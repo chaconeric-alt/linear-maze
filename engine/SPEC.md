@@ -4,7 +4,7 @@ Engine 0.5.3 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
-This document is the engine's reference: how it is built (sections 4 and 5), how content is written (6 and 7), the look (9), its limits (10), the editor's saved format (15), and games, packs and the loader (21). It is written to be handed to a collaborator, or to Claude, so sections 6, 7, 15 and 21 are precise.
+This document is the engine's reference: how it is built (sections 4 and 5), how content is written (6 and 7), the look (9), its limits (10), the editor's saved format (15), games, packs and the loader (21), and the next-generation look (22). It is written to be handed to a collaborator, or to Claude, so sections 6, 7, 15 and 21 are precise.
 
 Section numbers match the one-file spec of 0.4 and earlier, so old references still land in the right place. The sections about one game (1–3, 8, 11, 12, 14 and 16–20) moved to that game's own `SPEC.md`; for The Linear Maze that is `games/linear-maze/SPEC.md`.
 
@@ -15,6 +15,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.2:** stairs can lead somewhere of their own, stay locked until a story flag, and land you on a tagged tile (section 5, *Stairs*; a level's `stairs`). Elevators can wait for power and keep a stop locked (section 6.15, `power` and `stops`). Doors can open for a story flag instead of a key: clearance doors (section 6.2). Transmissions: someone speaks over an intercom while the game runs, from a trap or from code (section 6.16; `engine/comms.js`), with a new kind of content, `speakers`. Trap effects a pack defines can describe their settings for the editor (`params`, section 6.8).
 
 **New in 0.5.3:** status effects: timed conditions on the player or an enemy (slowed, chilled, burning, stunned...) that any weapon, projectile, attack, explosion or trap can carry, with resistance from armor and a chip on the HUD (section 6.17; `engine/status.js`, a new kind of content, `statuses`). Named boss bars across the top of the screen, with phases (section 6.5, `bossBar`). More kinds of ammunition than the four built in (section 6.18, `LM.defineAmmo`). Key items: things the player carries from floor to floor and sees in the inventory (section 6.19). An enemy can change its own damage reduction as it fights (`e.armor`) and hear every hit (`onHurt`). `LM.comms.speaking()` says who is talking.
+
+**Next generation:** a floor can switch on the next-generation look (section 22; `engine/nextgen.js` and its three companions): a slightly tilted camera that stands walls and closed doors up and leans as the player moves, black ceiling silhouettes (pipes, ducts, cables, beams, hanging lamps, turning fans), and coloured neon tubes that light the room. Monsters, items and people can be drawn from sprite sheets the editor makes from 3D models (`look: { type: 'sheet' }`). It is set floor by floor in the level's `nextGen` field; floors without it, and every existing game, draw exactly as before.
 
 ---
 
@@ -59,6 +61,10 @@ engine/
   level.js                 Level (parses map + legend), flow-field navigation
   physics.js               circle-vs-tile collision, ray casting, visibility polygons
   render.js                renderer: chunk cache, lighting, emissive pass, overlays; LM.gfx helpers
+  nextgen.js               the next-generation look (section 22): settings, the tilted camera, raised walls and doors
+  nextgen-ceiling.js       ceiling silhouettes for next-generation floors
+  nextgen-neon.js          neon tubes for next-generation floors
+  nextgen-sheets.js        sprite-sheet looks (made from 3D models by the editor)
   particles.js             pooled particles; LM.particleTypes
   combat.js                projectiles, damage, healing, explosions, firing weapons
   status.js                status effects on the player and enemies (chilled, burning, stunned...): apply, tick, resist
@@ -981,3 +987,62 @@ The script tag's `data-root` is the workspace folder relative to the page: `..` 
 ### 21.5 Moving a game, or renaming one
 
 A game's folder name is its id. To rename one: rename the folder, change `id` in its `game.js`, change the id in `games/games.js`, and change `'old-id/...'` in any other game that loads its packs. Keep `saveKey` as it was if players should keep their saves.
+
+---
+
+## 22. The next-generation look
+
+A floor switches it on with `nextGen` in its level definition. The editor writes it from **Floor settings → Next generation** (and the **Next gen** page); by hand it is plain data. Anything left out takes the default shown. Without `nextGen`, or with `enabled: false`, nothing in `engine/nextgen*.js` runs for that floor and it draws exactly as before. Gameplay never changes either way: collision, aiming, line of sight and the lightmap stay on the ground plane.
+
+```js
+nextGen: {
+  enabled: true,
+  oblique: { on: true, tilt: 0.55, height: 24, parallax: 0.25, sway: 0.35 },
+  ceiling: { on: true, clutter: 0.45, pipes: true, ducts: true, cables: true, beams: true, fans: true, hanging: false,
+             fanTag: 'fan', fanSpeed: 1, opacity: 0.94, color: '#030407', height: 1.7, parallax: 0.18, rim: true, seed: 0 },
+  neon:    { on: true, colors: ['#ff2fd0', '#22e6ff', '#9dff3a'], where: 'all', rooms: [], tag: '', density: 0.35,
+             flicker: 0.15, brightness: 0.9, radius: 120, style: 'tube', colorMode: 'room', mount: 0.7, lightTag: 'neon' },
+}
+```
+
+### 22.1 The tilted camera (`oblique`)
+
+An oblique orthographic view: the ground stays where it was, and anything with height moves up the screen by `height × tilt` world units. Every square solid that is `tall` (walls; not glass, partitions or pillars) is drawn standing up: its top, baked by its own terrain painter with no front face, is lifted, and the faces the camera can see (the south face, and east or west faces where parallax leans the wall) are drawn between the ground and the top from the strip its painter bakes as a front face. Closed doors stand as tall as the walls and pull up into a lintel as they open.
+
+- `tilt` 0–1: how far the camera leans from straight down. `height` 4–30: wall height in world units (a tile is 32).
+- `parallax` 0–1: walls away from the middle of the screen lean outward, so their sides show.
+- `sway` 0–1: the tilt trails the player's movement a little and settles when they stop.
+
+Raised walls are sorted with the objects by their north edge: things on a wall square (a breaker panel, a picture) draw over it, things north of it hide behind its top, things south of it stand in front of its face. After the lightmap is made, each raised top takes the light of its own square and each face the light of the floor just in front of it, so a lit room lights the walls around it.
+
+### 22.2 Ceiling silhouettes (`ceiling`)
+
+Shapes overhead, drawn after the lighting so they stay black, and lifted by the tilt and their own `parallax` so they drift against the floor: pipe bundles along walls (with brackets, flanges and elbows into the wall), banded ducts, cables slung across rooms and corridors, open-truss beams across corridors, lamps on cords (`hanging`), and turning fans whose blades hide what is under them as they pass. `clutter` 0–1 says how much there is, and each kind can be switched off. Fans go in open rooms, and always on tiles tagged `fanTag`. Nothing runs along a wall with an item or person on it or in front of it. The layout is worked out once per floor from its map and `seed`, so a floor looks the same every visit. With `rim`, edges catch a little light from below (the colour of the nearest neon), only where the floor under them is lit.
+
+### 22.3 Neon (`neon`)
+
+Tubes along walls that face open floor. Each tube is a row of ordinary static lights (one every two tiles, with `radius` and `brightness`), so it lights the floor, is blocked by walls and is switched by a `lights` trap effect with the tag `lightTag`. `flicker` is the share of tubes that stutter. The glass glows in the emissive pass, `mount` of the way up the wall's face on a tilted floor. A tube the player can't see now shows as a faint trace if they've been there, and not at all if they haven't.
+
+- `where`: `'all'` (any wall facing floor), `'rooms'` (walls of the floor's named `rooms`; all of them when `rooms` is empty), `'corridors'` (passages three tiles wide or less), `'tag'` (exactly along floor or wall tiles tagged `tag`), `'none'`.
+- `density` 0–1: how many of the possible walls get a tube (not used with `'tag'`).
+- `colors` and `colorMode`: `'room'` gives each room (or each 10 × 10 area outside rooms) one colour; `'random'`; `'cycle'`.
+- `style`: `'tube'`, `'double'` (two tubes) or `'dashed'` (segments).
+
+### 22.4 Sprite sheets (`look: { type: 'sheet' }`)
+
+A monster, item or person can be drawn from a sheet of frames: one picture in the game's `editor/sprites.js`, one row per direction per animation, one column per frame. The editor's 3D importer (Next gen → 3D models) makes them from `.glb` files, drawn through the same tilt as the floors.
+
+```js
+look: {
+  type: 'sheet', sprite: 'model-guard',
+  fw: 51, fh: 89,                 // one frame, in pixels
+  dirs: 8,                        // directions per animation: 0 faces east, then clockwise
+  anims: { idle: { row: 0, frames: 8, fps: 10 }, walk: { row: 8, frames: 12, fps: 12 }, death: { row: 16, frames: 14, fps: 12, loop: false } },
+  states: { idle: 'idle', move: 'walk', die: 'death' },   // also attack and hurt
+  anchor: [25.3, 62.9],           // the pixel under its feet, drawn at the thing's position
+  upp: 0.5,                       // world units per pixel
+  glow, bob,                      // as for other looks
+}
+```
+
+The direction follows a monster's or person's `facing` (an item's placement turn). The animation follows what it is doing: attacking (a monster with an attack under way), hurt (while it flashes), moving (faster than 8 units a second), otherwise standing still. A monster with a `die` animation leaves it playing where it fell, then fades. `LM.ng.sheetLook(look, kind, image)` builds the draw functions; the editor runtime uses it for every sheet look. The edit set keeps each sheet's record (its layout and how it was made) under `sheets`, which the game itself ignores.

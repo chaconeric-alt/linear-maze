@@ -364,6 +364,7 @@
       this.el = el;
       this.tool = ED.store.get('mapTool', 'paint');
       this.lit = ED.store.get('mapLit', true);
+      this.ngView = ED.store.get('mapNgView', false); // draw a next-generation floor tilted, with its ceiling and neon (js/ng.js)
       this.grid = ED.store.get('mapGrid', true);
       this.showTags = ED.store.get('mapTags', true);
       this.showRooms = ED.store.get('mapRooms', true);
@@ -381,6 +382,10 @@
       const find = extra[0] === 'find' && extra[1];
       if (find) this.findThing(find);
       if (extra[0] === 'settings') this.showLevelPanel(true);
+      if (extra[0] === 'nextgen') {
+        this.setNgView(true);
+        this.showLevelPanel(false, 'nextgen');
+      }
       this.problems = ME.validate(this.doc, M().raw('levels', id));
       this.drawStatus();
       ED.onLeave(() => this.destroy());
@@ -427,8 +432,9 @@
         return b;
       };
       const litBtn = h('button', { type: 'button', class: 'btn small' + (this.lit ? ' on' : ''), title: 'Torchlight: the floor’s own light and darkness. Off: flat light.', on: { click: () => { this.lit = !this.lit; ED.store.set('mapLit', this.lit); litBtn.classList.toggle('on', this.lit); this.renderer.flat = !this.lit; this.dirty = true; } } }, 'Torchlight');
+      this.ngBtn = h('button', { type: 'button', class: 'btn small' + (this.ngView ? ' on' : ''), title: 'Next-gen view: a floor with the next-generation look (Floor settings → Next generation) is drawn tilted, with its ceiling and neon. Off: drawn flat, which is easier to paint.', on: { click: () => this.setNgView(!this.ngView) } }, 'Next-gen view');
       tb.append(lvl, tg,
-        h('span', { class: 'sep' }), litBtn, toggle('Grid', 'grid', 'mapGrid'), toggle('Tags', 'showTags', 'mapTags'), toggle('Rooms', 'showRooms', 'mapRooms'),
+        h('span', { class: 'sep' }), litBtn, this.ngBtn, toggle('Grid', 'grid', 'mapGrid'), toggle('Tags', 'showTags', 'mapTags'), toggle('Rooms', 'showRooms', 'mapRooms'),
         h('button', { class: 'btn small', title: 'Zoom out (-)', on: { click: () => this.zoomBy(-1) } }, '−'),
         h('button', { class: 'btn small', title: 'Zoom in (+)', on: { click: () => this.zoomBy(1) } }, '+'),
         h('button', { class: 'btn small', title: 'Show the whole floor', on: { click: () => this.fit() } }, 'Fit'),
@@ -778,6 +784,7 @@
     loadGame() {
       this.renderer = ED.engine.makeRenderer(this.canvas);
       this.renderer.flat = !this.lit;
+      this.renderer.ngOff = !this.ngView;
       this.game = ED.engine.fakeGame(this.renderer);
       const saved = ED.store.get('mapCam:' + this.id);
       this.reload(true);
@@ -801,7 +808,8 @@
         if (!this.alive) return;
         this.raf = requestAnimationFrame(loop);
         if (!this.canvas.isConnected) return this.destroy();
-        const animate = this.lit;
+        // torchlight flickers; a next-generation floor's fans turn and its camera sways
+        const animate = this.lit || !!(this.ngView && this.game && this.game.level && this.game.level.ng);
         const gap = this.lastCost > 30 ? 140 : this.lastCost > 16 ? 50 : 0;
         if (!(this.dirty || (animate && now - (this.lastDraw || 0) >= gap))) return;
         this.dirty = false;
@@ -836,6 +844,20 @@
         }
       }
       this.dirty = true;
+    }
+    setNgView(v) {
+      this.ngView = !!v;
+      ED.store.set('mapNgView', this.ngView);
+      if (this.ngBtn) this.ngBtn.classList.toggle('on', this.ngView);
+      if (this.renderer) this.renderer.ngOff = !this.ngView;
+      this.dirty = true;
+    }
+    /** Every tag painted on this floor (tiles and things). */
+    tagsOnFloor() {
+      const tags = new Set();
+      for (const g of this.doc.ground) if (g && g.tag) tags.add(g.tag);
+      for (const o of this.doc.objs) if (o && typeof o === 'object' && o.tag) tags.add(o.tag);
+      return [...tags];
     }
     scheduleReload() {
       clearTimeout(this.reloadT);
@@ -1693,6 +1715,7 @@
         onChange: (l) => { d.rooms = l; commit(); this.dirty = true; }, title: (r) => r.name + ' · ' + (r.rect || []).join(','), addLabel: 'Add a room (or drag one with the Room tool)', newItem: () => ({ name: 'New room', rect: [1, 1, 5, 5] }),
       }));
       sect('traps', 'Traps and scripted events (' + (d.traps || []).length + ')', () => this.trapsEditor(d, commit));
+      sect('nextgen', 'Next generation' + (d.nextGen && d.nextGen.enabled ? ' (on)' : ''), () => ED.ng.levelSection(d, () => { commit(); this.scheduleReload(); }, this));
       sect('lights', 'Ceiling lights', () => F().list(d.ceilingLights || [], (cl, n, set) => F().params({ variants: 'json', every: 'number', offset: 'json', color: 'color', radius: 'number', intensity: 'number', flicker: 'number', skip: 'number', tag: 'tag' }, cl, (v) => set(v)), {
         onChange: (l) => { if (l.length) d.ceilingLights = l; else delete d.ceilingLights; commit(); this.scheduleReload(); }, title: (cl) => 'every ' + (cl.every || 4) + ' tiles on floor ' + JSON.stringify(cl.variants || 'any'), addLabel: 'Add a grid of lights', newItem: () => ({ variants: [0], every: 4, offset: [2, 2], color: '#f2f5ff', radius: 180, intensity: 0.5 }),
       }));

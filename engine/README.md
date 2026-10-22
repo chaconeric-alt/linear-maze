@@ -8,5 +8,6 @@ The runtime every game in `../games/` plays on. It holds no game content of its 
 - `editor-runtime.js` applies what the editor saved for a game (`games/<id>/editor/edits.js`).
 - `memory.js` lets floors remember how you left them (the stairs back up, return trips, elevators).
 - `elevators.js` builds a game's elevators into every floor they stop at.
+- `nextgen.js`, `nextgen-ceiling.js`, `nextgen-neon.js` and `nextgen-sheets.js` draw the next-generation look on floors that switch it on (a tilted camera with standing walls, ceiling silhouettes, neon), and sprite sheets made from 3D models. Floors without it draw as before (`SPEC.md` section 22).
 
 `SPEC.md` is the technical reference: how the engine works, how packs and levels are written, the editor's format, and games and packs (section 21).

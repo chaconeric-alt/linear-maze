@@ -166,13 +166,13 @@
     const d = binder.draft;
     const base = M().base(kind, id) || (M().isAdded(kind, id) && M().edits().add[kind][id].$extends ? M().base(kind, M().edits().add[kind][id].$extends) : null);
     const hasOriginal = !!(base && base.draw);
-    const mode = () => (d.look ? (d.look.type === 'sprite' ? 'picture' : 'built') : d.draw && (!base || d.draw !== base.draw) ? 'code' : hasOriginal ? 'original' : d.draw ? 'code' : 'built');
+    const mode = () => (d.look ? (d.look.type === 'sprite' ? 'picture' : d.look.type === 'sheet' ? 'model' : 'built') : d.draw && (!base || d.draw !== base.draw) ? 'code' : hasOriginal ? 'original' : d.draw ? 'code' : 'built');
     const box = h('div', { class: 'look' });
     const body = h('div');
     const lookType = kind === 'enemies' ? 'creature' : 'object';
     const modes = [];
     if (hasOriginal) modes.push(['original', 'Original drawing (from the pack’s code)']);
-    modes.push(['built', 'Built from settings (no code)'], ['picture', 'A picture'], ['code', 'My own drawing code']);
+    modes.push(['built', 'Built from settings (no code)'], ['picture', 'A picture'], ['model', 'A 3D model (sprite sheet)'], ['code', 'My own drawing code']);
     const setMode = (m) => {
       if (m === 'original') {
         delete d.look;
@@ -185,6 +185,10 @@
         d.look = kind === 'enemies' ? { type: 'creature', shape: 'humanoid', body: d.color || '#6b7a63', eyes: '#ff5a3a' } : { type: 'object', shape: 'box', color: '#7a5530' };
       } else if (m === 'picture') {
         d.look = { type: 'sprite', sprite: M().spriteIds()[0] || '', size: Math.round((d.radius || 10) * 2.6), facing: 'right' };
+      } else if (m === 'model') {
+        // a sheet made from a .glb on the Next gen page (js/ng-models.js)
+        const first = ED.ngModels.list()[0];
+        d.look = first ? ED.ngModels.lookFor(first.id) : { type: 'sheet', sprite: '' };
       } else if (m === 'code') {
         delete d.look;
         if (!d.draw) d.draw = ED.engine.compile(kind === 'enemies' ? 'function (g, e, t) {\n  g.rotate(e.facing);\n  g.fillStyle = \'#8a6a5a\';\n  g.beginPath();\n  g.arc(0, 0, e.r, 0, U.TAU);\n  g.fill();\n}' : 'function (g, it, t) {\n  g.fillStyle = \'#8a6a5a\';\n  g.fillRect(-8, -8, 16, 16);\n}');
@@ -198,6 +202,7 @@
       body.appendChild(F().field('Drawn as', F().select(m, modes, setMode)));
       if (m === 'built') body.appendChild(C.builtLook(d.look, lookType, () => binder.changed()));
       if (m === 'picture') body.appendChild(C.pictureLook(kind, id, d, () => binder.changed()));
+      if (m === 'model') body.appendChild(ED.ngModels.lookPanel(kind, id, d, () => binder.changed()));
       if (m === 'code') {
         body.appendChild(F().field('Body', F().code(ED.fnSource(d.draw) || '', (fn) => { if (fn) d.draw = fn; binder.changed(); }, { name: kind + '/' + id + '/draw' }), kind === 'enemies' ? 'function (g, e, t): g is already moved to the monster; call g.rotate(e.facing) to face where it walks. e.r is its radius.' : 'function (g, it, t): g is already moved to the item. it.props holds its placement settings.'));
         body.appendChild(F().field('Glow', F().code(ED.fnSource(d.drawGlow) || '', (fn) => { if (fn) d.drawGlow = fn; else delete d.drawGlow; binder.changed(); }, { name: kind + '/' + id + '/drawGlow', rows: 6 }), kind === 'enemies' ? 'Drawn in world space (use e.x, e.y), added as light. eyes(g, e, colour, spread, forward, size) draws glowing eyes.' : 'Drawn after the lighting, added as light. G.glow(g, x, y, radius, colour, alpha).'));
