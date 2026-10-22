@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linear Maze workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=Major+Mono+Display&family=Spectral:ital,wght@0,400;1,400&display=swap">
+<style>
+/* The workspace launcher: every game in games/, with Play buttons, and the way into the editor.
+   Players never see this page; a packaged game opens straight into its own title screen. */
+:root {
+  --ink: #090b10; --plate: #10131b; --line: rgba(214, 172, 96, 0.22); --brass: #e0b25a; --bone: #ebe4d4; --muted: #8f95a3;
+  --font-ui: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-head: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-lore: 'Spectral', Georgia, serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--ink); color: var(--bone); }
+body { font: 13px/1.55 var(--font-ui); padding: 48px 16px 64px; }
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 28px; }
+header h1 { margin: 0; font: 800 clamp(30px, 5vw, 46px)/1 var(--font-head); letter-spacing: 0.03em; text-transform: uppercase; }
+header p { margin: 10px 0 0; max-width: 70ch; color: var(--muted); }
+.games { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 14px; }
+.game { display: grid; gap: 10px; align-content: start; padding: 18px; background: var(--plate); border: 1px solid var(--line); border-top: 3px solid var(--accent, var(--brass)); }
+.mark { margin: 0; font: 400 30px/1 'Major Mono Display', monospace; color: var(--accent, var(--brass)); overflow-wrap: anywhere; }
+.game .id { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; }
+.game .desc { margin: 0; font: italic 400 15px/1.5 var(--font-lore); color: #d8cfbb; }
+.game .packs { margin: 0; color: var(--muted); font-size: 11.5px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.btn { display: inline-flex; align-items: center; padding: 9px 13px; font: 600 12px/1 var(--font-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--bone); text-decoration: none; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); }
+.btn:hover { border-color: var(--accent, var(--brass)); }
+.btn.primary { background: var(--accent, var(--brass)); border-color: var(--accent, var(--brass)); color: var(--ink); }
+.btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+section h2 { margin: 0 0 10px; font: 600 11px/1 var(--font-ui); letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+.layout { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; }
+.layout dt { color: var(--brass); }
+.layout dd { margin: 0; color: var(--muted); }
+code { color: var(--bone); }
+.err { color: #f08a7a; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Linear Maze workspace</h1>
+    <p>The engine, the games built on it, and the editor, side by side. Play a game here, or open the editor and choose this folder to change one, make a new one, or package one for players.</p>
+  </header>
+  <section>
+    <h2>Games</h2>
+    <div class="games" id="games"><p class="muted">Reading games/games.js…</p></div>
+  </section>
+  <section>
+    <h2>Make and change games</h2>
+    <div class="row"><a class="btn primary" href="editor/index.html">Open the editor</a></div>
+    <p style="color: var(--muted); max-width: 70ch">In the editor, choose this folder (the one with <code>engine</code>, <code>games</code> and <code>editor</code> in it). Works in Chrome and Edge.</p>
+  </section>
+  <section>
+    <h2>What’s in this folder</h2>
+    <dl class="layout">
+      <dt>engine/</dt><dd>The runtime: plays any game in <code>games/</code>. <code>engine/index.html?game=&lt;id&gt;</code> plays one. <code>engine/SPEC.md</code> is the technical reference.</dd>
+      <dt>games/</dt><dd>One folder per game: its <code>game.js</code> (title screen, packs, words), its asset packs (levels, monsters, items, tile sets, furniture, people) and its editor changes. Any game can load another game’s packs.</dd>
+      <dt>editor/</dt><dd>The Linear Maze Editor. It stands on its own: give someone this folder and they can open any workspace with it.</dd>
+      <dt>tools/</dt><dd><code>node tools/package.mjs &lt;id&gt;</code> writes a game for players into <code>dist/</code>: the engine plus that game’s files, as a folder and as one HTML file.</dd>
+    </dl>
+  </section>
+</main>
+<script>
+  'use strict';
+  // games/*/game.js call LM.defineGame; here that only records the manifest
+  window.LM = { games: {}, defineGame(m) { this.games[m.id] = m; } };
+  const load = (src) => new Promise((res) => { const s = document.createElement('script'); s.src = src; s.onload = () => res(true); s.onerror = () => res(false); document.body.appendChild(s); });
+  const el = (tag, attrs, ...kids) => {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) if (v != null) k === 'style' ? e.style.cssText = v : e.setAttribute(k, v);
+    for (const c of kids.flat()) if (c != null) e.append(c);
+    return e;
+  };
+  (async () => {
+    const box = document.getElementById('games');
+    if (!(await load('games/games.js'))) { box.replaceChildren(el('p', { class: 'err' }, 'games/games.js is missing.')); return; }
+    const ids = LM.gameList || [];
+    await Promise.all(ids.map((id) => load('games/' + id + '/game.js')));
+    box.replaceChildren(...ids.map((id) => {
+      const m = LM.games[id];
+      if (!m) return el('div', { class: 'game' }, el('p', { class: 'err' }, 'games/' + id + '/game.js is missing or broken.'));
+      const ts = m.titleScreen || {};
+      const accent = (m.theme && m.theme.accent) || null;
+      const lines = Array.isArray(ts.lines) && ts.lines.length ? ts.lines : String(m.title || id).split(/\s+/);
+      const packs = (m.packs || []).map((p) => (typeof p === 'string' ? p : p.pack + (p.levels === false ? ' (no floors)' : '')));
+      return el('article', { class: 'game', style: accent ? '--accent:' + accent : null },
+        el('p', { class: 'mark', style: ts.font ? "font-family:'" + ts.font + "', 'Major Mono Display', monospace" : null }, lines.join(' ')),
+        el('span', { class: 'id' }, 'games/' + id + '/ · version ' + (m.version || '?')),
+        m.description ? el('p', { class: 'desc' }, m.description) : null,
+        el('p', { class: 'packs' }, 'Packs: ' + (packs.join(', ') || 'none')),
+        el('div', { class: 'row' }, el('a', { class: 'btn primary', href: 'engine/index.html?game=' + encodeURIComponent(id) }, 'Play')));
+    }));
+  })();
+</script>
+</body>
+</html>
