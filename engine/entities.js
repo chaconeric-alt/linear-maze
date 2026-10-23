@@ -8,9 +8,14 @@
 
   // ------------------------------------------------------------ AI helpers
   const AI = (LM.ai = {});
-  /** Steer toward the player: straight when visible, otherwise along the flow field. */
+  const FA = LM.factions;
+  /** Who an enemy is after: its foe (engine factions: another enemy, or nobody), else the player. */
+  AI.foe = (e, game) => (e.foe !== undefined ? e.foe : game.player);
+  /** Steer toward the foe: straight when visible, otherwise along the flow field (the player's) or a short
+   *  search (anyone else's). */
   AI.chase = function (e, game, weight) {
-    const P = game.player;
+    const P = AI.foe(e, game);
+    if (!P) return false;
     const w = weight == null ? 1 : weight;
     if (e.seeLos && e.distP < 420) {
       const dx = P.x - e.x, dy = P.y - e.y, l = Math.hypot(dx, dy) || 1;
@@ -18,6 +23,7 @@
       e.my += (dy / l) * w;
       return true;
     }
+    if (P !== game.player) return AI.goTo(e, game, P.x, P.y, w);
     const d = LM.nav.dir(game.level, e.x, e.y);
     if (d) {
       e.mx += d.x * w;
@@ -26,14 +32,31 @@
     }
     return false;
   };
+  /** Walk toward a point by the shortest way round (a search out to 40 tiles, refreshed a few times a second). */
+  AI.goTo = function (e, game, x, y, weight) {
+    const m = e.mem, w = weight == null ? 1 : weight;
+    m.rtT = (m.rtT || 0) - game.dt;
+    const at = m.rt && Math.abs(e.x - (m.rt.tx * T + T / 2)) < 6 && Math.abs(e.y - (m.rt.ty * T + T / 2)) < 6;
+    if (m.rtT <= 0 || !m.rt || at) {
+      m.rtT = 0.35 + Math.random() * 0.2;
+      m.rt = LM.nav.step(game.level, e.x, e.y, x, y, 40);
+    }
+    if (!m.rt) return false;
+    const dx = m.rt.tx * T + T / 2 - e.x, dy = m.rt.ty * T + T / 2 - e.y, l = Math.hypot(dx, dy) || 1;
+    e.mx += (dx / l) * w;
+    e.my += (dy / l) * w;
+    return true;
+  };
   AI.away = function (e, game, weight) {
-    const P = game.player;
+    const P = AI.foe(e, game);
+    if (!P) return;
     const dx = e.x - P.x, dy = e.y - P.y, l = Math.hypot(dx, dy) || 1;
     e.mx += (dx / l) * weight;
     e.my += (dy / l) * weight;
   };
   AI.strafe = function (e, game, weight) {
-    const P = game.player;
+    const P = AI.foe(e, game);
+    if (!P) return;
     const dx = P.x - e.x, dy = P.y - e.y, l = Math.hypot(dx, dy) || 1;
     const dir = e.mem.strafeDir || (e.mem.strafeDir = U.chance(0.5) ? 1 : -1);
     e.mx += (-dy / l) * dir * weight;
@@ -43,6 +66,23 @@
       e.mem.strafeDir = -dir;
       e.mem.strafeT = U.rand(0.8, 2.2);
     }
+  };
+  /** Everything an enemy's blast would hurt around (x, y) within R: the player if its faction attacks the
+   *  player, and the enemies its faction attacks (none, with the default table). Each { t, d }. */
+  AI.hostilesNear = function (e, game, x, y, R) {
+    const out = [], P = game.player, fac = e.faction || 'monster';
+    if (P && !P.dead && FA.hostile(fac, 'player')) {
+      const d = U.dist(x, y, P.x, P.y);
+      if (d < R + P.r) out.push({ t: P, d });
+    }
+    if (FA.hitsEnemies(fac)) {
+      for (const o of game.enemies) {
+        if (o === e || o.dead || o.spawning > 0 || !FA.hostile(fac, o.faction)) continue;
+        const d = U.dist(x, y, o.x, o.y);
+        if (d < R + o.r) out.push({ t: o, d });
+      }
+    }
+    return out;
   };
   AI.wander = function (e, game, weight) {
     e.mem.wt = (e.mem.wt || 0) - game.dt;
@@ -117,15 +157,80 @@
       this.dead = false;
       this.hitWall = false;
       this.drops = props.drops;
+      // engine factions: who it fights (LM.factions). foe: who it's after; the player, with the default table
+      this.faction = props.faction || def.faction || 'monster';
+      this.foe = undefined;
+      this.foeT = Math.random() * 0.25;
+      this.foeHold = 0;
+      this.knowsP = this.aggro; // spawned hunting: hunting you
+      this.pDist = 9999;
+      this.pSee = false;
       if (def.init) def.init(this, game);
     }
-    alert(game, loud) {
+    /** Something woke it. foe: what it should go after (another enemy); left out, the player. */
+    alert(game, loud, foe) {
+      if (foe && foe.isEnemy && !foe.dead && FA.hostile(this.faction, foe.faction)) {
+        if (!this.aggro || !this.foe || this.foe === game.player) {
+          this.foe = foe;
+          this.foeHold = Math.max(this.foeHold, 1.5);
+        }
+      } else if (!foe || foe.isPlayer) this.knowsP = true;
       if (this.aggro) return;
       this.aggro = true;
       this.alertT = 0.8;
       if (this.def.bark) LM.audio.play(this.def.bark, { vol: game.vol(this.x, this.y) * 0.6 });
-      // wake nearby friends
-      if (loud) for (const o of game.enemies) if (!o.aggro && !o.dead && U.dist(o.x, o.y, this.x, this.y) < 150) o.alert(game, false);
+      // wake nearby friends (its own faction)
+      const f = this.foe && this.foe.isEnemy ? this.foe : undefined;
+      if (loud) for (const o of game.enemies) if (!o.aggro && !o.dead && o.faction === this.faction && U.dist(o.x, o.y, this.x, this.y) < 150) o.alert(game, false, f);
+    }
+    /** Could it notice o at distance d (line of sight already known)? Its `sight` all round, and `view`
+     *  ({ range, cone }) ahead of it, the way robots see. */
+    spots(o, d) {
+      const def = this.def;
+      if (d < (def.sight || 320)) return true;
+      const v = def.view;
+      if (!v || d > (v.range || 320) || (this._props && this._props.docked)) return false;
+      return Math.abs(U.angDiff(this.facing, Math.atan2(o.y - this.y, o.x - this.x))) < (v.cone || 1);
+    }
+    /** Pick who to go after (factions other than the default): the nearest hostile it can see, keeping its
+     *  current foe a while; failing that the one it was after, or the player if it knows about you. */
+    pickFoe(game) {
+      const P = game.player, fac = this.faction, L = game.level, def = this.def;
+      const cur = this.foe;
+      const valid = (o) => o && !o.dead && (o.isPlayer ? FA.hostile(fac, 'player') : FA.hostile(fac, o.faction));
+      if (cur && !valid(cur)) this.foe = null;
+      if (this.foeHold > 0 && valid(this.foe)) return;
+      const far = (def.view && def.view.range) || 0;
+      const reach = Math.max(def.sight || 320, far) * (this.aggro ? 1.35 : 1);
+      let best = null, bd = Infinity;
+      const keep = (o) => (o === this.foe ? 0.75 : 1);
+      if (P && !P.dead && FA.hostile(fac, 'player') && this.pSee && this.pDist < reach && (this.aggro || this.spots(P, this.pDist))) {
+        best = P;
+        bd = this.pDist * keep(P);
+      }
+      if (FA.hitsEnemies(fac)) {
+        for (const o of game.enemies) {
+          if (o === this || o.dead || o.spawning > 0 || !FA.hostile(fac, o.faction)) continue;
+          const d = U.dist(this.x, this.y, o.x, o.y);
+          if (d > reach || d * keep(o) >= bd) continue;
+          if (!this.aggro && !this.spots(o, d)) continue;
+          // (a clear shot, not just a view: nothing picks a fight through glass)
+          if (!LM.physics.los(L, this.x, this.y, o.x, o.y, 'shot')) continue;
+          best = o;
+          bd = d * keep(o);
+        }
+      }
+      if (best) {
+        this.foe = best;
+        this.foeSpotted = true;
+        if (best === P) this.knowsP = true;
+        return;
+      }
+      this.foeSpotted = false;
+      if (valid(this.foe) && this.aggro) return;
+      // nothing in sight: while it's idle it keeps half an eye on you (so its distance and line of sight
+      // are yours, as without factions); once it's fighting, only if it knows you're there
+      this.foe = (!this.aggro || this.knowsP) && P && !P.dead && FA.hostile(fac, 'player') ? P : null;
     }
     update(dt, game) {
       if (this.spawning > 0) {
@@ -145,14 +250,30 @@
         LM.status.update(game, this, dt);
         if (this.dead) return;
       }
-      this.distP = P ? U.dist(this.x, this.y, P.x, P.y) : 9999;
+      // who it's after: the player, unless the faction table gives it other enemies to fight
+      this.pDist = P ? U.dist(this.x, this.y, P.x, P.y) : 9999;
+      const simple = FA.onlyPlayer(this.faction);
+      if (simple) this.foe = P || null;
+      else {
+        this.foeT -= dt;
+        this.foeHold -= dt;
+        if (this.foe === undefined || this.foeT <= 0 || (this.foe && this.foe.dead)) {
+          this.foeT = 0.22 + Math.random() * 0.08;
+          this.pickFoe(game);
+        }
+      }
+      const foe = this.foe;
+      this.distP = foe ? U.dist(this.x, this.y, foe.x, foe.y) : 9999;
       if (this.losT <= 0) {
         this.losT = 0.1 + Math.random() * 0.05;
-        this.seeLos = P && this.distP < 900 && LM.physics.los(L, this.x, this.y, P.x, P.y);
+        this.pSee = P && this.pDist < 900 && LM.physics.los(L, this.x, this.y, P.x, P.y);
+        this.seeLos = foe === P ? this.pSee : !!foe && this.distP < 900 && LM.physics.los(L, this.x, this.y, foe.x, foe.y);
       }
-      this.visible = this.seeLos || this.distP < this.r + 30;
+      this.visible = this.pSee || this.pDist < this.r + 30;
       this.vis = U.approach(this.vis, this.visible ? 1 : 0, dt * 6);
-      if (!this.aggro && P && this.seeLos && this.distP < (def.sight || 320)) this.alert(game, true);
+      if (simple) {
+        if (!this.aggro && P && this.seeLos && this.distP < (def.sight || 320)) this.alert(game, true);
+      } else if (!this.aggro && foe && this.seeLos && this.foeSpotted) this.alert(game, true, foe);
       if (this.aggro && this.distP > (def.leash || 1400)) this.aggro = false;
 
       this.mx = 0;
@@ -184,7 +305,7 @@
         game.pushOutOfItems(this);
       }
       // face movement, or the player while attacking / when visible
-      const wantFace = this.atk || (this.seeLos && this.aggro) ? Math.atan2(P.y - this.y, P.x - this.x) : Math.hypot(this.vx, this.vy) > 8 ? Math.atan2(this.vy, this.vx) : this.facing;
+      const wantFace = foe && (this.atk || (this.seeLos && this.aggro)) ? Math.atan2(foe.y - this.y, foe.x - this.x) : Math.hypot(this.vx, this.vy) > 8 ? Math.atan2(this.vy, this.vx) : this.facing;
       if (!(this.atk && this.atk.lockFacing)) this.facing += U.angDiff(this.facing, wantFace) * Math.min(1, dt * (def.turn || 10));
 
       // hazards
@@ -215,7 +336,8 @@
         }
         return;
       }
-      if (!this.aggro || this.stunned > 0 || this.globalCd > 0 || !game.player || game.player.dead) return;
+      const foe = this.foe !== undefined ? this.foe : game.player;
+      if (!this.aggro || this.stunned > 0 || this.globalCd > 0 || !foe || foe.dead) return;
       for (let i = 0; i < atks.length; i++) {
         if (this.atkCd[i] > 0) continue;
         const ad = atks[i];
@@ -235,7 +357,8 @@
     die(game, o) {
       if (this.dead) return;
       this.dead = true;
-      game.stats.kills++;
+      // the floor's kill count is yours: not what the robots and the monsters do to each other
+      if (!(o && o.by && o.by.isEnemy)) game.stats.kills++;
       const def = this.def;
       if (!(o && o.fell)) {
         game.particles.burst(this.x, this.y, 16, {
@@ -280,7 +403,7 @@
         const w = Math.max(16, this.r * 2), y = this.y - this.r - 7;
         ctx.fillStyle = 'rgba(10,10,14,0.75)';
         ctx.fillRect(this.x - w / 2 - 1, y - 1, w + 2, 3.5);
-        ctx.fillStyle = this.def.boss ? '#e8be6e' : '#e0524f';
+        ctx.fillStyle = this.def.boss ? '#e8be6e' : !FA.hostile('player', this.faction) ? '#5fe08a' : '#e0524f';
         ctx.fillRect(this.x - w / 2, y, (w * Math.max(0, this.hp)) / this.maxHp, 1.6);
       }
     }
@@ -347,7 +470,7 @@
     update(dt, game) {
       this.t += dt;
       if (this.t >= this.flight) {
-        LM.combat.explode(game, this.tx, this.ty, { radius: this.radius, damage: this.damage, owner: this.owner, color: this.color, status: this.status });
+        LM.combat.explode(game, this.tx, this.ty, { radius: this.radius, damage: this.damage, owner: this.owner, color: this.color, status: this.status, faction: this.faction, by: this.by });
         return true;
       }
       if (Math.random() < dt * 30) {

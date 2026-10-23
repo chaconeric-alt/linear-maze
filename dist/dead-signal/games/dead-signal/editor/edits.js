@@ -23,7 +23,7 @@
  *   new floor the-complex
  *   new monster knife-fighter
  *   new tile type glass-corner (a copy of glass-v)
- *   floor order: ds-f1, ds-f2, dead-signal-lab, the-complex, sterile-annex
+ *   floor order: ds-f1, ds-f2, ds-f3, dead-signal-lab, the-complex, sterile-annex
  */
 'use strict';
 (function () {
@@ -1079,7 +1079,7 @@
       },
       terrain: { "glass-corner": { $extends: "glass-v", name: "Glass Corner" } },
     },
-    levelOrder: ["ds-f1", "ds-f2", "dead-signal-lab", "the-complex", "sterile-annex"],
+    levelOrder: ["ds-f1", "ds-f2", "ds-f3", "dead-signal-lab", "the-complex", "sterile-annex"],
     player: null,
   });
 })();

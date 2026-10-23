@@ -94,6 +94,7 @@
           hp: this.hp, shield: this.shield, gold: this.gold, weapons: this.weapons, weaponIdx: this.weaponIdx,
           ammo: this.ammo, equip: this.equip, bag: this.bag, blessings: this.blessings,
           gadgets: this.gadgets, flags: [...this.flags], data: this.data, keyItems: this.keyItems,
+          statuses: LM.status ? LM.status.save(this) : [],
         })
       );
     }
@@ -108,6 +109,7 @@
       this.flags = new Set(s.flags || []);
       this.data = JSON.parse(JSON.stringify(s.data || {}));
       this.keyItems = Array.isArray(s.keyItems) ? JSON.parse(JSON.stringify(s.keyItems)) : [];
+      if (LM.status) LM.status.load(this, s.statuses);
       Object.assign(this.ammo, s.ammo || {});
       for (const k of Object.keys(this.equip)) this.equip[k] = s.equip && s.equip[k] && LM.find('armor', s.equip[k]) ? s.equip[k] : null;
       this.bag = (s.bag || []).filter(known('armor'));

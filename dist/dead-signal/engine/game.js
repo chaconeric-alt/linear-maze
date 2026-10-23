@@ -177,6 +177,8 @@
         if (opts.via !== 'up' && opts.via !== 'elevator') this.above[id] = prevId;
       }
       this.levelId = id;
+      // who fights whom on this floor: the game's factions, with the level's own rows laid over them
+      if (LM.factions) LM.factions.use(def.factions || null);
       const L = (this.level = new LM.Level(def));
       L.sig = FM.signature(L);
       L.baseTerrain = L.terrain.map((t) => t.id);
@@ -566,6 +568,31 @@
       const n = P.keyItems.length;
       P.keyItems = P.keyItems.filter((k) => k.id !== id);
       return P.keyItems.length < n;
+    }
+    /**
+     * Change the side some enemies are on (engine factions): sel is a tag, an enemy id, or a test
+     * function (e) => bool. They forget who they were fighting and look again; the floor remembers the
+     * change. Returns how many changed.
+     */
+    setFaction(sel, faction) {
+      let n = 0;
+      for (const e of this.enemies) {
+        if (e.dead) continue;
+        const ok = typeof sel === 'function' ? sel(e) : e.tag === sel || e.def.id === sel;
+        if (!ok || e.faction === faction) continue;
+        e.faction = faction;
+        e._props = Object.assign({}, e._props, { faction });
+        e.foe = null;
+        e.foeT = 0;
+        e.foeHold = 0;
+        e.knowsP = false;
+        e.aggro = false;
+        e.atk = null;
+        n++;
+      }
+      // anyone after one of them that's now a friend looks again
+      for (const e of this.enemies) if (e.foe && e.foe.isEnemy && LM.factions && !LM.factions.hostile(e.faction, e.foe.faction)) e.foe = null;
+      return n;
     }
     /** Change a tile at runtime (secret doors, collapsing floors, doors that weren't there before). */
     setTerrain(tx, ty, id, tag) {

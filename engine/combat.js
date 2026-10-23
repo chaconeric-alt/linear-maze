@@ -6,6 +6,7 @@
 (function () {
   const LM = window.LM, U = LM.util, T = LM.TILE;
   const C = (LM.combat = {});
+  const FA = LM.factions;
 
   // ------------------------------------------------------------ projectiles
   class Projectile {
@@ -32,11 +33,15 @@
       this.age = 0;
       this.falloff = o.falloff || 0;
       this.status = o.status || this.def.status || null; // a status the hit carries (engine/status.js)
+      // engine factions: an enemy's shot (o.faction, or its shooter o.by's) hits whatever that faction
+      // attacks; without one, an enemy shot hits only the player, as it always has
+      this.by = o.by || null;
+      this.faction = o.owner === 'player' ? 'player' : o.faction || (this.by && this.by.faction) || null;
     }
     impact(game, hitWall) {
       this.dead = true;
       if (this.aoe) {
-        C.explode(game, this.x - this.vx * 0.004, this.y - this.vy * 0.004, Object.assign({ owner: this.owner, status: this.status }, this.aoe));
+        C.explode(game, this.x - this.vx * 0.004, this.y - this.vy * 0.004, Object.assign({ owner: this.owner, status: this.status, faction: this.owner === 'player' ? undefined : this.faction, by: this.by }, this.aoe));
         return;
       }
       const d = this.def;
@@ -71,6 +76,8 @@
         if (this.owner === 'player') {
           for (const e of game.enemies) {
             if (e.dead || e.spawning > 0 || this.hit.has(e)) continue;
+            // your shots pass through anyone on your side
+            if (!FA.hostile('player', e.faction)) continue;
             const rr = e.r + this.r;
             if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
               this.hit.add(e);
@@ -87,13 +94,28 @@
             }
           }
         } else {
-          const P = game.player;
-          if (P && !P.dead && P.falling <= 0) {
+          const P = game.player, fac = this.faction;
+          if (P && !P.dead && P.falling <= 0 && (fac == null || FA.hostile(fac, 'player'))) {
             const rr = P.r + this.r;
             if (U.dist2(this.x, this.y, P.x, P.y) < rr * rr) {
-              if (P.invuln <= 0) C.hurt(game, P, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status });
+              if (P.invuln <= 0) C.hurt(game, P, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by });
               this.impact(game, false);
               return;
+            }
+          }
+          if (fac != null && FA.hitsEnemies(fac)) {
+            for (const e of game.enemies) {
+              if (e.dead || e.spawning > 0 || e === this.by || this.hit.has(e) || !FA.hostile(fac, e.faction)) continue;
+              const rr = e.r + this.r;
+              if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
+                this.hit.add(e);
+                if (!this.aoe) C.hurt(game, e, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by });
+                game.particles.burst(this.x, this.y, 4, { type: 'dot', color: e.def.blood || '#7a1f1f', speed: 110, life: 0.3, angle: this.angle, spread: 0.6, size: [0.8, 1.6], drag: 6 });
+                if (this.pierce-- <= 0 || this.aoe) {
+                  this.impact(game, false);
+                  return;
+                }
+              }
             }
           }
         }
@@ -219,7 +241,19 @@
       target.hp -= dmg;
       target.flash = 0.09;
       target.lastHurt = 0;
-      if (!target.aggro) target.alert(game, true);
+      // o.by: the enemy that did it (engine factions); it turns on whoever hurt it
+      const by = o.by && o.by.isEnemy && !o.by.dead && o.by !== target ? o.by : null;
+      if (by && FA.hostile(target.faction, by.faction)) {
+        target.foe = by;
+        target.foeHold = Math.max(target.foeHold || 0, 2);
+      } else if (o.source === 'player') {
+        target.knowsP = true;
+        if (!FA.onlyPlayer(target.faction) && game.player && FA.hostile(target.faction, 'player') && (target.foeHold || 0) <= 0) {
+          target.foe = game.player;
+          target.foeHold = 1.5;
+        }
+      }
+      if (!target.aggro) target.alert(game, true, by || undefined);
       const mass = def.mass || 1;
       if (o.kx || o.ky) {
         target.kvx += (o.kx || 0) / mass;
@@ -311,7 +345,10 @@
   };
 
   // ------------------------------------------------------------ explosions
-  /** o: { radius, damage, owner, color, selfDamage, silent, status } */
+  /** o: { radius, damage, owner, color, selfDamage, silent, status, faction, by }
+   *  An enemy's blast with a faction (o.faction, from its attacker o.by) hurts what that faction attacks;
+   *  an enemy blast without one hurts only the player; yours hurt every enemy not on your side; anything
+   *  else (a barrel) hurts everyone. */
   C.explode = function (game, x, y, o) {
     const R = o.radius || 70, D = o.damage || 40;
     const col = o.color || '#ffb060';
@@ -334,20 +371,23 @@
     if (!o.silent) LM.audio.play('explode', { vol: game.vol(x, y), throttle: 0.05 });
     const L = game.level;
     const losOK = (tx, ty) => LM.physics.los(L, x, y, tx, ty, 'shot');
+    const fac = o.faction || null;
     // player
-    if (P && !P.dead && pd < R + P.r && losOK(P.x, P.y)) {
+    if (P && !P.dead && pd < R + P.r && losOK(P.x, P.y) && !(fac && fac !== 'player' && !FA.hostile(fac, 'player'))) {
       const k = 1 - U.clamp(pd / (R + P.r), 0, 1) * 0.6;
       const mul = o.owner === 'player' ? (o.selfDamage == null ? 0.35 : o.selfDamage) : 1;
-      if (mul > 0) C.hurt(game, P, D * k * mul, { kx: ((P.x - x) / (pd || 1)) * 160, ky: ((P.y - y) / (pd || 1)) * 160, source: o.owner, type: 'blast', status: o.status });
+      if (mul > 0) C.hurt(game, P, D * k * mul, { kx: ((P.x - x) / (pd || 1)) * 160, ky: ((P.y - y) / (pd || 1)) * 160, source: o.owner, type: 'blast', status: o.status, by: o.by });
     }
-    // enemies (player blasts and barrels hurt enemies; enemy blasts don't)
-    if (o.owner !== 'enemy') {
+    // enemies (your blasts and barrels hurt enemies; an enemy's only if its faction fights them)
+    const enemyBlast = o.owner === 'enemy';
+    if (!enemyBlast || (fac && FA.hitsEnemies(fac))) {
       for (const e of game.enemies) {
         if (e.dead) continue;
+        if (enemyBlast ? e === o.by || !FA.hostile(fac, e.faction) : o.owner === 'player' && !FA.hostile('player', e.faction)) continue;
         const d = U.dist(x, y, e.x, e.y);
         if (d < R + e.r && losOK(e.x, e.y)) {
           const k = 1 - U.clamp(d / (R + e.r), 0, 1) * 0.6;
-          C.hurt(game, e, D * k, { kx: ((e.x - x) / (d || 1)) * 260, ky: ((e.y - y) / (d || 1)) * 260, source: 'player', type: 'blast', status: o.status });
+          C.hurt(game, e, D * k, { kx: ((e.x - x) / (d || 1)) * 260, ky: ((e.y - y) / (d || 1)) * 260, source: enemyBlast ? 'enemy' : 'player', type: 'blast', status: o.status, by: o.by });
         }
       }
     }

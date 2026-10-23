@@ -217,6 +217,62 @@
     if (!level.inBounds(x, y)) return -1;
     return level.navDist[y * level.w + x];
   };
+  /** The next tile on a short walk from world point (fx, fy) to (tx, ty): { tx, ty } (a tile), or null when
+   *  there's no way within `lim` tiles. A breadth-first search from the goal that stops when it reaches
+   *  the start, for an enemy chasing something other than the player (the flow field is the player's). */
+  NAV.step = function (level, fx, fy, gx, gy, lim) {
+    const w = level.w;
+    const sx = Math.floor(fx / T), sy = Math.floor(fy / T), ex = Math.floor(gx / T), ey = Math.floor(gy / T);
+    if (!level.inBounds(sx, sy) || !level.inBounds(ex, ey)) return null;
+    if (sx === ex && sy === ey) return { tx: ex, ty: ey };
+    if (!level.navSeen || level.navSeen.length !== level.n) {
+      level.navSeen = new Int32Array(level.n);
+      level.navD2 = new Int16Array(level.n);
+      level.navQ2 = new Int32Array(level.n);
+      level.navGen = 0;
+    }
+    const seen = level.navSeen, dist = level.navD2, q = level.navQ2, gen = ++level.navGen;
+    const s = sy * w + sx, g0 = ey * w + ex, max = lim || 40;
+    let head = 0, tail = 0;
+    seen[g0] = gen;
+    dist[g0] = 0;
+    q[tail++] = g0;
+    let found = false;
+    while (head < tail && !found) {
+      const cur = q[head++];
+      const cx = cur % w, cy = (cur - cx) / w, cd = dist[cur];
+      if (cd >= max) continue;
+      for (let k = 0; k < 8; k++) {
+        const nx = cx + DIRS[k][0], ny = cy + DIRS[k][1];
+        const ni = ny * w + nx;
+        if (!level.inBounds(nx, ny) || seen[ni] === gen) continue;
+        // the start tile may be one the walker stands half in (a doorway); let it through
+        if (ni !== s && !NAV.passable(level, nx, ny)) continue;
+        if (k >= 4 && (!NAV.passable(level, cx + DIRS[k][0], cy) || !NAV.passable(level, cx, cy + DIRS[k][1]))) continue;
+        seen[ni] = gen;
+        dist[ni] = cd + 1;
+        q[tail++] = ni;
+        if (ni === s) {
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) return null;
+    // downhill from the start
+    let best = dist[s], bx = -1, by = -1;
+    for (let k = 0; k < 8; k++) {
+      const nx = sx + DIRS[k][0], ny = sy + DIRS[k][1];
+      if (!level.inBounds(nx, ny)) continue;
+      const ni = ny * w + nx;
+      if (seen[ni] !== gen || dist[ni] >= best) continue;
+      if (k >= 4 && (!NAV.passable(level, sx + DIRS[k][0], sy) || !NAV.passable(level, sx, sy + DIRS[k][1]))) continue;
+      best = dist[ni];
+      bx = nx;
+      by = ny;
+    }
+    return bx < 0 ? null : { tx: bx, ty: by };
+  };
   /** Unit vector pointing downhill on the flow field, or null. */
   NAV.dir = function (level, px, py) {
     const x = Math.floor(px / T), y = Math.floor(py / T);

@@ -254,6 +254,12 @@ New flags: `slept`, `woke`, `dressed`, `aliceCalled`, `townPlaque`, `visited-<pl
 
 No existing floor changes: every door on every floor of both games runs the same way as before (checked), and no floor had a `rot`.
 
+## 0.5.4: factions
+
+Built for Dead Signal's Floor 3. Enemies have a side (`e.faction`, default `'monster'`) and a foe (`e.foe`, `LM.ai.foe`); the game's table (a pack's `factions`, laid over by a level's) says who fights whom; `game.setFaction`; trap effects `faction` and `branch`; a status's `countdown`, `stack`, `keep`, `update` and `onEnd` reason; `LM.nav.step` and `LM.ai.goTo` for enemies chasing something other than the player. Engine spec sections 5, 6.5, 6.8, 6.17 and 6.20.
+
+**This game's packs.** `packs/core/enemies.js`: every core behaviour and attack goes for the foe instead of `game.player` (with this game's default table the foe is always the player), attacks say who struck (`by`), the nova hurts everything its faction fights (the player, here), and a melee swipe or a charge needs a clear way to land (it no longer hits through a glass partition). `packs/core/effects.js`: the `faction` and `branch` effects, and `spawn`'s `faction`. Nothing else changed. Every Linear Maze floor plays as before: with no factions declared, monsters still want only the player and the player's shots still hit everything (checked, every enemy in both games).
+
 ## 0.5.3: statuses, boss bars, more ammunition, key items
 
 Built for Dead Signal's Floor 2. `engine/status.js` (the `statuses` kind; `LM.status.apply / has / clear`; anything that hurts can carry `status`), a def's `bossBar` (a named bar, `phases`), `LM.defineAmmo`, `game.giveKeyItem` (saved with the player; the inventory's Carried list), an enemy's own `e.armor` and `onHurt`, a projectile's `quiet`, `LM.comms.speaking()`. Engine spec sections 5, 6.4, 6.5, 6.7 and 6.16–6.19.

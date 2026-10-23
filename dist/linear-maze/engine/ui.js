@@ -315,19 +315,29 @@
     }
   };
 
-  /** The player's statuses as chips under the vitals: the name, and a bar for the time left. */
+  /** The player's statuses as chips under the vitals: the name, and a bar for the time left (a countdown
+   *  status also shows the seconds, and pulses once it's urgent). */
+  const clock = (t) => (t >= 60 ? Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0') : Math.ceil(t) + 's');
   ui.statusFrame = function (game, P) {
     const row = ui.el.statusRow;
     if (!row) return;
     const list = (P.statuses || []).filter((s) => s.def.hud !== false && s.def.name);
-    const key = list.map((s) => s.id).join(',');
+    const key = list.map((s) => s.id + (s.n > 1 ? 'x' + s.n : '')).join(',');
     if (ui.cache.statuses !== key) {
       ui.cache.statuses = key;
-      row.replaceChildren(...list.map((s) => h('span', { class: 'status-chip', style: s.def.color ? '--sc:' + s.def.color : '', title: s.def.name }, s.def.name, h('i'))));
+      row.replaceChildren(...list.map((s) => h('span', { class: 'status-chip', style: s.def.color ? '--sc:' + s.def.color : '', title: s.def.name },
+        s.def.name + (s.n > 1 ? ' \u00d7' + s.n : ''), s.def.countdown ? h('b', { class: 'sc-clock' }, '') : null, h('i'))));
     }
     list.forEach((s, i) => {
-      const bar = row.children[i] && row.children[i].lastChild;
+      const chip = row.children[i];
+      if (!chip) return;
+      const bar = chip.lastChild;
       if (bar) bar.style.width = (U.clamp(s.t / (s.max || 1), 0, 1) * 100).toFixed(0) + '%';
+      if (s.def.countdown) {
+        const c = chip.querySelector('.sc-clock'), txt = clock(Math.max(0, s.t));
+        if (c && c.textContent !== txt) c.textContent = txt;
+        chip.classList.toggle('urgent', !!s.def.urgent && s.t <= s.def.urgent);
+      }
     });
   };
 
@@ -405,9 +415,10 @@
       if (!n.visible || n.def.spectral) continue;
       g.fillRect(ox + (n.x / T) * s - 1, oy + (n.y / T) * s - 1, 2, 2);
     }
-    g.fillStyle = '#ff5a4a';
     for (const e of game.enemies) {
       if (e.dead || !e.visible) continue;
+      // anyone on your side (engine factions) shows green
+      g.fillStyle = LM.factions && !LM.factions.hostile('player', e.faction) ? '#5fe08a' : '#ff5a4a';
       g.fillRect(ox + (e.x / T) * s - 1, oy + (e.y / T) * s - 1, 2, 2);
     }
     // player arrow

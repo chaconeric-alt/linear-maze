@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.5.3 · October 2026
+Engine 0.5.4 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -15,6 +15,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.2:** stairs can lead somewhere of their own, stay locked until a story flag, and land you on a tagged tile (section 5, *Stairs*; a level's `stairs`). Elevators can wait for power and keep a stop locked (section 6.15, `power` and `stops`). Doors can open for a story flag instead of a key: clearance doors (section 6.2). Transmissions: someone speaks over an intercom while the game runs, from a trap or from code (section 6.16; `engine/comms.js`), with a new kind of content, `speakers`. Trap effects a pack defines can describe their settings for the editor (`params`, section 6.8).
 
 **New in 0.5.3:** status effects: timed conditions on the player or an enemy (slowed, chilled, burning, stunned...) that any weapon, projectile, attack, explosion or trap can carry, with resistance from armor and a chip on the HUD (section 6.17; `engine/status.js`, a new kind of content, `statuses`). Named boss bars across the top of the screen, with phases (section 6.5, `bossBar`). More kinds of ammunition than the four built in (section 6.18, `LM.defineAmmo`). Key items: things the player carries from floor to floor and sees in the inventory (section 6.19). An enemy can change its own damage reduction as it fights (`e.armor`) and hear every hit (`onHurt`). `LM.comms.speaking()` says who is talking.
+
+**New in 0.5.4:** factions: who fights whom. Enemies have sides; robots and monsters can fight each other, and an enemy can be on yours (an ally that fights with you and never hurts you, whose health bar and map dot are green). A game sets the table, a floor can change it, a trap or code can move enemies from one side to another (section 6.20). Enemies chasing something other than the player find their way with a short search (`LM.nav.step`, `LM.ai.goTo`), and robots' view cones (`view`) count for every foe. Statuses can count down on the HUD, stack, run code every frame, say how they ended, and be carried up and down the stairs (section 6.17). A `branch` trap effect runs one list of effects or another depending on story flags (section 6.8). A melee swipe or a charge no longer lands through glass or a wall.
 
 ---
 
@@ -133,13 +135,15 @@ Entities are circles. Movement is sub-stepped and resolved axis by axis against 
 
 Each enemy has one **behaviour** (how it moves) and a list of **attacks** (what it does). Every frame the behaviour writes a desired direction; then the attack system either continues the current attack or starts the first one whose `canStart` passes and whose cooldown is ready. Attacks can override movement (a charge, a nova that roots the caster).
 
-Enemies notice the player by line of sight within `sight` range, by being shot, or by an alarm; noticing wakes friends within 150 units. Navigation: straight at the player when visible, otherwise downhill on a breadth-first flow field rooted at the player's tile (8-way, no corner cutting). Hazard tiles are avoided; knockback can still throw enemies into pits.
+Enemies notice the player by line of sight within `sight` range, by being shot, or by an alarm; noticing wakes friends (of the same faction) within 150 units. Navigation: straight at the player when visible, otherwise downhill on a breadth-first flow field rooted at the player's tile (8-way, no corner cutting). Hazard tiles are avoided; knockback can still throw enemies into pits.
+
+**Who an enemy is after** is its *foe* (`e.foe`; `LM.ai.foe(e, game)`). With the default factions that is always the player, and the rest of this paragraph changes nothing. When the faction table gives an enemy other enemies to fight (section 6.20), it looks round a few times a second for the nearest hostile it can see (within `sight` all round, or within its `view` cone ahead, and with a clear shot: nothing picks a fight through glass), keeps its current foe a little longer than a new one, turns on whoever hurts it, and, once nothing is in sight, keeps after the one it was fighting, or the player if it knows about them. `e.distP` and `e.seeLos` are measured to the foe (behaviours and attacks read them, so every core behaviour and attack fights whatever the foe is); `e.pDist` and `e.pSee` are always the player's (whether the player can see the enemy, for drawing). A foe that isn't the player is chased straight when visible and otherwise by a short search (`LM.nav.step(level, x, y, toX, toY, maxTiles)`, wrapped as `LM.ai.goTo(e, game, x, y, weight)`).
 
 ### Damage
 
 `LM.combat.hurt(game, target, amount, opts)` handles all three target kinds. For the player: invulnerability check, shield absorbs first, then armor reduces the rest, then knockback, shake and hit-stop. For enemies: armor reduces damage (the enemy's own `e.armor` if it has one, else its def's; statuses can make it take more), knockback is divided by mass, a damage number floats up, `def.onHurt(e, game, dmg, opts)` hears it, death drops loot. Destructible items lose hit points and break. `opts.status` (an id, or `{ id, seconds }`) puts a status on the target when the hit lands (section 6.17); a status ticking (`opts.type: 'status'`) hurts the player without the screen kick or the short invulnerability a hit gives.
 
-Explosions damage everything in radius that has a clear line from the centre. The player's own blasts hurt them at 35%. Enemy blasts do not hurt other enemies; barrel blasts hurt everyone.
+Explosions damage everything in radius that has a clear line from the centre. The player's own blasts hurt them at 35%, and don't hurt enemies on the player's side. An enemy's blast hurts what its faction fights (only the player, with the default table); barrel blasts hurt everyone. Projectiles and blasts from an enemy carry `faction` and `by` (the enemy), so a hit can be traced back: `opts.by` makes the target turn on its attacker, and a kill by another enemy doesn't count toward the floor's kills.
 
 ### People, conversations and story
 
@@ -342,6 +346,8 @@ Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `
 | `armor`, `mass` | Damage reduction 0–1; knockback divisor. |
 | `accel`, `turn` | Steering responsiveness. |
 | `sight`, `leash` | Notice distance; give-up distance. |
+| `view: { range, cone }` | A cone ahead of it (half-angle `cone`, radians) it also sees into, out to `range`; with factions it finds foes in it too. |
+| `faction` | Its side (section 6.20; default `'monster'`). A placed one can change it in `props.faction`. |
 | `ai`, `keep: [min, max]` | Behaviour id; preferred distance for ranged behaviours. |
 | `attacks: [{ type, ...params }]` | Tried in order when off cooldown. |
 | `drops` | `{ gold: [min, max], goldChance, items: [{ id, chance, props }] }` or a loot table id. |
@@ -353,7 +359,7 @@ Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `
 | `init`, `update`, `onDeath` | Hooks `(e, game)` / `(e, dt, game)`. |
 | `onHurt(e, game, dmg, opts)` | Every hit that lands, after damage (before death). A behaviour can set `e.armor` (a number, even negative) to change the enemy's damage reduction as it fights: shields up, a weak spot showing. |
 
-Core behaviours: `chaser`, `swarmer`, `skirmisher`, `lobber`, `turret`, `warden`, `boss`. A behaviour is `{ update(e, dt, game) }` that adds to `e.mx`, `e.my` and may scale `e.speedMul`. Helpers: `LM.ai.chase`, `away`, `strafe`, `wander`, `separate`, `avoidHazards`.
+Core behaviours: `chaser`, `swarmer`, `skirmisher`, `lobber`, `turret`, `warden`, `boss`. A behaviour is `{ update(e, dt, game) }` that adds to `e.mx`, `e.my` and may scale `e.speedMul`. Helpers: `LM.ai.chase`, `away`, `strafe` (all toward or around the foe), `goTo` (a point, the long way round if need be), `wander`, `separate`, `avoidHazards`, `foe` (who it's after), `hostilesNear(e, game, x, y, R)` (everything its blast would hurt).
 
 Core attacks and their parameters:
 
@@ -366,7 +372,7 @@ Core attacks and their parameters:
 | `charge` | `damage`, `speed`, `duration`, `windup`, `cooldown`, `minRange`, `maxRange`, `stun` |
 | `summon` | `enemy`, `count`, `max`, `windup`, `cooldown` |
 
-Every core attack also takes `status`: what the hit puts on the player (`{ type: 'melee', damage: 8, status: 'sedated' }`).
+Every core attack also takes `status`: what the hit puts on its target (`{ type: 'melee', damage: 8, status: 'sedated' }`). Every core attack goes for the foe (the player, without factions); `nova` hurts everything its faction fights inside the ring. A melee swipe or a charge only lands with a clear way between the two (not through glass).
 
 An attack type is `{ canStart(e, a, game), start?(e, atk, game), update(e, atk, dt, game), drawGlow?(g, e, atk, t, game) }`. `atk.t` counts up from 0; set `atk.done = true` to finish.
 
@@ -466,7 +472,7 @@ Map rows may differ in length (short rows are padded with void). Unknown charact
 | Effect `type` | Parameters |
 |---|---|
 | `darts` | `tag` (dart-emitter items), `volleys`, `interval`, `damage`, `speed` |
-| `spawn` | `tag` (floor tiles), `enemy` or `enemies[]`, `count` |
+| `spawn` | `tag` (floor tiles), `enemy` or `enemies[]`, `count`, `faction` (section 6.20) |
 | `seal` / `unseal` / `open` | `tag` (doors), `text` |
 | `alarm` | `radius`, `text` |
 | `lights` | `tag` (light sources), `on`, `text` |
@@ -479,10 +485,22 @@ Map rows may differ in length (short rows are padded with void). Unknown charact
 | `flicker` | `tag` or `radius`, `time`, `strength`: make lights stutter for a while |
 | `phone` (The Linear Maze's Office pack) | `thread`, `text`, `replies`: deliver a phone message (`games/linear-maze/SPEC.md`, section 6.13) |
 | `transmission` (the engine's) | `who` (a speaker), `text`, `glitch`, `seconds`, `flag`: someone speaks over the intercom (section 6.16) |
+| `faction` | `tag` or `enemy`, `faction`: put those enemies on another side (section 6.20) |
+| `branch` | `any` (flags; at least `min` of them, default 1), `all`, `not`, `then`, `else`: if the story flags agree, run the effects listed in `then`, otherwise those in `else`. The lists hold ordinary effects, each with its own `delay`, and can hold more branches. |
 
 The trap effects are registry content (`effects`): `{ run(game, ef, trap), params }`, where `trap.spawned` and `trap.sealed` are what the trap has spawned and sealed. `params` (`{ name: 'number' | 'text' | 'longtext' | 'bool' | 'color' | 'tag' | 'id:<kind>' | 'stringlist' | [options] }`) tells the editor what settings to offer for an effect it doesn't know.
 
 Every effect also accepts `delay`. A `seal` lasts until everything the same trap spawned is dead. Doors can start sealed with `props: { sealed: true }` in the legend.
+
+A conversation that depends on what the player has done is a `branch`. Dead Signal's Director, on the stairs out of Floor 3, makes one of four speeches, by what the player has read and seen:
+
+```js
+{ trigger: { type: 'zone', tag: 'stairBLanding' }, effects: [
+  { type: 'branch', any: ['fileColony'], then: [ /* transmissions */ ], else: [
+    { type: 'branch', any: ['fileMidwife', 'fileTenant', 'fileLantern'], min: 2, then: [ /* ... */ ], else: [ /* ... */ ] },
+  ] },
+] }
+```
 
 A sequence is a `flag` trap with delayed effects. The Linear Maze's prologue door is one trap: when `readNote` is set it sends a text at 3 s, flickers every light at 10 s, shakes the floor at 10.4 s, turns the tagged wall tile into `door-odd` and sets `doorAppeared` at 10.6 s, and texts "West hall." at 14 s.
 
@@ -640,7 +658,7 @@ statuses: {
 | Field | Meaning |
 |---|---|
 | `name` | The HUD chip (the player's statuses show under the health bar, with the time left). |
-| `seconds` | How long it lasts, unless whatever put it on says otherwise. Putting it on again refreshes it. |
+| `seconds` | How long it lasts, unless whatever put it on says otherwise. Putting it on again refreshes it (unless it stacks). |
 | `speedMul` | Movement multiplier while it lasts (several multiply). |
 | `dps`, `interval` | Damage a second, dealt in ticks every `interval` seconds (0.5). |
 | `stun` | An enemy can't move or attack while it lasts. |
@@ -649,9 +667,19 @@ statuses: {
 | `only` | Who it can land on: `'player'`, `'robot'` (enemies with `robot: true`) or `'monster'` (the rest). |
 | `cures` | Statuses it ends when it lands. |
 | `hud: false` | No chip. |
-| `onApply(game, target, s)`, `onEnd(game, target, s)` | Hooks. |
+| `countdown`, `urgent` | The chip shows the seconds left (`1:28`); from `urgent` seconds left it pulses. |
+| `stack`, `refresh` | Putting it on again adds one (as `s.n`, up to `stack`) instead of more time, and `dps` counts once per stack; with `refresh` it also restarts the clock. |
+| `keep` | The player carries it up and down the stairs (it is saved with them). |
+| `onApply(game, target, s)`, `update(game, target, s, dt)`, `onEnd(game, target, s, reason)` | Hooks: when it lands, every frame while it lasts, and when it ends (`reason`: `'expired'` when it ran out, `'cleared'` when something ended it). |
 
-Anything that hurts can carry one as `status` (an id or `{ id, seconds }`): a weapon, a projectile, any core attack, `LM.combat.explode`, `LM.combat.hurt`'s options. Code can call `LM.status.apply(game, target, 'chilled', { seconds: 3 })`, `LM.status.has(target, id)`, `LM.status.clear(game, target, id)`. Armor `resist` and an enemy's `resist` keep a status off (1) or shorten it. Statuses aren't saved: a new floor starts without them.
+A long one, for example: a clutch of eggs that hatches unless it's flushed in time.
+
+```js
+implanted: { name: 'Implanted', seconds: 90, countdown: true, urgent: 20, stack: 4, keep: true, only: 'player',
+  onEnd(game, P, s, reason) { if (reason === 'expired') hatch(game, P, s.n); } },
+```
+
+Anything that hurts can carry one as `status` (an id or `{ id, seconds }`): a weapon, a projectile, any core attack, `LM.combat.explode`, `LM.combat.hurt`'s options. Code can call `LM.status.apply(game, target, 'chilled', { seconds: 3 })`, `LM.status.has(target, id)`, `LM.status.clear(game, target, id)`. Armor `resist` and an enemy's `resist` keep a status off (1) or shorten it. Only `keep` statuses are saved (`LM.status.save` / `load`, with the player); a new floor starts without the rest.
 
 ### 6.18 Ammunition
 
@@ -674,6 +702,37 @@ game.hasKeyItem('override');   game.takeKeyItem('override');
 ```
 
 `flag` also sets a story flag (doors, stairs and traps read flags, so a clearance door opens for the card). Giving one the player already has does nothing.
+
+### 6.20 Factions
+
+Who fights whom (`LM.factions`, in `engine/core.js`). Every enemy has a side, `e.faction`: `props.faction` where it's placed, else its def's `faction`, else `'monster'`. The player's is `'player'`. The table lists, for each side, the sides it attacks; `'*'` is every other side.
+
+```js
+LM.factions.base   // the game's table; by default { player: ['*'], monster: ['player'] }
+```
+
+With the default table, monsters attack only the player and the player's shots hit every enemy: a game that never mentions factions plays exactly as before. A pack adds rows with `factions` (as Dead Signal does):
+
+```js
+LM.definePack({ id: 'ds-robots', factions: {
+  player: ['monster', 'robot'],          // your shots go through anything else (allies)
+  monster: ['player', 'ally'],
+  robot: ['player', 'ally'],
+  ally: ['monster', 'robot'],            // on your side: fights them, never you
+} });
+```
+
+A level's own `factions` lays rows over the game's while that floor is played (Dead Signal's Floor 3: `{ robot: ['player', 'monster', 'ally'], monster: ['player', 'robot', 'ally'] }`, where the robots and the specimens are at war). A side with an empty row (`specimen: []`) fights nobody, and nobody fights it unless their row names it: a monster in a cell, a robot with no power.
+
+What it changes: who an enemy looks for (section 5, *Enemy AI*); what an enemy's shots and blasts hit (an enemy shot with no faction hits only the player, as always); what the player's shots hit (they pass through enemies the player's row doesn't name); who wakes whom (an enemy wakes friends of its own side). Allies show green on the map and have green health bars; whatever else marks them (Dead Signal's robots: a green visor and a blue ring) is the pack's drawing.
+
+| Call | What it does |
+|---|---|
+| `LM.factions.hostile(a, b)` (also `LM.isHostile`) | Does side `a` attack side `b`? |
+| `LM.factions.use(levelRows)` | Rebuild the table: the game's, with these rows laid over (the engine calls it as a floor loads). |
+| `game.setFaction(sel, faction)` | Put enemies on another side: `sel` is a tag, an enemy id, or a test `(e) => bool`. They forget who they were fighting and look again; the floor remembers the change. Returns how many changed. |
+| trap effect `faction` | `{ tag \| enemy, faction }`: the same, from a trap (a cell's glass breaks: its specimen joins the monsters). |
+| trap effect `spawn`'s `faction` | What side the spawned enemies are on. |
 
 ---
 
@@ -723,13 +782,14 @@ game.hasKeyItem('override');   game.takeKeyItem('override');
 
 - Keyboard and mouse only. No gamepad, no touch controls, no key rebinding.
 - Moving lights (muzzle flashes, explosions, glowing projectiles) do not cast shadows; only static lights do.
-- Enemies don't take cover, flank, or hear gunfire beyond the alarm effect and waking nearby friends.
+- Enemies don't take cover, flank, or hear gunfire beyond the alarm effect and waking nearby friends (packs add hearing of their own).
+- An enemy after another enemy finds its way with a search out to 40 tiles; beyond that it waits. The flow field is the player's alone. Body size isn't part of navigation: a big enemy will try a door it can't fit through (and wait there).
 - No reloading, no dropping or selling weapons, no way to remove gear except swapping or taking it off into the pack.
 - One checkpoint per game, stored in the browser (written as you arrive on each floor, with every floor's memory).
 - A floor's memory keeps plain data only: state a pack keeps in a `Set`, a class instance or a closure is reset when you come back, and timers and things in flight are dropped when you leave.
 - Elevators are straight shafts on one plan: a floor can shift every elevator together, but not one on its own, and there are no stairs between floors other than each floor's own `<` and `>`.
 - Sound is synthesised placeholder effects plus a drone; there is no music.
-- Statuses aren't saved with the run, and area hazards (a cloud of gas, a pool of fire) are still a pack's own business: an item that puts a status on whoever stands near it.
+- Only statuses marked `keep` are saved with the run, and area hazards (a cloud of gas, a pool of fire) are still a pack's own business: an item that puts a status on whoever stands near it.
 - Levels are ASCII maps, typed by hand or painted in the editor. There is no procedural generation yet.
 - Fonts load from Google Fonts; offline, system fonts are used. A title screen can name another font, but it only shows on computers that have it.
 - NPCs don't pathfind: wanderers pick visible spots near home and pacers walk a straight line. Nobody follows the player.

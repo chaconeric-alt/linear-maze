@@ -311,7 +311,21 @@
       };
       if (dashed) out.push({ level: 'info', text: 'Getting around needs a dash over pits somewhere.' });
       if (exits.length && !exits.some(near)) out.push({ level: 'bad', text: 'The exit can’t be reached from the start' + (keys.size ? ' (even with the ' + [...keys].join(', ') + ' key)' : '') + '.', i: exits[0] });
-      const unreached = thingAt.filter(([i, t]) => !near(i) && !(t.kind === 'items' && ['wall-torch', 'dart-emitter', 'beam-emitter'].includes(t.id)));
+      // what doesn't need reaching: lights and emitters, pure decoration (nothing to use or pick up), and
+      // enemies on a side nobody fights (a specimen in its cell, a robot with no power)
+      const LMx = ED.engine.LM;
+      const skip = (t) => {
+        if (t.kind === 'items' && ['wall-torch', 'dart-emitter', 'beam-emitter'].includes(t.id)) return true;
+        const d = LMx.find(t.kind, t.id);
+        if (t.kind === 'items' && d && !d.interact && !d.onTouch && !d.destructible) return true;
+        if (t.kind === 'enemies' && LMx.factions) {
+          const f = (t.props && t.props.faction) || (d && d.faction);
+          const row = f && LMx.factions.base[f];
+          if (row && row.length === 0) return true;
+        }
+        return false;
+      };
+      const unreached = thingAt.filter(([i, t]) => !near(i) && !skip(t));
       const sealedDoors = [];
       for (let i = 0; i < W * H; i++) if (td(i).door && td(i).door.sealed) sealedDoors.push(i);
       if (unreached.length) out.push({ level: 'warn', text: ED.plural(unreached.length, 'thing') + ' can’t be reached on foot' + (sealedDoors.length ? ' (some may be behind doors opened by the story)' : '') + '.', i: unreached[0][0] });

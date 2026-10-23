@@ -99,8 +99,10 @@
   };
 
   // ======================================================== attacks
+  // every attack goes for the enemy's foe (AI.foe: the player, unless the game's factions say otherwise),
+  // and says who struck (by) so its target can turn on it
   function towardPlayer(e, game, lead, speed) {
-    const P = game.player;
+    const P = AI.foe(e, game);
     let tx = P.x, ty = P.y;
     if (lead && speed) {
       const tt = U.dist(e.x, e.y, P.x, P.y) / speed;
@@ -111,12 +113,13 @@
   }
   const attacks = {
     melee: {
-      canStart: (e, a, game) => e.seeLos && e.distP <= (a.range || 14) + e.r + game.player.r + 4,
+      canStart: (e, a, game) => e.seeLos && e.distP <= (a.range || 14) + e.r + AI.foe(e, game).r + 4,
       start(e, atk) {
         atk.dir = 0;
       },
       update(e, atk, dt, game) {
-        const a = atk.def, P = game.player;
+        const a = atk.def, P = AI.foe(e, game);
+        if (!P) return (atk.done = true);
         const wind = a.windup || 0.25;
         e.speedMul *= atk.t < wind ? 0.25 : 0.6;
         if (!atk.struck && atk.t >= wind) {
@@ -127,7 +130,8 @@
           const ang = Math.atan2(P.y - e.y, P.x - e.x);
           e.kvx += Math.cos(ang) * 90;
           e.kvy += Math.sin(ang) * 90;
-          if (d <= reach && !P.dead) LM.combat.hurt(game, P, a.damage || 10, { kx: Math.cos(ang) * (a.knock || 120), ky: Math.sin(ang) * (a.knock || 120), source: 'enemy', type: 'melee', status: a.status });
+          // (not through glass or a wall: a swipe needs the way clear)
+          if (d <= reach && !P.dead && LM.physics.los(game.level, e.x, e.y, P.x, P.y, 'shot')) LM.combat.hurt(game, P, a.damage || 10, { kx: Math.cos(ang) * (a.knock || 120), ky: Math.sin(ang) * (a.knock || 120), source: 'enemy', type: 'melee', status: a.status, by: e });
         }
         atk.lunge = atk.t < wind ? atk.t / wind : Math.max(0, 1 - (atk.t - wind) / 0.15);
         if (atk.t >= wind + (a.recover || 0.3)) atk.done = true;
@@ -141,6 +145,7 @@
       update(e, atk, dt, game) {
         const a = atk.def;
         const wind = a.windup || 0.3;
+        if (!AI.foe(e, game)) return (atk.done = true);
         e.speedMul *= a.moveWhileFiring == null ? 0.35 : a.moveWhileFiring;
         const burst = a.burst || 1, gap = a.burstGap || 0.1;
         atk.fired = atk.fired || 0;
@@ -150,7 +155,7 @@
           const ang = base + fan + U.rand(-(a.spread || 0.05), a.spread || 0.05);
           LM.combat.shoot(game, {
             type: a.projectile || 'enemy-bolt', x: e.x + Math.cos(ang) * (e.r + 4), y: e.y + Math.sin(ang) * (e.r + 4), angle: ang,
-            speed: a.speed || 340, owner: 'enemy', damage: a.damage || 8, range: (a.range || 400) + 200, knock: 40, status: a.status,
+            speed: a.speed || 340, owner: 'enemy', damage: a.damage || 8, range: (a.range || 400) + 200, knock: 40, status: a.status, by: e, faction: e.faction,
           });
           game.lights.push({ x: e.x + Math.cos(ang) * (e.r + 4), y: e.y + Math.sin(ang) * (e.r + 4), r: 70, color: a.flash || '#ff8a4a', intensity: 0.7, life: 0.06, max: 0.06 });
           LM.audio.play('enemyShot', { vol: game.vol(e.x, e.y) });
@@ -169,19 +174,20 @@
     lob: {
       canStart: (e, a, game) => (e.seeLos || a.indirect) && e.distP >= (a.minRange || 100) && e.distP <= (a.maxRange || 460),
       update(e, atk, dt, game) {
-        const a = atk.def, P = game.player;
+        const a = atk.def, P = AI.foe(e, game);
+        if (!P) return (atk.done = true);
         e.speedMul *= 0.2;
         const wind = a.windup || 0.5;
         if (!atk.fired && atk.t >= wind) {
           atk.fired = true;
           const flight = a.flight || 1;
-          let tx = P.x + P.vx * flight * 0.5, ty = P.y + P.vy * flight * 0.5;
+          let tx = P.x + (P.vx || 0) * flight * 0.5, ty = P.y + (P.vy || 0) * flight * 0.5;
           // keep the target on open floor near the player
           if (game.level.solidAt(Math.floor(tx / T), Math.floor(ty / T))) {
             tx = P.x;
             ty = P.y;
           }
-          game.fx.push(new LM.Lob({ x: e.x, y: e.y, tx, ty, flight, radius: a.radius || 60, damage: a.damage || 25, owner: 'enemy', color: a.color || '#ff9a4a', arc: 80, status: a.status }));
+          game.fx.push(new LM.Lob({ x: e.x, y: e.y, tx, ty, flight, radius: a.radius || 60, damage: a.damage || 25, owner: 'enemy', color: a.color || '#ff9a4a', arc: 80, status: a.status, by: e, faction: e.faction }));
           LM.audio.play('launcher', { vol: game.vol(e.x, e.y) * 0.8 });
           game.particles.add({ type: 'smoke', x: e.x, y: e.y - 6, vy: -20, life: 0.8, size: 4, color: '#3a3330', alpha: 0.5 });
         }
@@ -198,7 +204,7 @@
         LM.audio.play('warn');
       },
       update(e, atk, dt, game) {
-        const a = atk.def, P = game.player;
+        const a = atk.def;
         const wind = a.windup || 0.8;
         e.speedMul = 0;
         atk.shake = atk.t < wind ? (atk.t / wind) * 1.5 : 0;
@@ -211,15 +217,16 @@
           game.particles.burst(e.x, e.y, 24, { type: 'spark', color: a.color || '#f2c96b', speed: 380, life: 0.4, size: 1.2 });
           game.lights.push({ x: e.x, y: e.y, r: R * 2.2, color: a.color || '#f2c96b', intensity: 0.9, life: 0.35, max: 0.35 });
           game.addShake(0.25);
-          const d = U.dist(e.x, e.y, P.x, P.y);
-          if (d < R + P.r && LM.physics.los(game.level, e.x, e.y, P.x, P.y, 'shot')) {
+          // everything it fights inside the ring (the player, with the default factions)
+          for (const { t: P } of AI.hostilesNear(e, game, e.x, e.y, R)) {
+            if (!LM.physics.los(game.level, e.x, e.y, P.x, P.y, 'shot')) continue;
             const ang = Math.atan2(P.y - e.y, P.x - e.x);
-            LM.combat.hurt(game, P, a.damage || 20, { kx: Math.cos(ang) * 220, ky: Math.sin(ang) * 220, source: 'enemy', type: 'blast', status: a.status });
+            LM.combat.hurt(game, P, a.damage || 20, { kx: Math.cos(ang) * 220, ky: Math.sin(ang) * 220, source: 'enemy', type: 'blast', status: a.status, by: e });
           }
           if (a.shards) {
             for (let i = 0; i < a.shards; i++) {
               const ang = (i / a.shards) * U.TAU + e.t;
-              LM.combat.shoot(game, { type: 'warden-shard', x: e.x, y: e.y, angle: ang, speed: 230, owner: 'enemy', damage: a.shardDamage || 7, range: 420, knock: 30 });
+              LM.combat.shoot(game, { type: 'warden-shard', x: e.x, y: e.y, angle: ang, speed: 230, owner: 'enemy', damage: a.shardDamage || 7, range: 420, knock: 30, by: e, faction: e.faction });
             }
           }
         }
@@ -246,8 +253,9 @@
         LM.audio.play('charge');
       },
       update(e, atk, dt, game) {
-        const a = atk.def, P = game.player;
+        const a = atk.def, P = AI.foe(e, game);
         const wind = a.windup || 0.55;
+        if (!P && atk.t < wind) return (atk.done = true);
         if (atk.t < wind) {
           e.speedMul = 0;
           atk.shake = (atk.t / wind) * 2;
@@ -263,9 +271,9 @@
         e.vx = e.mx * (a.speed || 430);
         e.vy = e.my * (a.speed || 430);
         if (Math.random() < 0.6) game.particles.add({ type: 'smoke', x: e.x, y: e.y + e.r * 0.5, life: 0.5, size: 3, color: '#6a6058', alpha: 0.35 });
-        if (!atk.hit && U.dist(e.x, e.y, P.x, P.y) < e.r + P.r + 4) {
+        if (!atk.hit && P && !P.dead && U.dist(e.x, e.y, P.x, P.y) < e.r + P.r + 4 && LM.physics.los(game.level, e.x, e.y, P.x, P.y, 'shot')) {
           atk.hit = true;
-          LM.combat.hurt(game, P, a.damage || 25, { kx: Math.cos(atk.dir) * 340, ky: Math.sin(atk.dir) * 340, source: 'enemy', type: 'melee', status: a.status });
+          LM.combat.hurt(game, P, a.damage || 25, { kx: Math.cos(atk.dir) * 340, ky: Math.sin(atk.dir) * 340, source: 'enemy', type: 'melee', status: a.status, by: e });
           atk.t = Math.max(atk.t, wind + (a.duration || 0.6));
         }
         if (e.hitWall && atk.t > wind + 0.05) {
@@ -306,7 +314,7 @@
             const ang = Math.random() * U.TAU;
             const x = e.x + Math.cos(ang) * (e.r + 18), y = e.y + Math.sin(ang) * (e.r + 18);
             if (game.level.solidAt(Math.floor(x / T), Math.floor(y / T))) continue;
-            const s = game.spawnEnemy(a.enemy || 'skitter', x, y, { summoned: true, aggro: true });
+            const s = game.spawnEnemy(a.enemy || 'skitter', x, y, e.faction !== 'monster' ? { summoned: true, aggro: true, faction: e.faction } : { summoned: true, aggro: true });
             if (s) s.summoner = e;
           }
           LM.audio.play('warn');

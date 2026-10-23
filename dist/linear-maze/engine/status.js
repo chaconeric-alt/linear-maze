@@ -12,7 +12,12 @@
  * a second, in ticks of `interval` seconds, default 0.5), stun (an enemy can't act while it lasts),
  * vulnerable (+ fraction of damage taken: 0.2 = 20% more), color (the chip, and a glow under an enemy),
  * only ('player' | 'robot' | 'monster': who it can land on; robots are enemies with `robot: true`),
- * cures (statuses it ends when it lands), hud: false (no chip), onApply(game, target, s), onEnd(game, target, s).
+ * cures (statuses it ends when it lands), hud: false (no chip), onApply(game, target, s),
+ * onEnd(game, target, s, reason) (reason 'expired' when it ran out, 'cleared' when something ended it),
+ * update(game, target, s, dt) (every frame while it lasts).
+ * Long ones: countdown: true (the chip shows the seconds left), urgent: seconds (the chip pulses from then
+ * on), stack: n (applying it again adds one, up to n, as s.n, instead of more time, and its dps counts
+ * once per stack; refresh: true also restarts the clock), keep: true (the player carries it up and down the stairs: saved with them).
  *
  * Applying one: anything that hurts can carry `status` — a weapon, a projectile, an enemy attack, an
  * explosion, a trap — as an id or { id, seconds }. LM.combat.hurt applies it when the hit lands.
@@ -71,11 +76,14 @@
     const list = S.list(target);
     for (const c of d.cures || []) S.clear(game, target, c);
     let s = list.find((x) => x.id === id);
-    if (s) {
+    if (s && d.stack) {
+      s.n = Math.min(s.n + 1, d.stack === true ? 99 : d.stack);
+      if (d.refresh) s.t = s.max = secs;
+    } else if (s) {
       s.t = Math.max(s.t, secs);
       s.max = Math.max(s.max, s.t);
     } else {
-      s = { id, def: d, t: secs, max: secs, tick: 0 };
+      s = { id, def: d, t: secs, max: secs, tick: 0, n: 1 };
       list.push(s);
       if (d.onApply) d.onApply(game, target, s);
     }
@@ -89,7 +97,16 @@
     const gone = target.statuses.filter((s) => !id || s.id === id);
     if (!gone.length) return;
     target.statuses = target.statuses.filter((s) => !(!id || s.id === id));
-    for (const s of gone) if (s.def.onEnd) s.def.onEnd(game, target, s);
+    for (const s of gone) if (s.def.onEnd) s.def.onEnd(game, target, s, 'cleared');
+  };
+  /** The player's statuses worth carrying to the next floor (def.keep), as plain data. */
+  S.save = (target) => (target.statuses || []).filter((s) => s.def.keep && s.t > 0).map((s) => ({ id: s.id, t: +s.t.toFixed(2), max: s.max, n: s.n || 1 }));
+  S.load = function (target, list) {
+    target.statuses = [];
+    for (const o of list || []) {
+      const d = def(o.id);
+      if (d && o.t > 0) target.statuses.push({ id: o.id, def: d, t: o.t, max: o.max || o.t, tick: 0, n: o.n || 1 });
+    }
   };
   /** Movement multiplier from everything the target has (1 when nothing slows it). */
   S.speedMul = function (target) {
@@ -119,7 +136,7 @@
         s.tick += dt;
         while (s.tick >= every && !target.dead) {
           s.tick -= every;
-          const dmg = d.dps * every;
+          const dmg = d.dps * every * (d.stack ? s.n || 1 : 1); // a stacking status hurts once per stack
           if (target.isPlayer) {
             // a status ticks through the short invulnerability a hit gives, and doesn't give any itself
             const saved = target.invuln;
@@ -130,11 +147,12 @@
         }
       }
       if (d.stun && target.isEnemy && s.t > 0) target.stunned = Math.max(target.stunned || 0, Math.min(s.t, 0.2));
+      if (d.update && s.t > 0 && !target.dead) d.update(game, target, s, dt);
       if (s.t <= 0) (ended || (ended = [])).push(s);
     }
     if (ended) {
       target.statuses = list.filter((s) => s.t > 0);
-      for (const s of ended) if (s.def.onEnd) s.def.onEnd(game, target, s);
+      for (const s of ended) if (s.def.onEnd) s.def.onEnd(game, target, s, 'expired');
     }
   };
 

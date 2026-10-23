@@ -1,6 +1,6 @@
 # Dead Signal — design and build plan
 
-Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.3)
+Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.4)
 
 This file is the plan for building Dead Signal into a whole game: the story, the building, six maps (five floors and a basement) chapter by chapter, the monsters, robots, traps, puzzles, weapons, items and dressings on each, and the engine and pack code the game needs that the engine doesn't have yet. It is written to be handed to Claude a milestone at a time (section 11 has a prompt for each), together with the workspace, `engine/SPEC.md` and this file.
 
@@ -24,6 +24,17 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
 - The Sterile Annex leaves the run's middle: the order is Floor 1, Floor 2, then *The Dead Signal Laboratory* and *The Complex* as placeholders for Floors 3 and 4, and the Annex last.
 - Next: milestone M3 (factions, statuses for monsters and hazards, Floor 3).
 
+**Milestone M3 is built** (engine 0.5.4): Floor 3, *Gestation* (`packs/ds-story/levels/f3-gestation.js`), redesigned from the vat-hall-and-dream-lab plan (section 4.3 is the floor as built). Where M3 differs from the plan:
+- Floor 3 is a ring of corridor round the vat hall, with restricted labs off it, each with its own specimen, most in containment and some not: Lab 3-A (the Midwife, which lays eggs in you), 3-B (Tenants, which ride the dead), 3-D (Flesh Lanterns, in the dark), 3-E (juvenile Congregations in pens), Cell S-41 (empty; transferred to Five). The partners' briefing suite sells it all as "macroscopic synthids". Voss wants you across the lobby and up Stair B without looking; Stair B wants Level 3 clearance, so you end up looking.
+- Factions (E5) are in the engine (section 8.2): on this floor the robots in defence mode and the specimens fight each other, and ARIADNE's Orderlies fight both, on your side (a green visor and a blue ring). A relay on the floor gives them their orders; powering it wakes three more.
+- The way up is **Stair B** (the east stairwell): Stair A's flight up is filled with biocontainment foam. Floor 4 should start at its east stairwell.
+- The Sitter is built as the plan's opposite: not fast and unseen, but slow, enormous and all but bulletproof (95% damage reduction), too big for a door, heard walking long before it's seen. Two of them: one in the vat hall, one walking the ring. `unseen` (E9) is still to build, for something else.
+- New statuses: `implanted` (a 90-second countdown that hatches Nursery Grubs out of you unless a purge station or a purge injector flushes it; it follows you up the stairs) and `infected` (stacking damage over time). Status countdowns, stacking and `keep` are engine features now.
+- New: the Plasma Cutter (cells, a short burning arc) is in the pump room, not a vault; there's no dream lab, fuse, vault keypad or Neural Visor on this floor. The dreamers are named on the specimen files instead (Brandt, Pell, Thale, Moss; Voss's Specimen 41 is upstairs), and the vat hall's intake terminal lists all five.
+- Mother of Teeth, the Weeping Choir, Kneelers, the Grief Engine and the Surgical Arm are not on Floor 3; they can go to Floor 4 or the descent.
+- On the stairs, Voss makes his case, and what he says depends on what you've read and seen (a `branch` trap effect: four versions, from "You didn't look. Good man." to admitting he signed the Shelter B trial). The stairs wait until he's finished.
+- Next: milestone M4 (Floor 4).
+
 ---
 
 ## Contents
@@ -34,7 +45,7 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
 4. Chapters
    - 4.1 Floor 1 — Lockdown (lobby and administration)
    - 4.2 Floor 2 — Synthid Research (the labs, the Discovery Center, Shelter B)
-   - 4.3 Floor 3 — Gestation (growth vats and the dream lab)
+   - 4.3 Floor 3 — Gestation (the containment ring, the vat hall and the labs)
    - 4.4 Floor 4 — Proving Grounds (robotics and trials)
    - 4.5 Floor 5 — The Penthouse (the executive floor)
    - 4.6 The descent (floors 4 to 1, the second time)
@@ -331,53 +342,60 @@ Each chapter lists its rooms (with suggested sizes in tiles), robots, monsters, 
 
 ---
 
-### 4.3 Floor 3 — Gestation (growth vats and the dream lab)
+### 4.3 Floor 3 — Gestation (the containment ring, the vat hall and the labs)
 
-**Purpose.** The horror floor. Darkness, the Sitter, the first sight of how the monsters are made. The dream lab is where the player learns the monsters are the board's nightmares.
+*Built in milestone M3 (`packs/ds-story/levels/f3-gestation.js`, generated from a layout script and meant to be tuned in the editor). This replaces the earlier plan for a vat hall, a nursery and a dream lab; what's left of it is listed at the end.*
 
-**Mood.** Wet. Green-black, amniotic. Growth vats glow from inside. The floor is grated over drainage; things move under it. Lights fail in sections. Sounds: heartbeats from the vats, a lullaby from somewhere.
+**Purpose.** The horror floor, and the first proof that the monsters are a product. Every lab has its own specimen; most are behind glass and some are not. Their files say what they do and whose dream they were grown from. The Director wants you to see none of it.
+
+**Mood.** Wet and green-black (`ds-wetlab`): wet tile corridors, poured-resin labs, the vat hall's grating over drainage. The growth vats are the brightest things on the floor. Ceiling lights have failed in sections; Lab 3-D is dark but for what lives in it. Everything hunts out loud: wet clicking (the Midwife), chittering (Tenants), a voice with nobody behind it (the Ridden), a soft choir (Lanterns), footsteps that shake the floor and a hummed lullaby (the Sitters), murmuring (the colonies). The PA tells staff to go straight to Stair B and to be careful what they look at. Yellow arrows painted on the floor mark the staff route.
+
+**The route**
+1. **Stair A.** You arrive on the landing; the flight up is filled with biocontainment foam. Voss: "Three. Gestation. Brandt's floor… Cross the lobby to Stair B. Straight across. Don't stop. And be careful what you look at."
+2. **The lobby and Stair B's door.** The door wants Level 3 clearance. Voss: Brandt keeps a spare card in her office, on the south side; take the east corridor and keep to it, and don't go into the labs (`toBrandt`).
+3. **Round the ring** (the east corridor, then the south). The labs' windows and doors are on the way; a Sentinel and a Ridden are fighting at the north-east corner; a Sitter walks the ring.
+4. **Dr. Brandt's office.** The spare's drawer is empty: "took the spare — P." Her terminal: Okafor signed it out at 02:16, and his card has been read at Lab 3-B's door every thirty-one minutes all night, "inside → inside" (`knowsOkafor`). Voss: perhaps he's alive; go and get it. ARIADNE: `HE IS NOT ALIVE`.
+5. **Lab 3-B, Neural Tenancy.** Okafor is walking about his lab, ridden by a Tenant. Put him down and his card drops (`clearance3`), and the Tenant crawls out of him. Voss: "That's the card. Now come back to Stair B. No detours." ARIADNE: `READ THEIR NAMES FIRST`.
+6. **Stair B.** On the landing, Voss makes his case (below). The stairs up wait until he has finished (`vossDone`).
+
+Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line as you go in ("Theo. That's not the way to the stairs."; "It's dark in there for a reason. Leave it dark."; "That's the mainframe's relay. Don't touch it."…).
 
 **Rooms**
 
-| Room | Size | What's there |
+| Room | Where | What's there |
 |---|---|---|
-| Stair landing | 8 × 6 | A barricade someone built and didn't finish. |
-| Vat Hall | 30 × 12 | Two rows of growth vats (tall glass cylinders with shapes inside). Some are empty and broken. Drainage grates, flooded in the middle. |
-| The Nursery | 14 × 12 | Cribs. Mobiles. Motion-activated lights. The Sitter. |
-| Oneirography Suite (the dream lab) | 18 × 12 | Four sleep pods with headsets, a recording console, a wall of design sheets ("Specimen 41 — source: A. Voss, REM 4"). Puzzle 2. |
-| The Vault | 6 × 6 | Behind the dream lab: the Neural Visor, the Plasma Cutter, design sheet originals. |
-| Failed Forms | 12 × 8 | A gallery of preserved failures in jars and tanks. Readables. |
-| Surgical Theatre | 10 × 10 | Operating table, surgical lights, a Surgical Arm, a viewing window. |
-| Pump Room | 8 × 8 | The junction box for the Vat Hall's power (puzzle 3). |
-| Staff Quarters | 10 × 8 | Bunks, lockers, the vet tech's diary, a trauma kit. |
+| Stair A | x 23–27, y 1–8 | `<` back down; `>` behind a wall of foam (it opens for `master`, on the descent). |
+| Partner Briefing Suite | x 1–21, y 1–8 | Bright and clean. A presentation on a loop ("Macroscopic Synthids: living machines at the scale of the world", six slides: applications for "defence and research partners", templates "derived from an oneirographic source", ethics with asterisks), HELIOS the solar-sail model (there is no vat for HELIOS), posters, an FAQ brochure. |
+| Elevator lobby | x 29–50, y 5–9 | The dead elevators, the staff route arrows, Simone from reception at Stair B's door. |
+| Stair B | x 52–56, y 1–8 | Behind a Level 3 clearance door. `)` up to Floor 4; `(` down, sealed (`master`). |
+| ARIADNE Relay 03 | x 58–66, y 1–8 | The relay: the Orderlies' standing orders ("1. Do not harm the night technician. 2. Keep the specimens away from him. 3. Take him to Stair B. 4. If he asks what this floor is for, tell him."); fragment 6. |
+| Orderly Bay | x 68–78, y 1–8 | Three Orderlies asleep on their docks with no power (the `dormant` side). |
+| The vat hall | x 26–52, y 14–35 | Twelve growth vats in two rows (occupied, turning over, drained, broken outward), a spill of vat fluid, the intake terminal (TEMPLATE RUN: 40 litres a night from Floor 2; the templates and their sources), a Sitter, a Warden Drone. |
+| Lab 3-A · Oviparity | x 1–20, y 14–29 | Three cells: a Midwife behind glass, a breached empty cell, and cell 3, whose glass gives when you go to the back of the lab (its Midwife joins the loose one). Egg clutches that hatch as you pass, a clutch log ("STOP PURGING THE HOSTS. — I.B."), the dead, a purge station. |
+| Lab 3-B · Neural Tenancy | x 1–20, y 31–48 | Tenant tanks, steel tables, the dead laid out straight (bodies a Tenant can ride), three Ridden (one is Okafor), two loose Tenants, Okafor's logbook. |
+| Lab 3-D · Photophores | x 58–78, y 14–28 | No lights. Four Flesh Lanterns drifting, two in a glass tank; light benches; Dev, who ran the light tests, with his torch switched off. |
+| Lab 3-E · Colonial Organisms | x 58–78, y 30–48 | Four pens behind glass: three juvenile Congregation colonies pressing to the glass when you look, and pen 4, empty, its air duct taken out of the wall ("TRANSFERRED 14 MARCH · SHELTER B AIR RETURN"). The keeper's note; Agnes with a fire axe across her knees. |
+| Dr. Brandt's office | x 22–32, y 41–48 | The card-read log, the empty drawer, a photograph of the board on a terrace with a building on fire behind them, her sticky note: "She is not cruel. She is careful." |
+| Cell S-41 | x 34–45, y 41–48 | Empty, scratched from inside. A chair facing the glass with a cushion embroidered with a double axe. "Do not attempt to describe Specimen 41 to the Director. He knows." |
+| Pump room | x 47–56, y 41–48 | The vat hall's pumps; breaker 3P (the relay's mains: `relayPowered`); the Plasma Cutter on the fitter's bench. |
 
-**Robots.** Few: Surgical Arms (theatre, vat hall maintenance arms), a pair of Pacifiers guarding the dream lab (they don't let monsters in, and don't let you in either).
+**The specimens** (section 5.2): the Midwife, Tenants and the Ridden, Flesh Lanterns, the Sitters, juvenile Congregations. **The robots**: Sentinels and a Warden Drone in defence mode, ceiling turrets, and ARIADNE's Orderlies (section 5.1). On this floor the level's `factions` put robots and specimens at war; a contained specimen (the `specimen` side) is fought by nobody until its glass breaks.
 
-**Monsters.** The Sitter (one; it roams the Nursery and the dark parts of the Vat Hall), Mother of Teeth (Vat Hall), the Weeping Choir (Failed Forms), Nursery Grubs (lots), Flesh Lanterns (drifting light sources in the dark: kill one and its area goes dark), Kneelers (a row in the Surgical Theatre's gallery).
+**The specimen files** (terminals; each sets a flag and `sawProject`): the Midwife (3-A), the Tenant (3-B), the Lantern (3-D), the Congregation (3-E, with Field Trial 1: Colony 4 to the Shelter B air return, "status: event pending"), S-41, and the vat hall's intake. ARIADNE annotates each in her own voice ("SIXTEEN STAFF WERE HOSTS. NONE OF THEM VOLUNTEERED.", "EVENT PENDING WAS TONIGHT.").
 
-**Traps**
-- *Lights out*: `zone` triggers in the Nursery → `lights` off (tag `nursery`) for 12 s, then on. The Sitter only moves in the dark or when you're not looking (E9 `unseen`). Fixed for good by puzzle 1.
-- *Vat burst*: shooting a vat (destructible item `ds-vat`) releases what's in it. Some hold loot instead (the Neural Visor's spare is in one). Optional, risky.
-- *Flooded grates*: the middle of the Vat Hall is water. While the vat power is on, it's electrified (E7) on a 3-second pulse (on 1 s, off 2 s): cross on the off beat, or cut the power (puzzle 3). Monsters chasing you into it get shocked too.
-- *Kneelers*: a `zone` across the Surgical Theatre gallery → `alarm` with a small radius: Kneelers have a short `sight`, so they stay kneeling until the alarm wakes the whole row at once.
+**Voss on the stairs** (a `branch` on what you've seen):
+- read the colony file: he admits he signed it, says he'd sign it again, and promises to show you why when you're up there; ARIADNE: `HE WILL EXPLAIN. HE IS GOOD AT IT.`
+- read two other files: "Yes. It's a programme. Defence and research partners… I'll show you the contracts, the oversight, all of it." ARIADNE: `ASK HIM WHO DREAMED THEM.`
+- only seen them: "Failed lines. Old specimens… It isn't what it looks like."
+- seen nothing: "You didn't look. Good man."
 
-**Puzzles**
-1. **The fuse.** The Nursery's motion lights are on a dying fuse. The spare is in the Staff Quarters (a pickup, flag `fuse`). The fuse box (`ds-breaker` with `requires: 'fuse'`) restores the lights for good (`flag nurseryLit` → `lights` on, and the Sitter retreats to the Vat Hall).
-2. **The dreams.** Each sleep pod (`ds-dream-pod` item) plays a recording: a board member's nightmare, read as the dreamer's own words (the user's prose, about 100 words each), with one number in it. The Vault keypad needs the four numbers in the order of the board's seniority, which is on the org chart in the Staff Quarters (Voss is not on it: the vault's "fifth seat" is a blank, and that's the hint that Voss's own dream isn't here, because it's on Floor 5). Solving it sets `vaultOpen` and `dreamsKnown`.
-3. **The pump room.** Cut the Vat Hall's power at the junction (`ds-junction`: a three-switch box, all three down) to stop the electrified water. It also turns the vats dark: everything in them is visible only by its own glow, and two vats start moving. A choice: easy crossing, harder room.
+**ARIADNE's relay.** The relay's battery reaches two Orderlies (3-04 in the relay room, 3-07 in the south corridor): each joins you when you come near and keeps at your heel. Breaker 3P in the pump room gives the relay mains power (`relayPowered`): the three in the bay wake, the east turret joins them, the relay has more to say ("This floor makes the board's dreams. Every specimen file names its dreamer."), ARIADNE says `FIVE HANDS. THEY ARE YOURS.` and Voss is rattled.
 
-**Finds.** Plasma Cutter and Neural Visor (Vault), clearance card 3 (the theatre), batteries, med-gel, trauma kit, design sheets (readables: one per monster in the game, each with its source dreamer), the vet tech's diary, ARIADNE fragments 5 and 6 (one is inside a vat you have to shoot).
+**Finds.** Okafor's Level 3 card; the Plasma Cutter and cells (pump room); purge injectors (3-A, 3-B, 3-D; Midwives often drop one) and five purge stations; med-gel, a trauma kit in Brandt's office and in 3-E, rounds, shells, cryo; ARIADNE's fragment 6 (the relay).
 
-**Dressings.** New: growth vat (tall, lit, something inside; three variants: empty-broken, occupied, occupied-and-moving), crib, mobile, sleep pod, recording console, design-sheet wall, specimen jars, operating table, surgical lights, drainage grate (terrain), barricade. Existing: `hospital-bed`, `curtain`, `wheelchair`, `bookshelf`, `filing`, `papers`, `bones`, `candles` (someone has been praying in here).
+**On the way back.** Not built yet. Ideas: the foam on Stair A dissolved (the master card); the pens' glass cracked; the Orderlies waiting at Stair B, if they lived; the vat that was pressing on its lid is open.
 
-**Lines**
-- Voss: "Three. Brandt's floor. She'd want me to tell you the vats are perfectly safe. I won't."
-- ARIADNE (a sleep pod's playback, after the last dream): `THEY DREAM. I LISTEN. THEN THEY MAKE WHAT THEY DREAMED.`
-- The Sitter has no lines. The lullaby is a music-box version of the company jingle.
-
-**Exit.** West stairwell `>` to Floor 4.
-
-**On the way back.** The lights are out again, all of them (an `arrive` trap: `lights` off on every tag, `ambient` darker): Voss cut the floor's power to slow you down. The Neural Visor shows the Sitter's outline through walls. Two Sitters now.
+**Still to place** (from the earlier plan): the Nursery, the fuse and its motion lights, the dream lab with its sleep pods and recordings, the Vault and its keypad, the Neural Visor, Failed Forms, the surgical theatre and Kneelers, Mother of Teeth, the Weeping Choir, the Grief Engine, electrified water.
 
 ---
 
@@ -594,6 +612,7 @@ Numbers are in the engine's units (`engine/SPEC.md` 6.5): the player has 100 hea
 | **LabMate** (built, Floor 2) | 40 (10%) | 98 | `patrol` → `chaser` | melee syringe 8 + `sedated`; lobbed vial 10, radius 34 | The labs' assistants: a white shell, two arms, a screen for a face ("PLEASE HOLD STILL"). `props.docked`: waits on its charging dock, listening. |
 | **Courier** (built, Floor 2) | 22 | 196 | `swarmer` | charge 9 (stuns on a wall); melee 4 | A fast sample cart, in pairs. Its beeping calls every robot within 380. |
 | **Sterilizer** (built, Floor 2) | 90 (15%) | 58 | `patrol` → `ds-sterilize` | a UV beam (range 175) that turns after you at 1.5 rad/s: `uv`, 12 a second | Slow; get behind its lamp. |
+| **Orderly** (built, Floor 3; faction `ally`) | 80 (15%) | 112 | `ds-escort` | 2 blue bolts, 9 each; a shove, 8 | ARIADNE's: a white care robot with her blue thread wound on its shell, a green visor and a slow blue ring on the floor. It joins you when you come near and keeps at your heel, fights specimens and robots in defence mode, never you (your shots go through it). On its dock with no power it's on the `dormant` side until the relay is powered. Any robot ARIADNE takes shows the same marks. |
 | **DOCENT-3** (built, Floor 2) | 220 (10%) | 92, flying | `skirmisher` | fan of 3 bolts, 7 each; summons 2 Couriers | The Discovery Center's tour guide, with a flag on a stick. A named bar. Its death ends the tour (the staff door). |
 | **Pacifier** | 140 (25% armor) | 76 | `chaser` | charge 20 (shield bash, stuns 0.6 s); ranged taser 6 + `shocked` | Front shield (E10): 80% less damage from the front. Flank it, or EMP it. |
 | **Hauler** | 220 (20% armor) | 60 | `chaser` (brute-like) | charge 28; flame stream (new attack `stream`, or `ranged` with many short-lived projectiles) | Drops the Incinerator and fuel. |
@@ -613,11 +632,15 @@ Each was designed from one board member's dream; the design sheets on Floor 3 sa
 | **Hollow Coat** | Pell | 40 | 110 | `chaser` | melee 12 (scalpels in the sleeves) | An empty lab coat walking upright, buttoned to the top, a name badge, nothing inside. Falls in a heap when killed and gets up once more unless it's burned (new: `revive` in its `onDeath`). |
 | **Glass Lungs** | Thale | 30 | 70 | `skirmisher` | ranged: a breath of gas (E7 cloud) | A pair of transparent lungs, inflating and deflating, carried on six long finger-legs. Bursts into a gas cloud when killed. |
 | **The Tally** | Thale | 70 | 150 | `chaser` | melee 8 and steals 6 ammunition of your current weapon per hit | A centipede of human hands, every finger counting. Drops what it stole. |
-| **Flesh Lantern** | Brandt | 35 | 60, flying | `lobber`-ish drift | lob: acid 14, radius 40 | A bloated floating sac lit from inside like a paper lantern. It *is* a light source; killing one darkens its area. |
+| **Flesh Lantern** (built, Floor 3) | Thale | 45 | 42, flying | `lobber` | spit: bile 7, radius 36, `infected` (only with nothing in the way: not over glass) | A floating sac lit from inside like a paper lantern, tendrils hanging. It carries its own light; killing one puts it out. "The light is not the Lantern's own. It is the last host's." Hunts with a soft choir. |
+| **Midwife** (built, Floor 3) | Brandt | 150 (10%) | 128 | `ds-midwife` | ovipositor 10 + `implanted` (90 s, then the clutch hatches: 30 + 10 a clutch, and Nursery Grubs); a slash, 9 | Tall, careful, on four long legs, its abdomen beaded with eggs. Circles, darts in, lays, then backs off into the dark to wait. Hunts with wet clicking. Drops purge injectors. |
+| **Tenant** (built, Floor 3) | Pell | 24 | 150 | `ds-tenant` | a bite, 6 + `infected` | A skinned, segmented crawler with a ring of teeth. Goes for a dead body (`ds-body` with `host`): gets in at the base of the skull and stands it up as a Ridden. Bites if you come close. |
+| **Ridden** (built, Floor 3) | Pell | 85 | 74, in lurches | `ds-shamble` | a claw, 13 + `infected` | A dead scientist, walked about by a Tenant: head lolled, arms hanging, the thing along its spine. Goes back to where it worked. Put down, the body stays down and the Tenant crawls out for another. Drops what it carried (Okafor's card). |
+| **Juvenile Congregation** (built, Floor 3) | Pell | 300 | 46 | `ds-contained` | — (in a pen) | A young colony: a few faces so far, one of them very young. Presses to the glass when you look. Murmurs. |
 | **Mother of Teeth** | Brandt | 120 | 95 | `chaser` | charge 22; melee 18 | A mouth the size of a doorway walking on human hands, many of them. Its back is armored (E10 on the rear). |
 | **The Weeping Choir** | Voss | 160 | 30 | `warden` | nova 16 (radius 110, knockback, `slowed` 2 s); summon Grubs | A stalk of fused singing heads. They sing the company jingle, slightly wrong. |
 | **Ladder Saint** | Moss | 110 | 70 | `chaser` | melee 20, range 42 (very long reach) | Three metres of stacked spines like ladder rungs, two long arms. Steps over pits (`flying` for hazards). |
-| **The Sitter** | Voss | 200 | 220 (only when unseen) | `unseen` (new) | melee 45 | Sleep paralysis: a heavy, hunched shape that sits on things. Moves only when it's outside your aim cone or in the dark. The Neural Visor outlines it. |
+| **The Sitter** (built, Floor 3) | Moss | 1100 (95%) | 38 | `patrol` → `ds-lumber` | a slam, 30 (ring 72); a sweep, 34 | Built as the opposite of the plan: slow, enormous, all but bulletproof, and too big for a door. Footsteps you hear through walls (the floor shakes when it's close), and it hums three notes of a lullaby. A vast pale back in a smock that's too small. Avoid it. (The plan's fast, unseen Sitter, with the Neural Visor, is still a good monster for later.) |
 | **Kneeler** | Voss | 50 | 80 | dormant, then `chaser` | charge 16 | Robed figures praying in rows. All stand at once. |
 | **Faceless Usher** | Pell | 80 | 100 | `blink` (new) | melee 16 | Tall, in a good suit, an open palm where its face should be. Appears behind you. |
 | **Grief Engine** | Thale | 260 | 40 | `lobber` | summon Grubs (max 8); nova (a scream) 10, radius 140 | A pregnant, shuddering mass on gurney wheels, sobbing. Mini-boss on Floors 3–4. |
@@ -662,7 +685,7 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | **Security Sidearm** | Floor 1, the guard's locker | rounds | 14 | 4.2 | The Linear Maze's pistol, with ammunition. |
 | **Riot Shotgun** | Floor 1, armory cage | shells | 7 × 8 | 1.3 | The Scattergun re-skinned. |
 | **Cryo Sprayer** (built) | Floor 2, the oncology cold store | cryo (max 200) | 2.6 × 2 puffs | 12 | Short range (185), pierces 1. Applies `chilled` (half speed, 20% more damage, 2 s). The Congregation's counter. (Shattering, and putting out `burning`, can come with M3.) |
-| **Plasma Cutter** | Floor 3, the Vault | cells, 3 per shot | 28 | 2.4 | Pierces 4. The Arc Lance re-skinned. |
+| **Plasma Cutter** (built) | Floor 3, the pump room | cells | 6 | 8 | A maintenance cutter: a short hot arc (range 200, pierces 1) that sets things `burning` (6 a second, 2 s). |
 | **Incinerator** | Floor 4, a Hauler drops it | fuel (new, max 300) | 4 × stream | 14 | Range 200. `burning` (6 damage per second, 3 s). Kills Hollow Coats for good. |
 | **Railgun** | Floor 4, the Armory | slugs (new, max 12) | 120 | 0.6 | Pierces everything in a line, including thin walls (glass). Big kick. |
 | **EMP Grenade** | Floor 4, the Armory | rockets ("Charges") | 10 + `shocked` (robots stop 4 s) in radius 90 | 1 | Bursts at the cursor (`range: 'cursor'`, like the Ember Mortar). Harmless to monsters. |
@@ -701,6 +724,8 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | The fuse | flag | Floor 3's Nursery. |
 | Core modules 1–3 | flags | Chapter 8. |
 | Recharge station | Existing | Refills cells and shields; put one on Floors 3 and 4. |
+| Purge injector (built) | Flushes `implanted` and `infected` | Floor 3. It only goes in when you need it: walk over it clean and it stays. |
+| Purge station (built) | Three flushes | A violet wall unit at Floor 3's labs and corridors. |
 
 ### 6.4 Readables and collectibles
 
@@ -721,7 +746,7 @@ Palettes in `engine/SPEC.md` 6.1 terms. Painters: reuse what exists (`carpet-til
 |---|---|---|---|---|
 | `ds-lobby` | `#2a2c33` | carpet-tile (open plan), terrazzo (lobby), bath-tile (restrooms) | drywall | red strobes, blue screens, one ceiling panel in five |
 | `ds-cleanroom` (built) | `#3d454d` | clean-panel (corridors, labs, oncology), terrazzo (Discovery Center), bath-tile (gowning), carpet (admin), concrete (shelter, stairs), grate (air garden) | drywall, white | cold blue-white panels, one in two; green guide lights; grow lights in the air garden; the shelter dark but for dropped torches |
-| `ds-wetlab` | `#18221e` | wet-grate, bath-tile (theatre), carpet (quarters) | bulkhead, dark green | vats glow from inside; few panels |
+| `ds-wetlab` (built) | `#28322e` | wet-tile (corridors), grate over drainage (vat hall), resin (labs, cells, the dark lab), carpet (Brandt), terrazzo (briefing suite), sawdust (pens), concrete (stairs); biocontainment foam (a wall) | drywall, dark green | vats glow from inside; ceiling panels with gaps; Lab 3-D unlit but for its Lanterns |
 | `ds-proving` | `#2c2620` | concrete, plates, grate | bulkhead | sodium orange lamps; arc sparks |
 | `ds-penthouse` | `#251c18` | marble, rug-red carpet, dark wood planks | dark wood panel (new `wood-panel` wall) | picture lamps, chandeliers, candles; warm and low |
 | `ds-hatchery` | `#14181a` | concrete, sand (brood), wet stone | bulkhead, rusted | amber from the Sermon, emergency bulbs |
@@ -734,7 +759,7 @@ By floor; everything listed in the chapters as "new". Most are simple `draw` fun
 |---|---|
 | Lockdown | lockdown shutter (terrain, wall-like, with hazard edge), emergency strobe (wall light, red, flicker), wall screen (text scrolls; can glitch), breaker panel, keypad, network rack, drone dock, body under a sheet |
 | Clean room (built: `packs/ds-lab/labs.js`, `cleanroom.js`, `ds-story/shelter.js`) | lab bench, fume hood, sample fridge, biohazard bin, eyewash, gurney, charging dock; the Discovery Center's hanging synthid model, kiosks, mural, cutouts, display cases, theatre seats, children's drawings; membrane tank, valve, pump, brine (terrain); fungus chamber (spores), plastic bale; frond bed, CO₂ column; microscope feed, infusion chair, dispenser, cold store, frost; bunk, supply crate, torn vent, strands, dropped torch, blanket; guide lights, shelter sign, PA speaker, shelter door panel, quarantine release, blast door and biosafety door (terrain). Still to build: centrifuge, sequencer bay, strip curtain, UV gate, specimen cell, forklift. |
-| Wet lab | growth vat (3 variants), crib, mobile, sleep pod, recording console, design-sheet wall, specimen jar shelf, operating table, surgical light, drainage grate (terrain), barricade |
+| Wet lab (built: `packs/ds-lab/wetlab.js`, `gestation.js`) | growth vat (occupied, turning, drained, broken; five shapes), cell placard, specimen file terminal, briefing screen (slides), poster, HELIOS model, egg clutch (hatches), Tenant tank, steel table, painted staff route, scratches, feeding hatch; foam, containment door, Level 3 door, broken glass and vat fluid (terrain); ARIADNE's relay (`ds-robots`), purge station (`ds-arsenal`). Still to build: crib, mobile, sleep pod, recording console, design-sheet wall, specimen jar shelf, operating table, surgical light, barricade |
 | Proving | conveyor (terrain), crusher, welding arm, charging dock, half-built robot, target stand, lane divider, concrete barrier, cable run, sodium lamp |
 | Penthouse | chandelier, picture lamp, gilded frame (painting, readable), velvet rope, marble bust, grand piano, club chair, wine rack, dumbwaiter, dining table and settings, name card, aquarium, orchids, Hecatomb altar, labrys, pew, candelabra, blast door (terrain), server rack (cold / lit), core socket |
 | Hatchery | turbine, control desk, pipe run, steam vent, catwalk (terrain), coolant valve, cryo-lock console, incubation monitor, brood egg (3 states), the Sermon (6 × 6), amniotic pool (terrain), warm sand (floor), rusted locker |
@@ -771,11 +796,11 @@ What the engine and packs need that doesn't exist yet. Engine changes (E) go in 
 | E2 | `arrive` trap trigger; spawned waves a `clear` trap can watch | S | The descent's second waves; the Kill Box |
 | E3 | Elevator power and per-stop access (done, 0.5.2) | S | Every car dead until `elevatorsOnline`; the private car |
 | E4 | Doors that open for a flag (clearance) (done, 0.5.2) | S | Clearance cards and the master card |
-| E5 | Factions | M–L | Robots against everything; robots on your side at the end |
+| E5 | Factions (done, 0.5.4) | M–L | Robots against everything; robots on your side at the end |
 | E6 | Status effects and resistances (done, 0.5.3; area hazards and shattering still to come) | M | Frozen, burning, shocked, poisoned, slowed; Hazmat immunity |
 | E7 | Area hazards: gas, fire, live water | M | Decon gas, Glass Lungs, Pyre, flooded live floors |
 | E8 | Named boss bar and phases (done, 0.5.3) | S–M | The Assembler, the Silence, the Board |
-| E9 | Behaviours `patrol`, `unseen`, `blink` (`patrol` done, in `ds-robots`) | S each | Sentinels, the Sitter, Concierges and Ushers |
+| E9 | Behaviours `patrol`, `unseen`, `blink` (`patrol` done, in `ds-robots`; Floor 3's own: `ds-midwife`, `ds-tenant`, `ds-shamble`, `ds-lumber`, `ds-contained`, `ds-escort`) | S each | Sentinels, the Sitter, Concierges and Ushers |
 | E10 | Directional armor | S | Pacifiers, Mother of Teeth, Warden of Teeth |
 | E11 | Transmissions (intercom subtitles) (done, 0.5.2) | S | Voss, ARIADNE, the Concierge |
 | E12 | HUD objective and counters | S | "Reach the top floor", INCUBATION, BROADCAST |
@@ -803,7 +828,7 @@ In the same change, two fixes for waves. The `spawn` effect gets an `as` field t
 
 **E4. Clearance doors.** A door terrain's `door: { flag: 'clearance3', need: 'Level 3 clearance' }` opens only when the flag is set (checked like a key, but against story flags, which carry between floors). The master card is a second flag any clearance door accepts (`door.flag` may be a list: `['clearance3', 'master']`). Where: `engine/entities.js` (`Door.update`), the door's lock colour comes from a `color` field. Pack: terrain `ds-door-c2`, `ds-door-c3`, `ds-door-c4`, `ds-door-c5`, each a clean-room door with a coloured stripe.
 
-**E5. Factions.** The heart of the premise, and the biggest change.
+**E5. Factions.** *Done in 0.5.4 (`engine/SPEC.md` 6.20).* As built: the table is the game's (a pack's `factions`) with a level's rows laid over it; Dead Signal's has `player`, `monster`, `robot`, `ally`, plus `specimen` and `dormant` (sides nobody fights); the foe is `e.foe` (`LM.ai.foe`), and an enemy chasing another enemy uses a short search, not line of sight alone. The plan as written:
 - Enemies get `faction` (default `'monster'`; robots `'robot'`; the player is `'player'`; allies `'ally'`) and a table of who is hostile to whom: `LM.factions = { robot: ['player', 'monster', 'ally'], monster: ['player', 'robot', 'ally'], ally: ['monster', 'robot'] }` (robots in defence mode hate everything; under ARIADNE they become `ally`).
 - Each enemy picks a **target**: the nearest hostile it can see (the player or another enemy), re-checked a few times a second. Behaviours use `e.target` instead of `game.player` (most core behaviours read `game.player` directly; give them a helper, `LM.ai.target(e, game)`, and change them to use it). With no other target, it's the player, so single-faction games behave exactly as now.
 - Attacks and projectiles carry the attacker's faction; `LM.combat.hurt` and projectile hits damage enemies of hostile factions (today enemy projectiles only hit the player). Explosions likewise.
@@ -892,8 +917,15 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 | `congregationAwake`, `congregationDead` | the Congregation | the shelter's lamps; the release |
 | `quarantineLifted` | the release, once the Congregation is dead | Floor 2's quarantine shutter and Stair A up |
 | `clearance2`…`clearance4`, `master` | the cards | clearance doors (E4) |
-| `fuse`, `nurseryLit` | Floor 3's fuse and box | the Nursery lights, the Sitter's range |
-| `vaultOpen`, `dreamsKnown` | the dream pods and the vault keypad | the Vault; ARIADNE's lines later |
+| `toBrandt` | Voss, at Stair B's door on Floor 3 | — |
+| `knowsOkafor` | Brandt's terminal | Voss's lines in 3-B |
+| `clearance3` | Okafor's card (a key item) | Stair B's door |
+| `relayPowered` | breaker 3P in Floor 3's pump room | the Orderlies wake; the east turret turns |
+| `sawSpecimen`, `sawMidwife`, `sawTenant`, `sawLantern`, `sawSitter`, `sawColony` | seeing them | Voss on the stairs |
+| `sawProject`, `sawBriefing`, `fileMidwife`, `fileTenant`, `fileLantern`, `fileColony`, `fileS41`, `fileVats` | the files, the briefing, the vats | Voss on the stairs; ARIADNE |
+| `vossDone` | the last line of Voss's speech | Floor 3's Stair B up |
+| `fuse`, `nurseryLit` | (not built) | — |
+| `vaultOpen`, `dreamsKnown` | (not built) | — |
 | `junction1`…`junction3`, `lineDown` | Floor 4's junctions | the Assembler's shield, conveyors, crushers |
 | `trialPassed` | the Kill Box | the Armory |
 | `creed` | the Chapel altar | Voss's office |
@@ -919,7 +951,7 @@ Each milestone ends with something playable and tested. Hand Claude the workspac
 > (Built, October 2026: Floor 2 as section 4.2 describes it, with statuses, boss bars, cryo and key items in the engine. Factions moved to M3.)
 
 **M3. Statuses, hazards, and Floor 3.**
-> Do milestone M3: factions (E5) with SPEC updates and a regression check on every Linear Maze floor; area hazards (E7) and the statuses monsters need (burning, frozen shattering); the Incinerator's ammunition (fuel, with `LM.defineAmmo`); the `ds-wetlab` environment; Floor 3 per section 4.3 with the Sitter (`unseen` behaviour), Mother of Teeth, the Weeping Choir, Flesh Lanterns, Kneelers; the fuse, the dream pods and the vault. Leave the dream texts as placeholders marked TODO for me to write.
+> (Built, October 2026: Floor 3 as section 4.3 describes it, with factions in the engine. Area hazards (E7), fuel and the Incinerator, `unseen`, the dream pods and the vault are still to do.) The original prompt: Do milestone M3: factions (E5) with SPEC updates and a regression check on every Linear Maze floor; area hazards (E7) and the statuses monsters need (burning, frozen shattering); the Incinerator's ammunition (fuel, with `LM.defineAmmo`); the `ds-wetlab` environment; Floor 3 per section 4.3 with the Sitter (`unseen` behaviour), Mother of Teeth, the Weeping Choir, Flesh Lanterns, Kneelers; the fuse, the dream pods and the vault. Leave the dream texts as placeholders marked TODO for me to write.
 
 **M4. Floor 4.**
 > Do milestone M4: conveyors and crushers (E13), directional armor (E10), the boss bar (E8); the `ds-proving` environment; Floor 4 per section 4.4 with the Assembler, Pacifiers, Haulers, Tick Mines, the Grief Engine, Mr. Hush and Ladder Saints; the junction puzzle, the Kill Box, the pens; the Railgun, EMP grenades, the Exo-Frame.

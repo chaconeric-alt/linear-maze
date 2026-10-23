@@ -54,6 +54,7 @@
     { key: 'keep', label: 'Preferred distance', type: 'range2', when: (d) => ['skirmisher', 'lobber'].includes(d.ai), help: 'Ranged movers try to stay between these distances.' },
     { key: 'sight', label: 'Notices you within', type: 'number', help: 'Units, with a clear line of sight.' },
     { key: 'leash', label: 'Gives up beyond', type: 'number', placeholder: 'engine default' },
+    { key: 'faction', label: 'Side (faction)', type: 'text', placeholder: 'monster', help: 'Who it fights: the game\u2019s factions table says (default: monsters fight only you). A placed enemy can change it in its props.' },
     { key: 'accel', label: 'Acceleration', type: 'number', step: 1, placeholder: 'engine default' },
     { key: 'turn', label: 'Turn rate', type: 'number', step: 1, placeholder: 'engine default' },
     { key: 'flying', label: 'Flies (ignores pits, water and hazards)', type: 'bool' },
@@ -204,7 +205,7 @@
   SC.TRIGGERS = [['plate', 'Pressure plate (step on a tagged tile)'], ['zone', 'Zone (walk onto a tagged tile, invisible)'], ['beam', 'Laser beam (between tagged wall emitters)'], ['door', 'A tagged door first opens'], ['pickup', 'A tagged item is taken'], ['clear', 'Every enemy with the tag is dead'], ['flag', 'A story flag is set (tag = flag name)']];
   SC.TRAP_EFFECTS = {
     darts: { tag: 'tag', volleys: 'number', interval: 'number', damage: 'number', speed: 'number' },
-    spawn: { tag: 'tag', enemy: 'id:enemies', enemies: 'ids:enemies', count: 'number' },
+    spawn: { tag: 'tag', enemy: 'id:enemies', enemies: 'ids:enemies', count: 'number', faction: 'text' },
     seal: { tag: 'tag', text: 'text' }, unseal: { tag: 'tag', text: 'text' }, open: { tag: 'tag', text: 'text' },
     alarm: { radius: 'number', text: 'text' },
     lights: { tag: 'tag', on: 'bool', text: 'text' },
@@ -216,6 +217,7 @@
     ambient: { ambient: 'color', outsideSight: 'color', time: 'number' },
     flicker: { tag: 'tag', radius: 'number', time: 'number', strength: 'number' },
     phone: { thread: 'text', text: 'longtext' },
+    faction: { tag: 'tag', enemy: 'id:enemies', faction: 'text' },
   };
 
   // ------------------------------------------------------------ weapons, armor, blessings
