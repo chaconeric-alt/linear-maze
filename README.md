@@ -1,6 +1,8 @@
 # Linear Maze workspace
 
-Version 0.5.5. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+Version 0.5.6. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+
+New in 0.5.6: the AEGIS field on Dead Signal's Floor 4: ARIADNE sends the dead freight elevator up with a containment field in it that makes you much harder to hurt and, once a minute, to kill. Engine: an elevator can be parked on a floor without power and bring cargo (`parked`), gear can have a `lastStand` when a hit would kill you, and gadgets can resist statuses and draw an aura. See `engine/SPEC.md` sections 4 (*Damage*), 6.12 and 6.15.
 
 New in 0.5.5: Dead Signal's Floor 4 (*the Proving Grounds*): a trial, a maze of traps, and the board's nightmares in their private suites. Engine: waves (a `spawn` trap effect can tag what it spawns with `as`, and a `clear` trap waits for a group spawned later), a `faction` effect with `aggro` (let out to hunt), and a search limit for `LM.ai.goTo`. See `games/dead-signal/DESIGN.md` (section 4.4) and `engine/SPEC.md` section 6.8.
 

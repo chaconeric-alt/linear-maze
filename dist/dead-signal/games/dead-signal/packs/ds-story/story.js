@@ -6,7 +6,8 @@
  *                badge: his trinket, and the flag ruizBadge that opens the armory cage), ds-panel-light
  *                (a ceiling panel that carries a light: props.off starts it dark, a `lights` trap switches it)
  *   elevators    the building core (DESIGN.md 2.2): the private car A1, passenger cars A2 and A3, the
- *                freight car. None of them has power until elevatorsOnline.
+ *                freight car. None of them has power until elevatorsOnline (but ARIADNE parks the freight car on
+ *                Floor 4 with the AEGIS field in it: its `parked`).
  * LM.DS.FRAGMENTS has the twelve fragments' text; LM.DS.showFragment(game, n) shows one and sets fragment<n>.
  */
 'use strict';
@@ -117,7 +118,11 @@
     'a1-private': { name: 'Private car', x: 31, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F('b', 5), power: 'elevatorsOnline' },
     'a2-passenger': { name: 'Passenger car A2', x: 34, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F(1, 2, 3, 4, 5), power: 'elevatorsOnline' },
     'a3-passenger': { name: 'Passenger car A3', x: 37, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F(1, 2, 3, 4, 5), power: 'elevatorsOnline' },
-    'f1-freight': { name: 'Freight car', x: 42, y: 1, dir: 's', w: 3, d: 3, door: 2, floors: F('b', 1, 2, 3, 4), power: 'elevatorsOnline' },
+    // On Floor 4, ARIADNE sends it up once on what power it has, with the AEGIS field in it (aegisSent)
+    'f1-freight': {
+      name: 'Freight car', x: 42, y: 1, dir: 's', w: 3, d: 3, door: 2, floors: F('b', 1, 2, 3, 4), power: 'elevatorsOnline',
+      parked: { 'ds-f4': { flag: 'aegisSent', cargo: [{ item: 'ds-aegis-case', tag: 'aegisCase' }] } },
+    },
   };
 
   LM.definePack({ id: 'ds-story', name: 'Story', version: '0.1.0', speakers, items, elevators });

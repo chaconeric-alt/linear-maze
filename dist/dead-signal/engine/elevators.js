@@ -20,10 +20,18 @@
  *       power: 'liftsOn',       // optional: a story flag (or a list, any of them); until it's set the car is
  *                               // dark and its doors stay shut (the game's elevatorNoPower words say so)
  *       stops: { c: { until: 'keycard', text: 'needs a keycard' } },  // optional: a stop you can't choose yet
+ *       parked: { c: { flag: 'sentUp', cargo: [{ item: 'crate', props: {} }] } },  // optional: see below
  *     },
  *   }
  *
  * With neither floors nor except, an elevator stops at every floor of the game.
+ *
+ * Parked: a car with no power can still be sent to one floor and left there. `parked` is keyed by
+ * floor: a flag (or a list, any of them), or { flag, cargo }. Once the flag is set the car waits on
+ * that floor, lit, its doors held open, but its panel is still dead (the game's elevatorParked words)
+ * and it goes nowhere. If the flag is set while you're on that floor, you hear it come up the shaft:
+ * the hum, the bell, then the doors. `cargo` is what it brings: items ({ item, props, tag }) set down
+ * in the car as it arrives. (Arriving on a floor where it's already parked, it's simply there.)
  * A floor can shift the whole plan with `elevatorShift: [dx, dy]` (tiles), for a floor drawn further
  * along its map than the others: every elevator moves together, so distances and facing stay the same.
  * A floor where the shaft doesn't fit inside the map doesn't get that elevator; the editor says so.
@@ -69,6 +77,20 @@
     if (!s || !s.until || anyFlag(game, s.until)) return { ok: true };
     return { ok: false, text: s.text || LM.text('elevatorLocked') };
   };
+  /** Where this car is parked without power, on this floor (`parked`): { flag, cargo } or null. */
+  EL.parkedAt = function (el, levelId) {
+    const p = el && el.parked && el.parked[levelId];
+    if (!p) return null;
+    if (typeof p === 'string' || Array.isArray(p)) return { flag: p, cargo: [] };
+    return { flag: p.flag, cargo: Array.isArray(p.cargo) ? p.cargo : p.cargo ? [p.cargo] : [] };
+  };
+  /** Is this car parked here now (its flag is set)? */
+  EL.parked = function (el, game) {
+    const p = game && EL.parkedAt(el, game.levelId);
+    return !!(p && p.flag && [].concat(p.flag).length && anyFlag(game, p.flag));
+  };
+  /** Lit, with doors that open: it has power, or it's parked on this floor. */
+  EL.live = (el, game) => EL.powered(el, game) || EL.parked(el, game);
   /** A floor's shift of the whole plan, in tiles. */
   EL.shiftOf = (def) => (def && Array.isArray(def.elevatorShift) ? [int(def.elevatorShift[0], 0), int(def.elevatorShift[1], 0)] : [0, 0]);
 
@@ -216,6 +238,7 @@
       this.hold = 0;
       this.ride = null;
       this.light = 0;
+      this.coming = 0; // a parked car on its way up the shaft (seconds left)
     }
     /** Is this body inside the car (pad: how far past the walls still counts)? */
     holds(e, pad) {
@@ -227,7 +250,9 @@
       if (this.ride || this.hold > 0) return false;
       const P = game.player;
       if (!P || P.dead) return false;
-      if (!EL.powered(this.def, game)) return false;
+      // no power: shut, unless it's parked here, when its doors are held open (once the car has seen
+      // itself parked: a car parked while you're here comes up the shaft first, see update)
+      if (!EL.powered(this.def, game)) return EL.parked(this.def, game) && this.wasLive !== false;
       if (this.holds(P, 0)) return true;
       for (const d of this.doors) if (U.dist(P.x, P.y, d.x, d.y) < 50) return true;
       for (const e of game.enemies) {
@@ -242,8 +267,13 @@
     update(game, dt) {
       this.light = U.approach(this.light, this.ride && this.ride.moving ? 1 : 0, dt * 3);
       // no power: dark inside, and the doors say why when you walk up to them
-      const on = EL.powered(this.def, game);
-      if (this.lamp && this.lamp.off === on) this.lamp.off = !on;
+      const on = EL.live(this.def, game);
+      // parked while you're here: it comes up the shaft first (power coming on just lights it)
+      if (on && this.wasLive === false && !EL.powered(this.def, game)) this.comeUp(game);
+      this.wasLive = on;
+      if (this.coming > 0) this.coming -= dt;
+      const lit = on && !(this.coming > 0);
+      if (this.lamp && this.lamp.off === lit) this.lamp.off = !lit;
       if (!on) {
         const P = game.player;
         const near = P && !P.dead && this.doors.some((d) => U.dist(P.x, P.y, d.x, d.y) < 44);
@@ -292,6 +322,36 @@
         EL.leave(game, this, r.target);
       }
     }
+    /** A parked car arriving while you're on its floor: the hum up the shaft, its cargo set down
+     *  inside (behind the shut doors), the bell, then the doors. */
+    comeUp(game) {
+      const UP = 2.3;
+      this.coming = UP;
+      this.hold = UP + 0.45;
+      this.arriving = true;
+      for (const d of this.doors) {
+        d.open = 0;
+        d.target = 0;
+        d.closeT = 0;
+      }
+      const cx = (this.box.x0 + this.box.x1) / 2, cy = (this.box.y0 + this.box.y1) / 2;
+      const vol = () => (game.vol ? game.vol(cx, cy) : 1);
+      LM.audio.play('lift', { vol: vol() });
+      if (game.schedule) game.schedule(1.1, () => LM.audio.play('lift', { vol: vol() }));
+      const P = game.player;
+      if (P && U.dist(P.x, P.y, cx, cy) < 360) game.addShake(0.08);
+      const p = EL.parkedAt(this.def, game.levelId);
+      const cargo = (p ? p.cargo : []).filter((c) => c && c.item && LM.find('items', c.item));
+      const wide = this.box.x1 - this.box.x0 >= this.box.y1 - this.box.y0;
+      cargo.forEach((c, i) => {
+        const off = (i - (cargo.length - 1) / 2) * 22;
+        const it = game.spawnItemAt(c.item, cx + (wide ? off : 0), cy + (wide ? 0 : off), c.props ? JSON.parse(JSON.stringify(c.props)) : {});
+        if (!it) return;
+        it.pop = null;
+        it.pickupDelay = 0;
+        if (c.tag) it.tag = c.tag;
+      });
+    }
     /** Choose a floor: the doors close and the car goes. */
     send(game, levelId) {
       if (this.ride || levelId === game.levelId) return;
@@ -310,7 +370,8 @@
     for (const c of game.lifts) {
       const b = c.box;
       c.lamp = game.addStaticLight({ x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2, color: '#e9f1ff', radius: Math.max(b.x1 - b.x0, b.y1 - b.y0) + 40, intensity: 0.55, flicker: 0 });
-      if (c.lamp) c.lamp.off = !EL.powered(c.def, game);
+      c.wasLive = EL.live(c.def, game);
+      if (c.lamp) c.lamp.off = !c.wasLive;
     }
     if (opts && opts.via === 'elevator' && opts.lift) {
       const car = game.lifts.find((c) => c.id === opts.lift);
@@ -347,7 +408,7 @@
   EL.openPanel = function (game, id) {
     const car = EL.carOf(game, id);
     if (!car) return;
-    if (!EL.powered(car.def, game)) return game.toast(LM.text('elevatorNoPower'), 'warn');
+    if (!EL.powered(car.def, game)) return game.toast(LM.text(EL.parked(car.def, game) ? 'elevatorParked' : 'elevatorNoPower'), 'warn');
     const h = LM.ui.h;
     const stops = EL.stops(game, car.def);
     const buttons = [];
@@ -439,14 +500,15 @@
     const x = (w.x0 + w.x1) / 2 + o[0] * (T / 2 - 1), y = (w.y0 + w.y1) / 2 + o[1] * (T / 2 - 1);
     const across = door.horizontal;
     const lx = across ? x + ((w.x1 - w.x0) / 2 - 6) : x, ly = across ? y : y + ((w.y1 - w.y0) / 2 - 6);
-    if (!EL.powered(car.def, game)) {
+    if (!EL.live(car.def, game)) {
       // a dead lamp: a faint red standby dot
       LM.gfx.circle(ctx, lx, ly, 1.1, 'rgba(160,40,30,' + (0.35 + 0.15 * Math.sin(t * 1.3)) + ')');
       return;
     }
-    const on = car.arriving || car.ride ? 0.85 + 0.15 * Math.sin(t * 12) : 0.45;
-    LM.gfx.glow(ctx, lx, ly, 7, car.ride ? '#9fe8ff' : '#ffb84a', on * 0.7);
-    LM.gfx.circle(ctx, lx, ly, 1.3, car.ride ? '#dff8ff' : '#ffe2a8');
+    const moving = car.ride || car.coming > 0;
+    const on = car.arriving || moving ? 0.85 + 0.15 * Math.sin(t * 12) : 0.45;
+    LM.gfx.glow(ctx, lx, ly, 7, moving ? '#9fe8ff' : '#ffb84a', on * 0.7);
+    LM.gfx.circle(ctx, lx, ly, 1.3, moving ? '#dff8ff' : '#ffe2a8');
   };
 
   // ------------------------------------------------------------ tiles, the panel, sounds (any game can restyle them)

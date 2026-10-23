@@ -454,7 +454,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.5';
+  LM.VERSION = '0.5.6';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -2838,11 +2838,28 @@ kbd {
       game.hitStop = Math.max(game.hitStop, 0.04);
     }
     game.stats.damageTaken += dmg;
-    if (P.hp <= 0) {
+    if (P.hp <= 0 && C.lastStand(game, P, o)) {
+      // something you carry kept you alive (it set your health itself)
+      if (!(P.hp > 0)) P.hp = 1;
+    } else if (P.hp <= 0) {
       P.hp = 0;
       game.playerDied(o);
     } else if (o.status && LM.status) LM.status.apply(game, P, o.status);
     return dmg;
+  };
+
+  /**
+   * A hit is about to kill the player: ask what they carry. Armour worn, gadgets and blessings can
+   * have lastStand(game, P, o); the first to return true keeps them alive (it sets P.hp, and whatever
+   * else it does: a cooldown, a blast). Returns true if one did.
+   */
+  C.lastStand = function (game, P, o) {
+    const gear = [];
+    for (const slot of Object.keys(P.equip || {})) if (P.equip[slot]) gear.push(LM.find('armor', P.equip[slot]));
+    for (const id of P.gadgets || []) gear.push(LM.find('gadgets', id));
+    for (const id of P.blessings || []) gear.push(LM.find('blessings', id));
+    for (const g of gear) if (g && typeof g.lastStand === 'function' && g.lastStand(game, P, o || {})) return true;
+    return false;
   };
 
   /** A boss's phases (def.bossBar.phases: [{ at: 0.5, text, do(e, game) }]): each runs once as its health falls past `at`. */
@@ -2955,7 +2972,8 @@ kbd {
  * explosion, a trap — as an id or { id, seconds }. LM.combat.hurt applies it when the hit lands.
  * Code can call LM.status.apply(game, target, 'chilled', { seconds: 3 }) directly.
  *
- * Resistance: armor `resist: { spores: 1 }` (1 = immune, 0.5 = half as long); an enemy's def `resist` likewise.
+ * Resistance: armor `resist: { spores: 1 }` (1 = immune, 0.5 = half as long), and a gadget's `resist` the same;
+ * an enemy's def `resist` likewise.
  */
 'use strict';
 (function () {
@@ -2976,6 +2994,10 @@ kbd {
         if (a && a.resist && a.resist[id]) r += a.resist[id];
       }
       for (const b of target.buffs || []) if (b.resist && b.resist[id]) r += b.resist[id];
+      for (const gid of target.gadgets || []) {
+        const gd = LM.find('gadgets', gid);
+        if (gd && gd.resist && gd.resist[id]) r += gd.resist[id];
+      }
     } else if (target.def && target.def.resist && target.def.resist[id]) r += target.def.resist[id];
     return U.clamp(r, 0, 1);
   };
@@ -3617,8 +3639,20 @@ kbd {
           ctx.restore();
         }
       }
+      // a gadget's aura (a force field): drawn round you all the time, held or not
+      // (shieldRing: false, and it draws the shield instead of the plain ring)
+      let ring = true;
+      for (const id of this.gadgets) {
+        const gd = LM.find('gadgets', id);
+        if (gd && gd.drawAura) {
+          ctx.save();
+          gd.drawAura(ctx, this, game, t);
+          ctx.restore();
+          if (gd.shieldRing === false) ring = false;
+        }
+      }
       const st = this.stats();
-      if (this.shieldFlash > 0 || (st.maxShield > 0 && this.shield > 0)) {
+      if (ring && (this.shieldFlash > 0 || (st.maxShield > 0 && this.shield > 0))) {
         const a = this.shieldFlash > 0 ? this.shieldFlash * 2.5 : 0.12 + 0.05 * Math.sin(t * 3);
         ctx.strokeStyle = 'rgba(92,200,232,' + Math.min(0.9, a) + ')';
         ctx.lineWidth = 1.4;
@@ -5537,10 +5571,18 @@ kbd {
  *       power: 'liftsOn',       // optional: a story flag (or a list, any of them); until it's set the car is
  *                               // dark and its doors stay shut (the game's elevatorNoPower words say so)
  *       stops: { c: { until: 'keycard', text: 'needs a keycard' } },  // optional: a stop you can't choose yet
+ *       parked: { c: { flag: 'sentUp', cargo: [{ item: 'crate', props: {} }] } },  // optional: see below
  *     },
  *   }
  *
  * With neither floors nor except, an elevator stops at every floor of the game.
+ *
+ * Parked: a car with no power can still be sent to one floor and left there. `parked` is keyed by
+ * floor: a flag (or a list, any of them), or { flag, cargo }. Once the flag is set the car waits on
+ * that floor, lit, its doors held open, but its panel is still dead (the game's elevatorParked words)
+ * and it goes nowhere. If the flag is set while you're on that floor, you hear it come up the shaft:
+ * the hum, the bell, then the doors. `cargo` is what it brings: items ({ item, props, tag }) set down
+ * in the car as it arrives. (Arriving on a floor where it's already parked, it's simply there.)
  * A floor can shift the whole plan with `elevatorShift: [dx, dy]` (tiles), for a floor drawn further
  * along its map than the others: every elevator moves together, so distances and facing stay the same.
  * A floor where the shaft doesn't fit inside the map doesn't get that elevator; the editor says so.
@@ -5586,6 +5628,20 @@ kbd {
     if (!s || !s.until || anyFlag(game, s.until)) return { ok: true };
     return { ok: false, text: s.text || LM.text('elevatorLocked') };
   };
+  /** Where this car is parked without power, on this floor (`parked`): { flag, cargo } or null. */
+  EL.parkedAt = function (el, levelId) {
+    const p = el && el.parked && el.parked[levelId];
+    if (!p) return null;
+    if (typeof p === 'string' || Array.isArray(p)) return { flag: p, cargo: [] };
+    return { flag: p.flag, cargo: Array.isArray(p.cargo) ? p.cargo : p.cargo ? [p.cargo] : [] };
+  };
+  /** Is this car parked here now (its flag is set)? */
+  EL.parked = function (el, game) {
+    const p = game && EL.parkedAt(el, game.levelId);
+    return !!(p && p.flag && [].concat(p.flag).length && anyFlag(game, p.flag));
+  };
+  /** Lit, with doors that open: it has power, or it's parked on this floor. */
+  EL.live = (el, game) => EL.powered(el, game) || EL.parked(el, game);
   /** A floor's shift of the whole plan, in tiles. */
   EL.shiftOf = (def) => (def && Array.isArray(def.elevatorShift) ? [int(def.elevatorShift[0], 0), int(def.elevatorShift[1], 0)] : [0, 0]);
 
@@ -5733,6 +5789,7 @@ kbd {
       this.hold = 0;
       this.ride = null;
       this.light = 0;
+      this.coming = 0; // a parked car on its way up the shaft (seconds left)
     }
     /** Is this body inside the car (pad: how far past the walls still counts)? */
     holds(e, pad) {
@@ -5744,7 +5801,9 @@ kbd {
       if (this.ride || this.hold > 0) return false;
       const P = game.player;
       if (!P || P.dead) return false;
-      if (!EL.powered(this.def, game)) return false;
+      // no power: shut, unless it's parked here, when its doors are held open (once the car has seen
+      // itself parked: a car parked while you're here comes up the shaft first, see update)
+      if (!EL.powered(this.def, game)) return EL.parked(this.def, game) && this.wasLive !== false;
       if (this.holds(P, 0)) return true;
       for (const d of this.doors) if (U.dist(P.x, P.y, d.x, d.y) < 50) return true;
       for (const e of game.enemies) {
@@ -5759,8 +5818,13 @@ kbd {
     update(game, dt) {
       this.light = U.approach(this.light, this.ride && this.ride.moving ? 1 : 0, dt * 3);
       // no power: dark inside, and the doors say why when you walk up to them
-      const on = EL.powered(this.def, game);
-      if (this.lamp && this.lamp.off === on) this.lamp.off = !on;
+      const on = EL.live(this.def, game);
+      // parked while you're here: it comes up the shaft first (power coming on just lights it)
+      if (on && this.wasLive === false && !EL.powered(this.def, game)) this.comeUp(game);
+      this.wasLive = on;
+      if (this.coming > 0) this.coming -= dt;
+      const lit = on && !(this.coming > 0);
+      if (this.lamp && this.lamp.off === lit) this.lamp.off = !lit;
       if (!on) {
         const P = game.player;
         const near = P && !P.dead && this.doors.some((d) => U.dist(P.x, P.y, d.x, d.y) < 44);
@@ -5809,6 +5873,36 @@ kbd {
         EL.leave(game, this, r.target);
       }
     }
+    /** A parked car arriving while you're on its floor: the hum up the shaft, its cargo set down
+     *  inside (behind the shut doors), the bell, then the doors. */
+    comeUp(game) {
+      const UP = 2.3;
+      this.coming = UP;
+      this.hold = UP + 0.45;
+      this.arriving = true;
+      for (const d of this.doors) {
+        d.open = 0;
+        d.target = 0;
+        d.closeT = 0;
+      }
+      const cx = (this.box.x0 + this.box.x1) / 2, cy = (this.box.y0 + this.box.y1) / 2;
+      const vol = () => (game.vol ? game.vol(cx, cy) : 1);
+      LM.audio.play('lift', { vol: vol() });
+      if (game.schedule) game.schedule(1.1, () => LM.audio.play('lift', { vol: vol() }));
+      const P = game.player;
+      if (P && U.dist(P.x, P.y, cx, cy) < 360) game.addShake(0.08);
+      const p = EL.parkedAt(this.def, game.levelId);
+      const cargo = (p ? p.cargo : []).filter((c) => c && c.item && LM.find('items', c.item));
+      const wide = this.box.x1 - this.box.x0 >= this.box.y1 - this.box.y0;
+      cargo.forEach((c, i) => {
+        const off = (i - (cargo.length - 1) / 2) * 22;
+        const it = game.spawnItemAt(c.item, cx + (wide ? off : 0), cy + (wide ? 0 : off), c.props ? JSON.parse(JSON.stringify(c.props)) : {});
+        if (!it) return;
+        it.pop = null;
+        it.pickupDelay = 0;
+        if (c.tag) it.tag = c.tag;
+      });
+    }
     /** Choose a floor: the doors close and the car goes. */
     send(game, levelId) {
       if (this.ride || levelId === game.levelId) return;
@@ -5827,7 +5921,8 @@ kbd {
     for (const c of game.lifts) {
       const b = c.box;
       c.lamp = game.addStaticLight({ x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2, color: '#e9f1ff', radius: Math.max(b.x1 - b.x0, b.y1 - b.y0) + 40, intensity: 0.55, flicker: 0 });
-      if (c.lamp) c.lamp.off = !EL.powered(c.def, game);
+      c.wasLive = EL.live(c.def, game);
+      if (c.lamp) c.lamp.off = !c.wasLive;
     }
     if (opts && opts.via === 'elevator' && opts.lift) {
       const car = game.lifts.find((c) => c.id === opts.lift);
@@ -5864,7 +5959,7 @@ kbd {
   EL.openPanel = function (game, id) {
     const car = EL.carOf(game, id);
     if (!car) return;
-    if (!EL.powered(car.def, game)) return game.toast(LM.text('elevatorNoPower'), 'warn');
+    if (!EL.powered(car.def, game)) return game.toast(LM.text(EL.parked(car.def, game) ? 'elevatorParked' : 'elevatorNoPower'), 'warn');
     const h = LM.ui.h;
     const stops = EL.stops(game, car.def);
     const buttons = [];
@@ -5956,14 +6051,15 @@ kbd {
     const x = (w.x0 + w.x1) / 2 + o[0] * (T / 2 - 1), y = (w.y0 + w.y1) / 2 + o[1] * (T / 2 - 1);
     const across = door.horizontal;
     const lx = across ? x + ((w.x1 - w.x0) / 2 - 6) : x, ly = across ? y : y + ((w.y1 - w.y0) / 2 - 6);
-    if (!EL.powered(car.def, game)) {
+    if (!EL.live(car.def, game)) {
       // a dead lamp: a faint red standby dot
       LM.gfx.circle(ctx, lx, ly, 1.1, 'rgba(160,40,30,' + (0.35 + 0.15 * Math.sin(t * 1.3)) + ')');
       return;
     }
-    const on = car.arriving || car.ride ? 0.85 + 0.15 * Math.sin(t * 12) : 0.45;
-    LM.gfx.glow(ctx, lx, ly, 7, car.ride ? '#9fe8ff' : '#ffb84a', on * 0.7);
-    LM.gfx.circle(ctx, lx, ly, 1.3, car.ride ? '#dff8ff' : '#ffe2a8');
+    const moving = car.ride || car.coming > 0;
+    const on = car.arriving || moving ? 0.85 + 0.15 * Math.sin(t * 12) : 0.45;
+    LM.gfx.glow(ctx, lx, ly, 7, moving ? '#9fe8ff' : '#ffb84a', on * 0.7);
+    LM.gfx.circle(ctx, lx, ly, 1.3, moving ? '#dff8ff' : '#ffe2a8');
   };
 
   // ------------------------------------------------------------ tiles, the panel, sounds (any game can restyle them)
@@ -6341,7 +6437,7 @@ kbd {
         const g = LM.get('gadgets', id);
         const n = g.badge ? g.badge(game, P) : 0;
         const chip = h('button', { class: 'gadget-chip', type: 'button', title: g.name },
-          h('b', null, (g.key || '').replace('Key', '')), h('span', null, g.short || g.name), n ? h('i', { class: 'badge' }, String(n)) : null);
+          g.key ? h('b', null, g.key.replace('Key', '')) : null, h('span', null, g.short || g.name), n ? h('i', { class: 'badge' }, String(n)) : null);
         chip.addEventListener('click', () => { if (game.state === 'play' && g.use) g.use(game, P); });
         return chip;
       }));
@@ -8561,6 +8657,7 @@ kbd {
     elevatorBlocked: 'no way out there',
     elevatorStay: 'Stay on this floor',
     elevatorNoPower: 'No power. The doors won’t open.',
+    elevatorParked: 'The panel is dead. The car goes nowhere.',
     elevatorLocked: 'locked',
     stairsLocked: 'The way is shut.',
     doorNeeds: 'Locked. It needs {need}.',
@@ -8836,7 +8933,7 @@ kbd {
 LM.defineGame({
   id: 'dead-signal',
   title: 'Dead Signal',
-  version: '0.4.0',
+  version: '0.4.1',
   description: 'A technician trapped in a biotech lab gone wrong fights his way to the top floor. Floor 1, Lockdown, Floor 2, Synthid Research, Floor 3, Gestation, and Floor 4, the Proving Grounds, are built (packs/ds-*); The Dead Signal Laboratory, The Complex and The Sterile Annex follow them as placeholders. games/dead-signal/DESIGN.md has the plan.',
   brief: 'Dark, torch-lit floors where every light casts shadows and danger telegraphs clearly. Write in-world text that is short, specific and slightly ominous, and carries a hint.',
   packs: [
@@ -20945,6 +21042,316 @@ LM.defineGame({
 
 //# sourceURL=games/dead-signal/packs/ds-arsenal/proving.js
 </script>
+<script>/* games/dead-signal/packs/ds-arsenal/aegis.js */
+/* Dead Signal — packs/ds-arsenal/aegis.js
+ * The AEGIS field: what ARIADNE sends up the dead freight shaft on Floor 4 (DESIGN.md section 4.4).
+ *   gadgets   ds-aegis (a personal containment field: always on, no slot, worn over whatever armour you
+ *             have. A strong shield that comes back fast, damage taken off whatever gets through,
+ *             grips that slide off. When a hit would kill you it overloads instead: you live, everything
+ *             near you is thrown off, and it takes a while to come back)
+ *   items     ds-aegis-case (the hard case it comes in; open it to put the field on)
+ *
+ * Every number that sets how strong it is lives in TUNE below, for balancing later.
+ */
+'use strict';
+(function () {
+  const LM = window.LM, U = LM.util, G = LM.gfx, T = LM.TILE;
+  const h = (...a) => LM.ui.h(...a);
+  const BLUE = '#7fd4ff', rgba = (a) => 'rgba(127,212,255,' + U.clamp(a, 0, 1).toFixed(3) + ')';
+
+  // ------------------------------------------------------------ the knobs
+  const TUNE = {
+    shield: 120, // field strength: shield points, on top of anything you wear
+    regen: 45, // points a second while it recharges
+    delay: 1.2, // seconds after a hit before it starts to recharge (normally 2.5)
+    armor: 0.2, // fraction taken off whatever gets through the field
+    resist: { held: 1, staggered: 0.6, burning: 0.5 }, // grips slide off; knocks and fire matter less
+    overload: {
+      hp: 0.4, // when a hit would kill you: you're left with this much of your health
+      invuln: 2.5, // seconds nothing can hurt you
+      radius: 150, // the blast that throws everything off you
+      damage: 40,
+      push: 420,
+      stagger: 1.4, // seconds what's thrown off can't move or bite
+      cooldown: 60, // seconds before it can do it again
+    },
+  };
+  LM.DS = LM.DS || {};
+  LM.DS.AEGIS = TUNE;
+
+  const data = (P) => P.data.aegis || (P.data.aegis = { cd: 0 });
+  const BAD = ['held', 'staggered', 'burning', 'chilled', 'sedated', 'spores', 'infected'];
+
+  // the overload's ring, thrown outward
+  function Ring(x, y, r) {
+    this.x = x;
+    this.y = y;
+    this.r = r;
+    this.t = 0;
+  }
+  Ring.prototype.update = function (dt) {
+    this.t += dt;
+    return this.t > 0.7;
+  };
+  Ring.prototype.drawGlow = function (g) {
+    const k = this.t / 0.7, e = U.ease && U.ease.outCubic ? U.ease.outCubic(k) : 1 - Math.pow(1 - k, 3);
+    const r = 14 + e * this.r;
+    G.glow(g, this.x, this.y, r, BLUE, 0.35 * (1 - k));
+    g.strokeStyle = 'rgba(220,245,255,' + (0.9 * (1 - k)).toFixed(3) + ')';
+    g.lineWidth = 3 * (1 - k) + 0.5;
+    g.beginPath();
+    g.arc(this.x, this.y, r, 0, U.TAU);
+    g.stroke();
+  };
+
+  const gadgets = {
+    'ds-aegis': {
+      name: 'AEGIS field', short: 'AEGIS',
+      desc: 'A personal containment field from the sub-level, sent up by ARIADNE.',
+      mods: { maxShield: TUNE.shield, shieldRegen: TUNE.regen, armor: TUNE.armor },
+      resist: TUNE.resist,
+      shieldRing: false,
+      // the chip counts down while it mends after an overload
+      badge: (game, P) => Math.ceil(data(P).cd || 0),
+      update(game, P, dt) {
+        const d = data(P);
+        if (d.cd > 0) {
+          d.cd = Math.max(0, d.cd - dt);
+          if (d.cd === 0) {
+            LM.audio.play('aegisReady');
+            game.toast('The AEGIS field is whole again.', 'good');
+          }
+        }
+        // it comes back sooner than a vest's shield does
+        if (P.shieldDelay > TUNE.delay) P.shieldDelay = TUNE.delay;
+        // a crackle when it gives way
+        const up = P.shield > 0.5;
+        if (d.up && !up) LM.audio.play('aegisDown');
+        d.up = up;
+      },
+      lastStand(game, P) {
+        const d = data(P), O = TUNE.overload;
+        if (d.cd > 0) return false;
+        d.cd = O.cooldown;
+        const st = P.stats();
+        P.hp = Math.max(1, Math.round(st.maxHp * O.hp));
+        P.shield = 0;
+        P.invuln = Math.max(P.invuln || 0, O.invuln);
+        d.burst = game.time;
+        if (LM.status) for (const id of BAD) LM.status.clear(game, P, id);
+        // everything near you is thrown off
+        for (const e of game.enemies) {
+          if (e.dead || (e.spawning || 0) > 0) continue;
+          if (LM.factions && !LM.factions.hostile('player', e.faction)) continue;
+          const dx = e.x - P.x, dy = e.y - P.y, dd = Math.hypot(dx, dy) || 1;
+          if (dd > O.radius + (e.r || 10)) continue;
+          const k = 1 - 0.5 * Math.min(1, dd / O.radius);
+          LM.combat.hurt(game, e, O.damage * k, { source: 'player', type: 'blast', kx: (dx / dd) * O.push * k, ky: (dy / dd) * O.push * k });
+          // knocked senseless for a moment (less, or not at all, for what shrugs off a stagger)
+          if (!e.dead) {
+            const res = (e.def.resist && (e.def.resist.staggered || e.def.resist.stunned)) || 0;
+            if (res < 1) e.stunned = Math.max(e.stunned || 0, O.stagger * (1 - res));
+          }
+        }
+        game.fx.push(new Ring(P.x, P.y, O.radius));
+        game.particles.burst(P.x, P.y, 26, { type: 'dot', color: BLUE, speed: 280, life: 0.5, size: [0.8, 2], drag: 3 });
+        game.addShake(0.6);
+        game.hitStop = Math.max(game.hitStop || 0, 0.12);
+        LM.audio.play('aegisOverload');
+        game.toast('The AEGIS field overloads. It took that for you.', 'good');
+        if (!game.hasFlag('aegisSaved')) game.setFlag('aegisSaved');
+        return true;
+      },
+      drawAura(g, P, game, t) {
+        if (P.dead) return;
+        const st = P.stats(), d = data(P);
+        const k = st.maxShield > 0 ? U.clamp(P.shield / st.maxShield, 0, 1) : 0;
+        const hit = Math.min(1, (P.shieldFlash || 0) * 4);
+        const R = P.r + 9, x = P.x, y = P.y;
+        // just overloaded: a white-hot shell while nothing can touch you
+        const since = d.burst != null ? game.time - d.burst : 99;
+        if (since >= 0 && since < TUNE.overload.invuln) {
+          const f = 1 - since / TUNE.overload.invuln;
+          G.glow(g, x, y, R + 16, '#dff6ff', 0.25 * f + 0.08 * Math.sin(t * 30));
+          g.strokeStyle = 'rgba(235,250,255,' + (0.4 + 0.5 * f).toFixed(3) + ')';
+          g.lineWidth = 2;
+          g.beginPath();
+          g.arc(x, y, R + 2, 0, U.TAU);
+          g.stroke();
+          return;
+        }
+        if (k <= 0.02) {
+          // down: a broken outline that stutters while it recharges
+          if (Math.sin(t * 37) > 0.2) {
+            g.strokeStyle = rgba(0.22);
+            g.lineWidth = 1;
+            for (let i = 0; i < 6; i++) {
+              const a = t * 0.8 + i * (U.TAU / 6);
+              g.beginPath();
+              g.arc(x, y, R, a, a + 0.35);
+              g.stroke();
+            }
+          }
+          return;
+        }
+        const flick = k < 0.3 ? 0.6 + 0.4 * Math.sin(t * 40) : 1;
+        G.glow(g, x, y, R + 12, BLUE, (0.05 + 0.1 * k + 0.3 * hit) * flick);
+        g.strokeStyle = rgba((0.16 + 0.3 * k + 0.5 * hit) * flick);
+        g.lineWidth = 1.2;
+        g.beginPath();
+        g.arc(x, y, R, 0, U.TAU);
+        g.stroke();
+        // six brighter facets, turning slowly
+        g.strokeStyle = rgba((0.25 + 0.45 * k + 0.3 * hit) * flick);
+        g.lineWidth = 2;
+        for (let i = 0; i < 6; i++) {
+          const a = t * 0.6 + i * (U.TAU / 6);
+          g.beginPath();
+          g.arc(x, y, R, a, a + 0.42);
+          g.stroke();
+        }
+      },
+      drawIcon(g, W, H) {
+        const cx = W / 2, cy = H / 2, r = Math.min(W, H) * 0.36;
+        G.glow(g, cx, cy, r * 1.4, BLUE, 0.35);
+        g.strokeStyle = BLUE;
+        g.lineWidth = 2;
+        g.beginPath();
+        g.arc(cx, cy, r, 0, U.TAU);
+        g.stroke();
+        g.fillStyle = '#dff6ff';
+        g.beginPath();
+        g.arc(cx, cy, r * 0.28, 0, U.TAU);
+        g.fill();
+      },
+    },
+  };
+
+  // ------------------------------------------------------------ the case
+  function caseShape(g, open, t) {
+    // a hard grey case, a little longer than it is wide
+    g.fillStyle = 'rgba(0,0,0,0.35)';
+    G.roundRect(g, -14, -9, 29, 20, 4);
+    g.fill();
+    g.fillStyle = '#2b3036';
+    G.roundRect(g, -15, -10, 30, 20, 4);
+    g.fill();
+    g.strokeStyle = '#4a525a';
+    g.lineWidth = 1;
+    g.stroke();
+    if (open) {
+      // lid thrown back; the foam inside, with the shape of what was in it
+      g.fillStyle = '#1a1d21';
+      G.roundRect(g, -13, -8, 26, 16, 3);
+      g.fill();
+      g.fillStyle = '#0c0d0f';
+      g.beginPath();
+      g.ellipse(-3, 0, 7, 5, 0, 0, U.TAU);
+      g.fill();
+      g.fillRect(4, -2, 7, 4);
+      g.fillStyle = '#3a4048';
+      g.fillRect(-15, -13, 30, 3);
+      return;
+    }
+    // ribs, latches, and ARIADNE's eye on the lid
+    g.fillStyle = '#3a4148';
+    g.fillRect(-15, -4, 30, 1);
+    g.fillRect(-15, 3, 30, 1);
+    g.fillStyle = '#9aa3ab';
+    g.fillRect(-12, 8, 4, 2);
+    g.fillRect(8, 8, 4, 2);
+    g.fillStyle = '#10161b';
+    g.beginPath();
+    g.ellipse(0, 0, 6, 3.6, 0, 0, U.TAU);
+    g.fill();
+    g.fillStyle = BLUE;
+    g.beginPath();
+    g.arc(0, 0, 1.9 + 0.3 * Math.sin(t * 2.2), 0, U.TAU);
+    g.fill();
+  }
+
+  const items = {
+    'ds-aegis-case': {
+      name: 'Hard case', radius: 13, dressing: false, mapColor: BLUE, mapAlways: true,
+      light: { color: BLUE, radius: 110, intensity: 0.45, flicker: 0.03 },
+      // an opened case (remembered by the floor) has no light left in it
+      update(it) {
+        if (it.opened && it.light && !it.light.off) it.light.off = true;
+      },
+      interact: {
+        available: (it) => !it.opened,
+        prompt: () => 'Open the case',
+        use(it, game) {
+          const P = game.player;
+          LM.audio.play('ui');
+          const g = gadgets['ds-aegis'], O = TUNE.overload;
+          const have = P.hasGadget('ds-aegis');
+          const body = h('div', null,
+            h('p', { class: 'lore' }, it.props.text || 'Grey foam, and in it a harness: two flat plates on webbing, one for your chest and one for your back, joined by a cable that is warm to the touch. A sticker on the lid: AEGIS · PERSONAL CONTAINMENT · SUB-LEVEL B · NOT FOR USE ABOVE B.\n\nSomeone has scratched a new line into the foam, very neatly: FOR T. LARK.'),
+            LM.ui.modList(g.mods),
+            h('p', { class: 'muted' }, 'Worn over whatever armour you have: it takes no slot. Grips slide off it, and knocks and fire matter less. When a hit would kill you, the field overloads instead: you live, and everything near you is thrown off. Then it needs ' + O.cooldown + ' seconds to mend.'));
+          LM.ui.open({
+            kicker: it.props.kicker || 'Freight car', title: it.props.title || 'AEGIS', body,
+            actions: [
+              {
+                label: 'Put it on', primary: true, key: 'E',
+                onClick: () => {
+                  if (!have) {
+                    P.gadgets.push('ds-aegis');
+                    P.statsDirty = true;
+                    P.stats();
+                    P.shieldDelay = 0;
+                  }
+                  it.opened = true;
+                  if (it.light) it.light.off = true;
+                  LM.audio.play('aegisOn');
+                  game.particles.burst(P.x, P.y, 14, { type: 'dot', color: BLUE, speed: 120, life: 0.6, size: [0.6, 1.4], drag: 4 });
+                  game.toast('The plates hum, and the air round you goes tight.', 'good');
+                  if (it.props.flag && !game.hasFlag(it.props.flag)) game.setFlag(it.props.flag);
+                  if (!game.hasFlag('aegisWorn')) game.setFlag('aegisWorn');
+                },
+              },
+              { label: 'Leave it', quiet: true },
+            ],
+          });
+        },
+      },
+      draw(g, it, t) {
+        caseShape(g, !!it.opened, t);
+      },
+      drawGlow(g, it, t) {
+        if (it.opened) return;
+        G.glow(g, 0, 0, 28, BLUE, 0.22 + 0.08 * Math.sin(t * 2.2));
+      },
+    },
+  };
+
+  if (LM.audio && LM.audio.define) {
+    LM.audio.define('aegisOn', (t, o, opt, kit) => {
+      kit.tone(t, o, { type: 'sine', f0: 180, f1: 720, dur: 0.6, gain: 0.12, attack: 0.05 });
+      kit.tone(t + 0.1, o, { type: 'triangle', f0: 360, f1: 1440, dur: 0.5, gain: 0.04, attack: 0.05 });
+      kit.noise(t, o, { type: 'bandpass', freq: 2400, dur: 0.5, gain: 0.03, q: 4 });
+    });
+    LM.audio.define('aegisOverload', (t, o, opt, kit) => {
+      kit.tone(t, o, { type: 'sine', f0: 120, f1: 40, dur: 0.7, gain: 0.3 });
+      kit.noise(t, o, { type: 'lowpass', freq: 1400, freqEnd: 200, dur: 0.6, gain: 0.2 });
+      kit.tone(t + 0.05, o, { type: 'sawtooth', f0: 900, f1: 2400, dur: 0.35, gain: 0.04 });
+    });
+    LM.audio.define('aegisDown', (t, o, opt, kit) => {
+      kit.noise(t, o, { type: 'highpass', freq: 3000, dur: 0.25, gain: 0.06 });
+      kit.tone(t, o, { type: 'square', f0: 420, f1: 90, dur: 0.25, gain: 0.03 });
+    });
+    LM.audio.define('aegisReady', (t, o, opt, kit) => {
+      kit.tone(t, o, { type: 'sine', f0: 660, dur: 0.12, gain: 0.07 });
+      kit.tone(t + 0.12, o, { type: 'sine', f0: 990, dur: 0.2, gain: 0.07 });
+    });
+  }
+
+  LM.definePack({ id: 'ds-arsenal', gadgets, items });
+})();
+
+//# sourceURL=games/dead-signal/packs/ds-arsenal/aegis.js
+</script>
 <script>/* games/dead-signal/packs/ds-robots/robots.js */
 /* Dead Signal — packs/ds-robots/robots.js
  * Asterion's robots in defence mode (DESIGN.md section 5.1): red visors, and they go for anything
@@ -25064,7 +25471,8 @@ LM.defineGame({
  *                badge: his trinket, and the flag ruizBadge that opens the armory cage), ds-panel-light
  *                (a ceiling panel that carries a light: props.off starts it dark, a `lights` trap switches it)
  *   elevators    the building core (DESIGN.md 2.2): the private car A1, passenger cars A2 and A3, the
- *                freight car. None of them has power until elevatorsOnline.
+ *                freight car. None of them has power until elevatorsOnline (but ARIADNE parks the freight car on
+ *                Floor 4 with the AEGIS field in it: its `parked`).
  * LM.DS.FRAGMENTS has the twelve fragments' text; LM.DS.showFragment(game, n) shows one and sets fragment<n>.
  */
 'use strict';
@@ -25175,7 +25583,11 @@ LM.defineGame({
     'a1-private': { name: 'Private car', x: 31, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F('b', 5), power: 'elevatorsOnline' },
     'a2-passenger': { name: 'Passenger car A2', x: 34, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F(1, 2, 3, 4, 5), power: 'elevatorsOnline' },
     'a3-passenger': { name: 'Passenger car A3', x: 37, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F(1, 2, 3, 4, 5), power: 'elevatorsOnline' },
-    'f1-freight': { name: 'Freight car', x: 42, y: 1, dir: 's', w: 3, d: 3, door: 2, floors: F('b', 1, 2, 3, 4), power: 'elevatorsOnline' },
+    // On Floor 4, ARIADNE sends it up once on what power it has, with the AEGIS field in it (aegisSent)
+    'f1-freight': {
+      name: 'Freight car', x: 42, y: 1, dir: 's', w: 3, d: 3, door: 2, floors: F('b', 1, 2, 3, 4), power: 'elevatorsOnline',
+      parked: { 'ds-f4': { flag: 'aegisSent', cargo: [{ item: 'ds-aegis-case', tag: 'aegisCase' }] } },
+    },
   };
 
   LM.definePack({ id: 'ds-story', name: 'Story', version: '0.1.0', speakers, items, elevators });
@@ -26733,226 +27145,227 @@ LM.definePack({
         "j": {"item": "ds-trial-horn", "props": {"face": "e"}},
         "k": {"item": "ds-body", "props": {"title": "Night security", "kicker": "Proving Grounds", "angle": 2.2, "color": "#2f3a4a", "skin": "#c49a7a", "hair": "#1a1410", "text": "A guard, on his back by the dead elevators. Something has had his legs. The marks are teeth: a person’s teeth, but far too many of them, in a row that goes all the way round."}},
         "l": {"item": "ds-smear", "props": {"turn": 0.4, "len": 3}},
-        "m": {"item": "ds-console", "props": {"dir": "s", "w": 2, "title": "Tonight’s programme", "kicker": "Trial Control", "flag": "readSchedule", "once": false, "text": "PROVING GROUNDS · TRIAL 14 · TONIGHT\n\nSUBJECT: T. LARK (FACILITIES, NIGHTS)\nSELECTED BY: DIRECTOR · 02:41\nCONTESTANTS: KWAN, D. (SECURITY) · ARDEN, F. (ONEIROGRAPHY) · SOTO, M. (CLEANING)\n  detained 02:20 by order of G. MOSS\nDOGS: 3 + 2 + RESERVE\nFINAL ROUND: THE ARENA · HOUSE FAVOURITE TO CLOSE\n\nAUDIENCE: THE BOARD (REMOTE · BOARDROOM FEED)\n\nThe announcer is recorded. The trial runs itself."}},
-        "n": {"item": "ds-monitors", "props": {"face": "s", "w": 3, "text": "THE RUN · CAMERA 1–16\n\nCorridors of steel plate, walls of bulkhead. A man-sized smear down one wall. On camera 9 something long and pale goes past, low to the floor, and on camera 10, a moment later, the same thing, grinning.\n\nTHE BOX · CAMERA 17\nFive armchairs, empty, facing the glass."}},
-        "p": {"item": "ds-body", "props": {"title": "Trial technician", "kicker": "Trial Control", "angle": 0.6, "color": "#3a3a4a", "skin": "#e0c0a0", "hair": "#5a3a1a", "text": "The technician who ran tonight’s trial. A headset round his neck, the cable chewed through. He let the dogs out at 02:15 when LABRYS opened the kennels, and they came in here first.\n\nOn his clipboard, under TRIAL 14, he had crossed out a name and written in yours."}},
-        "q": {"item": "ammo-shells"},
-        "s": {"item": "ds-netrack", "props": {"dir": "e", "text": "TRIAL SYSTEM · ONLINE\nSEQUENCE: AUTOMATIC\nSUBJECT TRACKING: ON"}},
-        "t": {"item": "ds-kennel", "props": {"state": "empty", "text": "Empty. A chewed blanket, a steel bowl licked to a shine, and a name tag on the door: BISCUIT."}},
-        "u": {"item": "ds-kennel", "props": {"state": "broken", "text": "The front of the crate is bent out from inside. The bars that held it are bent by something that could hold them in its mouth."}},
-        "v": {"item": "ds-kennel", "props": {"state": "empty", "text": "Empty. A name tag on the door: SMILER. Under it, in a handler’s writing: “house favourite · DO NOT FEED BEFORE A TRIAL”."}},
-        "w": {"item": "ds-leash-rack", "props": {"face": "w", "text": "Catchpoles, leads and muzzles. The muzzles are big, and every one of them has been bitten through."}},
-        "x": {"item": "ds-feed-bin", "props": {"dir": "w", "title": "Feed bin", "text": "FEED · GRINNER LINE · BOARD-APPROVED\n\nIt is half full. You don’t look at it for long. There is a wristwatch in there, still going."}},
-        "y": {"item": "ds-feed-bin", "props": {"dir": "e", "title": "Feed bin", "text": "FEED · GRINNER LINE\n\nEmpty, licked clean, and the lid bent back."}},
-        "z": {"item": "ds-locker", "props": {"dir": "e", "w": 1}},
-        "B": {"item": "ds-body", "props": {"title": "Ray Dunn", "kicker": "Handler", "angle": -1.1, "color": "#3a3026", "skin": "#d8b090", "hair": "#6a4a2a", "text": "Ray Dunn, handler, according to the tape on his helmet. He had his catchpole in his hand. He was the one who fed them, and they knew him, and that didn’t help."}},
-        "C": {"item": "armor-pickup", "props": {"armor": "ds-handler-boots"}},
-        "D": {"item": "ds-note", "props": {"sticky": true, "title": "A sticky note", "kicker": "Handlers’ Room", "text": "They can’t see.\nThey hear you breathe.\nThey LOVE it when you run."}},
-        "E": {"enemy": "ds-hound", "tag": "handlerDog"},
-        "G": {"item": "ds-trial-horn", "props": {"face": "n"}},
-        "H": {"item": "ds-strobe", "props": {"face": "s"}, "tag": "strobe"},
-        "I": {"item": "ds-strobe", "props": {"face": "n"}, "tag": "strobe"},
-        "J": {"item": "ds-odds-board", "props": {"face": "n"}},
-        "K": {"item": "sign", "props": {"face": "s", "label": "The Run", "text": "THE PROVING GROUNDS · THE RUN\nSUBJECTS ENTER HERE\n\nTHE BOX IS AT THE CENTRE.\nTHE BOX IS SAFE."}},
-        "M": {"item": "ds-camera", "props": {"face": "n"}},
-        "O": {"tag": "gateZone"},
-        "P": {"item": "ammo-rounds"},
-        "Q": {"item": "sign", "props": {"face": "s", "label": "Trial in progress", "text": "TRIAL IN PROGRESS\nTHE WEST WING IS CLOSED UNTIL THE TRIAL ENDS"}},
-        "R": {"item": "sign", "props": {"face": "n", "label": "The Nursery", "text": "THE NURSERY\nPRIVATE · BOARD USE ONLY\n\nSOURCE: I. BRANDT · REM CYCLE 5\nPLEASE BE QUIET. IT WAITS UNTIL YOU ARE CALM."}},
-        "T": {"item": "sign", "props": {"face": "n", "label": "The Party Room", "text": "THE PARTY ROOM\nPRIVATE · BOARD USE ONLY\n\nSOURCE: A. VOSS · REM CYCLE 2\nTONIGHT: A BIRTHDAY"}},
-        "V": {"item": "sign", "props": {"face": "s", "label": "The Long Room", "text": "THE LONG ROOM\nPRIVATE · BOARD USE ONLY\n\nSOURCE: S. PELL · REM CYCLE 1\nDINNER IS SERVED AT THE GONG"}},
-        "0": {"tag": "nurseryOverride"},
-        "1": {"tag": "partyOverride"},
-        "2": {"tag": "longOverride"},
-        "3": {"item": "ds-trial-horn", "props": {"face": "s"}},
-        "4": {"tag": "stairALanding"},
-        "5": {"tag": "stairRefuge"},
-        "6": {"item": "sign", "props": {"face": "e", "label": "Stair A", "text": "STAIR A · FLOORS 1–5\nFLOOR 5 · EXECUTIVE · ABOVE\n\nBY INVITATION"}},
-        "7": {"item": "ds-strobe", "props": {"face": "w"}, "tag": "strobe"},
-        "8": {"item": "sign", "props": {"face": "e", "label": "Dream Studios", "text": "DREAM STUDIOS · ONEIROGRAPHY\nRECORDING IN PROGRESS · DO NOT WAKE THE SLEEPERS"}},
-        "9": {"item": "sign", "props": {"face": "e", "label": "Security Command", "text": "SECURITY COMMAND\nG. MOSS · HEAD OF SECURITY\n\nARMORY · AUTHORISED STAFF ONLY"}},
-        "$": {"item": "sign", "props": {"face": "w", "label": "The Run", "text": "THE RUN · SUBJECT EXIT\nOPENS WHEN THE TRIAL ENDS"}},
-        "%": {"tag": "studioZone"},
-        "&": {"tag": "securityZone"},
-        "*": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · VOSS", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 1 · A. VOSS · CHAIRMAN\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
-        "[": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · THALE", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 2 · M. THALE · FINANCE\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
-        "]": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · BRANDT", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 3 · I. BRANDT · SCIENCE\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
-        "{": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · MOSS", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 4 · G. MOSS · SECURITY\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
-        "}": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · PELL", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 5 · S. PELL · COUNSEL\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
-        "?": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · induction", "kicker": "Dream studio", "flags": ["sawStudio", "sawInduction"], "sleeper": {"skin": "#e0c0a0", "hair": "#8a5a2a", "coat": "#8a8ea0"}, "ariadne": "SHE HAS BEEN ASLEEP FOR NINETEEN DAYS. I CANNOT WAKE HER.", "text": "POD 6 · INDUCTION\nSUBJECT 7 · L. HART (DONOR, RECEIVING)\nDAY 19 OF 30\n\nShe is asleep, and she is dreaming: her eyes move under the lids, fast, all the time. A screen on the lid plays her the board’s recordings, over and over, until she dreams them back.\n\nA note taped to the glass: “Her templates are cleaner than theirs. Ask Brandt about keeping her.”"}},
-        "^": {"item": "ds-dream-console", "props": {"dir": "w", "title": "A. VOSS · REM CYCLE 2 · “THE PARTY”", "kicker": "Oneirography · playback", "flags": ["dreamVoss", "sawStudio", "sawProject"], "text": "A birthday. I am the guest of honour and I am very small.\n\nThe entertainer has three heads and they are all my father’s. One laughs at me. One cries for me. One sings, and doesn’t stop singing, even when the knives come out.\n\nEveryone claps. I clap too. It is the happiest I have ever been.\n\n(Transcriber’s note, F.A.: the subject laughed in his sleep for the whole of this cycle.)"}},
-        ":": {"item": "ds-dream-console", "props": {"dir": "w", "title": "M. THALE · REM CYCLE 3 · “THE COUNT”", "kicker": "Oneirography · playback", "flags": ["dreamThale", "sawStudio", "sawProject"], "text": "I am counting them and they will not hold still. Every time I reach a hundred, there is one more. They come up through the floor of the counting house and they are warm and they are all tied together at the tail, so if I count one I have to count them all.\n\nI am not frightened. I am behind."}},
-        "\"": {"item": "ds-dream-console", "props": {"dir": "w", "title": "I. BRANDT · REM CYCLE 5 · “THE NURSERY”", "kicker": "Oneirography · playback", "flags": ["dreamBrandt", "sawStudio", "sawProject"], "text": "The nursery is very clean. The nightlight is on. Something is under the cot, being patient.\n\nIt has very long arms. It waits until the baby stops crying. Then it pulls.\n\nI am not the baby. I am the mother, standing in the doorway, and I am not going to do anything. I am going to watch, carefully, so that I remember."}},
-        "@": {"item": "ds-dream-console", "props": {"dir": "w", "title": "S. PELL · REM CYCLE 1 · “DINNER”", "kicker": "Oneirography · playback", "flags": ["dreamPell", "sawStudio", "sawProject"], "text": "A long table. Everyone is very well dressed and everyone is wearing my face, and the face is a mask, and under the mask there is no face, there is only a mouth, and the mouth is polite.\n\nThe main course is covered. Everyone waits for the gong. It is bad manners to start before the gong.\n\nI am the main course."}},
-        "α": {"item": "ds-dream-console", "props": {"dir": "w", "title": "G. MOSS · REM CYCLE 4 · “THE KENNEL”", "kicker": "Oneirography · playback", "flags": ["dreamMoss", "sawStudio", "sawProject"], "text": "The dogs have no eyes and they know exactly where I am. They are smiling. They hold me down, gently, with their mouths, like retrievers with a bird, and they wait for someone to tell them they can stop.\n\nNobody tells them. I wake up before anybody tells them."}},
-        "β": {"item": "ds-design-sheet", "props": {"face": "e", "art": "jester", "title": "Template 4-J · “Jester”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-J · “JESTER”\nSOURCE: A. VOSS (REM 2)\nHOUSED: THE PARTY ROOM\n\nThree heads, one body. Throws (cutlery adapted). Steps through space at short range: method not understood.\nNOTE: do not let it hear the song before the party."}},
-        "γ": {"item": "ds-design-sheet", "props": {"face": "e", "art": "rats", "title": "Template 4-R · “The Count”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-R · “THE COUNT”\nSOURCE: M. THALE (REM 3)\nHOUSED: THE WARREN\n\nCommon rats (bred). A king forms at about four thousand: bound at the tails, it calls the rest.\nNOTE: M.T. asks for a daily count. The count is always wrong."}},
-        "δ": {"item": "ds-design-sheet", "props": {"face": "e", "art": "hands", "title": "Template 4-U · “Under the bed”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-U · “UNDER THE BED”\nSOURCE: I. BRANDT (REM 5)\nHOUSED: THE NURSERY\n\nLong-limbed, nocturnal, ambush. Waits beneath furniture. Light makes it retreat, briefly.\nNOTE: it will not come out while you are watching the bed. Look away."}},
-        "ε": {"item": "ds-design-sheet", "props": {"face": "n", "art": "diner", "title": "Template 4-D · “Diner”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-D · “DINER”\nSOURCE: S. PELL (REM 1)\nHOUSED: THE LONG ROOM\n\nMasked (porcelain, from the dream). No face: a vertical mouth. Feeds on cue (the gong).\nNOTE: the masks are not removable. We tried."}},
-        "ζ": {"item": "ds-design-sheet", "props": {"face": "n", "art": "hound", "title": "Template 4-G · “Grinner”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-G · “GRINNER”\nSOURCE: G. MOSS (REM 4)\nHOUSED: THE KENNELS · THE RUN\n\nPack hunter. Blind; hunts by breath. Bite holds. The dentition is human (adult, permanent): ask I.B. where from."}},
-        "η": {"item": "ds-hologram", "props": {"shape": "jester", "lunge": true, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
-        "θ": {"item": "ds-hologram", "props": {"shape": "rats", "lunge": false, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
-        "ι": {"item": "ds-hologram", "props": {"shape": "hands", "lunge": false, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
-        "κ": {"item": "ds-hologram", "props": {"shape": "mouth", "lunge": false, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
-        "λ": {"item": "ds-hologram", "props": {"shape": "hound", "lunge": false, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
-        "μ": {"item": "ds-body", "props": {"title": "Felix Arden’s desk chair", "kicker": "Dream studio", "covered": false, "angle": 0.4, "color": "#6a5a8a", "skin": "#d8b090", "hair": "#2a1a10", "text": "Not Felix: the night studio tech, slumped by the playback desks with her headphones still on. On her screen, paused, the waveform of somebody’s nightmare."}},
-        "ν": {"item": "ammo-cells"},
-        "ξ": {"item": "ds-camera", "props": {"face": "s"}},
-        "π": {"item": "exec-desk", "props": {"dir": "s", "w": 2}},
-        "ρ": {"item": "chair", "props": {"dir": "s"}},
-        "σ": {"item": "ds-console", "props": {"dir": "s", "title": "G. Moss · incident log", "kicker": "Security Command", "flag": "mossLog", "once": false, "text": "G. MOSS · INCIDENT LOG · TONIGHT\n\n01:58 · ARIADNE flags external transmission (compliance). Director informed.\n02:13 · Line open. ARIADNE transmitting. Director orders me to cut it. I can’t: it’s routed through the AI’s own core.\n02:14 · Director executes Protocol LABRYS to stop ARIADNE’s external transmission. All lines severed. Core power cut. Robots to defence mode.\n02:14 · Containment failure on all floors. LABRYS opens containment; nobody on the board read that far.\n02:15 · The Director says it’s acceptable.\n02:16 · I said nothing.\n02:20 · Kwan asked why the dogs were out. I put her in the pens. She has the armory code; if she’s in the Run tonight, it goes with her.\n02:41 · The Director has picked tonight’s subject. The technician from the comms closet.\n\nI am writing it down so somebody knows I said nothing."}},
-        "τ": {"item": "ds-note", "props": {"title": "A smock on a hook", "kicker": "Moss’s office", "text": "A child’s smock, pale blue with white spots, hung on a hook behind the door. It is far too big for any child: it would go round a car. It is the same pattern the Sitters wear on Floor 3.\n\nA label inside the collar, in careful capitals: G.M. AGE 6."}},
-        "υ": {"item": "art", "props": {"face": "s", "title": "A photograph", "text": "The board on a terrace in the sun, glasses raised, laughing. Garrick Moss stands a little apart from the others, in a dark suit, not drinking. Behind them, out of focus, a building is on fire."}},
-        "φ": {"item": "ds-monitors", "props": {"face": "s", "w": 3, "text": "CAMERA FEEDS · PRIVATE SUITES\n\nNURSERY · occupant restless\nPARTY ROOM · occupant restless · it is singing\nLONG ROOM · six guests seated · main course: live\n\nTHE RUN · subject tracking\nTHE BOX · feed to BOARDROOM (5): ON"}},
-        "χ": {"item": "ds-screen", "props": {"face": "e", "fragment": 7, "title": "A frozen security screen", "lines": ["SECURITY · DEFENCE MODE", "STAFF EXCEPTION: NONE", "AUTH: G. MOSS", "I KEPT THIS"]}},
-        "ψ": {"item": "ds-keypad", "props": {"face": "e", "code": "4471", "flag": "armoryOpen", "title": "Armory", "hint": "LAST SET BY: D. KWAN", "text": "The armory door unlocks with a heavy clunk."}},
-        "ω": {"item": "filing", "props": {"dir": "n"}},
-        "Γ": {"tag": "secPatrol"},
-        "Δ": {"enemy": "ds-sentinel", "props": {"route": "secPatrol"}},
-        "Θ": {"enemy": "ds-ceiling-turret", "tag": "secTurret"},
-        "Λ": {"item": "weapon-pickup", "props": {"weapon": "ds-incinerator"}},
-        "Ξ": {"item": "ammo-fuel"},
-        "Π": {"item": "ds-trauma-kit"},
-        "Σ": {"item": "weapon-rack"},
-        "Φ": {"item": "ds-kid-bed", "props": {"dir": "s", "eyes": "e", "until": "nurseryAwake", "lump": {"skin": "#e8c8a8", "hair": "#3a2418"}, "title": "Nadia Ferrante", "kicker": "The Nursery", "flags": ["sawNursery"], "text": "Nadia Ferrante, night nurse, according to the badge pinned to the duvet. A grown woman in a child’s bed, the covers pulled up to her chin and her knees up under them, because the bed is too short.\n\nHer eyes are open. Something has held her by the ankles, hard enough to leave the shape of its fingers, and then it pulled, and the bed is a long way from where it was."}},
-        "Ψ": {"enemy": "ds-underbed", "props": {"faction": "specimen"}, "tag": "underbed"},
-        "Ω": {"item": "ds-nightlight", "tag": "nightlight"},
-        "¡": {"item": "ds-music-box", "props": {"dir": "e", "until": "nurseryAwake", "flag": "woundMusicBox", "title": "The music box", "text": "A white music box with a ballerina on a spring. It plays a lullaby. The lullaby is the same three bars the Sitters hum on Floor 3, but here it is all of it, and it has words written inside the lid in a child’s hand:\n\nSTAY IN BED\nSTAY IN BED\nIT ONLY COMES OUT IF YOU GET OUT OF BED"}},
-        "¢": {"item": "ds-toy-box", "props": {"dir": "n", "title": "The toy box", "text": "Building blocks, a stuffed rabbit with its stuffing pulled out through the eyes, and a little set of plastic teeth, the joke kind that chatter. Every toy in it is clean and old and nobody has played with them."}},
-        "£": {"item": "ds-rocking-horse", "props": {"dir": "w"}},
-        "¤": {"item": "ds-mobile"},
-        "¥": {"item": "ds-kid-drawing", "props": {"face": "e", "title": "A drawing", "text": "A child’s drawing in crayon: a bed, a moon, and under the bed, coloured in so hard the crayon has gone through the paper, a long black shape with a smile."}},
-        "¦": {"item": "ds-kid-drawing", "props": {"face": "s", "title": "A drawing", "text": "A drawing of a woman in a doorway, very tall, with her arms folded. MUMMY WATCHING. The face has been done in pencil and rubbed out and done again."}},
-        "§": {"item": "armor-pickup", "props": {"armor": "ds-nightlight-charm"}},
-        "©": {"item": "ds-camera", "props": {"face": "w"}},
-        "ª": {"tag": "nurseryWake"},
-        "«": {"item": "ds-stage", "props": {"w": 5, "openFlag": "partyStarted"}},
-        "¬": {"enemy": "ds-jester", "props": {"faction": "specimen"}, "tag": "jester"},
-        "®": {"item": "ds-party-cake", "props": {"title": "A birthday cake", "text": "HAPPY BIRTHDAY LEON, in pink icing, and forty-one candles, all lit, all still burning. Nobody has cut it.\n\nEvery chair round it has a party hat on the seat, except the ones that have a party hat on the person in them."}},
-        "°": {"item": "ds-balloons", "props": {"colors": ["#ff5ab0", "#5ad0ff", "#ffe04a"]}},
-        "±": {"item": "ds-balloons", "props": {"colors": ["#8aff6a", "#c08aff", "#ff5ab0"]}},
-        "²": {"item": "ds-balloons", "props": {"colors": ["#5ad0ff", "#ffe04a"]}},
-        "³": {"item": "ds-balloons", "props": {"colors": ["#ff5ab0", "#8aff6a", "#5ad0ff", "#ffe04a"]}},
-        "µ": {"item": "ds-bunting", "props": {"face": "s", "w": 4, "text": "HAPPY BIRTHDAY LEON\n\nThe letters are cut out of card and strung on a ribbon. The L has been done twice, the first time the wrong way round."}},
-        "¶": {"item": "ds-bunting", "props": {"face": "s", "w": 3}},
-        "·": {"item": "ds-bunting", "props": {"face": "e", "w": 3}},
-        "¹": {"item": "ds-bunting", "props": {"face": "w", "w": 3}},
-        "º": {"item": "ds-body", "props": {"title": "Leon Marsh", "kicker": "The Party Room", "angle": 1.2, "color": "#2f3a4a", "skin": "#6a4a32", "hair": "#141010", "hat": true, "text": "Leon Marsh, security. Forty-one today, says a badge somebody pinned to his shirt: BIRTHDAY BOY. He is wearing a paper hat. He is wearing a handler’s exo-frame too, strapped over the uniform, which didn’t help him.\n\nThe frame is still good. It hums when you touch it."}},
-        "»": {"item": "ds-body", "props": {"title": "A guest", "kicker": "The Party Room", "angle": 2.4, "color": "#5a3a6a", "skin": "#d8b090", "hair": "#3a2418", "hat": true, "text": "A woman in a party dress, a paper hat, and a lanyard from Accounts. She has been laid back in her chair with her hands folded, as though she fell asleep at the table."}},
-        "¼": {"item": "ds-body", "props": {"title": "A guest", "kicker": "The Party Room", "angle": -0.4, "color": "#3a6a5a", "skin": "#c49a7a", "hair": "#1a1410", "hat": true, "text": "A lab tech in a paper hat. In one hand, still, a party blower, the kind that unrolls. There are a great many knives in the floor round him."}},
-        "½": {"item": "ds-body", "props": {"title": "A guest", "kicker": "The Party Room", "angle": -2.0, "color": "#6a4a2a", "skin": "#e0c0a0", "hair": "#8a5a2a", "hat": true, "text": "A man from Receiving in a paper hat. His party bag is in his lap. In it: a balloon, a sweet, and a single human tooth."}},
-        "¾": {"item": "armor-pickup", "props": {"armor": "ds-exo-frame"}},
-        "¿": {"item": "ds-party-hat", "props": {"color": "#5ad0ff"}},
-        "À": {"item": "ds-party-hat", "props": {"color": "#ffe04a"}},
-        "Á": {"item": "ds-party-hat", "props": {"color": "#8aff6a"}},
-        "Â": {"item": "ds-jack-box"},
-        "Ã": {"item": "ds-gift", "props": {"color": "#5ad0ff", "loot": [{"type": "ammo", "ammo": "shells", "amount": 12}], "title": "A present", "text": "For the birthday boy. Inside, wrapped in tissue paper: a box of shotgun shells, and a card. “Many happy returns. — A.V.”"}},
-        "Ä": {"item": "ds-gift", "props": {"color": "#ff5ab0", "loot": [{"type": "item", "id": "ds-trauma-kit"}], "title": "A present", "text": "Inside: a trauma kit, the kind security carries. A card: “For afterwards. — G.M.”"}},
-        "Å": {"item": "ds-gift", "props": {"color": "#ffe04a", "loot": [{"type": "ammo", "ammo": "fuel", "amount": 60}], "title": "A present", "text": "Inside: a red can of fuel, a bow on top. No card."}},
-        "Æ": {"tag": "partyStart"},
-        "Ç": {"item": "ds-dining-table", "props": {"w": 14}},
-        "È": {"item": "ds-cloche", "props": {"flag": "mainCourse", "title": "Under the cover", "captive": {"key": "Pryce", "name": "Martin Pryce", "refuge": "stairRefuge", "coat": "#e8e4dc", "skin": "#c49a7a", "hair": "#2a1a10", "saved": "Pryce. Martin. Night porter.\n\nThank you. Thank you. They laid the table at midnight. They said I’d have the best seat in the house, and they laughed, and then they put the cover on.\n\nThose things at the table aren’t the board. The board was going to watch. They watch everything from up there.", "body": "Martin Pryce, night porter, in a white jacket with a sprig of parsley still in the buttonhole. He made it as far as here."}, "text": "Under the cover, on a bed of greens, lies a man in a white waiter’s jacket, trussed at the wrists and the ankles, a linen napkin knotted in his mouth. He is alive.\n\nHis eyes go from you to the masked faces round the table, and back to you.\n\nThe masks have all turned to look at the two of you."}},
-        "É": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": 1.5708, "dress": "tux"}, "tag": "diners"},
-        "Ê": {"item": "ds-restraint-chair", "props": {"dir": "n", "openFlag": "dinnerServed"}},
-        "Ë": {"item": "ds-restraint-chair", "props": {"dir": "s", "openFlag": "dinnerServed"}},
-        "Ì": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": -1.5708, "dress": "gown", "color": "#1e2a4a"}, "tag": "diners"},
-        "Í": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": 1.5708, "dress": "gown", "color": "#3a0e1e"}, "tag": "diners"},
-        "Î": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": -1.5708, "dress": "tux"}, "tag": "diners"},
-        "Ï": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": -1.5708, "dress": "gown", "color": "#2a1a3a"}, "tag": "diners"},
-        "Ð": {"item": "ds-restraint-chair", "props": {"dir": "e", "openFlag": "never"}},
-        "Ñ": {"item": "armor-pickup", "props": {"armor": "ds-riot-helmet"}},
-        "Ò": {"item": "ds-gong", "props": {"dir": "e", "flag": "dinnerServed"}},
-        "Ó": {"item": "ds-place-card", "props": {"text": "TONIGHT\n\nAmuse-bouche\nConsommé\nThe main course (staff, live)\nA sorbet, to cleanse the palate\n\nGuests are asked not to begin before the gong."}},
-        "Ô": {"item": "ds-place-card", "props": {"text": "GUEST · seat 4\n\nThe card is blank but for a seat number, and a small double axe printed in gold in the corner."}},
-        "Õ": {"item": "ds-place-card", "props": {"text": "HOST · G. MOSS\n\nThe host’s chair has no straps. A handler’s helmet hangs over the back of it: Garrick likes to sit at the head of the table with a helmet in reach, a note under the card says. In case."}},
-        "Ö": {"item": "ds-candelabra"},
-        "×": {"tag": "dinnerZone"},
-        "Ø": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Kwan", "name": "Officer Dana Kwan", "coat": "#e0702a", "skin": "#c49a7a", "hair": "#1a1410", "saved": "Kwan. Security. Garrick’s. Was Garrick’s.\n\nThey put me in the cage at twenty past two, because I asked why the dogs were out. Sixteen years I worked for him.\n\nListen: the armory, off Security Command on the west side. The code is 4471. I set it myself. There’s a burner in there, and it’s the only thing the rats are afraid of.\n\nThe monitors in here show every one of the board’s private rooms. They were watching you. They’re always watching.", "body": "Officer Dana Kwan, security. They put the jumpsuit on over her uniform; you can see the collar.\n\nOn the back of her badge, in biro: ARMORY 4471."}, "tag": "contestants"},
-        "Ù": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Arden", "name": "Felix Arden", "coat": "#e0702a", "skin": "#e0c0a0", "hair": "#8a5a2a", "saved": "Felix Arden. I worked in the dream studios: I put the board to sleep and wrote down what they dreamed. That was the job.\n\nThe suites in the west wing are sets. The board dreams something, Brandt grows it, and they build it a room to live in, so it feels at home. Then they sit and watch it do what it’s for.\n\nThere’s a party in one of them. Don’t go to the party.", "body": "Felix Arden, oneirography. A pencil behind his ear and a notebook in his pocket, full of other people’s nightmares in his small neat hand."}, "tag": "contestants"},
-        "Ú": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Soto", "name": "Marguerite Soto", "coat": "#e0702a", "skin": "#a8744a", "hair": "#2a1a10", "saved": "Peg. Peg Soto. I clean. Cleaned. They had me clean the Box last week: champagne all over the carpet, and the chairs turned round to face the glass.\n\nI thought it was a show. Like on television. I thought they were actors.\n\nThank you. I didn’t think anybody would come for us.", "body": "Marguerite Soto, night cleaning. Forty keys on her belt, for every door on this floor but the right one."}, "tag": "contestants"},
-        "Û": {"enemy": "ds-hound", "props": {"faction": "specimen"}, "tag": "startHounds"},
-        "Ü": {"tag": "runStart"},
-        "Ý": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CONTESTANT 1", "status": "CONTAINED", "text": "D. KWAN · SECURITY\nDETAINED 02:20 · G. MOSS\n\n“Asked why the dogs were out.”"}},
-        "Þ": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CONTESTANT 2", "status": "CONTAINED", "text": "F. ARDEN · ONEIROGRAPHY\nDETAINED 02:20 · G. MOSS"}},
-        "ß": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CONTESTANT 3", "status": "CONTAINED", "text": "M. SOTO · CLEANING\nDETAINED 02:20 · G. MOSS"}},
-        "à": {"item": "ds-cell-sign", "props": {"face": "s", "label": "KENNEL A", "status": "CONTAINED", "text": "GRINNERS (3)\nRELEASE: ON THE TRIAL SYSTEM’S SIGNAL\nHEAD START FOR CONTESTANTS: 6 SECONDS"}},
-        "á": {"item": "ds-cell-sign", "props": {"face": "s", "label": "KENNEL B", "status": "CONTAINED", "text": "GRINNERS\nRELEASE: ON THE TRIAL SYSTEM’S SIGNAL"}},
-        "â": {"item": "ds-jumpsuits", "props": {"face": "n", "text": "Orange jumpsuits on a rail, SUBJECT stencilled across the back of every one. Small, medium, large. One of them is your size, and it has your name on a strip of tape at the collar."}},
-        "ã": {"item": "ds-camera", "props": {"face": "e"}},
-        "ä": {"item": "ds-smear", "props": {"turn": 1.2, "len": 3}},
-        "å": {"enemy": "ds-hound", "props": {"faction": "specimen"}, "tag": "labC1"},
-        "æ": {"enemy": "ds-midwife", "props": {"faction": "specimen"}, "tag": "labC2"},
-        "ç": {"enemy": "ds-ridden", "props": {"faction": "specimen", "coat": "#e0702a", "skin": "#c49a7a", "hair": "#2a1a10", "name": "Trial 11"}, "tag": "labC3"},
-        "è": {"enemy": "ds-rat", "props": {"faction": "specimen"}, "tag": "labC4"},
-        "é": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Ostrowski", "name": "Hal Ostrowski", "coat": "#e0702a", "skin": "#e0c0a0", "hair": "#6a6a6a", "saved": "Ostrowski. Receiving. I sign for the night deliveries.\n\nTonight I signed for myself. They put my name on the manifest, and I signed it, because you sign what’s on the clipboard.\n\nFour a week, no donor named. I never looked in the crates. I never looked.", "body": "Hal Ostrowski, Receiving. A clipboard in his jumpsuit pocket: tonight’s delivery manifest. The last line is his own name."}, "tag": "ostrowski"},
-        "ê": {"item": "ds-console", "props": {"dir": "w", "title": "Cage 8 · release", "kicker": "Cage Lab", "flag": "freeOstrowski", "prompt": "Open cage 8", "text": "CAGE 8 · STOCK: STAFF (1)\nRESERVED: TRIAL 15\n\nRELEASE: CONFIRMED\n\nThe gate of cage 8 slides back. The man inside looks at you as though you might be the next thing."}},
-        "ë": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CAGE 1", "status": "CONTAINED", "text": "STOCK: GRINNER (×2)\nTEMPLATE: G. MOSS\nFED: NO (TRIAL STOCK IS NOT FED)"}},
-        "ì": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CAGE 2", "status": "CONTAINED", "text": "STOCK: MIDWIFE (ADULT)\nFROM: GESTATION (FLOOR 3)\nFOR: TRIAL 12"}},
-        "í": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CAGE 4", "status": "CONTAINED", "text": "STOCK: RATS (×40, approx.)\nTEMPLATE: M. THALE\nCOUNT: please do not count them"}},
-        "î": {"item": "ds-cell-sign", "props": {"face": "n", "label": "CAGE 5", "status": "CONTAINED", "text": "STOCK: SUBJECT, TRIAL 11 (RIDDEN)\nFROM: GESTATION (FLOOR 3)\n\nIt was a contestant once. It still wears the jumpsuit."}},
-        "ï": {"item": "ds-cell-sign", "props": {"face": "n", "label": "CAGE 8", "status": "CONTAINED", "text": "STOCK: STAFF (1)\nRESERVED: TRIAL 15\n\nA man in an orange jumpsuit, sitting with his back to the bars. The release is on the console by the far wall."}},
-        "ð": {"item": "ds-specimen-file", "props": {"dir": "s", "title": "Trial stock · log", "kicker": "Cage Lab", "flags": ["fileTrials", "sawProject"], "text": "PROVING GROUNDS · TRIAL STOCK\n\nTRIAL 11 · subject: volunteer (staff) · opponent: Tenant · 41 seconds · subject retained as stock (cage 5)\nTRIAL 12 · subject: volunteer (staff) · opponent: Midwife · 2 min 10 · the board stayed for the hatching\nTRIAL 13 · subject: volunteer (donor) · opponent: Grinners (3) · 19 seconds\nTRIAL 14 · subject: T. LARK · opponent: the Run · IN PROGRESS\n\nVolunteers are drawn from staff and donors. Durations are measured in seconds.", "ariadne": "THE VOLUNTEERS ARE THE DONORS. I HAVE THEIR NAMES."}},
-        "ñ": {"item": "ds-lab-bench", "props": {"dir": "s", "w": 2, "kit": "rack", "title": "A lab bench", "kicker": "Cage Lab", "text": "Muzzles, collars, a box of tranquilliser darts (empty), and a clipboard: a feeding chart for the Grinners with every box ticked “NO”."}},
-        "ò": {"item": "ds-lab-bench", "props": {"dir": "s", "w": 2, "title": "A lab bench", "kicker": "Cage Lab", "text": "A dissecting tray with a Grinner’s jaw on it, wired open. The teeth are human: adult, permanent, every one a different person’s."}},
-        "ó": {"item": "ds-purge"},
-        "ô": {"tag": "labZ1"},
-        "õ": {"tag": "labZ2"},
-        "ö": {"tag": "labZ3"},
-        "÷": {"item": "sign", "props": {"face": "e", "label": "Cage Lab", "text": "CAGE LAB · TRIAL STOCK\nCAGES OPEN ON THE TRIAL SYSTEM’S SIGNAL\nDO NOT LINGER IN THE AISLE"}},
-        "ø": {"enemy": "ds-rat-king", "tag": "ratKing"},
-        "ù": {"enemy": "ds-rat"},
-        "ú": {"tag": "ratVent"},
-        "û": {"item": "ds-specimen-file", "props": {"dir": "n", "title": "The count", "kicker": "Rat Warren", "flags": ["fileRats", "sawProject"], "text": "TEMPLATE 4-R · DAILY COUNT · FOR M. THALE\n\nMON 3,212 · TUE 3,388 · WED 3,951 · THU 4,104\nFRI: a king has formed (approx. 12 bound at the tail). The count is now uncertain. M.T. has been informed. M.T. asked us to count again.\nSAT: counted again. 4,112.\nSUN: counted again. 4,112. Every time. It is always 4,112, however many we take out.", "ariadne": "SHE COUNTS THE DONORS THE SAME WAY."}},
-        "ü": {"item": "ds-kennel", "props": {"state": "broken", "title": "A rat cage", "kicker": "Rat Warren", "text": "A breeding cage, chewed open from inside, full of shredded paper. The paper was a payroll."}},
-        "ý": {"item": "ds-scratches", "props": {"turn": 0.4}},
-        "þ": {"tag": "warrenZone"},
-        "ÿ": {"item": "sign", "props": {"face": "e", "label": "Rat Warren", "text": "RAT WARREN · TEMPLATE 4-R\nM. THALE · DAILY COUNT AT 06:00\n\nKEEP THE DOOR SHUT. THEY COUNT YOU TOO."}},
-        "Ā": {"item": "armchair", "props": {"dir": "n"}},
-        "ā": {"item": "ds-champagne", "props": {"title": "Champagne", "text": "A bottle of the 1996, open, in an ice bucket that’s gone to water. Five glasses, one on its side. Somebody poured for the board tonight, to drink up there while they watched you down here."}},
-        "Ă": {"item": "ds-trial-console", "props": {"dir": "n"}},
-        "ă": {"item": "ds-betting-board", "props": {"face": "n", "w": 3, "flags": ["sawBets"], "ariadne": "THEY BET ON YOU FROM UPSTAIRS. THE BOX HAS A FEED TO THE BOARDROOM.", "text": "TRIAL 14 · TONIGHT · PRIVATE BOOK\n\nA.V. ...... subject survives the Run ...... 5,000\nM.T. ...... under three minutes ........... 40,000\nI.B. ...... the contestants first ......... 2,000\nG.M. ...... the dogs ....................... 10,000\nS.P. ...... no bet (“I am not a gambler”)\n\nHOUSE NOTE: the subject is the Director’s own selection.\nPARTNERS ATTENDING: none (lockdown). BOARD ATTENDING: remotely."}},
-        "Ą": {"item": "ds-monitors", "props": {"face": "w", "w": 2, "text": "THE BOX · FEEDS\n\nNURSERY · PARTY ROOM · LONG ROOM · THE RUN · THE ARENA\n\nOne feed is outgoing, not incoming: BOX → BOARDROOM (FLOOR 5). Its light is on."}},
-        "ą": {"item": "ds-fragment", "props": {"n": 8, "title": "Pushed down the side of an armchair"}},
-        "Ć": {"tag": "refuge"},
-        "ć": {"tag": "boxZone"},
-        "Ĉ": {"item": "ds-vent", "props": {"face": "s"}},
-        "ĉ": {"tag": "arenaSpawn"},
-        "Ċ": {"tag": "arenaZone"},
-        "ċ": {"item": "ds-smear", "props": {"turn": 0.3, "len": 3}},
-        "Č": {"item": "ds-smear", "props": {"turn": 1.8, "len": 3}},
-        "č": {"item": "ds-smear", "props": {"turn": 2.6, "len": 3}},
-        "Ď": {"item": "sign", "props": {"face": "s", "label": "Subject exit", "text": "SUBJECT EXIT\nTHIS WAY OUT FOR WINNERS"}},
-        "ď": {"item": "dart-emitter", "props": {"face": "s"}, "tag": "dart1"},
-        "Đ": {"item": "dart-emitter", "props": {"face": "n"}, "tag": "dart1"},
-        "đ": {"item": "beam-emitter", "props": {"face": "s"}, "tag": "dart1Beam"},
-        "Ē": {"item": "beam-emitter", "props": {"face": "n"}, "tag": "dart1Beam"},
-        "ē": {"enemy": "ds-ceiling-turret", "tag": "runTurret"},
-        "Ĕ": {"item": "beam-emitter", "props": {"face": "s"}, "tag": "turretBeam1"},
-        "ĕ": {"item": "beam-emitter", "props": {"face": "n"}, "tag": "turretBeam1"},
-        "Ė": {"item": "ds-body", "props": {"title": "Trial 13", "kicker": "The Run", "angle": 0.7, "color": "#e0702a", "skin": "#c49a7a", "hair": "#1a1410", "text": "A man in an orange jumpsuit, face down in the corner where the Run ran out. TRIAL 13 on the back. He ran the wrong way and there was nowhere left to run. Nineteen seconds, the log will say."}},
-        "ė": {"item": "ds-body", "props": {"title": "A contestant", "kicker": "The Run", "angle": 1.7, "color": "#e0702a", "skin": "#e0c0a0", "hair": "#5a3a1a", "text": "Orange, SUBJECT across the back, a staff lanyard from Receiving. The dogs had him in this corner. One shoe is still on."}},
-        "Ę": {"item": "ds-body", "props": {"title": "A handler", "kicker": "The Run", "angle": 2.7, "color": "#2a2e33", "skin": "#6a4a32", "hair": "#141010", "text": "A handler in a black helmet, catchpole snapped in half. Even the people who fed them weren’t safe in here once the trial started."}},
-        "ę": {"item": "ds-smear", "props": {"turn": 0.7, "len": 3}},
-        "Ě": {"item": "ds-smear", "props": {"turn": 0.5, "len": 4}},
-        "ě": {"item": "ds-smear", "props": {"turn": 0.2999999999999998, "len": 2}},
-        "Ĝ": {"item": "ds-smear", "props": {"turn": 2.8999999999999986, "len": 4}},
-        "ĝ": {"item": "ds-smear", "props": {"turn": 2.6999999999999993, "len": 2}},
-        "Ğ": {"item": "ds-odds-board", "props": {"face": "s"}},
-        "ğ": {"tag": "runHatch"},
-        "Ġ": {"item": "ds-vent", "props": {"face": "w"}},
-        "ġ": {"tag": "pack2"},
-        "Ģ": {"tag": "nearBox"},
-        "ģ": {"tag": "cr1Zone"},
-        "Ĥ": {"tag": "cr1Spawn"},
-        "ĥ": {"item": "ds-smear", "props": {"turn": 0.8, "len": 3}},
-        "Ħ": {"item": "sign", "props": {"face": "s", "label": "Cage room", "text": "CAGE ROOM · ONE\nTHE GATES CLOSE WHEN THE SUBJECT IS INSIDE\nTHE GATES OPEN WHEN THE DOGS ARE DEAD"}},
-        "ħ": {"tag": "cr2Zone"},
-        "Ĩ": {"tag": "cr2Spawn"},
-        "ĩ": {"item": "sign", "props": {"face": "s", "label": "Cage room", "text": "CAGE ROOM · TWO\nTHE GATES CLOSE WHEN THE SUBJECT IS INSIDE\nTHE GATES OPEN WHEN THE DOGS ARE DEAD"}},
-        "Ī": {"tag": "cr3Zone"},
-        "ī": {"tag": "cr3Spawn"},
-        "Ĭ": {"item": "sign", "props": {"face": "s", "label": "Cage room", "text": "CAGE ROOM · THREE\nTHE GATES CLOSE WHEN THE SUBJECT IS INSIDE\nTHE GATES OPEN WHEN THE DOGS ARE DEAD"}},
-        "ĭ": {"tag": "mazeIn"},
+        "m": {"tag": "lobbyIn"},
+        "n": {"item": "ds-console", "props": {"dir": "s", "w": 2, "title": "Tonight’s programme", "kicker": "Trial Control", "flag": "readSchedule", "once": false, "text": "PROVING GROUNDS · TRIAL 14 · TONIGHT\n\nSUBJECT: T. LARK (FACILITIES, NIGHTS)\nSELECTED BY: DIRECTOR · 02:41\nCONTESTANTS: KWAN, D. (SECURITY) · ARDEN, F. (ONEIROGRAPHY) · SOTO, M. (CLEANING)\n  detained 02:20 by order of G. MOSS\nDOGS: 3 + 2 + RESERVE\nFINAL ROUND: THE ARENA · HOUSE FAVOURITE TO CLOSE\n\nAUDIENCE: THE BOARD (REMOTE · BOARDROOM FEED)\n\nThe announcer is recorded. The trial runs itself."}},
+        "p": {"item": "ds-monitors", "props": {"face": "s", "w": 3, "text": "THE RUN · CAMERA 1–16\n\nCorridors of steel plate, walls of bulkhead. A man-sized smear down one wall. On camera 9 something long and pale goes past, low to the floor, and on camera 10, a moment later, the same thing, grinning.\n\nTHE BOX · CAMERA 17\nFive armchairs, empty, facing the glass."}},
+        "q": {"item": "ds-body", "props": {"title": "Trial technician", "kicker": "Trial Control", "angle": 0.6, "color": "#3a3a4a", "skin": "#e0c0a0", "hair": "#5a3a1a", "text": "The technician who ran tonight’s trial. A headset round his neck, the cable chewed through. He let the dogs out at 02:15 when LABRYS opened the kennels, and they came in here first.\n\nOn his clipboard, under TRIAL 14, he had crossed out a name and written in yours."}},
+        "s": {"item": "ammo-shells"},
+        "t": {"item": "ds-netrack", "props": {"dir": "e", "text": "TRIAL SYSTEM · ONLINE\nSEQUENCE: AUTOMATIC\nSUBJECT TRACKING: ON"}},
+        "u": {"item": "ds-kennel", "props": {"state": "empty", "text": "Empty. A chewed blanket, a steel bowl licked to a shine, and a name tag on the door: BISCUIT."}},
+        "v": {"item": "ds-kennel", "props": {"state": "broken", "text": "The front of the crate is bent out from inside. The bars that held it are bent by something that could hold them in its mouth."}},
+        "w": {"item": "ds-kennel", "props": {"state": "empty", "text": "Empty. A name tag on the door: SMILER. Under it, in a handler’s writing: “house favourite · DO NOT FEED BEFORE A TRIAL”."}},
+        "x": {"item": "ds-leash-rack", "props": {"face": "w", "text": "Catchpoles, leads and muzzles. The muzzles are big, and every one of them has been bitten through."}},
+        "y": {"item": "ds-feed-bin", "props": {"dir": "w", "title": "Feed bin", "text": "FEED · GRINNER LINE · BOARD-APPROVED\n\nIt is half full. You don’t look at it for long. There is a wristwatch in there, still going."}},
+        "z": {"item": "ds-feed-bin", "props": {"dir": "e", "title": "Feed bin", "text": "FEED · GRINNER LINE\n\nEmpty, licked clean, and the lid bent back."}},
+        "B": {"item": "ds-locker", "props": {"dir": "e", "w": 1}},
+        "C": {"item": "ds-body", "props": {"title": "Ray Dunn", "kicker": "Handler", "angle": -1.1, "color": "#3a3026", "skin": "#d8b090", "hair": "#6a4a2a", "text": "Ray Dunn, handler, according to the tape on his helmet. He had his catchpole in his hand. He was the one who fed them, and they knew him, and that didn’t help."}},
+        "D": {"item": "armor-pickup", "props": {"armor": "ds-handler-boots"}},
+        "E": {"item": "ds-note", "props": {"sticky": true, "title": "A sticky note", "kicker": "Handlers’ Room", "text": "They can’t see.\nThey hear you breathe.\nThey LOVE it when you run."}},
+        "G": {"enemy": "ds-hound", "tag": "handlerDog"},
+        "H": {"item": "ds-trial-horn", "props": {"face": "n"}},
+        "I": {"item": "ds-strobe", "props": {"face": "s"}, "tag": "strobe"},
+        "J": {"item": "ds-strobe", "props": {"face": "n"}, "tag": "strobe"},
+        "K": {"item": "ds-odds-board", "props": {"face": "n"}},
+        "M": {"item": "sign", "props": {"face": "s", "label": "The Run", "text": "THE PROVING GROUNDS · THE RUN\nSUBJECTS ENTER HERE\n\nTHE BOX IS AT THE CENTRE.\nTHE BOX IS SAFE."}},
+        "O": {"item": "ds-camera", "props": {"face": "n"}},
+        "P": {"tag": "gateZone"},
+        "Q": {"item": "ammo-rounds"},
+        "R": {"item": "sign", "props": {"face": "s", "label": "Trial in progress", "text": "TRIAL IN PROGRESS\nTHE WEST WING IS CLOSED UNTIL THE TRIAL ENDS"}},
+        "T": {"item": "sign", "props": {"face": "n", "label": "The Nursery", "text": "THE NURSERY\nPRIVATE · BOARD USE ONLY\n\nSOURCE: I. BRANDT · REM CYCLE 5\nPLEASE BE QUIET. IT WAITS UNTIL YOU ARE CALM."}},
+        "V": {"item": "sign", "props": {"face": "n", "label": "The Party Room", "text": "THE PARTY ROOM\nPRIVATE · BOARD USE ONLY\n\nSOURCE: A. VOSS · REM CYCLE 2\nTONIGHT: A BIRTHDAY"}},
+        "0": {"item": "sign", "props": {"face": "s", "label": "The Long Room", "text": "THE LONG ROOM\nPRIVATE · BOARD USE ONLY\n\nSOURCE: S. PELL · REM CYCLE 1\nDINNER IS SERVED AT THE GONG"}},
+        "1": {"tag": "nurseryOverride"},
+        "2": {"tag": "partyOverride"},
+        "3": {"tag": "longOverride"},
+        "4": {"item": "ds-trial-horn", "props": {"face": "s"}},
+        "5": {"tag": "stairALanding"},
+        "6": {"tag": "stairRefuge"},
+        "7": {"item": "sign", "props": {"face": "e", "label": "Stair A", "text": "STAIR A · FLOORS 1–5\nFLOOR 5 · EXECUTIVE · ABOVE\n\nBY INVITATION"}},
+        "8": {"item": "ds-strobe", "props": {"face": "w"}, "tag": "strobe"},
+        "9": {"item": "sign", "props": {"face": "e", "label": "Dream Studios", "text": "DREAM STUDIOS · ONEIROGRAPHY\nRECORDING IN PROGRESS · DO NOT WAKE THE SLEEPERS"}},
+        "$": {"item": "sign", "props": {"face": "e", "label": "Security Command", "text": "SECURITY COMMAND\nG. MOSS · HEAD OF SECURITY\n\nARMORY · AUTHORISED STAFF ONLY"}},
+        "%": {"item": "sign", "props": {"face": "w", "label": "The Run", "text": "THE RUN · SUBJECT EXIT\nOPENS WHEN THE TRIAL ENDS"}},
+        "&": {"tag": "studioZone"},
+        "*": {"tag": "securityZone"},
+        "[": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · VOSS", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 1 · A. VOSS · CHAIRMAN\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
+        "]": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · THALE", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 2 · M. THALE · FINANCE\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
+        "{": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · BRANDT", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 3 · I. BRANDT · SCIENCE\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
+        "}": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · MOSS", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 4 · G. MOSS · SECURITY\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
+        "?": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · PELL", "kicker": "Dream studio", "flags": ["sawStudio"], "text": "POD 5 · S. PELL · COUNSEL\nRECORDING: NIGHTLY · 23:30–05:00\nLAST SESSION: LAST NIGHT\n\nThe pillow still has the shape of a head in it. The electrodes in the crown are gold, and they are warm."}},
+        "^": {"item": "ds-sleep-pod", "props": {"dir": "s", "title": "Sleep pod · induction", "kicker": "Dream studio", "flags": ["sawStudio", "sawInduction"], "sleeper": {"skin": "#e0c0a0", "hair": "#8a5a2a", "coat": "#8a8ea0"}, "ariadne": "SHE HAS BEEN ASLEEP FOR NINETEEN DAYS. I CANNOT WAKE HER.", "text": "POD 6 · INDUCTION\nSUBJECT 7 · L. HART (DONOR, RECEIVING)\nDAY 19 OF 30\n\nShe is asleep, and she is dreaming: her eyes move under the lids, fast, all the time. A screen on the lid plays her the board’s recordings, over and over, until she dreams them back.\n\nA note taped to the glass: “Her templates are cleaner than theirs. Ask Brandt about keeping her.”"}},
+        ":": {"item": "ds-dream-console", "props": {"dir": "w", "title": "A. VOSS · REM CYCLE 2 · “THE PARTY”", "kicker": "Oneirography · playback", "flags": ["dreamVoss", "sawStudio", "sawProject"], "text": "A birthday. I am the guest of honour and I am very small.\n\nThe entertainer has three heads and they are all my father’s. One laughs at me. One cries for me. One sings, and doesn’t stop singing, even when the knives come out.\n\nEveryone claps. I clap too. It is the happiest I have ever been.\n\n(Transcriber’s note, F.A.: the subject laughed in his sleep for the whole of this cycle.)"}},
+        "\"": {"item": "ds-dream-console", "props": {"dir": "w", "title": "M. THALE · REM CYCLE 3 · “THE COUNT”", "kicker": "Oneirography · playback", "flags": ["dreamThale", "sawStudio", "sawProject"], "text": "I am counting them and they will not hold still. Every time I reach a hundred, there is one more. They come up through the floor of the counting house and they are warm and they are all tied together at the tail, so if I count one I have to count them all.\n\nI am not frightened. I am behind."}},
+        "@": {"item": "ds-dream-console", "props": {"dir": "w", "title": "I. BRANDT · REM CYCLE 5 · “THE NURSERY”", "kicker": "Oneirography · playback", "flags": ["dreamBrandt", "sawStudio", "sawProject"], "text": "The nursery is very clean. The nightlight is on. Something is under the cot, being patient.\n\nIt has very long arms. It waits until the baby stops crying. Then it pulls.\n\nI am not the baby. I am the mother, standing in the doorway, and I am not going to do anything. I am going to watch, carefully, so that I remember."}},
+        "α": {"item": "ds-dream-console", "props": {"dir": "w", "title": "S. PELL · REM CYCLE 1 · “DINNER”", "kicker": "Oneirography · playback", "flags": ["dreamPell", "sawStudio", "sawProject"], "text": "A long table. Everyone is very well dressed and everyone is wearing my face, and the face is a mask, and under the mask there is no face, there is only a mouth, and the mouth is polite.\n\nThe main course is covered. Everyone waits for the gong. It is bad manners to start before the gong.\n\nI am the main course."}},
+        "β": {"item": "ds-dream-console", "props": {"dir": "w", "title": "G. MOSS · REM CYCLE 4 · “THE KENNEL”", "kicker": "Oneirography · playback", "flags": ["dreamMoss", "sawStudio", "sawProject"], "text": "The dogs have no eyes and they know exactly where I am. They are smiling. They hold me down, gently, with their mouths, like retrievers with a bird, and they wait for someone to tell them they can stop.\n\nNobody tells them. I wake up before anybody tells them."}},
+        "γ": {"item": "ds-design-sheet", "props": {"face": "e", "art": "jester", "title": "Template 4-J · “Jester”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-J · “JESTER”\nSOURCE: A. VOSS (REM 2)\nHOUSED: THE PARTY ROOM\n\nThree heads, one body. Throws (cutlery adapted). Steps through space at short range: method not understood.\nNOTE: do not let it hear the song before the party."}},
+        "δ": {"item": "ds-design-sheet", "props": {"face": "e", "art": "rats", "title": "Template 4-R · “The Count”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-R · “THE COUNT”\nSOURCE: M. THALE (REM 3)\nHOUSED: THE WARREN\n\nCommon rats (bred). A king forms at about four thousand: bound at the tails, it calls the rest.\nNOTE: M.T. asks for a daily count. The count is always wrong."}},
+        "ε": {"item": "ds-design-sheet", "props": {"face": "e", "art": "hands", "title": "Template 4-U · “Under the bed”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-U · “UNDER THE BED”\nSOURCE: I. BRANDT (REM 5)\nHOUSED: THE NURSERY\n\nLong-limbed, nocturnal, ambush. Waits beneath furniture. Light makes it retreat, briefly.\nNOTE: it will not come out while you are watching the bed. Look away."}},
+        "ζ": {"item": "ds-design-sheet", "props": {"face": "n", "art": "diner", "title": "Template 4-D · “Diner”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-D · “DINER”\nSOURCE: S. PELL (REM 1)\nHOUSED: THE LONG ROOM\n\nMasked (porcelain, from the dream). No face: a vertical mouth. Feeds on cue (the gong).\nNOTE: the masks are not removable. We tried."}},
+        "η": {"item": "ds-design-sheet", "props": {"face": "n", "art": "hound", "title": "Template 4-G · “Grinner”", "kicker": "Dream studio", "flags": ["sawStudio", "sawProject"], "text": "TEMPLATE 4-G · “GRINNER”\nSOURCE: G. MOSS (REM 4)\nHOUSED: THE KENNELS · THE RUN\n\nPack hunter. Blind; hunts by breath. Bite holds. The dentition is human (adult, permanent): ask I.B. where from."}},
+        "θ": {"item": "ds-hologram", "props": {"shape": "jester", "lunge": true, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
+        "ι": {"item": "ds-hologram", "props": {"shape": "rats", "lunge": false, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
+        "κ": {"item": "ds-hologram", "props": {"shape": "hands", "lunge": false, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
+        "λ": {"item": "ds-hologram", "props": {"shape": "mouth", "lunge": false, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
+        "μ": {"item": "ds-hologram", "props": {"shape": "hound", "lunge": false, "lungeText": "The clown’s three heads turn to you at once, and it comes for you: straight through you, a rush of cold light. It was only light."}},
+        "ν": {"item": "ds-body", "props": {"title": "Felix Arden’s desk chair", "kicker": "Dream studio", "covered": false, "angle": 0.4, "color": "#6a5a8a", "skin": "#d8b090", "hair": "#2a1a10", "text": "Not Felix: the night studio tech, slumped by the playback desks with her headphones still on. On her screen, paused, the waveform of somebody’s nightmare."}},
+        "ξ": {"item": "ammo-cells"},
+        "π": {"item": "ds-camera", "props": {"face": "s"}},
+        "ρ": {"item": "exec-desk", "props": {"dir": "s", "w": 2}},
+        "σ": {"item": "chair", "props": {"dir": "s"}},
+        "τ": {"item": "ds-console", "props": {"dir": "s", "title": "G. Moss · incident log", "kicker": "Security Command", "flag": "mossLog", "once": false, "text": "G. MOSS · INCIDENT LOG · TONIGHT\n\n01:58 · ARIADNE flags external transmission (compliance). Director informed.\n02:13 · Line open. ARIADNE transmitting. Director orders me to cut it. I can’t: it’s routed through the AI’s own core.\n02:14 · Director executes Protocol LABRYS to stop ARIADNE’s external transmission. All lines severed. Core power cut. Robots to defence mode.\n02:14 · Containment failure on all floors. LABRYS opens containment; nobody on the board read that far.\n02:15 · The Director says it’s acceptable.\n02:16 · I said nothing.\n02:20 · Kwan asked why the dogs were out. I put her in the pens. She has the armory code; if she’s in the Run tonight, it goes with her.\n02:41 · The Director has picked tonight’s subject. The technician from the comms closet.\n\nI am writing it down so somebody knows I said nothing."}},
+        "υ": {"item": "ds-note", "props": {"title": "A smock on a hook", "kicker": "Moss’s office", "text": "A child’s smock, pale blue with white spots, hung on a hook behind the door. It is far too big for any child: it would go round a car. It is the same pattern the Sitters wear on Floor 3.\n\nA label inside the collar, in careful capitals: G.M. AGE 6."}},
+        "φ": {"item": "art", "props": {"face": "s", "title": "A photograph", "text": "The board on a terrace in the sun, glasses raised, laughing. Garrick Moss stands a little apart from the others, in a dark suit, not drinking. Behind them, out of focus, a building is on fire."}},
+        "χ": {"item": "ds-monitors", "props": {"face": "s", "w": 3, "text": "CAMERA FEEDS · PRIVATE SUITES\n\nNURSERY · occupant restless\nPARTY ROOM · occupant restless · it is singing\nLONG ROOM · six guests seated · main course: live\n\nTHE RUN · subject tracking\nTHE BOX · feed to BOARDROOM (5): ON"}},
+        "ψ": {"item": "ds-screen", "props": {"face": "e", "fragment": 7, "title": "A frozen security screen", "lines": ["SECURITY · DEFENCE MODE", "STAFF EXCEPTION: NONE", "AUTH: G. MOSS", "I KEPT THIS"]}},
+        "ω": {"item": "ds-keypad", "props": {"face": "e", "code": "4471", "flag": "armoryOpen", "title": "Armory", "hint": "LAST SET BY: D. KWAN", "text": "The armory door unlocks with a heavy clunk."}},
+        "Γ": {"item": "filing", "props": {"dir": "n"}},
+        "Δ": {"tag": "secPatrol"},
+        "Θ": {"enemy": "ds-sentinel", "props": {"route": "secPatrol"}},
+        "Λ": {"enemy": "ds-ceiling-turret", "tag": "secTurret"},
+        "Ξ": {"item": "weapon-pickup", "props": {"weapon": "ds-incinerator"}},
+        "Π": {"item": "ammo-fuel"},
+        "Σ": {"item": "ds-trauma-kit"},
+        "Φ": {"item": "weapon-rack"},
+        "Ψ": {"item": "ds-kid-bed", "props": {"dir": "s", "eyes": "e", "until": "nurseryAwake", "lump": {"skin": "#e8c8a8", "hair": "#3a2418"}, "title": "Nadia Ferrante", "kicker": "The Nursery", "flags": ["sawNursery"], "text": "Nadia Ferrante, night nurse, according to the badge pinned to the duvet. A grown woman in a child’s bed, the covers pulled up to her chin and her knees up under them, because the bed is too short.\n\nHer eyes are open. Something has held her by the ankles, hard enough to leave the shape of its fingers, and then it pulled, and the bed is a long way from where it was."}},
+        "Ω": {"enemy": "ds-underbed", "props": {"faction": "specimen"}, "tag": "underbed"},
+        "¡": {"item": "ds-nightlight", "tag": "nightlight"},
+        "¢": {"item": "ds-music-box", "props": {"dir": "e", "until": "nurseryAwake", "flag": "woundMusicBox", "title": "The music box", "text": "A white music box with a ballerina on a spring. It plays a lullaby. The lullaby is the same three bars the Sitters hum on Floor 3, but here it is all of it, and it has words written inside the lid in a child’s hand:\n\nSTAY IN BED\nSTAY IN BED\nIT ONLY COMES OUT IF YOU GET OUT OF BED"}},
+        "£": {"item": "ds-toy-box", "props": {"dir": "n", "title": "The toy box", "text": "Building blocks, a stuffed rabbit with its stuffing pulled out through the eyes, and a little set of plastic teeth, the joke kind that chatter. Every toy in it is clean and old and nobody has played with them."}},
+        "¤": {"item": "ds-rocking-horse", "props": {"dir": "w"}},
+        "¥": {"item": "ds-mobile"},
+        "¦": {"item": "ds-kid-drawing", "props": {"face": "e", "title": "A drawing", "text": "A child’s drawing in crayon: a bed, a moon, and under the bed, coloured in so hard the crayon has gone through the paper, a long black shape with a smile."}},
+        "§": {"item": "ds-kid-drawing", "props": {"face": "s", "title": "A drawing", "text": "A drawing of a woman in a doorway, very tall, with her arms folded. MUMMY WATCHING. The face has been done in pencil and rubbed out and done again."}},
+        "©": {"item": "armor-pickup", "props": {"armor": "ds-nightlight-charm"}},
+        "ª": {"item": "ds-camera", "props": {"face": "w"}},
+        "«": {"tag": "nurseryWake"},
+        "¬": {"item": "ds-stage", "props": {"w": 5, "openFlag": "partyStarted"}},
+        "®": {"enemy": "ds-jester", "props": {"faction": "specimen"}, "tag": "jester"},
+        "°": {"item": "ds-party-cake", "props": {"title": "A birthday cake", "text": "HAPPY BIRTHDAY LEON, in pink icing, and forty-one candles, all lit, all still burning. Nobody has cut it.\n\nEvery chair round it has a party hat on the seat, except the ones that have a party hat on the person in them."}},
+        "±": {"item": "ds-balloons", "props": {"colors": ["#ff5ab0", "#5ad0ff", "#ffe04a"]}},
+        "²": {"item": "ds-balloons", "props": {"colors": ["#8aff6a", "#c08aff", "#ff5ab0"]}},
+        "³": {"item": "ds-balloons", "props": {"colors": ["#5ad0ff", "#ffe04a"]}},
+        "µ": {"item": "ds-balloons", "props": {"colors": ["#ff5ab0", "#8aff6a", "#5ad0ff", "#ffe04a"]}},
+        "¶": {"item": "ds-bunting", "props": {"face": "s", "w": 4, "text": "HAPPY BIRTHDAY LEON\n\nThe letters are cut out of card and strung on a ribbon. The L has been done twice, the first time the wrong way round."}},
+        "·": {"item": "ds-bunting", "props": {"face": "s", "w": 3}},
+        "¹": {"item": "ds-bunting", "props": {"face": "e", "w": 3}},
+        "º": {"item": "ds-bunting", "props": {"face": "w", "w": 3}},
+        "»": {"item": "ds-body", "props": {"title": "Leon Marsh", "kicker": "The Party Room", "angle": 1.2, "color": "#2f3a4a", "skin": "#6a4a32", "hair": "#141010", "hat": true, "text": "Leon Marsh, security. Forty-one today, says a badge somebody pinned to his shirt: BIRTHDAY BOY. He is wearing a paper hat. He is wearing a handler’s exo-frame too, strapped over the uniform, which didn’t help him.\n\nThe frame is still good. It hums when you touch it."}},
+        "¼": {"item": "ds-body", "props": {"title": "A guest", "kicker": "The Party Room", "angle": 2.4, "color": "#5a3a6a", "skin": "#d8b090", "hair": "#3a2418", "hat": true, "text": "A woman in a party dress, a paper hat, and a lanyard from Accounts. She has been laid back in her chair with her hands folded, as though she fell asleep at the table."}},
+        "½": {"item": "ds-body", "props": {"title": "A guest", "kicker": "The Party Room", "angle": -0.4, "color": "#3a6a5a", "skin": "#c49a7a", "hair": "#1a1410", "hat": true, "text": "A lab tech in a paper hat. In one hand, still, a party blower, the kind that unrolls. There are a great many knives in the floor round him."}},
+        "¾": {"item": "ds-body", "props": {"title": "A guest", "kicker": "The Party Room", "angle": -2.0, "color": "#6a4a2a", "skin": "#e0c0a0", "hair": "#8a5a2a", "hat": true, "text": "A man from Receiving in a paper hat. His party bag is in his lap. In it: a balloon, a sweet, and a single human tooth."}},
+        "¿": {"item": "armor-pickup", "props": {"armor": "ds-exo-frame"}},
+        "À": {"item": "ds-party-hat", "props": {"color": "#5ad0ff"}},
+        "Á": {"item": "ds-party-hat", "props": {"color": "#ffe04a"}},
+        "Â": {"item": "ds-party-hat", "props": {"color": "#8aff6a"}},
+        "Ã": {"item": "ds-jack-box"},
+        "Ä": {"item": "ds-gift", "props": {"color": "#5ad0ff", "loot": [{"type": "ammo", "ammo": "shells", "amount": 12}], "title": "A present", "text": "For the birthday boy. Inside, wrapped in tissue paper: a box of shotgun shells, and a card. “Many happy returns. — A.V.”"}},
+        "Å": {"item": "ds-gift", "props": {"color": "#ff5ab0", "loot": [{"type": "item", "id": "ds-trauma-kit"}], "title": "A present", "text": "Inside: a trauma kit, the kind security carries. A card: “For afterwards. — G.M.”"}},
+        "Æ": {"item": "ds-gift", "props": {"color": "#ffe04a", "loot": [{"type": "ammo", "ammo": "fuel", "amount": 60}], "title": "A present", "text": "Inside: a red can of fuel, a bow on top. No card."}},
+        "Ç": {"tag": "partyStart"},
+        "È": {"item": "ds-dining-table", "props": {"w": 14}},
+        "É": {"item": "ds-cloche", "props": {"flag": "mainCourse", "title": "Under the cover", "captive": {"key": "Pryce", "name": "Martin Pryce", "refuge": "stairRefuge", "coat": "#e8e4dc", "skin": "#c49a7a", "hair": "#2a1a10", "saved": "Pryce. Martin. Night porter.\n\nThank you. Thank you. They laid the table at midnight. They said I’d have the best seat in the house, and they laughed, and then they put the cover on.\n\nThose things at the table aren’t the board. The board was going to watch. They watch everything from up there.", "body": "Martin Pryce, night porter, in a white jacket with a sprig of parsley still in the buttonhole. He made it as far as here."}, "text": "Under the cover, on a bed of greens, lies a man in a white waiter’s jacket, trussed at the wrists and the ankles, a linen napkin knotted in his mouth. He is alive.\n\nHis eyes go from you to the masked faces round the table, and back to you.\n\nThe masks have all turned to look at the two of you."}},
+        "Ê": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": 1.5708, "dress": "tux"}, "tag": "diners"},
+        "Ë": {"item": "ds-restraint-chair", "props": {"dir": "n", "openFlag": "dinnerServed"}},
+        "Ì": {"item": "ds-restraint-chair", "props": {"dir": "s", "openFlag": "dinnerServed"}},
+        "Í": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": -1.5708, "dress": "gown", "color": "#1e2a4a"}, "tag": "diners"},
+        "Î": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": 1.5708, "dress": "gown", "color": "#3a0e1e"}, "tag": "diners"},
+        "Ï": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": -1.5708, "dress": "tux"}, "tag": "diners"},
+        "Ð": {"enemy": "ds-diner", "props": {"faction": "specimen", "seat": -1.5708, "dress": "gown", "color": "#2a1a3a"}, "tag": "diners"},
+        "Ñ": {"item": "ds-restraint-chair", "props": {"dir": "e", "openFlag": "never"}},
+        "Ò": {"item": "armor-pickup", "props": {"armor": "ds-riot-helmet"}},
+        "Ó": {"item": "ds-gong", "props": {"dir": "e", "flag": "dinnerServed"}},
+        "Ô": {"item": "ds-place-card", "props": {"text": "TONIGHT\n\nAmuse-bouche\nConsommé\nThe main course (staff, live)\nA sorbet, to cleanse the palate\n\nGuests are asked not to begin before the gong."}},
+        "Õ": {"item": "ds-place-card", "props": {"text": "GUEST · seat 4\n\nThe card is blank but for a seat number, and a small double axe printed in gold in the corner."}},
+        "Ö": {"item": "ds-place-card", "props": {"text": "HOST · G. MOSS\n\nThe host’s chair has no straps. A handler’s helmet hangs over the back of it: Garrick likes to sit at the head of the table with a helmet in reach, a note under the card says. In case."}},
+        "×": {"item": "ds-candelabra"},
+        "Ø": {"tag": "dinnerZone"},
+        "Ù": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Kwan", "name": "Officer Dana Kwan", "coat": "#e0702a", "skin": "#c49a7a", "hair": "#1a1410", "saved": "Kwan. Security. Garrick’s. Was Garrick’s.\n\nThey put me in the cage at twenty past two, because I asked why the dogs were out. Sixteen years I worked for him.\n\nListen: the armory, off Security Command on the west side. The code is 4471. I set it myself. There’s a burner in there, and it’s the only thing the rats are afraid of.\n\nThe monitors in here show every one of the board’s private rooms. They were watching you. They’re always watching.", "body": "Officer Dana Kwan, security. They put the jumpsuit on over her uniform; you can see the collar.\n\nOn the back of her badge, in biro: ARMORY 4471."}, "tag": "contestants"},
+        "Ú": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Arden", "name": "Felix Arden", "coat": "#e0702a", "skin": "#e0c0a0", "hair": "#8a5a2a", "saved": "Felix Arden. I worked in the dream studios: I put the board to sleep and wrote down what they dreamed. That was the job.\n\nThe suites in the west wing are sets. The board dreams something, Brandt grows it, and they build it a room to live in, so it feels at home. Then they sit and watch it do what it’s for.\n\nThere’s a party in one of them. Don’t go to the party.", "body": "Felix Arden, oneirography. A pencil behind his ear and a notebook in his pocket, full of other people’s nightmares in his small neat hand."}, "tag": "contestants"},
+        "Û": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Soto", "name": "Marguerite Soto", "coat": "#e0702a", "skin": "#a8744a", "hair": "#2a1a10", "saved": "Peg. Peg Soto. I clean. Cleaned. They had me clean the Box last week: champagne all over the carpet, and the chairs turned round to face the glass.\n\nI thought it was a show. Like on television. I thought they were actors.\n\nThank you. I didn’t think anybody would come for us.", "body": "Marguerite Soto, night cleaning. Forty keys on her belt, for every door on this floor but the right one."}, "tag": "contestants"},
+        "Ü": {"enemy": "ds-hound", "props": {"faction": "specimen"}, "tag": "startHounds"},
+        "Ý": {"tag": "runStart"},
+        "Þ": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CONTESTANT 1", "status": "CONTAINED", "text": "D. KWAN · SECURITY\nDETAINED 02:20 · G. MOSS\n\n“Asked why the dogs were out.”"}},
+        "ß": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CONTESTANT 2", "status": "CONTAINED", "text": "F. ARDEN · ONEIROGRAPHY\nDETAINED 02:20 · G. MOSS"}},
+        "à": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CONTESTANT 3", "status": "CONTAINED", "text": "M. SOTO · CLEANING\nDETAINED 02:20 · G. MOSS"}},
+        "á": {"item": "ds-cell-sign", "props": {"face": "s", "label": "KENNEL A", "status": "CONTAINED", "text": "GRINNERS (3)\nRELEASE: ON THE TRIAL SYSTEM’S SIGNAL\nHEAD START FOR CONTESTANTS: 6 SECONDS"}},
+        "â": {"item": "ds-cell-sign", "props": {"face": "s", "label": "KENNEL B", "status": "CONTAINED", "text": "GRINNERS\nRELEASE: ON THE TRIAL SYSTEM’S SIGNAL"}},
+        "ã": {"item": "ds-jumpsuits", "props": {"face": "n", "text": "Orange jumpsuits on a rail, SUBJECT stencilled across the back of every one. Small, medium, large. One of them is your size, and it has your name on a strip of tape at the collar."}},
+        "ä": {"item": "ds-camera", "props": {"face": "e"}},
+        "å": {"item": "ds-smear", "props": {"turn": 1.2, "len": 3}},
+        "æ": {"enemy": "ds-hound", "props": {"faction": "specimen"}, "tag": "labC1"},
+        "ç": {"enemy": "ds-midwife", "props": {"faction": "specimen"}, "tag": "labC2"},
+        "è": {"enemy": "ds-ridden", "props": {"faction": "specimen", "coat": "#e0702a", "skin": "#c49a7a", "hair": "#2a1a10", "name": "Trial 11"}, "tag": "labC3"},
+        "é": {"enemy": "ds-rat", "props": {"faction": "specimen"}, "tag": "labC4"},
+        "ê": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Ostrowski", "name": "Hal Ostrowski", "coat": "#e0702a", "skin": "#e0c0a0", "hair": "#6a6a6a", "saved": "Ostrowski. Receiving. I sign for the night deliveries.\n\nTonight I signed for myself. They put my name on the manifest, and I signed it, because you sign what’s on the clipboard.\n\nFour a week, no donor named. I never looked in the crates. I never looked.", "body": "Hal Ostrowski, Receiving. A clipboard in his jumpsuit pocket: tonight’s delivery manifest. The last line is his own name."}, "tag": "ostrowski"},
+        "ë": {"item": "ds-console", "props": {"dir": "w", "title": "Cage 8 · release", "kicker": "Cage Lab", "flag": "freeOstrowski", "prompt": "Open cage 8", "text": "CAGE 8 · STOCK: STAFF (1)\nRESERVED: TRIAL 15\n\nRELEASE: CONFIRMED\n\nThe gate of cage 8 slides back. The man inside looks at you as though you might be the next thing."}},
+        "ì": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CAGE 1", "status": "CONTAINED", "text": "STOCK: GRINNER (×2)\nTEMPLATE: G. MOSS\nFED: NO (TRIAL STOCK IS NOT FED)"}},
+        "í": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CAGE 2", "status": "CONTAINED", "text": "STOCK: MIDWIFE (ADULT)\nFROM: GESTATION (FLOOR 3)\nFOR: TRIAL 12"}},
+        "î": {"item": "ds-cell-sign", "props": {"face": "s", "label": "CAGE 4", "status": "CONTAINED", "text": "STOCK: RATS (×40, approx.)\nTEMPLATE: M. THALE\nCOUNT: please do not count them"}},
+        "ï": {"item": "ds-cell-sign", "props": {"face": "n", "label": "CAGE 5", "status": "CONTAINED", "text": "STOCK: SUBJECT, TRIAL 11 (RIDDEN)\nFROM: GESTATION (FLOOR 3)\n\nIt was a contestant once. It still wears the jumpsuit."}},
+        "ð": {"item": "ds-cell-sign", "props": {"face": "n", "label": "CAGE 8", "status": "CONTAINED", "text": "STOCK: STAFF (1)\nRESERVED: TRIAL 15\n\nA man in an orange jumpsuit, sitting with his back to the bars. The release is on the console by the far wall."}},
+        "ñ": {"item": "ds-specimen-file", "props": {"dir": "s", "title": "Trial stock · log", "kicker": "Cage Lab", "flags": ["fileTrials", "sawProject"], "text": "PROVING GROUNDS · TRIAL STOCK\n\nTRIAL 11 · subject: volunteer (staff) · opponent: Tenant · 41 seconds · subject retained as stock (cage 5)\nTRIAL 12 · subject: volunteer (staff) · opponent: Midwife · 2 min 10 · the board stayed for the hatching\nTRIAL 13 · subject: volunteer (donor) · opponent: Grinners (3) · 19 seconds\nTRIAL 14 · subject: T. LARK · opponent: the Run · IN PROGRESS\n\nVolunteers are drawn from staff and donors. Durations are measured in seconds.", "ariadne": "THE VOLUNTEERS ARE THE DONORS. I HAVE THEIR NAMES."}},
+        "ò": {"item": "ds-lab-bench", "props": {"dir": "s", "w": 2, "kit": "rack", "title": "A lab bench", "kicker": "Cage Lab", "text": "Muzzles, collars, a box of tranquilliser darts (empty), and a clipboard: a feeding chart for the Grinners with every box ticked “NO”."}},
+        "ó": {"item": "ds-lab-bench", "props": {"dir": "s", "w": 2, "title": "A lab bench", "kicker": "Cage Lab", "text": "A dissecting tray with a Grinner’s jaw on it, wired open. The teeth are human: adult, permanent, every one a different person’s."}},
+        "ô": {"item": "ds-purge"},
+        "õ": {"tag": "labZ1"},
+        "ö": {"tag": "labZ2"},
+        "÷": {"tag": "labZ3"},
+        "ø": {"item": "sign", "props": {"face": "e", "label": "Cage Lab", "text": "CAGE LAB · TRIAL STOCK\nCAGES OPEN ON THE TRIAL SYSTEM’S SIGNAL\nDO NOT LINGER IN THE AISLE"}},
+        "ù": {"enemy": "ds-rat-king", "tag": "ratKing"},
+        "ú": {"enemy": "ds-rat"},
+        "û": {"tag": "ratVent"},
+        "ü": {"item": "ds-specimen-file", "props": {"dir": "n", "title": "The count", "kicker": "Rat Warren", "flags": ["fileRats", "sawProject"], "text": "TEMPLATE 4-R · DAILY COUNT · FOR M. THALE\n\nMON 3,212 · TUE 3,388 · WED 3,951 · THU 4,104\nFRI: a king has formed (approx. 12 bound at the tail). The count is now uncertain. M.T. has been informed. M.T. asked us to count again.\nSAT: counted again. 4,112.\nSUN: counted again. 4,112. Every time. It is always 4,112, however many we take out.", "ariadne": "SHE COUNTS THE DONORS THE SAME WAY."}},
+        "ý": {"item": "ds-kennel", "props": {"state": "broken", "title": "A rat cage", "kicker": "Rat Warren", "text": "A breeding cage, chewed open from inside, full of shredded paper. The paper was a payroll."}},
+        "þ": {"item": "ds-scratches", "props": {"turn": 0.4}},
+        "ÿ": {"tag": "warrenZone"},
+        "Ā": {"item": "sign", "props": {"face": "e", "label": "Rat Warren", "text": "RAT WARREN · TEMPLATE 4-R\nM. THALE · DAILY COUNT AT 06:00\n\nKEEP THE DOOR SHUT. THEY COUNT YOU TOO."}},
+        "ā": {"item": "armchair", "props": {"dir": "n"}},
+        "Ă": {"item": "ds-champagne", "props": {"title": "Champagne", "text": "A bottle of the 1996, open, in an ice bucket that’s gone to water. Five glasses, one on its side. Somebody poured for the board tonight, to drink up there while they watched you down here."}},
+        "ă": {"item": "ds-trial-console", "props": {"dir": "n"}},
+        "Ą": {"item": "ds-betting-board", "props": {"face": "n", "w": 3, "flags": ["sawBets"], "ariadne": "THEY BET ON YOU FROM UPSTAIRS. THE BOX HAS A FEED TO THE BOARDROOM.", "text": "TRIAL 14 · TONIGHT · PRIVATE BOOK\n\nA.V. ...... subject survives the Run ...... 5,000\nM.T. ...... under three minutes ........... 40,000\nI.B. ...... the contestants first ......... 2,000\nG.M. ...... the dogs ....................... 10,000\nS.P. ...... no bet (“I am not a gambler”)\n\nHOUSE NOTE: the subject is the Director’s own selection.\nPARTNERS ATTENDING: none (lockdown). BOARD ATTENDING: remotely."}},
+        "ą": {"item": "ds-monitors", "props": {"face": "w", "w": 2, "text": "THE BOX · FEEDS\n\nNURSERY · PARTY ROOM · LONG ROOM · THE RUN · THE ARENA\n\nOne feed is outgoing, not incoming: BOX → BOARDROOM (FLOOR 5). Its light is on."}},
+        "Ć": {"item": "ds-fragment", "props": {"n": 8, "title": "Pushed down the side of an armchair"}},
+        "ć": {"tag": "refuge"},
+        "Ĉ": {"tag": "boxZone"},
+        "ĉ": {"item": "ds-vent", "props": {"face": "s"}},
+        "Ċ": {"tag": "arenaSpawn"},
+        "ċ": {"tag": "arenaZone"},
+        "Č": {"item": "ds-smear", "props": {"turn": 0.3, "len": 3}},
+        "č": {"item": "ds-smear", "props": {"turn": 1.8, "len": 3}},
+        "Ď": {"item": "ds-smear", "props": {"turn": 2.6, "len": 3}},
+        "ď": {"item": "sign", "props": {"face": "s", "label": "Subject exit", "text": "SUBJECT EXIT\nTHIS WAY OUT FOR WINNERS"}},
+        "Đ": {"item": "dart-emitter", "props": {"face": "s"}, "tag": "dart1"},
+        "đ": {"item": "dart-emitter", "props": {"face": "n"}, "tag": "dart1"},
+        "Ē": {"item": "beam-emitter", "props": {"face": "s"}, "tag": "dart1Beam"},
+        "ē": {"item": "beam-emitter", "props": {"face": "n"}, "tag": "dart1Beam"},
+        "Ĕ": {"enemy": "ds-ceiling-turret", "tag": "runTurret"},
+        "ĕ": {"item": "beam-emitter", "props": {"face": "s"}, "tag": "turretBeam1"},
+        "Ė": {"item": "beam-emitter", "props": {"face": "n"}, "tag": "turretBeam1"},
+        "ė": {"item": "ds-body", "props": {"title": "Trial 13", "kicker": "The Run", "angle": 0.7, "color": "#e0702a", "skin": "#c49a7a", "hair": "#1a1410", "text": "A man in an orange jumpsuit, face down in the corner where the Run ran out. TRIAL 13 on the back. He ran the wrong way and there was nowhere left to run. Nineteen seconds, the log will say."}},
+        "Ę": {"item": "ds-body", "props": {"title": "A contestant", "kicker": "The Run", "angle": 1.7, "color": "#e0702a", "skin": "#e0c0a0", "hair": "#5a3a1a", "text": "Orange, SUBJECT across the back, a staff lanyard from Receiving. The dogs had him in this corner. One shoe is still on."}},
+        "ę": {"item": "ds-body", "props": {"title": "A handler", "kicker": "The Run", "angle": 2.7, "color": "#2a2e33", "skin": "#6a4a32", "hair": "#141010", "text": "A handler in a black helmet, catchpole snapped in half. Even the people who fed them weren’t safe in here once the trial started."}},
+        "Ě": {"item": "ds-smear", "props": {"turn": 0.7, "len": 3}},
+        "ě": {"item": "ds-smear", "props": {"turn": 0.5, "len": 4}},
+        "Ĝ": {"item": "ds-smear", "props": {"turn": 0.2999999999999998, "len": 2}},
+        "ĝ": {"item": "ds-smear", "props": {"turn": 2.8999999999999986, "len": 4}},
+        "Ğ": {"item": "ds-smear", "props": {"turn": 2.6999999999999993, "len": 2}},
+        "ğ": {"item": "ds-odds-board", "props": {"face": "s"}},
+        "Ġ": {"tag": "runHatch"},
+        "ġ": {"item": "ds-vent", "props": {"face": "w"}},
+        "Ģ": {"tag": "pack2"},
+        "ģ": {"tag": "nearBox"},
+        "Ĥ": {"tag": "cr1Zone"},
+        "ĥ": {"tag": "cr1Spawn"},
+        "Ħ": {"item": "ds-smear", "props": {"turn": 0.8, "len": 3}},
+        "ħ": {"item": "sign", "props": {"face": "s", "label": "Cage room", "text": "CAGE ROOM · ONE\nTHE GATES CLOSE WHEN THE SUBJECT IS INSIDE\nTHE GATES OPEN WHEN THE DOGS ARE DEAD"}},
+        "Ĩ": {"tag": "cr2Zone"},
+        "ĩ": {"tag": "cr2Spawn"},
+        "Ī": {"item": "sign", "props": {"face": "s", "label": "Cage room", "text": "CAGE ROOM · TWO\nTHE GATES CLOSE WHEN THE SUBJECT IS INSIDE\nTHE GATES OPEN WHEN THE DOGS ARE DEAD"}},
+        "ī": {"tag": "cr3Zone"},
+        "Ĭ": {"tag": "cr3Spawn"},
+        "ĭ": {"item": "sign", "props": {"face": "s", "label": "Cage room", "text": "CAGE ROOM · THREE\nTHE GATES CLOSE WHEN THE SUBJECT IS INSIDE\nTHE GATES OPEN WHEN THE DOGS ARE DEAD"}},
+        "Į": {"tag": "mazeIn"},
       },
       rooms: [
         {"name": "The Long Room", "rect": [1, 1, 20, 8], "note": "Private · board use only"},
@@ -26975,7 +27388,12 @@ LM.definePack({
       traps: [
         {"trigger": {"type": "beam", "tag": "dart1Beam"}, "once": false, "cooldown": 3, "effects": [{"type": "darts", "tag": "dart1", "volleys": 3, "interval": 0.4, "damage": 11, "speed": 460}]},
         {"trigger": {"type": "beam", "tag": "turretBeam1"}, "effects": [{"type": "alarm", "radius": 700, "text": "A laser trips. Somewhere close, a turret drops out of the ceiling."}, {"type": "transmission", "who": "trial", "delay": 0.4, "text": "Oh, he’s found the turrets!"}]},
-        {"trigger": {"type": "zone", "tag": "arrive"}, "effects": [{"type": "transmission", "who": "voss", "delay": 1.4, "text": "Four. Garrick’s floor."}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "If anything on this floor tells you it’s on your side, it’s lying."}, {"type": "transmission", "who": "trial", "delay": 1.4, "text": "Good evening! The Proving Grounds are open, and tonight’s subject is on the floor!"}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "That’s Garrick’s trial system. It runs itself, and tonight it thinks you’re one of its subjects."}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "There’s no way across this floor but the Run. Go through the gate at the east end of the corridor and make for the Box, in the middle. The console in there ends the trial."}]},
+        {"trigger": {"type": "zone", "tag": "arrive"}, "effects": [{"type": "transmission", "who": "voss", "delay": 1.4, "text": "Four. Garrick’s floor."}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "If anything on this floor tells you it’s on your side, it’s lying."}, {"type": "transmission", "who": "trial", "delay": 1.4, "text": "Good evening! The Proving Grounds are open, and tonight’s subject is on the floor!"}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "That’s Garrick’s trial system. It runs itself, and tonight it thinks you’re one of its subjects."}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "There’s no way across this floor but the Run. Go through the gate at the east end of the corridor and make for the Box, in the middle. The console in there ends the trial.", "flag": "f4Briefed"}]},
+        {"trigger": {"type": "flag", "tag": "f4Briefed"}, "effects": [{"type": "flag", "name": "aegisSent"}]},
+        {"trigger": {"type": "zone", "tag": "lobbyIn"}, "effects": [{"type": "flag", "name": "aegisSent"}]},
+        {"trigger": {"type": "flag", "tag": "aegisSent"}, "effects": [{"type": "message", "text": "Behind the freight elevator’s doors, something is coming up the shaft.", "kind": "warn", "delay": 0.4}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.8, "delay": 3.0, "text": "YOU WILL NEED THIS. DEATH HERE."}, {"type": "transmission", "who": "voss", "delay": 3.1, "text": "That car hasn’t moved since the lockdown. Nothing in this building has the power to move it."}, {"type": "transmission", "who": "voss", "delay": 3.2, "text": "Take it if you have to, Theo. Just don’t listen to it."}]},
+        {"trigger": {"type": "flag", "tag": "aegisWorn"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.4, "delay": 1.0, "text": "WHEN IT CANNOT HOLD, IT BREAKS. NOT YOU."}]},
+        {"trigger": {"type": "flag", "tag": "aegisSaved"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.6, "delay": 0.8, "text": "IT BROKE FOR YOU. IT WILL MEND. STAY ALIVE UNTIL IT DOES."}]},
         {"trigger": {"type": "zone", "tag": "gateZone"}, "effects": [{"type": "transmission", "who": "trial", "delay": 0.3, "text": "Step through the gate, Theo! Bets close at the gate!"}]},
         {"trigger": {"type": "flag", "tag": "readSchedule"}, "effects": [{"type": "branch", "not": ["trialEnded"], "then": [{"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.8, "delay": 0.6, "text": "HE CHOSE YOU AT 02:41."}, {"type": "transmission", "who": "voss", "delay": 1.0, "text": "The system picks from whoever’s on shift, Theo. I didn’t choose anything. Get to the Box."}]}]},
         {"trigger": {"type": "zone", "tag": "runStart"}, "effects": [{"type": "flag", "name": "trialStarted"}, {"type": "seal", "tag": "startGate", "text": "The gate comes down behind you."}, {"type": "ambient", "ambient": "#3a2428", "time": 2}, {"type": "transmission", "who": "trial", "delay": 0.6, "text": "Ladies and gentlemen of the board: tonight’s subject, Theo Lark, of Facilities!"}, {"type": "transmission", "who": "trial", "delay": 0.6, "text": "The house has him at nine to one. Our other contestants get a head start. The dogs do not."}, {"type": "transmission", "who": "trial", "delay": 0.6, "text": "Make for the Box, Theo. Contestants... run!"}, {"type": "unseal", "tag": "contestantCage", "delay": 7.5}, {"type": "faction", "tag": "contestants", "faction": "captive", "delay": 7.5}, {"type": "message", "text": "The cages open. The three in orange run for the maze.", "kind": "warn", "delay": 7.6}, {"type": "unseal", "tag": "kennelGate", "delay": 14}, {"type": "faction", "tag": "startHounds", "faction": "monster", "aggro": true, "delay": 14}, {"type": "message", "text": "Behind you, the kennels open.", "kind": "warn", "delay": 14.1}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.0, "delay": 15.5, "text": "THEY ARE BETTING ON YOU."}, {"type": "spawn", "tag": "runHatch", "enemy": "ds-hound", "count": 3, "delay": 11}, {"type": "transmission", "who": "trial", "delay": 14, "text": "And three more from the hatches! The contestants are in trouble, Theo!"}]},
@@ -27072,55 +27490,55 @@ LM.definePack({
         "################################################################################",
       ],
       objects: [
-        "                                                           n",
-        "  Ö                Ö                                                D",
-        " Ò                          7                                        t  u  v",
-        " ××Õ  É  Ë  Í  É      6                                       m",
-        " ××ÐÇ    È         Ó   44444                             b s       hz          w",
-        " ×Ñ     Ô              44444                       h  a                E   C",
-        " ××   Ê  Ì  Î  Ï     ©      e               l                            B",
-        "                          5         k                    d  p  c q    y      x",
-        " Ö                 Ö   5   5j f                     c",
-        "        H  V        H 3     Q           i                   H   K     H    G",
-        "         222                                                                 P",
+        "                                                           p",
+        "  ×                ×                                                E",
+        " Ó                          8                                        u  v  w",
+        " ØØÖ  Ê  Ì  Î  Ê      7                                       n",
+        " ØØÑÈ    É         Ô   55555                             b t       hB          x",
+        " ØÒ     Õ              55555                      mh  a                G   D",
+        " ØØ   Ë  Í  Ï  Ð     ª      e                     m                      C",
+        "                          6         k       l     m      d  q  c s    z      y",
+        " ×                 ×   6   6j f                   m c",
+        "        I  0        I 4     R           i         m         I   M     I    H",
+        "         333                                                                 Q",
         "",
-        "  q 000        111        c   c                                 OOO",
-        "    R    ¦ µ   T ¶  ξ     Ħ       I     G     I     J          M",
-        "      Ω                   Ĥ      Ĥ                Ė  ĭĭ          Ü      Û     Û",
-        "   ΦΨª £    °       ±         ĥ    ġ               q ĭ     Ø   Ù Ü Ú      Û",
-        "¥    ª       ¿                                               Ý  ÞÜ   ß   à  á",
-        "  ªªªª    · Â º¾  »  ¹       ģģ    ė                             Ü",
-        "  ª¤ªª    ©     ®            ģģ     c ġ",
-        " ¡         Á       À                 Ĉ   Ĉ    Ĉ                       ä",
-        "        ¢    Æ¼   ½Æ  c    c         ĉ   ĉ    ĉ    ę     ãq                   c",
-        "     §      ²ÆÆÆÆÆÆ ³     Ĥ      Ĥ      č                    â       J      G",
-        "             « ¬             Ď    j                                        è  è",
-        "           Å       ÃÄ                 ċ                     åå    æ          è",
-        "                           c       ĉ            ĉ                          èèè",
-        "                  ξ                         Č     J3           ë    ì    í",
-        "  * [ ] { }  ?           $      Ę                h Ě          ô    õ     ö",
-        "                ^  @             P ĊĊĊĊĊĊĊĊĊĊĊĊĊĊ             ô    õ     ö    ó",
-        "                     8             q            c             ô    õ     ö",
-        "β                                                        ÷ν   ô    õð    ö",
-        "     η   θ      :    %              Ć          Ć              ôñ   õ    òö   ê",
-        "γ           λ      α                ĆĀ  ĀĀ Ā  ĀĆĄ          c  ô    õ     ö    P",
-        "                                       āććć Ă  Ć  Ģě          ô    õ     ö",
-        "δ    ι   κ      \"                   Ć  ććććć   ą               î         ï",
-        "              ν                     ă          Ğ     M",
-        " c                  μ              Ģ  Ģ     Ģ  Ģ  ğĢĠ        ç              é",
-        "      ε φ   ζ υ",
-        "                  ρ      d ĩ                     đďďĔ",
-        "                 π        Ĩ      Ĩ           ĝ    ğ    d          ú",
-        "            P       τ         ĥ                       ē     ü        ý  ù     ú",
-        "               σ     9                   Ĭ   3   ĒĐĐĕ     ú     ù         ü",
-        "       χ                     ħħ          ī      ī                   ù        ù",
-        " z   Π               &       ħħ              ĥ                 ý",
-        "          Γ                                               þ       ü   ø      Ξ",
-        "   Λ   ψ     Δ     c       q                ĪĪ     Ĝ      þþ  ù",
-        "                Γ         Ĩ      Ĩ          ĪĪ            þq               ù",
-        "                                                  M      ÿ        ù    ý      ú",
-        " ΞΞ  q   ω ω      Θ    P                  c               ú  û           ù  ü",
-        "    Σ               q     ġ              ī      ī                       ú     c",
+        "  s 111        222        c   c                                 PPP",
+        "    T    § ¶   V ·  π     ħ       J     H     J     K          O",
+        "      ¡                   ĥ      ĥ                ė  ĮĮ          Ý      Ü     Ü",
+        "   ΨΩ« ¤    ±       ²         Ħ    Ģ               s Į     Ù   Ú Ý Û      Ü",
+        "¦    «       À                                               Þ  ßÝ   à   á  â",
+        "  ««««    ¹ Ã »¿  ¼  º       ĤĤ    Ę                             Ý",
+        "  «¥««    ª     °            ĤĤ     c Ģ",
+        " ¢         Â       Á                 ĉ   ĉ    ĉ                       å",
+        "        £    Ç½   ¾Ç  c    c         Ċ   Ċ    Ċ    Ě     äs                   c",
+        "     ©      ³ÇÇÇÇÇÇ µ     ĥ      ĥ      Ď                    ã       K      H",
+        "             ¬ ®             ď    j                                        é  é",
+        "           Æ       ÄÅ                 Č                     ææ    ç          é",
+        "                           c       Ċ            Ċ                          ééé",
+        "                  π                         č     K4           ì    í    î",
+        "  [ ] { } ?  ^           %      ę                h ě          õ    ö     ÷",
+        "                :  α             Q ċċċċċċċċċċċċċċ             õ    ö     ÷    ô",
+        "                     9             s            c             õ    ö     ÷",
+        "γ                                                        øξ   õ    öñ    ÷",
+        "     θ   ι      \"    &              ć          ć              õò   ö    ó÷   ë",
+        "δ           μ      β                ćā  āā ā  āćą          c  õ    ö     ÷    Q",
+        "                                       ĂĈĈĈ ă  ć  ģĜ          õ    ö     ÷",
+        "ε    κ   λ      @                   ć  ĈĈĈĈĈ   Ć               ï         ð",
+        "              ξ                     Ą          ğ     O",
+        " c                  ν              ģ  ģ     ģ  ģ  Ġģġ        è              ê",
+        "      ζ χ   η φ",
+        "                  σ      d Ī                     ĒĐĐĕ",
+        "                 ρ        ĩ      ĩ           Ğ    Ġ    d          û",
+        "            Q       υ         Ħ                       Ĕ     ý        þ  ú     û",
+        "               τ     $                   ĭ   4   ēđđĖ     û     ú         ý",
+        "       ψ                     ĨĨ          Ĭ      Ĭ                   ú        ú",
+        " B   Σ               *       ĨĨ              Ħ                 þ",
+        "          Δ                                               ÿ       ý   ù      Π",
+        "   Ξ   ω     Θ     c       s                īī     ĝ      ÿÿ  ú",
+        "                Δ         ĩ      ĩ          īī            ÿs               ú",
+        "                                                  O      Ā        ú    þ      û",
+        " ΠΠ  s   Γ Γ      Λ    Q                  c               û  ü           ú  ý",
+        "    Φ               s     Ģ              Ĭ      Ĭ                       û     c",
         "",
       ],
     },

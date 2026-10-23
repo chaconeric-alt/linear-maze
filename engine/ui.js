@@ -261,7 +261,7 @@
         const g = LM.get('gadgets', id);
         const n = g.badge ? g.badge(game, P) : 0;
         const chip = h('button', { class: 'gadget-chip', type: 'button', title: g.name },
-          h('b', null, (g.key || '').replace('Key', '')), h('span', null, g.short || g.name), n ? h('i', { class: 'badge' }, String(n)) : null);
+          g.key ? h('b', null, g.key.replace('Key', '')) : null, h('span', null, g.short || g.name), n ? h('i', { class: 'badge' }, String(n)) : null);
         chip.addEventListener('click', () => { if (game.state === 'play' && g.use) g.use(game, P); });
         return chip;
       }));

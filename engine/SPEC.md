@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.5.5 · October 2026
+Engine 0.5.6 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -19,6 +19,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.4:** factions: who fights whom. Enemies have sides; robots and monsters can fight each other, and an enemy can be on yours (an ally that fights with you and never hurts you, whose health bar and map dot are green). A game sets the table, a floor can change it, a trap or code can move enemies from one side to another (section 6.20). Enemies chasing something other than the player find their way with a short search (`LM.nav.step`, `LM.ai.goTo`), and robots' view cones (`view`) count for every foe. Statuses can count down on the HUD, stack, run code every frame, say how they ended, and be carried up and down the stairs (section 6.17). A `branch` trap effect runs one list of effects or another depending on story flags (section 6.8). A melee swipe or a charge no longer lands through glass or a wall.
 
 **New in 0.5.5:** waves. A `spawn` trap effect can tag what it spawns (`as`), and a `clear` trap waits for a group that appears later, so a sealed arena can send one wave after another (section 6.8). The `faction` effect's `aggro` lets enemies out hunting: they come straight for you. `LM.ai.goTo` takes a search limit, for something that has to cross a whole maze (section 6.5).
+
+**New in 0.5.6:** an elevator with no power can still be parked on one floor (its `parked`): once a flag is set it waits there, lit, doors held open, panel dead, and if you're on that floor when the flag is set it comes up the shaft first and can bring cargo (section 6.15). Gear can keep you alive: armour, gadgets and blessings can have `lastStand`, asked when a hit would kill you (section 4, *Damage*; 6.7). Gadgets can resist statuses like armour, and draw an aura round you all the time (`drawAura`, `shieldRing: false`; section 6.12).
 
 ---
 
@@ -144,6 +146,8 @@ Enemies notice the player by line of sight within `sight` range, by being shot, 
 ### Damage
 
 `LM.combat.hurt(game, target, amount, opts)` handles all three target kinds. For the player: invulnerability check, shield absorbs first, then armor reduces the rest, then knockback, shake and hit-stop. For enemies: armor reduces damage (the enemy's own `e.armor` if it has one, else its def's; statuses can make it take more), knockback is divided by mass, a damage number floats up, `def.onHurt(e, game, dmg, opts)` hears it, death drops loot. Destructible items lose hit points and break. `opts.status` (an id, or `{ id, seconds }`) puts a status on the target when the hit lands (section 6.17); a status ticking (`opts.type: 'status'`) hurts the player without the screen kick or the short invulnerability a hit gives.
+
+**A last stand.** When a hit would take the player to 0, `LM.combat.lastStand(game, P, opts)` asks what they carry, in order: armour worn, gadgets, blessings. The first whose `lastStand(game, P, opts)` returns true keeps them alive; it sets `P.hp` itself (1 if it doesn't), and does whatever else it does (a cooldown, a blast, invulnerability). Only damage asks: a pit or drowning doesn't.
 
 Explosions damage everything in radius that has a clear line from the centre. The player's own blasts hurt them at 35%, and don't hurt enemies on the player's side. An enemy's blast hurts what its faction fights (only the player, with the default table); barrel blasts hurt everyone. Projectiles and blasts from an enemy carry `faction` and `by` (the enemy), so a hit can be traced back: `opts.by` makes the target turn on its attacker, and a kill by another enemy doesn't count toward the floor's kills.
 
@@ -419,7 +423,7 @@ Both add numbers to the player's stats. Every stat a modifier can touch:
 | `goldFind` | 0 | extra gold from enemy drops |
 | `ammoMul` | 1 | ammunition capacity multiplier |
 
-Armor: `{ name, slot: 'head'|'body'|'feet'|'trinket', mods, resist, desc, color, trim, lamp, drawIcon }`. `resist: { spores: 1 }`: statuses it keeps off (1) or shortens (0.5); several pieces add up. Blessings: `{ name, mods, desc, stack, onGrant(game, player) }`.
+Armor: `{ name, slot: 'head'|'body'|'feet'|'trinket', mods, resist, desc, color, trim, lamp, drawIcon, lastStand }`. `resist: { spores: 1 }`: statuses it keeps off (1) or shortens (0.5); several pieces add up (a gadget's `resist` counts too). Blessings: `{ name, mods, desc, stack, onGrant(game, player), lastStand }`. `lastStand(game, P, opts)`: a hit is about to kill you; return true to survive it (section 4, *Damage*).
 
 ### 6.8 Levels
 
@@ -590,7 +594,11 @@ gadgets: {
     primary(game, P) {},                             // left click while it is held (unarmed)
     update(game, P, dt) {},
     mods: (P) => ({ lightRadius: 170 }),             // stat modifiers while carried, like armor
+    resist: { held: 1 },                             // statuses it keeps off or shortens, like armor
+    lastStand(game, P, opts) {},                     // a hit would kill you: return true to live (section 4, Damage)
     drawHeld(g, P, game, t), drawGlow(g, P, game, t), drawIcon(g, W, H),
+    drawAura(g, P, game, t),                         // drawn round you in the glow layer all the time, held or not
+    shieldRing: false,                               // with drawAura: it draws the shield, so the plain ring isn't
   },
 },
 ```
@@ -627,9 +635,19 @@ With neither `floors` nor `except` an elevator stops at every floor of the game.
 
 **Riding.** The doors open as you walk up (and for monsters chasing you). Inside, E at the panel lists the floors the car stops at, in the order of the run (1-9 pick one; this floor is marked, and a floor where the doors would open onto a wall is listed but can't be chosen). The doors close, the car hums for a moment, and you step out on that floor standing where you stood in the car; its doors open after a ding. Step out before the doors shut and the ride is off. Floors remember how you left them (section 5), and the ride doesn't change where the stairs up lead.
 
+**Parked.** A car with no power can still be sent to one floor and left there, for a story beat: something sends it up with a delivery.
+
+```js
+'freight': { ..., power: 'liftsOn',
+  parked: { 'floor-4': { flag: 'sentUp', cargo: [{ item: 'crate', props: { ... }, tag: 'crate' }] } } },
+// or just a flag: parked: { 'floor-4': 'sentUp' }
+```
+
+Keyed by floor: a flag (or a list, any of them), or `{ flag, cargo }`. Once the flag is set the car waits on that floor lit, with its doors held open and its lamp on, but its panel is still dead (the game's `elevatorParked` words) and it goes nowhere. If the flag is set while you're on that floor, you hear it come: it hums up the shaft for a couple of seconds (blue lamp), sets down its `cargo` inside behind the shut doors (items, each `{ item, props, tag }`, side by side in the car), rings, and opens. Arriving on a floor where it's already parked, it is simply there, and anything left in it is where you left it (the floor remembers). `LM.elevators.parkedAt(el, levelId)`, `parked(el, game)`, `live(el, game)` (powered, or parked here).
+
 **Power.** An elevator with `power` stays dark (its lamp off, a red standby dot over its doors) and its doors stay shut until the flag is set; walking up to it says the game's `elevatorNoPower` words. When the flag is set, on any floor, every car of that elevator comes on. A stop listed in `stops` with `until` is shown on the panel but can't be chosen until its flag is set (with its `text`, or the game's `elevatorLocked` word). `LM.elevators.powered(el, game)`, `LM.elevators.stopOpen(el, levelId, game)`.
 
-`LM.elevators`: `list()`, `serves(el, levelId)`, `forLevel(levelId)`, `footprint(el, shift)` (every tile, the doors, the car, the tiles in front, the panel), `check(levelId, el)` (`{ fits, clear, problems }`), `stops(game, el)`, `openPanel(game, id)`; on a floor being played, `game.lifts` are its cars (`car.send(game, levelId)` rides). The tiles, the panel and the sounds (`lift`, `liftDing`) are defined by the engine in a pack called `elevators`, so a game can restyle any of them by defining the same ids in a later pack. The panel's words are in the manifest's `words` (`elevator`, `elevatorTitle`, `elevatorPrompt`, `elevatorHere`, `elevatorBlocked`, `elevatorStay`, `elevatorNoPower`, `elevatorLocked`).
+`LM.elevators`: `list()`, `serves(el, levelId)`, `forLevel(levelId)`, `footprint(el, shift)` (every tile, the doors, the car, the tiles in front, the panel), `check(levelId, el)` (`{ fits, clear, problems }`), `stops(game, el)`, `openPanel(game, id)`; on a floor being played, `game.lifts` are its cars (`car.send(game, levelId)` rides). The tiles, the panel and the sounds (`lift`, `liftDing`) are defined by the engine in a pack called `elevators`, so a game can restyle any of them by defining the same ids in a later pack. The panel's words are in the manifest's `words` (`elevator`, `elevatorTitle`, `elevatorPrompt`, `elevatorHere`, `elevatorBlocked`, `elevatorStay`, `elevatorNoPower`, `elevatorParked`, `elevatorLocked`).
 
 ### 6.16 Transmissions
 
@@ -692,7 +710,7 @@ implanted: { name: 'Implanted', seconds: 90, countdown: true, urgent: 20, stack:
   onEnd(game, P, s, reason) { if (reason === 'expired') hatch(game, P, s.n); } },
 ```
 
-Anything that hurts can carry one as `status` (an id or `{ id, seconds }`): a weapon, a projectile, any core attack, `LM.combat.explode`, `LM.combat.hurt`'s options. Code can call `LM.status.apply(game, target, 'chilled', { seconds: 3 })`, `LM.status.has(target, id)`, `LM.status.clear(game, target, id)`. Armor `resist` and an enemy's `resist` keep a status off (1) or shorten it. Only `keep` statuses are saved (`LM.status.save` / `load`, with the player); a new floor starts without the rest.
+Anything that hurts can carry one as `status` (an id or `{ id, seconds }`): a weapon, a projectile, any core attack, `LM.combat.explode`, `LM.combat.hurt`'s options. Code can call `LM.status.apply(game, target, 'chilled', { seconds: 3 })`, `LM.status.has(target, id)`, `LM.status.clear(game, target, id)`. Armor `resist`, a gadget's `resist` and an enemy's `resist` keep a status off (1) or shorten it. Only `keep` statuses are saved (`LM.status.save` / `load`, with the player); a new floor starts without the rest.
 
 ### 6.18 Ammunition
 
@@ -947,7 +965,7 @@ The editor's map palette has a Dressings tab: furniture and fixtures from every 
 
 `editor/js/lifts.js`. The map palette's **Elevators** tab is the brush for a new elevator (car width and depth, door width, which way the doors face; `[` and `]` turn it) and the list of every elevator in the game with how it sits on this floor (stops here, skips, doesn't fit, blocked, overlaps). With the brush, a click places one with its shaft's top-left corner at that tile; it is written into the plan (minus the floor's `elevatorShift`) and appears on every floor. Every shaft is outlined over the map (dashed where it skips the floor or doesn't fit), with an arrow out of its doors. Select a shaft to edit it: name, place (arrows, or Move… and click), facing (`[` `]`), size, doors, the floors it stops at (every floor, every floor but some, or only some), **+ Car before it / after it** (the next car in a bank, sharing a wall), Delete (or the Delete key). Pick (I) on a shaft takes its size and facing as the brush. Painting under a shaft changes the map underneath, which stays hidden while the shaft is there.
 
-Floor settings → **Stairs and elevators**: where the floor's stairs up lead (`stairsUp`: automatic, closed, or a floor), **stairs that go somewhere of their own** (the level's `stairs`: by tag, with where they lead, the flags that unlock them, what they say while locked, the tag you arrive on, the sound and the floor-finished button), which elevators stop here, and moving every elevator on this floor (`elevatorShift`). The elevator inspector has a **Power** field (its `power` flags). A tile type with a door has **Opens for a story flag**, **What it needs** and **Lock colour** (a clearance door). Trap effects a pack defines with `params` get a form like the engine's own (the transmission effect's speaker list, for one). Statuses are a kind the editor lists (with speakers, under the game's settings), and ammunition a pack adds with `LM.defineAmmo` joins the editor's ammunition lists. Check reports an elevator that doesn't fit, opens onto a wall, overlaps another, or is built over the floor's start or stairs down, and counts things on the map under a shaft; it also warns about stairs in `stairs` whose tag no tile has, and notes stairs that lead to a floor the game doesn't have yet. The Floors page has a table of which elevator stops at which floor.
+Floor settings → **Stairs and elevators**: where the floor's stairs up lead (`stairsUp`: automatic, closed, or a floor), **stairs that go somewhere of their own** (the level's `stairs`: by tag, with where they lead, the flags that unlock them, what they say while locked, the tag you arrive on, the sound and the floor-finished button), which elevators stop here, and moving every elevator on this floor (`elevatorShift`). The elevator inspector has a **Power** field (its `power` flags) and **Parked here** (the flag that parks it on this floor, `parked`; its cargo, if it has one, is listed, and is written in code). A tile type with a door has **Opens for a story flag**, **What it needs** and **Lock colour** (a clearance door). Trap effects a pack defines with `params` get a form like the engine's own (the transmission effect's speaker list, for one). Statuses are a kind the editor lists (with speakers, under the game's settings), and ammunition a pack adds with `LM.defineAmmo` joins the editor's ammunition lists. Check reports an elevator that doesn't fit, opens onto a wall, overlaps another, or is built over the floor's start or stairs down, and counts things on the map under a shaft; it also warns about stairs in `stairs` whose tag no tile has, and notes stairs that lead to a floor the game doesn't have yet. The Floors page has a table of which elevator stops at which floor.
 
 ---
 

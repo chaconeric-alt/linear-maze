@@ -47,6 +47,7 @@
     elevatorBlocked: 'no way out there',
     elevatorStay: 'Stay on this floor',
     elevatorNoPower: 'No power. The doors won’t open.',
+    elevatorParked: 'The panel is dead. The car goes nowhere.',
     elevatorLocked: 'locked',
     stairsLocked: 'The way is shut.',
     doorNeeds: 'Locked. It needs {need}.',

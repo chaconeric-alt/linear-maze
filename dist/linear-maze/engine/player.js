@@ -513,8 +513,20 @@
           ctx.restore();
         }
       }
+      // a gadget's aura (a force field): drawn round you all the time, held or not
+      // (shieldRing: false, and it draws the shield instead of the plain ring)
+      let ring = true;
+      for (const id of this.gadgets) {
+        const gd = LM.find('gadgets', id);
+        if (gd && gd.drawAura) {
+          ctx.save();
+          gd.drawAura(ctx, this, game, t);
+          ctx.restore();
+          if (gd.shieldRing === false) ring = false;
+        }
+      }
       const st = this.stats();
-      if (this.shieldFlash > 0 || (st.maxShield > 0 && this.shield > 0)) {
+      if (ring && (this.shieldFlash > 0 || (st.maxShield > 0 && this.shield > 0))) {
         const a = this.shieldFlash > 0 ? this.shieldFlash * 2.5 : 0.12 + 0.05 * Math.sin(t * 3);
         ctx.strokeStyle = 'rgba(92,200,232,' + Math.min(0.9, a) + ')';
         ctx.lineWidth = 1.4;

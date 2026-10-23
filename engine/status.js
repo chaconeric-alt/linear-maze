@@ -23,7 +23,8 @@
  * explosion, a trap — as an id or { id, seconds }. LM.combat.hurt applies it when the hit lands.
  * Code can call LM.status.apply(game, target, 'chilled', { seconds: 3 }) directly.
  *
- * Resistance: armor `resist: { spores: 1 }` (1 = immune, 0.5 = half as long); an enemy's def `resist` likewise.
+ * Resistance: armor `resist: { spores: 1 }` (1 = immune, 0.5 = half as long), and a gadget's `resist` the same;
+ * an enemy's def `resist` likewise.
  */
 'use strict';
 (function () {
@@ -44,6 +45,10 @@
         if (a && a.resist && a.resist[id]) r += a.resist[id];
       }
       for (const b of target.buffs || []) if (b.resist && b.resist[id]) r += b.resist[id];
+      for (const gid of target.gadgets || []) {
+        const gd = LM.find('gadgets', gid);
+        if (gd && gd.resist && gd.resist[id]) r += gd.resist[id];
+      }
     } else if (target.def && target.def.resist && target.def.resist[id]) r += target.def.resist[id];
     return U.clamp(r, 0, 1);
   };

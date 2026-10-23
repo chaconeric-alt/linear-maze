@@ -33,6 +33,7 @@
     ['elevatorBlocked', 'Elevator: beside a floor where its doors open onto a wall', '', 'Elevator panel'],
     ['elevatorStay', 'Elevator: the close button', '', 'Elevator panel'],
     ['elevatorNoPower', 'Elevator: walking up to one with no power', '', 'Elevator'],
+    ['elevatorParked', 'Elevator: the panel of a car parked with no power', '', 'Elevator panel'],
     ['elevatorLocked', 'Elevator: beside a floor it can’t go to yet', '', 'Elevator panel'],
     ['stairsLocked', 'Stairs that are locked, or lead to a floor that isn’t there', '', 'Stairs'],
     ['doorNeeds', 'A clearance door that won’t open yet', '{need}: what it needs', 'Doors'],

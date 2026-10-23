@@ -1,6 +1,6 @@
 # Dead Signal — design and build plan
 
-Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.5)
+Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.6)
 
 This file is the plan for building Dead Signal into a whole game: the story, the building, six maps (five floors and a basement) chapter by chapter, the monsters, robots, traps, puzzles, weapons, items and dressings on each, and the engine and pack code the game needs that the engine doesn't have yet. It is written to be handed to Claude a milestone at a time (section 11 has a prompt for each), together with the workspace, `engine/SPEC.md` and this file.
 
@@ -43,6 +43,7 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
 - Moss's incident log is the proof the plan wanted: Voss ran LABRYS to stop ARIADNE's transmission, and called the containment failure acceptable. The trial programme says the Director picked you as tonight's subject at 02:41.
 - Engine (0.5.5): waves (the `spawn` effect's `as`, and `clear` traps that wait for a group spawned later), the `faction` effect's `aggro`, `LM.ai.goTo`'s search limit.
 - The way up is Stair A again (the west stairwell); Stair B is where you came in. On Stair A's landing Voss explains himself, by what you found (the log, the suites, the people you saved).
+- Added after M4 (engine 0.5.6), because the floor is hard: **the AEGIS field**. When Voss has finished welcoming you (or as soon as you step into the lobby), the dead freight car comes up the shaft on what power ARIADNE can spare, rings, and opens: in it, a hard case with ARIADNE's eye on the lid. ARIADNE: `YOU WILL NEED THIS. DEATH HERE.` Voss: the car hasn't moved since the lockdown; take it if you have to, don't listen to it. The AEGIS is a personal containment field worn over your armour (a gadget, no slot): a strong shield that comes back fast, damage taken off whatever gets through, grips slide off it; when a hit would kill you it overloads instead, throws everything off you, and needs a minute to mend. Every number is in `packs/ds-arsenal/aegis.js` (`TUNE`), to be set with the floor's difficulty. Engine: a parked elevator with cargo (`parked`), gear with a `lastStand`, gadget `resist` and `drawAura`.
 - Next: milestone M5 (Floor 5).
 
 ---
@@ -186,7 +187,7 @@ x:   22   26        31  34  37  40  42   46       53   57
 | West stairwell | x 22–27, y 1–8 | The main stairs. On each floor: `<` (back down to the floor below) and `>` (up to the floor above), a landing between. |
 | Passenger cars A2, A3 | elevators at x 34 and x 37, y 1, doors south | Floors 1–5. 2 × 2 cars, sharing walls. |
 | The private car A1 | elevator at x 31, y 1, doors south | Sub-level B and Floor 5 only: the board's own lift from their chapel to the Sermon. On Floors 1–4 draw solid wall where its shaft passes. |
-| Freight car F | elevator at x 42, y 1, `w: 3, d: 3, door: 2`, doors south | Sub-level B to Floor 4: the labs' service lift. |
+| Freight car F | elevator at x 42, y 1, `w: 3, d: 3, door: 2`, doors south | Sub-level B to Floor 4: the labs' service lift. Parked on Floor 4 by `aegisSent` (`parked`, engine 0.5.6): ARIADNE sends it up with the AEGIS field in it. |
 | Elevator lobby | x 30–49, y 5–9 | Open floor in front of every car on every floor. (A 2 × 2 car's shaft is 4 × 4 tiles with its walls, so the passenger doors open onto row 5 and the freight doors onto row 6.) |
 | East stairwell | x 52–57, y 1–8 | Floor 1: the only stairs down to Sub-level B, behind a lockdown shutter. Floors 2–5: a second way between floors, locked until the descent (it becomes the fast route down in chapter 6). |
 
@@ -419,6 +420,7 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 
 **The route**
 1. **Stair B.** You come up into the east stairwell. Voss: "Four. Garrick's floor. If anything on this floor tells you it's on your side, it's lying." The announcer welcomes the subject. Voss: the trial system runs itself and thinks you're a subject; the only way across is the Run; make for the Box, in the middle, whose console ends the trial.
+   **The freight car.** When he's done (`f4Briefed`), or as soon as you step into the lobby (`lobbyIn`), whichever is first (`aegisSent`): something comes up the freight shaft, the bell rings, and the doors open on a lit car with a hard case in it. ARIADNE: `YOU WILL NEED THIS. DEATH HERE.` Voss: "That car hasn't moved since the lockdown. Nothing in this building has the power to move it. Take it if you have to, Theo. Just don't listen to it." In the case, the AEGIS field (`aegisWorn`; ARIADNE: `WHEN IT CANNOT HOLD, IT BREAKS. NOT YOU.`). The first time it saves your life (`aegisSaved`): `IT BROKE FOR YOU. IT WILL MEND. STAY ALIVE UNTIL IT DOES.` The car stays there, lit and open, its panel dead.
 2. **The corridor.** The west half of the floor is behind a trial shutter. East: Trial Control (tonight's programme: subject T. LARK, *selected by the Director 02:41*; ARIADNE: `HE CHOSE YOU AT 02:41.`) and the Handlers' Room (a loose Grinner; the Handler's Boots). The gate to the Run is at the east end.
 3. **The Pens.** Through the gate the trial starts (`trialStarted`): the gate drops behind you, the announcer gives your odds (nine to one), and three contestants in orange (Officer Dana Kwan, Felix Arden, Peg Soto, put in the cages at 02:20 by Moss) are let out and run for the Box. Six seconds later the kennels open behind you (three Grinners). ARIADNE: `THEY ARE BETTING ON YOU.` A few seconds after that, three more come out of hatches in the Run, ahead, on the contestants' way.
 4. **The Run.** A maze of 2-wide steel corridors round the arena: blade floors (blades come up out of slots on a cycle, the slots glow red first), shock-plate cells (they pulse), a dart corridor (a laser across the way in), ceiling turrets woken by a tripwire, and three cage rooms (step in and the gates slam and hatches let in three dogs; they open again when the dogs are dead). The dogs and the contestants path round the blades and plates; you can run straight over them, in time. Dead ends have what the last subjects left. The Cage Lab and the Rat Warren open off its east side. Near the Box the announcer lets out a second pack.
@@ -432,7 +434,7 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 | Room | Where | What's there |
 |---|---|---|
 | Stair B | x 52–56, y 1–8 | Where you arrive. `(` back down to Floor 3; `)` up, sealed (`master`). |
-| Elevator lobby | x 29–50, y 5–9 | The dead elevators ("THE DOGS CAN'T OPEN THE STAIR DOORS. YOU CAN."), an odds board, a guard the dogs had. |
+| Elevator lobby | x 29–50, y 5–9 | The dead elevators ("THE DOGS CAN'T OPEN THE STAIR DOORS. YOU CAN."), an odds board, a guard the dogs had. The freight car, which ARIADNE sends up with the AEGIS field in it. |
 | Trial Control | x 58–66, y 1–8 | The announcer's booth: tonight's programme (`readSchedule`), the camera feeds, the trial technician (he crossed a name out and wrote in yours). |
 | Handlers' Room | x 68–78, y 1–8 | Kennels (BISCUIT; SMILER, "house favourite · DO NOT FEED BEFORE A TRIAL"; one bent open), feed bins, the leash rack, a handler, a loose Grinner, the Handler's Boots. |
 | The Pens | x 58–78, y 14–20 | Where the trial starts: three contestants' cages and three kennels behind bars, placards, the jumpsuit rail (one has your name on it). |
@@ -459,7 +461,7 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 - saved someone: "When this is over, I'll see they're looked after." ARIADNE: `HE SAID THAT ABOUT SHELTER B.`
 - none of these: "Garrick's trials have killed better men than you, and you walked out."
 
-**Finds.** The Incinerator and fuel (the armory; fuel also in the Warren, presents, and dropped by dogs), the Handler's Boots, the Nightlight, the Exo-Frame, the Riot Helmet, trauma kits (the presents, Smiler, the Rat King, the Underbed, the Jester), fragments 7 and 8.
+**Finds.** The AEGIS field (the freight car, from ARIADNE), the Incinerator and fuel (the armory; fuel also in the Warren, presents, and dropped by dogs), the Handler's Boots, the Nightlight, the Exo-Frame, the Riot Helmet, trauma kits (the presents, Smiler, the Rat King, the Underbed, the Jester), fragments 7 and 8.
 
 **On the way back.** Not built yet. Ideas: the trial system restarts for the descent ("Tonight's subject is back!"), with the Run's blades running again and the reserve dogs out; the Box's feed to the boardroom; the Long Room's table re-laid for one.
 
@@ -734,6 +736,7 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | Trinket | The Hecatomb Signet | Floor 5, the Chapel | +25% damage; robots in defence mode don't target you for 2 s after they see you ("They were built to recognise the faithful"); −15 max health |
 | Trinket | Ruiz's Badge | Floor 1 | +25 shield (it's lucky). Sentimental. |
 | Trinket | The Nightlight (built) | Floor 4, the Nursery | +170 light radius, +10 shield; `held` halved |
+| Gadget (no slot) | The AEGIS field (built) | Floor 4, the freight car (ARIADNE sends it up) | Worn over everything else: +120 shield that recharges at 45 a second, 1.2 s after a hit; +20% reduction; can't be held, `staggered` −60%, `burning` halved. When a hit would kill you it overloads (`lastStand`): you're left on 40% health, untouchable for 2.5 s, everything within 150 is thrown back, hurt and staggered; then 60 s to mend (the HUD chip counts down). Numbers in `aegis.js`'s `TUNE`. |
 
 ### 6.3 Items
 
@@ -952,6 +955,8 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 | `vossDone` | the last line of Voss's speech | Floor 3's Stair B up |
 | `fuse`, `nurseryLit` | (not built) | — |
 | `vaultOpen`, `dreamsKnown` | (not built) | — |
+| `f4Briefed`, `aegisSent` | Voss's last welcome line on Floor 4; that or stepping into the lobby | the freight car comes up (its `parked`), ARIADNE, Voss |
+| `aegisWorn`, `aegisSaved` | putting the AEGIS on; its first overload | ARIADNE |
 | `readSchedule` | Floor 4's programme in Trial Control | ARIADNE: he chose you |
 | `trialStarted` | stepping into the Pens | the odds boards; the contestants and the dogs let out |
 | `captiveSaved`, `saved<Name>`, `captiveDied<Name>` | the contestants (Kwan, Arden, Soto, Ostrowski, Pryce) | Voss on the stairs; the results |

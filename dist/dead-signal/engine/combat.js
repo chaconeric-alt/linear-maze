@@ -313,11 +313,28 @@
       game.hitStop = Math.max(game.hitStop, 0.04);
     }
     game.stats.damageTaken += dmg;
-    if (P.hp <= 0) {
+    if (P.hp <= 0 && C.lastStand(game, P, o)) {
+      // something you carry kept you alive (it set your health itself)
+      if (!(P.hp > 0)) P.hp = 1;
+    } else if (P.hp <= 0) {
       P.hp = 0;
       game.playerDied(o);
     } else if (o.status && LM.status) LM.status.apply(game, P, o.status);
     return dmg;
+  };
+
+  /**
+   * A hit is about to kill the player: ask what they carry. Armour worn, gadgets and blessings can
+   * have lastStand(game, P, o); the first to return true keeps them alive (it sets P.hp, and whatever
+   * else it does: a cooldown, a blast). Returns true if one did.
+   */
+  C.lastStand = function (game, P, o) {
+    const gear = [];
+    for (const slot of Object.keys(P.equip || {})) if (P.equip[slot]) gear.push(LM.find('armor', P.equip[slot]));
+    for (const id of P.gadgets || []) gear.push(LM.find('gadgets', id));
+    for (const id of P.blessings || []) gear.push(LM.find('blessings', id));
+    for (const g of gear) if (g && typeof g.lastStand === 'function' && g.lastStand(game, P, o || {})) return true;
+    return false;
   };
 
   /** A boss's phases (def.bossBar.phases: [{ at: 0.5, text, do(e, game) }]): each runs once as its health falls past `at`. */

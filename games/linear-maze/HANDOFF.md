@@ -254,6 +254,12 @@ New flags: `slept`, `woke`, `dressed`, `aliceCalled`, `townPlaque`, `visited-<pl
 
 No existing floor changes: every door on every floor of both games runs the same way as before (checked), and no floor had a `rot`.
 
+## 0.5.6: parked elevators, last stands, gadget auras
+
+Built for Dead Signal's Floor 4 (the AEGIS field). An elevator's `parked` (keyed by floor: a flag, or `{ flag, cargo }`): with no power, the car waits on that floor lit with its doors held open and its panel dead (the `elevatorParked` words), and if the flag is set while you're there it comes up the shaft, sets its cargo down inside and rings first (`LM.elevators.parkedAt / parked / live`; the editor's elevator inspector has **Parked here**). `LM.combat.lastStand`: armour, gadgets and blessings can have `lastStand(game, P, opts)`, asked when a hit would kill the player. A gadget's `resist` counts like armour's; `drawAura` draws round the player all the time, and `shieldRing: false` hides the plain shield ring. Engine spec sections 4, 6.7, 6.12, 6.15 and 15.5.
+
+**This game's packs.** Nothing changed: no Linear Maze floor parks an elevator, and nothing it carries has a `lastStand` (checked; every floor plays as before).
+
 ## 0.5.5: waves, letting things out hunting
 
 Built for Dead Signal's Floor 4. The `spawn` effect's `as` tags what it spawns, and a `clear` trap keeps looking for its group while it's empty, so it can watch a wave spawned later (before, a `clear` trap with nothing tagged at the start never fired, which no floor relied on). The `faction` effect's `aggro`. `LM.ai.goTo`'s search limit (`lim`, default 40 as before). Engine spec sections 6.5, 6.8 and 6.20.
