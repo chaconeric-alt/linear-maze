@@ -32,14 +32,15 @@
     }
     return false;
   };
-  /** Walk toward a point by the shortest way round (a search out to 40 tiles, refreshed a few times a second). */
-  AI.goTo = function (e, game, x, y, weight) {
+  /** Walk toward a point by the shortest way round (a search out to `lim` tiles, 40 by default, refreshed a few
+   *  times a second). Returns false when there's no way there within `lim`. */
+  AI.goTo = function (e, game, x, y, weight, lim) {
     const m = e.mem, w = weight == null ? 1 : weight;
     m.rtT = (m.rtT || 0) - game.dt;
     const at = m.rt && Math.abs(e.x - (m.rt.tx * T + T / 2)) < 6 && Math.abs(e.y - (m.rt.ty * T + T / 2)) < 6;
     if (m.rtT <= 0 || !m.rt || at) {
       m.rtT = 0.35 + Math.random() * 0.2;
-      m.rt = LM.nav.step(game.level, e.x, e.y, x, y, 40);
+      m.rt = LM.nav.step(game.level, e.x, e.y, x, y, lim || 40);
     }
     if (!m.rt) return false;
     const dx = m.rt.tx * T + T / 2 - e.x, dy = m.rt.ty * T + T / 2 - e.y, l = Math.hypot(dx, dy) || 1;

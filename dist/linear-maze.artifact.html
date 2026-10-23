@@ -448,7 +448,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.4';
+  LM.VERSION = '0.5.5';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -3668,14 +3668,15 @@ kbd {
     }
     return false;
   };
-  /** Walk toward a point by the shortest way round (a search out to 40 tiles, refreshed a few times a second). */
-  AI.goTo = function (e, game, x, y, weight) {
+  /** Walk toward a point by the shortest way round (a search out to `lim` tiles, 40 by default, refreshed a few
+   *  times a second). Returns false when there's no way there within `lim`. */
+  AI.goTo = function (e, game, x, y, weight, lim) {
     const m = e.mem, w = weight == null ? 1 : weight;
     m.rtT = (m.rtT || 0) - game.dt;
     const at = m.rt && Math.abs(e.x - (m.rt.tx * T + T / 2)) < 6 && Math.abs(e.y - (m.rt.ty * T + T / 2)) < 6;
     if (m.rtT <= 0 || !m.rt || at) {
       m.rtT = 0.35 + Math.random() * 0.2;
-      m.rt = LM.nav.step(game.level, e.x, e.y, x, y, 40);
+      m.rt = LM.nav.step(game.level, e.x, e.y, x, y, lim || 40);
     }
     if (!m.rt) return false;
     const dx = m.rt.tx * T + T / 2 - e.x, dy = m.rt.ty * T + T / 2 - e.y, l = Math.hypot(dx, dy) || 1;
@@ -5093,8 +5094,9 @@ kbd {
         }
       }
       if (tr.type === 'clear' && this.armed) {
-        // the group is captured once, because dead enemies leave game.enemies
-        if (!this.group) this.group = game.enemies.filter((e) => e.tag === tr.tag);
+        // the group is captured once, because dead enemies leave game.enemies (and until it has anyone in
+        // it, it keeps looking: a group a spawn effect makes later, with `as`, is a wave)
+        if (!this.group || !this.group.length) this.group = game.enemies.filter((e) => e.tag === tr.tag && !e.dead);
         if (this.group.length && this.group.every((e) => e.dead)) this.fire(game);
       }
       // a lockdown ends when everything this trap summoned is dead
@@ -12015,7 +12017,11 @@ LM.defineGame({
           if (!p) break;
           const c = center(p);
           const e = game.spawnEnemy(list[i % list.length], c.x + U.rand(-4, 4), c.y + U.rand(-4, 4), ef.faction ? { summoned: true, aggro: true, faction: ef.faction } : { summoned: true, aggro: true });
-          if (e) trap.spawned.push(e);
+          if (e) {
+            trap.spawned.push(e);
+            // `as`: a tag for what this spawn makes, so a `clear` trap can wait for the wave to die
+            if (ef.as) e.tag = ef.as;
+          }
         }
         LM.audio.play('warn');
       },
@@ -12156,9 +12162,19 @@ LM.defineGame({
       },
     },
     faction: {
-      // { tag | enemy, faction }: the enemies with this tag (or this enemy id) change sides (engine factions)
+      // { tag | enemy, faction, aggro }: the enemies with this tag (or this enemy id) change sides (engine
+      // factions). aggro: true, and they come looking for you straight away (let out to hunt).
       run(game, ef) {
-        if (ef.faction) game.setFaction(ef.tag || ef.enemy, ef.faction);
+        if (!ef.faction) return;
+        game.setFaction(ef.tag || ef.enemy, ef.faction);
+        if (!ef.aggro) return;
+        const sel = ef.tag || ef.enemy;
+        for (const e of game.enemies) {
+          if (e.dead || (e.tag !== sel && e.def.id !== sel)) continue;
+          e.aggro = true;
+          e.knowsP = true;
+          e.alertT = 1;
+        }
       },
     },
     quake: {

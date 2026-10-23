@@ -55,7 +55,11 @@
           if (!p) break;
           const c = center(p);
           const e = game.spawnEnemy(list[i % list.length], c.x + U.rand(-4, 4), c.y + U.rand(-4, 4), ef.faction ? { summoned: true, aggro: true, faction: ef.faction } : { summoned: true, aggro: true });
-          if (e) trap.spawned.push(e);
+          if (e) {
+            trap.spawned.push(e);
+            // `as`: a tag for what this spawn makes, so a `clear` trap can wait for the wave to die
+            if (ef.as) e.tag = ef.as;
+          }
         }
         LM.audio.play('warn');
       },
@@ -196,9 +200,19 @@
       },
     },
     faction: {
-      // { tag | enemy, faction }: the enemies with this tag (or this enemy id) change sides (engine factions)
+      // { tag | enemy, faction, aggro }: the enemies with this tag (or this enemy id) change sides (engine
+      // factions). aggro: true, and they come looking for you straight away (let out to hunt).
       run(game, ef) {
-        if (ef.faction) game.setFaction(ef.tag || ef.enemy, ef.faction);
+        if (!ef.faction) return;
+        game.setFaction(ef.tag || ef.enemy, ef.faction);
+        if (!ef.aggro) return;
+        const sel = ef.tag || ef.enemy;
+        for (const e of game.enemies) {
+          if (e.dead || (e.tag !== sel && e.def.id !== sel)) continue;
+          e.aggro = true;
+          e.knowsP = true;
+          e.alertT = 1;
+        }
       },
     },
     quake: {

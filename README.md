@@ -1,6 +1,8 @@
 # Linear Maze workspace
 
-Version 0.5.4. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+Version 0.5.5. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+
+New in 0.5.5: Dead Signal's Floor 4 (*the Proving Grounds*): a trial, a maze of traps, and the board's nightmares in their private suites. Engine: waves (a `spawn` trap effect can tag what it spawns with `as`, and a `clear` trap waits for a group spawned later), a `faction` effect with `aggro` (let out to hunt), and a search limit for `LM.ai.goTo`. See `games/dead-signal/DESIGN.md` (section 4.4) and `engine/SPEC.md` section 6.8.
 
 New in 0.5.4: Dead Signal's Floor 3 (*Gestation*), and the engine feature it needed: factions. Enemies have sides: robots and monsters fight each other, and an enemy can be on yours (it fights with you and never hurts you; your shots go through it). A game sets who fights whom, a floor can change it, and a trap or code can move enemies from one side to another. Statuses can count down on the HUD, stack, and follow you up the stairs; a `branch` trap effect plays one set of effects or another depending on story flags. Every Linear Maze floor plays as before. See `games/dead-signal/DESIGN.md` (section 4.3) and `engine/SPEC.md` sections 5, 6.8, 6.17 and 6.20.
 
@@ -20,7 +22,7 @@ New in 0.5.1: the stairs you arrived by take you back up, and every floor is as 
 
 The games:
 - **`games/linear-maze/`: The Linear Maze.** Its eleven packs are in their own folders: core, maze, office, memos, chessboard, apartment, rotary, dressings, home-story, library and town.
-- **`games/dead-signal/`: Dead Signal.** A technician trapped in a biotech lab gone wrong fights his way to the top floor. The plan is `games/dead-signal/DESIGN.md`. Floors 1 to 3 (*Lockdown*, *Synthid Research*, *Gestation*) are built, in Dead Signal's own packs (`packs/ds-*`); the floors you made in the editor on October 14 (*The Sterile Annex*, *The Dead Signal Laboratory*, *The Complex*) follow it as placeholders. It loads the Linear Maze's core, office (without its people and phone) and dressings packs.
+- **`games/dead-signal/`: Dead Signal.** A technician trapped in a biotech lab gone wrong fights his way to the top floor. The plan is `games/dead-signal/DESIGN.md`. Floors 1 to 4 (*Lockdown*, *Synthid Research*, *Gestation*, *the Proving Grounds*) are built, in Dead Signal's own packs (`packs/ds-*`); the floors you made in the editor on October 14 (*The Sterile Annex*, *The Dead Signal Laboratory*, *The Complex*) follow it as placeholders. It loads the Linear Maze's core, office (without its people and phone) and dressings packs.
 
 ## Play
 

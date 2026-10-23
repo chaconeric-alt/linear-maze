@@ -205,7 +205,7 @@
   SC.TRIGGERS = [['plate', 'Pressure plate (step on a tagged tile)'], ['zone', 'Zone (walk onto a tagged tile, invisible)'], ['beam', 'Laser beam (between tagged wall emitters)'], ['door', 'A tagged door first opens'], ['pickup', 'A tagged item is taken'], ['clear', 'Every enemy with the tag is dead'], ['flag', 'A story flag is set (tag = flag name)']];
   SC.TRAP_EFFECTS = {
     darts: { tag: 'tag', volleys: 'number', interval: 'number', damage: 'number', speed: 'number' },
-    spawn: { tag: 'tag', enemy: 'id:enemies', enemies: 'ids:enemies', count: 'number', faction: 'text' },
+    spawn: { tag: 'tag', enemy: 'id:enemies', enemies: 'ids:enemies', count: 'number', faction: 'text', as: 'text' },
     seal: { tag: 'tag', text: 'text' }, unseal: { tag: 'tag', text: 'text' }, open: { tag: 'tag', text: 'text' },
     alarm: { radius: 'number', text: 'text' },
     lights: { tag: 'tag', on: 'bool', text: 'text' },
@@ -217,7 +217,7 @@
     ambient: { ambient: 'color', outsideSight: 'color', time: 'number' },
     flicker: { tag: 'tag', radius: 'number', time: 'number', strength: 'number' },
     phone: { thread: 'text', text: 'longtext' },
-    faction: { tag: 'tag', enemy: 'id:enemies', faction: 'text' },
+    faction: { tag: 'tag', enemy: 'id:enemies', faction: 'text', aggro: 'bool' },
   };
 
   // ------------------------------------------------------------ weapons, armor, blessings

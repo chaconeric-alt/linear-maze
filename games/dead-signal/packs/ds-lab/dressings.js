@@ -496,6 +496,27 @@
         g.beginPath();
         g.arc(-11, 0.5, 3.2, Math.PI * 0.5, Math.PI * 1.5);
         g.fill();
+        // props.hat (Floor 4's Party Room): a paper party hat, still on
+        if (it.props.hat) {
+          g.fillStyle = it.props.hat === true ? '#ff5ab0' : it.props.hat;
+          g.beginPath();
+          g.moveTo(-19, 0.5);
+          g.lineTo(-12.5, -2.6);
+          g.lineTo(-12.5, 3.6);
+          g.closePath();
+          g.fill();
+          g.fillStyle = '#ffe04a';
+          g.beginPath();
+          g.arc(-19, 0.5, 1, 0, U.TAU);
+          g.fill();
+        }
+        // what something has been eating (Floor 4): less of them, and more of the stain
+        if (it.eaten) {
+          g.fillStyle = 'rgba(90,6,6,' + Math.min(0.8, it.eaten * 0.25) + ')';
+          g.beginPath();
+          g.ellipse(-1, 0, 6 + it.eaten, 5 + it.eaten * 0.6, 0.2, 0, U.TAU);
+          g.fill();
+        }
         // props.faceless (Floor 2's shelter): where the face was, something smooth and pale
         if (it.props.faceless) {
           g.fillStyle = '#e8dccb';

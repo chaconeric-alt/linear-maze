@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.5.4 · October 2026
+Engine 0.5.5 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -17,6 +17,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.3:** status effects: timed conditions on the player or an enemy (slowed, chilled, burning, stunned...) that any weapon, projectile, attack, explosion or trap can carry, with resistance from armor and a chip on the HUD (section 6.17; `engine/status.js`, a new kind of content, `statuses`). Named boss bars across the top of the screen, with phases (section 6.5, `bossBar`). More kinds of ammunition than the four built in (section 6.18, `LM.defineAmmo`). Key items: things the player carries from floor to floor and sees in the inventory (section 6.19). An enemy can change its own damage reduction as it fights (`e.armor`) and hear every hit (`onHurt`). `LM.comms.speaking()` says who is talking.
 
 **New in 0.5.4:** factions: who fights whom. Enemies have sides; robots and monsters can fight each other, and an enemy can be on yours (an ally that fights with you and never hurts you, whose health bar and map dot are green). A game sets the table, a floor can change it, a trap or code can move enemies from one side to another (section 6.20). Enemies chasing something other than the player find their way with a short search (`LM.nav.step`, `LM.ai.goTo`), and robots' view cones (`view`) count for every foe. Statuses can count down on the HUD, stack, run code every frame, say how they ended, and be carried up and down the stairs (section 6.17). A `branch` trap effect runs one list of effects or another depending on story flags (section 6.8). A melee swipe or a charge no longer lands through glass or a wall.
+
+**New in 0.5.5:** waves. A `spawn` trap effect can tag what it spawns (`as`), and a `clear` trap waits for a group that appears later, so a sealed arena can send one wave after another (section 6.8). The `faction` effect's `aggro` lets enemies out hunting: they come straight for you. `LM.ai.goTo` takes a search limit, for something that has to cross a whole maze (section 6.5).
 
 ---
 
@@ -359,7 +361,7 @@ Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `
 | `init`, `update`, `onDeath` | Hooks `(e, game)` / `(e, dt, game)`. |
 | `onHurt(e, game, dmg, opts)` | Every hit that lands, after damage (before death). A behaviour can set `e.armor` (a number, even negative) to change the enemy's damage reduction as it fights: shields up, a weak spot showing. |
 
-Core behaviours: `chaser`, `swarmer`, `skirmisher`, `lobber`, `turret`, `warden`, `boss`. A behaviour is `{ update(e, dt, game) }` that adds to `e.mx`, `e.my` and may scale `e.speedMul`. Helpers: `LM.ai.chase`, `away`, `strafe` (all toward or around the foe), `goTo` (a point, the long way round if need be), `wander`, `separate`, `avoidHazards`, `foe` (who it's after), `hostilesNear(e, game, x, y, R)` (everything its blast would hurt).
+Core behaviours: `chaser`, `swarmer`, `skirmisher`, `lobber`, `turret`, `warden`, `boss`. A behaviour is `{ update(e, dt, game) }` that adds to `e.mx`, `e.my` and may scale `e.speedMul`. Helpers: `LM.ai.chase`, `away`, `strafe` (all toward or around the foe), `goTo(e, game, x, y, weight, lim)` (a point, the long way round if need be; it searches out to `lim` tiles, 40 by default, and returns false when there's no way), `wander`, `separate`, `avoidHazards`, `foe` (who it's after), `hostilesNear(e, game, x, y, R)` (everything its blast would hurt).
 
 Core attacks and their parameters:
 
@@ -466,13 +468,13 @@ Map rows may differ in length (short rows are padded with void). Unknown charact
 | `beam` | the player crosses a laser between two tagged wall emitters that face each other across open floor |
 | `door` | a door with the tag first opens |
 | `pickup` | an item with the tag is taken |
-| `clear` | every enemy placed with the tag is dead |
+| `clear` | every enemy with the tag is dead: placed with it, or spawned with it (a `spawn` effect's `as`); until there are any, it waits |
 | `flag` | the story flag named by `tag` is set (by a conversation, an item or another trap) |
 
 | Effect `type` | Parameters |
 |---|---|
 | `darts` | `tag` (dart-emitter items), `volleys`, `interval`, `damage`, `speed` |
-| `spawn` | `tag` (floor tiles), `enemy` or `enemies[]`, `count`, `faction` (section 6.20) |
+| `spawn` | `tag` (floor tiles), `enemy` or `enemies[]`, `count`, `faction` (section 6.20), `as` (a tag for what it spawns: a `clear` trap with that tag fires when they're all dead) |
 | `seal` / `unseal` / `open` | `tag` (doors), `text` |
 | `alarm` | `radius`, `text` |
 | `lights` | `tag` (light sources), `on`, `text` |
@@ -485,12 +487,23 @@ Map rows may differ in length (short rows are padded with void). Unknown charact
 | `flicker` | `tag` or `radius`, `time`, `strength`: make lights stutter for a while |
 | `phone` (The Linear Maze's Office pack) | `thread`, `text`, `replies`: deliver a phone message (`games/linear-maze/SPEC.md`, section 6.13) |
 | `transmission` (the engine's) | `who` (a speaker), `text`, `glitch`, `seconds`, `flag`: someone speaks over the intercom (section 6.16) |
-| `faction` | `tag` or `enemy`, `faction`: put those enemies on another side (section 6.20) |
+| `faction` | `tag` or `enemy`, `faction`, `aggro`: put those enemies on another side (section 6.20); with `aggro`, they come looking for you at once (let out to hunt) |
 | `branch` | `any` (flags; at least `min` of them, default 1), `all`, `not`, `then`, `else`: if the story flags agree, run the effects listed in `then`, otherwise those in `else`. The lists hold ordinary effects, each with its own `delay`, and can hold more branches. |
 
 The trap effects are registry content (`effects`): `{ run(game, ef, trap), params }`, where `trap.spawned` and `trap.sealed` are what the trap has spawned and sealed. `params` (`{ name: 'number' | 'text' | 'longtext' | 'bool' | 'color' | 'tag' | 'id:<kind>' | 'stringlist' | [options] }`) tells the editor what settings to offer for an effect it doesn't know.
 
-Every effect also accepts `delay`. A `seal` lasts until everything the same trap spawned is dead. Doors can start sealed with `props: { sealed: true }` in the legend.
+Every effect also accepts `delay`. A `seal` lasts until everything the same trap spawned is dead (a trap that seals and spawns nothing stays sealed until something unseals it).
+
+**Waves.** A sealed arena with three waves is four traps: one seals the doors (and spawns nothing, so the seal holds), the next spawns the first wave `as: 'wave1'`, a `clear` trap on `wave1` spawns the second `as: 'wave2'`, and a `clear` trap on the last wave unseals the doors and sets a flag. Dead Signal's Floor 4 arena:
+
+```js
+{ trigger: { type: 'zone', tag: 'arenaZone' }, effects: [
+  { type: 'seal', tag: 'subjectDoor' },
+  { type: 'spawn', tag: 'arenaSpawn', enemy: 'ds-hound', count: 3, as: 'wave1', delay: 1.6 } ] },
+{ trigger: { type: 'clear', tag: 'wave1' }, effects: [{ type: 'spawn', tag: 'arenaSpawn', enemies: ['ds-hound', 'ds-rat', 'ds-rat'], count: 9, as: 'wave2', delay: 2.5 }] },
+{ trigger: { type: 'clear', tag: 'wave2' }, effects: [{ type: 'spawn', tag: 'arenaSpawn', enemies: ['ds-smiler', 'ds-hound', 'ds-hound'], count: 3, as: 'wave3', delay: 3.2 }] },
+{ trigger: { type: 'clear', tag: 'wave3' }, effects: [{ type: 'flag', name: 'trialEnded' }, { type: 'unseal', tag: 'subjectDoor' }] },
+``` Doors can start sealed with `props: { sealed: true }` in the legend.
 
 A conversation that depends on what the player has done is a `branch`. Dead Signal's Director, on the stairs out of Floor 3, makes one of four speeches, by what the player has read and seen:
 
@@ -731,7 +744,7 @@ What it changes: who an enemy looks for (section 5, *Enemy AI*); what an enemy's
 | `LM.factions.hostile(a, b)` (also `LM.isHostile`) | Does side `a` attack side `b`? |
 | `LM.factions.use(levelRows)` | Rebuild the table: the game's, with these rows laid over (the engine calls it as a floor loads). |
 | `game.setFaction(sel, faction)` | Put enemies on another side: `sel` is a tag, an enemy id, or a test `(e) => bool`. They forget who they were fighting and look again; the floor remembers the change. Returns how many changed. |
-| trap effect `faction` | `{ tag \| enemy, faction }`: the same, from a trap (a cell's glass breaks: its specimen joins the monsters). |
+| trap effect `faction` | `{ tag \| enemy, faction, aggro }`: the same, from a trap (a cell's glass breaks: its specimen joins the monsters). With `aggro: true` they're let out hunting: awake, and they know where you are. |
 | trap effect `spawn`'s `faction` | What side the spawned enemies are on. |
 
 ---
@@ -783,7 +796,8 @@ What it changes: who an enemy looks for (section 5, *Enemy AI*); what an enemy's
 - Keyboard and mouse only. No gamepad, no touch controls, no key rebinding.
 - Moving lights (muzzle flashes, explosions, glowing projectiles) do not cast shadows; only static lights do.
 - Enemies don't take cover, flank, or hear gunfire beyond the alarm effect and waking nearby friends (packs add hearing of their own).
-- An enemy after another enemy finds its way with a search out to 40 tiles; beyond that it waits. The flow field is the player's alone. Body size isn't part of navigation: a big enemy will try a door it can't fit through (and wait there).
+- An enemy after another enemy finds its way with a search out to 40 tiles (a pack's behaviour can ask `goTo` for more); beyond that it waits. The flow field is the player's alone. Body size isn't part of navigation: a big enemy will try a door it can't fit through (and wait there). Nor is furniture: a path can run through a table (the enemy slides along it, or waits); hazard tiles are walls to it.
+- An enemy opens a door only while it's after something (`aggro`): a pack's runaway that should get through doors keeps itself `aggro`.
 - No reloading, no dropping or selling weapons, no way to remove gear except swapping or taking it off into the pack.
 - One checkpoint per game, stored in the browser (written as you arrive on each floor, with every floor's memory).
 - A floor's memory keeps plain data only: state a pack keeps in a `Set`, a class instance or a closure is reset when you come back, and timers and things in flight are dropped when you leave.

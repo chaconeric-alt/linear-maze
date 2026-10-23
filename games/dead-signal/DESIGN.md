@@ -1,6 +1,6 @@
 # Dead Signal — design and build plan
 
-Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.4)
+Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.5)
 
 This file is the plan for building Dead Signal into a whole game: the story, the building, six maps (five floors and a basement) chapter by chapter, the monsters, robots, traps, puzzles, weapons, items and dressings on each, and the engine and pack code the game needs that the engine doesn't have yet. It is written to be handed to Claude a milestone at a time (section 11 has a prompt for each), together with the workspace, `engine/SPEC.md` and this file.
 
@@ -35,6 +35,16 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
 - On the stairs, Voss makes his case, and what he says depends on what you've read and seen (a `branch` trap effect: four versions, from "You didn't look. Good man." to admitting he signed the Shelter B trial). The stairs wait until he's finished.
 - Next: milestone M4 (Floor 4).
 
+**Milestone M4 is built** (engine 0.5.5): Floor 4, *the Proving Grounds* (`packs/ds-story/levels/f4-proving.js`), redesigned from the robotics-and-trials plan (section 4.4 is the floor as built). Where M4 differs from the plan:
+- Floor 4 is the floor where the board watched people die, and tonight you're the subject. The trial system runs itself (a recorded game-show announcer, odds boards with your name on them): the gate drops behind you, three staff in orange jumpsuits are let out ahead of you and the dogs behind, and the way across the floor is the Run, a braided maze of steel with blade floors, shock plates, dart corridors, ceiling turrets and three cage rooms, to the Box (the board's seats) and the arena under it, where the final round is three waves ending with the house favourite. Winning ends the trial and opens the west side.
+- The monsters are the board's nightmares, each with its own private suite, sealed; ARIADNE opens them as you pass and Voss begs you not to go in: the Nursery (something under a child's bed, with a grown woman in it), the Party Room (the Jester, three heads, a named fight) and the Long Room (six Diners strapped into chairs at a long table, released by the gong; the main course is a man, alive, under the cover). Each has a reward. The Dream Studios are where the board's nightmares are recorded: sleep pods, playback, design sheets, and holograms of the nightmares that turn to look at you.
+- No robot factory: no Assembler, conveyors, crushers, junctions, Pacifiers, Haulers or Tick Mines (E10 and E13 not needed yet). Robots are Security Command's Sentinel and turret, and the Run's turrets. The Incinerator is in Moss's armory (code 4471, from Kwan), not dropped by a Hauler. The Railgun and EMP grenades aren't built.
+- New monsters: Grinners (Moss's pack hounds), rats and the Rat King (Thale's), the Jester (Voss's), the thing under the bed (Brandt's), the Diners (Pell's), Smiler (the arena's). New: captives, people the monsters hunt (faction `captive`); feeding (anything with nothing to fight eats the dead).
+- Moss's incident log is the proof the plan wanted: Voss ran LABRYS to stop ARIADNE's transmission, and called the containment failure acceptable. The trial programme says the Director picked you as tonight's subject at 02:41.
+- Engine (0.5.5): waves (the `spawn` effect's `as`, and `clear` traps that wait for a group spawned later), the `faction` effect's `aggro`, `LM.ai.goTo`'s search limit.
+- The way up is Stair A again (the west stairwell); Stair B is where you came in. On Stair A's landing Voss explains himself, by what you found (the log, the suites, the people you saved).
+- Next: milestone M5 (Floor 5).
+
 ---
 
 ## Contents
@@ -46,7 +56,7 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
    - 4.1 Floor 1 — Lockdown (lobby and administration)
    - 4.2 Floor 2 — Synthid Research (the labs, the Discovery Center, Shelter B)
    - 4.3 Floor 3 — Gestation (the containment ring, the vat hall and the labs)
-   - 4.4 Floor 4 — Proving Grounds (robotics and trials)
+   - 4.4 Floor 4 — The Proving Grounds (the trial, the Run and the board's suites)
    - 4.5 Floor 5 — The Penthouse (the executive floor)
    - 4.6 The descent (floors 4 to 1, the second time)
    - 4.7 Sub-level B — The Hatchery
@@ -399,55 +409,61 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 
 ---
 
-### 4.4 Floor 4 — Proving Grounds (robotics and trials)
+### 4.4 Floor 4 — The Proving Grounds (the trial, the Run and the board's suites)
 
-**Purpose.** The arsenal floor and the robot floor. Big fights, machines, gauntlets. The proof that the board knew: Moss's incident log.
+*Built in milestone M4 (`packs/ds-story/levels/f4-proving.js`, generated from a layout script: the Run is a braided maze from a fixed seed; meant to be tuned in the editor). This replaces the earlier plan for a robot factory and firing ranges; what's left of it is listed at the end.*
 
-**Mood.** Industrial. Concrete, steel, hazard stripes, sodium orange light, conveyors and arms that keep working because nobody told them to stop. Firing ranges with bullet-scarred walls. (Take what you like from The Dead Signal Laboratory: it's already this floor.)
+**Purpose.** The floor where the board watched. Tonight the trial system has a subject, and it's you. The monsters go furthest here: the board's own nightmares, kept in rooms dressed as the dreams they came from, for evenings. The proof that the board knew: Moss's incident log.
+
+**Mood.** Garrick Moss's floor: bare concrete, steel plate and bulkheads under sodium orange (`ds-proving`). The trial system is cheerful and recorded: a game-show announcer on horns in the walls, odds boards that show your name and your odds, live. Behind sealed doors, the suites are the only soft rooms on the floor: a starry nursery, a candlelit dining room, a pink party room. Everything hunts out loud: the Grinners giggle (a dog laughing like a man), rats squeak, the Jester laughs in three voices and hums *Happy Birthday*, something under the bed giggles and scrapes, the Diners make polite conversation.
+
+**The route**
+1. **Stair B.** You come up into the east stairwell. Voss: "Four. Garrick's floor. If anything on this floor tells you it's on your side, it's lying." The announcer welcomes the subject. Voss: the trial system runs itself and thinks you're a subject; the only way across is the Run; make for the Box, in the middle, whose console ends the trial.
+2. **The corridor.** The west half of the floor is behind a trial shutter. East: Trial Control (tonight's programme: subject T. LARK, *selected by the Director 02:41*; ARIADNE: `HE CHOSE YOU AT 02:41.`) and the Handlers' Room (a loose Grinner; the Handler's Boots). The gate to the Run is at the east end.
+3. **The Pens.** Through the gate the trial starts (`trialStarted`): the gate drops behind you, the announcer gives your odds (nine to one), and three contestants in orange (Officer Dana Kwan, Felix Arden, Peg Soto, put in the cages at 02:20 by Moss) are let out and run for the Box. Six seconds later the kennels open behind you (three Grinners). ARIADNE: `THEY ARE BETTING ON YOU.` A few seconds after that, three more come out of hatches in the Run, ahead, on the contestants' way.
+4. **The Run.** A maze of 2-wide steel corridors round the arena: blade floors (blades come up out of slots on a cycle, the slots glow red first), shock-plate cells (they pulse), a dart corridor (a laser across the way in), ceiling turrets woken by a tripwire, and three cage rooms (step in and the gates slam and hatches let in three dogs; they open again when the dogs are dead). The dogs and the contestants path round the blades and plates; you can run straight over them, in time. Dead ends have what the last subjects left. The Cage Lab and the Rat Warren open off its east side. Near the Box the announcer lets out a second pack.
+5. **The Box.** The board's seats: five armchairs facing the glass over the arena, champagne, the betting board (`sawBets`; ARIADNE: the Box has a feed to the boardroom), fragment 8 down the side of a chair, and the contestants who made it, sitting along the walls. ARIADNE: `HE HAD THE BEST SEAT.` The console: *Begin the final round* (`finalRound`).
+6. **The arena.** The shutter drops behind you. Three Grinners (wave 1); three more and six rats (wave 2); then Smiler, the house favourite, and two more (wave 3). When the last is dead the trial ends (`trialEnded`): the announcer congratulates you, every trial gate unlocks, and the blades and plates in the Run go still. Voss: go straight to Stair A, don't stop, not on the west side. ARIADNE: `THE WEST SIDE IS WHERE THEY SAT.`
+7. **The west side.** The subject exit leads to the west corridor: the Dream Studios, Security Command, and, along the north corridor, the three suites, sealed. As you pass each, ARIADNE opens it (`I CAN OPEN THIS.` `YOU SHOULD SEE WHAT THEY MADE.`) and Voss begs you not to go in. None of them is on the way.
+8. **Stair A.** On the landing Voss explains himself (a `branch` on what you found), and the stairs up wait until he's done (`vossDone4`).
 
 **Rooms**
 
-| Room | Size | What's there |
+| Room | Where | What's there |
 |---|---|---|
-| Stair landing | 8 × 6 | Turret on the ceiling, dormant. |
-| Assembly Line | 30 × 10 | Conveyors (E13), welding arms, crushers on a cycle, half-built robots on the line, the Assembler (mini-boss) at the far end. |
-| Robot Bay | 14 × 10 | Charging docks: dormant Sentinels that wake when you pass (`zone` → wake). |
-| Firing Ranges | 20 × 8 | Lanes, targets, turret gauntlet (traps). |
-| Trial Arena ("Kill Box") | 16 × 16 | The arena the board used for trials, with a viewing window. Puzzle 2. |
-| Holding Pens | 12 × 8 | Monster pens behind bars; the release lever. Puzzle 4. |
-| Armory | 8 × 6 | Behind a vault door: Railgun, EMP grenades, Riot Helmet. |
-| Security Command | 10 × 8 | Moss's office: the incident log (the truth about LABRYS), clearance card 4, his spare keycard. |
-| Test Hall | 20 × 12 | Where robots were tested against specimens. The best showcase for factions. |
+| Stair B | x 52–56, y 1–8 | Where you arrive. `(` back down to Floor 3; `)` up, sealed (`master`). |
+| Elevator lobby | x 29–50, y 5–9 | The dead elevators ("THE DOGS CAN'T OPEN THE STAIR DOORS. YOU CAN."), an odds board, a guard the dogs had. |
+| Trial Control | x 58–66, y 1–8 | The announcer's booth: tonight's programme (`readSchedule`), the camera feeds, the trial technician (he crossed a name out and wrote in yours). |
+| Handlers' Room | x 68–78, y 1–8 | Kennels (BISCUIT; SMILER, "house favourite · DO NOT FEED BEFORE A TRIAL"; one bent open), feed bins, the leash rack, a handler, a loose Grinner, the Handler's Boots. |
+| The Pens | x 58–78, y 14–20 | Where the trial starts: three contestants' cages and three kennels behind bars, placards, the jumpsuit rail (one has your name on it). |
+| The Run | x 26–56, y 14–48 | The maze, its traps and its three cage rooms; odds boards, horns and cameras on its walls. |
+| Cage Lab | x 58–78, y 22–36 | Trial stock in cages that open as you go down the aisle: two Grinners, a Midwife and a Ridden from Floor 3, a cage of rats. The trial log (`fileTrials`: trials 11–14, "durations are measured in seconds"; ARIADNE: the volunteers are the donors). Cage 8: Hal Ostrowski from Receiving, reserved for trial 15; the console by the far wall lets him out (`freeOstrowski`). |
+| Rat Warren | x 58–78, y 38–48 | Rats out of every hole in the walls, and the Rat King (a named bar). Thale's daily count ("It is always 4,112"; `fileRats`). Fuel, shells. |
+| The Box | x 36–47, y 30–33 | The board's seats, the betting board, the console, the refuge where saved contestants sit; fragment 8. |
+| The arena | x 35–48, y 20–28 | Sawdust; hatches in the north wall; the final round. |
+| Dream Studios | x 1–20, y 26–35 | The board's five sleep pods; pod 6, induction, with a donor asleep in it for nineteen days (ARIADNE: `I CANNOT WAKE HER.`); five playback desks, one dream each (`dreamVoss` … `dreamMoss`); five design sheets; five holograms of the nightmares, one of which comes at you. |
+| Security Command | x 8–20, y 37–48 | Moss's office: his incident log (`mossLog`: the truth about LABRYS), the suites' camera feeds, a photograph, a child's smock the size of a car (G.M. AGE 6), fragment 7 on a frozen screen; a Sentinel and a turret. |
+| Armory | x 1–6, y 42–48 | Behind a keypad (4471, `armoryOpen`): the Incinerator, fuel, shells, a trauma kit. |
+| The Nursery | x 1–9, y 14–21 | Sealed. A starry room, a music box that plays while you're near, a rocking horse that rocks, a mobile, a nightlight. In the child's bed, a grown woman, dead (Nadia Ferrante, night nurse). Go near the bed and the music box winds down, the nightlight goes out, and what's under the bed reaches out (`nurseryAwake`). The Nightlight (trinket). |
+| The Party Room | x 11–20, y 14–24 | Sealed. Balloons, bunting (HAPPY BIRTHDAY LEON), a cake with forty-one candles, four guests in paper hats, presents (shells, a trauma kit, fuel). Go near the stage and the curtain opens (`partyStarted`): the Jester. The Exo-Frame, off Leon. |
+| The Long Room | x 1–20, y 1–8 | Sealed. A long table laid for dinner; six Diners strapped into the chairs, masks turning to follow you; place cards, the menu ("The main course (staff, live)"); the gong. Under the cover, Martin Pryce, the night porter, alive: cut him loose, the gong goes and the straps give (`mainCourse`, `dinnerServed`), and he runs for Stair A. Go to the head of the table and the gong goes anyway. The Riot Helmet, on the host's chair. |
+| Stair A | x 23–27, y 1–8 | `>` up to Floor 5; `<` down, sealed (`master`). Voss's speech on the landing. |
 
-**Robots.** Everything: Sentinels, Pacifiers, Haulers (with the Incinerator), Tick Mines from the Assembler, Scalpel Drones, ceiling turrets, Warden Drones. The Assembler.
+**The trial's people.** Kwan, Arden and Soto run for the Box from the Pens; Ostrowski from the Cage Lab, if you let him out. Pryce runs for Stair A. The monsters hunt them (faction `captive`: the dogs pick the nearest thing to bite, which isn't always you). One who gets to the refuge sits down there and can be talked to (`captiveSaved`, `saved<Name>`); one who doesn't leaves a body (`captiveDied<Name>`), and the dogs stop to eat. Kwan has the armory code: alive she tells you; dead, it's on the back of her badge.
 
-**Monsters.** The Grief Engine (Holding Pens, summons Grubs), Mr. Hush (the mascot, Test Hall), Ladder Saints (Trial Arena), Mother of Teeth, Kneelers. Fewer monsters than robots, but bigger ones.
+**The suites' monsters** (section 5.2): the thing under the bed (Brandt's), the Jester (Voss's), the Diners (Pell's). Elsewhere: Grinners and Smiler (Moss's), rats and the Rat King (Thale's). **Robots**: a Sentinel and a turret in Security Command, turrets in the Run. On this floor the level's factions set robots and monsters at war, and monsters on the contestants.
 
-**Traps**
-- *Crushers*: new `ds-crusher` item (E13): a two-tile press over the conveyor, down 0.6 s every 2.4 s, 40 damage, telegraphed by a warning light.
-- *Conveyors*: terrain that pushes (E13). One belt runs straight into a crusher; walk against it or dash.
-- *Turret gauntlet* (Firing Ranges): `beam` tripwires → `alarm` and wake the turrets (tag `rangeTurret`); a crawlspace behind the target lanes skips them (as Floor 2 of The Linear Maze does).
-- *Welding arms*: existing `fire-jet` (Linear Maze town pack) re-skinned as welding torches on the line, on timers.
-- *Lockdown doors*: the Kill Box (puzzle 2).
+**Voss on the stairs** (a `branch`):
+- read Moss's log: "Yes. I ran LABRYS…" "Acceptable is Garrick's word, not mine." "Come up to Five… I'll tell you the rest myself." ARIADNE: `HE WILL TELL YOU SOME OF IT.`
+- went into a suite: "They're theatre, Theo. A very old kind…" ARIADNE: `THEY WATCHED IT EAT.`
+- saved someone: "When this is over, I'll see they're looked after." ARIADNE: `HE SAID THAT ABOUT SHELTER B.`
+- none of these: "Garrick's trials have killed better men than you, and you walked out."
 
-**Puzzles**
-1. **Stop the line.** The Assembler is shielded while the line has power. Three power junctions on the floor (Robot Bay, Ranges, Test Hall) each take a shot, or a switch, to cut (`ds-junction`, flags `junction1..3`). With all three down (`flag lineDown` via a `flag` trap listening to the last one), the Assembler's shield drops, the conveyors stop and the crushers lock open.
-2. **The trial.** The Armory's vault door opens only for a passed trial. Step into the Kill Box: `seal`, three waves (`spawn` Ladder Saints; then Sentinels; then both, and the robots and saints fight each other if E5 is in), and when the last wave is dead, `unseal` and `flag trialPassed`. Waves need E2's spawn tags: today a `seal` lifts as soon as everything spawned so far is dead, which would open the doors between waves. The viewing window shows the board's empty chairs, each with a programme on it.
-3. **The vault code.** (If you want a puzzle instead of a fight.) Moss's spare keycard is in Security Command; the vault takes clearance card 4 *and* the keycard (two flags).
-4. **The pens.** The Test Hall is full of Sentinels. The Holding Pens' lever releases the Grief Engine and its Grubs into the Test Hall: they fight the robots, and you clean up what's left. If factions aren't in yet, the lever just opens the pens (they come for you).
+**Finds.** The Incinerator and fuel (the armory; fuel also in the Warren, presents, and dropped by dogs), the Handler's Boots, the Nightlight, the Exo-Frame, the Riot Helmet, trauma kits (the presents, Smiler, the Rat King, the Underbed, the Jester), fragments 7 and 8.
 
-**Finds.** Railgun, EMP grenades, Riot Helmet (Armory), Incinerator and fuel (a Hauler drops it), Exo-Frame (the Kill Box's reward), Mag-Boots (Robot Bay), clearance card 4, Moss's incident log (readable: the truth about LABRYS), trial programmes (readables: "Trial 9. Subject: volunteer (staff). Opponent: Ladder Saint. Duration: 41 seconds."), ARIADNE fragments 7 and 8.
+**On the way back.** Not built yet. Ideas: the trial system restarts for the descent ("Tonight's subject is back!"), with the Run's blades running again and the reserve dogs out; the Box's feed to the boardroom; the Long Room's table re-laid for one.
 
-**Dressings.** New: conveyor (terrain), crusher, robotic welding arm, robot charging dock, half-built robot, target stand, firing-lane divider, holding pen bars (or existing `cell-bars`), viewing window (glass), concrete barrier, cable runs, sodium lamp. Existing: `crate`, `barrel` (explosive!), `weapon-rack`, `armor-stand`, `recharge-station`, `toolbox`, `tire-stack`, `fire-jet`, glass walls.
-
-**Lines**
-- Voss: "Four. Garrick's floor. If anything on this floor tells you it's on your side, it's lying."
-- Moss's log, last entry: "02:14. Director executed LABRYS to stop ARIADNE's external transmission. Containment failure on all floors. The Director says it's acceptable. I said nothing. I'm writing it down so somebody knows I said nothing."
-- ARIADNE (a range target's scoreboard): `THEY ARE NOT TRAPPED. THEY ARE WATCHING. KEEP CLIMBING. I WILL TELL YOU AT THE TOP.`
-
-**Exit.** West stairwell `>` to Floor 5.
-
-**On the way back.** The Assembler's line restarts unless you destroyed it (it remembers). The Holding Pens are full again: Voss releases the reserve pens (an `arrive` trap with `truthKnown`), and this time the robots are on his side against you. With the Exo-Frame and the Railgun, it's a fair fight.
+**Still to place** (from the earlier plan): the Assembler and its junctions, conveyors and crushers, the Robot Bay, Pacifiers, Haulers, Tick Mines, the firing ranges and turret gauntlet, the Railgun and EMP grenades, Mag-Boots, the Grief Engine, Mr. Hush, Ladder Saints, Mother of Teeth, Kneelers.
 
 ---
 
@@ -637,6 +653,14 @@ Each was designed from one board member's dream; the design sheets on Floor 3 sa
 | **Tenant** (built, Floor 3) | Pell | 24 | 150 | `ds-tenant` | a bite, 6 + `infected` | A skinned, segmented crawler with a ring of teeth. Goes for a dead body (`ds-body` with `host`): gets in at the base of the skull and stands it up as a Ridden. Bites if you come close. |
 | **Ridden** (built, Floor 3) | Pell | 85 | 74, in lurches | `ds-shamble` | a claw, 13 + `infected` | A dead scientist, walked about by a Tenant: head lolled, arms hanging, the thing along its spine. Goes back to where it worked. Put down, the body stays down and the Tenant crawls out for another. Drops what it carried (Okafor's card). |
 | **Juvenile Congregation** (built, Floor 3) | Pell | 300 | 46 | `ds-contained` | — (in a pen) | A young colony: a few faces so far, one of them very young. Presses to the glass when you look. Murmurs. |
+| **Grinner** (built, Floor 4) | Moss | 58 | 200 | `ds-pack` | charge 12; a bite, 9 + `held` (it heals 4) | A long hairless dog with no eyes and a grin all the way round its head; the teeth are a person's. Packs circle, then one darts in. Blind: hunts by breath. Giggles while it hunts, and howls into a laugh. Eats the dead. |
+| **Smiler** (built, Floor 4) | Moss | 520 (15%) | 190 | `ds-pack` | charge 22; a bite, 18 + `held` (it heals 12) | The house favourite, half as big again, in a studded collar with a name tag. The arena's last wave. A named bar. |
+| **Rat** (built, Floor 4) | Thale | 6 | 165 | `swarmer` | a bite, 3 | Never one. |
+| **The Rat King** (built, Floor 4) | Thale | 560 (12%) | 70, in surges | `ds-roll` | a squeal (a ring, 12, `staggered`); a bite, 16; calls rats (4 at a time, up to 14) | A wheel of rats knotted at the tails, heads out, rolling. At half health the knot tears and half of it comes loose. A named bar (its heads count down). In the Rat Warren. |
+| **The Jester** (built, Floor 4) | Voss | 1250 (8%) | 130, skipping | `ds-jester` | a fan of five knives, 9 each; a laugh (a ring, 11, `staggered`); steps out of the air behind you and cuts, 20 | A tall clown in red and white diamonds, a ruff, three heads on long necks: one laughs, one weeps, one sings. Behind the Party Room's curtain until you go near the stage. A named bar; at 66% the weeping head dies, at 33% the singing one, and with each it's quicker and steps behind you more often. |
+| **Under the bed** (built, Floor 4) | Brandt | 380 | 215 | `ds-underbed` | a long arm that grabs and drags you to the bed (10, `held`); a slash, 15 | Unseen under the Nursery's bed until it's let out: fingers over the edge, two lights in the dark. Then arms with too many elbows reach for you from under the bed (55% armor while it's under). It comes out to hunt, like a spider made of a person, its head upside down; hurt enough, it goes back under. A named bar. |
+| **Diner** (built, Floor 4) | Pell | 115 (10%) | 128 | `ds-diner` | a bite, 13 (it heals 8) | A guest in evening dress, strapped into its chair at the Long Room's table, a smiling porcelain mask that turns to follow you. At the gong it rises and feeds. Crack the mask and there's no face, only a mouth that opens upright. Six of them. |
+| **Captive** (built, Floor 4; faction `captive`) | — | 40 | 140 | `ds-flee` | — | People, in orange jumpsuits with SUBJECT on the back: cower in their cages; let out, run for the refuge, away from whatever's hunting them. The monsters hunt them. |
 | **Mother of Teeth** | Brandt | 120 | 95 | `chaser` | charge 22; melee 18 | A mouth the size of a doorway walking on human hands, many of them. Its back is armored (E10 on the rear). |
 | **The Weeping Choir** | Voss | 160 | 30 | `warden` | nova 16 (radius 110, knockback, `slowed` 2 s); summon Grubs | A stalk of fused singing heads. They sing the company jingle, slightly wrong. |
 | **Ladder Saint** | Moss | 110 | 70 | `chaser` | melee 20, range 42 (very long reach) | Three metres of stacked spines like ladder rungs, two long arms. Steps over pits (`flying` for hazards). |
@@ -686,9 +710,9 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | **Riot Shotgun** | Floor 1, armory cage | shells | 7 × 8 | 1.3 | The Scattergun re-skinned. |
 | **Cryo Sprayer** (built) | Floor 2, the oncology cold store | cryo (max 200) | 2.6 × 2 puffs | 12 | Short range (185), pierces 1. Applies `chilled` (half speed, 20% more damage, 2 s). The Congregation's counter. (Shattering, and putting out `burning`, can come with M3.) |
 | **Plasma Cutter** (built) | Floor 3, the pump room | cells | 6 | 8 | A maintenance cutter: a short hot arc (range 200, pierces 1) that sets things `burning` (6 a second, 2 s). |
-| **Incinerator** | Floor 4, a Hauler drops it | fuel (new, max 300) | 4 × stream | 14 | Range 200. `burning` (6 damage per second, 3 s). Kills Hollow Coats for good. |
-| **Railgun** | Floor 4, the Armory | slugs (new, max 12) | 120 | 0.6 | Pierces everything in a line, including thin walls (glass). Big kick. |
-| **EMP Grenade** | Floor 4, the Armory | rockets ("Charges") | 10 + `shocked` (robots stop 4 s) in radius 90 | 1 | Bursts at the cursor (`range: 'cursor'`, like the Ember Mortar). Harmless to monsters. |
+| **Incinerator** (built) | Floor 4, Moss's armory (code 4471) | fuel (max 240) | 3.4 | 14 | A riot-squad flamethrower. A short roaring jet (range 215) that goes through three things and sets them `burning` (3 s). The answer to rats. (The plan: a Hauler drops it.) |
+| **Railgun** (not built) | Floor 4, the Armory | slugs (new, max 12) | 120 | 0.6 | Pierces everything in a line, including thin walls (glass). Big kick. |
+| **EMP Grenade** (not built) | Floor 4, the Armory | rockets ("Charges") | 10 + `shocked` (robots stop 4 s) in radius 90 | 1 | Bursts at the cursor (`range: 'cursor'`, like the Ember Mortar). Harmless to monsters. |
 
 ### 6.2 Armor
 
@@ -697,17 +721,19 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | Head | Hard Hat with Lamp | Floor 1, Mail Room | +120 light radius |
 | Head | Hazmat Hood (built) | Floor 2, the mycology anteroom | `resist: { spores: 1 }`, +3% reduction; no lamp (it replaces the hard hat) |
 | Head | Neural Visor | Floor 3, the Vault | shows the Sitter and Ushers through walls; +60 light |
-| Head | Riot Helmet | Floor 4, the Armory | +12% damage reduction |
+| Head | Riot Helmet (built) | Floor 4, the Long Room (the host's chair) | +8% reduction, +10 shield; `staggered` and `held` last half as long |
 | Body | Security Vest | Floor 1, the locker | +10% reduction |
 | Body | Lead Apron | Floor 2, Dispatch's lift (descent) | +15% reduction, −8 speed, `shocked` immunity |
-| Body | Exo-Frame | Floor 4, the Kill Box | +25% reduction, +20 speed, +15% damage |
+| Body | Exo-Frame (built) | Floor 4, the Party Room (off Leon) | +16% reduction, +30 max health, −12 speed; can't be held, `staggered` halved |
 | Body | Hazmat Suit | Sub-level B, Coolant Plant | gas and fire immunity, −10 speed |
 | Body | The Director's Coat | Floor 5, Voss's closet | +30% reduction, +20% damage, −20 max health ("It fits. It shouldn't.") |
-| Feet | Clean-room Boots | Floor 3 or 4 (not on Floor 2 as built) | +20 speed, faster dash |
+| Feet | Clean-room Boots | not placed yet | +20 speed, faster dash |
+| Feet | Handler's Boots (built) | Floor 4, the Handlers' Room | +10 speed, dash 0.15 s sooner |
 | Feet | Mag-Boots | Floor 4, Robot Bay | immune to conveyors and knockback |
 | Trinket | ARIADNE's Thread | Floor 5, after the terminal | the way to your objective is drawn on the minimap (pack code) |
 | Trinket | The Hecatomb Signet | Floor 5, the Chapel | +25% damage; robots in defence mode don't target you for 2 s after they see you ("They were built to recognise the faithful"); −15 max health |
 | Trinket | Ruiz's Badge | Floor 1 | +25 shield (it's lucky). Sentimental. |
+| Trinket | The Nightlight (built) | Floor 4, the Nursery | +170 light radius, +10 shield; `held` halved |
 
 ### 6.3 Items
 
@@ -717,7 +743,7 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | Trauma Kit | +70 health | Existing `medkit`, re-skinned. |
 | Adrenaline Shot | +30 speed, faster dash, 30 s | A buff (existing `P.addBuff`). |
 | Battery | cells | Existing `ammo-cells` pickup, re-skinned. |
-| Cryo canister, fuel can | `cryo`, `fuel` | New ammo pickups (E14). |
+| Cryo canister, fuel can (built) | `cryo`, `fuel` | Ammo pickups (E14): `ammo-cryo` (Floor 2), `ammo-fuel` (Floor 4). |
 | Clearance card 2, 3, 4 | flag `clearance2..4` | Opens clearance doors (E4) on every floor. |
 | Master card | flag `master` | Opens every clearance door, the east stairwells, the Isolation back room, the Vault shelf. |
 | Sample canisters A–D | flags | Floor 2's sequencer. |
@@ -747,7 +773,7 @@ Palettes in `engine/SPEC.md` 6.1 terms. Painters: reuse what exists (`carpet-til
 | `ds-lobby` | `#2a2c33` | carpet-tile (open plan), terrazzo (lobby), bath-tile (restrooms) | drywall | red strobes, blue screens, one ceiling panel in five |
 | `ds-cleanroom` (built) | `#3d454d` | clean-panel (corridors, labs, oncology), terrazzo (Discovery Center), bath-tile (gowning), carpet (admin), concrete (shelter, stairs), grate (air garden) | drywall, white | cold blue-white panels, one in two; green guide lights; grow lights in the air garden; the shelter dark but for dropped torches |
 | `ds-wetlab` (built) | `#28322e` | wet-tile (corridors), grate over drainage (vat hall), resin (labs, cells, the dark lab), carpet (Brandt), terrazzo (briefing suite), sawdust (pens), concrete (stairs); biocontainment foam (a wall) | drywall, dark green | vats glow from inside; ceiling panels with gaps; Lab 3-D unlit but for its Lanterns |
-| `ds-proving` | `#2c2620` | concrete, plates, grate | bulkhead | sodium orange lamps; arc sparks |
+| `ds-proving` (built) | `#2c2622` | concrete (corridors, stairs), plates (the Run), the board's carpet (the Box, Moss's office), starry carpet (the Nursery), parquet (the Long Room), party tiles, kennel floor, dark panel (the studios), sawdust (the arena); papered walls for the suites | bulkhead | sodium orange, one in two; candles in the Long Room, pink in the Party Room, violet in the studios; the arena lit bright |
 | `ds-penthouse` | `#251c18` | marble, rug-red carpet, dark wood planks | dark wood panel (new `wood-panel` wall) | picture lamps, chandeliers, candles; warm and low |
 | `ds-hatchery` | `#14181a` | concrete, sand (brood), wet stone | bulkhead, rusted | amber from the Sermon, emergency bulbs |
 
@@ -760,7 +786,7 @@ By floor; everything listed in the chapters as "new". Most are simple `draw` fun
 | Lockdown | lockdown shutter (terrain, wall-like, with hazard edge), emergency strobe (wall light, red, flicker), wall screen (text scrolls; can glitch), breaker panel, keypad, network rack, drone dock, body under a sheet |
 | Clean room (built: `packs/ds-lab/labs.js`, `cleanroom.js`, `ds-story/shelter.js`) | lab bench, fume hood, sample fridge, biohazard bin, eyewash, gurney, charging dock; the Discovery Center's hanging synthid model, kiosks, mural, cutouts, display cases, theatre seats, children's drawings; membrane tank, valve, pump, brine (terrain); fungus chamber (spores), plastic bale; frond bed, CO₂ column; microscope feed, infusion chair, dispenser, cold store, frost; bunk, supply crate, torn vent, strands, dropped torch, blanket; guide lights, shelter sign, PA speaker, shelter door panel, quarantine release, blast door and biosafety door (terrain). Still to build: centrifuge, sequencer bay, strip curtain, UV gate, specimen cell, forklift. |
 | Wet lab (built: `packs/ds-lab/wetlab.js`, `gestation.js`) | growth vat (occupied, turning, drained, broken; five shapes), cell placard, specimen file terminal, briefing screen (slides), poster, HELIOS model, egg clutch (hatches), Tenant tank, steel table, painted staff route, scratches, feeding hatch; foam, containment door, Level 3 door, broken glass and vat fluid (terrain); ARIADNE's relay (`ds-robots`), purge station (`ds-arsenal`). Still to build: crib, mobile, sleep pod, recording console, design-sheet wall, specimen jar shelf, operating table, surgical light, barricade |
-| Proving | conveyor (terrain), crusher, welding arm, charging dock, half-built robot, target stand, lane divider, concrete barrier, cable run, sodium lamp |
+| Proving (built: `packs/ds-lab/proving.js`, `trials.js`) | cage bars and barred gates, blade floors, shock plates, trial gates, suite doors, the armory door, papered walls (terrain); odds board, trial horn, trial console, betting board, champagne, kennel, feed bin, leash rack, jumpsuits; sleep pod, dream playback, design sheet, hologram; child's bed, nightlight, toy box, rocking horse, mobile, music box; dining table, restraint chair, the covered main course, gong, place card, candelabrum; balloons, birthday cake, bunting, stage and curtain, party hat, jack-in-the-box, present. Still to build: conveyor (terrain), crusher, welding arm, charging dock, half-built robot, target stand, lane divider, concrete barrier, cable run |
 | Penthouse | chandelier, picture lamp, gilded frame (painting, readable), velvet rope, marble bust, grand piano, club chair, wine rack, dumbwaiter, dining table and settings, name card, aquarium, orchids, Hecatomb altar, labrys, pew, candelabra, blast door (terrain), server rack (cold / lit), core socket |
 | Hatchery | turbine, control desk, pipe run, steam vent, catwalk (terrain), coolant valve, cryo-lock console, incubation monitor, brood egg (3 states), the Sermon (6 × 6), amniotic pool (terrain), warm sand (floor), rusted locker |
 
@@ -793,14 +819,14 @@ What the engine and packs need that doesn't exist yet. Engine changes (E) go in 
 | # | Change | Size | Used for |
 |---|---|---|---|
 | E1 | Stairs with their own destinations and locks (done, 0.5.2) | S–M | Floor 1's east stairwell to B1; locked stairwells |
-| E2 | `arrive` trap trigger; spawned waves a `clear` trap can watch | S | The descent's second waves; the Kill Box |
+| E2 | `arrive` trap trigger; spawned waves a `clear` trap can watch (waves done, 0.5.5; `arrive` still to do) | S | The descent's second waves; Floor 4's arena |
 | E3 | Elevator power and per-stop access (done, 0.5.2) | S | Every car dead until `elevatorsOnline`; the private car |
 | E4 | Doors that open for a flag (clearance) (done, 0.5.2) | S | Clearance cards and the master card |
 | E5 | Factions (done, 0.5.4) | M–L | Robots against everything; robots on your side at the end |
 | E6 | Status effects and resistances (done, 0.5.3; area hazards and shattering still to come) | M | Frozen, burning, shocked, poisoned, slowed; Hazmat immunity |
 | E7 | Area hazards: gas, fire, live water | M | Decon gas, Glass Lungs, Pyre, flooded live floors |
 | E8 | Named boss bar and phases (done, 0.5.3) | S–M | The Assembler, the Silence, the Board |
-| E9 | Behaviours `patrol`, `unseen`, `blink` (`patrol` done, in `ds-robots`; Floor 3's own: `ds-midwife`, `ds-tenant`, `ds-shamble`, `ds-lumber`, `ds-contained`, `ds-escort`) | S each | Sentinels, the Sitter, Concierges and Ushers |
+| E9 | Behaviours `patrol`, `unseen`, `blink` (`patrol` done, in `ds-robots`; Floor 3's own: `ds-midwife`, `ds-tenant`, `ds-shamble`, `ds-lumber`, `ds-contained`, `ds-escort`; Floor 4's: `ds-pack`, `ds-flee`, `ds-roll`, `ds-jester` with its `ds-blink` attack, `ds-underbed`, `ds-diner`) | S each | Sentinels, the Sitter, Concierges and Ushers |
 | E10 | Directional armor | S | Pacifiers, Mother of Teeth, Warden of Teeth |
 | E11 | Transmissions (intercom subtitles) (done, 0.5.2) | S | Voss, ARIADNE, the Concierge |
 | E12 | HUD objective and counters | S | "Reach the top floor", INCUBATION, BROADCAST |
@@ -822,7 +848,7 @@ stairs: {
 
 **E2. `arrive` trigger.** `{ trigger: { type: 'arrive', flag: 'truthKnown', notFlag: 'x' }, effects: [...] }` fires once at the end of `loadLevel` (after the pack `levelLoaded` handlers, so what it spawns *is* remembered with the floor), if its flags match. Being a trap, its fired state is remembered too: it never fires twice. Without `flag` it fires on every arrival (with `once: false`). Where: `engine/traps.js`, `engine/game.js` (it already has `triggerEvent(type, tag)`, which `flag` and `pickup` traps use), the editor's trigger list (`SC.TRIGGERS`).
 
-In the same change, two fixes for waves. The `spawn` effect gets an `as` field that tags what it spawns (`{ type: 'spawn', tag: 'pit', enemy: 'ladder-saint', as: 'wave1' }`, in `linear-maze/core`'s `effects.js`), so a `clear` trap can watch spawned monsters. And `clear` traps collect their group on their first update and keep it, so a group spawned later is never seen; they should look again while the group is empty.
+*Waves are done in 0.5.5* (Floor 4's arena uses them), along with two small things Floor 4 needed: the `faction` effect's `aggro` (let out to hunt: they know where you are) and a search limit for `LM.ai.goTo` (the contestants' run across the maze). In the same change, two fixes for waves. The `spawn` effect gets an `as` field that tags what it spawns (`{ type: 'spawn', tag: 'pit', enemy: 'ladder-saint', as: 'wave1' }`, in `linear-maze/core`'s `effects.js`), so a `clear` trap can watch spawned monsters. And `clear` traps collect their group on their first update and keep it, so a group spawned later is never seen; they should look again while the group is empty.
 
 **E3. Elevator power and access.** Elevator fields: `power: 'elevatorsOnline'` (no car runs, doors stay shut, lamps dark, the panel says the game's `elevatorNoPower` words until the flag is set); `stops: { 'ds-f5': { until: 'master' } }` (a stop listed but not selectable until a flag). `LM.elevators.check` and `stops` read them; `Car.wantOpen` checks power. The editor's elevator inspector gets a Power flag field. Where: `engine/elevators.js`, `editor/js/lifts.js`.
 
@@ -926,8 +952,21 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 | `vossDone` | the last line of Voss's speech | Floor 3's Stair B up |
 | `fuse`, `nurseryLit` | (not built) | — |
 | `vaultOpen`, `dreamsKnown` | (not built) | — |
-| `junction1`…`junction3`, `lineDown` | Floor 4's junctions | the Assembler's shield, conveyors, crushers |
-| `trialPassed` | the Kill Box | the Armory |
+| `readSchedule` | Floor 4's programme in Trial Control | ARIADNE: he chose you |
+| `trialStarted` | stepping into the Pens | the odds boards; the contestants and the dogs let out |
+| `captiveSaved`, `saved<Name>`, `captiveDied<Name>` | the contestants (Kwan, Arden, Soto, Ostrowski, Pryce) | Voss on the stairs; the results |
+| `finalRound` | the Box's console | the shutter to the arena |
+| `trialEnded` | the arena's third wave dead | every trial gate; the blades and plates stop; the corridor's shutter; Stair A |
+| `readResults`, `sawBets` | the console after the trial; the betting board | — |
+| `armoryOpen` | the armory keypad (4471) | the armory door |
+| `mossLog` | Moss's incident log | ARIADNE; Voss on the stairs |
+| `nurseryOpen`, `partyOpen`, `longOpen` | ARIADNE, outside each suite | the suites' doors |
+| `nurseryAwake`, `partyStarted`, `mainCourse`, `dinnerServed` | going near the bed, the stage; lifting the cover; the gong | the thing under the bed, the Jester, the Diners |
+| `underbedDead`, `jesterDead`, `ratKingDead`, `smilerDead` | killing them | ARIADNE's lines |
+| `freeOstrowski` | cage 8's console in the Cage Lab | cage 8 |
+| `sawStudio`, `dreamVoss`, `dreamThale`, `dreamBrandt`, `dreamPell`, `dreamMoss`, `fileTrials`, `fileRats` | the studios' recordings and sheets; the trial log; the count | — |
+| `vossDone4` | the last line of Voss's speech on Floor 4 | Floor 4's Stair A up |
+| `junction1`…`junction3`, `lineDown` | (not built) | — |
 | `creed` | the Chapel altar | Voss's office |
 | `truthKnown` | ARIADNE's terminal | the reveal sequence, every `arrive` trap on the descent, the east stairwells |
 | `basementOpen` | the east shutter's keypad (7114) or the master card | Floor 1's east stairwell (E1) |
@@ -954,7 +993,7 @@ Each milestone ends with something playable and tested. Hand Claude the workspac
 > (Built, October 2026: Floor 3 as section 4.3 describes it, with factions in the engine. Area hazards (E7), fuel and the Incinerator, `unseen`, the dream pods and the vault are still to do.) The original prompt: Do milestone M3: factions (E5) with SPEC updates and a regression check on every Linear Maze floor; area hazards (E7) and the statuses monsters need (burning, frozen shattering); the Incinerator's ammunition (fuel, with `LM.defineAmmo`); the `ds-wetlab` environment; Floor 3 per section 4.3 with the Sitter (`unseen` behaviour), Mother of Teeth, the Weeping Choir, Flesh Lanterns, Kneelers; the fuse, the dream pods and the vault. Leave the dream texts as placeholders marked TODO for me to write.
 
 **M4. Floor 4.**
-> Do milestone M4: conveyors and crushers (E13), directional armor (E10), the boss bar (E8); the `ds-proving` environment; Floor 4 per section 4.4 with the Assembler, Pacifiers, Haulers, Tick Mines, the Grief Engine, Mr. Hush and Ladder Saints; the junction puzzle, the Kill Box, the pens; the Railgun, EMP grenades, the Exo-Frame.
+> (Built, October 2026: Floor 4 as section 4.4 describes it: the trial, the Run and the board's suites, with waves in the engine. The factory, conveyors, crushers, directional armor, the Railgun and EMP grenades are still to do.) The original prompt: Do milestone M4: conveyors and crushers (E13), directional armor (E10), the boss bar (E8); the `ds-proving` environment; Floor 4 per section 4.4 with the Assembler, Pacifiers, Haulers, Tick Mines, the Grief Engine, Mr. Hush and Ladder Saints; the junction puzzle, the Kill Box, the pens; the Railgun, EMP grenades, the Exo-Frame.
 
 **M5. Floor 5 and the truth.**
 > Do milestone M5: the `ds-penthouse` environment and dressings; Floor 5 per section 4.5, with the Collection (section 7.3), the creed altar, the ARIADNE terminal dialog, Voss's office and the reveal sequence; Concierges (`blink`), Patrons, Faceless Ushers; the objective HUD (E12).

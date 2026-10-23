@@ -254,6 +254,12 @@ New flags: `slept`, `woke`, `dressed`, `aliceCalled`, `townPlaque`, `visited-<pl
 
 No existing floor changes: every door on every floor of both games runs the same way as before (checked), and no floor had a `rot`.
 
+## 0.5.5: waves, letting things out hunting
+
+Built for Dead Signal's Floor 4. The `spawn` effect's `as` tags what it spawns, and a `clear` trap keeps looking for its group while it's empty, so it can watch a wave spawned later (before, a `clear` trap with nothing tagged at the start never fired, which no floor relied on). The `faction` effect's `aggro`. `LM.ai.goTo`'s search limit (`lim`, default 40 as before). Engine spec sections 6.5, 6.8 and 6.20.
+
+**This game's packs.** `packs/core/effects.js`: `spawn`'s `as` and `faction`'s `aggro`. Nothing else changed; every Linear Maze floor plays as before (checked).
+
 ## 0.5.4: factions
 
 Built for Dead Signal's Floor 3. Enemies have a side (`e.faction`, default `'monster'`) and a foe (`e.foe`, `LM.ai.foe`); the game's table (a pack's `factions`, laid over by a level's) says who fights whom; `game.setFaction`; trap effects `faction` and `branch`; a status's `countdown`, `stack`, `keep`, `update` and `onEnd` reason; `LM.nav.step` and `LM.ai.goTo` for enemies chasing something other than the player. Engine spec sections 5, 6.5, 6.8, 6.17 and 6.20.

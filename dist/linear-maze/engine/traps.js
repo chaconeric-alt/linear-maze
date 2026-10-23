@@ -122,8 +122,9 @@
         }
       }
       if (tr.type === 'clear' && this.armed) {
-        // the group is captured once, because dead enemies leave game.enemies
-        if (!this.group) this.group = game.enemies.filter((e) => e.tag === tr.tag);
+        // the group is captured once, because dead enemies leave game.enemies (and until it has anyone in
+        // it, it keeps looking: a group a spawn effect makes later, with `as`, is a wave)
+        if (!this.group || !this.group.length) this.group = game.enemies.filter((e) => e.tag === tr.tag && !e.dead);
         if (this.group.length && this.group.every((e) => e.dead)) this.fire(game);
       }
       // a lockdown ends when everything this trap summoned is dead

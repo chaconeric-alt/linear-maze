@@ -1079,7 +1079,7 @@
       },
       terrain: { "glass-corner": { $extends: "glass-v", name: "Glass Corner" } },
     },
-    levelOrder: ["ds-f1", "ds-f2", "ds-f3", "dead-signal-lab", "the-complex", "sterile-annex"],
+    levelOrder: ["ds-f1", "ds-f2", "ds-f3", "ds-f4", "dead-signal-lab", "the-complex", "sterile-annex"],
     player: null,
   });
 })();
