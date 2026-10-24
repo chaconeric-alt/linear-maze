@@ -2,6 +2,8 @@
 
 Version 0.5.7. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
 
+Hosted (once GitHub Pages is on for this repo: Settings → Pages → Deploy from a branch, `main`, `/ (root)`): the launcher is at `https://chaconeric-alt.github.io/linear-maze/`, Dead Signal at `https://chaconeric-alt.github.io/linear-maze/dist/dead-signal.html`, The Linear Maze at `…/dist/linear-maze.html`, and the editor at `…/editor/`. `.nojekyll` tells Pages to serve the files as they are.
+
 New in 0.5.7: from Dead Signal's playtests. Objectives: what to do next on the HUD, the thing to find picked out when you're near it and marked on the minimap (a level's `objectives`, `engine/objectives.js`; written for all four of Dead Signal's floors, and editable in the editor's floor settings). Story lines that stop the game: a speaker with `pause` is read in the middle of the screen with Continue and Skip, except in a fight (Dead Signal's Voss and ARIADNE); the pause screen can turn it off. Long bodies get a `hitbox` so shots land on all of them (the Grinners), a side can wake when you shoot it (`factionWake`: Dead Signal's specimens), and floors remember which monsters were hunting. See `engine/SPEC.md` sections 6.5, 6.16, 6.20 and 6.21.
 
 New in 0.5.6: the AEGIS field on Dead Signal's Floor 4: ARIADNE sends the dead freight elevator up with a containment field in it that makes you much harder to hurt and, once a minute, to kill. Engine: an elevator can be parked on a floor without power and bring cargo (`parked`), gear can have a `lastStand` when a hit would kill you, and gadgets can resist statuses and draw an aura. See `engine/SPEC.md` sections 4 (*Damage*), 6.12 and 6.15.
