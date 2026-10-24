@@ -6,7 +6,7 @@
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.6';
+  LM.VERSION = '0.5.7';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -66,6 +66,8 @@
       for (const [f, list] of Object.entries(pack.factions)) LM.factions.base[f] = [].concat(list || []);
       LM.factions.use(null);
     }
+    // factionWake: a side that wakes when you hurt it ({ specimen: 'monster' }: your shots hit it, and it turns on you)
+    if (pack.factionWake && typeof pack.factionWake === 'object') Object.assign(LM.factions.wake, pack.factionWake);
     if (!LM.packs.find((p) => p.id === pack.id)) {
       LM.packs.push({ id: pack.id, name: pack.name || pack.id, version: pack.version || '0.0.0' });
     }
@@ -88,6 +90,8 @@
     base: { player: ['*'], monster: ['player'] },
     table: null,
     rev: 0,
+    // sides that wake when the player hurts them: { specimen: 'monster' } (a pack's factionWake)
+    wake: {},
   });
   /** Use the game's table with a level's rows laid over it (null: the game's own). */
   FA.use = function (over) {
@@ -105,6 +109,8 @@
     const l = FA.row(a);
     return l.includes(b) || l.includes('*');
   };
+  /** Do the player's shots and blasts land on faction f? (Its foes, and any side that wakes when hurt.) */
+  FA.playerHits = (f) => FA.hostile('player', f) || !!(f && FA.wake[f]);
   /** Does faction a attack nobody but the player? (Then an enemy skips looking for other foes.) */
   FA.onlyPlayer = function (a) {
     const c = FA.cache[a];

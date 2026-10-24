@@ -1707,10 +1707,33 @@
         onChange: (l) => { d.rooms = l; commit(); this.dirty = true; }, title: (r) => r.name + ' · ' + (r.rect || []).join(','), addLabel: 'Add a room (or drag one with the Room tool)', newItem: () => ({ name: 'New room', rect: [1, 1, 5, 5] }),
       }));
       sect('traps', 'Traps and scripted events (' + (d.traps || []).length + ')', () => this.trapsEditor(d, commit));
+      sect('objectives', 'Objectives (' + (d.objectives || []).length + ')', () => this.objectivesEditor(d, commit));
       sect('lights', 'Ceiling lights', () => F().list(d.ceilingLights || [], (cl, n, set) => F().params({ variants: 'json', every: 'number', offset: 'json', color: 'color', radius: 'number', intensity: 'number', flicker: 'number', skip: 'number', tag: 'tag' }, cl, (v) => set(v)), {
         onChange: (l) => { if (l.length) d.ceilingLights = l; else delete d.ceilingLights; commit(); this.scheduleReload(); }, title: (cl) => 'every ' + (cl.every || 4) + ' tiles on floor ' + JSON.stringify(cl.variants || 'any'), addLabel: 'Add a grid of lights', newItem: () => ({ variants: [0], every: 4, offset: [2, 2], color: '#f2f5ff', radius: 180, intensity: 0.5 }),
       }));
       sect('size', 'Map size', () => this.sizePanel());
+    }
+    /** The floor's objectives (engine/objectives.js): what the HUD tells the player to do next. */
+    objectivesEditor(d, commit) {
+      const flags = (v) => (v == null ? [] : [].concat(v));
+      const SPEC = { id: 'text', text: 'longtext', when: 'stringlist', any: 'stringlist', not: 'stringlist', done: 'stringlist', optional: 'bool', target: 'json', map: 'bool' };
+      const norm = (o) => Object.assign({}, o, { when: flags(o.when), any: flags(o.any), not: flags(o.not), done: flags(o.done) });
+      const clean = (o) => {
+        const c = Object.assign({}, o);
+        for (const k of ['when', 'any', 'not']) if (!c[k] || !c[k].length) delete c[k];
+        if (!c.optional) delete c.optional;
+        if (c.map !== false) delete c.map;
+        if (!c.target) delete c.target;
+        return c;
+      };
+      return h('div', null,
+        h('p', { class: 'hint' }, 'What the HUD tells the player to do next: the first one that’s showing and not done, with up to two optional ones under it. Story flags: when (all of them set before it shows), any (at least one), not (hidden while any is set), done (any one finishes it). Target: what to pick out when the player is in the same room or close, and to mark on the minimap: {"tag": "…"}, {"item": "id", "props": {…}}, {"enemy": "id"}, {"tile": [x, y]}, {"room": "Name"}, or a list of them. Map off keeps the targets off the minimap.'),
+        F().list(d.objectives || [], (o, n, set) => F().params(SPEC, norm(o), (v) => set(clean(v))), {
+          onChange: (l) => { if (l.length) d.objectives = l; else delete d.objectives; commit(); },
+          title: (o) => (o.optional ? 'Optional · ' : '') + (o.text || o.id || 'Objective'),
+          addLabel: 'Add an objective',
+          newItem: () => ({ id: 'objective' + ((d.objectives || []).length + 1), text: 'What to do next', done: ['someFlag'] }),
+        }));
     }
     checkPanel() {
       const box = h('div');

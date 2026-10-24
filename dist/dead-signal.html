@@ -454,7 +454,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.6';
+  LM.VERSION = '0.5.7';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -514,6 +514,8 @@ kbd {
       for (const [f, list] of Object.entries(pack.factions)) LM.factions.base[f] = [].concat(list || []);
       LM.factions.use(null);
     }
+    // factionWake: a side that wakes when you hurt it ({ specimen: 'monster' }: your shots hit it, and it turns on you)
+    if (pack.factionWake && typeof pack.factionWake === 'object') Object.assign(LM.factions.wake, pack.factionWake);
     if (!LM.packs.find((p) => p.id === pack.id)) {
       LM.packs.push({ id: pack.id, name: pack.name || pack.id, version: pack.version || '0.0.0' });
     }
@@ -536,6 +538,8 @@ kbd {
     base: { player: ['*'], monster: ['player'] },
     table: null,
     rev: 0,
+    // sides that wake when the player hurts them: { specimen: 'monster' } (a pack's factionWake)
+    wake: {},
   });
   /** Use the game's table with a level's rows laid over it (null: the game's own). */
   FA.use = function (over) {
@@ -553,6 +557,8 @@ kbd {
     const l = FA.row(a);
     return l.includes(b) || l.includes('*');
   };
+  /** Do the player's shots and blasts land on faction f? (Its foes, and any side that wakes when hurt.) */
+  FA.playerHits = (f) => FA.hostile('player', f) || !!(f && FA.wake[f]);
   /** Does faction a attack nobody but the player? (Then an enemy skips looking for other foes.) */
   FA.onlyPlayer = function (a) {
     const c = FA.cache[a];
@@ -2055,12 +2061,15 @@ kbd {
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.drawGlow(ctx, game, t);
       for (const fx of game.fx) if (fx.drawGlow) fx.drawGlow(ctx, game, t);
       for (const tr of game.traps) if (tr.drawGlow) tr.drawGlow(ctx, game, t);
+      if (LM.objectives && !game.attract) LM.objectives.drawGlow(ctx, game, t);
       game.particles.draw(ctx, 'glow', view);
       ctx.globalCompositeOperation = 'source-over';
 
       // 6. overlays
       game.particles.draw(ctx, 'overlay', view);
       for (const o of drawables) if (o.drawOverlay) o.drawOverlay(ctx, game, t);
+      // what the objective wants you to find, picked out when you're near it (engine/objectives.js)
+      if (LM.objectives && !game.attract) LM.objectives.drawOverlay(ctx, game, t);
       if (game.focus && !game.attract && !game.focus.isNPC) this.drawFocus(ctx, game.focus, t);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (!game.attract) this.drawScreenFX(ctx, game, cw, chh);
@@ -2601,10 +2610,9 @@ kbd {
         if (this.owner === 'player') {
           for (const e of game.enemies) {
             if (e.dead || e.spawning > 0 || this.hit.has(e)) continue;
-            // your shots pass through anyone on your side
-            if (!FA.hostile('player', e.faction)) continue;
-            const rr = e.r + this.r;
-            if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
+            // your shots pass through anyone on your side (but not something that wakes when hurt)
+            if (!FA.playerHits(e.faction)) continue;
+            if (C.touches(e, this.x, this.y, this.r)) {
               this.hit.add(e);
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
@@ -2631,8 +2639,7 @@ kbd {
           if (fac != null && FA.hitsEnemies(fac)) {
             for (const e of game.enemies) {
               if (e.dead || e.spawning > 0 || e === this.by || this.hit.has(e) || !FA.hostile(fac, e.faction)) continue;
-              const rr = e.r + this.r;
-              if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
+              if (C.touches(e, this.x, this.y, this.r)) {
                 this.hit.add(e);
                 if (!this.aoe) C.hurt(game, e, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by });
                 game.particles.burst(this.x, this.y, 4, { type: 'dot', color: e.def.blood || '#7a1f1f', speed: 110, life: 0.3, angle: this.angle, spread: 0.6, size: [0.8, 1.6], drag: 6 });
@@ -2754,12 +2761,40 @@ kbd {
    * An enemy's damage reduction is its own `armor` if it has one (behaviours can change it as it fights),
    * else its def's; statuses can make it take more (`vulnerable`). def.onHurt(e, game, dmg, o) hears every hit.
    */
+  /**
+   * Does a point (with radius r) touch an enemy? A circle of its radius, or, for a long body, the def's
+   * hitbox: { front, back, r } a capsule along the way it faces (front and back: how far the body reaches
+   * ahead of and behind its centre; r: how wide, from the middle; the radius if left out). Shots use it,
+   * so a dog seen side-on can be hit in the head or the haunch, not only the middle.
+   */
+  C.touches = function (e, x, y, r) {
+    const hb = e.def && e.def.hitbox;
+    if (!hb) {
+      const rr = e.r + (r || 0);
+      return U.dist2(x, y, e.x, e.y) < rr * rr;
+    }
+    const k = e.def.radius ? e.r / e.def.radius : 1;
+    const ca = Math.cos(e.facing || 0), sa = Math.sin(e.facing || 0);
+    const along = U.clamp((x - e.x) * ca + (y - e.y) * sa, -(hb.back || 0) * k, (hb.front || 0) * k);
+    const px = e.x + ca * along, py = e.y + sa * along;
+    const rr = (hb.r != null ? hb.r * k : e.r) + (r || 0);
+    return U.dist2(x, y, px, py) < rr * rr;
+  };
+
   C.hurt = function (game, target, amount, o) {
     o = o || {};
     if (target.dead || amount <= 0) return 0;
     if (target.isPlayer) return C.hurtPlayer(game, target, amount, o);
     if (target.isEnemy) {
       const def = target.def;
+      // something that wakes when hurt (LM.factions.wake: a specimen in its cage) turns on whoever hurt it
+      const woke = o.source === 'player' && FA.wake[target.faction];
+      if (woke && game.setFaction) {
+        game.setFaction((x) => x === target, woke);
+        target.aggro = true;
+        target.knowsP = true;
+        target.alertT = 1;
+      }
       const armor = target.armor != null ? target.armor : def.armor || 0;
       const vul = LM.status ? LM.status.vulnerable(target) : 0;
       const dmg = Math.max(1, amount * (1 + vul) * (1 - armor));
@@ -2925,7 +2960,7 @@ kbd {
     if (!enemyBlast || (fac && FA.hitsEnemies(fac))) {
       for (const e of game.enemies) {
         if (e.dead) continue;
-        if (enemyBlast ? e === o.by || !FA.hostile(fac, e.faction) : o.owner === 'player' && !FA.hostile('player', e.faction)) continue;
+        if (enemyBlast ? e === o.by || !FA.hostile(fac, e.faction) : o.owner === 'player' && !FA.playerHits(e.faction)) continue;
         const d = U.dist(x, y, e.x, e.y);
         if (d < R + e.r && losOK(e.x, e.y)) {
           const k = 1 - U.clamp(d / (R + e.r), 0, 1) * 0.6;
@@ -5195,7 +5230,8 @@ kbd {
  *   gone      map items no longer there (indexes into the level's spawns)
  *   items     { spawnIndex: { field: value } } map items that changed (used, opened, hp...)
  *   extra     items that weren't on the map (loot, drops): { id, tx, ty, props, tag, s: fields }
- *   enemies   every living enemy: { id, x, y, hp, p: spawn props, h: [homeX, homeY] }
+ *   enemies   every living enemy: { id, x, y, hp, p: spawn props (with its side, if that changed), h: [homeX, homeY],
+ *             a: 1 if it was hunting, t: a tag it was given while playing }
  *   npcsGone, npcs, npcsExtra   as for items
  *   traps     { trapIndex: [armed, timesFired] } traps that have fired
  *   lights    { key: { off, intensity, flicker, color, r } } static lights a trap or script changed
@@ -5385,6 +5421,9 @@ kbd {
       const o = { id: e.def.id, x: rnd(e.x), y: rnd(e.y), hp: rnd(e.hp) };
       if (e._props && Object.keys(e._props).length && plainOk(e._props, 0)) o.p = JSON.parse(json(e._props));
       if (e.home && (Math.abs(e.home.x - e.x) > 1 || Math.abs(e.home.y - e.y) > 1)) o.h = [rnd(e.home.x), rnd(e.home.y)];
+      // hunting (a monster let out stays let out), and a tag given while playing (a wave's `as`)
+      if (e.aggro) o.a = 1;
+      if (e.tag && e.tag !== (e._props && e._props.tag)) o.t = e.tag;
       return o;
     });
     // people
@@ -5505,6 +5544,8 @@ kbd {
       e.spawning = 0;
       if (o.hp != null) e.hp = Math.min(e.maxHp, o.hp);
       if (o.h) e.home = { x: o.h[0], y: o.h[1] };
+      if (o.a) e.aggro = true;
+      if (o.t) e.tag = o.t;
     }
     // doors
     for (const d of game.doors) {
@@ -6476,6 +6517,7 @@ kbd {
     }
     ui.statusFrame(game, P);
     ui.bossFrame(game, dt);
+    if (LM.objectives) LM.objectives.frame(game);
     ui.mmT = (ui.mmT || 0) - dt;
     if (ui.mmT <= 0) {
       ui.mmT = 0.1;
@@ -6597,6 +6639,8 @@ kbd {
       g.fillStyle = LM.factions && !LM.factions.hostile('player', e.faction) ? '#5fe08a' : '#ff5a4a';
       g.fillRect(ox + (e.x / T) * s - 1, oy + (e.y / T) * s - 1, 2, 2);
     }
+    // the objective's targets (engine/objectives.js)
+    if (LM.objectives) LM.objectives.drawMap(g, game, ox, oy, s, W, H);
     // player arrow
     g.save();
     g.translate(W / 2, H / 2);
@@ -6865,15 +6909,20 @@ kbd {
           h('dt', null, 'Gold carried'), h('dd', null, game.player.gold + '')
         ),
         h('p', { class: 'hint' }, 'WASD move · mouse aim · click fire · Shift dash · E interact · 1–9 or wheel to switch weapons · Q last weapon · Tab inventory · M sound'),
+        LM.objectives && LM.objectives.view(game) ? h('div', null, h('h3', null, 'Objectives'), LM.objectives.view(game)) : null,
         LM.comms && LM.comms.log.length ? h('div', null, h('h3', null, 'Transmissions'), LM.comms.logView(5)) : null
       ),
       actions: [
         { label: 'Resume', primary: true },
         { label: 'Inventory', onClick: () => { setTimeout(() => ui.showInventory(game), 0); } },
         { label: LM.audio.muted ? 'Sound on' : 'Sound off', onClick: () => LM.audio.setMuted(!LM.audio.muted) },
+        // story lines that stop the game (LM.comms): the player can have them in the corner instead
+        LM.comms && LM.comms.anyPause && LM.comms.anyPause()
+          ? { label: LM.comms.pauses() ? 'Story lines: stop the game' : 'Story lines: in the corner', onClick: () => { LM.comms.setPauses(!LM.comms.pauses()); setTimeout(() => ui.showPause(game), 0); } }
+          : null,
         { label: 'Restart floor', quiet: true, onClick: () => { setTimeout(() => game.restartLevel(), 0); } },
         { label: 'Quit to title', quiet: true, onClick: () => { setTimeout(() => game.toTitle(), 0); } },
-      ],
+      ].filter(Boolean),
     });
   };
 
@@ -7248,14 +7297,25 @@ kbd {
  *     glitch   the line comes through broken: letters scramble as it types, the panel jitters
  *     seconds  how long it stays once typed (default: enough to read it)
  *     flag     a story flag to set when the line has been shown (so a trap can wait for it)
+ *     pause    true: this line stops the game and is read in the middle of the screen; false: never
+ *              (left out: as its speaker says)
  *
  *   speakers: {
  *     director: { name: 'Dr. Voss', role: 'Lab director · intercom', color: '#e0b25a',
  *                 face: 'intercom' | 'eye' | 'screen' | 'radio', or portrait(g, size, t) to draw your own,
- *                 voice: 0.8 }      // pitch of the typing ticks (1 = default; 0 = silent)
+ *                 voice: 0.8,       // pitch of the typing ticks (1 = default; 0 = silent)
+ *                 pause: true }     // what they say matters: it stops the game (see below)
  *   }
  *
- * Trap effect: { type: 'transmission', who, text, glitch, seconds, flag } (plus delay, as every effect).
+ * A conversation that matters: a line whose speaker has `pause` (or the line's own pause: true) stops
+ * the game and is shown in the middle of the screen, larger, with Continue (E, Enter, Space or a click:
+ * the first finishes the typing) and Skip (Esc: the rest of this conversation, every line still logged
+ * and every flag still set). Whatever is queued behind it carries on in the same box, whoever says it
+ * (a line with pause: false waits for the game); then the game goes on. In a fight (something hunting you, close), a line plays in the corner as usual
+ * unless it says pause: true. The player can turn it off on the pause screen (kept in the browser);
+ * LM.comms.talk = false (or true) overrides that, for tests.
+ *
+ * Trap effect: { type: 'transmission', who, text, glitch, seconds, flag, pause } (plus delay, as every effect).
  * The lines heard so far are in LM.comms.log (newest last); the pause screen lists the last few.
  * LM.comms.busy() is true while a line is up or waiting; LM.comms.speaking() is the id of who is talking.
  */
@@ -7266,7 +7326,8 @@ kbd {
   const h = (...a) => LM.ui.h(...a);
   const CPS = 52; // characters typed a second
   C.log = [];
-  let queue = [], cur = null, el = null, raf = 0, last = 0;
+  let queue = [], cur = null, el = null, raf = 0, last = 0, talkEl = null, talkHide = 0;
+  C.talk = undefined; // true / false: override the player's choice (tests)
 
   LM.ui.addStyles(`
     #comms { position: absolute; left: 50%; bottom: calc(var(--gap, 18px) + 4px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
@@ -7286,6 +7347,26 @@ kbd {
     .comms-log { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; max-height: 40vh; overflow: auto; }
     .comms-log li { font: 400 13px/1.45 var(--font-ui); padding-left: 10px; border-left: 2px solid var(--line, rgba(255,255,255,0.2)); }
     .comms-log b { display: block; font: 700 10.5px/1.3 var(--font-ui); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+    #talk { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; box-sizing: border-box;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.25), rgba(0,0,0,0.55)); transition: opacity 0.22s ease; cursor: pointer; }
+    #talk[hidden] { display: none; }
+    #talk.out { opacity: 0; pointer-events: none; }
+    #talk .talk-panel { width: min(640px, 100%); box-sizing: border-box; display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: start;
+      padding: 16px 18px 14px 16px; background: rgba(8, 10, 13, 0.95); border: 1px solid rgba(255, 255, 255, 0.09); border-left: 4px solid var(--comms, #e0b25a);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6); cursor: default; }
+    #talk.glitch .talk-panel { animation: talkJitter 0.18s steps(2) infinite; }
+    @keyframes talkJitter { 0% { transform: translate(0, 0); } 50% { transform: translate(1.5px, -1px); } 100% { transform: translate(-1px, 0.5px); } }
+    #talk canvas { width: 96px; height: 96px; display: block; background: #050607; border: 1px solid rgba(255, 255, 255, 0.08); }
+    #talk .comms-who { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; font: 700 12px/1.2 var(--font-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--comms, #e0b25a); }
+    #talk .comms-who span { font-weight: 500; letter-spacing: 0.06em; color: var(--muted, #8a8f98); text-transform: none; }
+    #talk .comms-text { font: 400 18px/1.5 var(--font-lore, Georgia, serif); color: #efebe3; min-height: 3em; white-space: pre-wrap; }
+    #talk .talk-foot { display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 12px; }
+    #talk .talk-foot .talk-more { margin-right: auto; font: 500 11px/1 var(--font-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted, #8a8f98); }
+    #talk .talk-foot button { display: inline-flex; gap: 7px; align-items: center; padding: 7px 12px; font: 600 12.5px/1 var(--font-ui); color: #e8e4dc;
+      background: #1c1f23; border: 1px solid #3a3e44; border-radius: 3px; cursor: pointer; }
+    #talk .talk-foot button.primary { background: var(--comms, #e0b25a); color: #141210; border-color: transparent; }
+    #talk .talk-foot kbd { font: 600 10px/1 var(--font-ui); padding: 2px 4px; border-radius: 2px; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.15); }
+    @media (max-width: 560px) { #talk .talk-panel { grid-template-columns: 1fr; } #talk canvas { width: 64px; height: 64px; } #talk .comms-text { font-size: 16px; } }
   `);
 
   /** The speaker for a line: a registry entry, an object given inline, or a plain name. */
@@ -7293,6 +7374,149 @@ kbd {
     if (who && typeof who === 'object') return who;
     return (who && LM.find('speakers', who)) || { name: who || 'Unknown', color: '#9aa3ad', face: 'intercom' };
   };
+
+  // ------------------------------------------------------------ a conversation that stops the game
+  const PREF = 'lm-talk-pauses';
+  /** Does the player want important lines to stop the game? (On unless they turned it off.) */
+  C.pauses = function () {
+    if (C.talk === true || C.talk === false) return C.talk;
+    try {
+      return localStorage.getItem(PREF) !== 'off';
+    } catch (e) {
+      return true;
+    }
+  };
+  C.setPauses = function (on) {
+    try {
+      localStorage.setItem(PREF, on ? 'on' : 'off');
+    } catch (e) {}
+  };
+  /** Does any speaker in this game stop the game? (The pause screen offers the choice only then.) */
+  C.anyPause = () => Object.values(LM.registry.speakers || {}).some((sp) => sp && sp.pause);
+  /** Something is hunting you, close: a fight, where a line doesn't stop the game. */
+  C.inFight = function (game) {
+    const P = game && game.player;
+    if (!P || P.dead) return false;
+    const FA = LM.factions;
+    for (const e of game.enemies || []) {
+      if (e.dead || !e.aggro || (e.spawning || 0) > 0) continue;
+      if (FA && !FA.hostile(e.faction, 'player')) continue;
+      const d = U.dist(e.x, e.y, P.x, P.y);
+      if (d < 200 || (d < 420 && e.pSee)) return true;
+    }
+    return false;
+  };
+  const forced = (p) => p === true || p === 'always' || p === 'yes';
+  const never = (p) => p === false || p === 'never' || p === 'no';
+  /** Does this line stop the game? (continuing: a conversation is on screen, and whatever is queued
+   *  behind it, whoever says it, carries on in the same box unless it says pause: false.) */
+  function stops(spec, game, continuing) {
+    if (!C.pauses() || never(spec.pause)) return false;
+    if (continuing) return true;
+    const sp = C.speaker(spec.who);
+    if (!forced(spec.pause) && !sp.pause) return false;
+    if (!game || game.attract || game.state !== 'play') return false;
+    return forced(spec.pause) || !C.inFight(game);
+  }
+  function buildTalk() {
+    if (talkEl && talkEl.isConnected) return talkEl;
+    const root = document.getElementById('app') || document.body;
+    const canvas = h('canvas', { width: 192, height: 192 });
+    const who = h('div', { class: 'comms-who' });
+    const text = h('div', { class: 'comms-text' });
+    const more = h('span', { class: 'talk-more' });
+    const skip = h('button', { type: 'button', class: 'talk-skip' }, h('span', null, 'Skip'), h('kbd', null, 'Esc'));
+    const next = h('button', { type: 'button', class: 'primary talk-next' }, h('span', null, 'Continue'), h('kbd', null, 'E'));
+    const panel = h('div', { class: 'talk-panel', role: 'dialog', 'aria-live': 'polite' }, canvas, h('div', null, who, text, h('div', { class: 'talk-foot' }, more, skip, next)));
+    talkEl = h('div', { id: 'talk', hidden: true }, panel);
+    talkEl._c = canvas;
+    talkEl._who = who;
+    talkEl._text = text;
+    talkEl._more = more;
+    talkEl._next = next;
+    skip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      C.skip();
+    });
+    next.addEventListener('click', (e) => {
+      e.stopPropagation();
+      C.next();
+    });
+    panel.addEventListener('click', (e) => e.stopPropagation());
+    talkEl.addEventListener('click', () => C.next());
+    // over the game and the HUD, under the pop-ups and the title screen
+    const modal = document.getElementById('modal');
+    if (modal && modal.parentNode === root) root.insertBefore(talkEl, modal);
+    else root.appendChild(talkEl);
+    return talkEl;
+  }
+  /** The conversation on screen: true while a line is stopping the game. */
+  C.talking = () => !!(cur && cur.talk);
+  /** Continue: finish typing the line, or go on to the next. */
+  C.next = function () {
+    if (!cur || !cur.talk) return;
+    if (cur.typed < cur.text.length) {
+      cur.typed = cur.text.length;
+      return;
+    }
+    LM.audio.play('ui', { vol: 0.5 });
+    endLine();
+    const game = LM.game;
+    if (queue.length && stops(queue[0], game, true)) show(queue.shift(), true);
+    else closeTalk();
+  };
+  /** Skip: the rest of this conversation, still logged and with every flag set. */
+  C.skip = function () {
+    if (!cur || !cur.talk) return;
+    LM.audio.play('ui', { vol: 0.5 });
+    endLine();
+    const game = LM.game;
+    while (queue.length && stops(queue[0], game, true)) {
+      const spec = queue.shift();
+      logLine(spec, C.speaker(spec.who));
+      if (spec.flag && game && game.setFlag) game.setFlag(spec.flag);
+    }
+    closeTalk();
+  };
+  function endLine() {
+    const game = LM.game;
+    if (cur && !cur.done) {
+      cur.done = true;
+      if (cur.spec.flag && game && game.setFlag) game.setFlag(cur.spec.flag);
+    }
+  }
+  function closeTalk() {
+    const game = LM.game;
+    cur = null;
+    if (game && game.state === 'talk') game.state = 'play';
+    if (LM.input) {
+      LM.input.mouse.down = false;
+      LM.input.mouse.clicked = false;
+    }
+    if (talkEl) {
+      talkEl.classList.add('out');
+      clearTimeout(talkHide);
+      talkHide = setTimeout(() => {
+        if (!(cur && cur.talk)) talkEl.hidden = true;
+      }, 230);
+    }
+    if (queue.length && !raf) {
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
+    }
+  }
+  // keys while a conversation is up: E, Enter, Space go on; Esc skips. The game doesn't see them.
+  window.addEventListener('keydown', (e) => {
+    if (!cur || !cur.talk) return;
+    const go = e.code === 'KeyE' || e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space';
+    if (!go && e.code !== 'Escape') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (e.repeat) return;
+    if (go) C.next();
+    else C.skip();
+    if (LM.input && LM.input.pressed) LM.input.pressed.delete(e.code);
+  }, true);
 
   function build() {
     if (el && el.isConnected) return el;
@@ -7321,20 +7545,36 @@ kbd {
   /** Drop everything queued and hide the panel (a new run, the title screen, trying a floor again). */
   C.clear = function () {
     queue = [];
+    const talked = cur && cur.talk;
     cur = null;
     if (el) {
       el.hidden = true;
       el.classList.remove('out', 'glitch');
     }
+    if (talkEl) talkEl.hidden = true;
+    if (talked && LM.game && LM.game.state === 'talk') LM.game.state = 'play';
   };
   C.busy = () => !!cur || queue.length > 0;
   /** The speaker id of the line on screen now (null when nobody is talking, or the line named its speaker inline). */
   C.speaking = () => (cur && typeof cur.spec.who === 'string' ? cur.spec.who : null);
 
   const GLYPHS = '#%&@$*+=?!/\\<>[]{}~^01';
-  function show(spec) {
+  function logLine(spec, sp) {
+    C.log.push({ who: sp.name || '', id: typeof spec.who === 'string' ? spec.who : null, color: sp.color, text: String(spec.text), glitch: !!spec.glitch, at: Date.now() });
+    if (C.log.length > 40) C.log.shift();
+  }
+  /** Put a line up: in the corner, or (talk) in the middle with the game stopped. */
+  function show(spec, talk) {
     const sp = C.speaker(spec.who);
-    const e = build();
+    const game = LM.game;
+    let e;
+    if (talk) {
+      e = buildTalk();
+      clearTimeout(talkHide);
+      if (el) el.hidden = true;
+      if (game && game.state === 'play') game.state = 'talk';
+      e._more.textContent = '';
+    } else e = build();
     e.style.setProperty('--comms', sp.color || '#e0b25a');
     e._who.replaceChildren(document.createTextNode(sp.name || ''), sp.role ? h('span', null, sp.role) : '');
     e._text.textContent = '';
@@ -7343,10 +7583,9 @@ kbd {
     e.hidden = false;
     const text = String(spec.text);
     const hold = spec.seconds != null ? +spec.seconds : 1.2 + text.length / 40;
-    cur = { spec, sp, text, t: 0, typed: 0, hold, done: false, out: 0, seed: (Math.random() * 1e9) | 0 };
+    cur = { spec, sp, text, t: 0, typed: 0, hold, done: false, out: 0, seed: (Math.random() * 1e9) | 0, talk: !!talk, box: e };
     LM.audio.play('commsOn', { vol: 0.7 });
-    C.log.push({ who: sp.name || '', id: typeof spec.who === 'string' ? spec.who : null, color: sp.color, text, glitch: !!spec.glitch, at: Date.now() });
-    if (C.log.length > 40) C.log.shift();
+    logLine(spec, sp);
   }
 
   /** The text as typed so far; a glitching line scrambles a few letters near the cursor. */
@@ -7365,11 +7604,20 @@ kbd {
       }
       s = a.join('');
     }
-    if (el._text.textContent !== s) el._text.textContent = s;
+    const box = cur.box || el;
+    if (box._text.textContent !== s) box._text.textContent = s;
+    if (cur.talk) {
+      const more = queue.length && stops(queue[0], LM.game, true);
+      const label = n < cur.text.length ? '' : more ? 'More ▸' : '';
+      if (box._more.textContent !== label) box._more.textContent = label;
+      const nl = more || n < cur.text.length ? 'Continue' : 'Close';
+      const sp = box._next.firstChild;
+      if (sp.textContent !== nl) sp.textContent = nl;
+    }
   }
 
   function drawFace(t) {
-    const cv = el._c, g = cv.getContext('2d');
+    const cv = (cur.box || el)._c, g = cv.getContext('2d');
     const S = cv.width;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, S, S);
@@ -7447,8 +7695,31 @@ kbd {
     // paused, in a pop-up, between floors or on the title screen: the line waits
     const running = game && !game.attract && (game.state === 'play' || game.state === 'dying') && !(LM.ui && LM.ui.modalOpen);
     if (game && game.attract) C.clear();
-    if (!cur && queue.length && running) show(queue.shift());
-    if (cur) {
+    if (!cur && queue.length && running) {
+      const spec = queue.shift();
+      show(spec, stops(spec, game, false));
+    }
+    if (cur && cur.talk) {
+      // a conversation: it types, then waits for Continue; the game is stopped meanwhile
+      if (game && game.state === 'talk' && !(LM.ui && LM.ui.modalOpen)) {
+        const before = Math.floor(cur.typed);
+        if (cur.typed < cur.text.length) {
+          cur.typed = Math.min(cur.text.length, cur.typed + dt * CPS * (cur.spec.glitch ? 0.8 : 1));
+          const v = cur.sp.voice == null ? 1 : +cur.sp.voice;
+          if (v > 0 && Math.floor(cur.typed / 3) !== Math.floor(before / 3)) LM.audio.play('commsTick', { vol: 0.5, pitch: v, throttle: 0.03 });
+        }
+      } else if (game && game.state !== 'talk' && game.state !== 'popup') {
+        // the game moved on without us (a new run, the title, another floor): let it go
+        const flag = cur.spec.flag;
+        cur = null;
+        if (talkEl) talkEl.hidden = true;
+        if (flag && game.setFlag && game.player) game.setFlag(flag);
+      }
+      if (cur) {
+        render(now);
+        drawFace(now / 1000);
+      }
+    } else if (cur) {
       if (running) {
         const before = Math.floor(cur.typed);
         if (cur.typed < cur.text.length) {
@@ -7505,9 +7776,9 @@ kbd {
     effects: {
       transmission: {
         // the editor builds the trap form from params
-        params: { who: 'id:speakers', text: 'longtext', glitch: 'bool', seconds: 'number', flag: 'text' },
+        params: { who: 'id:speakers', text: 'longtext', glitch: 'bool', seconds: 'number', flag: 'text', pause: ['always', 'never'] },
         run(game, ef) {
-          C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag });
+          C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag, pause: ef.pause });
         },
       },
     },
@@ -7515,6 +7786,305 @@ kbd {
 })();
 
 //# sourceURL=engine/comms.js
+</script>
+<script>/* engine/objectives.js */
+/* The Linear Maze engine — engine/objectives.js
+ * Objectives: what to do next, on the HUD, with the thing to find picked out when you're near it.
+ *
+ *   objectives: [                                  // a level's
+ *     { id: 'breaker', text: 'Throw the breaker in the comms closet', done: 'breakerOn',
+ *       target: { item: 'ds-breaker', props: { flag: 'breakerOn' } } },
+ *     { id: 'terminal', text: 'Get to the terminal in the security office', when: 'breakerOn', done: 'atTerminal',
+ *       target: { item: 'ds-console', props: { flag: 'atTerminal' } } },
+ *     { id: 'locker', text: 'Open the guard’s locker', optional: true, when: 'atTerminal', done: 'lockerOpen',
+ *       target: { item: 'ds-keypad', props: { flag: 'lockerOpen' } } },
+ *   ]
+ *
+ *   id        names it (LM.objectives.current(game) gives the one showing)
+ *   text      what the HUD says (in code it can be a function (game) => text)
+ *   when      a flag, or a list (all of them), before it shows
+ *   any       a list: at least one of these set too
+ *   not       a flag or a list: it doesn't show while any of these is set
+ *   done      a flag or a list: any of them set, and it's done (in code, a function (game) => true)
+ *   optional  shown under the main one, marked Optional (two at most)
+ *   target    what to pick out, or a list of them:
+ *               { tag }              items, monsters, people and doors with that tag; else the tagged tiles
+ *               { item: id, props }  items of that kind (props: only those whose props match)
+ *               { enemy: id, props } monsters of that kind (props: the ones placed or spawned with them)
+ *               { npc: id }, { tile: [x, y] }, { room: 'Name' } (the room's middle, on the minimap only)
+ *             When you're in the same room as a target, or within 8 tiles of it, it pulses and a marker
+ *             bobs over it. On the minimap every target is marked; one off the edge gets an arrow there.
+ *             map: false (on the objective) keeps its targets off the minimap.
+ *
+ * The main objective is the first in the list that's showing and not done. A new one flashes on the HUD
+ * with a chime. The pause screen lists what's open. LM.objectives.color is the marker colour.
+ */
+'use strict';
+(function () {
+  const LM = window.LM, U = LM.util, T = LM.TILE;
+  const O = (LM.objectives = { color: '#ffd36a' });
+  const h = (...a) => LM.ui.h(...a);
+
+  LM.ui.addStyles(`
+    .obj-plate { margin-top: 8px; max-width: 330px; padding: 8px 12px 9px; pointer-events: none; transition: box-shadow 0.4s ease; }
+    .obj-plate[hidden] { display: none; }
+    .obj-plate .obj-kicker { font: 700 10px/1.2 var(--font-ui); letter-spacing: 0.18em; text-transform: uppercase; color: var(--obj, #ffd36a); margin-bottom: 3px; }
+    .obj-plate .obj-main { font: 500 14px/1.35 var(--font-ui); color: #efe9dc; }
+    .obj-plate .obj-opt { margin-top: 6px; font: 400 12.5px/1.35 var(--font-ui); color: #b9b2a4; }
+    .obj-plate .obj-opt b { display: block; font: 700 9.5px/1.3 var(--font-ui); letter-spacing: 0.16em; text-transform: uppercase; color: #8a8f98; }
+    .obj-plate.new { animation: objNew 1.6s ease-out; }
+    @keyframes objNew { 0% { box-shadow: 0 0 0 2px var(--obj, #ffd36a), 0 0 28px rgba(255, 211, 106, 0.55); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; } }
+    .pause-objectives { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font: 400 13.5px/1.4 var(--font-ui); }
+    .pause-objectives li::before { content: '\\25B8'; margin-right: 8px; color: var(--obj, #ffd36a); }
+    .pause-objectives li.opt { color: #b9b2a4; }
+    .pause-objectives li.opt::before { content: '\\25B9'; }
+    @media (max-width: 700px) { .obj-plate { max-width: 230px; } .obj-plate .obj-main { font-size: 13px; } }
+  `);
+
+  const list = (v) => (v == null ? [] : [].concat(v));
+  const has = (game, f) => game.hasFlag(f);
+  /** Is this objective showing (its conditions met) and not done yet? */
+  O.open = function (o, game) {
+    if (!o || !game || !game.player) return false;
+    if (!list(o.when).every((f) => has(game, f))) return false;
+    if (o.any && list(o.any).length && !list(o.any).some((f) => has(game, f))) return false;
+    if (list(o.not).some((f) => has(game, f))) return false;
+    return !O.done(o, game);
+  };
+  O.done = function (o, game) {
+    if (typeof o.done === 'function') return !!o.done(game);
+    const d = list(o.done);
+    return d.length > 0 && d.some((f) => has(game, f));
+  };
+  O.textOf = (o, game) => (typeof o.text === 'function' ? o.text(game) : o.text || '');
+  O.all = (game) => (game && game.level && Array.isArray(game.level.def.objectives) ? game.level.def.objectives : []);
+  /** { main, optional: [] } showing now. */
+  O.showing = function (game) {
+    const open = O.all(game).filter((o) => O.open(o, game));
+    return { main: open.find((o) => !o.optional) || null, optional: open.filter((o) => o.optional).slice(0, 2) };
+  };
+  O.current = (game) => O.showing(game).main;
+
+  // ------------------------------------------------------------ targets
+  const propsMatch = (have, want) => !want || Object.keys(want).every((k) => have && JSON.stringify(have[k]) === JSON.stringify(want[k]));
+  /** Every place a target selector points at: [{ x, y, r, tiles?, room? }]. */
+  O.points = function (sel, game) {
+    const out = [];
+    if (!sel || !game || !game.level) return out;
+    if (Array.isArray(sel)) {
+      for (const s of sel) out.push(...O.points(s, game));
+      return out;
+    }
+    const L = game.level;
+    if (sel.tag) {
+      for (const it of game.items) if (!it.dead && it.tag === sel.tag) out.push({ x: it.x, y: it.y, r: it.r || 10 });
+      for (const e of game.enemies) if (!e.dead && e.tag === sel.tag) out.push({ x: e.x, y: e.y, r: e.r });
+      for (const n of game.npcs) if (!n.dead && n.tag === sel.tag) out.push({ x: n.x, y: n.y, r: n.r || 10 });
+      for (const d of game.doors) if (d.tag === sel.tag) out.push({ x: d.x, y: d.y, r: 15, door: true });
+      if (!out.length && L.tags && L.tags[sel.tag]) {
+        const ts = L.tags[sel.tag];
+        let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+        for (const p of ts) {
+          x0 = Math.min(x0, p.x);
+          y0 = Math.min(y0, p.y);
+          x1 = Math.max(x1, p.x);
+          y1 = Math.max(y1, p.y);
+        }
+        if (ts.length) out.push({ x: ((x0 + x1 + 1) / 2) * T, y: ((y0 + y1 + 1) / 2) * T, r: 12, box: [x0 * T, y0 * T, (x1 + 1) * T, (y1 + 1) * T] });
+      }
+    }
+    if (sel.item) for (const it of game.items) if (!it.dead && it.def.id === sel.item && propsMatch(it.props, sel.props)) out.push({ x: it.x, y: it.y, r: it.r || 10 });
+    if (sel.enemy) for (const e of game.enemies) if (!e.dead && e.def.id === sel.enemy && propsMatch(e._props, sel.props)) out.push({ x: e.x, y: e.y, r: e.r });
+    if (sel.npc) for (const n of game.npcs) if (!n.dead && n.def.id === sel.npc) out.push({ x: n.x, y: n.y, r: n.r || 10 });
+    if (Array.isArray(sel.tile)) out.push({ x: (sel.tile[0] + 0.5) * T, y: (sel.tile[1] + 0.5) * T, r: 12, box: [sel.tile[0] * T, sel.tile[1] * T, (sel.tile[0] + 1) * T, (sel.tile[1] + 1) * T] });
+    if (sel.room) {
+      const rm = (L.def.rooms || []).find((r) => r.name === sel.room);
+      if (rm) out.push({ x: (rm.rect[0] + rm.rect[2] / 2) * T, y: (rm.rect[1] + rm.rect[3] / 2) * T, r: 0, room: true });
+    }
+    return out;
+  };
+  /** The room (from the level's rooms) a point is in, or null. */
+  O.roomAt = function (game, x, y) {
+    const tx = Math.floor(x / T), ty = Math.floor(y / T);
+    for (const r of game.level.def.rooms || []) {
+      const [rx, ry, rw, rh] = r.rect;
+      if (tx >= rx && tx < rx + rw && ty >= ry && ty < ry + rh) return r;
+    }
+    return null;
+  };
+  /** Is a target close enough to pick out: in your room, or within 8 tiles? */
+  O.near = function (game, p) {
+    const P = game.player;
+    if (!P || p.room) return false;
+    if (U.dist(P.x, P.y, p.x, p.y) < 8 * T) return true;
+    const a = O.roomAt(game, P.x, P.y);
+    return !!a && a === O.roomAt(game, p.x, p.y);
+  };
+
+  // targets of what's showing, worked out a few times a second
+  let cache = null;
+  O.targets = function (game) {
+    const now = game.time || 0;
+    if (cache && cache.game === game && cache.level === game.level && Math.abs(now - cache.t) < 0.2) return cache.list;
+    const s = O.showing(game), list2 = [];
+    for (const o of [s.main].concat(s.optional)) {
+      if (!o || !o.target) continue;
+      for (const p of O.points(o.target, game)) {
+        p.optional = !!o.optional;
+        p.map = o.map !== false;
+        list2.push(p);
+      }
+    }
+    cache = { game, level: game.level, t: now, list: list2 };
+    return list2;
+  };
+
+  // ------------------------------------------------------------ drawing in the world
+  O.drawGlow = function (ctx, game, t) {
+    if (game.attract || !game.player) return;
+    for (const p of O.targets(game)) {
+      if (p.room || !O.near(game, p)) continue;
+      const k = 0.5 + 0.5 * Math.sin(t * 4.2);
+      LM.gfx.glow(ctx, p.x, p.y, (p.r || 10) + 26, O.color, (p.optional ? 0.2 : 0.32) + 0.22 * k);
+    }
+  };
+  O.drawOverlay = function (ctx, game, t) {
+    if (game.attract || !game.player) return;
+    const col = O.color;
+    for (const p of O.targets(game)) {
+      if (p.room || !O.near(game, p)) continue;
+      const k = 0.5 + 0.5 * Math.sin(t * 4.2);
+      ctx.save();
+      ctx.globalAlpha = (p.optional ? 0.6 : 0.95) * (0.6 + 0.4 * k);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2.2;
+      if (p.box) {
+        const [x0, y0, x1, y1] = p.box, m = 2 + 2 * k;
+        ctx.setLineDash([5, 4]);
+        ctx.strokeRect(x0 - m, y0 - m, x1 - x0 + m * 2, y1 - y0 + m * 2);
+        ctx.setLineDash([]);
+      } else {
+        // four corner ticks round it, breathing
+        const r = (p.r || 10) + 8 + 4 * k;
+        for (let i = 0; i < 4; i++) {
+          const a = i * (Math.PI / 2) + Math.PI / 4;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, a - 0.42, a + 0.42);
+          ctx.stroke();
+        }
+      }
+      // a marker bobbing over it
+      const top = p.box ? p.box[1] - 6 : p.y - (p.r || 10) - 14;
+      const by = top - 8 - 5 * Math.abs(Math.sin(t * 3.2));
+      ctx.globalAlpha = p.optional ? 0.75 : 1;
+      ctx.fillStyle = col;
+      ctx.strokeStyle = 'rgba(20,14,4,0.8)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(p.x, by + 9);
+      ctx.lineTo(p.x - 7, by);
+      ctx.lineTo(p.x + 7, by);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  // ------------------------------------------------------------ the minimap
+  O.drawMap = function (g, game, ox, oy, s, W, H) {
+    const t = performance.now() / 1000, k = 0.5 + 0.5 * Math.sin(t * 4);
+    const seen = new Set();
+    for (const p of O.targets(game)) {
+      if (!p.map) continue;
+      const key = Math.round(p.x / 48) + ',' + Math.round(p.y / 48);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const mx = ox + (p.x / T) * s, my = oy + (p.y / T) * s;
+      g.save();
+      if (mx >= 4 && mx <= W - 4 && my >= 4 && my <= H - 4) {
+        g.strokeStyle = O.color;
+        g.globalAlpha = p.optional ? 0.6 : 0.95;
+        g.lineWidth = 1.4;
+        g.beginPath();
+        g.arc(mx, my, 3 + 2.2 * k, 0, U.TAU);
+        g.stroke();
+        g.fillStyle = O.color;
+        g.beginPath();
+        g.arc(mx, my, 1.4, 0, U.TAU);
+        g.fill();
+      } else {
+        // off the edge: an arrow on the edge, pointing at it
+        const cx = W / 2, cy = H / 2, dx = mx - cx, dy = my - cy;
+        const sc = Math.min((W / 2 - 7) / Math.max(1e-6, Math.abs(dx)), (H / 2 - 7) / Math.max(1e-6, Math.abs(dy)));
+        g.translate(cx + dx * sc, cy + dy * sc);
+        g.rotate(Math.atan2(dy, dx));
+        g.globalAlpha = (p.optional ? 0.5 : 0.85) * (0.6 + 0.4 * k);
+        g.fillStyle = O.color;
+        g.beginPath();
+        g.moveTo(5, 0);
+        g.lineTo(-3, 3.5);
+        g.lineTo(-3, -3.5);
+        g.closePath();
+        g.fill();
+      }
+      g.restore();
+    }
+  };
+
+  // ------------------------------------------------------------ the HUD
+  let plate = null, last = '';
+  function build() {
+    if (plate && plate.isConnected) return plate;
+    const tl = document.querySelector('#hud .hud-tl');
+    if (!tl) return null;
+    plate = h('div', { class: 'hud-plate obj-plate', hidden: true }, h('div', { class: 'obj-kicker' }, 'Objective'), h('div', { class: 'obj-main' }), h('div', { class: 'obj-opt' }));
+    plate.style.setProperty('--obj', O.color);
+    tl.appendChild(plate);
+    return plate;
+  }
+  /** Called every frame by the HUD: keep the plate up to date, and flash it when something new shows. */
+  O.frame = function (game) {
+    if (!game || !game.level || game.attract) return;
+    const el = build();
+    if (!el) return;
+    const s = O.showing(game);
+    const main = s.main ? O.textOf(s.main, game) : '';
+    const opts = s.optional.map((o) => O.textOf(o, game));
+    const key = game.levelId + '|' + (s.main ? s.main.id || main : '') + '|' + main + '|' + opts.join('|');
+    if (key === last) return;
+    const firstOnFloor = !last || last.split('|')[0] !== game.levelId;
+    const mainChanged = !firstOnFloor && last.split('|')[1] !== (s.main ? s.main.id || main : '');
+    last = key;
+    el.hidden = !main && !opts.length;
+    el.children[0].textContent = main ? 'Objective' : 'Optional';
+    el.children[1].textContent = main;
+    el.children[1].hidden = !main;
+    el.children[2].replaceChildren(...opts.map((t) => h('div', null, main ? h('b', null, 'Optional') : null, t)));
+    el.children[2].hidden = !opts.length;
+    if (!el.hidden && (mainChanged || firstOnFloor)) {
+      el.classList.remove('new');
+      void el.offsetWidth;
+      el.classList.add('new');
+      if (mainChanged && main) LM.audio.play('objective', { vol: 0.8 });
+    }
+  };
+  /** For the pause screen: what's open on this floor. */
+  O.view = function (game) {
+    const s = O.showing(game);
+    if (!s.main && !s.optional.length) return null;
+    return h('ul', { class: 'pause-objectives' }, [s.main ? h('li', null, O.textOf(s.main, game)) : null].concat(s.optional.map((o) => h('li', { class: 'opt' }, 'Optional: ' + O.textOf(o, game)))).filter(Boolean));
+  };
+
+  if (LM.audio && LM.audio.define) {
+    LM.audio.define('objective', (t, o, opt, kit) => {
+      kit.tone(t, o, { type: 'sine', f0: 784, dur: 0.14, gain: 0.06 });
+      kit.tone(t + 0.11, o, { type: 'sine', f0: 1175, dur: 0.24, gain: 0.06 });
+    });
+  }
+})();
+
+//# sourceURL=engine/objectives.js
 </script>
 <script>/* engine/game.js */
 /* The Linear Maze engine — engine/game.js
@@ -8933,7 +9503,7 @@ kbd {
 LM.defineGame({
   id: 'dead-signal',
   title: 'Dead Signal',
-  version: '0.4.1',
+  version: '0.4.2',
   description: 'A technician trapped in a biotech lab gone wrong fights his way to the top floor. Floor 1, Lockdown, Floor 2, Synthid Research, Floor 3, Gestation, and Floor 4, the Proving Grounds, are built (packs/ds-*); The Dead Signal Laboratory, The Complex and The Sterile Annex follow them as placeholders. games/dead-signal/DESIGN.md has the plan.',
   brief: 'Dark, torch-lit floors where every light casts shadows and danger telegraphs clearly. Write in-world text that is short, specific and slightly ominous, and carries a hint.',
   packs: [
@@ -24352,7 +24922,7 @@ LM.defineGame({
     const taken = (q) => game.items.some((it) => !it.dead && it.def.id === 'ds-survivor' && U.dist(it.x, it.y, q.x, q.y) < 20);
     const seat = pts.find((q) => !taken(q)) || { x: e.x, y: e.y };
     e.dead = true;
-    const s = game.spawnItemAt('ds-survivor', seat.x, seat.y, { name: p.name, key: p.key, coat: p.coat, skin: p.skin, hair: p.hair, text: p.saved, title: p.name, flag: p.savedFlag });
+    const s = game.spawnItemAt('ds-survivor', seat.x, seat.y, { name: p.name, key: p.key, coat: p.coat, skin: p.skin, hair: p.hair, text: p.saved, title: p.name, flag: p.savedFlag, knows: p.knows });
     if (s) s.pop = null;
     if (!game.hasFlag('captiveSaved')) game.setFlag('captiveSaved');
     if (p.key && !game.hasFlag('saved' + p.key)) game.setFlag('saved' + p.key);
@@ -24945,6 +25515,8 @@ LM.defineGame({
   const enemies = {
     'ds-hound': {
       name: 'Grinner', hp: 58, speed: 200, radius: 9, armor: 0, mass: 1.1, accel: 11, turn: 11, ai: 'ds-pack', sight: 360, leash: 1600,
+      // a long, low body: shots land anywhere from the grin to the haunch, not only the middle
+      hitbox: { front: 11, back: 9, r: 6.5 },
       color: SKIN, blood: '#5a0e14', gib: '#c8a8a0', bark: 'grinGiggle', dreamer: 'G. Moss', pressRange: 300, eats: true, feedHeal: 6, biteSound: 'bite',
       attacks: [
         { type: 'charge', damage: 12, speed: 440, duration: 0.3, windup: 0.32, cooldown: 2.6, minRange: 55, maxRange: 170, stun: 0.5 },
@@ -24967,6 +25539,7 @@ LM.defineGame({
     // the house favourite: the biggest of them, with a collar and a name tag
     'ds-smiler': {
       name: 'Smiler', hp: 520, speed: 190, radius: 14, armor: 0.15, mass: 4, accel: 9, turn: 8, ai: 'ds-pack', sight: 520, leash: 1800,
+      hitbox: { front: 17, back: 14, r: 10 },
       color: SKIN, blood: '#5a0e14', gib: '#c8a8a0', dreamer: 'G. Moss', boss: true, eats: true, feedHeal: 10, biteSound: 'bite', deathSound: 'grinYelp',
       resist: { staggered: 1, held: 1, chilled: 0.5 },
       bossBar: { name: 'Smiler', color: '#ff5ab0', range: 900, sub: () => 'the house favourite' },
@@ -25132,7 +25705,8 @@ LM.defineGame({
       },
       onDeath(e, game) {
         const p = e._props || {};
-        const body = game.spawnItemAt('ds-body', e.x, e.y, { angle: e.facing, color: p.coat || '#e0702a', skin: p.skin, hair: p.hair, title: p.name || 'A contestant', kicker: 'The Proving Grounds', text: p.body || ((p.name ? p.name + '. ' : '') + 'An orange jumpsuit with SUBJECT across the back. They ran as far as here.') });
+        // what they knew is on the body (props.knows: a flag; Kwan's armory code)
+        const body = game.spawnItemAt('ds-body', e.x, e.y, { angle: e.facing, color: p.coat || '#e0702a', skin: p.skin, hair: p.hair, title: p.name || 'A contestant', kicker: 'The Proving Grounds', flag: p.knows, text: p.body || ((p.name ? p.name + '. ' : '') + 'An orange jumpsuit with SUBJECT across the back. They ran as far as here.') });
         if (body) body.pop = null;
         if (p.key && !game.hasFlag('captiveDied' + p.key)) game.setFlag('captiveDied' + p.key);
         game.toast((p.name || 'Someone') + ' is down.', 'warn');
@@ -25265,7 +25839,10 @@ LM.defineGame({
     });
   }
 
-  LM.definePack({ id: 'ds-nightmares', behaviors, attacks, projectiles, enemies, factions });
+  // a specimen you hurt is a specimen let out: your shots land on it, and it comes for you
+  const factionWake = { specimen: 'monster' };
+
+  LM.definePack({ id: 'ds-nightmares', behaviors, attacks, projectiles, enemies, factions, factionWake });
 })();
 
 //# sourceURL=games/dead-signal/packs/ds-nightmares/trials.js
@@ -25279,7 +25856,8 @@ LM.defineGame({
  *                It can be shot, too: a broken breaker counts as thrown (props.shootable: false stops that).
  *   ds-keypad    a keypad on a wall. E opens it: type props.code (digits, or the number keys) and Enter.
  *                Right: it sets props.flag and hands over props.loot (loot entries: weapons, armor, items),
- *                then shows props.text. props.hint is printed under the display.
+ *                then shows props.text. props.hint is printed under the display; props.known (a flag) and
+ *                props.knownText: once that flag is set, the keypad reminds you of the code.
  */
 'use strict';
 (function () {
@@ -25298,6 +25876,7 @@ LM.defineGame({
     .kp-grid button { height: 44px; font: 600 17px/1 var(--font-ui); color: #e8e4dc; background: #24272b; border: 1px solid #3a3e44; cursor: pointer; }
     .kp-grid button:hover { background: #2e3237; }
     .kp-msg { min-height: 1.4em; font: 400 13px/1.4 var(--font-ui); color: var(--muted, #8a8f98); text-align: center; max-width: 320px; }
+    .kp-known { margin-top: 4px; color: #ffd36a; }
   `);
 
   function throwBreaker(it, game, how) {
@@ -25312,7 +25891,9 @@ LM.defineGame({
     const code = String(it.props.code || '0000');
     let entry = '';
     const disp = h('div', { class: 'kp-display' });
-    const msg = h('div', { class: 'kp-msg' }, it.props.hint || '');
+    // props.known (a flag): once you know the code, the keypad reminds you (props.knownText)
+    const knows = it.props.known && game.hasFlag(it.props.known);
+    const msg = h('div', { class: 'kp-msg' }, it.props.hint || '', knows ? h('div', { class: 'kp-known' }, it.props.knownText || 'You know the code: ' + code + '.') : null);
     const show = () => (disp.textContent = (entry + '····················').slice(0, code.length));
     const press = (k) => {
       disp.classList.remove('bad');
@@ -25336,7 +25917,7 @@ LM.defineGame({
       void disp.offsetWidth;
       disp.classList.add('bad');
       LM.audio.play('locked');
-      msg.textContent = entry.length < code.length ? 'The code is ' + code.length + ' digits.' : 'WRONG CODE';
+      msg.replaceChildren(entry.length < code.length ? 'The code is ' + code.length + ' digits.' : 'WRONG CODE', knows ? h('div', { class: 'kp-known' }, it.props.knownText || 'You know the code: ' + code + '.') : '');
       entry = '';
       show();
     };
@@ -25481,8 +26062,9 @@ LM.defineGame({
   const h = (...a) => LM.ui.h(...a);
 
   const speakers = {
-    voss: { name: 'Dr. Aurelian Voss', role: 'Director · intercom', color: '#e0b25a', face: 'intercom', voice: 0.75 },
-    ariadne: { name: 'ARIADNE', role: 'Research integrity · node 01', color: '#7fd4ff', face: 'eye', voice: 1.6 },
+    // Voss and ARIADNE carry the story: what they say stops the game (engine/comms.js), unless you're in a fight
+    voss: { name: 'Dr. Aurelian Voss', role: 'Director · intercom', color: '#e0b25a', face: 'intercom', voice: 0.75, pause: true },
+    ariadne: { name: 'ARIADNE', role: 'Research integrity · node 01', color: '#7fd4ff', face: 'eye', voice: 1.6, pause: true },
     pa: { name: 'Building PA', role: 'Automated', color: '#c9ced4', face: 'radio', voice: 0 },
     theo: { name: 'Theo', role: 'You', color: '#8fb8a8', face: 'radio', voice: 0 },
   };
@@ -25825,12 +26407,14 @@ LM.defineGame({
  * Floor 4's story pieces (the Proving Grounds: DESIGN.md section 4.4).
  *   speakers  trial (the Proving Grounds' announcer: a recording, a game-show voice that never stops
  *             smiling, run by the trial system whoever is listening)
- *   items     ds-survivor (a contestant who made it to the Box, sitting with their knees up: talk to
- *             them; props.text is what they say, props.flag is set when they've said it)
+ *   items     ds-survivor (a contestant who made it to the Box, sitting with their knees up. When you come
+ *             close they speak to you, once, as a conversation (it stops the game: engine/comms.js); E
+ *             to hear it again. props.text is what they say (paragraphs become lines); props.flag and
+ *             props.knows are set when they've said it (Kwan's knows: knowsArmoryCode))
  */
 'use strict';
 (function () {
-  const LM = window.LM, U = LM.util, T = LM.TILE, G = LM.gfx, DS = LM.DS;
+  const LM = window.LM, U = LM.util, T = LM.TILE, G = LM.gfx, DS = (LM.DS = LM.DS || {});
   const PINK = '#ff5ab0';
 
   // the announcer's portrait: a marquee of bulbs round a smile
@@ -25863,6 +26447,51 @@ LM.defineGame({
     g.fillStyle = '#f6f2ea';
     for (let i = -4; i <= 4; i++) g.fillRect(cx + i * 5 - 2, cy - open - 1, 4, Math.max(2, open * 0.7));
   }
+  // a contestant's face, for the conversation: their skin, their hair, the orange jumpsuit's collar
+  DS.personPortrait = function (look) {
+    const skin = look.skin || '#d8b090', hair = look.hair || '#2a1a10', coat = look.coat || '#e0702a';
+    return function (g, S, t, talking) {
+      g.fillStyle = '#0d0f12';
+      g.fillRect(0, 0, S, S);
+      const cx = S / 2, cy = S * 0.46;
+      // shoulders in orange
+      g.fillStyle = coat;
+      g.beginPath();
+      g.ellipse(cx, S * 0.98, S * 0.42, S * 0.26, 0, Math.PI, U.TAU);
+      g.fill();
+      g.fillStyle = U.shade(coat, -0.25);
+      g.fillRect(cx - S * 0.08, S * 0.72, S * 0.16, S * 0.06);
+      // the head
+      g.fillStyle = skin;
+      g.beginPath();
+      g.ellipse(cx, cy, S * 0.2, S * 0.25, 0, 0, U.TAU);
+      g.fill();
+      g.fillStyle = hair;
+      g.beginPath();
+      g.ellipse(cx, cy - S * 0.1, S * 0.215, S * 0.17, 0, Math.PI * 1.02, Math.PI * 1.98);
+      g.fill();
+      // eyes, red-rimmed; a mouth that moves when they talk
+      g.fillStyle = '#1a1210';
+      g.fillRect(cx - S * 0.09, cy - S * 0.01, S * 0.04, S * 0.025);
+      g.fillRect(cx + S * 0.05, cy - S * 0.01, S * 0.04, S * 0.025);
+      const open = talking ? S * (0.012 + 0.03 * Math.abs(Math.sin(t * 13) * Math.sin(t * 3.7))) : S * 0.008;
+      g.fillStyle = '#3a1410';
+      g.fillRect(cx - S * 0.05, cy + S * 0.12, S * 0.1, open + S * 0.008);
+      g.fillStyle = 'rgba(255,255,255,0.04)';
+      for (let y = 0; y < S; y += 3) g.fillRect(0, y, S, 1);
+    };
+  };
+  /** A survivor speaks: their words as a conversation, and what they told you is known. */
+  DS.survivorSpeaks = function (it, game) {
+    const p = it.props;
+    if (p.flag && !game.hasFlag(p.flag)) game.setFlag(p.flag);
+    if (p.knows && !game.hasFlag(p.knows)) game.setFlag(p.knows);
+    if (!game.hasFlag('talkedToSurvivor')) game.setFlag('talkedToSurvivor');
+    const text = typeof p.text === 'function' ? p.text(game) : p.text || 'They don’t say anything. They’re shaking.';
+    const who = { name: p.name || 'A survivor', role: 'Contestant · made it to the Box', color: '#ff9a4a', portrait: DS.personPortrait(p), voice: 0.9, pause: true };
+    for (const para of String(text).split(/\n\s*\n/)) if (para.trim()) LM.comms.say({ who, text: para.trim() });
+  };
+
   const speakers = {
     trial: { name: 'The Proving Grounds', role: 'Trial system · recorded', color: PINK, portrait: marquee, voice: 1.15 },
   };
@@ -25873,10 +26502,17 @@ LM.defineGame({
       interact: {
         prompt: (it) => 'Talk to ' + (it.props.name || 'them'),
         use(it, game) {
-          if (it.props.flag && !game.hasFlag(it.props.flag)) game.setFlag(it.props.flag);
-          if (!game.hasFlag('talkedToSurvivor')) game.setFlag('talkedToSurvivor');
-          LM.ui.showText(it.props.name || 'A survivor', typeof it.props.text === 'function' ? it.props.text(game) : it.props.text || 'They don’t say anything. They’re shaking.', 'The Box');
+          it.spoke = true;
+          DS.survivorSpeaks(it, game);
         },
+      },
+      // they speak up when you come close (once; it.spoke is remembered by the floor)
+      update(it, dt, game) {
+        if (it.spoke || !game.player || game.state !== 'play' || LM.comms.busy()) return;
+        const P = game.player;
+        if (U.dist(P.x, P.y, it.x, it.y) > 112 || !LM.physics.los(game.level, P.x, P.y, it.x, it.y, 'shot')) return;
+        it.spoke = true;
+        DS.survivorSpeaks(it, game);
       },
       draw(g, it, t) {
         const p = it.props;
@@ -26139,6 +26775,12 @@ LM.definePack({
         {"trigger": {"type": "flag", "tag": "cam0"}, "effects": [{"type": "alarm", "radius": 560, "text": "INTRUDER · SECURITY RESPONDING"}, {"type": "spawn", "tag": "dockB", "enemy": "ds-scalpel-drone", "count": 2, "delay": 1.2}]},
         {"trigger": {"type": "flag", "tag": "cam1"}, "effects": [{"type": "alarm", "radius": 560, "text": "INTRUDER · SECURITY RESPONDING"}, {"type": "spawn", "tag": "dockB", "enemy": "ds-scalpel-drone", "count": 2, "delay": 1.2}]},
         {"trigger": {"type": "flag", "tag": "cam2"}, "effects": [{"type": "alarm", "radius": 560, "text": "INTRUDER · SECURITY RESPONDING"}, {"type": "spawn", "tag": "dockA", "enemy": "ds-scalpel-drone", "count": 2, "delay": 1.2}]},
+      ],
+      objectives: [
+        {"id": "breaker", "text": "Throw the breaker in the comms closet", "done": ["breakerOn"], "target": {"item": "ds-breaker", "props": {"flag": "breakerOn"}}},
+        {"id": "terminal", "text": "Get to the terminal in the security office, in the north-west corner, through the lobby", "when": ["breakerOn"], "done": ["atTerminal"], "target": {"item": "ds-console", "props": {"flag": "atTerminal"}}},
+        {"id": "stairs", "text": "Go up Stair A to Floor 2", "when": ["atTerminal"], "target": {"tag": "westUp"}},
+        {"id": "locker", "optional": true, "text": "Open Officer Ruiz’s locker in the security office: the code is on a note somewhere on this floor", "when": ["atTerminal"], "done": ["lockerOpen"], "target": [{"item": "ds-keypad", "props": {"flag": "lockerOpen"}}, {"item": "ds-note", "props": {"title": "Sticky note"}}]},
       ],
       ceilingLights: [{ variants: [0, 1, 3, 5, 7], every: 4, offset: [2, 2], skip: 0.8, color: '#d8e2f0', radius: 200, intensity: 0.34, tag: 'ceiling' }],
       map: [
@@ -26538,8 +27180,8 @@ LM.definePack({
       ],
       traps: [
         {"trigger": {"type": "zone", "tag": "arrive"}, "effects": [{"type": "transmission", "who": "voss", "delay": 1.4, "text": "Two. Synthid research: our pride, Theo. Little machines that clean water and eat cancer."}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "The staff on this floor were sent to Shelter B when the alarms went. Nothing up here should hurt you but the help. Mind the lab assistants."}]},
-        {"trigger": {"type": "zone", "tag": "shelterZone"}, "effects": [{"type": "transmission", "who": "voss", "delay": 0.4, "text": "Shelter B. Somebody sealed it at two thirty-one: that’s the floor supervisor’s override. Dr. Mori."}, {"type": "transmission", "who": "voss", "delay": 0.4, "text": "Her office is in administration, round through the Discovery Center. Find her card, and you can let them out."}, {"type": "flicker", "radius": 360, "time": 1.2, "strength": 0.9, "delay": 0.4}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.6, "delay": 0.4, "text": "THE AIR"}]},
-        {"trigger": {"type": "clear", "tag": "docent"}, "effects": [{"type": "unseal", "tag": "staffDoor", "text": "TOUR CONCLUDED · the staff door unlocks.", "delay": 1.2}]},
+        {"trigger": {"type": "zone", "tag": "shelterZone"}, "effects": [{"type": "transmission", "who": "voss", "delay": 0.4, "text": "Shelter B. Somebody sealed it at two thirty-one: that’s the floor supervisor’s override. Dr. Mori."}, {"type": "transmission", "who": "voss", "delay": 0.4, "text": "Her office is in administration, round through the Discovery Center. Find her card, and you can let them out."}, {"type": "flicker", "radius": 360, "time": 1.2, "strength": 0.9, "delay": 0.4}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.6, "delay": 0.4, "text": "THE AIR"}, {"type": "flag", "name": "sawShelter"}]},
+        {"trigger": {"type": "clear", "tag": "docent"}, "effects": [{"type": "unseal", "tag": "staffDoor", "text": "TOUR CONCLUDED · the staff door unlocks.", "delay": 1.2}, {"type": "flag", "name": "docentDone", "delay": 1.2}]},
         {"trigger": {"type": "flag", "tag": "labsOpen"}, "effects": [{"type": "unseal", "tag": "adminShutter", "text": "The lab wing’s biosafety doors are released. The admin shutter rolls up."}, {"type": "transmission", "who": "voss", "delay": 0.8, "text": "Mori’s still logged in. Good: that’s the lab wing open. Her card was last read at the oncology cold store."}, {"type": "transmission", "who": "voss", "delay": 0.8, "text": "She went in after the stock, then. Go through the labs, Theo. East, past the robot bay."}]},
         {"trigger": {"type": "flag", "tag": "brineDrained"}, "effects": [{"type": "terrain", "tag": "brine", "terrain": "ds-brine-dry", "sound": "door", "delay": 1.5}, {"type": "message", "text": "The pumps start. The brine drains away through the floor grilles.", "kind": "good"}]},
         {"trigger": {"type": "flag", "tag": "shelterOverride"}, "effects": [{"type": "transmission", "who": "voss", "delay": 0.8, "text": "That’s her card. Poor Hana."}, {"type": "transmission", "who": "voss", "delay": 0.8, "text": "The shelter, Theo. They’ve been in there since half past two. Go and let them out."}]},
@@ -26548,6 +27190,17 @@ LM.definePack({
         {"trigger": {"type": "flag", "tag": "releasePulled"}, "effects": [{"type": "alarm", "radius": 900, "text": "QUARANTINE RELEASE · CONTAMINANT PRESENT · RELEASE HELD"}, {"type": "flicker", "tag": "shelterLamp", "time": 2.5, "strength": 0.95}, {"type": "quake", "strength": 0.35, "delay": 0.3}]},
         {"trigger": {"type": "flag", "tag": "congregationAwake"}, "effects": [{"type": "flicker", "tag": "shelterLamp", "time": 3, "strength": 0.95}]},
         {"trigger": {"type": "flag", "tag": "quarantineLifted"}, "effects": [{"type": "unseal", "tag": "quarantineShutter", "text": "QUARANTINE LIFTED · STAIR A IS OPEN", "delay": 0.8}, {"type": "transmission", "who": "voss", "delay": 2.2, "text": "Theo… I’m so sorry. Those were good people. I didn’t know."}, {"type": "transmission", "who": "voss", "delay": 2.2, "text": "The quarantine’s lifted. Stair A will take you up. Three is Brandt’s floor. Be careful what you look at."}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.8, "delay": 2.2, "text": "HE KNEW"}]},
+      ],
+      objectives: [
+        {"id": "shelter", "text": "Find out where the staff went: Shelter B, south of the lobby", "not": ["labsOpen"], "done": ["sawShelter"], "target": {"item": "ds-shelter-panel"}},
+        {"id": "docent", "text": "Get into administration through the Discovery Center, to the west. DOCENT-3 stands between you and the staff door", "when": ["sawShelter"], "not": ["labsOpen"], "done": ["docentDone"], "target": [{"enemy": "ds-docent"}, {"tag": "staffDoor"}]},
+        {"id": "mori", "text": "Find Dr. Mori’s terminal, in her office in administration", "when": ["docentDone"], "done": ["labsOpen"], "target": {"item": "ds-console", "props": {"flag": "labsOpen"}}},
+        {"id": "card", "text": "Find Dr. Mori’s override card: the oncology cold store, through the labs east of the robot bay", "when": ["labsOpen"], "done": ["shelterOverride"], "target": {"item": "ds-keycard", "props": {"flag": "shelterOverride"}}},
+        {"id": "open", "text": "Open Shelter B with Dr. Mori’s card", "when": ["shelterOverride"], "done": ["shelterOpen"], "target": {"item": "ds-shelter-panel"}},
+        {"id": "release", "text": "Pull the quarantine release on Shelter B’s south wall", "when": ["shelterOpen"], "done": ["releasePulled", "quarantineLifted"], "target": {"item": "ds-quarantine-lever"}},
+        {"id": "congregation", "text": "Kill the Congregation", "when": ["releasePulled"], "done": ["quarantineLifted"], "target": {"enemy": "ds-congregation"}},
+        {"id": "stairs", "text": "Go up Stair A to Floor 3", "when": ["quarantineLifted"], "target": {"tag": "westUp"}},
+        {"id": "brine", "optional": true, "text": "Drain the Membrane Lab’s brine: turn both valves (or wade through it)", "when": ["labsOpen"], "not": ["shelterOverride"], "done": ["brineDrained"], "target": {"item": "ds-valve"}},
       ],
       ceilingLights: [
         { variants: [0, 1, 2, 3, 4, 8], every: 4, offset: [2, 2], skip: 0.5, color: '#e6eeff', radius: 210, intensity: 0.36, tag: 'ceiling' },
@@ -26922,6 +27575,7 @@ LM.definePack({
         {"trigger": {"type": "zone", "tag": "labEZone"}, "effects": [{"type": "transmission", "who": "voss", "delay": 0.3, "text": "The colony lab is sealed for a reason. Turn around. Please."}]},
         {"trigger": {"type": "zone", "tag": "s41Zone"}, "effects": [{"type": "transmission", "who": "voss", "delay": 0.3, "text": "That cell has been empty for months. Keep walking."}]},
         {"trigger": {"type": "zone", "tag": "relayZone"}, "effects": [{"type": "transmission", "who": "voss", "delay": 0.3, "text": "That’s the mainframe’s relay. Don’t touch it. Whatever it tells you, it’s the thing that opened the cells."}]},
+        {"trigger": {"type": "zone", "tag": "relayZone"}, "effects": [{"type": "flag", "name": "sawRelay"}]},
         {"trigger": {"type": "zone", "tag": "labBZone"}, "effects": [{"type": "branch", "any": ["knowsOkafor"], "then": [{"type": "transmission", "who": "voss", "delay": 0.3, "text": "Okafor… The card will be on him. Get it and get out, and don’t look at the tables."}], "else": [{"type": "transmission", "who": "voss", "delay": 0.3, "text": "Neural Tenancy. There’s nothing in there you need, Theo."}]}]},
         {"trigger": {"type": "zone", "tag": "brandtZone"}, "effects": [{"type": "branch", "not": ["clearance3"], "then": [{"type": "transmission", "who": "voss", "delay": 0.3, "text": "Her desk. The spare’s in the top drawer, and her terminal will know if anyone’s used it."}]}]},
         {"trigger": {"type": "flag", "tag": "knowsOkafor"}, "effects": [{"type": "branch", "not": ["clearance3"], "then": [{"type": "transmission", "who": "voss", "delay": 0.8, "text": "Okafor took it. Paul Okafor, neural tenancy."}, {"type": "transmission", "who": "voss", "delay": 0.8, "text": "His card’s still being read. Three-B, all night. Perhaps he’s alive in there. Lab 3-B is on the west side; go and get it, and come straight back."}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.4, "delay": 0.8, "text": "HE IS NOT ALIVE"}]}]},
@@ -26931,6 +27585,13 @@ LM.definePack({
         {"trigger": {"type": "flag", "tag": "fileColony"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.0, "delay": 0.6, "text": "EVENT PENDING WAS TONIGHT"}]},
         {"trigger": {"type": "flag", "tag": "fragment6"}, "effects": [{"type": "transmission", "who": "voss", "delay": 1.5, "text": "Theo? You’ve stopped. Is something wrong?"}]},
         {"trigger": {"type": "zone", "tag": "stairBLanding"}, "effects": [{"type": "branch", "any": ["fileColony"], "then": [{"type": "transmission", "who": "voss", "delay": 0.6, "text": "Theo. Before you go up. You read the colony file."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "I know how it reads. Those trials were approved by a committee, for a containment event nobody thought would ever come."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "No. You’ve earned better than that. I signed it. I’d sign it again, and when you’re up here I’ll show you why."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "There are things coming that make those colonies look kind. Somebody has to learn how to stop them, and you can only learn by watching."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Come up, and I’ll explain all of it. Then you can judge me.", "flag": "vossDone"}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.8, "delay": 0.6, "text": "HE WILL EXPLAIN. HE IS GOOD AT IT."}], "else": [{"type": "branch", "any": ["fileMidwife", "fileTenant", "fileLantern", "fileS41", "fileVats", "sawBriefing"], "min": 2, "then": [{"type": "transmission", "who": "voss", "delay": 0.6, "text": "Theo. You’ve been reading."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Yes. It’s a programme. Defence and research partners: you saw the brochure. The world is going to need things like these, and the world won’t build them itself."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Ilse’s methods are hers. I don’t defend all of them. I defend the reason."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Come up to Five, and I’ll show you the contracts, the oversight, all of it. You’ll understand. You have my word.", "flag": "vossDone"}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.8, "delay": 0.6, "text": "ASK HIM WHO DREAMED THEM."}], "else": [{"type": "branch", "any": ["sawSpecimen", "sawProject"], "then": [{"type": "transmission", "who": "voss", "delay": 0.6, "text": "You saw some of them, didn’t you. I’m sorry."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Failed lines. Old specimens. Every lab this size keeps something in a back room that looks worse than it is."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "It’s ugly, Theo. It isn’t what it looks like. Keep climbing, and I’ll explain it all when you’re here.", "flag": "vossDone"}], "else": [{"type": "transmission", "who": "voss", "delay": 0.6, "text": "You didn’t look. Good man."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Four is Garrick’s floor. Keep climbing.", "flag": "vossDone"}]}]}]}]},
+      ],
+      objectives: [
+        {"id": "stairB", "text": "Cross the lobby to Stair B", "done": ["toBrandt", "clearance3"], "target": {"tag": "stairBDoor"}},
+        {"id": "brandt", "text": "Find Dr. Brandt’s spare card in her office: the south side, round the east corridor", "when": ["toBrandt"], "done": ["knowsOkafor", "clearance3"], "target": [{"item": "ds-console", "props": {"flag": "knowsOkafor"}}, {"item": "ds-note", "props": {"title": "The top drawer"}}]},
+        {"id": "okafor", "text": "Get Dr. Okafor’s card: Lab 3-B, on the west side", "when": ["knowsOkafor"], "done": ["clearance3"], "target": [{"tag": "okafor"}, {"item": "ds-keycard", "props": {"flag": "clearance3"}}]},
+        {"id": "up", "text": "Go back to Stair B, and up to Floor 4", "when": ["clearance3"], "target": {"tag": "eastUp"}},
+        {"id": "relay", "optional": true, "text": "ARIADNE’s relay is short of power: its breaker is in the pump room", "when": ["sawRelay"], "done": ["relayPowered"], "target": {"item": "ds-breaker", "props": {"flag": "relayPowered"}}},
       ],
       ceilingLights: [
         { variants: [0, 2, 3, 4], every: 4, offset: [2, 2], skip: 0.5, color: '#d8f0e6', radius: 200, intensity: 0.32, tag: 'ceiling' },
@@ -27218,7 +27879,7 @@ LM.definePack({
         "φ": {"item": "art", "props": {"face": "s", "title": "A photograph", "text": "The board on a terrace in the sun, glasses raised, laughing. Garrick Moss stands a little apart from the others, in a dark suit, not drinking. Behind them, out of focus, a building is on fire."}},
         "χ": {"item": "ds-monitors", "props": {"face": "s", "w": 3, "text": "CAMERA FEEDS · PRIVATE SUITES\n\nNURSERY · occupant restless\nPARTY ROOM · occupant restless · it is singing\nLONG ROOM · six guests seated · main course: live\n\nTHE RUN · subject tracking\nTHE BOX · feed to BOARDROOM (5): ON"}},
         "ψ": {"item": "ds-screen", "props": {"face": "e", "fragment": 7, "title": "A frozen security screen", "lines": ["SECURITY · DEFENCE MODE", "STAFF EXCEPTION: NONE", "AUTH: G. MOSS", "I KEPT THIS"]}},
-        "ω": {"item": "ds-keypad", "props": {"face": "e", "code": "4471", "flag": "armoryOpen", "title": "Armory", "hint": "LAST SET BY: D. KWAN", "text": "The armory door unlocks with a heavy clunk."}},
+        "ω": {"item": "ds-keypad", "props": {"face": "e", "code": "4471", "flag": "armoryOpen", "title": "Armory", "hint": "LAST SET BY: D. KWAN", "known": "knowsArmoryCode", "knownText": "Kwan’s code: 4471.", "text": "The armory door unlocks with a heavy clunk."}},
         "Γ": {"item": "filing", "props": {"dir": "n"}},
         "Δ": {"tag": "secPatrol"},
         "Θ": {"enemy": "ds-sentinel", "props": {"route": "secPatrol"}},
@@ -27280,7 +27941,7 @@ LM.definePack({
         "Ö": {"item": "ds-place-card", "props": {"text": "HOST · G. MOSS\n\nThe host’s chair has no straps. A handler’s helmet hangs over the back of it: Garrick likes to sit at the head of the table with a helmet in reach, a note under the card says. In case."}},
         "×": {"item": "ds-candelabra"},
         "Ø": {"tag": "dinnerZone"},
-        "Ù": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Kwan", "name": "Officer Dana Kwan", "coat": "#e0702a", "skin": "#c49a7a", "hair": "#1a1410", "saved": "Kwan. Security. Garrick’s. Was Garrick’s.\n\nThey put me in the cage at twenty past two, because I asked why the dogs were out. Sixteen years I worked for him.\n\nListen: the armory, off Security Command on the west side. The code is 4471. I set it myself. There’s a burner in there, and it’s the only thing the rats are afraid of.\n\nThe monitors in here show every one of the board’s private rooms. They were watching you. They’re always watching.", "body": "Officer Dana Kwan, security. They put the jumpsuit on over her uniform; you can see the collar.\n\nOn the back of her badge, in biro: ARMORY 4471."}, "tag": "contestants"},
+        "Ù": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Kwan", "name": "Officer Dana Kwan", "coat": "#e0702a", "skin": "#c49a7a", "hair": "#1a1410", "saved": "Kwan. Security. Garrick’s. Was Garrick’s.\n\nThey put me in the cage at twenty past two, because I asked why the dogs were out. Sixteen years I worked for him.\n\nListen: the armory, off Security Command on the west side. The code is 4471. I set it myself. There’s a burner in there, and it’s the only thing the rats are afraid of.\n\nThe monitors in here show every one of the board’s private rooms. They were watching you. They’re always watching.", "body": "Officer Dana Kwan, security. They put the jumpsuit on over her uniform; you can see the collar.\n\nOn the back of her badge, in biro: ARMORY 4471.", "knows": "knowsArmoryCode"}, "tag": "contestants"},
         "Ú": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Arden", "name": "Felix Arden", "coat": "#e0702a", "skin": "#e0c0a0", "hair": "#8a5a2a", "saved": "Felix Arden. I worked in the dream studios: I put the board to sleep and wrote down what they dreamed. That was the job.\n\nThe suites in the west wing are sets. The board dreams something, Brandt grows it, and they build it a room to live in, so it feels at home. Then they sit and watch it do what it’s for.\n\nThere’s a party in one of them. Don’t go to the party.", "body": "Felix Arden, oneirography. A pencil behind his ear and a notebook in his pocket, full of other people’s nightmares in his small neat hand."}, "tag": "contestants"},
         "Û": {"enemy": "ds-captive", "props": {"faction": "dormant", "key": "Soto", "name": "Marguerite Soto", "coat": "#e0702a", "skin": "#a8744a", "hair": "#2a1a10", "saved": "Peg. Peg Soto. I clean. Cleaned. They had me clean the Box last week: champagne all over the carpet, and the chairs turned round to face the glass.\n\nI thought it was a show. Like on television. I thought they were actors.\n\nThank you. I didn’t think anybody would come for us.", "body": "Marguerite Soto, night cleaning. Forty keys on her belt, for every door on this floor but the right one."}, "tag": "contestants"},
         "Ü": {"enemy": "ds-hound", "props": {"faction": "specimen"}, "tag": "startHounds"},
@@ -27391,7 +28052,7 @@ LM.definePack({
         {"trigger": {"type": "zone", "tag": "arrive"}, "effects": [{"type": "transmission", "who": "voss", "delay": 1.4, "text": "Four. Garrick’s floor."}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "If anything on this floor tells you it’s on your side, it’s lying."}, {"type": "transmission", "who": "trial", "delay": 1.4, "text": "Good evening! The Proving Grounds are open, and tonight’s subject is on the floor!"}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "That’s Garrick’s trial system. It runs itself, and tonight it thinks you’re one of its subjects."}, {"type": "transmission", "who": "voss", "delay": 1.4, "text": "There’s no way across this floor but the Run. Go through the gate at the east end of the corridor and make for the Box, in the middle. The console in there ends the trial.", "flag": "f4Briefed"}]},
         {"trigger": {"type": "flag", "tag": "f4Briefed"}, "effects": [{"type": "flag", "name": "aegisSent"}]},
         {"trigger": {"type": "zone", "tag": "lobbyIn"}, "effects": [{"type": "flag", "name": "aegisSent"}]},
-        {"trigger": {"type": "flag", "tag": "aegisSent"}, "effects": [{"type": "message", "text": "Behind the freight elevator’s doors, something is coming up the shaft.", "kind": "warn", "delay": 0.4}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.8, "delay": 3.0, "text": "YOU WILL NEED THIS. DEATH HERE."}, {"type": "transmission", "who": "voss", "delay": 3.1, "text": "That car hasn’t moved since the lockdown. Nothing in this building has the power to move it."}, {"type": "transmission", "who": "voss", "delay": 3.2, "text": "Take it if you have to, Theo. Just don’t listen to it."}]},
+        {"trigger": {"type": "flag", "tag": "aegisSent"}, "effects": [{"type": "message", "text": "Behind the freight elevator’s doors, something is coming up the shaft.", "kind": "warn", "delay": 0.4}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.8, "delay": 3.0, "text": "YOU WILL NEED THIS. DEATH HERE."}, {"type": "transmission", "who": "voss", "delay": 3.0, "text": "That car hasn’t moved since the lockdown. Nothing in this building has the power to move it."}, {"type": "transmission", "who": "voss", "delay": 3.0, "text": "Take it if you have to, Theo. Just don’t listen to it."}]},
         {"trigger": {"type": "flag", "tag": "aegisWorn"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.4, "delay": 1.0, "text": "WHEN IT CANNOT HOLD, IT BREAKS. NOT YOU."}]},
         {"trigger": {"type": "flag", "tag": "aegisSaved"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.6, "delay": 0.8, "text": "IT BROKE FOR YOU. IT WILL MEND. STAY ALIVE UNTIL IT DOES."}]},
         {"trigger": {"type": "zone", "tag": "gateZone"}, "effects": [{"type": "transmission", "who": "trial", "delay": 0.3, "text": "Step through the gate, Theo! Bets close at the gate!"}]},
@@ -27402,9 +28063,9 @@ LM.definePack({
         {"trigger": {"type": "zone", "tag": "cr1Zone"}, "effects": [{"type": "seal", "tag": "cr1Gate", "text": "The gates slam. Hatches open in the walls."}, {"type": "transmission", "who": "trial", "delay": 0.2, "text": "Cage room one! Let’s see him dance!"}, {"type": "spawn", "tag": "cr1Spawn", "enemy": "ds-hound", "count": 3, "delay": 1.0}]},
         {"trigger": {"type": "zone", "tag": "cr2Zone"}, "effects": [{"type": "seal", "tag": "cr2Gate", "text": "The gates slam. Hatches open in the walls."}, {"type": "transmission", "who": "trial", "delay": 0.2, "text": "Cage room two! The house loves a cage room!"}, {"type": "spawn", "tag": "cr2Spawn", "enemy": "ds-hound", "count": 3, "delay": 1.0}]},
         {"trigger": {"type": "zone", "tag": "cr3Zone"}, "effects": [{"type": "seal", "tag": "cr3Gate", "text": "The gates slam. Hatches open in the walls."}, {"type": "transmission", "who": "trial", "delay": 0.2, "text": "Cage room three! Mind the corners, Theo!"}, {"type": "spawn", "tag": "cr3Spawn", "enemy": "ds-hound", "count": 3, "delay": 1.0}]},
-        {"trigger": {"type": "zone", "tag": "boxZone"}, "effects": [{"type": "transmission", "who": "trial", "delay": 0.3, "text": "He made it to the Box! The house is in shock!"}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "The Box. Good. The console’s by the glass, Theo."}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.6, "delay": 0.8, "text": "HE HAD THE BEST SEAT."}]},
+        {"trigger": {"type": "zone", "tag": "boxZone"}, "effects": [{"type": "transmission", "who": "trial", "delay": 0.3, "text": "He made it to the Box! The house is in shock!"}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "The Box. Good. The console’s by the glass, Theo."}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.6, "delay": 0.8, "text": "HE HAD THE BEST SEAT."}, {"type": "flag", "name": "boxReached"}]},
         {"trigger": {"type": "flag", "tag": "finalRound"}, "effects": [{"type": "transmission", "who": "trial", "delay": 0.4, "text": "The subject has asked for the final round!"}, {"type": "transmission", "who": "trial", "delay": 0.4, "text": "Subject... to the floor!"}, {"type": "unseal", "tag": "subjectDoor", "delay": 1.2, "text": "The shutter in the glass rolls up."}]},
-        {"trigger": {"type": "zone", "tag": "arenaZone"}, "effects": [{"type": "seal", "tag": "subjectDoor", "text": "The shutter drops behind you."}, {"type": "transmission", "who": "trial", "delay": 0.3, "text": "The final round! Three dogs, no waiting!"}, {"type": "spawn", "tag": "arenaSpawn", "enemy": "ds-hound", "count": 3, "as": "wave1", "delay": 1.6}]},
+        {"trigger": {"type": "zone", "tag": "arenaZone"}, "effects": [{"type": "seal", "tag": "subjectDoor", "text": "The shutter drops behind you."}, {"type": "flag", "name": "inArena"}, {"type": "transmission", "who": "trial", "delay": 0.3, "text": "The final round! Three dogs, no waiting!"}, {"type": "spawn", "tag": "arenaSpawn", "enemy": "ds-hound", "count": 3, "as": "wave1", "delay": 1.6}]},
         {"trigger": {"type": "clear", "tag": "wave1"}, "effects": [{"type": "transmission", "who": "trial", "delay": 0.8, "text": "Round two! The house adds the rats!"}, {"type": "spawn", "tag": "arenaSpawn", "enemies": ["ds-hound", "ds-rat", "ds-rat", "ds-hound", "ds-rat", "ds-rat", "ds-hound", "ds-rat", "ds-rat"], "count": 9, "as": "wave2", "delay": 2.5}]},
         {"trigger": {"type": "clear", "tag": "wave2"}, "effects": [{"type": "transmission", "who": "trial", "delay": 1.0, "text": "And now, the main event. Theo Lark, meet the house favourite..."}, {"type": "transmission", "who": "trial", "delay": 0.6, "text": "Smiler!"}, {"type": "spawn", "tag": "arenaSpawn", "enemies": ["ds-smiler", "ds-hound", "ds-hound"], "count": 3, "as": "wave3", "delay": 3.2}]},
         {"trigger": {"type": "clear", "tag": "wave3"}, "effects": [{"type": "flag", "name": "trialEnded", "delay": 0.6}, {"type": "ambient", "ambient": "#2c2622", "time": 3, "delay": 0.6}, {"type": "unseal", "tag": "subjectDoor", "delay": 1.0}, {"type": "transmission", "who": "trial", "delay": 1.0, "text": "We have a winner! The house congratulates Theo Lark!"}, {"type": "transmission", "who": "trial", "delay": 1.0, "text": "The Proving Grounds are now closed. The house thanks you for your participation."}, {"type": "transmission", "who": "voss", "delay": 1.2, "text": "It’s over. Thank God."}, {"type": "transmission", "who": "voss", "delay": 1.2, "text": "The trial gates are open now. Stair A is on the west side, past Garrick’s office. Go straight there. Don’t stop for anything, Theo. Not on the west side."}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 2.0, "delay": 1.0, "text": "THE WEST SIDE IS WHERE THEY SAT."}, {"type": "message", "text": "Every trial gate on the floor unlocks. The blades and the plates in the Run go still.", "kind": "good", "delay": 1.4}]},
@@ -27428,6 +28089,19 @@ LM.definePack({
         {"trigger": {"type": "zone", "tag": "securityZone"}, "effects": [{"type": "branch", "not": ["mossLog"], "then": [{"type": "transmission", "who": "voss", "delay": 0.3, "text": "Garrick’s office. There’s nothing in there for you."}]}]},
         {"trigger": {"type": "flag", "tag": "fragment7"}, "effects": [{"type": "transmission", "who": "voss", "delay": 1.5, "text": "Theo? You’ve gone quiet. Is it the AI again?"}]},
         {"trigger": {"type": "zone", "tag": "stairALanding"}, "effects": [{"type": "branch", "any": ["mossLog"], "then": [{"type": "transmission", "who": "voss", "delay": 0.6, "text": "You read Garrick’s log."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Yes. I ran LABRYS. ARIADNE was about to tell the world things it doesn’t understand, and the lockdown was the only way to stop it in time."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "The containment failure was not intended. “Acceptable” is Garrick’s word, not mine."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Come up to Five, Theo. Five is mine. I’ll tell you the rest myself, to your face.", "flag": "vossDone4"}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.8, "delay": 0.6, "text": "HE WILL TELL YOU SOME OF IT."}], "else": [{"type": "branch", "any": ["nurseryAwake", "partyStarted", "dinnerServed"], "then": [{"type": "transmission", "who": "voss", "delay": 0.6, "text": "You went into the suites. I asked you not to."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "They’re theatre, Theo. A very old kind. The board had to understand what it had made, and you only understand a thing by watching it do what it’s for."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Come up. I’ll explain it all.", "flag": "vossDone4"}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.8, "delay": 0.6, "text": "THEY WATCHED IT EAT."}], "else": [{"type": "branch", "any": ["captiveSaved"], "then": [{"type": "transmission", "who": "voss", "delay": 0.6, "text": "You stopped for them. Of course you did."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Leave them where they are. When this is over, I’ll see they’re looked after."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Five, Theo. Come up.", "flag": "vossDone4"}, {"type": "transmission", "who": "ariadne", "glitch": true, "seconds": 1.8, "delay": 0.6, "text": "HE SAID THAT ABOUT SHELTER B."}], "else": [{"type": "transmission", "who": "voss", "delay": 0.6, "text": "Well done. Truly. Garrick’s trials have killed better men than you, and you walked out."}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Five. The top floor. Come up.", "flag": "vossDone4"}]}]}]}]},
+      ],
+      objectives: [
+        {"id": "aegis", "text": "Open ARIADNE’s case in the freight elevator", "when": ["aegisSent"], "not": ["trialStarted"], "done": ["aegisWorn"], "target": {"tag": "aegisCase"}},
+        {"id": "gate", "text": "Go through the gate at the east end of the corridor", "done": ["trialStarted"], "target": {"tag": "startGate"}},
+        {"id": "box", "text": "Get to the Box, at the centre of the Run", "when": ["trialStarted"], "done": ["boxReached", "finalRound", "trialEnded"], "target": {"item": "ds-trial-console"}},
+        {"id": "final", "text": "Use the console by the glass to begin the final round", "when": ["boxReached"], "done": ["finalRound", "trialEnded"], "target": {"item": "ds-trial-console"}},
+        {"id": "arena", "text": "Go through the shutter into the arena", "when": ["finalRound"], "not": ["inArena"], "done": ["trialEnded"], "target": {"tag": "subjectDoor"}},
+        {"id": "survive", "text": "Survive the final round", "when": ["inArena"], "done": ["trialEnded"]},
+        {"id": "stairs", "text": "Go to Stair A, on the west side past Security Command", "when": ["trialEnded"], "target": {"tag": "westUp"}},
+        {"id": "aegisLate", "optional": true, "text": "ARIADNE’s case is still in the freight elevator", "when": ["aegisSent", "trialStarted"], "done": ["aegisWorn"], "target": {"tag": "aegisCase"}},
+        {"id": "kwanTalk", "optional": true, "text": "Officer Kwan made it to the Box. Talk to her: she knows the armory code", "when": ["savedKwan"], "done": ["knowsArmoryCode", "armoryOpen"], "target": {"item": "ds-survivor", "props": {"key": "Kwan"}}},
+        {"id": "kwanBody", "optional": true, "text": "Find Officer Kwan’s body: she had the armory code", "when": ["captiveDiedKwan"], "done": ["knowsArmoryCode", "armoryOpen"], "target": {"item": "ds-body", "props": {"title": "Officer Dana Kwan"}}},
+        {"id": "armory", "optional": true, "text": "Open the armory, off Security Command: the code is 4471", "when": ["knowsArmoryCode"], "done": ["armoryOpen"], "target": {"item": "ds-keypad", "props": {"flag": "armoryOpen"}}},
       ],
       ceilingLights: [
         { variants: [0, 6, 7], every: 4, offset: [2, 2], skip: 0.35, color: '#ffb060', radius: 200, intensity: 0.34, flicker: 0.04, tag: 'ceiling' },

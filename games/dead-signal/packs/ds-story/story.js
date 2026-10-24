@@ -16,8 +16,9 @@
   const h = (...a) => LM.ui.h(...a);
 
   const speakers = {
-    voss: { name: 'Dr. Aurelian Voss', role: 'Director · intercom', color: '#e0b25a', face: 'intercom', voice: 0.75 },
-    ariadne: { name: 'ARIADNE', role: 'Research integrity · node 01', color: '#7fd4ff', face: 'eye', voice: 1.6 },
+    // Voss and ARIADNE carry the story: what they say stops the game (engine/comms.js), unless you're in a fight
+    voss: { name: 'Dr. Aurelian Voss', role: 'Director · intercom', color: '#e0b25a', face: 'intercom', voice: 0.75, pause: true },
+    ariadne: { name: 'ARIADNE', role: 'Research integrity · node 01', color: '#7fd4ff', face: 'eye', voice: 1.6, pause: true },
     pa: { name: 'Building PA', role: 'Automated', color: '#c9ced4', face: 'radio', voice: 0 },
     theo: { name: 'Theo', role: 'You', color: '#8fb8a8', face: 'radio', voice: 0 },
   };

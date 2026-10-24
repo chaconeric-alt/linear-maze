@@ -434,12 +434,15 @@
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.drawGlow(ctx, game, t);
       for (const fx of game.fx) if (fx.drawGlow) fx.drawGlow(ctx, game, t);
       for (const tr of game.traps) if (tr.drawGlow) tr.drawGlow(ctx, game, t);
+      if (LM.objectives && !game.attract) LM.objectives.drawGlow(ctx, game, t);
       game.particles.draw(ctx, 'glow', view);
       ctx.globalCompositeOperation = 'source-over';
 
       // 6. overlays
       game.particles.draw(ctx, 'overlay', view);
       for (const o of drawables) if (o.drawOverlay) o.drawOverlay(ctx, game, t);
+      // what the objective wants you to find, picked out when you're near it (engine/objectives.js)
+      if (LM.objectives && !game.attract) LM.objectives.drawOverlay(ctx, game, t);
       if (game.focus && !game.attract && !game.focus.isNPC) this.drawFocus(ctx, game.focus, t);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (!game.attract) this.drawScreenFX(ctx, game, cw, chh);

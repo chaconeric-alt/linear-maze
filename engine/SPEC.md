@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.5.6 · October 2026
+Engine 0.5.7 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -21,6 +21,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.5:** waves. A `spawn` trap effect can tag what it spawns (`as`), and a `clear` trap waits for a group that appears later, so a sealed arena can send one wave after another (section 6.8). The `faction` effect's `aggro` lets enemies out hunting: they come straight for you. `LM.ai.goTo` takes a search limit, for something that has to cross a whole maze (section 6.5).
 
 **New in 0.5.6:** an elevator with no power can still be parked on one floor (its `parked`): once a flag is set it waits there, lit, doors held open, panel dead, and if you're on that floor when the flag is set it comes up the shaft first and can bring cargo (section 6.15). Gear can keep you alive: armour, gadgets and blessings can have `lastStand`, asked when a hit would kill you (section 4, *Damage*; 6.7). Gadgets can resist statuses like armour, and draw an aura round you all the time (`drawAura`, `shieldRing: false`; section 6.12).
+
+**New in 0.5.7:** objectives: what to do next on the HUD, with the thing to find picked out when you're near it and marked on the minimap (a level's `objectives`; section 6.21, `engine/objectives.js`). Story lines that stop the game: a speaker with `pause` (or a line's own `pause: true`) is read in the middle of the screen with the game stopped, Continue and Skip, unless you're in a fight; the player can turn it off on the pause screen (section 6.16). A long body can have a `hitbox` (a capsule along the way it faces) so shots land on all of it (section 6.5). A side can wake when you hurt it (a pack's `factionWake`: your shots land on it, and it turns on you; section 6.20). Floors remember a monster's hunting and a tag it was given while playing (section 5).
 
 ---
 
@@ -73,6 +75,7 @@ engine/
   npc.js                   NPC (non-hostile people), movement behaviours, speech bubbles, LM.gfx.person
   traps.js                 Trap (trigger + effects)
   memory.js                floors remember how you left them: snapshots of a floor, laid back over it when you return
+  objectives.js            objectives: what to do next on the HUD, its targets picked out in the world and on the minimap
   elevators.js             elevators: shafts built into every floor they stop at, the cars, the panel; its tiles and sounds
   ui.js                    HUD, minimap, toasts, room titles, boss bars, status chips, pop-up system, dialog, portraits, title screen, standard screens
   comms.js                 transmissions: lines typed into a panel while the game runs, speakers, the transmission trap effect
@@ -193,6 +196,8 @@ stairs: {
 Leaving a floor by any route (stairs, elevator, or a pack calling `game.loadLevel`) takes a snapshot of it, and coming back lays that snapshot over the freshly built floor (`engine/memory.js`). What you picked up stays gone; monsters you killed stay dead and the rest are where they were, with the health they had; opened chests stay opened with what's left in them; unlocked doors stay unlocked; tiles a trap or script changed stay changed; traps that fired stay fired; switched lights stay switched; the minimap stays explored; rooms already announced aren't announced again; blood and scorch marks stay (the most recent 240); the floor's tally carries on. People keep where they were standing and anything a script changed on them.
 
 Keys belong to the floor they're found on: they don't come with you to another floor (as before), but they're waiting in your pocket when you come back to it.
+
+A monster keeps its side (a `faction` change is part of its props), whether it was hunting, and a tag it was given while playing (a wave's `as`); one far beyond its `leash` when you come back gives up the hunt as usual.
 
 A snapshot keeps an item's, person's or monster's **fields**: its own properties that are plain data (numbers, strings, booleans, and plain objects and arrays of them, up to 2000 characters each), and only those that changed since it was made, plus things that weren't on the map (loot that dropped). A pack whose objects keep their state that way (`it.used`, `it.opened`, `npc.mem.appeased`) is remembered for free. Not remembered: state kept in a `Set`, a class instance or a closure; timers (`game.schedule`) and anything in flight (shots, particles); and anything a pack's `levelLoaded` handler makes, since the handler makes it again on every arrival (the Linear Maze's rotary phones and desk toys). A floor whose map has changed since its snapshot (an edited game) starts fresh.
 
@@ -360,6 +365,7 @@ Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `
 | `flying`, `swimmer`, `stationary`, `boss` | Ignores hazards; full speed in water; never moves; gold health bar. |
 | `bossBar: { name, color, sub(e, game), range, phases }` | A named bar across the top of the screen while it's awake and within `range` (900) of the player; up to three at once. `sub` is a short line beside the name ("9 faces"). `phases: [{ at: 0.5, text, do(e, game) }]` each run once as its health falls past `at` (a fraction); `text` is a toast. |
 | `resist: { chilled: 1 }` | Statuses it shrugs off (1) or that last less long on it (0.5). |
+| `hitbox: { front, back, r }` | A long body: shots land anywhere on a capsule along the way it faces, from `back` behind its centre to `front` ahead of it, `r` wide from the middle (the radius if left out); scaled with its radius. Without it, a circle of its radius. Movement and walls still use the radius. `LM.combat.touches(e, x, y, r)`. |
 | `blood`, `gib`, `deathGlow`, `deathSound`, `bark`, `color` | Feel. |
 | `draw(g, e, t)`, `drawGlow(g, e, t)` | Body (in local space, call `g.rotate(e.facing)` yourself) and emissive bits. |
 | `init`, `update`, `onDeath` | Hooks `(e, game)` / `(e, dt, game)`. |
@@ -449,6 +455,7 @@ LM.definePack({
       objectLegend: { /* characters for the objects layer */ },
       rooms: [{ name, rect: [x, y, w, h], note }],   // announced on first entry; first match wins where rects overlap
       traps: [ /* see below */ ],
+      objectives: [{ id, text, when, any, not, done, optional, target, map }],   // optional: what to do next (section 6.21)
       ceilingLights: [{ variants: [0, 1], every: 4, offset: [2, 2], color, radius, intensity, flicker, skip, tag }],
       map: [ '#####', '#<.>#', '#####' ],
       objects: [ '     ', ' @ c ', '     ' ],   // optional second layer on the same grid
@@ -659,7 +666,8 @@ LM.comms.say({ who: 'director', text: 'Get to the stairs.', glitch: false, secon
 speakers: {
   director: { name: 'Dr. Voss', role: 'Director · intercom', color: '#e0b25a',
               face: 'intercom',      // 'intercom' | 'eye' | 'screen' | 'radio', or portrait(g, size, t, talking) to draw one
-              voice: 0.8 },          // pitch of the typing ticks; 0 is silent
+              voice: 0.8,            // pitch of the typing ticks; 0 is silent
+              pause: true },         // what they say stops the game (below)
 },
 ```
 
@@ -670,8 +678,11 @@ speakers: {
 | `glitch` | It comes through broken: letters scramble near the cursor, the panel jitters. |
 | `seconds` | How long it stays once typed (default 1.2 s plus a little per character). |
 | `flag` | A story flag set when the line has been shown, so a trap can follow it. |
+| `pause` | `true`: it stops the game even in a fight; `false`: never (left out: as its speaker says). |
 
 The trap effect `transmission` takes the same fields (and `delay`, as every effect; give a trap's lines the same delay and they play in order). `LM.comms.busy()` says whether anything is playing or queued; `LM.comms.speaking()` is the id of who is talking now (a speaker on the wall can light up for them); `LM.comms.clear()` drops it all. Each entry in `LM.comms.log` has the speaker's `who` (name) and `id`.
+
+**Lines that stop the game.** A speaker with `pause: true` carries the story: what they say stops the game and is read in the middle of the screen, larger, with Continue (E, Enter, Space or a click; the first press finishes a line still typing) and Skip (Esc: the rest of this conversation, every line still logged and every flag still set). Whatever is queued behind it carries on in the same box, whoever says it; then the game goes on. In a fight (a hunting enemy that's hostile to the player within 200, or within 420 in sight) a line plays in the corner as usual. A line's own `pause` overrides its speaker: `true` (or `'always'`) stops the game even in a fight, `false` (or `'never'`) never does. The player can turn it off on the pause screen (*Story lines: stop the game / in the corner*, kept in the browser), which is offered only when some speaker pauses. While a conversation is up the game's state is `'talk'`: nothing moves and no timer runs. `LM.comms.talking()`, `next()`, `skip()`, `pauses()` / `setPauses(on)`, `inFight(game)`; `LM.comms.talk = true | false` overrides the player's choice (tests).
 
 ### 6.17 Statuses
 
@@ -753,6 +764,8 @@ LM.definePack({ id: 'ds-robots', factions: {
 } });
 ```
 
+**Waking.** A pack's `factionWake: { specimen: 'monster' }` names sides that wake when the player hurts them: the player's shots and blasts land on them (as on a foe), and the first hit puts the one hit on the new side, hunting the player (`LM.factions.wake`, `LM.factions.playerHits(f)`). Dead Signal's specimens: one you shoot through its cage's open door, or one that got out, comes for you; bars and glass still take the shot.
+
 A level's own `factions` lays rows over the game's while that floor is played (Dead Signal's Floor 3: `{ robot: ['player', 'monster', 'ally'], monster: ['player', 'robot', 'ally'] }`, where the robots and the specimens are at war). A side with an empty row (`specimen: []`) fights nobody, and nobody fights it unless their row names it: a monster in a cell, a robot with no power.
 
 What it changes: who an enemy looks for (section 5, *Enemy AI*); what an enemy's shots and blasts hit (an enemy shot with no faction hits only the player, as always); what the player's shots hit (they pass through enemies the player's row doesn't name); who wakes whom (an enemy wakes friends of its own side). Allies show green on the map and have green health bars; whatever else marks them (Dead Signal's robots: a green visor and a blue ring) is the pack's drawing.
@@ -764,6 +777,35 @@ What it changes: who an enemy looks for (section 5, *Enemy AI*); what an enemy's
 | `game.setFaction(sel, faction)` | Put enemies on another side: `sel` is a tag, an enemy id, or a test `(e) => bool`. They forget who they were fighting and look again; the floor remembers the change. Returns how many changed. |
 | trap effect `faction` | `{ tag \| enemy, faction, aggro }`: the same, from a trap (a cell's glass breaks: its specimen joins the monsters). With `aggro: true` they're let out hunting: awake, and they know where you are. |
 | trap effect `spawn`'s `faction` | What side the spawned enemies are on. |
+
+### 6.21 Objectives
+
+`engine/objectives.js`. What to do next, on the HUD under the health plate, with the thing to find picked out when you're near it. A level lists them in order:
+
+```js
+objectives: [
+  { id: 'breaker', text: 'Throw the breaker in the comms closet', done: 'breakerOn',
+    target: { item: 'ds-breaker', props: { flag: 'breakerOn' } } },
+  { id: 'terminal', text: 'Get to the terminal in the security office', when: 'breakerOn', done: 'atTerminal',
+    target: { item: 'ds-console', props: { flag: 'atTerminal' } } },
+  { id: 'locker', optional: true, text: 'Open Officer Ruiz’s locker', when: 'atTerminal', done: 'lockerOpen',
+    target: [{ item: 'ds-keypad', props: { flag: 'lockerOpen' } }, { item: 'ds-note', props: { title: 'Sticky note' } }] },
+]
+```
+
+| Field | Meaning |
+|---|---|
+| `id` | Names it (`LM.objectives.current(game)` returns the one showing). |
+| `text` | What the HUD says (in code, a function `(game) => text`). |
+| `when` | A flag, or a list (all of them), that must be set before it shows. |
+| `any` | A list: at least one of these set too. |
+| `not` | A flag or a list: hidden while any is set. |
+| `done` | A flag or a list: any one set and it's done (in code, a function `(game) => true`). An objective with no `done` stays until you leave the floor (the stairs). |
+| `optional` | Shown under the main one, marked Optional (two at most). |
+| `target` | What to pick out, or a list: `{ tag }` (items, monsters, people and doors with that tag, else the tagged tiles, outlined), `{ item: id, props }` and `{ enemy: id, props }` (of that kind; `props` matches what they were placed or spawned with), `{ npc: id }`, `{ tile: [x, y] }`, `{ room: 'Name' }` (the room's middle, on the minimap only). |
+| `map` | `false` keeps its targets off the minimap. |
+
+The main objective is the first in the list that's showing and not done. When it changes the plate flashes and a chime plays. A target in the same room as the player (the level's `rooms`), or within 8 tiles, pulses: a glow, four ticks round it and a marker bobbing over it, drawn over the lighting so it shows in the dark. Every target is marked on the minimap, with an arrow on the edge for one that's off it. The pause screen lists what's open. `LM.objectives.color` is the marker colour (`#ffd36a`); `LM.objectives.showing(game)`, `points(target, game)`, `near(game, p)`.
 
 ---
 
@@ -965,7 +1007,7 @@ The editor's map palette has a Dressings tab: furniture and fixtures from every 
 
 `editor/js/lifts.js`. The map palette's **Elevators** tab is the brush for a new elevator (car width and depth, door width, which way the doors face; `[` and `]` turn it) and the list of every elevator in the game with how it sits on this floor (stops here, skips, doesn't fit, blocked, overlaps). With the brush, a click places one with its shaft's top-left corner at that tile; it is written into the plan (minus the floor's `elevatorShift`) and appears on every floor. Every shaft is outlined over the map (dashed where it skips the floor or doesn't fit), with an arrow out of its doors. Select a shaft to edit it: name, place (arrows, or Move… and click), facing (`[` `]`), size, doors, the floors it stops at (every floor, every floor but some, or only some), **+ Car before it / after it** (the next car in a bank, sharing a wall), Delete (or the Delete key). Pick (I) on a shaft takes its size and facing as the brush. Painting under a shaft changes the map underneath, which stays hidden while the shaft is there.
 
-Floor settings → **Stairs and elevators**: where the floor's stairs up lead (`stairsUp`: automatic, closed, or a floor), **stairs that go somewhere of their own** (the level's `stairs`: by tag, with where they lead, the flags that unlock them, what they say while locked, the tag you arrive on, the sound and the floor-finished button), which elevators stop here, and moving every elevator on this floor (`elevatorShift`). The elevator inspector has a **Power** field (its `power` flags) and **Parked here** (the flag that parks it on this floor, `parked`; its cargo, if it has one, is listed, and is written in code). A tile type with a door has **Opens for a story flag**, **What it needs** and **Lock colour** (a clearance door). Trap effects a pack defines with `params` get a form like the engine's own (the transmission effect's speaker list, for one). Statuses are a kind the editor lists (with speakers, under the game's settings), and ammunition a pack adds with `LM.defineAmmo` joins the editor's ammunition lists. Check reports an elevator that doesn't fit, opens onto a wall, overlaps another, or is built over the floor's start or stairs down, and counts things on the map under a shaft; it also warns about stairs in `stairs` whose tag no tile has, and notes stairs that lead to a floor the game doesn't have yet. The Floors page has a table of which elevator stops at which floor.
+Floor settings → **Stairs and elevators**: where the floor's stairs up lead (`stairsUp`: automatic, closed, or a floor), **stairs that go somewhere of their own** (the level's `stairs`: by tag, with where they lead, the flags that unlock them, what they say while locked, the tag you arrive on, the sound and the floor-finished button), which elevators stop here, and moving every elevator on this floor (`elevatorShift`). Floor settings → **Objectives** lists the floor's objectives (section 6.21) to edit: text, the flags (when, any, not, done), optional, the target as JSON, and whether it's on the minimap. The `transmission` effect's form has **pause** (the speaker's choice, always or never). The elevator inspector has a **Power** field (its `power` flags) and **Parked here** (the flag that parks it on this floor, `parked`; its cargo, if it has one, is listed, and is written in code). A tile type with a door has **Opens for a story flag**, **What it needs** and **Lock colour** (a clearance door). Trap effects a pack defines with `params` get a form like the engine's own (the transmission effect's speaker list, for one). Statuses are a kind the editor lists (with speakers, under the game's settings), and ammunition a pack adds with `LM.defineAmmo` joins the editor's ammunition lists. Check reports an elevator that doesn't fit, opens onto a wall, overlaps another, or is built over the floor's start or stairs down, and counts things on the map under a shaft; it also warns about stairs in `stairs` whose tag no tile has, and notes stairs that lead to a floor the game doesn't have yet. The Floors page has a table of which elevator stops at which floor.
 
 ---
 

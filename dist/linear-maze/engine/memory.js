@@ -15,7 +15,8 @@
  *   gone      map items no longer there (indexes into the level's spawns)
  *   items     { spawnIndex: { field: value } } map items that changed (used, opened, hp...)
  *   extra     items that weren't on the map (loot, drops): { id, tx, ty, props, tag, s: fields }
- *   enemies   every living enemy: { id, x, y, hp, p: spawn props, h: [homeX, homeY] }
+ *   enemies   every living enemy: { id, x, y, hp, p: spawn props (with its side, if that changed), h: [homeX, homeY],
+ *             a: 1 if it was hunting, t: a tag it was given while playing }
  *   npcsGone, npcs, npcsExtra   as for items
  *   traps     { trapIndex: [armed, timesFired] } traps that have fired
  *   lights    { key: { off, intensity, flicker, color, r } } static lights a trap or script changed
@@ -205,6 +206,9 @@
       const o = { id: e.def.id, x: rnd(e.x), y: rnd(e.y), hp: rnd(e.hp) };
       if (e._props && Object.keys(e._props).length && plainOk(e._props, 0)) o.p = JSON.parse(json(e._props));
       if (e.home && (Math.abs(e.home.x - e.x) > 1 || Math.abs(e.home.y - e.y) > 1)) o.h = [rnd(e.home.x), rnd(e.home.y)];
+      // hunting (a monster let out stays let out), and a tag given while playing (a wave's `as`)
+      if (e.aggro) o.a = 1;
+      if (e.tag && e.tag !== (e._props && e._props.tag)) o.t = e.tag;
       return o;
     });
     // people
@@ -325,6 +329,8 @@
       e.spawning = 0;
       if (o.hp != null) e.hp = Math.min(e.maxHp, o.hp);
       if (o.h) e.home = { x: o.h[0], y: o.h[1] };
+      if (o.a) e.aggro = true;
+      if (o.t) e.tag = o.t;
     }
     // doors
     for (const d of game.doors) {

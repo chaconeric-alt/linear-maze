@@ -1,6 +1,6 @@
 # Dead Signal — design and build plan
 
-Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.6)
+Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.7)
 
 This file is the plan for building Dead Signal into a whole game: the story, the building, six maps (five floors and a basement) chapter by chapter, the monsters, robots, traps, puzzles, weapons, items and dressings on each, and the engine and pack code the game needs that the engine doesn't have yet. It is written to be handed to Claude a milestone at a time (section 11 has a prompt for each), together with the workspace, `engine/SPEC.md` and this file.
 
@@ -44,6 +44,7 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
 - Engine (0.5.5): waves (the `spawn` effect's `as`, and `clear` traps that wait for a group spawned later), the `faction` effect's `aggro`, `LM.ai.goTo`'s search limit.
 - The way up is Stair A again (the west stairwell); Stair B is where you came in. On Stair A's landing Voss explains himself, by what you found (the log, the suites, the people you saved).
 - Added after M4 (engine 0.5.6), because the floor is hard: **the AEGIS field**. When Voss has finished welcoming you (or as soon as you step into the lobby), the dead freight car comes up the shaft on what power ARIADNE can spare, rings, and opens: in it, a hard case with ARIADNE's eye on the lid. ARIADNE: `YOU WILL NEED THIS. DEATH HERE.` Voss: the car hasn't moved since the lockdown; take it if you have to, don't listen to it. The AEGIS is a personal containment field worn over your armour (a gadget, no slot): a strong shield that comes back fast, damage taken off whatever gets through, grips slide off it; when a hit would kill you it overloads instead, throws everything off you, and needs a minute to mend. Every number is in `packs/ds-arsenal/aegis.js` (`TUNE`), to be set with the floor's difficulty. Engine: a parked elevator with cargo (`parked`), gear with a `lastStand`, gadget `resist` and `drawAura`.
+- After playtests (engine 0.5.7): players weren't sure what to do next, missed Voss, couldn't hit some dogs, and missed the armory code. Now every floor has **objectives** on the HUD (each floor's *Objectives* paragraph below): the thing to find pulses when you're in its room and is marked on the minimap. **Voss and ARIADNE stop the game**: their lines are read in the middle of the screen with Continue and Skip (unless you're in a fight, when they play in the corner as before; the pause screen can turn it off). The **Grinners** have a hitbox the length of their bodies, and a **specimen** you shoot wakes and comes for you instead of letting shots through (caged ones are behind bars that take the shot). Dogs let out stay out if you leave the floor and come back. **Kwan** speaks up when you reach her in the Box, and the armory code is then known (`knowsArmoryCode`, also from her body); the armory keypad reminds you of it.
 - Next: milestone M5 (Floor 5).
 
 ---
@@ -301,6 +302,8 @@ Each chapter lists its rooms (with suggested sizes in tiles), robots, monsters, 
 
 **Exit.** The west stairwell `>` to Floor 2.
 
+**Objectives** (on the HUD): throw the breaker in the comms closet → get to the security office terminal (north-west, through the lobby) → go up Stair A. Optional, from the terminal: Ruiz's locker (the keypad and the sticky note are marked).
+
 **On the way back (chapter 6).** The lobby is a battleground: a Pacifier squad Voss sends to stop you, and Grief Engine spawn crawling out of the lift shafts. The east stairwell shutter opens for `basementOpen`.
 
 ---
@@ -348,6 +351,8 @@ Each chapter lists its rooms (with suggested sizes in tiles), robots, monsters, 
 **Lines.** Voss: arrival; the shelter door ("Find her card, and you can let them out"); the lab wing ("She went in after the stock"); the card ("Poor Hana… Go and let them out"); after the fight ("I didn't know… Three is Brandt's floor"). ARIADNE: `THE AIR`, `THEY WERE SENT THERE`, `HE KNEW`. The PA: four recorded announcements on a loop until the shelter opens. DOCENT-3: the tour, mixed with threats.
 
 **Exit.** Stair A `>` to Floor 3, once the quarantine lifts.
+
+**Objectives**: find where the staff went (Shelter B; `sawShelter`) → get through the Discovery Center to administration, past DOCENT-3 (`docentDone`, when its tour ends) → Dr. Mori's terminal (`labsOpen`) → her override card, in the oncology cold store → open Shelter B → pull the quarantine release → kill the Congregation → Stair A. Optional: drain the brine (both valves).
 
 **On the way back (chapter 6).** Not built yet. Ideas: the shelter's vent has been busy (strands everywhere, the bodies gone); the dispatch lift has power and something comes down it; the Discovery Center's model synthid is on the floor.
 
@@ -403,6 +408,8 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 **ARIADNE's relay.** The relay's battery reaches two Orderlies (3-04 in the relay room, 3-07 in the south corridor): each joins you when you come near and keeps at your heel. Breaker 3P in the pump room gives the relay mains power (`relayPowered`): the three in the bay wake, the east turret joins them, the relay has more to say ("This floor makes the board's dreams. Every specimen file names its dreamer."), ARIADNE says `FIVE HANDS. THEY ARE YOURS.` and Voss is rattled.
 
 **Finds.** Okafor's Level 3 card; the Plasma Cutter and cells (pump room); purge injectors (3-A, 3-B, 3-D; Midwives often drop one) and five purge stations; med-gel, a trauma kit in Brandt's office and in 3-E, rounds, shells, cryo; ARIADNE's fragment 6 (the relay).
+
+**Objectives**: cross the lobby to Stair B → Dr. Brandt's spare card, in her office (south side, the east corridor) → Okafor's card, Lab 3-B (Okafor, then the card he drops, are marked) → back to Stair B and up. Optional, once you've seen the relay (`sawRelay`): its breaker in the pump room.
 
 **On the way back.** Not built yet. Ideas: the foam on Stair A dissolved (the master card); the pens' glass cracked; the Orderlies waiting at Stair B, if they lived; the vat that was pressing on its lid is open.
 
@@ -462,6 +469,8 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 - none of these: "Garrick's trials have killed better men than you, and you walked out."
 
 **Finds.** The AEGIS field (the freight car, from ARIADNE), the Incinerator and fuel (the armory; fuel also in the Warren, presents, and dropped by dogs), the Handler's Boots, the Nightlight, the Exo-Frame, the Riot Helmet, trauma kits (the presents, Smiler, the Rat King, the Underbed, the Jester), fragments 7 and 8.
+
+**Objectives**: go through the gate at the east end of the corridor (ARIADNE's case first, when the freight car comes) → get to the Box (`boxReached`; the console is marked across the maze) → the console: begin the final round → through the shutter into the arena (`inArena`) → survive the final round → Stair A. Optional: ARIADNE's case, if you went past it; Kwan in the Box, who knows the armory code (or her body, if the dogs got her: `savedKwan`, `captiveDiedKwan`, `knowsArmoryCode`); the armory, code 4471.
 
 **On the way back.** Not built yet. Ideas: the trial system restarts for the descent ("Tonight's subject is back!"), with the Run's blades running again and the reserve dogs out; the Box's feed to the boardroom; the Long Room's table re-laid for one.
 
@@ -655,7 +664,7 @@ Each was designed from one board member's dream; the design sheets on Floor 3 sa
 | **Tenant** (built, Floor 3) | Pell | 24 | 150 | `ds-tenant` | a bite, 6 + `infected` | A skinned, segmented crawler with a ring of teeth. Goes for a dead body (`ds-body` with `host`): gets in at the base of the skull and stands it up as a Ridden. Bites if you come close. |
 | **Ridden** (built, Floor 3) | Pell | 85 | 74, in lurches | `ds-shamble` | a claw, 13 + `infected` | A dead scientist, walked about by a Tenant: head lolled, arms hanging, the thing along its spine. Goes back to where it worked. Put down, the body stays down and the Tenant crawls out for another. Drops what it carried (Okafor's card). |
 | **Juvenile Congregation** (built, Floor 3) | Pell | 300 | 46 | `ds-contained` | — (in a pen) | A young colony: a few faces so far, one of them very young. Presses to the glass when you look. Murmurs. |
-| **Grinner** (built, Floor 4) | Moss | 58 | 200 | `ds-pack` | charge 12; a bite, 9 + `held` (it heals 4) | A long hairless dog with no eyes and a grin all the way round its head; the teeth are a person's. Packs circle, then one darts in. Blind: hunts by breath. Giggles while it hunts, and howls into a laugh. Eats the dead. |
+| **Grinner** (built, Floor 4) | Moss | 58 | 200 | `ds-pack` | charge 12; a bite, 9 + `held` (it heals 4) | A long hairless dog with no eyes and a grin all the way round its head; the teeth are a person's. Packs circle, then one darts in. Blind: hunts by breath. Giggles while it hunts, and howls into a laugh. Eats the dead. Its hitbox is its whole body, grin to haunch (`hitbox`, 0.5.7). |
 | **Smiler** (built, Floor 4) | Moss | 520 (15%) | 190 | `ds-pack` | charge 22; a bite, 18 + `held` (it heals 12) | The house favourite, half as big again, in a studded collar with a name tag. The arena's last wave. A named bar. |
 | **Rat** (built, Floor 4) | Thale | 6 | 165 | `swarmer` | a bite, 3 | Never one. |
 | **The Rat King** (built, Floor 4) | Thale | 560 (12%) | 70, in surges | `ds-roll` | a squeal (a ring, 12, `staggered`); a bite, 16; calls rats (4 at a time, up to 14) | A wheel of rats knotted at the tails, heads out, rolling. At half health the knot tears and half of it comes loose. A named bar (its heads count down). In the Rat Warren. |
@@ -939,6 +948,7 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 | `sawShelterPanel` | Shelter B's door panel, read before the override | — |
 | `labsOpen` | Mori's terminal (Floor 2 administration) | the lab wing's biosafety door; the admin shutter |
 | `brineDrained` | both valves in the membrane lab | the brine turns to dry floor |
+| `sawShelter`, `docentDone` | Shelter B's concourse; DOCENT-3's tour over (destroyed) | objectives |
 | `shelterOverride` | Mori's card (a key item) | Shelter B's panel |
 | `oncologyExit` | the oncology door console | Oncology's west door |
 | `shelterOpen` | the shelter panel, with the override | the blast door; the PA stops; the guide lights go out |
@@ -949,6 +959,7 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 | `toBrandt` | Voss, at Stair B's door on Floor 3 | — |
 | `knowsOkafor` | Brandt's terminal | Voss's lines in 3-B |
 | `clearance3` | Okafor's card (a key item) | Stair B's door |
+| `sawRelay` | reaching ARIADNE's relay on Floor 3 | the optional objective (its breaker) |
 | `relayPowered` | breaker 3P in Floor 3's pump room | the Orderlies wake; the east turret turns |
 | `sawSpecimen`, `sawMidwife`, `sawTenant`, `sawLantern`, `sawSitter`, `sawColony` | seeing them | Voss on the stairs |
 | `sawProject`, `sawBriefing`, `fileMidwife`, `fileTenant`, `fileLantern`, `fileColony`, `fileS41`, `fileVats` | the files, the briefing, the vats | Voss on the stairs; ARIADNE |
@@ -957,6 +968,8 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 | `vaultOpen`, `dreamsKnown` | (not built) | — |
 | `f4Briefed`, `aegisSent` | Voss's last welcome line on Floor 4; that or stepping into the lobby | the freight car comes up (its `parked`), ARIADNE, Voss |
 | `aegisWorn`, `aegisSaved` | putting the AEGIS on; its first overload | ARIADNE |
+| `boxReached`, `inArena` | reaching the Box; going into the arena | objectives |
+| `knowsArmoryCode` | Kwan, in the Box (she speaks when you reach her), or her body | objectives; the armory keypad reminds you |
 | `readSchedule` | Floor 4's programme in Trial Control | ARIADNE: he chose you |
 | `trialStarted` | stepping into the Pens | the odds boards; the contestants and the dogs let out |
 | `captiveSaved`, `saved<Name>`, `captiveDied<Name>` | the contestants (Kwan, Arden, Soto, Ostrowski, Pryce) | Voss on the stairs; the results |

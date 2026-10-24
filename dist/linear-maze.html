@@ -454,7 +454,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.6';
+  LM.VERSION = '0.5.7';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -514,6 +514,8 @@ kbd {
       for (const [f, list] of Object.entries(pack.factions)) LM.factions.base[f] = [].concat(list || []);
       LM.factions.use(null);
     }
+    // factionWake: a side that wakes when you hurt it ({ specimen: 'monster' }: your shots hit it, and it turns on you)
+    if (pack.factionWake && typeof pack.factionWake === 'object') Object.assign(LM.factions.wake, pack.factionWake);
     if (!LM.packs.find((p) => p.id === pack.id)) {
       LM.packs.push({ id: pack.id, name: pack.name || pack.id, version: pack.version || '0.0.0' });
     }
@@ -536,6 +538,8 @@ kbd {
     base: { player: ['*'], monster: ['player'] },
     table: null,
     rev: 0,
+    // sides that wake when the player hurts them: { specimen: 'monster' } (a pack's factionWake)
+    wake: {},
   });
   /** Use the game's table with a level's rows laid over it (null: the game's own). */
   FA.use = function (over) {
@@ -553,6 +557,8 @@ kbd {
     const l = FA.row(a);
     return l.includes(b) || l.includes('*');
   };
+  /** Do the player's shots and blasts land on faction f? (Its foes, and any side that wakes when hurt.) */
+  FA.playerHits = (f) => FA.hostile('player', f) || !!(f && FA.wake[f]);
   /** Does faction a attack nobody but the player? (Then an enemy skips looking for other foes.) */
   FA.onlyPlayer = function (a) {
     const c = FA.cache[a];
@@ -2055,12 +2061,15 @@ kbd {
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.drawGlow(ctx, game, t);
       for (const fx of game.fx) if (fx.drawGlow) fx.drawGlow(ctx, game, t);
       for (const tr of game.traps) if (tr.drawGlow) tr.drawGlow(ctx, game, t);
+      if (LM.objectives && !game.attract) LM.objectives.drawGlow(ctx, game, t);
       game.particles.draw(ctx, 'glow', view);
       ctx.globalCompositeOperation = 'source-over';
 
       // 6. overlays
       game.particles.draw(ctx, 'overlay', view);
       for (const o of drawables) if (o.drawOverlay) o.drawOverlay(ctx, game, t);
+      // what the objective wants you to find, picked out when you're near it (engine/objectives.js)
+      if (LM.objectives && !game.attract) LM.objectives.drawOverlay(ctx, game, t);
       if (game.focus && !game.attract && !game.focus.isNPC) this.drawFocus(ctx, game.focus, t);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (!game.attract) this.drawScreenFX(ctx, game, cw, chh);
@@ -2601,10 +2610,9 @@ kbd {
         if (this.owner === 'player') {
           for (const e of game.enemies) {
             if (e.dead || e.spawning > 0 || this.hit.has(e)) continue;
-            // your shots pass through anyone on your side
-            if (!FA.hostile('player', e.faction)) continue;
-            const rr = e.r + this.r;
-            if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
+            // your shots pass through anyone on your side (but not something that wakes when hurt)
+            if (!FA.playerHits(e.faction)) continue;
+            if (C.touches(e, this.x, this.y, this.r)) {
               this.hit.add(e);
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
@@ -2631,8 +2639,7 @@ kbd {
           if (fac != null && FA.hitsEnemies(fac)) {
             for (const e of game.enemies) {
               if (e.dead || e.spawning > 0 || e === this.by || this.hit.has(e) || !FA.hostile(fac, e.faction)) continue;
-              const rr = e.r + this.r;
-              if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
+              if (C.touches(e, this.x, this.y, this.r)) {
                 this.hit.add(e);
                 if (!this.aoe) C.hurt(game, e, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by });
                 game.particles.burst(this.x, this.y, 4, { type: 'dot', color: e.def.blood || '#7a1f1f', speed: 110, life: 0.3, angle: this.angle, spread: 0.6, size: [0.8, 1.6], drag: 6 });
@@ -2754,12 +2761,40 @@ kbd {
    * An enemy's damage reduction is its own `armor` if it has one (behaviours can change it as it fights),
    * else its def's; statuses can make it take more (`vulnerable`). def.onHurt(e, game, dmg, o) hears every hit.
    */
+  /**
+   * Does a point (with radius r) touch an enemy? A circle of its radius, or, for a long body, the def's
+   * hitbox: { front, back, r } a capsule along the way it faces (front and back: how far the body reaches
+   * ahead of and behind its centre; r: how wide, from the middle; the radius if left out). Shots use it,
+   * so a dog seen side-on can be hit in the head or the haunch, not only the middle.
+   */
+  C.touches = function (e, x, y, r) {
+    const hb = e.def && e.def.hitbox;
+    if (!hb) {
+      const rr = e.r + (r || 0);
+      return U.dist2(x, y, e.x, e.y) < rr * rr;
+    }
+    const k = e.def.radius ? e.r / e.def.radius : 1;
+    const ca = Math.cos(e.facing || 0), sa = Math.sin(e.facing || 0);
+    const along = U.clamp((x - e.x) * ca + (y - e.y) * sa, -(hb.back || 0) * k, (hb.front || 0) * k);
+    const px = e.x + ca * along, py = e.y + sa * along;
+    const rr = (hb.r != null ? hb.r * k : e.r) + (r || 0);
+    return U.dist2(x, y, px, py) < rr * rr;
+  };
+
   C.hurt = function (game, target, amount, o) {
     o = o || {};
     if (target.dead || amount <= 0) return 0;
     if (target.isPlayer) return C.hurtPlayer(game, target, amount, o);
     if (target.isEnemy) {
       const def = target.def;
+      // something that wakes when hurt (LM.factions.wake: a specimen in its cage) turns on whoever hurt it
+      const woke = o.source === 'player' && FA.wake[target.faction];
+      if (woke && game.setFaction) {
+        game.setFaction((x) => x === target, woke);
+        target.aggro = true;
+        target.knowsP = true;
+        target.alertT = 1;
+      }
       const armor = target.armor != null ? target.armor : def.armor || 0;
       const vul = LM.status ? LM.status.vulnerable(target) : 0;
       const dmg = Math.max(1, amount * (1 + vul) * (1 - armor));
@@ -2925,7 +2960,7 @@ kbd {
     if (!enemyBlast || (fac && FA.hitsEnemies(fac))) {
       for (const e of game.enemies) {
         if (e.dead) continue;
-        if (enemyBlast ? e === o.by || !FA.hostile(fac, e.faction) : o.owner === 'player' && !FA.hostile('player', e.faction)) continue;
+        if (enemyBlast ? e === o.by || !FA.hostile(fac, e.faction) : o.owner === 'player' && !FA.playerHits(e.faction)) continue;
         const d = U.dist(x, y, e.x, e.y);
         if (d < R + e.r && losOK(e.x, e.y)) {
           const k = 1 - U.clamp(d / (R + e.r), 0, 1) * 0.6;
@@ -5195,7 +5230,8 @@ kbd {
  *   gone      map items no longer there (indexes into the level's spawns)
  *   items     { spawnIndex: { field: value } } map items that changed (used, opened, hp...)
  *   extra     items that weren't on the map (loot, drops): { id, tx, ty, props, tag, s: fields }
- *   enemies   every living enemy: { id, x, y, hp, p: spawn props, h: [homeX, homeY] }
+ *   enemies   every living enemy: { id, x, y, hp, p: spawn props (with its side, if that changed), h: [homeX, homeY],
+ *             a: 1 if it was hunting, t: a tag it was given while playing }
  *   npcsGone, npcs, npcsExtra   as for items
  *   traps     { trapIndex: [armed, timesFired] } traps that have fired
  *   lights    { key: { off, intensity, flicker, color, r } } static lights a trap or script changed
@@ -5385,6 +5421,9 @@ kbd {
       const o = { id: e.def.id, x: rnd(e.x), y: rnd(e.y), hp: rnd(e.hp) };
       if (e._props && Object.keys(e._props).length && plainOk(e._props, 0)) o.p = JSON.parse(json(e._props));
       if (e.home && (Math.abs(e.home.x - e.x) > 1 || Math.abs(e.home.y - e.y) > 1)) o.h = [rnd(e.home.x), rnd(e.home.y)];
+      // hunting (a monster let out stays let out), and a tag given while playing (a wave's `as`)
+      if (e.aggro) o.a = 1;
+      if (e.tag && e.tag !== (e._props && e._props.tag)) o.t = e.tag;
       return o;
     });
     // people
@@ -5505,6 +5544,8 @@ kbd {
       e.spawning = 0;
       if (o.hp != null) e.hp = Math.min(e.maxHp, o.hp);
       if (o.h) e.home = { x: o.h[0], y: o.h[1] };
+      if (o.a) e.aggro = true;
+      if (o.t) e.tag = o.t;
     }
     // doors
     for (const d of game.doors) {
@@ -6476,6 +6517,7 @@ kbd {
     }
     ui.statusFrame(game, P);
     ui.bossFrame(game, dt);
+    if (LM.objectives) LM.objectives.frame(game);
     ui.mmT = (ui.mmT || 0) - dt;
     if (ui.mmT <= 0) {
       ui.mmT = 0.1;
@@ -6597,6 +6639,8 @@ kbd {
       g.fillStyle = LM.factions && !LM.factions.hostile('player', e.faction) ? '#5fe08a' : '#ff5a4a';
       g.fillRect(ox + (e.x / T) * s - 1, oy + (e.y / T) * s - 1, 2, 2);
     }
+    // the objective's targets (engine/objectives.js)
+    if (LM.objectives) LM.objectives.drawMap(g, game, ox, oy, s, W, H);
     // player arrow
     g.save();
     g.translate(W / 2, H / 2);
@@ -6865,15 +6909,20 @@ kbd {
           h('dt', null, 'Gold carried'), h('dd', null, game.player.gold + '')
         ),
         h('p', { class: 'hint' }, 'WASD move · mouse aim · click fire · Shift dash · E interact · 1–9 or wheel to switch weapons · Q last weapon · Tab inventory · M sound'),
+        LM.objectives && LM.objectives.view(game) ? h('div', null, h('h3', null, 'Objectives'), LM.objectives.view(game)) : null,
         LM.comms && LM.comms.log.length ? h('div', null, h('h3', null, 'Transmissions'), LM.comms.logView(5)) : null
       ),
       actions: [
         { label: 'Resume', primary: true },
         { label: 'Inventory', onClick: () => { setTimeout(() => ui.showInventory(game), 0); } },
         { label: LM.audio.muted ? 'Sound on' : 'Sound off', onClick: () => LM.audio.setMuted(!LM.audio.muted) },
+        // story lines that stop the game (LM.comms): the player can have them in the corner instead
+        LM.comms && LM.comms.anyPause && LM.comms.anyPause()
+          ? { label: LM.comms.pauses() ? 'Story lines: stop the game' : 'Story lines: in the corner', onClick: () => { LM.comms.setPauses(!LM.comms.pauses()); setTimeout(() => ui.showPause(game), 0); } }
+          : null,
         { label: 'Restart floor', quiet: true, onClick: () => { setTimeout(() => game.restartLevel(), 0); } },
         { label: 'Quit to title', quiet: true, onClick: () => { setTimeout(() => game.toTitle(), 0); } },
-      ],
+      ].filter(Boolean),
     });
   };
 
@@ -7248,14 +7297,25 @@ kbd {
  *     glitch   the line comes through broken: letters scramble as it types, the panel jitters
  *     seconds  how long it stays once typed (default: enough to read it)
  *     flag     a story flag to set when the line has been shown (so a trap can wait for it)
+ *     pause    true: this line stops the game and is read in the middle of the screen; false: never
+ *              (left out: as its speaker says)
  *
  *   speakers: {
  *     director: { name: 'Dr. Voss', role: 'Lab director · intercom', color: '#e0b25a',
  *                 face: 'intercom' | 'eye' | 'screen' | 'radio', or portrait(g, size, t) to draw your own,
- *                 voice: 0.8 }      // pitch of the typing ticks (1 = default; 0 = silent)
+ *                 voice: 0.8,       // pitch of the typing ticks (1 = default; 0 = silent)
+ *                 pause: true }     // what they say matters: it stops the game (see below)
  *   }
  *
- * Trap effect: { type: 'transmission', who, text, glitch, seconds, flag } (plus delay, as every effect).
+ * A conversation that matters: a line whose speaker has `pause` (or the line's own pause: true) stops
+ * the game and is shown in the middle of the screen, larger, with Continue (E, Enter, Space or a click:
+ * the first finishes the typing) and Skip (Esc: the rest of this conversation, every line still logged
+ * and every flag still set). Whatever is queued behind it carries on in the same box, whoever says it
+ * (a line with pause: false waits for the game); then the game goes on. In a fight (something hunting you, close), a line plays in the corner as usual
+ * unless it says pause: true. The player can turn it off on the pause screen (kept in the browser);
+ * LM.comms.talk = false (or true) overrides that, for tests.
+ *
+ * Trap effect: { type: 'transmission', who, text, glitch, seconds, flag, pause } (plus delay, as every effect).
  * The lines heard so far are in LM.comms.log (newest last); the pause screen lists the last few.
  * LM.comms.busy() is true while a line is up or waiting; LM.comms.speaking() is the id of who is talking.
  */
@@ -7266,7 +7326,8 @@ kbd {
   const h = (...a) => LM.ui.h(...a);
   const CPS = 52; // characters typed a second
   C.log = [];
-  let queue = [], cur = null, el = null, raf = 0, last = 0;
+  let queue = [], cur = null, el = null, raf = 0, last = 0, talkEl = null, talkHide = 0;
+  C.talk = undefined; // true / false: override the player's choice (tests)
 
   LM.ui.addStyles(`
     #comms { position: absolute; left: 50%; bottom: calc(var(--gap, 18px) + 4px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
@@ -7286,6 +7347,26 @@ kbd {
     .comms-log { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; max-height: 40vh; overflow: auto; }
     .comms-log li { font: 400 13px/1.45 var(--font-ui); padding-left: 10px; border-left: 2px solid var(--line, rgba(255,255,255,0.2)); }
     .comms-log b { display: block; font: 700 10.5px/1.3 var(--font-ui); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+    #talk { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; box-sizing: border-box;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.25), rgba(0,0,0,0.55)); transition: opacity 0.22s ease; cursor: pointer; }
+    #talk[hidden] { display: none; }
+    #talk.out { opacity: 0; pointer-events: none; }
+    #talk .talk-panel { width: min(640px, 100%); box-sizing: border-box; display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: start;
+      padding: 16px 18px 14px 16px; background: rgba(8, 10, 13, 0.95); border: 1px solid rgba(255, 255, 255, 0.09); border-left: 4px solid var(--comms, #e0b25a);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6); cursor: default; }
+    #talk.glitch .talk-panel { animation: talkJitter 0.18s steps(2) infinite; }
+    @keyframes talkJitter { 0% { transform: translate(0, 0); } 50% { transform: translate(1.5px, -1px); } 100% { transform: translate(-1px, 0.5px); } }
+    #talk canvas { width: 96px; height: 96px; display: block; background: #050607; border: 1px solid rgba(255, 255, 255, 0.08); }
+    #talk .comms-who { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; font: 700 12px/1.2 var(--font-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--comms, #e0b25a); }
+    #talk .comms-who span { font-weight: 500; letter-spacing: 0.06em; color: var(--muted, #8a8f98); text-transform: none; }
+    #talk .comms-text { font: 400 18px/1.5 var(--font-lore, Georgia, serif); color: #efebe3; min-height: 3em; white-space: pre-wrap; }
+    #talk .talk-foot { display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 12px; }
+    #talk .talk-foot .talk-more { margin-right: auto; font: 500 11px/1 var(--font-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted, #8a8f98); }
+    #talk .talk-foot button { display: inline-flex; gap: 7px; align-items: center; padding: 7px 12px; font: 600 12.5px/1 var(--font-ui); color: #e8e4dc;
+      background: #1c1f23; border: 1px solid #3a3e44; border-radius: 3px; cursor: pointer; }
+    #talk .talk-foot button.primary { background: var(--comms, #e0b25a); color: #141210; border-color: transparent; }
+    #talk .talk-foot kbd { font: 600 10px/1 var(--font-ui); padding: 2px 4px; border-radius: 2px; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.15); }
+    @media (max-width: 560px) { #talk .talk-panel { grid-template-columns: 1fr; } #talk canvas { width: 64px; height: 64px; } #talk .comms-text { font-size: 16px; } }
   `);
 
   /** The speaker for a line: a registry entry, an object given inline, or a plain name. */
@@ -7293,6 +7374,149 @@ kbd {
     if (who && typeof who === 'object') return who;
     return (who && LM.find('speakers', who)) || { name: who || 'Unknown', color: '#9aa3ad', face: 'intercom' };
   };
+
+  // ------------------------------------------------------------ a conversation that stops the game
+  const PREF = 'lm-talk-pauses';
+  /** Does the player want important lines to stop the game? (On unless they turned it off.) */
+  C.pauses = function () {
+    if (C.talk === true || C.talk === false) return C.talk;
+    try {
+      return localStorage.getItem(PREF) !== 'off';
+    } catch (e) {
+      return true;
+    }
+  };
+  C.setPauses = function (on) {
+    try {
+      localStorage.setItem(PREF, on ? 'on' : 'off');
+    } catch (e) {}
+  };
+  /** Does any speaker in this game stop the game? (The pause screen offers the choice only then.) */
+  C.anyPause = () => Object.values(LM.registry.speakers || {}).some((sp) => sp && sp.pause);
+  /** Something is hunting you, close: a fight, where a line doesn't stop the game. */
+  C.inFight = function (game) {
+    const P = game && game.player;
+    if (!P || P.dead) return false;
+    const FA = LM.factions;
+    for (const e of game.enemies || []) {
+      if (e.dead || !e.aggro || (e.spawning || 0) > 0) continue;
+      if (FA && !FA.hostile(e.faction, 'player')) continue;
+      const d = U.dist(e.x, e.y, P.x, P.y);
+      if (d < 200 || (d < 420 && e.pSee)) return true;
+    }
+    return false;
+  };
+  const forced = (p) => p === true || p === 'always' || p === 'yes';
+  const never = (p) => p === false || p === 'never' || p === 'no';
+  /** Does this line stop the game? (continuing: a conversation is on screen, and whatever is queued
+   *  behind it, whoever says it, carries on in the same box unless it says pause: false.) */
+  function stops(spec, game, continuing) {
+    if (!C.pauses() || never(spec.pause)) return false;
+    if (continuing) return true;
+    const sp = C.speaker(spec.who);
+    if (!forced(spec.pause) && !sp.pause) return false;
+    if (!game || game.attract || game.state !== 'play') return false;
+    return forced(spec.pause) || !C.inFight(game);
+  }
+  function buildTalk() {
+    if (talkEl && talkEl.isConnected) return talkEl;
+    const root = document.getElementById('app') || document.body;
+    const canvas = h('canvas', { width: 192, height: 192 });
+    const who = h('div', { class: 'comms-who' });
+    const text = h('div', { class: 'comms-text' });
+    const more = h('span', { class: 'talk-more' });
+    const skip = h('button', { type: 'button', class: 'talk-skip' }, h('span', null, 'Skip'), h('kbd', null, 'Esc'));
+    const next = h('button', { type: 'button', class: 'primary talk-next' }, h('span', null, 'Continue'), h('kbd', null, 'E'));
+    const panel = h('div', { class: 'talk-panel', role: 'dialog', 'aria-live': 'polite' }, canvas, h('div', null, who, text, h('div', { class: 'talk-foot' }, more, skip, next)));
+    talkEl = h('div', { id: 'talk', hidden: true }, panel);
+    talkEl._c = canvas;
+    talkEl._who = who;
+    talkEl._text = text;
+    talkEl._more = more;
+    talkEl._next = next;
+    skip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      C.skip();
+    });
+    next.addEventListener('click', (e) => {
+      e.stopPropagation();
+      C.next();
+    });
+    panel.addEventListener('click', (e) => e.stopPropagation());
+    talkEl.addEventListener('click', () => C.next());
+    // over the game and the HUD, under the pop-ups and the title screen
+    const modal = document.getElementById('modal');
+    if (modal && modal.parentNode === root) root.insertBefore(talkEl, modal);
+    else root.appendChild(talkEl);
+    return talkEl;
+  }
+  /** The conversation on screen: true while a line is stopping the game. */
+  C.talking = () => !!(cur && cur.talk);
+  /** Continue: finish typing the line, or go on to the next. */
+  C.next = function () {
+    if (!cur || !cur.talk) return;
+    if (cur.typed < cur.text.length) {
+      cur.typed = cur.text.length;
+      return;
+    }
+    LM.audio.play('ui', { vol: 0.5 });
+    endLine();
+    const game = LM.game;
+    if (queue.length && stops(queue[0], game, true)) show(queue.shift(), true);
+    else closeTalk();
+  };
+  /** Skip: the rest of this conversation, still logged and with every flag set. */
+  C.skip = function () {
+    if (!cur || !cur.talk) return;
+    LM.audio.play('ui', { vol: 0.5 });
+    endLine();
+    const game = LM.game;
+    while (queue.length && stops(queue[0], game, true)) {
+      const spec = queue.shift();
+      logLine(spec, C.speaker(spec.who));
+      if (spec.flag && game && game.setFlag) game.setFlag(spec.flag);
+    }
+    closeTalk();
+  };
+  function endLine() {
+    const game = LM.game;
+    if (cur && !cur.done) {
+      cur.done = true;
+      if (cur.spec.flag && game && game.setFlag) game.setFlag(cur.spec.flag);
+    }
+  }
+  function closeTalk() {
+    const game = LM.game;
+    cur = null;
+    if (game && game.state === 'talk') game.state = 'play';
+    if (LM.input) {
+      LM.input.mouse.down = false;
+      LM.input.mouse.clicked = false;
+    }
+    if (talkEl) {
+      talkEl.classList.add('out');
+      clearTimeout(talkHide);
+      talkHide = setTimeout(() => {
+        if (!(cur && cur.talk)) talkEl.hidden = true;
+      }, 230);
+    }
+    if (queue.length && !raf) {
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
+    }
+  }
+  // keys while a conversation is up: E, Enter, Space go on; Esc skips. The game doesn't see them.
+  window.addEventListener('keydown', (e) => {
+    if (!cur || !cur.talk) return;
+    const go = e.code === 'KeyE' || e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space';
+    if (!go && e.code !== 'Escape') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (e.repeat) return;
+    if (go) C.next();
+    else C.skip();
+    if (LM.input && LM.input.pressed) LM.input.pressed.delete(e.code);
+  }, true);
 
   function build() {
     if (el && el.isConnected) return el;
@@ -7321,20 +7545,36 @@ kbd {
   /** Drop everything queued and hide the panel (a new run, the title screen, trying a floor again). */
   C.clear = function () {
     queue = [];
+    const talked = cur && cur.talk;
     cur = null;
     if (el) {
       el.hidden = true;
       el.classList.remove('out', 'glitch');
     }
+    if (talkEl) talkEl.hidden = true;
+    if (talked && LM.game && LM.game.state === 'talk') LM.game.state = 'play';
   };
   C.busy = () => !!cur || queue.length > 0;
   /** The speaker id of the line on screen now (null when nobody is talking, or the line named its speaker inline). */
   C.speaking = () => (cur && typeof cur.spec.who === 'string' ? cur.spec.who : null);
 
   const GLYPHS = '#%&@$*+=?!/\\<>[]{}~^01';
-  function show(spec) {
+  function logLine(spec, sp) {
+    C.log.push({ who: sp.name || '', id: typeof spec.who === 'string' ? spec.who : null, color: sp.color, text: String(spec.text), glitch: !!spec.glitch, at: Date.now() });
+    if (C.log.length > 40) C.log.shift();
+  }
+  /** Put a line up: in the corner, or (talk) in the middle with the game stopped. */
+  function show(spec, talk) {
     const sp = C.speaker(spec.who);
-    const e = build();
+    const game = LM.game;
+    let e;
+    if (talk) {
+      e = buildTalk();
+      clearTimeout(talkHide);
+      if (el) el.hidden = true;
+      if (game && game.state === 'play') game.state = 'talk';
+      e._more.textContent = '';
+    } else e = build();
     e.style.setProperty('--comms', sp.color || '#e0b25a');
     e._who.replaceChildren(document.createTextNode(sp.name || ''), sp.role ? h('span', null, sp.role) : '');
     e._text.textContent = '';
@@ -7343,10 +7583,9 @@ kbd {
     e.hidden = false;
     const text = String(spec.text);
     const hold = spec.seconds != null ? +spec.seconds : 1.2 + text.length / 40;
-    cur = { spec, sp, text, t: 0, typed: 0, hold, done: false, out: 0, seed: (Math.random() * 1e9) | 0 };
+    cur = { spec, sp, text, t: 0, typed: 0, hold, done: false, out: 0, seed: (Math.random() * 1e9) | 0, talk: !!talk, box: e };
     LM.audio.play('commsOn', { vol: 0.7 });
-    C.log.push({ who: sp.name || '', id: typeof spec.who === 'string' ? spec.who : null, color: sp.color, text, glitch: !!spec.glitch, at: Date.now() });
-    if (C.log.length > 40) C.log.shift();
+    logLine(spec, sp);
   }
 
   /** The text as typed so far; a glitching line scrambles a few letters near the cursor. */
@@ -7365,11 +7604,20 @@ kbd {
       }
       s = a.join('');
     }
-    if (el._text.textContent !== s) el._text.textContent = s;
+    const box = cur.box || el;
+    if (box._text.textContent !== s) box._text.textContent = s;
+    if (cur.talk) {
+      const more = queue.length && stops(queue[0], LM.game, true);
+      const label = n < cur.text.length ? '' : more ? 'More ▸' : '';
+      if (box._more.textContent !== label) box._more.textContent = label;
+      const nl = more || n < cur.text.length ? 'Continue' : 'Close';
+      const sp = box._next.firstChild;
+      if (sp.textContent !== nl) sp.textContent = nl;
+    }
   }
 
   function drawFace(t) {
-    const cv = el._c, g = cv.getContext('2d');
+    const cv = (cur.box || el)._c, g = cv.getContext('2d');
     const S = cv.width;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, S, S);
@@ -7447,8 +7695,31 @@ kbd {
     // paused, in a pop-up, between floors or on the title screen: the line waits
     const running = game && !game.attract && (game.state === 'play' || game.state === 'dying') && !(LM.ui && LM.ui.modalOpen);
     if (game && game.attract) C.clear();
-    if (!cur && queue.length && running) show(queue.shift());
-    if (cur) {
+    if (!cur && queue.length && running) {
+      const spec = queue.shift();
+      show(spec, stops(spec, game, false));
+    }
+    if (cur && cur.talk) {
+      // a conversation: it types, then waits for Continue; the game is stopped meanwhile
+      if (game && game.state === 'talk' && !(LM.ui && LM.ui.modalOpen)) {
+        const before = Math.floor(cur.typed);
+        if (cur.typed < cur.text.length) {
+          cur.typed = Math.min(cur.text.length, cur.typed + dt * CPS * (cur.spec.glitch ? 0.8 : 1));
+          const v = cur.sp.voice == null ? 1 : +cur.sp.voice;
+          if (v > 0 && Math.floor(cur.typed / 3) !== Math.floor(before / 3)) LM.audio.play('commsTick', { vol: 0.5, pitch: v, throttle: 0.03 });
+        }
+      } else if (game && game.state !== 'talk' && game.state !== 'popup') {
+        // the game moved on without us (a new run, the title, another floor): let it go
+        const flag = cur.spec.flag;
+        cur = null;
+        if (talkEl) talkEl.hidden = true;
+        if (flag && game.setFlag && game.player) game.setFlag(flag);
+      }
+      if (cur) {
+        render(now);
+        drawFace(now / 1000);
+      }
+    } else if (cur) {
       if (running) {
         const before = Math.floor(cur.typed);
         if (cur.typed < cur.text.length) {
@@ -7505,9 +7776,9 @@ kbd {
     effects: {
       transmission: {
         // the editor builds the trap form from params
-        params: { who: 'id:speakers', text: 'longtext', glitch: 'bool', seconds: 'number', flag: 'text' },
+        params: { who: 'id:speakers', text: 'longtext', glitch: 'bool', seconds: 'number', flag: 'text', pause: ['always', 'never'] },
         run(game, ef) {
-          C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag });
+          C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag, pause: ef.pause });
         },
       },
     },
@@ -7515,6 +7786,305 @@ kbd {
 })();
 
 //# sourceURL=engine/comms.js
+</script>
+<script>/* engine/objectives.js */
+/* The Linear Maze engine — engine/objectives.js
+ * Objectives: what to do next, on the HUD, with the thing to find picked out when you're near it.
+ *
+ *   objectives: [                                  // a level's
+ *     { id: 'breaker', text: 'Throw the breaker in the comms closet', done: 'breakerOn',
+ *       target: { item: 'ds-breaker', props: { flag: 'breakerOn' } } },
+ *     { id: 'terminal', text: 'Get to the terminal in the security office', when: 'breakerOn', done: 'atTerminal',
+ *       target: { item: 'ds-console', props: { flag: 'atTerminal' } } },
+ *     { id: 'locker', text: 'Open the guard’s locker', optional: true, when: 'atTerminal', done: 'lockerOpen',
+ *       target: { item: 'ds-keypad', props: { flag: 'lockerOpen' } } },
+ *   ]
+ *
+ *   id        names it (LM.objectives.current(game) gives the one showing)
+ *   text      what the HUD says (in code it can be a function (game) => text)
+ *   when      a flag, or a list (all of them), before it shows
+ *   any       a list: at least one of these set too
+ *   not       a flag or a list: it doesn't show while any of these is set
+ *   done      a flag or a list: any of them set, and it's done (in code, a function (game) => true)
+ *   optional  shown under the main one, marked Optional (two at most)
+ *   target    what to pick out, or a list of them:
+ *               { tag }              items, monsters, people and doors with that tag; else the tagged tiles
+ *               { item: id, props }  items of that kind (props: only those whose props match)
+ *               { enemy: id, props } monsters of that kind (props: the ones placed or spawned with them)
+ *               { npc: id }, { tile: [x, y] }, { room: 'Name' } (the room's middle, on the minimap only)
+ *             When you're in the same room as a target, or within 8 tiles of it, it pulses and a marker
+ *             bobs over it. On the minimap every target is marked; one off the edge gets an arrow there.
+ *             map: false (on the objective) keeps its targets off the minimap.
+ *
+ * The main objective is the first in the list that's showing and not done. A new one flashes on the HUD
+ * with a chime. The pause screen lists what's open. LM.objectives.color is the marker colour.
+ */
+'use strict';
+(function () {
+  const LM = window.LM, U = LM.util, T = LM.TILE;
+  const O = (LM.objectives = { color: '#ffd36a' });
+  const h = (...a) => LM.ui.h(...a);
+
+  LM.ui.addStyles(`
+    .obj-plate { margin-top: 8px; max-width: 330px; padding: 8px 12px 9px; pointer-events: none; transition: box-shadow 0.4s ease; }
+    .obj-plate[hidden] { display: none; }
+    .obj-plate .obj-kicker { font: 700 10px/1.2 var(--font-ui); letter-spacing: 0.18em; text-transform: uppercase; color: var(--obj, #ffd36a); margin-bottom: 3px; }
+    .obj-plate .obj-main { font: 500 14px/1.35 var(--font-ui); color: #efe9dc; }
+    .obj-plate .obj-opt { margin-top: 6px; font: 400 12.5px/1.35 var(--font-ui); color: #b9b2a4; }
+    .obj-plate .obj-opt b { display: block; font: 700 9.5px/1.3 var(--font-ui); letter-spacing: 0.16em; text-transform: uppercase; color: #8a8f98; }
+    .obj-plate.new { animation: objNew 1.6s ease-out; }
+    @keyframes objNew { 0% { box-shadow: 0 0 0 2px var(--obj, #ffd36a), 0 0 28px rgba(255, 211, 106, 0.55); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; } }
+    .pause-objectives { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font: 400 13.5px/1.4 var(--font-ui); }
+    .pause-objectives li::before { content: '\\25B8'; margin-right: 8px; color: var(--obj, #ffd36a); }
+    .pause-objectives li.opt { color: #b9b2a4; }
+    .pause-objectives li.opt::before { content: '\\25B9'; }
+    @media (max-width: 700px) { .obj-plate { max-width: 230px; } .obj-plate .obj-main { font-size: 13px; } }
+  `);
+
+  const list = (v) => (v == null ? [] : [].concat(v));
+  const has = (game, f) => game.hasFlag(f);
+  /** Is this objective showing (its conditions met) and not done yet? */
+  O.open = function (o, game) {
+    if (!o || !game || !game.player) return false;
+    if (!list(o.when).every((f) => has(game, f))) return false;
+    if (o.any && list(o.any).length && !list(o.any).some((f) => has(game, f))) return false;
+    if (list(o.not).some((f) => has(game, f))) return false;
+    return !O.done(o, game);
+  };
+  O.done = function (o, game) {
+    if (typeof o.done === 'function') return !!o.done(game);
+    const d = list(o.done);
+    return d.length > 0 && d.some((f) => has(game, f));
+  };
+  O.textOf = (o, game) => (typeof o.text === 'function' ? o.text(game) : o.text || '');
+  O.all = (game) => (game && game.level && Array.isArray(game.level.def.objectives) ? game.level.def.objectives : []);
+  /** { main, optional: [] } showing now. */
+  O.showing = function (game) {
+    const open = O.all(game).filter((o) => O.open(o, game));
+    return { main: open.find((o) => !o.optional) || null, optional: open.filter((o) => o.optional).slice(0, 2) };
+  };
+  O.current = (game) => O.showing(game).main;
+
+  // ------------------------------------------------------------ targets
+  const propsMatch = (have, want) => !want || Object.keys(want).every((k) => have && JSON.stringify(have[k]) === JSON.stringify(want[k]));
+  /** Every place a target selector points at: [{ x, y, r, tiles?, room? }]. */
+  O.points = function (sel, game) {
+    const out = [];
+    if (!sel || !game || !game.level) return out;
+    if (Array.isArray(sel)) {
+      for (const s of sel) out.push(...O.points(s, game));
+      return out;
+    }
+    const L = game.level;
+    if (sel.tag) {
+      for (const it of game.items) if (!it.dead && it.tag === sel.tag) out.push({ x: it.x, y: it.y, r: it.r || 10 });
+      for (const e of game.enemies) if (!e.dead && e.tag === sel.tag) out.push({ x: e.x, y: e.y, r: e.r });
+      for (const n of game.npcs) if (!n.dead && n.tag === sel.tag) out.push({ x: n.x, y: n.y, r: n.r || 10 });
+      for (const d of game.doors) if (d.tag === sel.tag) out.push({ x: d.x, y: d.y, r: 15, door: true });
+      if (!out.length && L.tags && L.tags[sel.tag]) {
+        const ts = L.tags[sel.tag];
+        let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+        for (const p of ts) {
+          x0 = Math.min(x0, p.x);
+          y0 = Math.min(y0, p.y);
+          x1 = Math.max(x1, p.x);
+          y1 = Math.max(y1, p.y);
+        }
+        if (ts.length) out.push({ x: ((x0 + x1 + 1) / 2) * T, y: ((y0 + y1 + 1) / 2) * T, r: 12, box: [x0 * T, y0 * T, (x1 + 1) * T, (y1 + 1) * T] });
+      }
+    }
+    if (sel.item) for (const it of game.items) if (!it.dead && it.def.id === sel.item && propsMatch(it.props, sel.props)) out.push({ x: it.x, y: it.y, r: it.r || 10 });
+    if (sel.enemy) for (const e of game.enemies) if (!e.dead && e.def.id === sel.enemy && propsMatch(e._props, sel.props)) out.push({ x: e.x, y: e.y, r: e.r });
+    if (sel.npc) for (const n of game.npcs) if (!n.dead && n.def.id === sel.npc) out.push({ x: n.x, y: n.y, r: n.r || 10 });
+    if (Array.isArray(sel.tile)) out.push({ x: (sel.tile[0] + 0.5) * T, y: (sel.tile[1] + 0.5) * T, r: 12, box: [sel.tile[0] * T, sel.tile[1] * T, (sel.tile[0] + 1) * T, (sel.tile[1] + 1) * T] });
+    if (sel.room) {
+      const rm = (L.def.rooms || []).find((r) => r.name === sel.room);
+      if (rm) out.push({ x: (rm.rect[0] + rm.rect[2] / 2) * T, y: (rm.rect[1] + rm.rect[3] / 2) * T, r: 0, room: true });
+    }
+    return out;
+  };
+  /** The room (from the level's rooms) a point is in, or null. */
+  O.roomAt = function (game, x, y) {
+    const tx = Math.floor(x / T), ty = Math.floor(y / T);
+    for (const r of game.level.def.rooms || []) {
+      const [rx, ry, rw, rh] = r.rect;
+      if (tx >= rx && tx < rx + rw && ty >= ry && ty < ry + rh) return r;
+    }
+    return null;
+  };
+  /** Is a target close enough to pick out: in your room, or within 8 tiles? */
+  O.near = function (game, p) {
+    const P = game.player;
+    if (!P || p.room) return false;
+    if (U.dist(P.x, P.y, p.x, p.y) < 8 * T) return true;
+    const a = O.roomAt(game, P.x, P.y);
+    return !!a && a === O.roomAt(game, p.x, p.y);
+  };
+
+  // targets of what's showing, worked out a few times a second
+  let cache = null;
+  O.targets = function (game) {
+    const now = game.time || 0;
+    if (cache && cache.game === game && cache.level === game.level && Math.abs(now - cache.t) < 0.2) return cache.list;
+    const s = O.showing(game), list2 = [];
+    for (const o of [s.main].concat(s.optional)) {
+      if (!o || !o.target) continue;
+      for (const p of O.points(o.target, game)) {
+        p.optional = !!o.optional;
+        p.map = o.map !== false;
+        list2.push(p);
+      }
+    }
+    cache = { game, level: game.level, t: now, list: list2 };
+    return list2;
+  };
+
+  // ------------------------------------------------------------ drawing in the world
+  O.drawGlow = function (ctx, game, t) {
+    if (game.attract || !game.player) return;
+    for (const p of O.targets(game)) {
+      if (p.room || !O.near(game, p)) continue;
+      const k = 0.5 + 0.5 * Math.sin(t * 4.2);
+      LM.gfx.glow(ctx, p.x, p.y, (p.r || 10) + 26, O.color, (p.optional ? 0.2 : 0.32) + 0.22 * k);
+    }
+  };
+  O.drawOverlay = function (ctx, game, t) {
+    if (game.attract || !game.player) return;
+    const col = O.color;
+    for (const p of O.targets(game)) {
+      if (p.room || !O.near(game, p)) continue;
+      const k = 0.5 + 0.5 * Math.sin(t * 4.2);
+      ctx.save();
+      ctx.globalAlpha = (p.optional ? 0.6 : 0.95) * (0.6 + 0.4 * k);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2.2;
+      if (p.box) {
+        const [x0, y0, x1, y1] = p.box, m = 2 + 2 * k;
+        ctx.setLineDash([5, 4]);
+        ctx.strokeRect(x0 - m, y0 - m, x1 - x0 + m * 2, y1 - y0 + m * 2);
+        ctx.setLineDash([]);
+      } else {
+        // four corner ticks round it, breathing
+        const r = (p.r || 10) + 8 + 4 * k;
+        for (let i = 0; i < 4; i++) {
+          const a = i * (Math.PI / 2) + Math.PI / 4;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, a - 0.42, a + 0.42);
+          ctx.stroke();
+        }
+      }
+      // a marker bobbing over it
+      const top = p.box ? p.box[1] - 6 : p.y - (p.r || 10) - 14;
+      const by = top - 8 - 5 * Math.abs(Math.sin(t * 3.2));
+      ctx.globalAlpha = p.optional ? 0.75 : 1;
+      ctx.fillStyle = col;
+      ctx.strokeStyle = 'rgba(20,14,4,0.8)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(p.x, by + 9);
+      ctx.lineTo(p.x - 7, by);
+      ctx.lineTo(p.x + 7, by);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  // ------------------------------------------------------------ the minimap
+  O.drawMap = function (g, game, ox, oy, s, W, H) {
+    const t = performance.now() / 1000, k = 0.5 + 0.5 * Math.sin(t * 4);
+    const seen = new Set();
+    for (const p of O.targets(game)) {
+      if (!p.map) continue;
+      const key = Math.round(p.x / 48) + ',' + Math.round(p.y / 48);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const mx = ox + (p.x / T) * s, my = oy + (p.y / T) * s;
+      g.save();
+      if (mx >= 4 && mx <= W - 4 && my >= 4 && my <= H - 4) {
+        g.strokeStyle = O.color;
+        g.globalAlpha = p.optional ? 0.6 : 0.95;
+        g.lineWidth = 1.4;
+        g.beginPath();
+        g.arc(mx, my, 3 + 2.2 * k, 0, U.TAU);
+        g.stroke();
+        g.fillStyle = O.color;
+        g.beginPath();
+        g.arc(mx, my, 1.4, 0, U.TAU);
+        g.fill();
+      } else {
+        // off the edge: an arrow on the edge, pointing at it
+        const cx = W / 2, cy = H / 2, dx = mx - cx, dy = my - cy;
+        const sc = Math.min((W / 2 - 7) / Math.max(1e-6, Math.abs(dx)), (H / 2 - 7) / Math.max(1e-6, Math.abs(dy)));
+        g.translate(cx + dx * sc, cy + dy * sc);
+        g.rotate(Math.atan2(dy, dx));
+        g.globalAlpha = (p.optional ? 0.5 : 0.85) * (0.6 + 0.4 * k);
+        g.fillStyle = O.color;
+        g.beginPath();
+        g.moveTo(5, 0);
+        g.lineTo(-3, 3.5);
+        g.lineTo(-3, -3.5);
+        g.closePath();
+        g.fill();
+      }
+      g.restore();
+    }
+  };
+
+  // ------------------------------------------------------------ the HUD
+  let plate = null, last = '';
+  function build() {
+    if (plate && plate.isConnected) return plate;
+    const tl = document.querySelector('#hud .hud-tl');
+    if (!tl) return null;
+    plate = h('div', { class: 'hud-plate obj-plate', hidden: true }, h('div', { class: 'obj-kicker' }, 'Objective'), h('div', { class: 'obj-main' }), h('div', { class: 'obj-opt' }));
+    plate.style.setProperty('--obj', O.color);
+    tl.appendChild(plate);
+    return plate;
+  }
+  /** Called every frame by the HUD: keep the plate up to date, and flash it when something new shows. */
+  O.frame = function (game) {
+    if (!game || !game.level || game.attract) return;
+    const el = build();
+    if (!el) return;
+    const s = O.showing(game);
+    const main = s.main ? O.textOf(s.main, game) : '';
+    const opts = s.optional.map((o) => O.textOf(o, game));
+    const key = game.levelId + '|' + (s.main ? s.main.id || main : '') + '|' + main + '|' + opts.join('|');
+    if (key === last) return;
+    const firstOnFloor = !last || last.split('|')[0] !== game.levelId;
+    const mainChanged = !firstOnFloor && last.split('|')[1] !== (s.main ? s.main.id || main : '');
+    last = key;
+    el.hidden = !main && !opts.length;
+    el.children[0].textContent = main ? 'Objective' : 'Optional';
+    el.children[1].textContent = main;
+    el.children[1].hidden = !main;
+    el.children[2].replaceChildren(...opts.map((t) => h('div', null, main ? h('b', null, 'Optional') : null, t)));
+    el.children[2].hidden = !opts.length;
+    if (!el.hidden && (mainChanged || firstOnFloor)) {
+      el.classList.remove('new');
+      void el.offsetWidth;
+      el.classList.add('new');
+      if (mainChanged && main) LM.audio.play('objective', { vol: 0.8 });
+    }
+  };
+  /** For the pause screen: what's open on this floor. */
+  O.view = function (game) {
+    const s = O.showing(game);
+    if (!s.main && !s.optional.length) return null;
+    return h('ul', { class: 'pause-objectives' }, [s.main ? h('li', null, O.textOf(s.main, game)) : null].concat(s.optional.map((o) => h('li', { class: 'opt' }, 'Optional: ' + O.textOf(o, game)))).filter(Boolean));
+  };
+
+  if (LM.audio && LM.audio.define) {
+    LM.audio.define('objective', (t, o, opt, kit) => {
+      kit.tone(t, o, { type: 'sine', f0: 784, dur: 0.14, gain: 0.06 });
+      kit.tone(t + 0.11, o, { type: 'sine', f0: 1175, dur: 0.24, gain: 0.06 });
+    });
+  }
+})();
+
+//# sourceURL=engine/objectives.js
 </script>
 <script>/* engine/game.js */
 /* The Linear Maze engine — engine/game.js

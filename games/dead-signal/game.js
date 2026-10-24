@@ -7,7 +7,7 @@
 LM.defineGame({
   id: 'dead-signal',
   title: 'Dead Signal',
-  version: '0.4.1',
+  version: '0.4.2',
   description: 'A technician trapped in a biotech lab gone wrong fights his way to the top floor. Floor 1, Lockdown, Floor 2, Synthid Research, Floor 3, Gestation, and Floor 4, the Proving Grounds, are built (packs/ds-*); The Dead Signal Laboratory, The Complex and The Sterile Annex follow them as placeholders. games/dead-signal/DESIGN.md has the plan.',
   brief: 'Dark, torch-lit floors where every light casts shadows and danger telegraphs clearly. Write in-world text that is short, specific and slightly ominous, and carries a hint.',
   packs: [

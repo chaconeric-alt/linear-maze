@@ -300,6 +300,7 @@
     }
     ui.statusFrame(game, P);
     ui.bossFrame(game, dt);
+    if (LM.objectives) LM.objectives.frame(game);
     ui.mmT = (ui.mmT || 0) - dt;
     if (ui.mmT <= 0) {
       ui.mmT = 0.1;
@@ -421,6 +422,8 @@
       g.fillStyle = LM.factions && !LM.factions.hostile('player', e.faction) ? '#5fe08a' : '#ff5a4a';
       g.fillRect(ox + (e.x / T) * s - 1, oy + (e.y / T) * s - 1, 2, 2);
     }
+    // the objective's targets (engine/objectives.js)
+    if (LM.objectives) LM.objectives.drawMap(g, game, ox, oy, s, W, H);
     // player arrow
     g.save();
     g.translate(W / 2, H / 2);
@@ -689,15 +692,20 @@
           h('dt', null, 'Gold carried'), h('dd', null, game.player.gold + '')
         ),
         h('p', { class: 'hint' }, 'WASD move · mouse aim · click fire · Shift dash · E interact · 1–9 or wheel to switch weapons · Q last weapon · Tab inventory · M sound'),
+        LM.objectives && LM.objectives.view(game) ? h('div', null, h('h3', null, 'Objectives'), LM.objectives.view(game)) : null,
         LM.comms && LM.comms.log.length ? h('div', null, h('h3', null, 'Transmissions'), LM.comms.logView(5)) : null
       ),
       actions: [
         { label: 'Resume', primary: true },
         { label: 'Inventory', onClick: () => { setTimeout(() => ui.showInventory(game), 0); } },
         { label: LM.audio.muted ? 'Sound on' : 'Sound off', onClick: () => LM.audio.setMuted(!LM.audio.muted) },
+        // story lines that stop the game (LM.comms): the player can have them in the corner instead
+        LM.comms && LM.comms.anyPause && LM.comms.anyPause()
+          ? { label: LM.comms.pauses() ? 'Story lines: stop the game' : 'Story lines: in the corner', onClick: () => { LM.comms.setPauses(!LM.comms.pauses()); setTimeout(() => ui.showPause(game), 0); } }
+          : null,
         { label: 'Restart floor', quiet: true, onClick: () => { setTimeout(() => game.restartLevel(), 0); } },
         { label: 'Quit to title', quiet: true, onClick: () => { setTimeout(() => game.toTitle(), 0); } },
-      ],
+      ].filter(Boolean),
     });
   };
 

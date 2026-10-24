@@ -3,7 +3,7 @@
  */
 LM.describePack({
   name: 'Story',
-  version: '0.4.1',
+  version: '0.4.2',
   description: 'Dead Signal’s story and its floors: who speaks over the intercom (Voss, ARIADNE, the building PA), ARIADNE’s twelve audit fragments, Officer Ruiz’s badge, ceiling panels a trap can switch on, the building core’s four elevators (no power until elevatorsOnline; on Floor 4 ARIADNE parks the freight car with the AEGIS field in it), Floor 1, Lockdown, and Floor 2, Synthid Research: the evacuation’s guide lights and signs, the PA’s announcement, Shelter B’s door panel and quarantine release, cards you carry, and DOCENT-3’s voice. Floor 3, Gestation: Voss steering you past the labs, and his case on the stairs. Floor 4, the Proving Grounds: the trial’s announcer, and the contestants who made it to the Box.',
   requires: ['linear-maze/core', 'ds-lab', 'ds-arsenal', 'ds-robots', 'ds-nightmares', 'ds-puzzles'],
   scripts: ['story.js', 'shelter.js', 'proving.js'],

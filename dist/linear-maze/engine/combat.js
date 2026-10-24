@@ -76,10 +76,9 @@
         if (this.owner === 'player') {
           for (const e of game.enemies) {
             if (e.dead || e.spawning > 0 || this.hit.has(e)) continue;
-            // your shots pass through anyone on your side
-            if (!FA.hostile('player', e.faction)) continue;
-            const rr = e.r + this.r;
-            if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
+            // your shots pass through anyone on your side (but not something that wakes when hurt)
+            if (!FA.playerHits(e.faction)) continue;
+            if (C.touches(e, this.x, this.y, this.r)) {
               this.hit.add(e);
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
@@ -106,8 +105,7 @@
           if (fac != null && FA.hitsEnemies(fac)) {
             for (const e of game.enemies) {
               if (e.dead || e.spawning > 0 || e === this.by || this.hit.has(e) || !FA.hostile(fac, e.faction)) continue;
-              const rr = e.r + this.r;
-              if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
+              if (C.touches(e, this.x, this.y, this.r)) {
                 this.hit.add(e);
                 if (!this.aoe) C.hurt(game, e, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by });
                 game.particles.burst(this.x, this.y, 4, { type: 'dot', color: e.def.blood || '#7a1f1f', speed: 110, life: 0.3, angle: this.angle, spread: 0.6, size: [0.8, 1.6], drag: 6 });
@@ -229,12 +227,40 @@
    * An enemy's damage reduction is its own `armor` if it has one (behaviours can change it as it fights),
    * else its def's; statuses can make it take more (`vulnerable`). def.onHurt(e, game, dmg, o) hears every hit.
    */
+  /**
+   * Does a point (with radius r) touch an enemy? A circle of its radius, or, for a long body, the def's
+   * hitbox: { front, back, r } a capsule along the way it faces (front and back: how far the body reaches
+   * ahead of and behind its centre; r: how wide, from the middle; the radius if left out). Shots use it,
+   * so a dog seen side-on can be hit in the head or the haunch, not only the middle.
+   */
+  C.touches = function (e, x, y, r) {
+    const hb = e.def && e.def.hitbox;
+    if (!hb) {
+      const rr = e.r + (r || 0);
+      return U.dist2(x, y, e.x, e.y) < rr * rr;
+    }
+    const k = e.def.radius ? e.r / e.def.radius : 1;
+    const ca = Math.cos(e.facing || 0), sa = Math.sin(e.facing || 0);
+    const along = U.clamp((x - e.x) * ca + (y - e.y) * sa, -(hb.back || 0) * k, (hb.front || 0) * k);
+    const px = e.x + ca * along, py = e.y + sa * along;
+    const rr = (hb.r != null ? hb.r * k : e.r) + (r || 0);
+    return U.dist2(x, y, px, py) < rr * rr;
+  };
+
   C.hurt = function (game, target, amount, o) {
     o = o || {};
     if (target.dead || amount <= 0) return 0;
     if (target.isPlayer) return C.hurtPlayer(game, target, amount, o);
     if (target.isEnemy) {
       const def = target.def;
+      // something that wakes when hurt (LM.factions.wake: a specimen in its cage) turns on whoever hurt it
+      const woke = o.source === 'player' && FA.wake[target.faction];
+      if (woke && game.setFaction) {
+        game.setFaction((x) => x === target, woke);
+        target.aggro = true;
+        target.knowsP = true;
+        target.alertT = 1;
+      }
       const armor = target.armor != null ? target.armor : def.armor || 0;
       const vul = LM.status ? LM.status.vulnerable(target) : 0;
       const dmg = Math.max(1, amount * (1 + vul) * (1 - armor));
@@ -400,7 +426,7 @@
     if (!enemyBlast || (fac && FA.hitsEnemies(fac))) {
       for (const e of game.enemies) {
         if (e.dead) continue;
-        if (enemyBlast ? e === o.by || !FA.hostile(fac, e.faction) : o.owner === 'player' && !FA.hostile('player', e.faction)) continue;
+        if (enemyBlast ? e === o.by || !FA.hostile(fac, e.faction) : o.owner === 'player' && !FA.playerHits(e.faction)) continue;
         const d = U.dist(x, y, e.x, e.y);
         if (d < R + e.r && losOK(e.x, e.y)) {
           const k = 1 - U.clamp(d / (R + e.r), 0, 1) * 0.6;

@@ -222,6 +222,12 @@ LM.definePack({
         {"trigger": {"type": "flag", "tag": "cam1"}, "effects": [{"type": "alarm", "radius": 560, "text": "INTRUDER · SECURITY RESPONDING"}, {"type": "spawn", "tag": "dockB", "enemy": "ds-scalpel-drone", "count": 2, "delay": 1.2}]},
         {"trigger": {"type": "flag", "tag": "cam2"}, "effects": [{"type": "alarm", "radius": 560, "text": "INTRUDER · SECURITY RESPONDING"}, {"type": "spawn", "tag": "dockA", "enemy": "ds-scalpel-drone", "count": 2, "delay": 1.2}]},
       ],
+      objectives: [
+        {"id": "breaker", "text": "Throw the breaker in the comms closet", "done": ["breakerOn"], "target": {"item": "ds-breaker", "props": {"flag": "breakerOn"}}},
+        {"id": "terminal", "text": "Get to the terminal in the security office, in the north-west corner, through the lobby", "when": ["breakerOn"], "done": ["atTerminal"], "target": {"item": "ds-console", "props": {"flag": "atTerminal"}}},
+        {"id": "stairs", "text": "Go up Stair A to Floor 2", "when": ["atTerminal"], "target": {"tag": "westUp"}},
+        {"id": "locker", "optional": true, "text": "Open Officer Ruiz’s locker in the security office: the code is on a note somewhere on this floor", "when": ["atTerminal"], "done": ["lockerOpen"], "target": [{"item": "ds-keypad", "props": {"flag": "lockerOpen"}}, {"item": "ds-note", "props": {"title": "Sticky note"}}]},
+      ],
       ceilingLights: [{ variants: [0, 1, 3, 5, 7], every: 4, offset: [2, 2], skip: 0.8, color: '#d8e2f0', radius: 200, intensity: 0.34, tag: 'ceiling' }],
       map: [
         "################################################################################",

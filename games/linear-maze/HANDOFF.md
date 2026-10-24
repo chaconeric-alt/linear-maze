@@ -254,6 +254,12 @@ New flags: `slept`, `woke`, `dressed`, `aliceCalled`, `townPlaque`, `visited-<pl
 
 No existing floor changes: every door on every floor of both games runs the same way as before (checked), and no floor had a `rot`.
 
+## 0.5.7: objectives, story lines that stop the game, hitboxes, waking sides
+
+Built from Dead Signal's playtests. `engine/objectives.js` (a level's `objectives`: when / any / not / done flags, optional, targets by tag, item, enemy, npc, tile or room; the HUD plate under the health, targets pulsing near you and marked on the minimap, the pause screen's list; render and minimap hooks; the editor's floor settings → Objectives). `engine/comms.js`: a speaker's `pause` (and a line's `pause`) stops the game for a conversation in the middle of the screen, Continue / Skip, game state `'talk'`, not in a fight; the pause screen's *Story lines* choice (localStorage `lm-talk-pauses`); the transmission form's pause field. An enemy def's `hitbox` (`LM.combat.touches`), a pack's `factionWake` (`LM.factions.wake`, `playerHits`), and floor memory keeps `aggro` and a runtime tag. Engine spec sections 5, 6.5, 6.8, 6.16, 6.20, 6.21 and 15.5.
+
+**This game's packs.** Nothing changed: no Linear Maze floor has objectives (the office's phone keeps its own "Right now"), no speaker pauses, no enemy has a `hitbox` and no pack wakes a side, so every floor plays as before (checked). A Linear Maze floor can now be given `objectives` in the editor.
+
 ## 0.5.6: parked elevators, last stands, gadget auras
 
 Built for Dead Signal's Floor 4 (the AEGIS field). An elevator's `parked` (keyed by floor: a flag, or `{ flag, cargo }`): with no power, the car waits on that floor lit with its doors held open and its panel dead (the `elevatorParked` words), and if the flag is set while you're there it comes up the shaft, sets its cargo down inside and rings first (`LM.elevators.parkedAt / parked / live`; the editor's elevator inspector has **Parked here**). `LM.combat.lastStand`: armour, gadgets and blessings can have `lastStand(game, P, opts)`, asked when a hit would kill the player. A gadget's `resist` counts like armour's; `drawAura` draws round the player all the time, and `shieldRing: false` hides the plain shield ring. Engine spec sections 4, 6.7, 6.12, 6.15 and 15.5.

@@ -390,7 +390,7 @@
     const taken = (q) => game.items.some((it) => !it.dead && it.def.id === 'ds-survivor' && U.dist(it.x, it.y, q.x, q.y) < 20);
     const seat = pts.find((q) => !taken(q)) || { x: e.x, y: e.y };
     e.dead = true;
-    const s = game.spawnItemAt('ds-survivor', seat.x, seat.y, { name: p.name, key: p.key, coat: p.coat, skin: p.skin, hair: p.hair, text: p.saved, title: p.name, flag: p.savedFlag });
+    const s = game.spawnItemAt('ds-survivor', seat.x, seat.y, { name: p.name, key: p.key, coat: p.coat, skin: p.skin, hair: p.hair, text: p.saved, title: p.name, flag: p.savedFlag, knows: p.knows });
     if (s) s.pop = null;
     if (!game.hasFlag('captiveSaved')) game.setFlag('captiveSaved');
     if (p.key && !game.hasFlag('saved' + p.key)) game.setFlag('saved' + p.key);
@@ -983,6 +983,8 @@
   const enemies = {
     'ds-hound': {
       name: 'Grinner', hp: 58, speed: 200, radius: 9, armor: 0, mass: 1.1, accel: 11, turn: 11, ai: 'ds-pack', sight: 360, leash: 1600,
+      // a long, low body: shots land anywhere from the grin to the haunch, not only the middle
+      hitbox: { front: 11, back: 9, r: 6.5 },
       color: SKIN, blood: '#5a0e14', gib: '#c8a8a0', bark: 'grinGiggle', dreamer: 'G. Moss', pressRange: 300, eats: true, feedHeal: 6, biteSound: 'bite',
       attacks: [
         { type: 'charge', damage: 12, speed: 440, duration: 0.3, windup: 0.32, cooldown: 2.6, minRange: 55, maxRange: 170, stun: 0.5 },
@@ -1005,6 +1007,7 @@
     // the house favourite: the biggest of them, with a collar and a name tag
     'ds-smiler': {
       name: 'Smiler', hp: 520, speed: 190, radius: 14, armor: 0.15, mass: 4, accel: 9, turn: 8, ai: 'ds-pack', sight: 520, leash: 1800,
+      hitbox: { front: 17, back: 14, r: 10 },
       color: SKIN, blood: '#5a0e14', gib: '#c8a8a0', dreamer: 'G. Moss', boss: true, eats: true, feedHeal: 10, biteSound: 'bite', deathSound: 'grinYelp',
       resist: { staggered: 1, held: 1, chilled: 0.5 },
       bossBar: { name: 'Smiler', color: '#ff5ab0', range: 900, sub: () => 'the house favourite' },
@@ -1170,7 +1173,8 @@
       },
       onDeath(e, game) {
         const p = e._props || {};
-        const body = game.spawnItemAt('ds-body', e.x, e.y, { angle: e.facing, color: p.coat || '#e0702a', skin: p.skin, hair: p.hair, title: p.name || 'A contestant', kicker: 'The Proving Grounds', text: p.body || ((p.name ? p.name + '. ' : '') + 'An orange jumpsuit with SUBJECT across the back. They ran as far as here.') });
+        // what they knew is on the body (props.knows: a flag; Kwan's armory code)
+        const body = game.spawnItemAt('ds-body', e.x, e.y, { angle: e.facing, color: p.coat || '#e0702a', skin: p.skin, hair: p.hair, title: p.name || 'A contestant', kicker: 'The Proving Grounds', flag: p.knows, text: p.body || ((p.name ? p.name + '. ' : '') + 'An orange jumpsuit with SUBJECT across the back. They ran as far as here.') });
         if (body) body.pop = null;
         if (p.key && !game.hasFlag('captiveDied' + p.key)) game.setFlag('captiveDied' + p.key);
         game.toast((p.name || 'Someone') + ' is down.', 'warn');
@@ -1303,5 +1307,8 @@
     });
   }
 
-  LM.definePack({ id: 'ds-nightmares', behaviors, attacks, projectiles, enemies, factions });
+  // a specimen you hurt is a specimen let out: your shots land on it, and it comes for you
+  const factionWake = { specimen: 'monster' };
+
+  LM.definePack({ id: 'ds-nightmares', behaviors, attacks, projectiles, enemies, factions, factionWake });
 })();
