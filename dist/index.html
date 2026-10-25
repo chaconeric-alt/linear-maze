@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linear Maze Next Gen</title>
+<meta name="description" content="Games made with the next-generation Linear Maze engine: The Linear Maze and Dead Signal.">
+<style>
+  :root { --ink: #0c0d10; --plate: #15171c; --line: #2a2d35; --bone: #ece6d8; --muted: #9a958a; --brass: #e0b25a; --neon: #22e6ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at top, #1a1d26 0%, var(--ink) 60%); color: var(--bone);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; display: grid; place-items: center; padding: 48px 16px; }
+  main { width: min(760px, 100%); }
+  h1 { margin: 0 0 6px; font-size: clamp(30px, 6vw, 46px); letter-spacing: 0.04em; font-weight: 800; }
+  h1 span { color: var(--brass); }
+  .sub { margin: 0 0 32px; color: var(--muted); }
+  .games { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .game { display: block; padding: 22px 22px 20px; background: var(--plate); border: 1px solid var(--line); border-radius: 10px; color: inherit; text-decoration: none;
+          transition: border-color 0.15s, transform 0.15s; }
+  .game:hover, .game:focus-visible { border-color: var(--brass); transform: translateY(-2px); outline: none; }
+  .game h2 { margin: 0 0 8px; font-size: 22px; }
+  .game p { margin: 0 0 16px; color: var(--muted); font-size: 15px; }
+  .play { display: inline-block; padding: 8px 14px; background: var(--brass); color: #1a1408; font-weight: 700; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 4px; }
+  .game.signal .play { background: var(--neon); color: #04161a; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Linear Maze <span>Next Gen</span></h1>
+  <p class="sub">Games made with the next-generation Linear Maze engine. They need a keyboard and mouse.</p>
+  <div class="games">
+    <a class="game" href="linear-maze.html">
+      <h2>The Linear Maze</h2>
+      <p>A fast top-down shooter. A quiet morning on the 14th floor of an office tower, a door that wasn’t there before, three maze floors below it, and then the strange evening, night and morning at home.</p>
+      <span class="play">Play</span>
+    </a>
+    <a class="game signal" href="dead-signal.html">
+      <h2>Dead Signal</h2>
+      <p>The building is locked. The lines are dead. Something on the top floor is still talking.</p>
+      <span class="play">Play</span>
+    </a>
+  </div>
+  <footer>Each game is a single page and saves your progress in your own browser.</footer>
+</main>
+</body>
+</html>

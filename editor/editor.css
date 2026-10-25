@@ -501,3 +501,11 @@ kbd { font-family: var(--f-mono); font-size: 11px; border: 1px solid var(--line-
 .ng-demo { border-radius: var(--r); flex: 0 0 auto; }
 .ng-model-row { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--line); }
 @media (max-width: 760px) { .ng-model-grid { grid-template-columns: 1fr; } }
+
+/* sprite sheets drawn by hand (js/ng-models.js importDrawn) */
+.ng-sheet-grid { display: block; max-width: 100%; margin-top: 8px; background: repeating-conic-gradient(#2a2a30 0 25%, #34343a 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line, #444); }
+.ng-anim-table { border-collapse: collapse; margin-top: 8px; }
+.ng-anim-table th { text-align: left; font-weight: 600; font-size: 11px; padding: 3px 6px; color: var(--muted, #999); }
+.ng-anim-table td { padding: 3px 6px; }
+.ng-anim-table input { width: 64px; }
+.hint.warn { color: #e8a040; }

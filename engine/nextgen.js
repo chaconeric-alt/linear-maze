@@ -240,6 +240,7 @@
     if (tx == null) {
       if (r.ngTops) r.ngTops.clear();
       if (r.ngFaces) r.ngFaces.clear();
+      if (r.ngCurveTops) r.ngCurveTops.clear();
       return;
     }
     if (r.ngTops) r.ngTops.delete(Math.floor(tx / CH) + ',' + Math.floor(ty / CH));
@@ -328,7 +329,80 @@
       ctx.fillRect(ix0 + ax, iy0 + ay, ix1 - ix0, 0.8);
     }
   }
-  const piecePool = [], doorPool = [];
+  /** The top of a curved edge's wall (engine/shapes.js), baked once per square with no front face. */
+  function curveTop(r, L, tx, ty, wall) {
+    const cache = r.ngCurveTops || (r.ngCurveTops = new Map());
+    const key = tx + ',' + ty;
+    let c = cache.get(key);
+    if (c) return c;
+    const s = r.scale;
+    c = document.createElement('canvas');
+    c.width = c.height = Math.max(1, Math.ceil(T * s));
+    const g = c.getContext('2d');
+    g.setTransform(s, 0, 0, s, -tx * T * s, -ty * T * s);
+    const info = { level: L, env: L.env, T, x: tx, y: ty, rnd: U.mulberry32((L.seed ^ (tx * 7919 + ty * 104729)) >>> 0), rot: 0, across: undefined, turnFloor: false, variant: 0, n: () => wall };
+    try {
+      if (wall.bake) wall.bake(g, tx * T, ty * T, info);
+      else throw 0;
+    } catch (e) {
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = (L.env.wall && L.env.wall.top) || '#2a2a2a';
+      g.fillRect(0, 0, c.width, c.height);
+    }
+    cache.set(key, c);
+    if (cache.size > 400) cache.delete(cache.keys().next().value);
+    return c;
+  }
+  /** A curved edge square standing up: the faces of its curve the camera can see, then its raised top. */
+  class CurvePiece {
+    draw(ctx) {
+      const r = this.r, f = r.ngf, L = r.level, tx = this.tx, ty = this.ty, ref = this.ref;
+      const [ax, ay] = NG.lift(f, tx * T + T / 2, ty * T + T / 2, f.height);
+      this.lift = [ax, ay];
+      this.faces = [];
+      const strip = faceStrip(r, L, tx, ty, ref.wall);
+      for (const pc of ref.pieces) {
+        // a face shows when its open side looks back against the lift (toward the camera)
+        if (pc.nx * ax + pc.ny * ay > -0.12 * Math.hypot(ax, ay)) continue;
+        // draw it from the end on the left as the camera sees it, so the strip isn't mirrored
+        const flip = pc.nx * ay - pc.ny * ax < 0;
+        const [x0, y0, x1, y1] = flip ? [pc.bx, pc.by, pc.ax, pc.ay] : [pc.ax, pc.ay, pc.bx, pc.by];
+        const q = { ex: x0 + ax, ey: y0 + ay, ux: x1 - x0, uy: y1 - y0, vx: -ax, vy: -ay, nx: pc.nx, ny: pc.ny };
+        this.faces.push(q);
+        quad(ctx, strip, 0, 0, strip.width, strip.height, q.ex, q.ey, q.ux, q.uy, q.vx, q.vy);
+        // faces turned away from the light read darker, as the walls' sides do
+        const side = 1 - Math.max(0, pc.ny);
+        if (side > 0.05) quadFill(ctx, 'rgba(0,0,0,' + (0.3 * side).toFixed(3) + ')', q.ex, q.ey, q.ux, q.uy, q.vx, q.vy);
+        quadFill(ctx, 'rgba(0,0,0,0.22)', q.ex + q.vx * 0.82, q.ey + q.vy * 0.82, q.ux, q.uy, q.vx * 0.18, q.vy * 0.18);
+      }
+      const top = curveTop(r, L, tx, ty, ref.wall);
+      ctx.save();
+      LM.shapes.clipWall(ctx, ref, tx, ty, ax, ay);
+      ctx.drawImage(top, 0, 0, top.width, top.height, tx * T + ax, ty * T + ay, T, T);
+      ctx.restore();
+    }
+    /** After the lightmap: the top takes its own square's light, each face the floor's in front of it. */
+    stamp(g, snap, src) {
+      const tx = this.tx, ty = this.ty, [ax, ay] = this.lift || [0, 0];
+      const sr = src(tx * T, ty * T, T, T);
+      if (sr) {
+        g.save();
+        LM.shapes.clipWall(g, this.ref, tx, ty, ax, ay);
+        g.drawImage(snap, sr[0], sr[1], sr[2], sr[3], tx * T + ax, ty * T + ay, T, T);
+        g.restore();
+      }
+      for (const q of this.faces || []) {
+        const mx = q.ex - q.vx + q.ux / 2 + q.nx * 6, my = q.ey - q.vy + q.uy / 2 + q.ny * 6;
+        const s2 = src(mx - 3, my - 3, 6, 6);
+        if (!s2) continue;
+        g.save();
+        g.transform(q.ux, q.uy, q.vx, q.vy, q.ex, q.ey);
+        g.drawImage(snap, s2[0], s2[1], s2[2], s2[3], 0, 0, 1, 1);
+        g.restore();
+      }
+    }
+  }
+  const piecePool = [], doorPool = [], curvePool = [];
 
   /** Add this frame's raised walls and doors to the renderer's drawables. */
   O.addPieces = function (r, game, drawables) {
@@ -337,13 +411,29 @@
     r.ngPieces.length = 0;
     if (!f || f.tilt <= 0.01) return;
     const L = game.level, tv = r.tileView;
-    let n = 0, nd = 0;
+    let n = 0, nd = 0, nc = 0;
     const tx0 = Math.max(0, tv.tx0 - 1), tx1 = Math.min(L.w - 1, tv.tx1 + 1);
     const ty0 = Math.max(0, tv.ty0), ty1 = Math.min(L.h - 1, tv.ty1 + 1);
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
         const d = L.terrain[ty * L.w + tx];
         const door = L.doorAt[ty * L.w + tx];
+        const refs = L.curve && L.curve[ty * L.w + tx];
+        if (refs) {
+          for (const ref of refs) {
+            const p = curvePool[nc] || (curvePool[nc] = new CurvePiece());
+            nc++;
+            p.r = r;
+            p.tx = tx;
+            p.ty = ty;
+            p.ref = ref;
+            // sorted by the top of its wall part, as a wall square is by its north edge
+            p.y = ref.top + 0.01;
+            p.z = 0;
+            r.ngPieces.push(p);
+            drawables.push(p);
+          }
+        }
         if (door) {
           if (!game.doors.includes(door)) continue;
           const p = doorPool[nd] || (doorPool[nd] = new DoorPiece());
@@ -368,7 +458,7 @@
         // it, things north of it hide behind it, things south of it stand in front of it
         p.y = ty * T + 0.01;
         p.z = 0;
-        const solid = (x, y) => NG.raised(L.t(x, y)) || !L.inBounds(x, y);
+        const solid = (x, y) => NG.raised(L.t(x, y)) || !L.inBounds(x, y) || (L.curve && !!LM.shapes.wallToward(L, x, y, tx, ty));
         p.open = { s: !solid(tx, ty + 1), n: !solid(tx, ty - 1), e: !solid(tx + 1, ty), w: !solid(tx - 1, ty) };
         r.ngPieces.push(p);
         drawables.push(p);
@@ -404,6 +494,10 @@
       return sw > 0.5 && sh > 0.5 ? [sx, sy, sw, sh] : null;
     };
     for (const p of pieces) {
+      if (p.stamp) {
+        p.stamp(g, snap, src);
+        continue;
+      }
       const geo = p.geo;
       if (!geo) continue;
       const [x0, y0, x1, y1] = p.box || [p.tx * T, p.ty * T, p.tx * T + T, p.ty * T + T];

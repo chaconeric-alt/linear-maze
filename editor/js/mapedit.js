@@ -961,10 +961,14 @@
           ctx.strokeStyle = 'rgba(224,178,90,0.55)';
           ctx.strokeRect(x * T, y * T, w * T, hh * T);
           ctx.setLineDash([]);
+          // a shaped room (engine/shapes.js): its outline over the rect
+          if (room.shape && window.LM_SHAPES) drawOutline(ctx, LM_SHAPES.outline(LM_SHAPES.fromRoom(room)), 'rgba(92,200,232,0.9)', 2 / s);
           ctx.fillStyle = 'rgba(224,178,90,0.85)';
           ctx.fillText(room.name, x * T + 4, y * T + Math.max(12, 14 / r.zoom));
         }
       }
+      // free shapes (round pillars, polygons): engine/shapes.js
+      if (this.showRooms && window.LM_SHAPES) for (const sh of this.def.shapes || []) drawOutline(ctx, LM_SHAPES.outline(sh), sh.solid ? 'rgba(232,120,92,0.9)' : 'rgba(92,200,232,0.9)', 2 / s);
       // tags, start, unknowns
       for (let ty = v.ty0; ty <= v.ty1; ty++) {
         for (let tx = v.tx0; tx <= v.tx1; tx++) {
@@ -1711,9 +1715,15 @@
       sect('rooms', 'Rooms (' + (d.rooms || []).length + ')', () => F().list(d.rooms || [], (r, n, set) => h('div', null,
         F().field('Name', F().text(r.name, (v) => set(Object.assign({}, r, { name: v })))),
         F().field('Small line', F().text(r.note, (v) => set(Object.assign({}, r, { note: v || undefined })), { emptyUndefined: true })),
-        F().field('x, y, width, height', F().text((r.rect || []).join(', '), (v) => { const a = v.split(/[,\s]+/).map(Number); if (a.length === 4 && a.every((z) => !Number.isNaN(z))) set(Object.assign({}, r, { rect: a })); }, { mono: true }))), {
+        F().field('x, y, width, height', F().text((r.rect || []).join(', '), (v) => { const a = v.split(/[,\s]+/).map(Number); if (a.length === 4 && a.every((z) => !Number.isNaN(z))) set(Object.assign({}, r, { rect: a })); }, { mono: true })),
+        F().field('Shape', F().select(r.shape, [[undefined, 'Square (as drawn)'], ['circle', 'Circle'], ['ellipse', 'Oval'], ['octagon', 'Octagon'], ['hexagon', 'Hexagon'], ['diamond', 'Diamond'], [{ type: 'rounded', radius: 1.5 }, 'Rounded corners']],
+          (v) => { const n = Object.assign({}, r); if (v === undefined) delete n.shape; else n.shape = v; set(n); this.scheduleReload && this.scheduleReload(); }),
+          'Trims the room’s floor to this shape and stands curved walls round it. Corridors and doors on the rect’s edge stay open.')), {
         onChange: (l) => { d.rooms = l; commit(); this.dirty = true; }, title: (r) => r.name + ' · ' + (r.rect || []).join(','), addLabel: 'Add a room (or drag one with the Room tool)', newItem: () => ({ name: 'New room', rect: [1, 1, 5, 5] }),
       }));
+      sect('shapes', 'Round pillars and free shapes (' + (d.shapes || []).length + ')', () => h('div', null,
+        h('p', { class: 'muted' }, 'Positions and sizes in tiles. { "type": "circle", "x": 12.5, "y": 8.5, "r": 1.5, "solid": true } is a round pillar; leave out solid for a round opening. Types: circle, ellipse (rx, ry), ngon (r, sides), polygon (points), rounded (rect, radius).'),
+        F().json(d.shapes || [], (v) => { if (Array.isArray(v) && v.length) d.shapes = v; else delete d.shapes; commit(); this.dirty = true; this.scheduleReload && this.scheduleReload(); })));
       sect('traps', 'Traps and scripted events (' + (d.traps || []).length + ')', () => this.trapsEditor(d, commit));
       sect('nextgen', 'Next generation' + (d.nextGen && d.nextGen.enabled ? ' (on)' : ''), () => ED.ng.levelSection(d, () => { commit(); this.scheduleReload(); }, this));
       sect('lights', 'Ceiling lights', () => F().list(d.ceilingLights || [], (cl, n, set) => F().params({ variants: 'json', every: 'number', offset: 'json', color: 'color', radius: 'number', intensity: 'number', flicker: 'number', skip: 'number', tag: 'tag' }, cl, (v) => set(v)), {
@@ -1801,6 +1811,18 @@
     }
   }
   ED.MapEditor = MapEditor;
+  /** A shape's outline (points in tiles, from engine/shapes.js) over the map. */
+  function drawOutline(ctx, pts, color, lw) {
+    if (!pts || pts.length < 3) return;
+    const T = 32;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0] * T, pts[0][1] * T);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * T, pts[i][1] * T);
+    ctx.closePath();
+    ctx.stroke();
+  }
   function tagColor(tag) {
     let hsh = 0;
     for (const c of tag) hsh = (hsh * 31 + c.charCodeAt(0)) >>> 0;

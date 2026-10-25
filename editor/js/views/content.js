@@ -172,7 +172,7 @@
     const lookType = kind === 'enemies' ? 'creature' : 'object';
     const modes = [];
     if (hasOriginal) modes.push(['original', 'Original drawing (from the pack’s code)']);
-    modes.push(['built', 'Built from settings (no code)'], ['picture', 'A picture'], ['model', 'A 3D model (sprite sheet)'], ['code', 'My own drawing code']);
+    modes.push(['built', 'Built from settings (no code)'], ['picture', 'A picture'], ['model', 'A sprite sheet (3D model or drawn)'], ['code', 'My own drawing code']);
     const setMode = (m) => {
       if (m === 'original') {
         delete d.look;

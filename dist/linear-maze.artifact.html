@@ -1516,6 +1516,8 @@ kbd {
  *      line-of-sight mask)
  *   5. emissive pass ('lighter'): glows, tracers, beams, telegraphs
  *   6. overlays: damage numbers, interaction ring, crosshair, vignette
+ * A next-generation floor (engine/nextgen.js) adds raised walls to 3, takes them into 4, adds its
+ * neon to 5 and its ceiling silhouettes between 5 and 6. Other floors draw exactly as before.
  */
 'use strict';
 (function () {
@@ -1681,11 +1683,13 @@ kbd {
       this.lc.height = Math.ceil(this.canvas.height / 2);
       this.chunks.clear();
       this.chunkOrder.length = 0;
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this);
     }
     setLevel(level) {
       this.level = level;
       this.chunks.clear();
       this.chunkOrder.length = 0;
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this);
       this.decals = [];
       this.lightTiles = new Map();
       this.lightTileScale = 0;
@@ -1842,6 +1846,7 @@ kbd {
       this.chunks.delete(key);
       const i = this.chunkOrder.indexOf(key);
       if (i >= 0) this.chunkOrder.splice(i, 1);
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this, tx, ty);
     }
 
     // ---------------------------------------------------- frame
@@ -1896,6 +1901,8 @@ kbd {
       const tx0 = Math.max(0, Math.floor(view.x0 / T)), tx1 = Math.min(L.w - 1, Math.floor(view.x1 / T));
       const ty0 = Math.max(0, Math.floor(view.y0 / T)), ty1 = Math.min(L.h - 1, Math.floor(view.y1 / T));
       this.tileView = { tx0, tx1, ty0, ty1 };
+      // a next-generation floor: this frame's camera tilt (null on every other floor)
+      const ngf = L.ng && LM.ng ? LM.ng.frame(this, game, dt) : (this.ngf = null);
 
       // 2. animated terrain
       for (let ty = ty0; ty <= ty1; ty++) {
@@ -1915,6 +1922,7 @@ kbd {
       for (const e of game.enemies) if (!e.dead && inView(e.x, e.y) && (game.attract || e.visible)) drawables.push(e);
       for (const n of game.npcs) if (inView(n.x, n.y) && n.vis > 0.01) drawables.push(n);
       if (game.player && !game.attract) drawables.push(game.player);
+      if (ngf) LM.ng.oblique.addPieces(this, game, drawables);
       drawables.sort((a, b) => (a.z || 0) - (b.z || 0) || a.y - b.y);
       for (const o of drawables) if (o.drawShadow) o.drawShadow(ctx, game, t);
       game.particles.draw(ctx, 'under', view);
@@ -1922,9 +1930,11 @@ kbd {
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.draw(ctx, game, t);
       for (const fx of game.fx) if (fx.draw) fx.draw(ctx, game, t);
       game.particles.draw(ctx, 'normal', view);
+      if (ngf && LM.ng.ceiling) LM.ng.ceiling.draw(ctx, game, t, this, true);
 
       // 4. lighting
       this.renderLight(game, view, ox, oy);
+      if (ngf) LM.ng.oblique.stampLight(this, game);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = 'multiply';
       ctx.drawImage(this.lc, 0, 0, this.lc.width, this.lc.height, 0, 0, this.lc.width * 2, this.lc.height * 2);
@@ -1942,8 +1952,10 @@ kbd {
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.drawGlow(ctx, game, t);
       for (const fx of game.fx) if (fx.drawGlow) fx.drawGlow(ctx, game, t);
       for (const tr of game.traps) if (tr.drawGlow) tr.drawGlow(ctx, game, t);
+      if (ngf && LM.ng.neon) LM.ng.neon.drawGlow(ctx, game, t, this);
       game.particles.draw(ctx, 'glow', view);
       ctx.globalCompositeOperation = 'source-over';
+      if (ngf && LM.ng.ceiling) LM.ng.ceiling.draw(ctx, game, t, this);
 
       // 6. overlays
       game.particles.draw(ctx, 'overlay', view);
@@ -2192,6 +2204,1106 @@ kbd {
 })();
 
 //# sourceURL=engine/render.js
+</script>
+<script>/* engine/nextgen.js */
+/* The Linear Maze engine — engine/nextgen.js
+ * The next-generation look, switched on floor by floor (a level's nextGen settings, which the editor
+ * sets in Floor settings → Next generation). A floor without them, or with them switched off, draws
+ * exactly as it always has: nothing here runs.
+ *
+ *   oblique   a slightly tilted camera: walls and closed doors stand up and show their fronts (and,
+ *             with parallax, their sides). The tilt leans a little as the player moves.
+ *   ceiling   black silhouettes overhead: pipes, ducts, cables, beams, hanging lamps and turning fans
+ *             (engine/nextgen-ceiling.js)
+ *   neon      coloured neon tubes along the walls that light the room (engine/nextgen-neon.js)
+ *   sheets    sprite-sheet looks the editor makes from 3D models (engine/nextgen-sheets.js)
+ *
+ * Only drawing changes. The ground plane, collision, aiming, line of sight and the lightmap stay where
+ * they were; a raised wall is the same tile it always was, drawn standing up.
+ *
+ *   level.nextGen = {
+ *     enabled: true,
+ *     oblique: { on, tilt 0..1, height (world units), parallax 0..1, sway 0..1 },
+ *     ceiling: { on, clutter 0..1, pipes, ducts, cables, beams, fans, hanging, fanTag, fanSpeed,
+ *                opacity, color, height (× wall height), parallax, rim, seed },
+ *     neon:    { on, colors: [...], where: 'all' | 'rooms' | 'corridors' | 'tag' | 'none', rooms: [names],
+ *                tag, density 0..1, flicker 0..1, brightness, radius, style: 'tube' | 'dashed' | 'double',
+ *                colorMode: 'room' | 'random' | 'cycle', mount 0..1, lightTag },
+ *   }
+ * engine/SPEC.md section 22 documents every field.
+ */
+'use strict';
+(function () {
+  const LM = window.LM, T = LM.TILE, U = LM.util;
+  const CH = 8, CHW = CH * T; // the renderer's chunk size (engine/render.js)
+  const FH = 9; // the front face LM.paintWall bakes into a wall tile with open floor south of it
+
+  const NG = (LM.ng = {});
+  NG.DEFAULTS = {
+    oblique: { on: false, tilt: 0.55, height: 24, parallax: 0.25, sway: 0.35 },
+    ceiling: { on: false, clutter: 0.45, pipes: true, ducts: true, cables: true, beams: true, fans: true, hanging: false, fanTag: '', fanSpeed: 1, opacity: 0.94, color: '#030407', height: 1.7, parallax: 0.18, rim: true, seed: 0 },
+    neon: { on: false, colors: ['#ff2fd0', '#22e6ff', '#9dff3a'], where: 'all', rooms: [], tag: '', density: 0.35, flicker: 0.15, brightness: 0.9, radius: 120, style: 'tube', colorMode: 'room', mount: 0.7, lightTag: 'neon' },
+  };
+
+  /** A level definition's next-gen settings with every field filled in, or null when they're off. */
+  NG.settings = function (def) {
+    const raw = def && def.nextGen;
+    if (!raw || !raw.enabled) return null;
+    const out = { enabled: true };
+    for (const [k, base] of Object.entries(NG.DEFAULTS)) {
+      const r = raw[k] && typeof raw[k] === 'object' ? raw[k] : {};
+      out[k] = Object.assign({}, base, r, { on: !!r.on });
+    }
+    const O = out.oblique;
+    O.tilt = U.clamp(+O.tilt || 0, 0, 1);
+    O.height = U.clamp(+O.height || 0, 4, 30); // past a tile's depth the raised top no longer covers its own square
+    O.parallax = U.clamp(+O.parallax || 0, 0, 1);
+    O.sway = U.clamp(+O.sway || 0, 0, 1);
+    return out;
+  };
+
+  /** Called by Game.loadLevel once the floor's own lights are in: works out the floor's fixtures. */
+  NG.attach = function (game, L) {
+    const cfg = NG.settings(L.def);
+    L.ng = null;
+    if (!cfg) return;
+    const N = (L.ng = { cfg, edges: NG.wallEdges(L) });
+    if (cfg.ceiling.on && NG.ceiling) N.ceiling = NG.ceiling.build(L, cfg.ceiling, N);
+    if (cfg.neon.on && NG.neon) N.neon = NG.neon.build(game, L, cfg.neon, N);
+  };
+
+  // ------------------------------------------------------------ the floor's shape
+  const raisedCache = new WeakMap();
+  /** A tile that stands up in the tilted view: a full-square solid such as a wall (not glass, partitions or pillars). */
+  NG.raised = function (d) {
+    if (!d) return false;
+    let r = raisedCache.get(d);
+    if (r === undefined) {
+      r = !!(d.tall && d.solid && !d.rect && !d.rects && d.shape !== 'circle' && !d.door);
+      raisedCache.set(d, r);
+    }
+    return r;
+  };
+  /** Runs of wall edge facing open floor: [{ dir: 's'|'n'|'e'|'w', x0, y0, x1, y1 (tile edge coords), len, open: [tiles] }].
+   *  An 's' run is the south edge of a row of walls with floor below it, and so on. */
+  NG.wallEdges = function (L) {
+    const runs = [];
+    const isWall = (x, y) => NG.raised(L.t(x, y));
+    const isOpen = (x, y) => L.inBounds(x, y) && !L.t(x, y).solid && L.t(x, y).id !== 'void';
+    const scan = (dir, outer, inner, at) => {
+      for (let a = 0; a < outer; a++) {
+        let run = null;
+        for (let b = 0; b <= inner; b++) {
+          const p = b < inner ? at(a, b) : null;
+          const ok = p && isWall(p.wx, p.wy) && isOpen(p.ox, p.oy);
+          if (ok && !run) run = { dir, b0: b, open: [] };
+          if (ok) run.open.push({ x: p.ox, y: p.oy });
+          if (!ok && run) {
+            run.len = b - run.b0;
+            run.a = a;
+            runs.push(run);
+            run = null;
+          }
+        }
+      }
+    };
+    scan('s', L.h, L.w, (y, x) => ({ wx: x, wy: y, ox: x, oy: y + 1 }));
+    scan('n', L.h, L.w, (y, x) => ({ wx: x, wy: y, ox: x, oy: y - 1 }));
+    scan('e', L.w, L.h, (x, y) => ({ wx: x, wy: y, ox: x + 1, oy: y }));
+    scan('w', L.w, L.h, (x, y) => ({ wx: x, wy: y, ox: x - 1, oy: y }));
+    // edge coordinates of the run's line, in tiles
+    for (const r of runs) {
+      if (r.dir === 's' || r.dir === 'n') {
+        const ey = r.dir === 's' ? r.a + 1 : r.a;
+        Object.assign(r, { x0: r.b0, y0: ey, x1: r.b0 + r.len, y1: ey });
+      } else {
+        const ex = r.dir === 'e' ? r.a + 1 : r.a;
+        Object.assign(r, { x0: ex, y0: r.b0, x1: ex, y1: r.b0 + r.len });
+      }
+    }
+    return runs;
+  };
+  /** Which room (by name) a tile is in, if any. */
+  NG.roomAt = function (L, x, y) {
+    for (const r of L.def.rooms || []) {
+      const [rx, ry, rw, rh] = r.rect || [];
+      if (x >= rx && y >= ry && x < rx + rw && y < ry + rh) return r.name;
+    }
+    return null;
+  };
+  /** A seeded random stream for a floor's fixtures. */
+  NG.rng = (L, salt, seed) => U.mulberry32((L.seed ^ U.strHash(salt) ^ ((seed | 0) * 2654435761)) >>> 0);
+
+  // ------------------------------------------------------------ the camera's lean, once per frame
+  /** Works out this frame's tilt for the renderer: r.ngf = { tilt, height, lx, ly, par, cam, half } or null. */
+  NG.frame = function (r, game, dt) {
+    const L = game.level, N = L && L.ng;
+    if (!N || r.ngOff) return (r.ngf = null);
+    const O = N.cfg.oblique;
+    const st = r.ngState || (r.ngState = { sx: 0, sy: 0 });
+    // the camera trails the player a little: walking east leans the walls west, and back as you stop
+    const P = game.player, sp = (LM.PLAYER_BASE && LM.PLAYER_BASE.speed) || 172;
+    const vx = P && !game.attract ? U.clamp(P.vx / sp, -1.5, 1.5) : Math.sin((game.time || 0) * 0.25) * 0.4;
+    const vy = P && !game.attract ? U.clamp(P.vy / sp, -1.5, 1.5) : 0;
+    st.sx = U.damp(st.sx, -vx * O.sway * 0.7, 2.2, dt || 0);
+    st.sy = U.damp(st.sy, vy * O.sway * 0.25, 2.2, dt || 0);
+    const vh = r.viewHalf();
+    r.ngf = {
+      tilt: O.on ? O.tilt : 0,
+      height: O.height,
+      lx: st.sx,
+      ly: -1 + st.sy,
+      par: O.on ? O.parallax : 0,
+      camX: game.cam.x,
+      camY: game.cam.y,
+      halfW: Math.max(1, vh.w),
+      halfH: Math.max(1, vh.h),
+    };
+    return r.ngf;
+  };
+  /** How far a point z units above (x, y) moves on screen: [dx, dy]. extraPar adds parallax of its own (the ceiling's). */
+  NG.lift = function (f, x, y, z, extraPar) {
+    const k = f.tilt * f.par + (extraPar || 0);
+    return [z * (f.tilt * f.lx + (k * (x - f.camX)) / f.halfW), z * (f.tilt * f.ly + (k * (y - f.camY)) / f.halfH)];
+  };
+
+  // ------------------------------------------------------------ raised walls
+  // Each wall tile in view becomes a piece sorted with the objects by its south edge, so whatever stands
+  // south of a wall is drawn over its front and whatever stands north of it is hidden behind its top.
+  const O = (NG.oblique = {});
+  const STUB = {};
+  function stubs() {
+    if (!STUB.wall) {
+      STUB.wall = LM.find('terrain', 'wall') || { id: 'wall', tall: true, solid: true };
+      STUB.floor = LM.find('terrain', 'floor') || { id: 'floor' };
+    }
+    return STUB;
+  }
+  /** The wall tops of one chunk, baked with no front face (the face is drawn standing up instead). */
+  function topChunk(r, cx, cy) {
+    const cache = r.ngTops || (r.ngTops = new Map());
+    const key = cx + ',' + cy;
+    let c = cache.get(key);
+    if (c) return c;
+    const L = r.level, env = L.env, s = r.scale;
+    c = document.createElement('canvas');
+    c.width = Math.ceil(CHW * s) + 1;
+    c.height = Math.ceil(CHW * s) + 1;
+    const g = c.getContext('2d');
+    g.setTransform(s, 0, 0, s, -cx * CHW * s, -cy * CHW * s);
+    const S = stubs();
+    const info = { level: L, env, T, x: 0, y: 0, rnd: null, rot: 0, across: undefined, turnFloor: false, variant: 0,
+      n: (dx, dy) => (dx === 0 && dy === 1 && !NG.raised(L.t(info.x, info.y + 1)) ? S.wall : L.t(info.x + dx, info.y + dy)),
+    };
+    for (let ty = cy * CH; ty < cy * CH + CH; ty++) {
+      for (let tx = cx * CH; tx < cx * CH + CH; tx++) {
+        if (!L.inBounds(tx, ty)) continue;
+        const d = L.t(tx, ty);
+        if (!NG.raised(d) || !d.bake) continue;
+        info.x = tx;
+        info.y = ty;
+        info.variant = L.variant[ty * L.w + tx];
+        info.rnd = U.mulberry32((L.seed ^ (tx * 7919 + ty * 104729)) >>> 0);
+        g.save();
+        g.beginPath();
+        g.rect(tx * T, ty * T, T, T);
+        g.clip();
+        d.bake(g, tx * T, ty * T, info);
+        g.restore();
+      }
+    }
+    cache.set(key, c);
+    if (cache.size > 64) cache.delete(cache.keys().next().value);
+    return c;
+  }
+  /** The front face of a wall tile: the strip its painter bakes when there is open floor south of it. */
+  function faceStrip(r, L, tx, ty, d) {
+    const cache = r.ngFaces || (r.ngFaces = new Map());
+    const v = L.variant[ty * L.w + tx];
+    const key = d.id + '|' + v + '|' + (tx & 1) + '|' + (ty & 1);
+    let c = cache.get(key);
+    if (c) return c;
+    const s = r.scale, S = stubs();
+    c = document.createElement('canvas');
+    c.width = Math.max(1, Math.ceil(T * s));
+    c.height = Math.max(1, Math.ceil(FH * s));
+    const g = c.getContext('2d');
+    g.setTransform(s, 0, 0, s, -tx * T * s, -(ty * T + T - FH) * s);
+    const info = { level: L, env: L.env, T, x: tx, y: ty, rnd: U.mulberry32((L.seed ^ (tx * 7919 + ty * 104729)) >>> 0), rot: 0, across: undefined, turnFloor: false, variant: v,
+      n: (dx, dy) => (dx === 0 && dy === 1 ? S.floor : L.t(tx + dx, ty + dy)),
+    };
+    try {
+      if (d.bake) d.bake(g, tx * T, ty * T, info);
+    } catch (e) {
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = (L.env.wall && L.env.wall.face) || '#2a2a2a';
+      g.fillRect(0, 0, c.width, c.height);
+    }
+    cache.set(key, c);
+    if (cache.size > 160) cache.delete(cache.keys().next().value);
+    return c;
+  }
+  /** Forget what was baked (a new floor, a new scale, or a tile that changed). */
+  O.forget = function (r, tx, ty) {
+    if (tx == null) {
+      if (r.ngTops) r.ngTops.clear();
+      if (r.ngFaces) r.ngFaces.clear();
+      return;
+    }
+    if (r.ngTops) r.ngTops.delete(Math.floor(tx / CH) + ',' + Math.floor(ty / CH));
+  };
+
+  /** Draw a picture over the parallelogram from (ex, ey) (its top-left) along (ux, uy) and down (vx, vy). */
+  function quad(ctx, img, sx, sy, sw, sh, ex, ey, ux, uy, vx, vy) {
+    ctx.save();
+    ctx.transform(ux, uy, vx, vy, ex, ey);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 1, 1);
+    ctx.restore();
+  }
+  function quadFill(ctx, fill, ex, ey, ux, uy, vx, vy) {
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex + ux, ey + uy);
+    ctx.lineTo(ex + ux + vx, ey + uy + vy);
+    ctx.lineTo(ex + vx, ey + vy);
+    ctx.closePath();
+    ctx.fill();
+  }
+  /** The faces of a block from (x0, y0) to (x1, y1) standing from z0 to z1 that the camera can see:
+   *  [{ side, ex, ey, ux, uy, vx, vy }], each running along the edge (u) and from its top down (v). */
+  function faces(f, x0, y0, x1, y1, z0, z1, open) {
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const [ax, ay] = NG.lift(f, cx, cy, z1);
+    const [bx, by] = z0 ? NG.lift(f, cx, cy, z0) : [0, 0];
+    const dx = ax - bx, dy = ay - by;
+    const out = [];
+    if (open.s && dy < -0.15) out.push({ side: 's', ex: x0 + ax, ey: y1 + ay, ux: x1 - x0, uy: 0, vx: -dx, vy: -dy });
+    if (open.n && dy > 0.15) out.push({ side: 'n', ex: x0 + ax, ey: y0 + ay, ux: x1 - x0, uy: 0, vx: -dx, vy: -dy });
+    if (open.e && dx < -0.15) out.push({ side: 'e', ex: x1 + ax, ey: y0 + ay, ux: 0, uy: y1 - y0, vx: -dx, vy: -dy });
+    if (open.w && dx > 0.15) out.push({ side: 'w', ex: x0 + ax, ey: y0 + ay, ux: 0, uy: y1 - y0, vx: -dx, vy: -dy });
+    return { top: [ax, ay], faces: out };
+  }
+
+  class WallPiece {
+    draw(ctx) {
+      const r = this.r, f = r.ngf, L = r.level, tx = this.tx, ty = this.ty, d = this.d;
+      const x0 = tx * T, y0 = ty * T;
+      const geo = faces(f, x0, y0, x0 + T, y0 + T, 0, f.height, this.open);
+      this.geo = geo;
+      const strip = faceStrip(r, L, tx, ty, d);
+      for (const q of geo.faces) {
+        quad(ctx, strip, 0, 0, strip.width, strip.height, q.ex, q.ey, q.ux, q.uy, q.vx, q.vy);
+        // the sides take less light than the front; the top edge catches a little
+        if (q.side !== 's') quadFill(ctx, 'rgba(0,0,0,0.28)', q.ex, q.ey, q.ux, q.uy, q.vx, q.vy);
+        quadFill(ctx, 'rgba(0,0,0,0.22)', q.ex + q.vx * 0.82, q.ey + q.vy * 0.82, q.ux, q.uy, q.vx * 0.18, q.vy * 0.18);
+      }
+      const c = topChunk(r, Math.floor(tx / CH), Math.floor(ty / CH));
+      const s = r.scale;
+      const sx = (tx - Math.floor(tx / CH) * CH) * T * s, sy = (ty - Math.floor(ty / CH) * CH) * T * s;
+      ctx.drawImage(c, sx, sy, T * s, T * s, x0 + geo.top[0], y0 + geo.top[1], T, T);
+    }
+  }
+  class DoorPiece {
+    draw(ctx) {
+      const r = this.r, f = r.ngf, door = this.door, env = r.level.env;
+      const pal = env.door || {};
+      const x0 = door.tx * T, y0 = door.ty * T;
+      const open = U.clamp(door.open || 0, 0, 1);
+      // a closed door stands as tall as the walls; as it opens it pulls up into a lintel over the doorway
+      const z0 = f.height * 0.72 * open;
+      const inset = door.horizontal ? [0, 9, T, T - 9] : [9, 0, T - 9, T];
+      const [ix0, iy0, ix1, iy1] = [x0 + inset[0], y0 + inset[1], x0 + inset[2], y0 + inset[3]];
+      const geo = faces(f, ix0, iy0, ix1, iy1, z0, f.height, this.open);
+      this.geo = geo;
+      this.box = [ix0, iy0, ix1, iy1];
+      const panel = pal.panel || '#4a3a2a', frame = pal.frame || '#231c15', trim = pal.trim || '#8a6a40';
+      for (const q of geo.faces) {
+        quadFill(ctx, q.side === 's' ? panel : U.shade(panel, -0.3), q.ex, q.ey, q.ux, q.uy, q.vx, q.vy);
+        ctx.save();
+        ctx.strokeStyle = U.rgba(trim, 0.7);
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(q.ex + q.ux * 0.5, q.ey + q.uy * 0.5);
+        ctx.lineTo(q.ex + q.ux * 0.5 + q.vx, q.ey + q.uy * 0.5 + q.vy);
+        ctx.stroke();
+        ctx.restore();
+      }
+      const [ax, ay] = geo.top;
+      ctx.fillStyle = frame;
+      ctx.fillRect(ix0 + ax, iy0 + ay, ix1 - ix0, iy1 - iy0);
+      ctx.fillStyle = U.rgba(trim, 0.5);
+      ctx.fillRect(ix0 + ax, iy0 + ay, ix1 - ix0, 0.8);
+    }
+  }
+  const piecePool = [], doorPool = [];
+
+  /** Add this frame's raised walls and doors to the renderer's drawables. */
+  O.addPieces = function (r, game, drawables) {
+    const f = r.ngf;
+    r.ngPieces = r.ngPieces || [];
+    r.ngPieces.length = 0;
+    if (!f || f.tilt <= 0.01) return;
+    const L = game.level, tv = r.tileView;
+    let n = 0, nd = 0;
+    const tx0 = Math.max(0, tv.tx0 - 1), tx1 = Math.min(L.w - 1, tv.tx1 + 1);
+    const ty0 = Math.max(0, tv.ty0), ty1 = Math.min(L.h - 1, tv.ty1 + 1);
+    for (let ty = ty0; ty <= ty1; ty++) {
+      for (let tx = tx0; tx <= tx1; tx++) {
+        const d = L.terrain[ty * L.w + tx];
+        const door = L.doorAt[ty * L.w + tx];
+        if (door) {
+          if (!game.doors.includes(door)) continue;
+          const p = doorPool[nd] || (doorPool[nd] = new DoorPiece());
+          nd++;
+          p.r = r;
+          p.door = door;
+          p.y = ty * T + 0.5;
+          p.z = 0;
+          p.open = door.horizontal ? { s: true, n: true, e: false, w: false } : { s: true, n: true, e: true, w: true };
+          r.ngPieces.push(p);
+          drawables.push(p);
+          continue;
+        }
+        if (!NG.raised(d)) continue;
+        const p = piecePool[n] || (piecePool[n] = new WallPiece());
+        n++;
+        p.r = r;
+        p.tx = tx;
+        p.ty = ty;
+        p.d = d;
+        // sorted by its north edge: things on the wall square itself (a breaker panel, a picture) draw over
+        // it, things north of it hide behind it, things south of it stand in front of it
+        p.y = ty * T + 0.01;
+        p.z = 0;
+        const solid = (x, y) => NG.raised(L.t(x, y)) || !L.inBounds(x, y);
+        p.open = { s: !solid(tx, ty + 1), n: !solid(tx, ty - 1), e: !solid(tx + 1, ty), w: !solid(tx - 1, ty) };
+        r.ngPieces.push(p);
+        drawables.push(p);
+      }
+    }
+  };
+
+  /** After the lightmap is made: each raised top takes the light of its own square, and each face the
+   *  light of the floor in front of it, so a lit room lights the walls around it. */
+  O.stampLight = function (r, game) {
+    const f = r.ngf, pieces = r.ngPieces;
+    if (!f || !pieces || !pieces.length || r.flat) return;
+    const lc = r.lc, g = r.lctx;
+    const snap = r.ngSnap || (r.ngSnap = document.createElement('canvas'));
+    if (snap.width !== lc.width || snap.height !== lc.height) {
+      snap.width = lc.width;
+      snap.height = lc.height;
+    }
+    const sg = snap.getContext('2d');
+    sg.globalCompositeOperation = 'copy';
+    sg.drawImage(lc, 0, 0);
+    const s2 = r.scale / 2, ox = r.ox / 2, oy = r.oy / 2;
+    g.setTransform(s2, 0, 0, s2, ox, oy);
+    g.globalCompositeOperation = 'source-over';
+    const W = snap.width, H = snap.height;
+    // a world rectangle as a source rectangle of the snapshot (clamped: drawImage refuses rectangles off the canvas)
+    const src = (x, y, w, h) => {
+      let sx = x * s2 + ox, sy = y * s2 + oy, sw = w * s2, sh = h * s2;
+      if (sx < 0) { sw += sx; sx = 0; }
+      if (sy < 0) { sh += sy; sy = 0; }
+      sw = Math.min(sw, W - sx);
+      sh = Math.min(sh, H - sy);
+      return sw > 0.5 && sh > 0.5 ? [sx, sy, sw, sh] : null;
+    };
+    for (const p of pieces) {
+      const geo = p.geo;
+      if (!geo) continue;
+      const [x0, y0, x1, y1] = p.box || [p.tx * T, p.ty * T, p.tx * T + T, p.ty * T + T];
+      const top = src(x0, y0, x1 - x0, y1 - y0);
+      if (top) g.drawImage(snap, top[0], top[1], top[2], top[3], x0 + geo.top[0], y0 + geo.top[1], x1 - x0, y1 - y0);
+      for (const q of geo.faces) {
+        // the strip of floor just in front of the face
+        const k = 7;
+        const rect = q.side === 's' ? [x0, y1, x1 - x0, k] : q.side === 'n' ? [x0, y0 - k, x1 - x0, k] : q.side === 'e' ? [x1, y0, k, y1 - y0] : [x0 - k, y0, k, y1 - y0];
+        const sr = src(rect[0], rect[1], rect[2], rect[3]);
+        if (!sr) continue;
+        g.save();
+        g.transform(q.ux, q.uy, q.vx, q.vy, q.ex, q.ey);
+        // horizontal faces read the strip left to right; side faces read it top to bottom
+        if (q.side === 'e' || q.side === 'w') {
+          g.transform(0, 1, 1, 0, 0, 0);
+          g.drawImage(snap, sr[0], sr[1], sr[2], sr[3], 0, 0, 1, 1);
+        } else g.drawImage(snap, sr[0], sr[1], sr[2], sr[3], 0, 0, 1, 1);
+        g.restore();
+      }
+    }
+  };
+})();
+
+//# sourceURL=engine/nextgen.js
+</script>
+<script>/* engine/nextgen-ceiling.js */
+/* The Linear Maze engine — engine/nextgen-ceiling.js
+ * Ceiling silhouettes for next-generation floors (engine/nextgen.js): black shapes hanging overhead,
+ * drawn after the lighting so they stay dark against the light, and lifted by the camera's tilt and
+ * parallax so they drift against the floor below them.
+ *
+ *   pipes     bundles of one to three pipes along a wall, with brackets, flanges and elbows into the wall
+ *   ducts     a wide duct along a wall, banded every tile
+ *   cables    cables slung across a room or corridor, sagging in the middle
+ *   beams     open trusses across a corridor
+ *   hanging   lamps on cords
+ *   fans      turning ceiling fans in open rooms; their blades hide what is under them as they pass.
+ *             Tiles tagged with the floor's fanTag always get one.
+ *
+ * Everything is laid out once per floor from its map and a seed, so a floor looks the same every visit;
+ * clutter (0 to 1) says how much of it there is.
+ */
+'use strict';
+(function () {
+  const LM = window.LM, T = LM.TILE, U = LM.util, NG = LM.ng;
+  const C = (NG.ceiling = {});
+
+  /** Every fixture on the floor: [{ kind, z, w, pts: [[x, y, z]...], box: [x0, y0, x1, y1], ... }]. */
+  C.build = function (L, cfg, N) {
+    const rnd = NG.rng(L, 'ceiling', cfg.seed);
+    const c = U.clamp(+cfg.clutter || 0, 0, 1);
+    const H = N.cfg.oblique.height * (cfg.height || 1.7);
+    const out = [];
+    const isOpen = (x, y) => L.inBounds(x, y) && !L.t(x, y).solid && L.t(x, y).id !== 'void';
+    const wall = (x, y) => NG.raised(L.t(x, y));
+    // a point d units out from a run's wall line, at tile position along it
+    const along = (run, at, d) => {
+      const n = { s: [0, 1], n: [0, -1], e: [1, 0], w: [-1, 0] }[run.dir];
+      const horiz = run.dir === 's' || run.dir === 'n';
+      const x = horiz ? at * T : run.x0 * T, y = horiz ? run.y0 * T : at * T;
+      return [x + n[0] * d, y + n[1] * d];
+    };
+    const busy = new Set(); // wall runs already carrying something
+    // nothing runs along a wall with something on it or in front of it you might need to see (a panel, a switch, a desk)
+    const things = new Set(L.spawns.filter((sp) => sp.kind !== 'door').map((sp) => sp.x + ',' + sp.y));
+    const cluttered = (run) => run.open.some((p) => {
+      const w = { s: [p.x, p.y - 1], n: [p.x, p.y + 1], e: [p.x - 1, p.y], w: [p.x + 1, p.y] }[run.dir];
+      return things.has(p.x + ',' + p.y) || things.has(w[0] + ',' + w[1]);
+    });
+    if (c > 0) {
+      for (const run of N.edges) {
+        if (run.len < 2 || cluttered(run)) continue;
+        const key = run.dir + run.x0 + ',' + run.y0;
+        const a0 = run.dir === 's' || run.dir === 'n' ? run.x0 : run.y0, a1 = a0 + run.len;
+        // ducts first: they are the biggest thing on a wall
+        if (cfg.ducts && run.len >= 3 && rnd() < c * 0.22) {
+          const w = 10 + rnd() * 6, d = w / 2 + 1;
+          const s0 = a0 + Math.floor(rnd() * run.len * 0.25), s1 = a1 - Math.floor(rnd() * run.len * 0.25);
+          if (s1 - s0 >= 2) {
+            out.push({ kind: 'duct', w, pts: [[...along(run, s0, d), H], [...along(run, s1, d), H]], bands: s1 - s0 });
+            busy.add(key);
+            continue;
+          }
+        }
+        if (cfg.pipes && rnd() < c * 0.55) {
+          const count = 1 + Math.floor(rnd() * Math.min(3, 1 + c * 3));
+          const s0 = a0 + Math.floor(rnd() * run.len * 0.3), s1 = a1 - Math.floor(rnd() * run.len * 0.3);
+          if (s1 - s0 < 2) continue;
+          let d = 3;
+          for (let i = 0; i < count; i++) {
+            const w = 2.4 + rnd() * 3.4;
+            d += w / 2;
+            const z = H * (0.94 - i * 0.04);
+            const pts = [];
+            // the pipe comes out of the wall, runs along it and goes back in
+            pts.push([...along(run, s0 + 0.25 * i, 0), z], [...along(run, s0 + 0.25 * i, d), z], [...along(run, s1 - 0.25 * i, d), z], [...along(run, s1 - 0.25 * i, 0), z]);
+            const flanges = [];
+            for (let a = s0 + 1; a < s1; a++) if (rnd() < 0.3) flanges.push(along(run, a + rnd() * 0.6, d).concat(z));
+            const brackets = [];
+            for (let a = s0 + 1; a < s1; a += 2) brackets.push([along(run, a, 0).concat(z), along(run, a, d).concat(z)]);
+            out.push({ kind: 'pipe', w, pts, flanges, brackets: i === 0 ? brackets : [], horiz: run.dir === 's' || run.dir === 'n' });
+            d += w / 2 + 1.5 + rnd() * 2;
+          }
+          busy.add(key);
+        }
+      }
+      // spans: open runs of floor between two walls, across rows and columns
+      const spans = [];
+      for (let y = 0; y < L.h; y++) {
+        let x = 0;
+        while (x < L.w) {
+          if (wall(x, y) && isOpen(x + 1, y)) {
+            let e = x + 1;
+            while (e < L.w && isOpen(e, y)) e++;
+            if (e < L.w && wall(e, y) && e - x - 1 >= 2 && e - x - 1 <= 9) spans.push({ horiz: true, a: x + 1, b: e, at: y, len: e - x - 1 });
+            x = e;
+          } else x++;
+        }
+      }
+      for (let x = 0; x < L.w; x++) {
+        let y = 0;
+        while (y < L.h) {
+          if (wall(x, y) && isOpen(x, y + 1)) {
+            let e = y + 1;
+            while (e < L.h && isOpen(x, e)) e++;
+            if (e < L.h && wall(x, e) && e - y - 1 >= 2 && e - y - 1 <= 9) spans.push({ horiz: false, a: y + 1, b: e, at: x, len: e - y - 1 });
+            y = e;
+          } else y++;
+        }
+      }
+      const P = (sp, along, across) => (sp.horiz ? [along, across] : [across, along]);
+      let lastBeam = -99;
+      spans.forEach((sp, i) => {
+        if (cfg.beams && sp.len <= 6 && i - lastBeam > 3 && rnd() < c * 0.16) {
+          lastBeam = i;
+          const at = sp.at * T + T / 2, w = 7 + rnd() * 5;
+          out.push({ kind: 'beam', w, pts: [[...P(sp, sp.a * T, at), H * 1.02], [...P(sp, sp.b * T, at), H * 1.02]] });
+          return;
+        }
+        if (cfg.cables && rnd() < c * 0.1) {
+          const n = 1 + Math.floor(rnd() * 3);
+          for (let k = 0; k < n; k++) {
+            const a = sp.at * T + 6 + rnd() * (T - 12), b = sp.at * T + 6 + rnd() * (T - 12);
+            const sag = H * (0.25 + rnd() * 0.3);
+            const pts = [];
+            for (let j = 0; j <= 12; j++) {
+              const t = j / 12;
+              pts.push([...P(sp, U.lerp(sp.a * T, sp.b * T, t), U.lerp(a, b, t)), H - sag * 4 * t * (1 - t)]);
+            }
+            out.push({ kind: 'cable', w: 1 + rnd() * 1.2, pts });
+          }
+        }
+      });
+    }
+    // hanging lamps and fans need open floor around them
+    const roomy = (x, y, r) => {
+      for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (!isOpen(x + dx, y + dy)) return false;
+      return true;
+    };
+    const fans = [];
+    const farFrom = (list, x, y, d) => list.every((p) => Math.abs(p.tx - x) + Math.abs(p.ty - y) >= d);
+    if (cfg.fans) {
+      if (cfg.fanTag && L.tags[cfg.fanTag]) for (const p of L.tags[cfg.fanTag]) fans.push({ tx: p.x, ty: p.y, R: 22 + rnd() * 6 });
+      if (c > 0) {
+        for (let y = 2; y < L.h - 2; y++) {
+          for (let x = 2; x < L.w - 2; x++) {
+            if (U.hash2(x, y, (cfg.seed | 0) + 31) > c * 0.05) continue;
+            const big = roomy(x, y, 2);
+            if (!big && !roomy(x, y, 1)) continue;
+            if (!farFrom(fans, x, y, 7)) continue;
+            fans.push({ tx: x, ty: y, R: big ? 26 + rnd() * 12 : 16 + rnd() * 6 });
+          }
+        }
+      }
+      for (const f of fans) {
+        const x = f.tx * T + T / 2, y = f.ty * T + T / 2;
+        out.push({ kind: 'fan', x, y, z: H * 0.86, R: f.R, blades: 3 + Math.floor(rnd() * 3), speed: (2.2 + rnd() * 3) * (cfg.fanSpeed == null ? 1 : +cfg.fanSpeed) * (rnd() < 0.5 ? -1 : 1), phase: rnd() * U.TAU, guard: rnd() < 0.5, pts: [[x, y, H * 0.86]] });
+      }
+    }
+    if (cfg.hanging && c > 0) {
+      const lamps = [];
+      for (let y = 1; y < L.h - 1; y++) {
+        for (let x = 1; x < L.w - 1; x++) {
+          if (U.hash2(x, y, (cfg.seed | 0) + 57) > c * 0.06 || !roomy(x, y, 1) || !farFrom(lamps, x, y, 4) || !farFrom(fans, x, y, 3)) continue;
+          lamps.push({ tx: x, ty: y });
+          const px = x * T + 6 + rnd() * (T - 12), py = y * T + 6 + rnd() * (T - 12);
+          out.push({ kind: 'lamp', x: px, y: py, R: 3.5 + rnd() * 3, pts: [[px, py, H], [px, py, H * 0.42]] });
+        }
+      }
+    }
+    // a box around each, padded for the lift
+    for (const f of out) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const p of f.pts) {
+        x0 = Math.min(x0, p[0]);
+        y0 = Math.min(y0, p[1]);
+        x1 = Math.max(x1, p[0]);
+        y1 = Math.max(y1, p[1]);
+      }
+      const pad = (f.R || 0) + (f.w || 0) + H * 1.3;
+      f.box = [x0 - pad, y0 - pad, x1 + pad, y1 + pad];
+    }
+    return out;
+  };
+
+  // ------------------------------------------------------------ drawing
+  function rimFor(L, f, cfg) {
+    if (f.rimC !== undefined) return f.rimC;
+    let best = null, bd = 190 * 190;
+    const N = L.ng;
+    const [x, y] = f.pts[Math.floor(f.pts.length / 2)];
+    if (N.neon) {
+      for (const tb of N.neon.tubes) {
+        const d = U.dist2(x, y, (tb.ax + tb.bx) / 2, (tb.ay + tb.by) / 2);
+        if (d < bd) {
+          bd = d;
+          best = tb.color;
+        }
+      }
+    }
+    f.rimC = best || '#8a94a8';
+    return f.rimC;
+  }
+  /** Draw the floor's silhouettes over everything but the overlays. With rim, draw instead the thin
+   *  edge of light they catch from below; that pass goes in before the lighting, so it only shows where
+   *  the floor under it is lit. */
+  C.draw = function (ctx, game, t, r, rim) {
+    const L = game.level, N = L.ng, list = N && N.ceiling, f = r.ngf;
+    if (!list || !list.length || !f) return;
+    const cfg = N.cfg.ceiling, v = r.view, par = cfg.parallax || 0;
+    if (rim && !cfg.rim) return;
+    const lift = (x, y, z) => {
+      const [dx, dy] = NG.lift(f, x, y, z, par);
+      return [x + dx, y + dy];
+    };
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.lineJoin = 'round';
+    const col = cfg.color || '#030407';
+    const alpha = U.clamp(cfg.opacity == null ? 0.94 : +cfg.opacity, 0, 1);
+    const grow = rim ? 1.8 : 0;
+    ctx.globalAlpha = rim ? alpha * 0.55 : alpha;
+    for (const fx of list) {
+      const b = fx.box;
+      if (b[2] < v.x0 || b[0] > v.x1 || b[3] < v.y0 || b[1] > v.y1) continue;
+      ctx.strokeStyle = ctx.fillStyle = rim ? rimFor(L, fx, cfg) : col;
+      if (fx.kind === 'fan') drawFan(ctx, fx, lift, t, grow);
+      else if (fx.kind === 'lamp') drawLamp(ctx, fx, lift, grow);
+      else drawRun(ctx, fx, lift, grow);
+    }
+    ctx.restore();
+  };
+  function path(ctx, pts, lift) {
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const [x, y] = lift(p[0], p[1], p[2]);
+      if (i) ctx.lineTo(x, y);
+      else ctx.moveTo(x, y);
+    });
+  }
+  function drawRun(ctx, fx, lift, grow) {
+    ctx.lineCap = fx.kind === 'duct' ? 'square' : fx.kind === 'beam' ? 'butt' : 'round';
+    if (fx.kind === 'beam') {
+      // an open truss: two chords and a zigzag between them
+      const [a, b] = fx.pts;
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+      const nx = (-dy / len) * fx.w / 2, ny = (dx / len) * fx.w / 2;
+      ctx.lineWidth = 2.2 + grow;
+      for (const s of [-1, 1]) {
+        path(ctx, [[a[0] + nx * s, a[1] + ny * s, a[2]], [b[0] + nx * s, b[1] + ny * s, b[2]]], lift);
+        ctx.stroke();
+      }
+      const n = Math.max(2, Math.round(len / 10));
+      const zig = [];
+      for (let i = 0; i <= n; i++) {
+        const k = i / n, s = i % 2 ? 1 : -1;
+        zig.push([a[0] + dx * k + nx * s, a[1] + dy * k + ny * s, a[2]]);
+      }
+      ctx.lineWidth = 1.4 + grow;
+      path(ctx, zig, lift);
+      ctx.stroke();
+      return;
+    }
+    ctx.lineWidth = fx.w + grow;
+    path(ctx, fx.pts, lift);
+    ctx.stroke();
+    if (fx.kind === 'duct') {
+      const [a, b] = fx.pts;
+      ctx.lineWidth = 2 + grow;
+      for (let i = 1; i < fx.bands; i++) {
+        const k = i / fx.bands;
+        const cx = U.lerp(a[0], b[0], k), cy = U.lerp(a[1], b[1], k);
+        const horiz = Math.abs(b[0] - a[0]) > Math.abs(b[1] - a[1]);
+        const e = fx.w / 2 + 1.2;
+        path(ctx, horiz ? [[cx, cy - e, a[2]], [cx, cy + e, a[2]]] : [[cx - e, cy, a[2]], [cx + e, cy, a[2]]], lift);
+        ctx.stroke();
+      }
+    }
+    if (fx.kind === 'pipe') {
+      for (const fl of fx.flanges || []) {
+        const e = fx.w * 0.85;
+        ctx.lineWidth = 2.2 + grow;
+        path(ctx, fx.horiz ? [[fl[0], fl[1] - e, fl[2]], [fl[0], fl[1] + e, fl[2]]] : [[fl[0] - e, fl[1], fl[2]], [fl[0] + e, fl[1], fl[2]]], lift);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 1.4 + grow;
+      for (const br of fx.brackets || []) {
+        path(ctx, br, lift);
+        ctx.stroke();
+      }
+    }
+  }
+  function drawFan(ctx, fx, lift, t, grow) {
+    const [x, y] = lift(fx.x, fx.y, fx.z);
+    const a0 = fx.phase + t * fx.speed;
+    for (let i = 0; i < fx.blades; i++) {
+      const a = a0 + (i * U.TAU) / fx.blades;
+      const ca = Math.cos(a), sa = Math.sin(a);
+      const L0 = fx.R * 0.16, L1 = fx.R + grow, w0 = fx.R * 0.1 + grow, w1 = fx.R * 0.2 + grow;
+      ctx.beginPath();
+      ctx.moveTo(x + ca * L0 - sa * w0, y + sa * L0 + ca * w0);
+      ctx.lineTo(x + ca * L1 - sa * w1, y + sa * L1 + ca * w1);
+      ctx.quadraticCurveTo(x + ca * (L1 + w1 * 0.6), y + sa * (L1 + w1 * 0.6), x + ca * L1 + sa * w1 * 0.4, y + sa * L1 - ca * w1 * 0.4);
+      ctx.lineTo(x + ca * L0 + sa * w0, y + sa * L0 - ca * w0);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.arc(x, y, fx.R * 0.2 + grow, 0, U.TAU);
+    ctx.fill();
+    if (fx.guard) {
+      ctx.lineWidth = 1.3 + grow;
+      ctx.beginPath();
+      ctx.arc(x, y, fx.R * 1.08, 0, U.TAU);
+      ctx.stroke();
+    }
+    // the rod it hangs from, up to the ceiling
+    const [cx, cy] = lift(fx.x, fx.y, fx.z / 0.86);
+    ctx.lineWidth = 2 + grow;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(cx, cy);
+    ctx.stroke();
+  }
+  function drawLamp(ctx, fx, lift, grow) {
+    ctx.lineWidth = 0.9 + grow;
+    ctx.lineCap = 'round';
+    path(ctx, fx.pts, lift);
+    ctx.stroke();
+    const p = fx.pts[1];
+    const [x, y] = lift(p[0], p[1], p[2]);
+    ctx.beginPath();
+    ctx.arc(x, y, fx.R + grow, 0, U.TAU);
+    ctx.fill();
+  }
+})();
+
+//# sourceURL=engine/nextgen-ceiling.js
+</script>
+<script>/* engine/nextgen-neon.js */
+/* The Linear Maze engine — engine/nextgen-neon.js
+ * Neon for next-generation floors (engine/nextgen.js): coloured tubes along the walls. Each tube is a
+ * row of ordinary static lights (so it lights the floor, is blocked by walls and can be switched by a
+ * trap's 'lights' effect through its tag) plus its own glowing glass, drawn in the emissive pass. On a
+ * tilted floor a tube sits on the wall's front, part way up.
+ *
+ * Where the tubes go (neon.where):
+ *   'all'        any wall facing open floor
+ *   'rooms'      walls of the named rooms (neon.rooms; every named room when the list is empty)
+ *   'corridors'  walls of narrow passages
+ *   'tag'        only along floor (or wall) tiles tagged neon.tag: paint the tag where you want tubes
+ *   'none'       no tubes
+ * density (0 to 1) is how many of the possible walls get one; colorMode 'room' gives each room one colour.
+ */
+'use strict';
+(function () {
+  const LM = window.LM, T = LM.TILE, U = LM.util, NG = LM.ng;
+  const NE = (NG.neon = {});
+  const isHex = (s) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(s || ''));
+
+  NE.build = function (game, L, cfg, N) {
+    const colors = (cfg.colors || []).filter(isHex);
+    const out = { tubes: [] };
+    if (!colors.length || cfg.where === 'none') return out;
+    const rnd = NG.rng(L, 'neon', 0);
+    const density = U.clamp(+cfg.density || 0, 0, 1);
+    const H = N.cfg.oblique.height;
+    const tagged = new Set(((cfg.where === 'tag' && cfg.tag && L.tags[cfg.tag]) || []).map((p) => p.x + ',' + p.y));
+    const rooms = cfg.rooms && cfg.rooms.length ? new Set(cfg.rooms) : null;
+    const isOpen = (x, y) => L.inBounds(x, y) && !L.t(x, y).solid && L.t(x, y).id !== 'void';
+    const narrow = (p, dir) => {
+      // floor across the passage, away from this wall: three tiles or fewer is a corridor
+      const [dx, dy] = { s: [0, 1], n: [0, -1], e: [1, 0], w: [-1, 0] }[dir];
+      let n = 0;
+      while (n < 5 && isOpen(p.x + dx * n, p.y + dy * n)) n++;
+      return n <= 3;
+    };
+    const wallOf = (p, dir) => ({ s: [p.x, p.y - 1], n: [p.x, p.y + 1], e: [p.x - 1, p.y], w: [p.x + 1, p.y] }[dir]);
+    const roomColor = new Map();
+    let cycle = 0;
+    const pickColor = (p) => {
+      if (cfg.colorMode === 'random') return colors[Math.floor(rnd() * colors.length)];
+      if (cfg.colorMode === 'cycle') return colors[cycle++ % colors.length];
+      const room = NG.roomAt(L, p.x, p.y) || 'zone' + Math.floor(p.x / 10) + ',' + Math.floor(p.y / 10);
+      if (!roomColor.has(room)) roomColor.set(room, colors[U.strHash(room + L.id) % colors.length]);
+      return roomColor.get(room);
+    };
+    const spans = []; // [run, first index, last index] within run.open
+    for (const run of N.edges) {
+      const open = run.open;
+      if (cfg.where === 'tag') {
+        // the tagged stretches of this run
+        let s = -1;
+        for (let i = 0; i <= open.length; i++) {
+          const p = open[i];
+          const w = p && wallOf(p, run.dir);
+          const on = p && (tagged.has(p.x + ',' + p.y) || tagged.has(w[0] + ',' + w[1]));
+          if (on && s < 0) s = i;
+          if (!on && s >= 0) {
+            spans.push([run, s, i - 1]);
+            s = -1;
+          }
+        }
+        continue;
+      }
+      const mid = open[Math.floor(open.length / 2)];
+      if (cfg.where === 'rooms') {
+        const room = NG.roomAt(L, mid.x, mid.y);
+        if (!room || (rooms && !rooms.has(room))) continue;
+      }
+      if (cfg.where === 'corridors' && open.filter((p) => narrow(p, run.dir)).length < open.length / 2) continue;
+      if (rnd() >= (run.len >= 2 ? density : density * 0.3)) continue;
+      let a = 0, b = open.length - 1;
+      if (open.length >= 4 && rnd() < 0.5) {
+        const len = Math.max(2, Math.floor(open.length * (0.4 + rnd() * 0.5)));
+        a = Math.floor(rnd() * (open.length - len + 1));
+        b = a + len - 1;
+      }
+      spans.push([run, a, b]);
+    }
+    for (const [run, a, b] of spans) {
+      const horiz = run.dir === 's' || run.dir === 'n';
+      const n = { s: [0, 1], n: [0, -1], e: [1, 0], w: [-1, 0] }[run.dir];
+      const pa = run.open[a], pb = run.open[b];
+      const inset = 0.15;
+      const ex = run.x0 * T, ey = run.y0 * T;
+      const ax = horiz ? (pa.x + inset) * T : ex, ay = horiz ? ey : (pa.y + inset) * T;
+      const bx = horiz ? (pb.x + 1 - inset) * T : ex, by = horiz ? ey : (pb.y + 1 - inset) * T;
+      const color = pickColor(pa);
+      const tube = {
+        dir: run.dir, color,
+        ax: ax + n[0] * 1.5, ay: ay + n[1] * 1.5, bx: bx + n[0] * 1.5, by: by + n[1] * 1.5,
+        // on the wall's front part way up; a wall seen from behind carries its tube on its top edge
+        z: run.dir === 'n' ? H : H * U.clamp(cfg.mount == null ? 0.7 : +cfg.mount, 0.05, 1),
+        flicker: rnd() < (+cfg.flicker || 0) ? 0.35 + rnd() * 0.45 : 0,
+        phase: rnd() * 10,
+        lights: [],
+      };
+      const len = Math.hypot(bx - ax, by - ay);
+      const count = Math.max(1, Math.round(len / (T * 2)));
+      for (let i = 0; i < count; i++) {
+        const k = (i + 0.5) / count;
+        const li = game.addStaticLight({
+          x: U.lerp(ax, bx, k) + n[0] * 10, y: U.lerp(ay, by, k) + n[1] * 10,
+          color, radius: +cfg.radius || 120, intensity: (cfg.brightness == null ? 0.9 : +cfg.brightness) * 0.55,
+          flicker: tube.flicker * 0.9, tag: cfg.lightTag || 'neon',
+        });
+        li.phase = tube.phase;
+        tube.lights.push(li);
+      }
+      tube.box = [Math.min(tube.ax, tube.bx) - 40, Math.min(tube.ay, tube.by) - 40, Math.max(tube.ax, tube.bx) + 40, Math.max(tube.ay, tube.by) + 40];
+      out.tubes.push(tube);
+    }
+    return out;
+  };
+
+  /** How much of a tube the player sees: 1 in sight, 0.15 explored, 0 never seen (always 1 without a player). */
+  function sight(game, L, tb) {
+    const P = game.player;
+    if (!P || game.attract || !game.los) return 1;
+    const n = { s: [0, 1], n: [0, -1], e: [1, 0], w: [-1, 0] }[tb.dir];
+    const fx = (tb.ax + tb.bx) / 2 + n[0] * 10, fy = (tb.ay + tb.by) / 2 + n[1] * 10;
+    // the line of sight is costly to check; a tube keeps its answer for a few frames
+    if (tb._seenAt === undefined || game.frame - tb._seenAt > 6) {
+      tb._seenAt = game.frame;
+      tb._seen = U.dist(P.x, P.y, fx, fy) < 900 && LM.physics.los(L, P.x, P.y, fx, fy) ? 1 : 0;
+    }
+    if (tb._seen) return 1;
+    const tx = Math.floor(fx / T), ty = Math.floor(fy / T);
+    return L.inBounds(tx, ty) && L.explored[ty * L.w + tx] ? 0.15 : 0;
+  }
+
+  /** The glowing glass, in the emissive pass ('lighter'). */
+  NE.drawGlow = function (ctx, game, t, r) {
+    const L = game.level, N = L.ng, f = r.ngf;
+    if (!N || !N.neon || !f) return;
+    const cfg = N.cfg.neon, v = r.view;
+    const bright = cfg.brightness == null ? 0.9 : +cfg.brightness;
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (const tb of N.neon.tubes) {
+      const b = tb.box;
+      if (b[2] < v.x0 || b[0] > v.x1 || b[3] < v.y0 || b[1] > v.y1) continue;
+      // seen now: full glow; a tube in a part of the floor you've been but can't see: a faint trace; never seen: nothing
+      const seen = sight(game, L, tb);
+      if (seen <= 0) continue;
+      const lit = !tb.lights.length || !tb.lights[0].off;
+      let k = (lit ? Math.min(1.2, bright) : 0.12) * seen;
+      // the same stutter as its lights (engine/render.js), so glass and glow flicker together
+      if (lit && tb.flicker) k *= 1 - tb.flicker * (0.5 + 0.5 * Math.sin(t * 13 + tb.phase) * Math.sin(t * 7.3 + tb.phase * 2));
+      const [dax, day] = NG.lift(f, tb.ax, tb.ay, tb.z);
+      const [dbx, dby] = NG.lift(f, tb.bx, tb.by, tb.z);
+      const lines = [];
+      if (cfg.style === 'double') {
+        const dx = tb.bx - tb.ax, dy = tb.by - tb.ay, len = Math.hypot(dx, dy) || 1;
+        const nx = (-dy / len) * 1.8, ny = (dx / len) * 1.8;
+        lines.push([tb.ax + dax + nx, tb.ay + day + ny, tb.bx + dbx + nx, tb.by + dby + ny], [tb.ax + dax - nx, tb.ay + day - ny, tb.bx + dbx - nx, tb.by + dby - ny]);
+      } else lines.push([tb.ax + dax, tb.ay + day, tb.bx + dbx, tb.by + dby]);
+      const passes = [[9, U.rgba(tb.color, 0.12 * k)], [4, U.rgba(tb.color, 0.45 * k)], [1.6, lit ? U.mix(tb.color, '#ffffff', 0.55) : U.rgba(tb.color, 0.3)]];
+      for (const [w, style] of passes) {
+        ctx.lineWidth = w;
+        ctx.strokeStyle = style;
+        ctx.globalAlpha = w < 2 ? Math.min(1, 0.95 * Math.max(k, 0.3)) : 1;
+        ctx.setLineDash(cfg.style === 'dashed' && w < 5 ? [7, 4] : []);
+        for (const [x0, y0, x1, y1] of lines) {
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+  };
+})();
+
+//# sourceURL=engine/nextgen-neon.js
+</script>
+<script>/* engine/nextgen-sheets.js */
+/* The Linear Maze engine — engine/nextgen-sheets.js
+ * Sprite-sheet looks: monsters, people and items drawn from a sheet of frames, as the editor makes them
+ * from a 3D model (.glb) under Next gen → 3D objects. The sheet is one picture in the game's
+ * editor/sprites.js; the look says how it is laid out:
+ *
+ *   look: {
+ *     type: 'sheet', sprite: 'picture id',
+ *     fw, fh,              one frame's size in pixels
+ *     dirs: 1 | 4 | 8 | 16, the directions the model was drawn from; direction 0 faces east, then clockwise
+ *     anims: { walk: { row, frames, fps, loop }, ... }   each animation's first row; one row per direction
+ *     states: { idle, move, attack, hurt, die }           which animation plays when (names from anims)
+ *     anchor: [ax, ay],    the pixel under the model's feet (drawn at the thing's position)
+ *     upp,                 world units per pixel (32 units is one tile)
+ *     glow,                optional glow colour
+ *     rotate,              true: a sheet drawn from straight above (dirs 1); the game turns it to face where
+ *                          it goes. `facing` says which way the drawing faces ('right' unless given)
+ *     hurtHold,            seconds the hurt animation holds after a hit (default: only while it flashes)
+ *   }
+ * An animation may also give `hit`: the frame an attack lands on. The frames before it then play over the
+ * attack's wind-up, so the blow lands when the damage does.
+ * Sheets drawn by hand (Look → Import a drawn sprite sheet) use the same format; templates and a guide are in
+ * editor/templates/.
+ *
+ * The editor runtime (engine/editor-runtime.js) turns a sheet look into draw functions with LM.ng.sheetLook.
+ * A monster with a 'die' animation leaves it playing where it fell.
+ */
+'use strict';
+(function () {
+  const LM = window.LM, U = LM.util, G = LM.gfx;
+  const NG = (LM.ng = LM.ng || {});
+
+  /** The animation a thing should be playing now. */
+  function stateOf(look, e, kind) {
+    const st = look.states || {};
+    const has = (n) => n && look.anims && look.anims[n];
+    if (kind === 'enemy' && e.atk && has(st.attack)) return st.attack;
+    if (e.flash > 0 && look.hurtHold) e._ngHurtUntil = (e.t || 0) + look.hurtHold;
+    if ((e.flash > 0 || e._ngHurtUntil > (e.t || 0)) && has(st.hurt)) return st.hurt;
+    const speed = Math.hypot(e.vx || 0, e.vy || 0);
+    if (speed > 8 && has(st.move)) return st.move;
+    if (has(st.idle)) return st.idle;
+    return Object.keys(look.anims || {})[0];
+  }
+  /** Which way the thing faces, as a direction index of the sheet. */
+  function dirOf(look, angle) {
+    const n = look.dirs || 1;
+    if (n <= 1) return 0;
+    const a = (((angle + (look.facingOffset || 0)) % U.TAU) + U.TAU) % U.TAU;
+    return Math.round(a / (U.TAU / n)) % n;
+  }
+  function frameOf(a, t0, t) {
+    const n = Math.max(1, a.frames || 1);
+    const i = Math.floor((t - t0) * (a.fps || 10));
+    return a.loop === false ? Math.min(n - 1, i) : ((i % n) + n) % n;
+  }
+  /** An attack's frame: with a `hit` frame, the frames before it play over the wind-up and the rest over the recovery. */
+  function attackFrame(a, e, t0, t) {
+    const ad = e.atk && e.atk.def;
+    if (a.hit == null || !ad || ad.windup == null) return frameOf(a, t0, t);
+    const n = Math.max(1, a.frames || 1), hit = Math.min(n - 1, a.hit), at = e.atk.t || 0, wind = ad.windup || 0.3;
+    const i = at < wind ? Math.floor((at / wind) * hit) : hit + Math.floor(((at - wind) / Math.max(0.15, ad.recover || 0.3)) * (n - hit));
+    return Math.max(0, Math.min(n - 1, i));
+  }
+  /** A top-down sheet (rotate): turn the drawing to face the way the thing faces. */
+  const DRAWN = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 };
+  function turn(g, look, angle) {
+    if (look.rotate && angle != null) g.rotate(angle - (DRAWN[look.facing || 'right'] || 0));
+  }
+  function blit(g, look, img, row, col, alpha) {
+    const fw = look.fw, fh = look.fh, upp = look.upp || 0.5;
+    const [ax, ay] = look.anchor || [fw / 2, fh * 0.8];
+    if (alpha != null) g.globalAlpha *= alpha;
+    g.drawImage(img, col * fw, row * fh, fw, fh, -ax * upp, -ay * upp, fw * upp, fh * upp);
+  }
+
+  /** Draw functions for a sheet look. image(id) returns a loaded Image (the editor runtime's ED.image). */
+  NG.sheetLook = function (look, kind, image) {
+    const out = {
+      draw(g, e, t) {
+        const img = image(look.sprite);
+        if (!img || !img.complete || !img.naturalWidth || !look.fw) {
+          g.fillStyle = look.color || '#7a7a7a';
+          g.beginPath();
+          g.arc(0, 0, (e.r || 10) * 0.9, 0, U.TAU);
+          g.fill();
+          return;
+        }
+        let angle = e.facing;
+        if (kind === 'item') {
+          // items are drawn turned with their placement; draw the sheet upright and pick the direction instead
+          if (e.turnAngle) g.rotate(-e.turnAngle);
+          angle = Math.PI / 2 + (e.turnAngle || 0);
+        }
+        if (angle == null) angle = Math.PI / 2;
+        const name = stateOf(look, e, kind);
+        const a = look.anims && look.anims[name];
+        if (!a) return;
+        const s = e._ngSheet || (e._ngSheet = { name: null, t0: 0 });
+        if (s.name !== name) {
+          s.name = name;
+          s.t0 = t;
+        }
+        if (look.bob) g.translate(0, Math.sin(t * 3 + (e.t || 0)) * 1.2);
+        if (look.rotate) {
+          // drawn from straight above: one row, turned to face where it goes (items keep their placement turn)
+          if (kind !== 'item') turn(g, look, e.facing);
+          else if (e.turnAngle) g.rotate(e.turnAngle);
+          blit(g, look, img, a.row, name === (look.states || {}).attack && kind === 'enemy' ? attackFrame(a, e, s.t0, t) : frameOf(a, s.t0, t));
+          return;
+        }
+        blit(g, look, img, a.row + dirOf(look, angle), name === (look.states || {}).attack && kind === 'enemy' ? attackFrame(a, e, s.t0, t) : frameOf(a, s.t0, t));
+      },
+    };
+    // no glow unless the look asks for one: a sheet replaces the whole drawing, including an earlier look's glow
+    out.drawGlow = null;
+    if (look.glow) {
+      out.drawGlow = kind === 'enemy'
+        ? (g, e, t) => G.glow(g, e.x, e.y, look.glowSize || e.r * 2.6, look.glow, 0.25 + 0.08 * Math.sin(t * 2))
+        : (g, it, t) => G.glow(g, 0, 0, look.glowSize || (it.r || 9) * 2, look.glow, 0.3 + 0.1 * Math.sin(t * 2.5));
+    }
+    const die = look.states && look.states.die && look.anims && look.anims[look.states.die];
+    if (kind === 'enemy' && die) {
+      // the death plays out where it fell, holds its last frame, then fades
+      out.sheetDeath = function (e, game) {
+        const img = image(look.sprite);
+        if (!img || !game || !game.fx) return;
+        const row = die.row + (look.rotate ? 0 : dirOf(look, e.facing == null ? Math.PI / 2 : e.facing));
+        const facing = e.facing;
+        const dur = Math.max(1, die.frames || 1) / (die.fps || 10);
+        game.fx.push({
+          t: 0,
+          update(dt) {
+            this.t += dt;
+            return this.t > dur + 1.6;
+          },
+          draw(ctx) {
+            ctx.save();
+            ctx.translate(e.x, e.y);
+            turn(ctx, look, facing);
+            const fade = this.t > dur + 0.8 ? 1 - (this.t - dur - 0.8) / 0.8 : 1;
+            blit(ctx, look, img, row, frameOf(Object.assign({}, die, { loop: false }), 0, this.t), Math.max(0, fade));
+            ctx.restore();
+          },
+        });
+      };
+    }
+    return out;
+  };
+})();
+
+//# sourceURL=engine/nextgen-sheets.js
 </script>
 <script>/* engine/particles.js */
 /* The Linear Maze engine — engine/particles.js
@@ -7369,6 +8481,8 @@ kbd {
           if (spec) this.addStaticLight(Object.assign({ x: x * T + T / 2, y: y * T + T / 2 }, spec));
         }
       }
+      // a next-generation floor's fixtures: ceiling silhouettes and neon (engine/nextgen.js)
+      if (LM.ng) LM.ng.attach(this, L);
       // where you arrive: given, the stairs you came up by, or the floor's start
       let at = opts.at && Number.isFinite(opts.at.x) && Number.isFinite(opts.at.y) ? opts.at : null;
       if (!at && opts.arrive) {
@@ -27035,7 +28149,7 @@ LM.definePack({
     else if (kind === 'enemies') buildEnemy(def);
     else if (kind === 'lootTables') buildLoot(def);
     else if (kind === 'npcs') {
-      if (def.look && def.look.type === 'sprite') Object.assign(def, ED.looks.sprite(def.look, 'npc'));
+      if (def.look && (def.look.type === 'sprite' || def.look.type === 'sheet')) Object.assign(def, ED.looks[def.look.type](def.look, 'npc'));
     }
     return def;
   };
@@ -27565,6 +28679,14 @@ LM.definePack({
   // ================================================================ enemies
   function buildEnemy(def) {
     if (def.look) Object.assign(def, ED.lookFor(def.look, 'enemy'));
+    if (def.sheetDeath && !def._sheetHooked) {
+      def._sheetHooked = true;
+      const prev = def.onDeath;
+      def.onDeath = function (e, game) {
+        if (prev) prev.call(this, e, game);
+        if (def.sheetDeath) def.sheetDeath(e, game);
+      };
+    }
     if (def.deathEffects && !def._deathHooked) {
       def._deathHooked = true;
       const prev = def.onDeath;
@@ -27800,6 +28922,7 @@ LM.definePack({
       // tiles bake once; repaint any chunk that baked before the picture decoded
       const g = LM.game;
       if (g && g.renderer && g.renderer.chunks) g.renderer.chunks.clear();
+      if (g && g.renderer && LM.ng && LM.ng.oblique) LM.ng.oblique.forget(g.renderer);
       if (ED.onImageLoad) ED.onImageLoad(id);
     };
     img.src = src;
@@ -27856,6 +28979,9 @@ LM.definePack({
     }
     return out;
   };
+
+  /** A sprite sheet made from a 3D model (engine/nextgen-sheets.js): direction and animation picked as it moves. */
+  ED.looks.sheet = (look, kind) => (LM.ng && LM.ng.sheetLook ? LM.ng.sheetLook(look, kind, ED.image) : ED.looks.sprite(look, kind));
 
   /** A creature from parameters, in the style of the core enemies (top-down, facing right). */
   ED.looks.creature = function (look) {

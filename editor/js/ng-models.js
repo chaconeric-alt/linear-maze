@@ -9,6 +9,7 @@
  *   ED.ngModels.list()                  [{ id, name, look, ... }] every sheet in this game
  *   ED.ngModels.lookFor(id)             a look for it: { type: 'sheet', sprite: id, ... }
  *   ED.ngModels.lookPanel(kind, id, d, changed)   the Look tab's controls for a sheet look
+ *   ED.ngModels.importDrawn({ done(id) })   the importer for a sheet drawn by hand (a PNG on a template)
  *
  * Sheets are kept as pictures (editor/sprites.js) with their layout in the edit set's `sheets`
  * (editor/edits.js), so a thing's look and the sheet's own record agree. three.js and its glTF
@@ -600,11 +601,13 @@
       ED.rerender();
     };
     box.appendChild(h('div', { class: 'row' },
-      F().field('Model', F().select(look.sprite, [[undefined, list.length ? '(choose)' : '(no models yet)']].concat(list.map((s) => [s.id, s.name || s.id])), (v) => v && pickOne(v))),
-      h('button', { class: 'btn small', on: { click: () => NM.open({ done: pickOne }) } }, 'Import a 3D model…')));
+      F().field('Sheet', F().select(look.sprite, [[undefined, list.length ? '(choose)' : '(no sheets yet)']].concat(list.map((s) => [s.id, s.name || s.id])), (v) => v && pickOne(v))),
+      h('button', { class: 'btn small', on: { click: () => NM.open({ done: pickOne }) } }, 'Import a 3D model…'),
+      h('button', { class: 'btn small', on: { click: () => NM.importDrawn({ done: pickOne, suggest: id }) } }, 'Import a drawn sprite sheet…')));
+    box.appendChild(NM.templateLinks());
     const entry = NM.get(look.sprite);
     if (!entry) {
-      box.appendChild(h('p', { class: 'muted' }, look.sprite ? 'The sheet “' + look.sprite + '” isn’t in this game any more.' : 'Choose a model, or import one (.glb).'));
+      box.appendChild(h('p', { class: 'muted' }, look.sprite ? 'The sheet “' + look.sprite + '” isn’t in this game any more.' : 'Choose a sheet, or import one: a 3D model (.glb), or a sheet you drew.'));
       return box;
     }
     const img = ED.engine.X.image(look.sprite);
@@ -612,7 +615,132 @@
       F().field('Size', ED.ng.slider(look.upp / entry.look.upp, (v) => { look.upp = Math.round(entry.look.upp * v * 1000) / 1000; changed(); }, { min: 0.3, max: 3, step: 0.05, fmt: (x) => '×' + x })),
       F().field('Glow', F().color(look.glow, (v) => { if (v) look.glow = v; else delete look.glow; changed(); }, { allowEmpty: true })),
       F().field('Bobs', F().bool(look.bob, (v) => { if (v) look.bob = true; else delete look.bob; changed(); })),
-      h('p', { class: 'hint' }, 'Plays ' + Object.entries(look.states || {}).map(([s, a]) => a + ' when ' + { idle: 'still', move: 'moving', attack: 'attacking', hurt: 'hurt', die: 'dying' }[s]).join(', ') + '. ' + (entry.made && entry.made.tilt ? 'Drawn for a camera tilted ' + Math.round(entry.made.tilt * 100) + '%.' : 'Drawn looking straight down.')))));
+      h('p', { class: 'hint' }, 'Plays ' + Object.entries(look.states || {}).map(([s, a]) => a + ' when ' + { idle: 'still', move: 'moving', attack: 'attacking', hurt: 'hurt', die: 'dying' }[s]).join(', ') + '. ' + (entry.made && entry.made.drawn ? 'Drawn by hand: ' + ((NM.STYLES.find((st) => st[0] === entry.made.style) || [])[1] || 'a sheet') + '.' : entry.made && entry.made.tilt ? 'Drawn for a camera tilted ' + Math.round(entry.made.tilt * 100) + '%.' : 'Drawn looking straight down.')))));
     return box;
   };
+
+  // ------------------------------------------------------------ sheets drawn by hand
+  // A PNG drawn on one of the templates in editor/templates/ (see SPRITE-SHEETS.md there), kept in the same
+  // `sheets` records as the 3D models, so the Look tab and the engine treat it like any other sheet.
+  NM.STYLES = [
+    ['topdown', 'Seen from straight above, facing right (the game turns it): one row per animation'],
+    ['34-4', 'Three-quarter view (for the tilted camera), 4 directions: east, south, west, north'],
+    ['34-8', 'Three-quarter view, 8 directions: east, south-east, south … north-east'],
+    ['34-1', 'Three-quarter view, one direction (it doesn’t turn)'],
+  ];
+  NM.ANIMS = [['idle', 4, 6], ['walk', 6, 10], ['attack', 6, 12], ['hurt', 2, 12], ['death', 6, 10]];
+  const STATE = { idle: 'idle', walk: 'move', attack: 'attack', hurt: 'hurt', death: 'die' };
+  const dirsOf = (style) => ({ topdown: 1, '34-4': 4, '34-8': 8, '34-1': 1 })[style] || 1;
+  /** The look for a drawn sheet: o = { style, fw, fh, size, facing, frames: { idle: [frames, fps], ... }, hit } */
+  NM.drawnLook = function (o) {
+    const dirs = dirsOf(o.style), top = o.style === 'topdown';
+    const anims = {}, states = {};
+    NM.ANIMS.forEach(([name], i) => {
+      const [frames, fps] = o.frames[name] || [0, 10];
+      if (!(frames > 0)) return;
+      anims[name] = { row: i * dirs, frames, fps };
+      if (name === 'attack' && o.hit != null) anims[name].hit = o.hit;
+      if (name === 'death') anims[name].loop = false;
+      states[STATE[name]] = name;
+    });
+    const look = {
+      fw: o.fw, fh: o.fh, dirs, anims, states,
+      anchor: top ? [o.fw / 2, o.fh / 2] : [o.fw / 2, Math.round(o.fh * 0.875 * 10) / 10],
+      upp: Math.round((o.size / o.fw) * 1000) / 1000,
+      hurtHold: 0.25,
+    };
+    if (top) {
+      look.rotate = true;
+      if (o.facing && o.facing !== 'right') look.facing = o.facing;
+    }
+    return look;
+  };
+  /** The importer for a drawn sheet: pick a PNG, say how it's laid out, check it moving, keep it. */
+  NM.importDrawn = async function (opts) {
+    opts = opts || {};
+    const file = await ED.pickFile('image/png,image/webp,image/*');
+    if (!file) return;
+    const url = await ED.readFile(file, 'dataURL');
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('That file isn’t a picture the browser can read.'));
+      i.src = url;
+    });
+    const W = img.naturalWidth, H = img.naturalHeight;
+    // a first guess from the size: 8 columns, square frames for top-down, 4:5 for three-quarter
+    const o = { style: 'topdown', fw: Math.round(W / 8), fh: Math.round(W / 8), size: 34, facing: 'right', hit: 3, frames: {} };
+    if (H / o.fw > 8) Object.assign(o, { style: H / Math.round(o.fw * 1.25) >= 40 ? '34-8' : '34-4', fh: Math.round(o.fw * 1.25) });
+    for (const [n, f, fps] of NM.ANIMS) o.frames[n] = [f, fps];
+    const name = h('input', { type: 'text', value: (opts.suggest || file.name.replace(/\.\w+$/, '')).replace(/[-_]+/g, ' ') });
+    const fit = h('p', { class: 'hint' });
+    const demoBox = h('div');
+    const sheetCv = h('canvas', { class: 'ng-sheet-grid' });
+    const form = h('div', { class: 'subform' });
+    const table = h('table', { class: 'ng-anim-table' });
+    const look = () => Object.assign({ type: 'sheet', sprite: '' }, NM.drawnLook(o));
+    const redraw = () => {
+      const cols = W / o.fw, rows = H / o.fh, need = NM.ANIMS.length * dirsOf(o.style);
+      const ok = Number.isInteger(cols) && Number.isInteger(rows);
+      fit.textContent = (ok ? '' : '⚠ ') + W + ' × ' + H + ' pixels: ' + (ok ? cols + ' columns × ' + rows + ' rows of ' + o.fw + ' × ' + o.fh + ' frames' + (rows < need ? '. ⚠ This layout needs ' + need + ' rows.' : '.') : 'not a whole number of ' + o.fw + ' × ' + o.fh + ' frames. Check the frame size.');
+      fit.classList.toggle('warn', !ok || rows < need);
+      const k = Math.min(1, 420 / W, 420 / H);
+      sheetCv.width = Math.round(W * k);
+      sheetCv.height = Math.round(H * k);
+      const g = sheetCv.getContext('2d');
+      g.drawImage(img, 0, 0, sheetCv.width, sheetCv.height);
+      g.strokeStyle = 'rgba(255, 64, 160, 0.55)';
+      for (let x = 0; x <= W; x += o.fw) { g.beginPath(); g.moveTo(x * k + 0.5, 0); g.lineTo(x * k + 0.5, sheetCv.height); g.stroke(); }
+      for (let y = 0; y <= H; y += o.fh) { g.beginPath(); g.moveTo(0, y * k + 0.5); g.lineTo(sheetCv.width, y * k + 0.5); g.stroke(); }
+      ED.clear(demoBox);
+      demoBox.appendChild(NM.demo(look(), () => img));
+    };
+    const num = (v, cb, a) => F().number(v, (x) => { cb(x); redraw(); }, a);
+    const buildForm = () => {
+      ED.clear(form);
+      form.append(
+        F().field('Name', name),
+        F().field('How it’s drawn', F().select(o.style, NM.STYLES, (v) => {
+          o.style = v;
+          if (v === 'topdown') o.fh = o.fw;
+          else if (o.fh === o.fw) o.fh = Math.round(o.fw * 1.25);
+          buildForm();
+          redraw();
+        })),
+        F().field('Frame width (pixels)', num(o.fw, (x) => (o.fw = x || o.fw), { min: 8, max: 1024 })),
+        F().field('Frame height (pixels)', num(o.fh, (x) => (o.fh = x || o.fh), { min: 8, max: 1024 })),
+        F().field('Size in the game (units across one frame)', num(o.size, (x) => (o.size = x || 34), { min: 4, max: 400 }), 'A tile is 32 units. 34 suits an ordinary monster in a 64-pixel frame; you can change it later on the Look tab.'),
+        ...(o.style === 'topdown' ? [F().field('The drawing faces', F().select(o.facing, [['right', 'right'], ['up', 'up'], ['left', 'left'], ['down', 'down']], (v) => { o.facing = v; redraw(); }))] : []));
+      ED.clear(table);
+      table.appendChild(h('tr', null, h('th', null, 'Animation'), h('th', null, 'Frames'), h('th', null, 'Frames a second'), h('th', null, 'Hit frame (from 1)')));
+      for (const [n] of NM.ANIMS) {
+        const f = o.frames[n];
+        table.appendChild(h('tr', null, h('td', null, n), h('td', null, num(f[0], (x) => (f[0] = x || 0), { min: 0, max: 64 })), h('td', null, num(f[1], (x) => (f[1] = x || 10), { min: 1, max: 60 })),
+          h('td', null, n === 'attack' ? num(o.hit + 1, (x) => (o.hit = Math.max(0, (x || 1) - 1)), { min: 1, max: 64 }) : null)));
+      }
+    };
+    buildForm();
+    redraw();
+    ED.modal({
+      title: 'Import a drawn sprite sheet', wide: true,
+      body: h('div', { class: 'ng-drawn' },
+        h('p', { class: 'muted' }, 'A sheet drawn on one of the templates (Look tab, or editor/templates/): one row per animation (per direction), in the order idle, walk, attack, hurt, death, one frame per column. Frames set to 0 are left out.'),
+        h('div', { class: 'row', style: { alignItems: 'flex-start', gap: '16px' } }, h('div', { style: { flex: 1 } }, form, table), h('div', null, demoBox, h('p', { class: 'hint' }, 'Walks a circle, stands, attacks.'))),
+        fit, sheetCv),
+      actions: [{ label: 'Cancel', quiet: true }, { label: 'Use this sheet', primary: true, onClick: () => {
+        const id = ED.uniqueId(ED.slug(name.value) || 'sheet', (x) => !!M().sprites[x]);
+        save(id, { name: name.value || id, look: NM.drawnLook(o), made: { drawn: true, style: o.style, file: file.name } }, url);
+        if (opts.done) opts.done(id);
+      } }],
+    });
+  };
+  NM.TEMPLATES = [
+    ['sheet-topdown-64.png', 'top-down, 64 px'], ['sheet-topdown-128.png', 'top-down, 128 px (big monsters)'],
+    ['sheet-34-4dir-64x80.png', 'three-quarter, 4 directions'], ['sheet-34-8dir-64x80.png', 'three-quarter, 8 directions'],
+    ['sheet-34-4dir-128x160.png', 'three-quarter, 4 directions, 128 px'],
+    ['example-topdown-beetle-64.png', 'example: top-down beetle'], ['example-34-slime-4dir-64x80.png', 'example: three-quarter slime'],
+  ];
+  /** Links to the templates and the guide. */
+  NM.templateLinks = () => h('p', { class: 'muted' }, 'Drawing your own? Start from a template (draw on a layer above it, hide the guide, export a transparent PNG): ',
+    ...NM.TEMPLATES.flatMap(([f, label], i) => [i ? ' · ' : '', h('a', { href: 'templates/' + f, download: '' }, label)]), ' · ', h('a', { href: 'templates/SPRITE-SHEETS.md', target: '_blank' }, 'the guide'));
 })();

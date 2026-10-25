@@ -1,0 +1,58 @@
+/* games/havknot/game.js — HavKnot
+ * The game’s manifest: what it’s called, its title screen, the words on the engine’s own
+ * screens, and the asset packs it loads, in order. The editor’s Game page writes this file;
+ * hand edits are kept as long as it stays one LM.defineGame({...}) call.
+ * engine/SPEC.md section 21 explains every field.
+ */
+LM.defineGame({
+  id: 'havknot',
+  title: 'HavKnot',
+  version: '0.1.0',
+  description: '',
+  brief: '',
+  packs: ['linear-maze/core'],
+  start: null,
+  saveKey: null,
+  editorChanges: true,
+  titleScreen: {
+    lines: ['HavKnot'],
+    layout: 'stairs',
+    size: 'large',
+    font: 'Major Mono Display',
+    tagline: '',
+    newGame: 'New game',
+    showControls: true,
+    footer: 'Content packs: {packs}',
+    background: null,
+    picture: null,
+  },
+  theme: { accent: '#e0b25a' },
+  words: {
+    floor: 'Floor {n}',
+    continueGame: 'Continue: {floor}, {name}',
+    descend: 'Go on to {floor}: {name}',
+    nextIntro: 'The way goes on.',
+    cleared: '{floor} cleared',
+    leftBehind: '{floor} · left behind',
+    victoryKicker: 'The end',
+    victoryTitle: 'You made it',
+    victoryText: '',
+    playAgain: 'Play again',
+    deathTitle: 'You died',
+    deathText: 'Trying again restores you to how you entered this floor.',
+    tryAgain: 'Try the floor again',
+    backToTitle: 'Back to title',
+    noWayUp: 'The way back up is closed.',
+    elevator: 'Elevator',
+    elevatorTitle: 'Which floor?',
+    elevatorPrompt: 'Choose a floor',
+    elevatorHere: 'you are here',
+    elevatorBlocked: 'no way out there',
+    elevatorStay: 'Stay on this floor',
+    elevatorNoPower: 'No power. The doors won’t open.',
+    elevatorLocked: 'locked',
+    stairsLocked: 'The way is shut.',
+    doorNeeds: 'Locked. It needs {need}.',
+    doorAccepts: '{need} accepted.',
+  },
+});

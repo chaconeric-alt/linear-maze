@@ -12,7 +12,8 @@
  * a second, in ticks of `interval` seconds, default 0.5), stun (an enemy can't act while it lasts),
  * vulnerable (+ fraction of damage taken: 0.2 = 20% more), color (the chip, and a glow under an enemy),
  * only ('player' | 'robot' | 'monster': who it can land on; robots are enemies with `robot: true`),
- * cures (statuses it ends when it lands), hud: false (no chip), onApply(game, target, s), onEnd(game, target, s).
+ * cures (statuses it ends when it lands), hud: false (no chip), onApply(game, target, s), onEnd(game, target, s),
+ * damageType (what its ticks count as, for an enemy's `takes`), ignoreArmor (its ticks go straight through armor: acid).
  *
  * Applying one: anything that hurts can carry `status` — a weapon, a projectile, an enemy attack, an
  * explosion, a trap — as an id or { id, seconds }. LM.combat.hurt applies it when the hit lands.
@@ -124,9 +125,9 @@
             // a status ticks through the short invulnerability a hit gives, and doesn't give any itself
             const saved = target.invuln;
             target.invuln = 0;
-            LM.combat.hurt(game, target, dmg, { source: 'status', type: 'status', status: null });
+            LM.combat.hurt(game, target, dmg, { source: 'status', type: 'status', status: null, damageType: d.damageType, ignoreArmor: d.ignoreArmor });
             if (!target.dead) target.invuln = saved;
-          } else LM.combat.hurt(game, target, dmg, { source: 'status', type: 'status' });
+          } else LM.combat.hurt(game, target, dmg, { source: 'status', type: 'status', damageType: d.damageType, ignoreArmor: d.ignoreArmor });
         }
       }
       if (d.stun && target.isEnemy && s.t > 0) target.stunned = Math.max(target.stunned || 0, Math.min(s.t, 0.2));

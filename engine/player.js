@@ -58,6 +58,10 @@
       this.lastWeaponIdx = 0;
       this.ammo = {};
       for (const k of Object.keys(AMMO_MAX)) this.ammo[k] = 0;
+      this.mags = {}; // rounds loaded in each magazine weapon (weapon id -> count); saved
+      this.reloadT = 0; // seconds left on the reload under way (0: not reloading)
+      this.reloadMax = 0;
+      this.heat = {}; // overheating weapons: weapon id -> { shots: [times], until }
       this.keyItems = []; // things the player carries between floors: { id, name, text, color } (game.giveKeyItem)
       this.gold = 0;
       this.keys = new Set();
@@ -92,7 +96,7 @@
       return JSON.parse(
         JSON.stringify({
           hp: this.hp, shield: this.shield, gold: this.gold, weapons: this.weapons, weaponIdx: this.weaponIdx,
-          ammo: this.ammo, equip: this.equip, bag: this.bag, blessings: this.blessings,
+          ammo: this.ammo, mags: this.mags, equip: this.equip, bag: this.bag, blessings: this.blessings,
           gadgets: this.gadgets, flags: [...this.flags], data: this.data, keyItems: this.keyItems,
         })
       );
@@ -109,6 +113,7 @@
       this.data = JSON.parse(JSON.stringify(s.data || {}));
       this.keyItems = Array.isArray(s.keyItems) ? JSON.parse(JSON.stringify(s.keyItems)) : [];
       Object.assign(this.ammo, s.ammo || {});
+      this.mags = Object.assign({}, s.mags || {});
       for (const k of Object.keys(this.equip)) this.equip[k] = s.equip && s.equip[k] && LM.find('armor', s.equip[k]) ? s.equip[k] : null;
       this.bag = (s.bag || []).filter(known('armor'));
       this.blessings = (s.blessings || []).filter(known('blessings'));
@@ -123,7 +128,20 @@
         if (!mods) return;
         for (const k of Object.keys(mods)) if (k in s) s[k] += mods[k];
       };
-      for (const slot of Object.keys(this.equip)) if (this.equip[slot]) apply(LM.get('armor', this.equip[slot]).mods);
+      // a piece with `coverage` only protects the hits that strike it (LM.combat.hurtPlayer rolls for it),
+      // so its armor stays out of the flat figure
+      s.plates = [];
+      s.takes = {};
+      for (const slot of Object.keys(this.equip)) {
+        if (!this.equip[slot]) continue;
+        const a = LM.get('armor', this.equip[slot]);
+        if (a.coverage != null && a.mods && a.mods.armor) {
+          s.plates.push({ id: a.id, name: a.name, armor: a.mods.armor, coverage: U.clamp(+a.coverage || 0, 0, 1) });
+          apply(Object.assign({}, a.mods, { armor: 0 }));
+        } else apply(a.mods);
+        // takes: { electric: 0.5 } multiplies that kind of damage (insulated boots); several pieces multiply
+        if (a.takes) for (const [k, v] of Object.entries(a.takes)) s.takes[k] = (s.takes[k] == null ? 1 : s.takes[k]) * v;
+      }
       for (const b of this.blessings) apply(LM.get('blessings', b).mods);
       for (const id of this.gadgets) {
         const gd = LM.get('gadgets', id);
@@ -182,6 +200,7 @@
         return 'ammo';
       }
       this.weapons.push(id);
+      if (w.magazine) this.loadMag(w, true);
       this.weapons.sort((a, b) => (LM.get('weapons', a).slot || 9) - (LM.get('weapons', b).slot || 9));
       if (this.weapons.length === 1) this.weaponIdx = -1;
       if (w.ammo) this.addAmmo(w.ammo, w.pickupAmmo || 10);
@@ -194,7 +213,81 @@
       this.lastWeaponIdx = this.weaponIdx;
       this.weaponIdx = i;
       this.fireCd = Math.max(this.fireCd, 0.12);
+      this.reloadT = 0; // switching drops a reload under way
       LM.audio.play('switch');
+    }
+
+    // ---------------------------------------------------- magazines and heat
+    /** Rounds loaded in a magazine weapon (w.magazine). A weapon seen for the first time loads from the reserve. */
+    magOf(w) {
+      if (!w || !w.magazine) return Infinity;
+      if (this.mags[w.id] == null) this.loadMag(w, true);
+      return this.mags[w.id];
+    }
+    /** Fill a weapon's magazine from its reserve (or from nothing, for a weapon with no ammo kind). Returns rounds loaded. */
+    loadMag(w, quiet) {
+      const have = this.mags[w.id] || 0;
+      let n = Math.max(0, w.magazine - have);
+      if (w.ammo) n = Math.min(n, this.ammo[w.ammo] || 0);
+      this.mags[w.id] = have + n;
+      if (w.ammo) this.ammo[w.ammo] -= n;
+      return n;
+    }
+    /** Start reloading the weapon in hand: w.reloadTime seconds (1.5), cancelled by switching weapons. */
+    startReload(game) {
+      const w = this.currentWeapon();
+      if (!w || !w.magazine || this.reloadT > 0 || !this.isArmed(game)) return false;
+      if (this.magOf(w) >= w.magazine) return false;
+      if (w.ammo && !(this.ammo[w.ammo] > 0)) {
+        if (this.emptyWarn <= 0) {
+          LM.audio.play('empty');
+          game.toast('Out of ' + LM.AMMO_NAMES[w.ammo].toLowerCase(), 'warn');
+          this.emptyWarn = 1.2;
+        }
+        return false;
+      }
+      this.reloadMax = this.reloadT = w.reloadTime || 1.5;
+      this.reloadId = w.id;
+      LM.audio.play('switch');
+      if (w.onReload) w.onReload(game, this, 'start');
+      return true;
+    }
+    finishReload(game) {
+      const w = this.currentWeapon();
+      this.reloadT = 0;
+      if (!w || w.id !== this.reloadId) return;
+      this.loadMag(w);
+      LM.audio.play('switch');
+      if (w.onReload) w.onReload(game, this, 'done');
+    }
+    /** How hot a weapon with `heat` is: 0..1 (1: overheated). */
+    heatOf(w, game) {
+      const h = w && w.heat && this.heat[w.id];
+      if (!h) return 0;
+      const now = game ? game.time : 0;
+      if (h.until > now) return 1;
+      const win = w.heat.window || 3;
+      h.shots = h.shots.filter((t) => now - t < win);
+      return Math.min(1, h.shots.length / (w.heat.shots || 6));
+    }
+    overheated(w, game) {
+      const h = w && w.heat && this.heat[w.id];
+      return !!(h && h.until > game.time);
+    }
+    /** A shot from a weapon with heat: { shots, window, cooldown }. That many shots inside window seconds overheats it. */
+    addHeat(w, game) {
+      const H = w.heat, h = this.heat[w.id] || (this.heat[w.id] = { shots: [], until: 0 });
+      const now = game.time;
+      h.shots = h.shots.filter((t) => now - t < (H.window || 3));
+      h.shots.push(now);
+      if (h.shots.length >= (H.shots || 6)) {
+        h.shots.length = 0;
+        h.until = now + (H.cooldown || 3);
+        LM.audio.play('empty');
+        game.toast(w.name + ' overheated', 'warn');
+        game.particles.burst(this.x + Math.cos(this.aim) * 14, this.y + Math.sin(this.aim) * 14, 8, { type: 'smoke', color: '#9a9488', speed: 30, life: 0.9, size: 3, alpha: 0.35 });
+        if (H.onOverheat) H.onOverheat(game, this);
+      }
     }
     /** Put on an armour piece. The old piece goes to the bag. */
     equipArmor(id) {
@@ -232,6 +325,10 @@
       this.recoil = U.damp(this.recoil, 0, 7, dt);
       this.emptyWarn -= dt;
       this.gadgetCd -= dt;
+      if (this.reloadT > 0) {
+        this.reloadT -= dt;
+        if (this.reloadT <= 0) this.finishReload(game);
+      }
       if (this.statuses && this.statuses.length && LM.status) {
         LM.status.update(game, this, dt);
         if (this.dead) return;
@@ -314,15 +411,28 @@
       for (let n = 1; n <= 9; n++) if (I.hit('Digit' + n) && this.weapons[n - 1]) this.switchTo(n - 1, game);
       if (I.wheel && this.weapons.length) this.switchTo((this.weaponIdx + (I.wheel > 0 ? 1 : -1) + this.weapons.length) % this.weapons.length, game);
       if (I.hit('KeyQ')) this.switchTo(this.lastWeaponIdx, game);
+      // R reloads a magazine weapon (unless a gadget has R)
+      if (I.hit('KeyR') && !this.gadgets.some((id) => LM.get('gadgets', id).key === 'KeyR')) this.startReload(game);
 
       // firing
       const w = this.currentWeapon();
       if (!this.isArmed(game)) {
         const gd = this.heldGadget();
         if (I.mouse.clicked && gd && gd.primary && this.gadgetCd <= 0 && game.state === 'play') gd.primary(game, this);
-      } else if (I.mouse.down && this.fireCd <= 0 && game.state === 'play') {
+      } else if (I.mouse.down && this.fireCd <= 0 && game.state === 'play' && this.reloadT <= 0) {
         const per = w.ammoPerShot || 1;
-        if (w.ammo && (this.ammo[w.ammo] || 0) < per) {
+        if (w.heat && this.overheated(w, game)) {
+          if (this.emptyWarn <= 0) {
+            LM.audio.play('empty');
+            this.emptyWarn = 0.6;
+          }
+        } else if (w.magazine && this.magOf(w) < per) {
+          // an empty magazine: reload if there's anything to load, else say so (and fall back to the first weapon)
+          if (!this.startReload(game)) {
+            this.fireCd = 0.25;
+            if (this.weaponIdx !== 0 && w.ammo && !(this.ammo[w.ammo] > 0)) game.schedule(0.25, () => this.switchTo(0, game));
+          }
+        } else if (!w.magazine && w.ammo && (this.ammo[w.ammo] || 0) < per) {
           if (this.emptyWarn <= 0) {
             LM.audio.play('empty');
             game.toast('Out of ' + LM.AMMO_NAMES[w.ammo].toLowerCase(), 'warn');
@@ -331,10 +441,14 @@
             if (this.weaponIdx !== 0) game.schedule(0.25, () => this.switchTo(0, game));
           }
         } else {
-          if (w.ammo) this.ammo[w.ammo] -= per;
+          if (w.magazine) this.mags[w.id] -= per;
+          else if (w.ammo) this.ammo[w.ammo] -= per;
           this.fireCd = 1 / w.fireRate;
           LM.combat.fireWeapon(game, this, w, this.aim);
+          if (w.heat) this.addHeat(w, game);
           game.stats.shots++;
+          // the last round out starts the reload by itself (w.autoReload: false to leave it to R)
+          if (w.magazine && this.mags[w.id] < per && w.autoReload !== false) game.schedule(1 / w.fireRate, () => { if (this.currentWeapon() === w) this.startReload(game); });
         }
       }
 
@@ -509,6 +623,17 @@
           ctx.rotate(this.aim);
           gd.drawGlow(ctx, this, game, t);
           ctx.restore();
+        }
+      }
+      const w = this.isArmed(game) ? this.currentWeapon() : null;
+      if (w && w.heat) {
+        // a hot barrel glows, and an overheated one pulses red until it cools
+        const k = this.heatOf(w, game), hot = this.overheated(w, game);
+        const a = hot ? 0.75 + 0.25 * Math.sin(t * 14) : k * k * 0.6;
+        if (a > 0.02) {
+          const len = (w.length || 14) + 2;
+          LM.gfx.glow(ctx, this.x + Math.cos(this.aim) * len, this.y + Math.sin(this.aim) * len, hot ? 14 : 6 + k * 6, w.heat.color || '#ff3a1e', a);
+          LM.gfx.glow(ctx, this.x + Math.cos(this.aim) * len * 0.6, this.y + Math.sin(this.aim) * len * 0.6, hot ? 10 : 5, w.heat.color || '#ff3a1e', a * 0.6);
         }
       }
       const st = this.stats();

@@ -67,6 +67,8 @@
         }
       }
     }
+    // curved walls (engine/shapes.js) live in floor squares, so they're checked on their own
+    if (level.curve && LM.shapes.resolve(level, e, x0, y0, x1, y1)) hit = true;
     return hit;
   }
   P.resolve = resolve;
@@ -90,6 +92,7 @@
     const tx = Math.floor(x / T), ty = Math.floor(y / T);
     const d = level.t(tx, ty);
     if (level.dynAt(tx, ty) === 1) return true;
+    if (level.curve && LM.shapes.solidAt(level, x, y)) return true;
     if (!d.blocksShots) return false;
     if (d.rect || d.rects) {
       for (const rc of level.rectsAt(tx, ty)) {
@@ -132,6 +135,17 @@
       if (t > maxDist) break;
       const d = level.t(tx, ty);
       const dyn = level.dynAt(tx, ty) === 1;
+      // a curved wall inside this square (engine/shapes.js)
+      if (level.curve && tx >= 0 && ty >= 0 && tx < level.w && ty < level.h && level.curve[ty * level.w + tx]) {
+        const ht = LM.shapes.rayTile(level, ty * level.w + tx, ox, oy, dx, dy, t, Math.min(tMX, tMY));
+        if (ht >= 0 && ht <= maxDist) {
+          out.t = ht;
+          out.wall = true;
+          out.tx = tx;
+          out.ty = ty;
+          return out.t;
+        }
+      }
       const blocks = dyn || (light ? d.blocksLight : d.blocksShots);
       if (blocks) {
         if (d.shape === 'circle' && !dyn) {
@@ -203,6 +217,18 @@
     const r2 = radius * radius;
     for (let ty = y0; ty <= y1; ty++) {
       for (let tx = x0; tx <= x1; tx++) {
+        const refs = level.curve && level.curve[ty * level.w + tx];
+        if (refs) {
+          // the ends of each curved piece of wall, so shadows follow the curve
+          for (const ref of refs) for (const pc of ref.pieces) {
+            for (const [wx, wy] of [[pc.ax, pc.ay], [pc.bx, pc.by]]) {
+              if (U.dist2(wx, wy, ox, oy) > r2) continue;
+              const a = Math.atan2(wy - oy, wx - ox);
+              angles.push(a - EPS, a + EPS);
+            }
+          }
+          continue;
+        }
         if (!level.blocksLight(tx, ty)) continue;
         const d = level.t(tx, ty);
         if (d.shape === 'circle' && level.dynAt(tx, ty) !== 1) {

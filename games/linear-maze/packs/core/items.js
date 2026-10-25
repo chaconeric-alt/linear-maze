@@ -63,8 +63,8 @@
     const curId = P.equip[a.slot];
     const cur = curId ? LM.get('armor', curId) : null;
     const slotName = { head: 'head', body: 'body', feet: 'feet', trinket: 'trinket' }[a.slot];
-    const cards = [compareCard('Found · ' + slotName, LM.ui.icons.armor(a, 44), a.name, [LM.ui.modList(a.mods), h('p', null, a.desc || '')], true)];
-    cards.push(cur ? compareCard('Worn now', LM.ui.icons.armor(cur, 44), cur.name, LM.ui.modList(cur.mods)) : compareCard('Worn now', null, 'Nothing', h('p', null, 'Your ' + slotName + ' slot is empty.')));
+    const cards = [compareCard('Found · ' + slotName, LM.ui.icons.armor(a, 44), a.name, [LM.ui.modList(a.mods, a.coverage), h('p', null, a.desc || '')], true)];
+    cards.push(cur ? compareCard('Worn now', LM.ui.icons.armor(cur, 44), cur.name, LM.ui.modList(cur.mods, cur.coverage)) : compareCard('Worn now', null, 'Nothing', h('p', null, 'Your ' + slotName + ' slot is empty.')));
     LM.ui.open({
       kicker: it.def.name,
       title: a.name,

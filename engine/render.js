@@ -223,6 +223,11 @@
       const info = { level: L, env, T, x: 0, y: 0, rnd: null, rot: 0, across: undefined, turnFloor: false, variant: 0,
         n: (dx, dy) => {
           if (info.rot > 0) [dx, dy] = LM.Level.turnDir(dx, dy, info.rot);
+          // a curved edge's wall part counts as wall to the square beside it (engine/shapes.js)
+          if (L.curve) {
+            const w = LM.shapes.wallToward(L, info.x + dx, info.y + dy, info.x, info.y);
+            if (w) return w;
+          }
           return L.t(info.x + dx, info.y + dy);
         },
       };
@@ -255,6 +260,7 @@
           }
         }
       }
+      if (L.curve) this.bakeCurves(g, tx0, ty0, info);
       // replay decals that overlap this chunk
       const x0 = cx * CHW, y0 = cy * CHW;
       for (const d of this.decals) {
@@ -262,6 +268,69 @@
         this.paintDecal(g, d);
       }
       return c;
+    }
+    /** Curved edges (engine/shapes.js): the wall part of each square, painted with its wall's top, a dark rim
+     *  along the curve and a soft shadow on the floor side. */
+    bakeCurves(g, tx0, ty0, info) {
+      const L = this.level, SH = LM.shapes;
+      for (let ty = ty0; ty < ty0 + CH; ty++) {
+        for (let tx = tx0; tx < tx0 + CH; tx++) {
+          if (!L.inBounds(tx, ty)) continue;
+          const refs = L.curve[ty * L.w + tx];
+          if (!refs) continue;
+          for (const ref of refs) {
+            const wall = ref.wall;
+            // the floor side: a soft contact shadow along the curve
+            g.save();
+            SH.clipOpen(g, ref, tx, ty);
+            g.lineCap = 'round';
+            for (const [w, a] of [[22, 0.1], [13, 0.12], [6, 0.16]]) {
+              g.strokeStyle = 'rgba(0,0,0,' + a + ')';
+              g.lineWidth = w;
+              g.beginPath();
+              for (const pc of ref.pieces) {
+                g.moveTo(pc.ax, pc.ay);
+                g.lineTo(pc.bx, pc.by);
+              }
+              g.stroke();
+            }
+            g.restore();
+            // the wall side, as the wall's own top (every neighbour is wall, so no front face)
+            g.save();
+            SH.clipWall(g, ref, tx, ty);
+            const n0 = info.n;
+            info.x = tx;
+            info.y = ty;
+            info.rot = 0;
+            info.variant = 0;
+            info.rnd = U.mulberry32((L.seed ^ (tx * 7919 + ty * 104729)) >>> 0);
+            info.n = () => wall;
+            try {
+              if (wall.bake) wall.bake(g, tx * T, ty * T, info);
+              else {
+                g.fillStyle = (L.env.wall && L.env.wall.top) || '#2a2a2a';
+                g.fillRect(tx * T, ty * T, T, T);
+              }
+            } finally {
+              info.n = n0;
+            }
+            g.restore();
+            g.save();
+            g.beginPath();
+            g.rect(tx * T, ty * T, T, T);
+            g.clip();
+            g.strokeStyle = 'rgba(0,0,0,0.45)';
+            g.lineWidth = 1.4;
+            g.beginPath();
+            for (const pc of ref.pieces) {
+              g.moveTo(pc.ax, pc.ay);
+              g.lineTo(pc.bx, pc.by);
+            }
+            g.stroke();
+            g.restore();
+          }
+        }
+      }
     }
     /** Soft contact shadow on ground tiles next to tall solids. */
     bakeAO(g, tx, ty) {
@@ -679,8 +748,30 @@
           ctx.moveTo(x + k, y + k); ctx.lineTo(x + k / 2, y + k / 2);
           ctx.stroke();
         }
+        // a magazine reload fills a ring; a weapon with heat shows how hot it is (red when it has overheated)
+        if (w && P.reloadT > 0) {
+          const f = 1 - P.reloadT / (P.reloadMax || 1);
+          ctx.strokeStyle = 'rgba(232,190,110,0.35)';
+          ctx.lineWidth = 2 * d;
+          ctx.beginPath();
+          ctx.arc(x, y, 14 * d, 0, U.TAU);
+          ctx.stroke();
+          ctx.strokeStyle = 'rgba(232,190,110,0.95)';
+          ctx.beginPath();
+          ctx.arc(x, y, 14 * d, -Math.PI / 2, -Math.PI / 2 + U.TAU * f);
+          ctx.stroke();
+        } else if (w && w.heat) {
+          const k = P.heatOf(w, game), hot = P.overheated(w, game);
+          if (k > 0.01) {
+            ctx.strokeStyle = hot ? 'rgba(255,60,40,' + (0.6 + 0.4 * Math.sin(this.time * 14)) + ')' : 'rgba(255,' + Math.round(200 - 140 * k) + ',80,0.85)';
+            ctx.lineWidth = 2 * d;
+            ctx.beginPath();
+            ctx.arc(x, y, 14 * d, -Math.PI / 2, -Math.PI / 2 + U.TAU * k);
+            ctx.stroke();
+          }
+        }
         // reload/cooldown ring for slow weapons
-        if (w && w.fireRate < 2 && P.fireCd > 0) {
+        if (w && w.fireRate < 2 && P.fireCd > 0 && !(P.reloadT > 0)) {
           const f = P.fireCd / (1 / w.fireRate);
           ctx.strokeStyle = 'rgba(232,190,110,0.8)';
           ctx.lineWidth = 2 * d;

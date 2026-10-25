@@ -1,8 +1,10 @@
 # Linear Maze workspace
 
-Version 0.5.3. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+Version 0.6.0. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
 
 New: the **next-generation** look, switched on floor by floor in the editor (Floor settings → Next generation, or the new **Next gen** page): a slightly tilted camera that stands the walls up and leans as you move, black ceiling silhouettes (pipes, ducts, cables, beams, turning fans), and neon tubes in your colours that light the room. The Next gen page also makes tile sets from your own pictures (sliced, scaled to game size and matched to a tile set's colours) and turns 3D models (.glb, animated or not) into sprite sheets for monsters, items and people. Floors you don't switch on, and both existing games, play exactly as before. See `engine/SPEC.md` section 22 and `editor/README.md`.
+
+New in 0.6.0: round and other non-square rooms (circles, ovals, octagons, rounded rooms, any polygon) and round pillars, with curved walls that collide, block shots and light, and stand up on next-gen floors; weapon magazines with reloading, weapons that overheat, armor that only covers part of the body, damage types, and a hook for a game's own death screen. See `engine/SPEC.md` sections 6.4, 6.7, 21.3 and 23, and the test floor `games/round-rooms/`.
 
 New in 0.5.3: Dead Signal's Floor 2 (*Synthid Research*), and the engine features it needed: status effects on the player and on enemies (slowed, chilled, stunned, damage over time), with resistance from armor and chips on the HUD; named boss bars with phases; more kinds of ammunition than the built-in four; key items you carry from floor to floor. See `games/dead-signal/DESIGN.md` (section 4.2) and `engine/SPEC.md` sections 6.5 and 6.17–6.19.
 

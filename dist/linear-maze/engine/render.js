@@ -8,6 +8,8 @@
  *      line-of-sight mask)
  *   5. emissive pass ('lighter'): glows, tracers, beams, telegraphs
  *   6. overlays: damage numbers, interaction ring, crosshair, vignette
+ * A next-generation floor (engine/nextgen.js) adds raised walls to 3, takes them into 4, adds its
+ * neon to 5 and its ceiling silhouettes between 5 and 6. Other floors draw exactly as before.
  */
 'use strict';
 (function () {
@@ -173,11 +175,13 @@
       this.lc.height = Math.ceil(this.canvas.height / 2);
       this.chunks.clear();
       this.chunkOrder.length = 0;
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this);
     }
     setLevel(level) {
       this.level = level;
       this.chunks.clear();
       this.chunkOrder.length = 0;
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this);
       this.decals = [];
       this.lightTiles = new Map();
       this.lightTileScale = 0;
@@ -334,6 +338,7 @@
       this.chunks.delete(key);
       const i = this.chunkOrder.indexOf(key);
       if (i >= 0) this.chunkOrder.splice(i, 1);
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this, tx, ty);
     }
 
     // ---------------------------------------------------- frame
@@ -388,6 +393,8 @@
       const tx0 = Math.max(0, Math.floor(view.x0 / T)), tx1 = Math.min(L.w - 1, Math.floor(view.x1 / T));
       const ty0 = Math.max(0, Math.floor(view.y0 / T)), ty1 = Math.min(L.h - 1, Math.floor(view.y1 / T));
       this.tileView = { tx0, tx1, ty0, ty1 };
+      // a next-generation floor: this frame's camera tilt (null on every other floor)
+      const ngf = L.ng && LM.ng ? LM.ng.frame(this, game, dt) : (this.ngf = null);
 
       // 2. animated terrain
       for (let ty = ty0; ty <= ty1; ty++) {
@@ -407,6 +414,7 @@
       for (const e of game.enemies) if (!e.dead && inView(e.x, e.y) && (game.attract || e.visible)) drawables.push(e);
       for (const n of game.npcs) if (inView(n.x, n.y) && n.vis > 0.01) drawables.push(n);
       if (game.player && !game.attract) drawables.push(game.player);
+      if (ngf) LM.ng.oblique.addPieces(this, game, drawables);
       drawables.sort((a, b) => (a.z || 0) - (b.z || 0) || a.y - b.y);
       for (const o of drawables) if (o.drawShadow) o.drawShadow(ctx, game, t);
       game.particles.draw(ctx, 'under', view);
@@ -414,9 +422,11 @@
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.draw(ctx, game, t);
       for (const fx of game.fx) if (fx.draw) fx.draw(ctx, game, t);
       game.particles.draw(ctx, 'normal', view);
+      if (ngf && LM.ng.ceiling) LM.ng.ceiling.draw(ctx, game, t, this, true);
 
       // 4. lighting
       this.renderLight(game, view, ox, oy);
+      if (ngf) LM.ng.oblique.stampLight(this, game);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = 'multiply';
       ctx.drawImage(this.lc, 0, 0, this.lc.width, this.lc.height, 0, 0, this.lc.width * 2, this.lc.height * 2);
@@ -434,8 +444,10 @@
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.drawGlow(ctx, game, t);
       for (const fx of game.fx) if (fx.drawGlow) fx.drawGlow(ctx, game, t);
       for (const tr of game.traps) if (tr.drawGlow) tr.drawGlow(ctx, game, t);
+      if (ngf && LM.ng.neon) LM.ng.neon.drawGlow(ctx, game, t, this);
       game.particles.draw(ctx, 'glow', view);
       ctx.globalCompositeOperation = 'source-over';
+      if (ngf && LM.ng.ceiling) LM.ng.ceiling.draw(ctx, game, t, this);
 
       // 6. overlays
       game.particles.draw(ctx, 'overlay', view);

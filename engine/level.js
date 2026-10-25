@@ -74,11 +74,19 @@
       }
       // elevators that stop here are built into the map (engine/elevators.js)
       if (LM.elevators) LM.elevators.stamp(this);
+      // round rooms, pillars and other shapes trim the grid and leave curved edges (engine/shapes.js)
+      this.curve = null;
+      this.navBlock = null;
+      this.shapes = [];
+      if (LM.shapes && LM.shapes.carve && ((def.shapes && def.shapes.length) || (def.rooms || []).some((r) => r.shape))) LM.shapes.carve(this);
       if (!this.start) {
         console.warn('[LM] Level ' + def.id + ' has no entry ("<"); using first floor tile');
         for (let i = 0; i < n && !this.start; i++) if (!this.terrain[i].solid) this.start = { x: i % this.w, y: Math.floor(i / this.w) };
       }
-      this.rooms = (def.rooms || []).map((r) => ({ name: r.name, rect: r.rect, visited: false, note: r.note }));
+      this.rooms = (def.rooms || []).map((r) => {
+        const shp = r.shape ? this.shapes.find((s) => s.spec.room === r.name) : null;
+        return { name: r.name, rect: r.rect, visited: false, note: r.note, shape: r.shape, poly: shp ? shp.pts : null };
+      });
       LM.nav.init(this);
     }
     addSpawns(e, x, y) {
@@ -134,7 +142,7 @@
       const tx = px / T, ty = py / T;
       for (const r of this.rooms) {
         const [x, y, w, h] = r.rect;
-        if (tx >= x && ty >= y && tx < x + w && ty < y + h) return r;
+        if (tx >= x && ty >= y && tx < x + w && ty < y + h && (!r.poly || LM.shapes.inPoly(r.poly, px, py))) return r;
       }
       return null;
     }
@@ -181,6 +189,7 @@
     const i = y * level.w + x;
     const d = level.terrain[i];
     if (d.solid || d.hazard) return false;
+    if (level.navBlock && level.navBlock[i]) return false; // a curved edge whose middle is wall
     const door = level.doorAt[i];
     if (door && door.blocking && (door.lock || door.sealed || (door.flag && !door.unlocked))) return false;
     return true;

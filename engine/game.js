@@ -9,6 +9,9 @@
 
   // ------------------------------------------------------------ the game being played
   /** Choose the game (its manifest, with defaults filled in) without starting it. */
+  /** Death-screen hooks (Game.playerDied): fn(game, cause) returning true replaces the engine's death screen. */
+  LM.deathHooks = [];
+  LM.onDeath = (fn) => LM.deathHooks.push(fn);
   LM.useGame = function (id) {
     const m = LM.games[id];
     if (!m) throw new Error('There is no game called ' + id + ' (no LM.defineGame({ id: "' + id + '" }) has run).');
@@ -466,9 +469,13 @@
       }
     }
 
-    playerDied() {
+    /** cause: the hit that did it (LM.combat.hurt's options). A game can replace the death screen: a function given to
+     *  LM.onDeath(fn) runs first, fn(game, cause), and one that returns true has shown its own (an epilogue, say). */
+    playerDied(cause) {
       const P = this.player;
       if (P.dead) return;
+      this.deathCause = cause || null;
+      LM.emit('playerDied', { game: this, cause: this.deathCause });
       P.dead = true;
       this.state = 'dying';
       this.hitStop = 0.25;
@@ -477,6 +484,13 @@
       LM.audio.play('lose');
       this.schedule(1.1, () => {
         this.state = 'dead';
+        for (const fn of LM.deathHooks) {
+          try {
+            if (fn(this, this.deathCause)) return;
+          } catch (e) {
+            console.error(e);
+          }
+        }
         LM.ui.showDeath(this);
       }, true);
     }
