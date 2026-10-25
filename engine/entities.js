@@ -594,7 +594,18 @@
     update(dt, game) {
       this.t += dt;
       this.flash -= dt;
-      if (this.def.update) this.def.update(this, dt, game);
+      const d = this.def;
+      // a current that draws things in (def.pull, or props.pull; it.pullOff stops it): a whirlpool, a drain
+      if ((d.pull || this.props.pull) && !this.pullOff) LM.physics.pull(game, this, this.props.pull ? Object.assign({}, d.pull, this.props.pull) : d.pull, dt);
+      // something that catches you as you cross it (def.snare: webs, glue)
+      if (d.snare && game.player && !game.player.dead && LM.status) {
+        const P = game.player, rr = this.r + P.r * 0.5;
+        if (U.dist2(P.x, P.y, this.x, this.y) < rr * rr && !(d.snare.when && !d.snare.when(this, game))) {
+          LM.status.apply(game, P, d.snare.status || 'snared', { seconds: d.snare.seconds || 0.35 });
+          if (d.snare.onCatch) d.snare.onCatch(this, game, P);
+        }
+      }
+      if (d.update) d.update(this, dt, game);
     }
     destroy(game, o) {
       if (this.dead) return;
@@ -751,6 +762,8 @@
           }
         }
       }
+      // held open (the open effect's hold: a bookcase that has swung in stays in)
+      if (this.held && !this.sealed) want = true;
       if (want) {
         this.target = 1;
         this.closeT = 1.4;

@@ -40,6 +40,8 @@
     }
     impact(game, hitWall) {
       this.dead = true;
+      // def.onImpact(p, game, hitWall): where it lands, something happens (silk leaves a web)
+      if (this.def.onImpact) this.def.onImpact(this, game, hitWall);
       if (this.aoe) {
         C.explode(game, this.x - this.vx * 0.004, this.y - this.vy * 0.004, Object.assign({ owner: this.owner, status: this.status, faction: this.owner === 'player' ? undefined : this.faction, by: this.by }, this.aoe));
         return;
@@ -80,6 +82,11 @@
             if (!FA.playerHits(e.faction)) continue;
             if (C.touches(e, this.x, this.y, this.r)) {
               this.hit.add(e);
+              // a shield that sends shots back (def.reflect)
+              if (e.def.reflect && C.reflects(game, e, this)) {
+                C.reflect(game, e, this);
+                return;
+              }
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
               if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status });
@@ -122,7 +129,7 @@
           const rr = it.r + this.r;
           if (U.dist2(this.x, this.y, it.x, it.y) < rr * rr) {
             this.hit.add(it);
-            C.hurt(game, it, this.damage, { source: this.owner });
+            C.hurt(game, it, this.damage, { source: this.owner, status: this.status });
             this.impact(game, false);
             return;
           }
@@ -247,6 +254,47 @@
     return U.dist2(x, y, px, py) < rr * rr;
   };
 
+  /**
+   * An enemy's shield that sends your shots back: def.reflect { arc (radians either side of where it faces,
+   * default 1.2; Math.PI for all round), aim (true: back at whoever fired, else straight back the way it
+   * came), damage (× the shot's damage, default 1), speed (× its speed, default 1), color, sound, chance
+   * (0..1, default 1), when(e, game) (only while this is true: a shield that's up) }. e.noReflect turns it
+   * off for a while from code.
+   */
+  C.reflects = function (game, e, p) {
+    const r = e.def.reflect;
+    if (!r || e.noReflect || p.reflected > 2) return false;
+    if (r.when && !r.when(e, game)) return false;
+    if (r.chance != null && Math.random() >= r.chance) return false;
+    const from = Math.atan2(p.y - p.vy * 0.02 - e.y, p.x - p.vx * 0.02 - e.x);
+    return Math.abs(U.angDiff(e.facing || 0, from)) <= (r.arc == null ? 1.2 : r.arc);
+  };
+  C.reflect = function (game, e, p) {
+    const r = e.def.reflect, P = game.player;
+    const sp = Math.hypot(p.vx, p.vy) * (r.speed || 1);
+    let ang = Math.atan2(-p.vy, -p.vx);
+    if (r.aim !== false && P && !P.dead) ang = Math.atan2(P.y - p.y, P.x - p.x) + U.rand(-0.06, 0.06);
+    p.vx = Math.cos(ang) * sp;
+    p.vy = Math.sin(ang) * sp;
+    p.angle = ang;
+    p.owner = 'enemy';
+    p.faction = e.faction;
+    p.by = e;
+    p.hit = new Set([e]);
+    p.traveled = 0;
+    p.pierce = 0;
+    p.reflected = (p.reflected || 0) + 1;
+    p.damage *= r.damage == null ? 1 : r.damage;
+    if (r.color) p.color = r.color;
+    p.x += Math.cos(ang) * (e.r * 0.5);
+    p.y += Math.sin(ang) * (e.r * 0.5);
+    e.flash = Math.max(e.flash, 0.05);
+    game.particles.burst(p.x, p.y, 7, { type: 'spark', color: r.color || '#fff2c8', speed: 220, life: 0.25, angle: ang, spread: 0.9, size: 1 });
+    game.lights.push({ x: p.x, y: p.y, r: 60, color: r.color || '#fff2c8', intensity: 0.8, life: 0.08, max: 0.08 });
+    LM.audio.play(r.sound || 'reflect', { vol: game.vol(e.x, e.y), throttle: 0.04 });
+    if (e.def.onReflect) e.def.onReflect(e, game, p);
+  };
+
   C.hurt = function (game, target, amount, o) {
     o = o || {};
     if (target.dead || amount <= 0) return 0;
@@ -300,6 +348,10 @@
       return dmg;
     }
     if (target.isItem && target.def.destructible) {
+      // def.burns: fire (a hit carrying a status with def.fire, or burning) takes it at once (webs, paper)
+      const st = o.status && (typeof o.status === 'string' ? o.status : o.status.id);
+      const fiery = st && (st === 'burning' || (LM.status && LM.status.def(st) && LM.status.def(st).fire)) || o.type === 'fire';
+      if (target.def.burns && fiery) amount = Math.max(amount, target.hp == null ? target.def.destructible.hp : target.hp);
       target.hp = (target.hp == null ? target.def.destructible.hp : target.hp) - amount;
       target.flash = 0.08;
       if (target.hp <= 0) target.destroy(game, o);
@@ -439,7 +491,7 @@
       if (it.dead || !it.def.destructible) continue;
       const d = U.dist(x, y, it.x, it.y);
       if (d < R + it.r && losOK(it.x, it.y)) {
-        game.schedule(0.08 + Math.random() * 0.1, () => C.hurt(game, it, D, { source: o.owner, type: 'blast' }));
+        game.schedule(0.08 + Math.random() * 0.1, () => C.hurt(game, it, D, { source: o.owner, type: 'blast', status: o.status }));
       }
     }
   };

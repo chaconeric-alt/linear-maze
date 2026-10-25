@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.5.7 · October 2026
+Engine 0.5.8 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -23,6 +23,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.6:** an elevator with no power can still be parked on one floor (its `parked`): once a flag is set it waits there, lit, doors held open, panel dead, and if you're on that floor when the flag is set it comes up the shaft first and can bring cargo (section 6.15). Gear can keep you alive: armour, gadgets and blessings can have `lastStand`, asked when a hit would kill you (section 4, *Damage*; 6.7). Gadgets can resist statuses like armour, and draw an aura round you all the time (`drawAura`, `shieldRing: false`; section 6.12).
 
 **New in 0.5.7:** objectives: what to do next on the HUD, with the thing to find picked out when you're near it and marked on the minimap (a level's `objectives`; section 6.21, `engine/objectives.js`). Story lines that stop the game: a speaker with `pause` (or a line's own `pause: true`) is read in the middle of the screen with the game stopped, Continue and Skip, unless you're in a fight; the player can turn it off on the pause screen (section 6.16). A long body can have a `hitbox` (a capsule along the way it faces) so shots land on all of it (section 6.5). A side can wake when you hurt it (a pack's `factionWake`: your shots land on it, and it turns on you; section 6.20). Floors remember a monster's hunting and a tag it was given while playing (section 5).
+
+**New in 0.5.8:** curved rooms: a level's `ovals` fit an ellipse into a rectangle of the map, and its wall is a true curve for walking, shots, sight and light, baked smooth, with a ring of recessed ceiling lights (section 6.22, `engine/curves.js`). Seeing the floor below: tiles with `seeBelow` (glass floors, an atrium's open well) show another level under this one, baked from its map, with parallax and its own darkness (a level's `below`, section 6.23). Things that pull you in (an item's `pull`: a whirlpool, a drain), catch you as you cross them (`snare`) and go up at a touch of fire (`burns`, section 6.6). Enemies that send your shots back (`reflect`, section 6.5), two new core attacks, `gaze` (meet its eyes and you turn to stone) and `blink` (a step through nowhere), and statuses that hold you fast (`bound`) and show on you (`tint`, section 6.17). A projectile can do something where it lands (`onImpact`, section 6.4). Endings: a trap or a pack can end the game, or a chapter of it, with a card and a choice (`ending`), and save a checkpoint mid-floor (`checkpoint`; section 6.24). Stairs that are `quick` skip the floor-finished screen (two halves of one floor, section 5). `level.walkable(x, y)`.
 
 ---
 
@@ -126,6 +128,7 @@ Pop-ups pause the world (`state = 'popup'`); rendering continues so flames still
 ### Rendering
 
 1. **Terrain chunks.** The level is baked lazily into 8 × 8-tile canvases at the exact screen scale, painted by each terrain's `bake()` (floors, then contact shadows, then walls and pillars). Blood, scorch marks and debris are painted into chunks as permanent decals. One extra chunk just outside the view is baked on quiet frames so walking never hitches.
+1b. **The floor below** (a level's `below`, section 6.23): where there are `seeBelow` tiles, the other level's own chunks, baked smaller and drawn with parallax under them, then darkened.
 2. **Animated terrain:** water ripples, spikes, pressure plates.
 3. **Objects**, sorted by y: shadows, items, doors, enemies (only those in line of sight), the player, projectiles, effects, particles.
 4. **Lightmap** at half resolution: an ambient fill, then every light added (`lighter`) clipped by its own visibility polygon, then the player's aura and aim cone, then short-lived lights (muzzle flashes, explosions, glowing projectiles). Finally everything outside the player's line of sight is multiplied darker. The lightmap is multiplied over the scene. Steady static lights (no flicker: ceiling panels, windows, screens) are painted once into world-space light tiles of 12 × 12 tiles and reused; a tile is repainted only when a light in it is switched, dimmed or set flickering, or a wall near it changes. Flickering lights are drawn every frame.
@@ -136,7 +139,7 @@ Static light polygons are cached and only recomputed when a nearby door opens or
 
 ### Collision and movement
 
-Entities are circles. Movement is sub-stepped and resolved axis by axis against solid tiles (rectangles: the whole tile, or a thin tile's boxes turned with the tile; or circles for pillars), so bodies slide along walls. Closed doors are dynamic solids. Solid furniture pushes bodies out. Bullets march in 5-unit steps and stop on anything that blocks shots.
+Entities are circles. Movement is sub-stepped and resolved axis by axis against solid tiles (rectangles: the whole tile, or a thin tile's boxes turned with the tile; or circles for pillars), so bodies slide along walls. In a curved room (section 6.22) a body inside the ellipse is pushed back off the curve instead, so it slides round it. Closed doors are dynamic solids. Solid furniture pushes bodies out. Bullets march in 5-unit steps and stop on anything that blocks shots.
 
 ### Enemy AI
 
@@ -186,6 +189,7 @@ stairs: {
 | `arrive` | A tag on the floor they lead to: you arrive on its first tile (otherwise the start, or for stairs up the stairs down you last took). |
 | `dir` | `'up'` or `'down'`: the sound (`ascend`, `descend`), for a game whose stairs on go up. |
 | `go` | The button on the floor-finished screen (`{floor}`, `{name}`), instead of the game's `descend` words. |
+| `quick` | `true`: always straight there with a quick fade, never the floor-finished screen, even the first time (two halves of one floor: Dead Signal's private stairs between Floor 5 and 5a). |
 
 `game.stairsAt(tx, ty)` gives the entry for a stairs tile (with its `tag`), and `game.anyFlag(f)` whether a flag, or any of a list, is set. The stairs down that a floor's `next` leads to and the way back up work as above whether or not a floor has `stairs`; the field only changes the stairs it names.
 
@@ -291,6 +295,7 @@ textures: {
 | `bake(g, x, y, info)` | Painted once into the terrain cache. |
 | `drawDynamic`, `drawGlow` | `(g, x, y, tx, ty, game, t)`: lit animation, and emissive animation. |
 | `mapColor` | Minimap colour; `'none'` hides the tile. |
+| `seeBelow` | The level's `below` shows through it: a glass floor (walkable), an atrium's well (solid, so you look over a rail). Paint the tile with a transparent middle; the engine draws the floor below first (section 6.23). |
 
 | `door: { lock, style, sealed }` | `style` picks a pack-drawn door look; `sealed: true` keeps it shut until something unseals it. |
 | `door: { flag, need, color }` | A **clearance door**: it stays locked until the story flag `flag` (or any of a list) is set, then unlocks for good (floors remember it). Flags carry from floor to floor, keys don't. Walking up to it says the game's `doorNeeds` words with `{need}`, and `doorAccepts` when it opens; `color` is its lock stripe and glow. A placement can make any door a clearance door: legend `props: { flag, need, color }`. Monsters can't open one that's locked. |
@@ -347,7 +352,7 @@ A legend entry is `{ terrain, item, enemy, npc, tag, props, variant, rot, start 
 | `length`, `drawHeld(g, player, kick)` | How it looks in hand; also used for icons. |
 | `status` | A status every projectile carries to what it hits (section 6.17): `'chilled'` or `{ id, seconds }`. |
 
-Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `sparkColor`, `light: { r, color, intensity }`, `status` (as the weapon's), `quiet` (no sparks, smoke or sound against walls: sprays and mists), and optional `draw(g, p, t)` / `drawGlow(g, p, t)`.
+Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `sparkColor`, `light: { r, color, intensity }`, `status` (as the weapon's), `quiet` (no sparks, smoke or sound against walls: sprays and mists), `onImpact(p, game, hitWall)` (something happens where it lands: Dead Signal's silk lays a web), and optional `draw(g, p, t)` / `drawGlow(g, p, t)`.
 
 ### 6.5 Enemies, behaviours and attacks
 
@@ -365,6 +370,7 @@ Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `
 | `flying`, `swimmer`, `stationary`, `boss` | Ignores hazards; full speed in water; never moves; gold health bar. |
 | `bossBar: { name, color, sub(e, game), range, phases }` | A named bar across the top of the screen while it's awake and within `range` (900) of the player; up to three at once. `sub` is a short line beside the name ("9 faces"). `phases: [{ at: 0.5, text, do(e, game) }]` each run once as its health falls past `at` (a fraction); `text` is a toast. |
 | `resist: { chilled: 1 }` | Statuses it shrugs off (1) or that last less long on it (0.5). |
+| `reflect: { arc, aim, damage, speed, color, sound, chance, when(e, game) }` | It sends the player's shots back: a shot arriving within `arc` (radians, 1.2) of the way it faces bounces off unhurt, aimed back at the player (`aim: false`: straight back the way it came), at `speed` × its speed, doing `damage` × its damage, now an enemy shot. `chance` (0–1) lets some through; `when` turns it on and off (a shield that drops); a behaviour can set `e.noReflect`. A shot bounces three times at most. `def.onReflect(e, game, p)` hears each. Shoot it from behind, or with blasts. `LM.combat.reflects(game, e, p)`, `reflect(game, e, p)`. |
 | `hitbox: { front, back, r }` | A long body: shots land anywhere on a capsule along the way it faces, from `back` behind its centre to `front` ahead of it, `r` wide from the middle (the radius if left out); scaled with its radius. Without it, a circle of its radius. Movement and walls still use the radius. `LM.combat.touches(e, x, y, r)`. |
 | `blood`, `gib`, `deathGlow`, `deathSound`, `bark`, `color` | Feel. |
 | `draw(g, e, t)`, `drawGlow(g, e, t)` | Body (in local space, call `g.rotate(e.facing)` yourself) and emissive bits. |
@@ -383,6 +389,8 @@ Core attacks and their parameters:
 | `nova` | `damage`, `radius`, `windup`, `recover`, `cooldown`, `color`, `shards`, `shardDamage` |
 | `charge` | `damage`, `speed`, `duration`, `windup`, `cooldown`, `minRange`, `maxRange`, `stun` |
 | `summon` | `enemy`, `count`, `max`, `windup`, `cooldown` |
+| `gaze` | `range`, `minRange`, `windup` (its eyes open: you can see it coming), `duration`, `recover`, `cooldown`, `cone`, `status`, `every`, `petrify`, `petrifyStatus`, `damage`, `move`, `color`. While its eyes are open, looking toward it (aiming within `cone` of it, with nothing between) puts `status` on you every `every` seconds; meet its eyes for `petrify` seconds in a row and `petrifyStatus` lands, with `damage`. `move` is its speed while it stares. Look away, or put something between you. |
+| `blink` | `minRange`, `maxRange`, `windup`, `delay` (from arriving to striking), `damage`, `distance` (how far from you it arrives, 54), `behind` (where you aren't looking), `color`, `sound`, `arriveSound`, `status`, `cooldown`. It vanishes and arrives beside its foe on open floor (`level.walkable`), then strikes. |
 
 Every core attack also takes `status`: what the hit puts on its target (`{ type: 'melee', damage: 8, status: 'sedated' }`). Every core attack goes for the foe (the player, without factions); `nova` hurts everything its faction fights inside the ring. A melee swipe or a charge only lands with a clear way between the two (not through glass).
 
@@ -405,6 +413,10 @@ An attack type is `{ canStart(e, a, game), start?(e, atk, game), update(e, atk, 
 | `solid: 'rect'` | Box collision instead of a circle: set `it.box = [w, h]` and optional `it.boxOff = [dx, dy]` in `init` (desks, counters, tables). |
 | `cache`, `cacheRadius`, `cacheKey(item, game)` | Paint `draw` once into a sprite of half-size `cacheRadius` (a number, or a function of the item) and reuse it. Only for drawings that never animate; `cacheKey` returns a string that changes whenever the picture should (a flag, a used state). `drawGlow` still runs every frame. |
 | `reach` | Extra interaction range in units (someone behind a desk). |
+| `pull: { radius, strength, swirl, core, damage, interval, status, enemies, flying }` | A current that draws things in (a whirlpool, a drain, a black hole): within `radius` (120), bodies are moved toward the item at up to `strength` (220) units a second, stronger nearer; `swirl` (−1 to 1) turns the pull into a spiral; inside `core` (16) they take `damage` every `interval` seconds (0.5), with `status`. `enemies: false` pulls only the player; `flying: true` pulls flyers too (an enemy def's `pullImmune` keeps it out). A dash goes through. A placement's `props.pull` is laid over the def's; `it.pullOff = true` stops it (a cycle, a valve). `LM.physics.pull(game, src, spec, dt)` for code. |
+| `snare: { status, seconds, when(item, game), onCatch(item, game, P) }` | Crossing it puts `status` on the player for `seconds` (0.35) each frame they're in it: webs, glue. Use a status with `speedMul` or `bound`. |
+| `burns` | A destructible item that fire takes at once: a hit carrying `burning` or any status with `fire`, or `type: 'fire'`, destroys it whatever its hit points (webs, paper, hay). |
+| `seenBelow: false` | Not drawn when its floor is seen from the floor above (section 6.23). |
 
 Placement props every item understands: `ox`, `oy` (a nudge in units, for pieces that sit between tiles), `turn` (quarter turns clockwise, `1`–`3`, for any piece that isn't wall-mounted: the engine turns its drawing, its sprite, its glow, its solid box and, for a piece that spans several tiles, its footprint, which keeps its top-left tile where it was placed; `it.box` and `it.boxOff` stay in the piece's own frame and `it.getRect()` gives the turned box) and, on wall-mounted items, `face: 'n' | 's' | 'e' | 'w'` to choose which side of a wall it hangs on (otherwise the first open side, checked south, east, west, north). Office furniture also takes `dir` (the side its front faces; a piece that reads `dir` draws its own front, and the editor uses `dir` for it rather than `turn`) and, for multi-tile pieces, `w` and `h` in tiles anchored at the top-left tile. Drawing code must take randomness from a seeded generator (`U.mulberry32`, `U.hash2`, `info.rnd`), never `Math.random`, or the piece changes every frame.
 
@@ -451,6 +463,8 @@ LM.definePack({
       stairsUp: 'a-floor',           // optional: where its stairs up (<) lead; false closes them; default: the floor you came from (section 5)
       stairs: { tag: { to, until, locked, arrive, dir, go } },   // optional: stairs of their own, by the tag on their tiles (section 5)
       elevatorShift: [dx, dy],       // optional: move every elevator on this floor by whole tiles (section 6.15)
+      ovals: [{ rect: [x, y, w, h], wall, variant, lights }],   // optional: curved rooms (section 6.22)
+      below: { level, dx, dy, depth, dim, tint, rim, decals },   // optional: the floor seen through seeBelow tiles (section 6.23)
       legend: { /* per-floor terrain overrides */ },
       objectLegend: { /* characters for the objects layer */ },
       rooms: [{ name, rect: [x, y, w, h], note }],   // announced on first entry; first match wins where rects overlap
@@ -486,7 +500,7 @@ Map rows may differ in length (short rows are padded with void). Unknown charact
 |---|---|
 | `darts` | `tag` (dart-emitter items), `volleys`, `interval`, `damage`, `speed` |
 | `spawn` | `tag` (floor tiles), `enemy` or `enemies[]`, `count`, `faction` (section 6.20), `as` (a tag for what it spawns: a `clear` trap with that tag fires when they're all dead) |
-| `seal` / `unseal` / `open` | `tag` (doors), `text` |
+| `seal` / `unseal` / `open` | `tag` (doors), `text`; `open` unlocks them for good, and with `hold: true` swings them open and keeps them open (a bookcase that has swung in; floors remember it) |
 | `alarm` | `radius`, `text` |
 | `lights` | `tag` (light sources), `on`, `text` |
 | `explode` | `tag`, `radius`, `damage`, `stagger` |
@@ -500,6 +514,8 @@ Map rows may differ in length (short rows are padded with void). Unknown charact
 | `transmission` (the engine's) | `who` (a speaker), `text`, `glitch`, `seconds`, `flag`: someone speaks over the intercom (section 6.16) |
 | `faction` | `tag` or `enemy`, `faction`, `aggro`: put those enemies on another side (section 6.20); with `aggro`, they come looking for you at once (let out to hunt) |
 | `branch` | `any` (flags; at least `min` of them, default 1), `all`, `not`, `then`, `else`: if the story flags agree, run the effects listed in `then`, otherwise those in `else`. The lists hold ordinary effects, each with its own `delay`, and can hold more branches. |
+| `checkpoint` (the engine's) | `text`: save here, mid-floor; dying or *Try again* comes back to this moment (section 6.24). `text: ''` saves without a toast. |
+| `ending` (the engine's) | `kicker`, `title`, `text`, `tone` (`bad`, `good`, `chapter`), `stats`, `final`, `flag`, `actions`: end the game or a chapter of it with a card and a choice (section 6.24). It waits for a line that stops the game to be read. |
 
 The trap effects are registry content (`effects`): `{ run(game, ef, trap), params }`, where `trap.spawned` and `trap.sealed` are what the trap has spawned and sealed. `params` (`{ name: 'number' | 'text' | 'longtext' | 'bool' | 'color' | 'tag' | 'id:<kind>' | 'stringlist' | [options] }`) tells the editor what settings to offer for an effect it doesn't know.
 
@@ -709,6 +725,9 @@ statuses: {
 | `only` | Who it can land on: `'player'`, `'robot'` (enemies with `robot: true`) or `'monster'` (the rest). |
 | `cures` | Statuses it ends when it lands. |
 | `hud: false` | No chip. |
+| `bound` | Held fast: no dashing and no firing while it lasts (a click is a dry click). Webbed; turned to stone. `LM.status.bound(target)`. |
+| `tint`, `tintAlpha` | A colour washed over the target while it lasts (grey stone, white silk), `tintAlpha` strong (0.45). `LM.status.tint(target)`. |
+| `fire` | It counts as fire: an item with `burns` goes up when a hit carrying it lands. |
 | `countdown`, `urgent` | The chip shows the seconds left (`1:28`); from `urgent` seconds left it pulses. |
 | `stack`, `refresh` | Putting it on again adds one (as `s.n`, up to `stack`) instead of more time, and `dps` counts once per stack; with `refresh` it also restarts the clock. |
 | `keep` | The player carries it up and down the stairs (it is saved with them). |
@@ -806,6 +825,69 @@ objectives: [
 | `map` | `false` keeps its targets off the minimap. |
 
 The main objective is the first in the list that's showing and not done. When it changes the plate flashes and a chime plays. A target in the same room as the player (the level's `rooms`), or within 8 tiles, pulses: a glow, four ticks round it and a marker bobbing over it, drawn over the lighting so it shows in the dark. Every target is marked on the minimap, with an arrow on the edge for one that's off it. The pause screen lists what's open. `LM.objectives.color` is the marker colour (`#ffd36a`); `LM.objectives.showing(game)`, `points(target, game)`, `near(game, p)`.
+
+### 6.22 Curved rooms
+
+`engine/curves.js`. A level's `ovals` each name a rectangle of the map, and the engine fits an ellipse into it: inside is floor, the ring the ellipse crosses is part floor and part wall, and the rest of the rectangle is wall. The wall is a true curve for everything: bodies slide round it, shots stop on it, sight and light are cut by it (the visibility polygon follows the arc), and it is baked as one smooth piece: the floor, the wall's top outside the curve, and along the northern arc a curved front face, lip and contact shadow where a straight wall would show its face.
+
+```js
+ovals: [
+  { rect: [31, 16, 22, 18], wall: '#', variant: 4,
+    lights: { count: 14, inset: 1.4, color: '#ffc879', radius: 150, intensity: 0.8, centre: true, cove: '#ffc879', tag: 'galleryLights' } },
+],
+```
+
+| Field | Meaning |
+|---|---|
+| `rect` | `[x, y, w, h]` in tiles; the ellipse touches its four sides. A circle is a square rect. |
+| `wall` | A legend character or a terrain id for the wall (default the legend's `#`). Its painter's colours are borrowed for the curve (`LM.curves.paletteOf`: a terrain's `palette`, else read from its bake). |
+| `variant` | The floor variant under the curve (default the variant at the centre). |
+| `lights` | A ring of recessed ceiling lights: `count` of them, `inset` tiles in from the wall (1.25), `color`, `radius` (150), `intensity`, `flicker`; `centre: true` adds one in the middle, larger; `cove` (a colour) a soft line of light along the top of the wall; `tag` lets a trap switch them all. Each is drawn as a small glowing lens. Static lights, so a ring costs nothing once painted (section 5, *Rendering*). |
+
+Only plain tiles are reshaped: plain floor and plain wall (anything `solid` and `tall` that isn't a door). Doors, stairs, water, pillars, hazards and elevators inside the rectangle are left as they are, so put a doorway where the ellipse meets the rectangle's edge (the middle of a side) and the curve opens round it: a curve tile beside a door, or beside any open tile in the ring, goes back to floor, so the way in is never pinched. Furniture inside works as anywhere.
+
+Under the hood, the curve tiles are a terrain made from the wall (`<wall id>~curve`, `def.curve`), and `level.curveAt[i]` / `level.curveIn[i]` say which oval a tile belongs to and whether part of it is floor. `LM.curves.at(level, x, y)`, `inside(ov, x, y)`, `push(level, ov, e)`, `rayTile(ov, ox, oy, dx, dy, t0, t1)`, `ringPoints(ov, count, inset)`. The map editor's level settings have a *Curved rooms* list and *The floor below* (section 15.3); the map shows the curves once the level reloads.
+
+### 6.23 Seeing the floor below
+
+A level's `below` names another level that lies under it, seen through tiles whose terrain has `seeBelow`: a glass floor you walk across, an atrium's well you look down into over a rail.
+
+```js
+below: { level: 'ds-f4', dx: -2, dy: 0, depth: 0.3, dim: 0.55, tint: 'rgba(40,90,70,0.18)', rim: 14,
+         decals: [{ type: 'blood', x: 40, y: 22, r: 1.5 }] },
+```
+
+| Field | Meaning |
+|---|---|
+| `level` | The level below (any level the game has loaded). |
+| `dx`, `dy` | Its tile (x, y) lies under this floor's tile (x + dx, y + dy). |
+| `depth` | How far down it looks (0.22): it's drawn smaller about the middle of the screen, so it slides by slower than this floor as you walk (parallax). |
+| `dim` | How much darker it is (0.5, 0–1). |
+| `tint` | A colour washed over it (glass, smoke). |
+| `rim` | The width of the shadow inside the opening's edge, in units (14; 0 for none). |
+| `decals` | `[{ type, x, y, r, color }]` in its tiles: marks painted on it (blood on an arena's floor). |
+
+It is the floor below's own map, baked by its own environment's painters into chunks of its own (with its furniture, but not its monsters, people or lights: what you see is its layout, lit by this floor), and baked lazily like this floor's. It costs one extra pass over the screen where there are `seeBelow` tiles in view, and nothing where there aren't. A `seeBelow` tile is painted with a transparent middle (glass with a frame, a well's balustrade); everything drawn on it, and the player's shadow, lies over the floor below. An item def with `seenBelow: false` is left out of the view from above.
+
+### 6.24 Endings and checkpoints
+
+A game can end in more than one place, and a chapter can end without the game ending.
+
+```js
+game.ending({
+  kicker: 'Floor 5a · The Control Room', title: 'The Dead Signal', tone: 'bad',
+  text: 'The lights come back on, floor by floor.\n\nNobody comes up the stairs.',
+  final: false, stats: false, flag: 'endedObey',
+  actions: [{ label: 'Choose again', do: 'retry', primary: true }, { label: 'Back to the title', do: 'title', quiet: true }],
+});
+game.checkpointHere('Checkpoint');
+```
+
+`game.ending(spec)` sets `flag`, stops the game (`state: 'ending'`), plays `sound` (`lose` for a bad ending, `win` otherwise), fades, and shows a card: the `kicker` and `title`, `text` in paragraphs (split at blank lines), the floor's numbers if `stats`, its colour from `tone` (`bad` red, `good` gold, `chapter` the game's accent). `final: true` means the run is over: the save is cleared. Each action is `{ label, do, primary, quiet }`, where `do` is `'retry'` (back to the last checkpoint), `'continue'` (back to playing, right here: an end of chapter you can walk on from), `'newRun'` or `'title'` (the default, and what a card with no actions offers). `game.endingAction(do)` runs one from code. `LM.ui.showEnding(game, spec)` draws the card.
+
+`game.checkpointHere(text)` saves the game as it is now, mid-floor: this floor's state (section 5, *Floors remember*), the player as they are, and where they stand become what dying and *Try again* return to, and what Continue on the title screen loads. `text` is a toast (`'Checkpoint'`; `false` for none). Use it before a choice that ends the game, so *Choose again* doesn't send the player back across the floor.
+
+Both are trap effects too: `checkpoint` (`text`) and `ending` (the same fields as the spec, `actions` as a list). An `ending` effect waits while a line that stops the game (section 6.16) is being read, so a speech can lead into it.
 
 ---
 
@@ -998,6 +1080,8 @@ A placed item's `title`, `deity`, `name` and `text` props override the popup's. 
 ### 15.3 How the map editor writes levels
 
 The map editor keeps each tile as a legend entry (terrain, variant, rot, tag, start, and at most one item, enemy or NPC) plus an optional objects-layer entry. Turning a tile writes its `rot` (a door keeps an explicit `rot: 0`, which pins it east–west; other tiles drop a turn of 0). Turning furniture writes `props.dir` for pieces that draw their own front and `props.turn` for the rest, taking a piece as drawn facing south: facing west is `turn: 1`, north `2`, east `3`. Untouched tiles keep their characters; a changed tile reuses a character whose entry matches, or gets a new one in the level's own `legend` (or `objectLegend`). A changed level is saved as a patch with the full `map` (and `objects`) plus the legend entries it added or changed. Characters the editor added and no longer uses are dropped.
+
+The level panel edits what isn't on the map: its settings, stairs and elevators, rooms, traps, objectives, ceiling lights, the map's size, and (0.5.8) *Curved rooms* (`ovals`: one entry each, `rect` and `lights` as JSON) and *The floor below* (`below`: pick the level, then its offsets, depth, dim, tint and rim). The map is rebuilt after each change, so a new oval shows its curve straight away.
 
 ### 15.4 Dressings
 

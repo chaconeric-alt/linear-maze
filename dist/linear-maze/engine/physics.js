@@ -13,12 +13,15 @@
     const r = e.r;
     const x0 = Math.floor((e.x - r) / T), x1 = Math.floor((e.x + r) / T);
     const y0 = Math.floor((e.y - r) / T), y1 = Math.floor((e.y + r) / T);
+    // inside a curved room (engine/curves.js): its wall is the curve, handled after the tiles
+    const ov = level.ovals && level.ovals.length ? LM.curves.at(level, e.x, e.y) : null;
     for (let ty = y0; ty <= y1; ty++) {
       for (let tx = x0; tx <= x1; tx++) {
         const d = level.t(tx, ty);
         const dyn = level.dynAt(tx, ty) === 1;
         if (!d.solid && !dyn) continue;
         if (e.passHazard && !dyn && d.hazard) continue;
+        if (ov && !dyn && LM.curves.wallFor(level, ov, tx, ty, d)) continue;
         const rects = !dyn && (d.rect || d.rects) ? level.rectsAt(tx, ty) : null;
         if (rects) {
           // thin tiles (glass, partitions, corners): one or more boxes, turned with the tile
@@ -67,6 +70,7 @@
         }
       }
     }
+    if (ov && LM.curves.push(level, ov, e)) hit = true;
     return hit;
   }
   P.resolve = resolve;
@@ -85,12 +89,52 @@
     return hit;
   };
 
+  /**
+   * A current that draws things toward a point (an item's `pull`: a whirlpool, a drain, a vortex):
+   *   { radius (120), strength (220: units a second at the middle, a third of it at the rim), swirl (0..1:
+   *   how much of it goes round rather than in), core (16: within this of the middle it hurts), damage,
+   *   interval (0.5 s between hurts), status, enemies (true: monsters are drawn in too), flying (false:
+   *   flying things aren't) }
+   * A dash cuts across it.
+   */
+  P.pull = function (game, src, sp, dt) {
+    const L = game.level, R = sp.radius || 120, S = sp.strength == null ? 220 : sp.strength, sw = U.clamp(sp.swirl || 0, -1, 1), core = sp.core || 16;
+    const list = sp.enemies === false ? [game.player] : [game.player].concat(game.enemies);
+    for (const e of list) {
+      if (!e || e.dead) continue;
+      if (e.isEnemy && (e.spawning > 0 || e.def.stationary || e.def.pullImmune || (e.def.flying && !sp.flying))) continue;
+      if (e.isPlayer && (e.falling > 0 || e.dashT > 0)) continue;
+      const dx = src.x - e.x, dy = src.y - e.y, d = Math.hypot(dx, dy);
+      if (d > R + e.r || d < 0.01) continue;
+      const k = U.clamp(1 - d / R, 0, 1), f = S * (0.33 + 0.67 * k) * dt;
+      const ux = dx / d, uy = dy / d, inw = 1 - Math.abs(sw);
+      let mx = (ux * inw - uy * sw) * f, my = (uy * inw + ux * sw) * f;
+      // don't overshoot the middle
+      if (d < Math.hypot(mx, my)) {
+        mx = dx;
+        my = dy;
+      }
+      P.move(L, e, mx, my);
+      if (sp.damage && d < core + e.r) {
+        e._pullCd = (e._pullCd || 0) - dt;
+        if (e._pullCd <= 0) {
+          e._pullCd = sp.interval || 0.5;
+          LM.combat.hurt(game, e, sp.damage, { source: 'hazard', type: 'hazard', status: sp.status });
+        }
+      }
+    }
+  };
+
   /** Is the point inside something that stops bullets? */
   P.pointBlocksShot = function (level, x, y) {
     const tx = Math.floor(x / T), ty = Math.floor(y / T);
     const d = level.t(tx, ty);
     if (level.dynAt(tx, ty) === 1) return true;
     if (!d.blocksShots) return false;
+    if (d.curve) {
+      const ov = level.curveAt[ty * level.w + tx];
+      return !(ov && LM.curves.inside(ov, x, y));
+    }
     if (d.rect || d.rects) {
       for (const rc of level.rectsAt(tx, ty)) {
         const rx = tx * T + rc[0], ry = ty * T + rc[1];
@@ -134,7 +178,18 @@
       const dyn = level.dynAt(tx, ty) === 1;
       const blocks = dyn || (light ? d.blocksLight : d.blocksShots);
       if (blocks) {
-        if (d.shape === 'circle' && !dyn) {
+        if (d.curve && !dyn) {
+          // a curve tile: wall only beyond the curve (engine/curves.js)
+          const ov = level.curveAt[ty * level.w + tx];
+          const ht = ov ? LM.curves.rayTile(ov, ox, oy, dx, dy, t, Math.min(tMX, tMY)) : t;
+          if (ht >= 0 && !(i === 0 && light && !(ov && LM.curves.inside(ov, ox, oy)))) {
+            out.t = Math.min(ht, maxDist);
+            out.wall = ht <= maxDist;
+            out.tx = tx;
+            out.ty = ty;
+            return out.t;
+          }
+        } else if (d.shape === 'circle' && !dyn) {
           const ht = rayCircle(ox, oy, dx, dy, tx * T + T / 2, ty * T + T / 2, d.radius);
           if (ht >= 0 && ht <= Math.min(tMX, tMY) + 0.01) {
             out.t = Math.min(ht, maxDist);
@@ -205,6 +260,7 @@
       for (let tx = x0; tx <= x1; tx++) {
         if (!level.blocksLight(tx, ty)) continue;
         const d = level.t(tx, ty);
+        if (d.curve && level.dynAt(tx, ty) !== 1) LM.curves.angles(level, tx, ty, ox, oy, r2, (a) => angles.push(a - EPS, a + EPS));
         if (d.shape === 'circle' && level.dynAt(tx, ty) !== 1) {
           const cx = tx * T + T / 2, cy = ty * T + T / 2;
           const dd = Math.hypot(cx - ox, cy - oy);

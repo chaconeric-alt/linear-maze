@@ -116,7 +116,8 @@
   // The building core (DESIGN.md 2.2): the same place on every floor; nothing runs until the power is back.
   const F = (...n) => n.map((k) => (k === 'b' ? 'ds-b1' : 'ds-f' + k));
   const elevators = {
-    'a1-private': { name: 'Private car', x: 31, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F('b', 5), power: 'elevatorsOnline' },
+    // the board's own car: from their private floor and the executive floor straight down to the sub-level
+    'a1-private': { name: 'Private car', x: 31, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F('b', 5, '5a'), power: 'elevatorsOnline' },
     'a2-passenger': { name: 'Passenger car A2', x: 34, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F(1, 2, 3, 4, 5), power: 'elevatorsOnline' },
     'a3-passenger': { name: 'Passenger car A3', x: 37, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F(1, 2, 3, 4, 5), power: 'elevatorsOnline' },
     // On Floor 4, ARIADNE sends it up once on what power it has, with the AEGIS field in it (aegisSent)

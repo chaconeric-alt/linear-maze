@@ -83,7 +83,7 @@
     if (p.knows && !game.hasFlag(p.knows)) game.setFlag(p.knows);
     if (!game.hasFlag('talkedToSurvivor')) game.setFlag('talkedToSurvivor');
     const text = typeof p.text === 'function' ? p.text(game) : p.text || 'They don’t say anything. They’re shaking.';
-    const who = { name: p.name || 'A survivor', role: 'Contestant · made it to the Box', color: '#ff9a4a', portrait: DS.personPortrait(p), voice: 0.9, pause: true };
+    const who = { name: p.name || 'A survivor', role: p.role || 'Contestant · made it to the Box', color: p.color || '#ff9a4a', portrait: DS.personPortrait(p), voice: 0.9, pause: true };
     for (const para of String(text).split(/\n\s*\n/)) if (para.trim()) LM.comms.say({ who, text: para.trim() });
   };
 

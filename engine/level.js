@@ -72,7 +72,9 @@
           }
         });
       }
-      // elevators that stop here are built into the map (engine/elevators.js)
+      // curved rooms (engine/curves.js), then the elevators that stop here (engine/elevators.js), built into the map
+      this.ovals = [];
+      if (LM.curves) LM.curves.stamp(this);
       if (LM.elevators) LM.elevators.stamp(this);
       if (!this.start) {
         console.warn('[LM] Level ' + def.id + ' has no entry ("<"); using first floor tile');
@@ -102,6 +104,12 @@
     }
     solidAt(x, y) {
       return this.t(x, y).solid || this.dynAt(x, y) === 1;
+    }
+    /** Can something stand on this tile's centre? Floor, or a curve tile whose middle is on the floor side. */
+    walkable(x, y) {
+      const d = this.t(x, y);
+      if (this.dynAt(x, y) === 1) return false;
+      return !d.solid || (!!d.curve && !!this.curveIn && this.curveIn[y * this.w + x] === 1);
     }
     /** The tile's turn: 0-3 quarter turns clockwise, or -1 when its legend entry doesn't set one. */
     rotAt(x, y) {
@@ -180,7 +188,7 @@
     if (!level.inBounds(x, y)) return false;
     const i = y * level.w + x;
     const d = level.terrain[i];
-    if (d.solid || d.hazard) return false;
+    if (d.hazard || (d.solid && !(d.curve && level.curveIn && level.curveIn[i]))) return false;
     const door = level.doorAt[i];
     if (door && door.blocking && (door.lock || door.sealed || (door.flag && !door.unlocked))) return false;
     return true;

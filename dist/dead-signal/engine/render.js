@@ -173,6 +173,7 @@
       this.lc.height = Math.ceil(this.canvas.height / 2);
       this.chunks.clear();
       this.chunkOrder.length = 0;
+      if (this.below) this.below.chunks.clear();
     }
     setLevel(level) {
       this.level = level;
@@ -181,6 +182,7 @@
       this.decals = [];
       this.lightTiles = new Map();
       this.lightTileScale = 0;
+      this.setBelow(level);
     }
     screenToWorld(sx, sy, cam) {
       return { x: cam.x + (sx - this.cssW / 2) / this.zoom, y: cam.y + (sy - this.cssH / 2) / this.zoom };
@@ -204,7 +206,12 @@
       return c;
     }
     bakeChunk(cx, cy) {
-      const L = this.level, env = L.env, s = this.scale;
+      // the editor bakes with a stand-in renderer ({ level, scale, decals, bakeAO, paintDecal }): use ours
+      return LM.Renderer.prototype.bakeChunkOf.call(this, this.level, cx, cy, this.scale);
+    }
+    /** Bake one chunk of a level's terrain at scale s (the level being played, or the one seen below it). */
+    bakeChunkOf(L, cx, cy, s, extra) {
+      const env = L.env;
       const c = document.createElement('canvas');
       c.width = Math.ceil(CHW * s) + 1;
       c.height = Math.ceil(CHW * s) + 1;
@@ -247,10 +254,20 @@
             g.restore();
             info.rot = 0;
             info.across = undefined;
-            if (layer === 0 && !d.noAO) this.bakeAO(g, tx, ty);
+            if (layer === 0 && !d.noAO) this.bakeAO(g, tx, ty, L);
           }
         }
       }
+      // curved rooms: the curve's face, lip and shadow over the tiles (engine/curves.js)
+      if (L.ovals && L.ovals.length && LM.curves) {
+        try {
+          LM.curves.bakeChunk(g, L, tx0, ty0, CH, info);
+        } catch (e) {
+          console.warn('[LM] A curved room didn’t bake', e);
+        }
+      }
+      if (extra) extra(g, cx * CHW, cy * CHW);
+      if (L !== this.level) return c;
       // replay decals that overlap this chunk
       const x0 = cx * CHW, y0 = cy * CHW;
       for (const d of this.decals) {
@@ -260,8 +277,8 @@
       return c;
     }
     /** Soft contact shadow on ground tiles next to tall solids. */
-    bakeAO(g, tx, ty) {
-      const L = this.level;
+    bakeAO(g, tx, ty, L) {
+      L = L || this.level;
       const x = tx * T, y = ty * T;
       const tall = (dx, dy) => {
         const d = L.t(tx + dx, ty + dy);
@@ -389,6 +406,12 @@
       const ty0 = Math.max(0, Math.floor(view.y0 / T)), ty1 = Math.min(L.h - 1, Math.floor(view.y1 / T));
       this.tileView = { tx0, tx1, ty0, ty1 };
 
+      // 1b. the floor below, through glass floors and down atriums (level.below)
+      if (this.below) {
+        this.drawBelow(game, ctx, camX, camY, tx0, tx1, ty0, ty1);
+        ctx.setTransform(s, 0, 0, s, ox, oy);
+      }
+
       // 2. animated terrain
       for (let ty = ty0; ty <= ty1; ty++) {
         for (let tx = tx0; tx <= tx1; tx++) {
@@ -435,6 +458,7 @@
       for (const fx of game.fx) if (fx.drawGlow) fx.drawGlow(ctx, game, t);
       for (const tr of game.traps) if (tr.drawGlow) tr.drawGlow(ctx, game, t);
       if (LM.objectives && !game.attract) LM.objectives.drawGlow(ctx, game, t);
+      if (L.ovals && L.ovals.length && LM.curves) LM.curves.drawGlow(ctx, game, t, view);
       game.particles.draw(ctx, 'glow', view);
       ctx.globalCompositeOperation = 'source-over';
 
@@ -447,6 +471,169 @@
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (!game.attract) this.drawScreenFX(ctx, game, cw, chh);
       return baked;
+    }
+
+    // ---------------------------------------------------- the floor below
+    /**
+     * A level's `below`: { level, dx, dy, depth, dim, tint, decals } — the floor seen through its terrain with
+     * seeBelow (glass floors, an atrium's open well). Tile (x, y) of the floor below lies under tile
+     * (x + dx, y + dy) here. depth (default 0.22) is how far down it looks: it's drawn smaller about the
+     * middle of the screen, so it slides by slower than this floor (parallax). dim (default 0.5) darkens
+     * it, tint washes it with a colour (glass). decals: [{ type, x, y, r, color }] (tiles) painted on it
+     * (blood on the floor of an arena). Its terrain and its items are drawn, not its monsters.
+     */
+    setBelow(L) {
+      this.below = null;
+      const b = L && L.def && L.def.below;
+      if (!b || !b.level || b.level === L.id) return;
+      const def = LM.find('levels', b.level);
+      if (!def) return;
+      let any = false;
+      for (let i = 0; i < L.n && !any; i++) if (L.terrain[i].seeBelow) any = true;
+      if (!any) return;
+      let BL;
+      try {
+        BL = new LM.Level(def);
+      } catch (e) {
+        console.warn('[LM] The floor below (' + b.level + ') couldn’t be built', e);
+        return;
+      }
+      this.below = {
+        L: BL, spec: b, dx: (+b.dx || 0) * T, dy: (+b.dy || 0) * T, k: 1 / (1 + (b.depth == null ? 0.22 : Math.max(0, +b.depth))),
+        chunks: new Map(), order: [], items: null,
+      };
+    }
+    /** The floor below's own furniture, drawn into its chunks (a stand-in game: nothing on it moves). */
+    belowItems() {
+      const B = this.below;
+      if (B.items) return B.items;
+      const BL = B.L;
+      const stub = { level: BL, renderer: null, time: 0, player: null, items: [], enemies: [], npcs: [], doors: [], lights: [], staticLights: [],
+        hasFlag: () => false, anyFlag: () => false, addStaticLight: (s) => s, particles: { add() {}, burst() {} } };
+      B.stub = stub;
+      B.items = [];
+      for (const sp of BL.spawns) {
+        if (sp.kind !== 'item') continue;
+        const def = LM.find('items', sp.id);
+        if (!def || !def.draw || def.wallMounted || def.seenBelow === false) continue;
+        try {
+          const it = new LM.Item(stub, def, sp.x, sp.y, sp.props, sp.tag);
+          B.items.push(it);
+        } catch (e) {
+          /* a piece that can't be made without a real game is left out */
+        }
+      }
+      B.items.sort((a, b) => (a.z || 0) - (b.z || 0) || a.y - b.y);
+      return B.items;
+    }
+    belowChunk(cx, cy, sb) {
+      const B = this.below, key = cx + ',' + cy;
+      let c = B.chunks.get(key);
+      if (c) return c;
+      const items = this.belowItems();
+      const decals = B.spec.decals || [];
+      c = this.bakeChunkOf(B.L, cx, cy, sb, (g, x0, y0) => {
+        for (const d of decals) {
+          const dd = { type: d.type || 'blood', x: (+d.x + 0.5) * T, y: (+d.y + 0.5) * T, r: (+d.r || 0.6) * T, color: d.color || '#5e1616', seed: ((+d.x * 7919 + +d.y * 104729) >>> 0) || 1 };
+          if (dd.x + dd.r < x0 || dd.y + dd.r < y0 || dd.x - dd.r > x0 + CHW || dd.y - dd.r > y0 + CHW) continue;
+          this.paintDecal(g, dd);
+        }
+        for (const it of items) {
+          if (it.x < x0 - 48 || it.y < y0 - 48 || it.x > x0 + CHW + 48 || it.y > y0 + CHW + 48) continue;
+          try {
+            if (it.def.shadow !== false) G.shadow(g, it.x, it.y + (it.def.shadowY || 0), it.r * (it.def.shadowScale || 1), 0.32);
+            g.save();
+            g.translate(it.x, it.y);
+            if (it.turnAngle) g.rotate(it.turnAngle);
+            it.def.draw(g, it, 0, B.stub);
+            g.restore();
+          } catch (e) {
+            g.restore();
+          }
+        }
+        // a long way down: darker, and through glass a little coloured (baked in: it never changes)
+        const b = B.spec, dim = b.dim == null ? 0.5 : U.clamp(+b.dim, 0, 1);
+        if (dim > 0) {
+          g.fillStyle = 'rgba(0,0,0,' + dim + ')';
+          g.fillRect(x0, y0, CHW + 1, CHW + 1);
+        }
+        if (b.tint) {
+          g.fillStyle = b.tint;
+          g.fillRect(x0, y0, CHW + 1, CHW + 1);
+        }
+      });
+      B.chunks.set(key, c);
+      B.order.push(key);
+      if (B.order.length > 40) B.chunks.delete(B.order.shift());
+      return c;
+    }
+    drawBelow(game, ctx, camX, camY, tx0, tx1, ty0, ty1) {
+      const B = this.below, L = game.level, s = this.scale, sb = s * B.k, b = B.spec;
+      const cw = this.canvas.width, chh = this.canvas.height;
+      // the tiles here that look down, as one clip
+      let any = false, bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+      ctx.save();
+      ctx.setTransform(s, 0, 0, s, this.ox, this.oy);
+      ctx.beginPath();
+      for (let ty = ty0; ty <= ty1; ty++) {
+        let run = -1;
+        for (let tx = tx0; tx <= tx1 + 1; tx++) {
+          const on = tx <= tx1 && L.terrain[ty * L.w + tx].seeBelow;
+          if (on && run < 0) run = tx;
+          if (!on && run >= 0) {
+            ctx.rect(run * T, ty * T, (tx - run) * T, T);
+            any = true;
+            bx0 = Math.min(bx0, run);
+            bx1 = Math.max(bx1, tx);
+            by0 = Math.min(by0, ty);
+            by1 = Math.max(by1, ty + 1);
+            run = -1;
+          }
+        }
+      }
+      if (!any) return ctx.restore();
+      ctx.clip();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      // which of the floor below's chunks the clip can show (and only that box gets filled: cheaper)
+      const sx = (wx) => Math.round(cw / 2 + (wx - camX) * s), sy = (wy) => Math.round(chh / 2 + (wy - camY) * s);
+      const toBelowX = (px) => camX + (px - cw / 2) / sb - B.dx, toBelowY = (py) => camY + (py - chh / 2) / sb - B.dy;
+      const px0 = Math.max(0, sx(bx0 * T)), px1 = Math.min(cw, sx(bx1 * T)), py0 = Math.max(0, sy(by0 * T)), py1 = Math.min(chh, sy(by1 * T));
+      const dim0 = b.dim == null ? 0.5 : U.clamp(+b.dim, 0, 1);
+      ctx.fillStyle = U.mix(B.L.env.voidColor || '#000000', '#000000', dim0);
+      ctx.fillRect(px0, py0, px1 - px0, py1 - py0);
+      const cx0 = Math.floor(toBelowX(px0) / CHW), cx1 = Math.floor(toBelowX(px1) / CHW);
+      const cy0 = Math.floor(toBelowY(py0) / CHW), cy1 = Math.floor(toBelowY(py1) / CHW);
+      const maxCX = Math.ceil(B.L.w / CH), maxCY = Math.ceil(B.L.h / CH);
+      for (let cy = cy0; cy <= cy1; cy++) {
+        for (let cx = cx0; cx <= cx1; cx++) {
+          if (cx < 0 || cy < 0 || cx >= maxCX || cy >= maxCY) continue;
+          const c = this.belowChunk(cx, cy, sb);
+          ctx.drawImage(c, Math.round(cw / 2 + (cx * CHW + B.dx - camX) * sb), Math.round(chh / 2 + (cy * CHW + B.dy - camY) * sb));
+        }
+      }
+      // the depth of the floor at the edges of the opening: shadow falls inside its rim
+      ctx.setTransform(s, 0, 0, s, this.ox, this.oy);
+      const rim = b.rim == null ? 14 : +b.rim;
+      if (rim > 0) {
+        const see = (x, y) => L.inBounds(x, y) && L.terrain[y * L.w + x].seeBelow;
+        for (let ty = ty0; ty <= ty1; ty++) {
+          for (let tx = tx0; tx <= tx1; tx++) {
+            if (!see(tx, ty)) continue;
+            const x = tx * T, y = ty * T;
+            for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+              if (see(tx + dx, ty + dy)) continue;
+              const ex = dx > 0 ? x + T : x, ey = dy > 0 ? y + T : y;
+              const grd = dx ? ctx.createLinearGradient(ex, 0, ex - dx * rim, 0) : ctx.createLinearGradient(0, ey, 0, ey - dy * rim);
+              grd.addColorStop(0, 'rgba(0,0,0,0.6)');
+              grd.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.fillStyle = grd;
+              if (dx) ctx.fillRect(dx > 0 ? x + T - rim : x, y, rim, T);
+              else ctx.fillRect(x, dy > 0 ? y + T - rim : y, T, rim);
+            }
+          }
+        }
+      }
+      ctx.restore();
     }
 
     renderLight(game, view, ox, oy) {

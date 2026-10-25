@@ -230,7 +230,9 @@
       if (doc.objs[i] && doc.objs[i]._unknown) out.push({ level: 'bad', text: 'Unknown object character “' + doc.objs[i]._unknown + '”', i });
     }
     if (start < 0) out.push({ level: 'bad', text: 'No start: paint the Entry stairs, or tick “Player starts here” on a tile.' });
-    if (!exits.length) out.push({ level: 'warn', text: 'No exit stairs. (Fine if the floor ends some other way, like the Chessboard’s report module.)' });
+    // a floor you leave by stairs of its own that go somewhere (the level's stairs: a `to`), or by an elevator, needs no exit
+    const leaves = lifts.size > 0 || Object.values(def.stairs || {}).some((st) => st && st.to);
+    if (!exits.length && !leaves) out.push({ level: 'warn', text: 'No exit stairs. (Fine if the floor ends some other way, like the Chessboard’s report module.)' });
     if (start >= 0) {
       // reachability, picking up keys on the way
       const keys = new Set();
@@ -1710,6 +1712,20 @@
       sect('objectives', 'Objectives (' + (d.objectives || []).length + ')', () => this.objectivesEditor(d, commit));
       sect('lights', 'Ceiling lights', () => F().list(d.ceilingLights || [], (cl, n, set) => F().params({ variants: 'json', every: 'number', offset: 'json', color: 'color', radius: 'number', intensity: 'number', flicker: 'number', skip: 'number', tag: 'tag' }, cl, (v) => set(v)), {
         onChange: (l) => { if (l.length) d.ceilingLights = l; else delete d.ceilingLights; commit(); this.scheduleReload(); }, title: (cl) => 'every ' + (cl.every || 4) + ' tiles on floor ' + JSON.stringify(cl.variants || 'any'), addLabel: 'Add a grid of lights', newItem: () => ({ variants: [0], every: 4, offset: [2, 2], color: '#f2f5ff', radius: 180, intensity: 0.5 }),
+      }));
+      // curved rooms (engine/curves.js): an ellipse fitted into a rectangle of the map, with a ring of recessed lights
+      sect('ovals', 'Curved rooms (' + (d.ovals || []).length + ')', () => F().list(d.ovals || [], (o, n, set) => F().params({ rect: 'json', wall: 'text', variant: 'number', lights: 'json' }, o, (v) => set(v)), {
+        onChange: (l) => { if (l.length) d.ovals = l; else delete d.ovals; commit(); this.scheduleReload(); },
+        title: (o) => 'oval at ' + (o.rect || []).join(', ') + (o.lights ? ' · ' + (o.lights.count || '') + ' lights' : ''),
+        addLabel: 'Add a curved room (x, y, width, height of its rectangle)',
+        newItem: () => ({ rect: [2, 2, 12, 8], lights: { count: 10, inset: 1.25, color: '#ffd9a0', cove: '#ffb060' } }),
+      }));
+      // the floor below, seen through tiles with seeBelow (glass floors, atriums)
+      sect('below', 'The floor below' + (d.below ? ': ' + d.below.level : ''), () => F().params({ level: 'id:levels', dx: 'number', dy: 'number', depth: 'number', dim: 'number', tint: 'text', rim: 'number', decals: 'json' }, d.below || {}, (v) => {
+        if (v && v.level) d.below = v;
+        else delete d.below;
+        commit();
+        this.scheduleReload();
       }));
       sect('size', 'Map size', () => this.sizePanel());
     }

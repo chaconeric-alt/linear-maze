@@ -431,7 +431,11 @@
   LM.paintWall = function (g, x, y, info, palette) {
     const env = info.env, p = palette || env.wall;
     const painter = LM.get('textures', p.style);
-    const open = (dx, dy) => !info.n(dx, dy).tall;
+    // (a curve tile next door has its own curved face: engine/curves.js)
+    const open = (dx, dy) => {
+      const n = info.n(dx, dy);
+      return !n.tall && !n.curve;
+    };
     const south = open(0, 1);
     const fh = south ? 9 : 0;
     painter.top(g, x, y, T - fh, info, p);

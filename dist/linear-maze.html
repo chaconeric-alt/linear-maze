@@ -204,6 +204,16 @@ kbd {
 .hint { color: var(--muted); font-size: 12px; }
 .lore { font: italic 400 17px/1.55 var(--font-lore); color: #d9d0bd; max-width: 60ch; }
 .lore-block { border-left: 1px solid var(--line); padding-left: 16px; }
+/* an ending, or the end of a chapter (game.ending): bad red, good gold, chapter the game's accent */
+.panel.ending { --tone: var(--brass); }
+.panel.ending.bad { --tone: #d9584c; }
+.panel.ending.good { --tone: #f0c45a; }
+.panel.ending::before { border-color: var(--tone); width: 34px; height: 34px; }
+.panel.ending::after { border-color: var(--tone); width: 34px; height: 34px; }
+.panel.ending .kicker { color: var(--tone); }
+.panel.ending h2 { font-size: 40px; }
+.ending-card .lore { margin-bottom: 14px; }
+.ending-card .lore:first-child { margin-top: 6px; }
 
 .btn {
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer;
@@ -454,7 +464,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.7';
+  LM.VERSION = '0.5.8';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -958,6 +968,26 @@ kbd {
     tone(t, o, { type: 'square', f0: 140, f1: 70, dur: 0.05, gain: 0.08 });
   });
   S('wall', (t, o) => noise(t, o, { type: 'bandpass', freq: 2400, dur: 0.04, gain: 0.12, q: 2 }));
+  // a gaze opening, and what it does when it lands; a step out of the air and back into it
+  S('gazeOpen', (t, o) => {
+    tone(t, o, { type: 'sine', f0: 220, f1: 660, dur: 0.8, gain: 0.08, attack: 0.3 });
+    tone(t, o, { type: 'triangle', f0: 330, f1: 990, dur: 0.8, gain: 0.04, attack: 0.3 });
+  });
+  S('petrify', (t, o) => {
+    noise(t, o, { freq: 700, freqEnd: 120, dur: 0.5, gain: 0.5 });
+    tone(t, o, { type: 'square', f0: 90, f1: 40, dur: 0.4, gain: 0.1 });
+  });
+  S('blinkOut', (t, o) => noise(t, o, { type: 'highpass', freq: 3000, freqEnd: 800, dur: 0.18, gain: 0.12 }));
+  S('blinkIn', (t, o) => {
+    noise(t, o, { type: 'bandpass', freq: 600, freqEnd: 2600, dur: 0.14, gain: 0.14, q: 2 });
+    tone(t, o, { type: 'sine', f0: 900, f1: 1400, dur: 0.1, gain: 0.04 });
+  });
+  // a shot turned back off a shield: a bright ring
+  S('reflect', (t, o) => {
+    tone(t, o, { type: 'sine', f0: 2600, f1: 2300, dur: 0.18, gain: 0.07 });
+    tone(t, o, { type: 'triangle', f0: 1300, f1: 1150, dur: 0.12, gain: 0.06 });
+    noise(t, o, { type: 'highpass', freq: 5000, dur: 0.03, gain: 0.08 });
+  });
   S('enemyDie', (t, o) => {
     noise(t, o, { freq: 1200, freqEnd: 120, dur: 0.35, gain: 0.45 });
     tone(t, o, { type: 'sawtooth', f0: 220, f1: 40, dur: 0.3, gain: 0.12 });
@@ -1130,7 +1160,9 @@ kbd {
           }
         });
       }
-      // elevators that stop here are built into the map (engine/elevators.js)
+      // curved rooms (engine/curves.js), then the elevators that stop here (engine/elevators.js), built into the map
+      this.ovals = [];
+      if (LM.curves) LM.curves.stamp(this);
       if (LM.elevators) LM.elevators.stamp(this);
       if (!this.start) {
         console.warn('[LM] Level ' + def.id + ' has no entry ("<"); using first floor tile');
@@ -1160,6 +1192,12 @@ kbd {
     }
     solidAt(x, y) {
       return this.t(x, y).solid || this.dynAt(x, y) === 1;
+    }
+    /** Can something stand on this tile's centre? Floor, or a curve tile whose middle is on the floor side. */
+    walkable(x, y) {
+      const d = this.t(x, y);
+      if (this.dynAt(x, y) === 1) return false;
+      return !d.solid || (!!d.curve && !!this.curveIn && this.curveIn[y * this.w + x] === 1);
     }
     /** The tile's turn: 0-3 quarter turns clockwise, or -1 when its legend entry doesn't set one. */
     rotAt(x, y) {
@@ -1238,7 +1276,7 @@ kbd {
     if (!level.inBounds(x, y)) return false;
     const i = y * level.w + x;
     const d = level.terrain[i];
-    if (d.solid || d.hazard) return false;
+    if (d.hazard || (d.solid && !(d.curve && level.curveIn && level.curveIn[i]))) return false;
     const door = level.doorAt[i];
     if (door && door.blocking && (door.lock || door.sealed || (door.flag && !door.unlocked))) return false;
     return true;
@@ -1375,12 +1413,15 @@ kbd {
     const r = e.r;
     const x0 = Math.floor((e.x - r) / T), x1 = Math.floor((e.x + r) / T);
     const y0 = Math.floor((e.y - r) / T), y1 = Math.floor((e.y + r) / T);
+    // inside a curved room (engine/curves.js): its wall is the curve, handled after the tiles
+    const ov = level.ovals && level.ovals.length ? LM.curves.at(level, e.x, e.y) : null;
     for (let ty = y0; ty <= y1; ty++) {
       for (let tx = x0; tx <= x1; tx++) {
         const d = level.t(tx, ty);
         const dyn = level.dynAt(tx, ty) === 1;
         if (!d.solid && !dyn) continue;
         if (e.passHazard && !dyn && d.hazard) continue;
+        if (ov && !dyn && LM.curves.wallFor(level, ov, tx, ty, d)) continue;
         const rects = !dyn && (d.rect || d.rects) ? level.rectsAt(tx, ty) : null;
         if (rects) {
           // thin tiles (glass, partitions, corners): one or more boxes, turned with the tile
@@ -1429,6 +1470,7 @@ kbd {
         }
       }
     }
+    if (ov && LM.curves.push(level, ov, e)) hit = true;
     return hit;
   }
   P.resolve = resolve;
@@ -1447,12 +1489,52 @@ kbd {
     return hit;
   };
 
+  /**
+   * A current that draws things toward a point (an item's `pull`: a whirlpool, a drain, a vortex):
+   *   { radius (120), strength (220: units a second at the middle, a third of it at the rim), swirl (0..1:
+   *   how much of it goes round rather than in), core (16: within this of the middle it hurts), damage,
+   *   interval (0.5 s between hurts), status, enemies (true: monsters are drawn in too), flying (false:
+   *   flying things aren't) }
+   * A dash cuts across it.
+   */
+  P.pull = function (game, src, sp, dt) {
+    const L = game.level, R = sp.radius || 120, S = sp.strength == null ? 220 : sp.strength, sw = U.clamp(sp.swirl || 0, -1, 1), core = sp.core || 16;
+    const list = sp.enemies === false ? [game.player] : [game.player].concat(game.enemies);
+    for (const e of list) {
+      if (!e || e.dead) continue;
+      if (e.isEnemy && (e.spawning > 0 || e.def.stationary || e.def.pullImmune || (e.def.flying && !sp.flying))) continue;
+      if (e.isPlayer && (e.falling > 0 || e.dashT > 0)) continue;
+      const dx = src.x - e.x, dy = src.y - e.y, d = Math.hypot(dx, dy);
+      if (d > R + e.r || d < 0.01) continue;
+      const k = U.clamp(1 - d / R, 0, 1), f = S * (0.33 + 0.67 * k) * dt;
+      const ux = dx / d, uy = dy / d, inw = 1 - Math.abs(sw);
+      let mx = (ux * inw - uy * sw) * f, my = (uy * inw + ux * sw) * f;
+      // don't overshoot the middle
+      if (d < Math.hypot(mx, my)) {
+        mx = dx;
+        my = dy;
+      }
+      P.move(L, e, mx, my);
+      if (sp.damage && d < core + e.r) {
+        e._pullCd = (e._pullCd || 0) - dt;
+        if (e._pullCd <= 0) {
+          e._pullCd = sp.interval || 0.5;
+          LM.combat.hurt(game, e, sp.damage, { source: 'hazard', type: 'hazard', status: sp.status });
+        }
+      }
+    }
+  };
+
   /** Is the point inside something that stops bullets? */
   P.pointBlocksShot = function (level, x, y) {
     const tx = Math.floor(x / T), ty = Math.floor(y / T);
     const d = level.t(tx, ty);
     if (level.dynAt(tx, ty) === 1) return true;
     if (!d.blocksShots) return false;
+    if (d.curve) {
+      const ov = level.curveAt[ty * level.w + tx];
+      return !(ov && LM.curves.inside(ov, x, y));
+    }
     if (d.rect || d.rects) {
       for (const rc of level.rectsAt(tx, ty)) {
         const rx = tx * T + rc[0], ry = ty * T + rc[1];
@@ -1496,7 +1578,18 @@ kbd {
       const dyn = level.dynAt(tx, ty) === 1;
       const blocks = dyn || (light ? d.blocksLight : d.blocksShots);
       if (blocks) {
-        if (d.shape === 'circle' && !dyn) {
+        if (d.curve && !dyn) {
+          // a curve tile: wall only beyond the curve (engine/curves.js)
+          const ov = level.curveAt[ty * level.w + tx];
+          const ht = ov ? LM.curves.rayTile(ov, ox, oy, dx, dy, t, Math.min(tMX, tMY)) : t;
+          if (ht >= 0 && !(i === 0 && light && !(ov && LM.curves.inside(ov, ox, oy)))) {
+            out.t = Math.min(ht, maxDist);
+            out.wall = ht <= maxDist;
+            out.tx = tx;
+            out.ty = ty;
+            return out.t;
+          }
+        } else if (d.shape === 'circle' && !dyn) {
           const ht = rayCircle(ox, oy, dx, dy, tx * T + T / 2, ty * T + T / 2, d.radius);
           if (ht >= 0 && ht <= Math.min(tMX, tMY) + 0.01) {
             out.t = Math.min(ht, maxDist);
@@ -1567,6 +1660,7 @@ kbd {
       for (let tx = x0; tx <= x1; tx++) {
         if (!level.blocksLight(tx, ty)) continue;
         const d = level.t(tx, ty);
+        if (d.curve && level.dynAt(tx, ty) !== 1) LM.curves.angles(level, tx, ty, ox, oy, r2, (a) => angles.push(a - EPS, a + EPS));
         if (d.shape === 'circle' && level.dynAt(tx, ty) !== 1) {
           const cx = tx * T + T / 2, cy = ty * T + T / 2;
           const dd = Math.hypot(cx - ox, cy - oy);
@@ -1623,6 +1717,451 @@ kbd {
 })();
 
 //# sourceURL=engine/physics.js
+</script>
+<script>/* engine/curves.js */
+/* The Linear Maze engine — engine/curves.js
+ * Curved rooms. A level's `ovals` each name a rectangle of the map, and the engine fits an ellipse into it:
+ *
+ *   ovals: [{ rect: [x, y, w, h], wall: '#', variant: 3, lights: { count: 10, inset: 1.3, color: '#ffc879' } }]
+ *
+ * Inside the ellipse is floor; outside it, wall. Tiles the ellipse crosses become curve tiles: part floor,
+ * part wall, with the boundary a true curve for walking, shooting, sight and light, and baked as one (the
+ * floor, the wall's top, and a curved front face along the northern arc where a straight wall would show its
+ * face). Tiles of the rectangle the ellipse doesn't reach become the wall. Doors, stairs and other terrain
+ * that isn't plain floor or wall are left as they are, so a doorway in the curve still works (put it where
+ * the ellipse meets the rectangle's edge: the middle of a side).
+ *
+ * Fields: rect [x, y, w, h] in tiles (the ellipse touches its four sides); wall: a legend character or a
+ * terrain id for the wall (default the legend's '#'); variant: the floor variant under the curve (default
+ * the variant at the oval's centre); lights: a ring of recessed ceiling lights { count, inset (tiles in from
+ * the wall), color, radius, intensity, flicker, centre: true (one more in the middle), cove: a colour (a
+ * soft line of light along the top of the wall), tag }.
+ *
+ * Engine use: LM.curves.stamp (level.js), the physics hooks (physics.js), bakeChunk (render.js),
+ * addLights (game.js), drawGlow (render.js, the emissive pass).
+ */
+'use strict';
+(function () {
+  const LM = window.LM, T = LM.TILE, U = LM.util;
+  const C = (LM.curves = {});
+  const FH = 9; // the height of a wall's front face (LM.paintWall)
+
+  /** The nearest point to (px, py) on the ellipse x²/a² + y²/b² = 1 (centred on the origin). A few steps of
+   *  the curvature iteration, which converges from anywhere and never needs a trig call. */
+  C.closest = function (px, py, a, b) {
+    const ax = Math.abs(px), ay = Math.abs(py);
+    let tx = 0.70710678, ty = 0.70710678;
+    for (let i = 0; i < 4; i++) {
+      const x = a * tx, y = b * ty;
+      const ex = ((a * a - b * b) * tx * tx * tx) / a;
+      const ey = ((b * b - a * a) * ty * ty * ty) / b;
+      const rx = x - ex, ry = y - ey, qx = ax - ex, qy = ay - ey;
+      const r = Math.hypot(rx, ry), q = Math.hypot(qx, qy) || 1e-9;
+      tx = U.clamp(((qx * r) / q + ex) / a, 0, 1);
+      ty = U.clamp(((qy * r) / q + ey) / b, 0, 1);
+      const l = Math.hypot(tx, ty) || 1;
+      tx /= l;
+      ty /= l;
+    }
+    return [(px < 0 ? -1 : 1) * a * tx, (py < 0 ? -1 : 1) * b * ty];
+  };
+  /** Is the world point inside the oval's ellipse? */
+  const inside = (ov, x, y) => {
+    const u = (x - ov.cx) / ov.a, v = (y - ov.cy) / ov.b;
+    return u * u + v * v < 1;
+  };
+  C.inside = inside;
+  /** Does any part of tile (tx, ty) lie inside the ellipse? (its nearest point to the centre does) */
+  const touches = (ov, tx, ty) => {
+    const x = U.clamp(ov.cx, tx * T, tx * T + T), y = U.clamp(ov.cy, ty * T, ty * T + T);
+    return inside(ov, x, y);
+  };
+  /** Is every corner of the tile inside? */
+  const within = (ov, tx, ty) => inside(ov, tx * T, ty * T) && inside(ov, tx * T + T, ty * T) && inside(ov, tx * T, ty * T + T) && inside(ov, tx * T + T, ty * T + T);
+
+  // ------------------------------------------------------------ building them into the map
+  const curveDefs = new Map();
+  const TALL = { tall: true, solid: true, id: 'curve-neighbour' };
+  /** The curve tile made from a wall: the wall's look and stops, part of the tile floor. */
+  function curveOf(wd) {
+    let d = curveDefs.get(wd);
+    if (d) return d;
+    d = Object.assign({}, wd, {
+      id: wd.id + '~curve', curve: true, wall: wd, solid: true, blocksShots: true, blocksLight: true, tall: false, noAO: true,
+      noDecals: true, turns: false, shape: undefined, rect: undefined, rects: undefined, door: undefined, hazard: undefined,
+      layer: 1, bake: bakeCurve,
+    });
+    curveDefs.set(wd, d);
+    return d;
+  }
+  function bakeCurve(g, x, y, info) {
+    const L = info.level, ov = L.curveAt && L.curveAt[info.y * L.w + info.x];
+    LM.paintFloor(g, x, y, info);
+    if (!ov) return;
+    const wd = this.wall;
+    g.save();
+    g.beginPath();
+    g.rect(x, y, T, T);
+    g.ellipse(ov.cx, ov.cy, ov.a, ov.b, 0, 0, U.TAU);
+    g.clip('evenodd');
+    // the wall's top, as if walled in all round: the curve's own face and lip are baked over it (bakeChunk)
+    const n0 = info.n;
+    info.n = (dx, dy) => {
+      const nx = info.x + dx, ny = info.y + dy;
+      if (nx >= ov.x - 1 && ny >= ov.y - 1 && nx <= ov.x + ov.w && ny <= ov.y + ov.h) return TALL;
+      return n0(dx, dy);
+    };
+    try {
+      if (wd.bake) wd.bake(g, x, y, info);
+    } finally {
+      info.n = n0;
+      g.restore();
+    }
+  }
+
+  C.stamp = function (level) {
+    const list = level.def.ovals;
+    level.ovals = [];
+    if (!Array.isArray(list) || !list.length) return;
+    const legend = Object.assign({}, LM.registry.legend, level.def.legend || {});
+    const terrainOf = (k) => {
+      if (k == null) return null;
+      let e = legend[k];
+      if (typeof e === 'string') e = { terrain: e };
+      const id = e ? e.terrain : k;
+      return LM.find('terrain', id) || null;
+    };
+    const dfltWall = terrainOf('#') || LM.find('terrain', 'wall');
+    level.curveAt = new Array(level.n).fill(null);
+    level.curveIn = new Uint8Array(level.n);
+    list.forEach((o, k) => {
+      if (!o || !Array.isArray(o.rect) || o.rect.length < 4) return;
+      const [rx, ry, rw, rh] = o.rect.map((v) => Math.round(+v));
+      if (!(rw >= 2 && rh >= 2)) return;
+      const ov = { i: k, x: rx, y: ry, w: rw, h: rh, cx: (rx + rw / 2) * T, cy: (ry + rh / 2) * T, a: (rw * T) / 2, b: (rh * T) / 2, spec: o };
+      let wd = terrainOf(o.wall) || dfltWall;
+      if (!wd || !wd.solid) wd = dfltWall;
+      ov.wallDef = wd;
+      const mx = Math.floor(rx + rw / 2), my = Math.floor(ry + rh / 2);
+      const variant = o.variant != null ? +o.variant : level.inBounds(mx, my) ? level.variant[my * level.w + mx] : 0;
+      ov.variant = variant;
+      const cd = curveOf(wd);
+      for (let ty = ry; ty < ry + rh; ty++) {
+        for (let tx = rx; tx < rx + rw; tx++) {
+          if (!level.inBounds(tx, ty)) continue;
+          const i = ty * level.w + tx, td = level.terrain[i];
+          // doors, stairs, water, pillars...: kept (only plain floor and plain wall are reshaped)
+          const plain = td === wd || (td.solid && td.tall && !td.door) || (td.floorLike && !td.door && !td.entry && !td.exit && !td.hazard && !td.elevator);
+          if (!plain || within(ov, tx, ty)) continue;
+          if (!touches(ov, tx, ty)) {
+            level.terrain[i] = wd;
+            continue;
+          }
+          (ov.was || (ov.was = new Map())).set(i, td);
+          level.terrain[i] = cd;
+          level.curveAt[i] = ov;
+          level.curveIn[i] = inside(ov, tx * T + T / 2, ty * T + T / 2) ? 1 : 0;
+          level.variant[i] = variant;
+        }
+      }
+      // a doorway in the curve: the curve tile just inside it goes back to plain floor, so the way through
+      // is a doorway's width and not pinched to nothing where the curve touches it
+      for (let ty = ry - 1; ty <= ry + rh; ty++) {
+        for (let tx = rx - 1; tx <= rx + rw; tx++) {
+          if (!level.inBounds(tx, ty)) continue;
+          const d = level.terrain[ty * level.w + tx];
+          if (d.curve || (d.solid && !d.door) || d.hazard) continue;
+          const inRect = tx >= rx && ty >= ry && tx < rx + rw && ty < ry + rh;
+          if (inRect && within(ov, tx, ty)) continue;
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = tx + dx, ny = ty + dy;
+            if (!level.inBounds(nx, ny)) continue;
+            const j = ny * level.w + nx;
+            if (level.curveAt[j] !== ov) continue;
+            // only the tile on the way in (toward the middle)
+            if ((nx * T + T / 2 - (tx * T + T / 2)) * (ov.cx - (tx * T + T / 2)) + (ny * T + T / 2 - (ty * T + T / 2)) * (ov.cy - (ty * T + T / 2)) <= 0) continue;
+            const was = ov.was && ov.was.get(j);
+            level.terrain[j] = was && was.floorLike && !was.solid ? was : LM.find('terrain', 'floor') || was;
+            level.curveAt[j] = null;
+            level.curveIn[j] = 0;
+            (ov.opened || (ov.opened = [])).push(j);
+          }
+        }
+      }
+      level.ovals.push(ov);
+    });
+  };
+
+  /** The oval whose ellipse holds the world point, or null. */
+  C.at = function (level, x, y) {
+    const ovs = level.ovals;
+    if (!ovs || !ovs.length) return null;
+    for (const ov of ovs) {
+      if (x < ov.cx - ov.a || x > ov.cx + ov.a || y < ov.cy - ov.b || y > ov.cy + ov.b) continue;
+      if (inside(ov, x, y)) return ov;
+    }
+    return null;
+  };
+
+  // ------------------------------------------------------------ physics
+  /** A tile that, seen from inside this oval, is all wall: a curve tile of it, or a solid tile around it that
+   *  the ellipse doesn't reach. (Things inside the ellipse, a pillar, a statue on terrain, still collide.) */
+  C.wallFor = function (level, ov, tx, ty, d) {
+    if (d.curve) return level.curveAt[ty * level.w + tx] === ov;
+    if (tx < ov.x - 1 || ty < ov.y - 1 || tx > ov.x + ov.w || ty > ov.y + ov.h) return false;
+    return !touches(ov, tx, ty);
+  };
+  /** Keep a circle that's inside the ellipse at least its radius from the curve, where the curve is wall
+   *  (not a doorway). Returns true if it touched. */
+  C.push = function (level, ov, e) {
+    const lx = e.x - ov.cx, ly = e.y - ov.cy;
+    const [qx, qy] = C.closest(lx, ly, ov.a, ov.b);
+    let dx = lx - qx, dy = ly - qy;
+    const d = Math.hypot(dx, dy);
+    if (d >= e.r) return false;
+    // the outward normal at the nearest point, and the tile just beyond it
+    let nx = qx / (ov.a * ov.a), ny = qy / (ov.b * ov.b);
+    const nl = Math.hypot(nx, ny) || 1;
+    nx /= nl;
+    ny /= nl;
+    const bx = Math.floor((ov.cx + qx + nx * 2) / T), by = Math.floor((ov.cy + qy + ny * 2) / T);
+    if (!level.solidAt(bx, by)) return false;
+    if (d > 1e-4) {
+      dx /= d;
+      dy /= d;
+    } else {
+      dx = -nx;
+      dy = -ny;
+    }
+    e.x += dx * (e.r - d);
+    e.y += dy * (e.r - d);
+    return true;
+  };
+  /** A ray through curve tile (tile entered at distance t0, left at t1): where it meets wall, or -1 if it gets
+   *  through on the floor side. */
+  C.rayTile = function (ov, ox, oy, dx, dy, t0, t1) {
+    const px = (ox - ov.cx) / ov.a, py = (oy - ov.cy) / ov.b, qx = dx / ov.a, qy = dy / ov.b;
+    const A = qx * qx + qy * qy, B = 2 * (px * qx + py * qy), Cc = px * px + py * py - 1;
+    const disc = B * B - 4 * A * Cc;
+    if (disc <= 0 || A < 1e-12) return t0;
+    const s = Math.sqrt(disc), e1 = (-B - s) / (2 * A), e2 = (-B + s) / (2 * A);
+    if (t0 < e1 - 1e-4 || t0 > e2) return t0;
+    return e2 < t1 ? Math.max(t0, e2) : -1;
+  };
+  /** Extra directions for a visibility polygon: where the curve crosses each curve tile's edges, and the
+   *  middle of the arc between, so lit and seen areas follow the curve. */
+  C.angles = function (level, tx, ty, ox, oy, r2, push) {
+    const ov = level.curveAt[ty * level.w + tx];
+    if (!ov) return;
+    const pts = [];
+    const x0 = tx * T, y0 = ty * T, x1 = x0 + T, y1 = y0 + T;
+    // vertical edges: x fixed
+    for (const x of [x0, x1]) {
+      const u = (x - ov.cx) / ov.a;
+      if (u * u >= 1) continue;
+      const h = ov.b * Math.sqrt(1 - u * u);
+      for (const y of [ov.cy - h, ov.cy + h]) if (y >= y0 && y <= y1) pts.push(x, y);
+    }
+    for (const y of [y0, y1]) {
+      const v = (y - ov.cy) / ov.b;
+      if (v * v >= 1) continue;
+      const w = ov.a * Math.sqrt(1 - v * v);
+      for (const x of [ov.cx - w, ov.cx + w]) if (x >= x0 && x <= x1) pts.push(x, y);
+    }
+    if (pts.length >= 4) {
+      // the middle of the arc: halfway round between the first two crossings
+      const a0 = Math.atan2((pts[1] - ov.cy) / ov.b, (pts[0] - ov.cx) / ov.a), a1 = Math.atan2((pts[3] - ov.cy) / ov.b, (pts[2] - ov.cx) / ov.a);
+      const am = a0 + U.angDiff(a0, a1) / 2;
+      pts.push(ov.cx + Math.cos(am) * ov.a, ov.cy + Math.sin(am) * ov.b);
+    }
+    for (let i = 0; i < pts.length; i += 2) {
+      if (U.dist2(pts[i], pts[i + 1], ox, oy) > r2) continue;
+      push(Math.atan2(pts[i + 1] - oy, pts[i] - ox));
+    }
+  };
+
+  // ------------------------------------------------------------ baking
+  /** The palette a wall terrain paints with: its def's own `palette`, else whatever its bake hands
+   *  LM.paintWall (found by asking it to bake once with LM.paintWall listening), else the environment's wall. */
+  const palettes = new Map();
+  let scratch = null;
+  C.paletteOf = function (wd, info) {
+    const key = wd.id + '|' + ((info.env && info.env.name) || '');
+    if (palettes.has(key)) return palettes.get(key);
+    let p = wd.palette || null;
+    if (!p && wd.bake) {
+      const pw = LM.paintWall;
+      scratch = scratch || document.createElement('canvas').getContext('2d');
+      LM.paintWall = (g, x, y, inf, pal) => {
+        p = pal || inf.env.wall;
+      };
+      try {
+        wd.bake(scratch, 0, 0, Object.assign({}, info, { x: 0, y: 0, n: () => TALL }));
+      } catch (e) {
+        p = null;
+      } finally {
+        LM.paintWall = pw;
+      }
+    }
+    p = p || info.env.wall || {};
+    palettes.set(key, p);
+    return p;
+  };
+  /** The curved face, lip and contact shadow, over a chunk's tiles (after they're baked). */
+  C.bakeChunk = function (g, L, tx0, ty0, n, info) {
+    if (!L.ovals || !L.ovals.length) return;
+    for (const ov of L.ovals) {
+      if (ov.x + ov.w < tx0 - 1 || ov.y + ov.h < ty0 - 1 || ov.x - 1 > tx0 + n || ov.y - 1 > ty0 + n) continue;
+      const wd = ov.wallDef;
+      const p = C.paletteOf(wd, info);
+      const painter = p.style ? LM.find('textures', p.style) : null;
+      // where there's wall: the curve tiles and the solid ring around them (not doors, not openings)
+      const wallClip = () => {
+        g.beginPath();
+        for (let ty = Math.max(ov.y - 1, ty0 - 1); ty <= Math.min(ov.y + ov.h, ty0 + n); ty++) {
+          for (let tx = Math.max(ov.x - 1, tx0 - 1); tx <= Math.min(ov.x + ov.w, tx0 + n); tx++) {
+            if (!L.inBounds(tx, ty)) continue;
+            const d = L.t(tx, ty);
+            if ((d.curve && L.curveAt[ty * L.w + tx] === ov) || (d.tall && !d.door)) g.rect(tx * T, ty * T, T, T);
+          }
+        }
+        g.clip();
+      };
+      const ell = (dy, grow) => g.ellipse(ov.cx, ov.cy + (dy || 0), ov.a + (grow || 0), ov.b + (grow || 0), 0, 0, U.TAU);
+      // 1. the front face: the band of wall just above the northern arc
+      g.save();
+      wallClip();
+      g.beginPath();
+      g.rect(ov.cx - ov.a - T, ov.cy - ov.b - T, ov.a * 2 + T * 2, ov.b * 2 + T * 2);
+      ell();
+      g.clip('evenodd');
+      g.beginPath();
+      ell(-FH);
+      g.clip();
+      const sx0 = Math.max(ov.cx - ov.a, tx0 * T - 2), sx1 = Math.min(ov.cx + ov.a, (tx0 + n) * T + 2);
+      const ox = info.x, oy = info.y;
+      for (let sx = Math.floor(sx0); sx < sx1; sx += 2) {
+        const u = (sx + 1 - ov.cx) / ov.a;
+        if (u * u >= 1) continue;
+        const yt = ov.cy - ov.b * Math.sqrt(1 - u * u);
+        const ctx0 = Math.floor(sx / T) * T;
+        g.save();
+        g.beginPath();
+        g.rect(sx, yt - FH - 2, 2.2, FH + 3);
+        g.clip();
+        info.x = Math.floor(sx / T);
+        info.y = Math.floor((yt - 1) / T);
+        if (painter && painter.face) painter.face(g, ctx0, yt - FH, FH, info, p);
+        else {
+          g.fillStyle = p.face || '#3a3530';
+          g.fillRect(ctx0, yt - FH, T, FH);
+        }
+        g.restore();
+      }
+      info.x = ox;
+      info.y = oy;
+      g.restore();
+      // 2. lips: along the top of the face, and along the curve where there's no face (the south side)
+      g.save();
+      wallClip();
+      g.beginPath();
+      g.rect(ov.cx - ov.a - T, ov.cy - ov.b - T, ov.a * 2 + T * 2, ov.b * 2 + T * 2);
+      ell();
+      g.clip('evenodd');
+      g.strokeStyle = p.edge || 'rgba(255,255,255,0.2)';
+      g.lineWidth = 1.3;
+      g.beginPath();
+      g.ellipse(ov.cx, ov.cy - FH, ov.a, ov.b, 0, Math.PI, U.TAU);
+      g.stroke();
+      g.beginPath();
+      g.rect(ov.cx - ov.a - T, ov.cy - ov.b - T, ov.a * 2 + T * 2, ov.b * 2 + T * 2);
+      ell(-FH);
+      g.clip('evenodd');
+      g.lineWidth = 2.4;
+      g.beginPath();
+      ell();
+      g.stroke();
+      if (p.trim) {
+        g.strokeStyle = U.rgba(p.trim, 0.5);
+        g.lineWidth = 0.8;
+        g.beginPath();
+        ell(0, 3.2);
+        g.stroke();
+      }
+      g.restore();
+      // 3. the floor's contact shadow round the inside of the curve
+      g.save();
+      g.beginPath();
+      ell();
+      g.clip();
+      for (const [w, a] of [[16, 0.1], [9, 0.13], [4, 0.16]]) {
+        g.strokeStyle = 'rgba(0,0,0,' + a + ')';
+        g.lineWidth = w;
+        g.beginPath();
+        ell();
+        g.stroke();
+      }
+      g.restore();
+    }
+  };
+
+  // ------------------------------------------------------------ recessed lights
+  C.ringPoints = function (ov, count, inset) {
+    const pts = [], a = Math.max(8, ov.a - inset * T), b = Math.max(8, ov.b - inset * T);
+    for (let i = 0; i < count; i++) {
+      const t = (i / count) * U.TAU - Math.PI / 2;
+      pts.push({ x: ov.cx + Math.cos(t) * a, y: ov.cy + Math.sin(t) * b });
+    }
+    return pts;
+  };
+  C.addLights = function (game) {
+    const L = game.level;
+    for (const ov of L.ovals || []) {
+      const li = ov.spec.lights;
+      ov.fixtures = [];
+      if (!li) continue;
+      const count = Math.max(0, Math.round(li.count != null ? li.count : Math.round((ov.a + ov.b) / 34)));
+      const spec = (x, y) => ({ x, y, color: li.color || '#ffd9a0', radius: li.radius || 150, intensity: li.intensity == null ? 0.42 : li.intensity, flicker: li.flicker || 0, tag: li.tag });
+      for (const p of C.ringPoints(ov, count, li.inset == null ? 1.25 : li.inset)) ov.fixtures.push({ x: p.x, y: p.y, light: game.addStaticLight(spec(p.x, p.y)) });
+      if (li.centre || li.center) ov.fixtures.push({ x: ov.cx, y: ov.cy, light: game.addStaticLight(Object.assign(spec(ov.cx, ov.cy), { radius: (li.radius || 150) * 1.4 })) });
+    }
+  };
+  /** The emissive pass: each recessed light's lens, and the cove's line of light along the top of the wall. */
+  C.drawGlow = function (ctx, game, t, view) {
+    const L = game.level;
+    for (const ov of L.ovals || []) {
+      if (ov.cx + ov.a < view.x0 || ov.cx - ov.a > view.x1 || ov.cy + ov.b < view.y0 || ov.cy - ov.b > view.y1) continue;
+      const li = ov.spec.lights;
+      if (!li) continue;
+      for (const f of ov.fixtures || []) {
+        const on = f.light && !f.light.off;
+        if (!on) continue;
+        const k = f.light.intensity / (li.intensity == null ? 0.42 : li.intensity || 0.42);
+        LM.gfx.glow(ctx, f.x, f.y, 9, li.color || '#ffd9a0', 0.55 * k);
+        ctx.fillStyle = U.rgba('#fff6e6', 0.45 * k);
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, 1.6, 0, U.TAU);
+        ctx.fill();
+      }
+      if (li.cove) {
+        const anyOn = (ov.fixtures || []).some((f) => f.light && !f.light.off);
+        if (!anyOn) continue;
+        ctx.save();
+        ctx.strokeStyle = U.rgba(li.cove, 0.16);
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.ellipse(ov.cx, ov.cy - FH * 0.6, ov.a - 1, ov.b - 1, 0, 0, U.TAU);
+        ctx.stroke();
+        ctx.strokeStyle = U.rgba(li.cove, 0.32);
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  };
+})();
+
+//# sourceURL=engine/curves.js
 </script>
 <script>/* engine/render.js */
 /* The Linear Maze engine — engine/render.js
@@ -1800,6 +2339,7 @@ kbd {
       this.lc.height = Math.ceil(this.canvas.height / 2);
       this.chunks.clear();
       this.chunkOrder.length = 0;
+      if (this.below) this.below.chunks.clear();
     }
     setLevel(level) {
       this.level = level;
@@ -1808,6 +2348,7 @@ kbd {
       this.decals = [];
       this.lightTiles = new Map();
       this.lightTileScale = 0;
+      this.setBelow(level);
     }
     screenToWorld(sx, sy, cam) {
       return { x: cam.x + (sx - this.cssW / 2) / this.zoom, y: cam.y + (sy - this.cssH / 2) / this.zoom };
@@ -1831,7 +2372,12 @@ kbd {
       return c;
     }
     bakeChunk(cx, cy) {
-      const L = this.level, env = L.env, s = this.scale;
+      // the editor bakes with a stand-in renderer ({ level, scale, decals, bakeAO, paintDecal }): use ours
+      return LM.Renderer.prototype.bakeChunkOf.call(this, this.level, cx, cy, this.scale);
+    }
+    /** Bake one chunk of a level's terrain at scale s (the level being played, or the one seen below it). */
+    bakeChunkOf(L, cx, cy, s, extra) {
+      const env = L.env;
       const c = document.createElement('canvas');
       c.width = Math.ceil(CHW * s) + 1;
       c.height = Math.ceil(CHW * s) + 1;
@@ -1874,10 +2420,20 @@ kbd {
             g.restore();
             info.rot = 0;
             info.across = undefined;
-            if (layer === 0 && !d.noAO) this.bakeAO(g, tx, ty);
+            if (layer === 0 && !d.noAO) this.bakeAO(g, tx, ty, L);
           }
         }
       }
+      // curved rooms: the curve's face, lip and shadow over the tiles (engine/curves.js)
+      if (L.ovals && L.ovals.length && LM.curves) {
+        try {
+          LM.curves.bakeChunk(g, L, tx0, ty0, CH, info);
+        } catch (e) {
+          console.warn('[LM] A curved room didn’t bake', e);
+        }
+      }
+      if (extra) extra(g, cx * CHW, cy * CHW);
+      if (L !== this.level) return c;
       // replay decals that overlap this chunk
       const x0 = cx * CHW, y0 = cy * CHW;
       for (const d of this.decals) {
@@ -1887,8 +2443,8 @@ kbd {
       return c;
     }
     /** Soft contact shadow on ground tiles next to tall solids. */
-    bakeAO(g, tx, ty) {
-      const L = this.level;
+    bakeAO(g, tx, ty, L) {
+      L = L || this.level;
       const x = tx * T, y = ty * T;
       const tall = (dx, dy) => {
         const d = L.t(tx + dx, ty + dy);
@@ -2016,6 +2572,12 @@ kbd {
       const ty0 = Math.max(0, Math.floor(view.y0 / T)), ty1 = Math.min(L.h - 1, Math.floor(view.y1 / T));
       this.tileView = { tx0, tx1, ty0, ty1 };
 
+      // 1b. the floor below, through glass floors and down atriums (level.below)
+      if (this.below) {
+        this.drawBelow(game, ctx, camX, camY, tx0, tx1, ty0, ty1);
+        ctx.setTransform(s, 0, 0, s, ox, oy);
+      }
+
       // 2. animated terrain
       for (let ty = ty0; ty <= ty1; ty++) {
         for (let tx = tx0; tx <= tx1; tx++) {
@@ -2062,6 +2624,7 @@ kbd {
       for (const fx of game.fx) if (fx.drawGlow) fx.drawGlow(ctx, game, t);
       for (const tr of game.traps) if (tr.drawGlow) tr.drawGlow(ctx, game, t);
       if (LM.objectives && !game.attract) LM.objectives.drawGlow(ctx, game, t);
+      if (L.ovals && L.ovals.length && LM.curves) LM.curves.drawGlow(ctx, game, t, view);
       game.particles.draw(ctx, 'glow', view);
       ctx.globalCompositeOperation = 'source-over';
 
@@ -2074,6 +2637,169 @@ kbd {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (!game.attract) this.drawScreenFX(ctx, game, cw, chh);
       return baked;
+    }
+
+    // ---------------------------------------------------- the floor below
+    /**
+     * A level's `below`: { level, dx, dy, depth, dim, tint, decals } — the floor seen through its terrain with
+     * seeBelow (glass floors, an atrium's open well). Tile (x, y) of the floor below lies under tile
+     * (x + dx, y + dy) here. depth (default 0.22) is how far down it looks: it's drawn smaller about the
+     * middle of the screen, so it slides by slower than this floor (parallax). dim (default 0.5) darkens
+     * it, tint washes it with a colour (glass). decals: [{ type, x, y, r, color }] (tiles) painted on it
+     * (blood on the floor of an arena). Its terrain and its items are drawn, not its monsters.
+     */
+    setBelow(L) {
+      this.below = null;
+      const b = L && L.def && L.def.below;
+      if (!b || !b.level || b.level === L.id) return;
+      const def = LM.find('levels', b.level);
+      if (!def) return;
+      let any = false;
+      for (let i = 0; i < L.n && !any; i++) if (L.terrain[i].seeBelow) any = true;
+      if (!any) return;
+      let BL;
+      try {
+        BL = new LM.Level(def);
+      } catch (e) {
+        console.warn('[LM] The floor below (' + b.level + ') couldn’t be built', e);
+        return;
+      }
+      this.below = {
+        L: BL, spec: b, dx: (+b.dx || 0) * T, dy: (+b.dy || 0) * T, k: 1 / (1 + (b.depth == null ? 0.22 : Math.max(0, +b.depth))),
+        chunks: new Map(), order: [], items: null,
+      };
+    }
+    /** The floor below's own furniture, drawn into its chunks (a stand-in game: nothing on it moves). */
+    belowItems() {
+      const B = this.below;
+      if (B.items) return B.items;
+      const BL = B.L;
+      const stub = { level: BL, renderer: null, time: 0, player: null, items: [], enemies: [], npcs: [], doors: [], lights: [], staticLights: [],
+        hasFlag: () => false, anyFlag: () => false, addStaticLight: (s) => s, particles: { add() {}, burst() {} } };
+      B.stub = stub;
+      B.items = [];
+      for (const sp of BL.spawns) {
+        if (sp.kind !== 'item') continue;
+        const def = LM.find('items', sp.id);
+        if (!def || !def.draw || def.wallMounted || def.seenBelow === false) continue;
+        try {
+          const it = new LM.Item(stub, def, sp.x, sp.y, sp.props, sp.tag);
+          B.items.push(it);
+        } catch (e) {
+          /* a piece that can't be made without a real game is left out */
+        }
+      }
+      B.items.sort((a, b) => (a.z || 0) - (b.z || 0) || a.y - b.y);
+      return B.items;
+    }
+    belowChunk(cx, cy, sb) {
+      const B = this.below, key = cx + ',' + cy;
+      let c = B.chunks.get(key);
+      if (c) return c;
+      const items = this.belowItems();
+      const decals = B.spec.decals || [];
+      c = this.bakeChunkOf(B.L, cx, cy, sb, (g, x0, y0) => {
+        for (const d of decals) {
+          const dd = { type: d.type || 'blood', x: (+d.x + 0.5) * T, y: (+d.y + 0.5) * T, r: (+d.r || 0.6) * T, color: d.color || '#5e1616', seed: ((+d.x * 7919 + +d.y * 104729) >>> 0) || 1 };
+          if (dd.x + dd.r < x0 || dd.y + dd.r < y0 || dd.x - dd.r > x0 + CHW || dd.y - dd.r > y0 + CHW) continue;
+          this.paintDecal(g, dd);
+        }
+        for (const it of items) {
+          if (it.x < x0 - 48 || it.y < y0 - 48 || it.x > x0 + CHW + 48 || it.y > y0 + CHW + 48) continue;
+          try {
+            if (it.def.shadow !== false) G.shadow(g, it.x, it.y + (it.def.shadowY || 0), it.r * (it.def.shadowScale || 1), 0.32);
+            g.save();
+            g.translate(it.x, it.y);
+            if (it.turnAngle) g.rotate(it.turnAngle);
+            it.def.draw(g, it, 0, B.stub);
+            g.restore();
+          } catch (e) {
+            g.restore();
+          }
+        }
+        // a long way down: darker, and through glass a little coloured (baked in: it never changes)
+        const b = B.spec, dim = b.dim == null ? 0.5 : U.clamp(+b.dim, 0, 1);
+        if (dim > 0) {
+          g.fillStyle = 'rgba(0,0,0,' + dim + ')';
+          g.fillRect(x0, y0, CHW + 1, CHW + 1);
+        }
+        if (b.tint) {
+          g.fillStyle = b.tint;
+          g.fillRect(x0, y0, CHW + 1, CHW + 1);
+        }
+      });
+      B.chunks.set(key, c);
+      B.order.push(key);
+      if (B.order.length > 40) B.chunks.delete(B.order.shift());
+      return c;
+    }
+    drawBelow(game, ctx, camX, camY, tx0, tx1, ty0, ty1) {
+      const B = this.below, L = game.level, s = this.scale, sb = s * B.k, b = B.spec;
+      const cw = this.canvas.width, chh = this.canvas.height;
+      // the tiles here that look down, as one clip
+      let any = false, bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+      ctx.save();
+      ctx.setTransform(s, 0, 0, s, this.ox, this.oy);
+      ctx.beginPath();
+      for (let ty = ty0; ty <= ty1; ty++) {
+        let run = -1;
+        for (let tx = tx0; tx <= tx1 + 1; tx++) {
+          const on = tx <= tx1 && L.terrain[ty * L.w + tx].seeBelow;
+          if (on && run < 0) run = tx;
+          if (!on && run >= 0) {
+            ctx.rect(run * T, ty * T, (tx - run) * T, T);
+            any = true;
+            bx0 = Math.min(bx0, run);
+            bx1 = Math.max(bx1, tx);
+            by0 = Math.min(by0, ty);
+            by1 = Math.max(by1, ty + 1);
+            run = -1;
+          }
+        }
+      }
+      if (!any) return ctx.restore();
+      ctx.clip();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      // which of the floor below's chunks the clip can show (and only that box gets filled: cheaper)
+      const sx = (wx) => Math.round(cw / 2 + (wx - camX) * s), sy = (wy) => Math.round(chh / 2 + (wy - camY) * s);
+      const toBelowX = (px) => camX + (px - cw / 2) / sb - B.dx, toBelowY = (py) => camY + (py - chh / 2) / sb - B.dy;
+      const px0 = Math.max(0, sx(bx0 * T)), px1 = Math.min(cw, sx(bx1 * T)), py0 = Math.max(0, sy(by0 * T)), py1 = Math.min(chh, sy(by1 * T));
+      const dim0 = b.dim == null ? 0.5 : U.clamp(+b.dim, 0, 1);
+      ctx.fillStyle = U.mix(B.L.env.voidColor || '#000000', '#000000', dim0);
+      ctx.fillRect(px0, py0, px1 - px0, py1 - py0);
+      const cx0 = Math.floor(toBelowX(px0) / CHW), cx1 = Math.floor(toBelowX(px1) / CHW);
+      const cy0 = Math.floor(toBelowY(py0) / CHW), cy1 = Math.floor(toBelowY(py1) / CHW);
+      const maxCX = Math.ceil(B.L.w / CH), maxCY = Math.ceil(B.L.h / CH);
+      for (let cy = cy0; cy <= cy1; cy++) {
+        for (let cx = cx0; cx <= cx1; cx++) {
+          if (cx < 0 || cy < 0 || cx >= maxCX || cy >= maxCY) continue;
+          const c = this.belowChunk(cx, cy, sb);
+          ctx.drawImage(c, Math.round(cw / 2 + (cx * CHW + B.dx - camX) * sb), Math.round(chh / 2 + (cy * CHW + B.dy - camY) * sb));
+        }
+      }
+      // the depth of the floor at the edges of the opening: shadow falls inside its rim
+      ctx.setTransform(s, 0, 0, s, this.ox, this.oy);
+      const rim = b.rim == null ? 14 : +b.rim;
+      if (rim > 0) {
+        const see = (x, y) => L.inBounds(x, y) && L.terrain[y * L.w + x].seeBelow;
+        for (let ty = ty0; ty <= ty1; ty++) {
+          for (let tx = tx0; tx <= tx1; tx++) {
+            if (!see(tx, ty)) continue;
+            const x = tx * T, y = ty * T;
+            for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+              if (see(tx + dx, ty + dy)) continue;
+              const ex = dx > 0 ? x + T : x, ey = dy > 0 ? y + T : y;
+              const grd = dx ? ctx.createLinearGradient(ex, 0, ex - dx * rim, 0) : ctx.createLinearGradient(0, ey, 0, ey - dy * rim);
+              grd.addColorStop(0, 'rgba(0,0,0,0.6)');
+              grd.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.fillStyle = grd;
+              if (dx) ctx.fillRect(dx > 0 ? x + T - rim : x, y, rim, T);
+              else ctx.fillRect(x, dy > 0 ? y + T - rim : y, T, rim);
+            }
+          }
+        }
+      }
+      ctx.restore();
     }
 
     renderLight(game, view, ox, oy) {
@@ -2574,6 +3300,8 @@ kbd {
     }
     impact(game, hitWall) {
       this.dead = true;
+      // def.onImpact(p, game, hitWall): where it lands, something happens (silk leaves a web)
+      if (this.def.onImpact) this.def.onImpact(this, game, hitWall);
       if (this.aoe) {
         C.explode(game, this.x - this.vx * 0.004, this.y - this.vy * 0.004, Object.assign({ owner: this.owner, status: this.status, faction: this.owner === 'player' ? undefined : this.faction, by: this.by }, this.aoe));
         return;
@@ -2614,6 +3342,11 @@ kbd {
             if (!FA.playerHits(e.faction)) continue;
             if (C.touches(e, this.x, this.y, this.r)) {
               this.hit.add(e);
+              // a shield that sends shots back (def.reflect)
+              if (e.def.reflect && C.reflects(game, e, this)) {
+                C.reflect(game, e, this);
+                return;
+              }
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
               if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status });
@@ -2656,7 +3389,7 @@ kbd {
           const rr = it.r + this.r;
           if (U.dist2(this.x, this.y, it.x, it.y) < rr * rr) {
             this.hit.add(it);
-            C.hurt(game, it, this.damage, { source: this.owner });
+            C.hurt(game, it, this.damage, { source: this.owner, status: this.status });
             this.impact(game, false);
             return;
           }
@@ -2781,6 +3514,47 @@ kbd {
     return U.dist2(x, y, px, py) < rr * rr;
   };
 
+  /**
+   * An enemy's shield that sends your shots back: def.reflect { arc (radians either side of where it faces,
+   * default 1.2; Math.PI for all round), aim (true: back at whoever fired, else straight back the way it
+   * came), damage (× the shot's damage, default 1), speed (× its speed, default 1), color, sound, chance
+   * (0..1, default 1), when(e, game) (only while this is true: a shield that's up) }. e.noReflect turns it
+   * off for a while from code.
+   */
+  C.reflects = function (game, e, p) {
+    const r = e.def.reflect;
+    if (!r || e.noReflect || p.reflected > 2) return false;
+    if (r.when && !r.when(e, game)) return false;
+    if (r.chance != null && Math.random() >= r.chance) return false;
+    const from = Math.atan2(p.y - p.vy * 0.02 - e.y, p.x - p.vx * 0.02 - e.x);
+    return Math.abs(U.angDiff(e.facing || 0, from)) <= (r.arc == null ? 1.2 : r.arc);
+  };
+  C.reflect = function (game, e, p) {
+    const r = e.def.reflect, P = game.player;
+    const sp = Math.hypot(p.vx, p.vy) * (r.speed || 1);
+    let ang = Math.atan2(-p.vy, -p.vx);
+    if (r.aim !== false && P && !P.dead) ang = Math.atan2(P.y - p.y, P.x - p.x) + U.rand(-0.06, 0.06);
+    p.vx = Math.cos(ang) * sp;
+    p.vy = Math.sin(ang) * sp;
+    p.angle = ang;
+    p.owner = 'enemy';
+    p.faction = e.faction;
+    p.by = e;
+    p.hit = new Set([e]);
+    p.traveled = 0;
+    p.pierce = 0;
+    p.reflected = (p.reflected || 0) + 1;
+    p.damage *= r.damage == null ? 1 : r.damage;
+    if (r.color) p.color = r.color;
+    p.x += Math.cos(ang) * (e.r * 0.5);
+    p.y += Math.sin(ang) * (e.r * 0.5);
+    e.flash = Math.max(e.flash, 0.05);
+    game.particles.burst(p.x, p.y, 7, { type: 'spark', color: r.color || '#fff2c8', speed: 220, life: 0.25, angle: ang, spread: 0.9, size: 1 });
+    game.lights.push({ x: p.x, y: p.y, r: 60, color: r.color || '#fff2c8', intensity: 0.8, life: 0.08, max: 0.08 });
+    LM.audio.play(r.sound || 'reflect', { vol: game.vol(e.x, e.y), throttle: 0.04 });
+    if (e.def.onReflect) e.def.onReflect(e, game, p);
+  };
+
   C.hurt = function (game, target, amount, o) {
     o = o || {};
     if (target.dead || amount <= 0) return 0;
@@ -2834,6 +3608,10 @@ kbd {
       return dmg;
     }
     if (target.isItem && target.def.destructible) {
+      // def.burns: fire (a hit carrying a status with def.fire, or burning) takes it at once (webs, paper)
+      const st = o.status && (typeof o.status === 'string' ? o.status : o.status.id);
+      const fiery = st && (st === 'burning' || (LM.status && LM.status.def(st) && LM.status.def(st).fire)) || o.type === 'fire';
+      if (target.def.burns && fiery) amount = Math.max(amount, target.hp == null ? target.def.destructible.hp : target.hp);
       target.hp = (target.hp == null ? target.def.destructible.hp : target.hp) - amount;
       target.flash = 0.08;
       if (target.hp <= 0) target.destroy(game, o);
@@ -2973,7 +3751,7 @@ kbd {
       if (it.dead || !it.def.destructible) continue;
       const d = U.dist(x, y, it.x, it.y);
       if (d < R + it.r && losOK(it.x, it.y)) {
-        game.schedule(0.08 + Math.random() * 0.1, () => C.hurt(game, it, D, { source: o.owner, type: 'blast' }));
+        game.schedule(0.08 + Math.random() * 0.1, () => C.hurt(game, it, D, { source: o.owner, type: 'blast', status: o.status }));
       }
     }
   };
@@ -2992,7 +3770,9 @@ kbd {
  *     shocked: { name: 'Shocked', seconds: 4, stun: true, only: 'robot' },
  *   }
  *
- * Fields: name (the HUD chip), seconds (how long, unless the hit says), speedMul (movement ×), dps (damage
+ * Fields: name (the HUD chip), seconds (how long, unless the hit says), speedMul (movement ×), bound (no dashing
+ * and no firing while it lasts: webbed, turned to stone), tint (a colour washed over the target, tintAlpha how
+ * strongly, default 0.45), fire (it counts as fire: burnable things go up, see an item's `burns`), dps (damage
  * a second, in ticks of `interval` seconds, default 0.5), stun (an enemy can't act while it lasts),
  * vulnerable (+ fraction of damage taken: 0.2 = 20% more), color (the chip, and a glow under an enemy),
  * only ('player' | 'robot' | 'monster': who it can land on; robots are enemies with `robot: true`),
@@ -3062,8 +3842,9 @@ kbd {
     const r = S.resist(target, id);
     if (r >= 1) return null;
     const secs = ((opts && opts.seconds) || (typeof spec === 'object' && spec.seconds) || d.seconds || 2) * (1 - r);
-    const list = S.list(target);
+    // cure first: clearing replaces the target's list, so take the list after
     for (const c of d.cures || []) S.clear(game, target, c);
+    const list = S.list(target);
     let s = list.find((x) => x.id === id);
     if (s && d.stack) {
       s.n = Math.min(s.n + 1, d.stack === true ? 99 : d.stack);
@@ -3096,6 +3877,19 @@ kbd {
       const d = def(o.id);
       if (d && o.t > 0) target.statuses.push({ id: o.id, def: d, t: o.t, max: o.max || o.t, tick: 0, n: o.n || 1 });
     }
+  };
+  /** Is the target held fast by a status (def.bound: no dashing, no firing, while it lasts)? */
+  S.bound = function (target) {
+    if (!target || !target.statuses || !target.statuses.length) return false;
+    for (const s of target.statuses) if (s.def.bound) return true;
+    return false;
+  };
+  /** The colour a status washes over its target while it lasts (def.tint), strongest last; or null. */
+  S.tint = function (target) {
+    if (!target || !target.statuses || !target.statuses.length) return null;
+    let out = null;
+    for (const s of target.statuses) if (s.def.tint) out = { color: s.def.tint, a: s.def.tintAlpha == null ? 0.45 : s.def.tintAlpha, s };
+    return out;
   };
   /** Movement multiplier from everything the target has (1 when nothing slows it). */
   S.speedMul = function (target) {
@@ -3443,7 +4237,9 @@ kbd {
         this.vx = U.damp(this.vx, ix * speed, rate, dt);
         this.vy = U.damp(this.vy, iy * speed, rate, dt);
       }
-      if (I.anyHit('ShiftLeft', 'ShiftRight', 'Space') && this.dashCd <= 0 && !swim) {
+      // held fast (a status with bound: webbed, turned to stone): no dash, no shooting
+      const bound = LM.status ? LM.status.bound(this) : false;
+      if (I.anyHit('ShiftLeft', 'ShiftRight', 'Space') && this.dashCd <= 0 && !swim && !bound) {
         let dx = ix, dy = iy;
         if (!dx && !dy) {
           dx = Math.cos(this.aim);
@@ -3480,7 +4276,12 @@ kbd {
 
       // firing
       const w = this.currentWeapon();
-      if (!this.isArmed(game)) {
+      if (bound) {
+        if (I.mouse.clicked && this.emptyWarn <= 0) {
+          LM.audio.play('empty');
+          this.emptyWarn = 0.6;
+        }
+      } else if (!this.isArmed(game)) {
         const gd = this.heldGadget();
         if (I.mouse.clicked && gd && gd.primary && this.gadgetCd <= 0 && game.state === 'play') gd.primary(game, this);
       } else if (I.mouse.down && this.fireCd <= 0 && game.state === 'play') {
@@ -3647,6 +4448,14 @@ kbd {
         ctx.fillRect(3, -1.4, 2.2, 2.8);
       }
       ctx.restore();
+      // a status that colours you (def.tint: turning to stone, wrapped in silk)
+      const tint = LM.status ? LM.status.tint(this) : null;
+      if (tint) {
+        ctx.fillStyle = U.rgba(tint.color, tint.a * Math.min(1, 0.4 + (tint.s.n || 1) * 0.2));
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, (this.r + 1.5) * k, 0, U.TAU);
+        ctx.fill();
+      }
 
       // water line
       if (this.swimming) {
@@ -4305,7 +5114,18 @@ kbd {
     update(dt, game) {
       this.t += dt;
       this.flash -= dt;
-      if (this.def.update) this.def.update(this, dt, game);
+      const d = this.def;
+      // a current that draws things in (def.pull, or props.pull; it.pullOff stops it): a whirlpool, a drain
+      if ((d.pull || this.props.pull) && !this.pullOff) LM.physics.pull(game, this, this.props.pull ? Object.assign({}, d.pull, this.props.pull) : d.pull, dt);
+      // something that catches you as you cross it (def.snare: webs, glue)
+      if (d.snare && game.player && !game.player.dead && LM.status) {
+        const P = game.player, rr = this.r + P.r * 0.5;
+        if (U.dist2(P.x, P.y, this.x, this.y) < rr * rr && !(d.snare.when && !d.snare.when(this, game))) {
+          LM.status.apply(game, P, d.snare.status || 'snared', { seconds: d.snare.seconds || 0.35 });
+          if (d.snare.onCatch) d.snare.onCatch(this, game, P);
+        }
+      }
+      if (d.update) d.update(this, dt, game);
     }
     destroy(game, o) {
       if (this.dead) return;
@@ -4462,6 +5282,8 @@ kbd {
           }
         }
       }
+      // held open (the open effect's hold: a bookcase that has swung in stays in)
+      if (this.held && !this.sealed) want = true;
       if (want) {
         this.target = 1;
         this.closeT = 1.4;
@@ -5226,7 +6048,8 @@ kbd {
  *   terrain   { tileIndex: terrainId } tiles changed while playing (setTerrain)
  *   explored  the minimap, as bits (base64)
  *   rooms     indexes of rooms already announced
- *   doors     { tileIndex: bits } 1 unlocked (a key or clearance door), 2 sealed, 4 has opened (door triggers fired)
+ *   doors     { tileIndex: bits } 1 unlocked (a key or clearance door), 2 sealed, 4 has opened (door triggers fired),
+ *             8 held open
  *   gone      map items no longer there (indexes into the level's spawns)
  *   items     { spawnIndex: { field: value } } map items that changed (used, opened, hp...)
  *   extra     items that weren't on the map (loot, drops): { id, tx, ty, props, tag, s: fields }
@@ -5387,7 +6210,7 @@ kbd {
     const doors = {};
     let nd = 0;
     for (const d of game.doors) {
-      const bits = (d.unlocked && (d.lock || d.flag) ? 1 : 0) | (d.sealed && !lockdown.has(d) ? 2 : 0) | (d.opened ? 4 : 0);
+      const bits = (d.unlocked && (d.lock || d.flag) ? 1 : 0) | (d.sealed && !lockdown.has(d) ? 2 : 0) | (d.opened ? 4 : 0) | (d.held ? 8 : 0);
       doors[L.idx(d.tx, d.ty)] = bits;
       nd++;
     }
@@ -5554,6 +6377,7 @@ kbd {
       if (bits & 1) d.unlocked = true;
       d.sealed = !!(bits & 2);
       d.opened = !!(bits & 4);
+      d.held = !!(bits & 8);
     }
     // traps
     for (const [i, v] of Object.entries(m.traps || {})) {
@@ -6134,7 +6958,7 @@ kbd {
         g.fillRect(x, y, T, T);
         g.fillStyle = 'rgba(255,255,255,0.08)';
         g.fillRect(x, y, T, 1.4);
-        if (!info.n(0, 1).tall) {
+        if (!info.n(0, 1).tall && !info.n(0, 1).curve) {
           g.fillStyle = (info.env.wall && info.env.wall.face) || '#25282c';
           g.fillRect(x, y + T - 9, T, 9);
         }
@@ -6607,7 +7431,8 @@ kbd {
         const i = y * L.w + x;
         if (!L.explored[i]) continue;
         const td = L.terrain[i];
-        const col = td.mapColor || (td.solid ? '#6b6556' : 'rgba(205,190,160,0.16)');
+        // a curve tile is floor on the map if its middle is (engine/curves.js)
+        const col = td.curve ? (L.curveIn[i] ? 'rgba(205,190,160,0.16)' : '#6b6556') : td.mapColor || (td.solid ? '#6b6556' : 'rgba(205,190,160,0.16)');
         if (col === 'none') continue;
         g.fillStyle = col;
         g.fillRect(ox + x * s, oy + y * s, s + 0.4, s + 0.4);
@@ -7027,6 +7852,24 @@ kbd {
       dismissable: false,
     });
     ui.prevState = 'victory';
+  };
+  /** An ending, or the end of a chapter (game.ending): a card with the story's last words and what to do next. */
+  ui.showEnding = function (game, spec) {
+    const acts = (spec.actions && spec.actions.length ? spec.actions : [{ label: LM.text('backToTitle'), do: 'title', primary: true }]).map((a) => ({
+      label: a.label || 'Continue', primary: !!a.primary, quiet: !!a.quiet, onClick: () => setTimeout(() => game.endingAction(a.do || a.action), 0),
+    }));
+    ui.open({
+      kicker: spec.kicker || '',
+      title: spec.title || LM.text('victoryTitle'),
+      body: h('div', { class: 'ending-card' + (spec.tone ? ' ' + spec.tone : '') },
+        spec.text ? String(spec.text).split('\n\n').map((t) => h('p', { class: 'lore' }, t)) : null,
+        spec.stats ? statsTable(game) : null),
+      actions: acts,
+      dismissable: false,
+      wide: !!spec.wide,
+      className: 'ending' + (spec.tone ? ' ' + spec.tone : ''),
+    });
+    ui.prevState = 'ending';
   };
   ui.showDeath = function (game) {
     ui.open({
@@ -7781,6 +8624,22 @@ kbd {
           C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag, pause: ef.pause });
         },
       },
+      // (the game's own flow, here with the other story effects)
+      checkpoint: {
+        params: { text: 'text' },
+        run(game, ef) {
+          // after whatever's being said has been said, so a line queued with it isn't lost on a retry
+          game.checkpointHere(ef.text === '' ? false : ef.text);
+        },
+      },
+      ending: {
+        params: { kicker: 'text', title: 'text', text: 'longtext', tone: ['bad', 'good', 'chapter'], stats: 'bool', final: 'bool', flag: 'text', actions: 'json' },
+        run(game, ef) {
+          // wait for a line that stops the game to be read first
+          const go = () => (C.talking && C.talking() ? game.schedule(0.3, go, true) : game.ending(ef));
+          go();
+        },
+      },
     },
   });
 })();
@@ -8337,6 +9196,8 @@ kbd {
           }
         }
       }
+      // curved rooms' rings of recessed lights (engine/curves.js)
+      if (LM.curves) LM.curves.addLights(this);
       // lights that belong to terrain (molten slag, glowing water...)
       for (let y = 0; y < L.h; y++) {
         for (let x = 0; x < L.w; x++) {
@@ -8498,7 +9359,8 @@ kbd {
      * to: where they lead (stairs down: instead of the floor's next; stairs up: instead of the way you came);
      * until: a flag (or a list, any of them) that has to be set before they open; locked: what you're told until then;
      * arrive: a tag on the floor they lead to, to arrive on; dir: 'up' | 'down', the sound; go: the button on the
-     * floor-finished screen ({floor} {name}). null when the tile has no entry.
+     * floor-finished screen ({floor} {name}); quick: true, no floor-finished screen, even the first time (stairs
+     * between two halves of one floor). null when the tile has no entry.
      */
     stairsAt(tx, ty) {
       const st = this.level && this.level.def.stairs;
@@ -8513,6 +9375,49 @@ kbd {
     /** Is any of these flags set? (a name, or a list of names) */
     anyFlag(f) {
       return [].concat(f || []).some((n) => this.hasFlag(n));
+    }
+
+    /**
+     * Make here a checkpoint, partway through a floor: dying (or an ending's "Choose again") brings you back to
+     * this moment, the floor as it is now and you as you are. Saved, like arriving on a floor.
+     */
+    checkpointHere(text) {
+      const P = this.player;
+      if (!P || P.dead || this.attract) return;
+      const m = this.rememberFloor();
+      this.checkpoint = P.serialize();
+      this.arrival = { memory: m, at: { x: P.x, y: P.y }, via: (this.arrival && this.arrival.via) || null };
+      writeSave(Object.assign({ levelId: this.levelId, player: this.checkpoint, savedAt: Date.now() }, this.memorySave()));
+      if (text !== false) this.toast(text || 'Checkpoint', 'good');
+    }
+    /**
+     * End the game here, or a chapter of it. spec: { kicker, title, text (paragraphs between blank lines),
+     * tone ('bad' | 'good' | 'chapter': the card's colour), stats (show the floor's numbers), flag (set first),
+     * final (the run is over: the save is cleared), sound, actions: [{ label, do, primary }] } where do is
+     * 'retry' (back to the last checkpoint: the floor's arrival, or checkpointHere), 'continue' (back to
+     * playing), 'title' or 'newRun'. Left out: back to the title.
+     */
+    ending(spec) {
+      if (this.state === 'ending' || !this.player) return;
+      spec = spec || {};
+      if (spec.flag) this.setFlag(spec.flag);
+      this.state = 'ending';
+      if (spec.final) clearSave();
+      LM.audio.play(spec.sound || (spec.tone === 'bad' ? 'lose' : 'win'));
+      const show = () => LM.ui.showEnding(this, spec);
+      if (spec.fade === false) show();
+      else LM.ui.fade(show);
+    }
+    endingAction(what) {
+      LM.ui.closeAll();
+      if (LM.comms) LM.comms.clear();
+      if (what === 'retry') return this.restartLevel();
+      if (what === 'continue') {
+        this.state = 'play';
+        return;
+      }
+      if (what === 'newRun') return this.newRun();
+      return this.toTitle();
     }
 
     restartLevel() {
@@ -8538,8 +9443,9 @@ kbd {
       const arrive = st && st.arrive, sound = (st && stairSound(st)) || 'descend';
       if (next && LM.find('levels', next)) {
         this.above[next] = this.levelId;
-        // a floor you've been down to before: straight there, as you left it
-        if (this.floors[next]) return this.travel(next, { via: 'down', leftAt: here, arrive, sound });
+        // a floor you've been down to before: straight there, as you left it (and stairs that say quick: always:
+        // two halves of one floor, say)
+        if (this.floors[next] || (st && st.quick)) return this.travel(next, { via: 'down', leftAt: here, arrive, sound });
         this.state = 'complete';
         LM.audio.play(sound);
         const carry = P.serialize();
@@ -8927,7 +9833,7 @@ kbd {
       const pi = pty * L.w + ptx;
       this.navT = (this.navT || 0) - dt;
       if ((pi !== L.navFrom && this.navT <= 0) || L.navDirty) {
-        if (L.inBounds(ptx, pty) && !L.t(ptx, pty).solid) LM.nav.compute(L, ptx, pty);
+        if (L.inBounds(ptx, pty) && L.walkable(ptx, pty)) LM.nav.compute(L, ptx, pty);
         this.navT = 0.15;
       }
 
@@ -9989,7 +10895,11 @@ LM.defineGame({
   LM.paintWall = function (g, x, y, info, palette) {
     const env = info.env, p = palette || env.wall;
     const painter = LM.get('textures', p.style);
-    const open = (dx, dy) => !info.n(dx, dy).tall;
+    // (a curve tile next door has its own curved face: engine/curves.js)
+    const open = (dx, dy) => {
+      const n = info.n(dx, dy);
+      return !n.tall && !n.curve;
+    };
     const south = open(0, 1);
     const fh = south ? 9 : 0;
     painter.top(g, x, y, T - fh, info, p);
@@ -10999,6 +11909,133 @@ LM.defineGame({
           g.stroke();
           g.globalAlpha = 1;
         }
+      },
+    },
+    // a look that does something to you if you meet it (the engine's gaze): its eyes open (a windup you can see
+    // coming), and while they're open, looking toward it (aiming within `cone` of it, with nothing between)
+    // puts `status` on you every `every` seconds; meet it for `petrify` seconds in a row and `petrifyStatus`
+    // lands (and `damage`). Look away, or put something between you. { range, windup, duration, recover,
+    // cone, status, every, petrify, petrifyStatus, damage, move (speed × while it stares), color }
+    gaze: {
+      canStart: (e, a, game) => {
+        const F = AI.foe(e, game);
+        return F && F.isPlayer && e.seeLos && e.distP <= (a.range || 380) && e.distP >= (a.minRange || 0);
+      },
+      start(e, atk, game) {
+        atk.stare = 0;
+        atk.tick = 0;
+        LM.audio.play(atk.def.sound || 'gazeOpen', { vol: Math.max(0.5, game.vol(e.x, e.y)) });
+      },
+      update(e, atk, dt, game) {
+        const a = atk.def, F = AI.foe(e, game);
+        if (!F || F.dead) return (atk.done = true);
+        e.speedMul *= a.move == null ? 0.15 : a.move;
+        const wind = a.windup || 0.9, hold = a.duration || 2.4;
+        atk.open = atk.t >= wind && atk.t < wind + hold;
+        atk.looking = false;
+        if (atk.open && F.isPlayer && atk.stare >= 0) {
+          const toE = Math.atan2(e.y - F.y, e.x - F.x);
+          const d = U.dist(e.x, e.y, F.x, F.y);
+          atk.looking = d <= (a.range || 380) * 1.15 && Math.abs(U.angDiff(F.aim, toE)) < (a.cone || 0.55) && LM.physics.los(game.level, F.x, F.y, e.x, e.y, 'light');
+          if (atk.looking) {
+            atk.stare += dt;
+            atk.tick -= dt;
+            if (atk.tick <= 0 && a.status && LM.status) {
+              atk.tick = a.every || 0.25;
+              LM.status.apply(game, F, a.status);
+            }
+            if (a.petrify && atk.stare >= a.petrify) {
+              atk.stare = -1;
+              if (a.petrifyStatus && LM.status) LM.status.apply(game, F, a.petrifyStatus);
+              if (a.damage) LM.combat.hurt(game, F, a.damage, { source: 'enemy', type: 'gaze', by: e });
+              LM.audio.play(a.petrifySound || 'petrify', { vol: 1 });
+              game.addShake(0.3);
+            }
+          } else atk.stare = Math.max(0, atk.stare - dt * 0.6);
+        }
+        if (atk.t >= wind + hold + (a.recover || 0.5)) atk.done = true;
+      },
+      drawGlow(g, e, atk, t) {
+        const a = atk.def, wind = a.windup || 0.9, col = a.color || '#c8ff9a';
+        const ex = e.x + Math.cos(e.facing) * e.r * 0.6, ey = e.y + Math.sin(e.facing) * e.r * 0.6;
+        if (atk.t < wind) {
+          const k = atk.t / wind;
+          g.strokeStyle = U.rgba(col, 0.2 + k * 0.6);
+          g.lineWidth = 1.5;
+          g.beginPath();
+          g.arc(e.x, e.y, e.r * (3.4 - k * 2), 0, U.TAU);
+          g.stroke();
+          G.glow(g, ex, ey, 10 + k * 10, col, k * 0.8);
+          return;
+        }
+        if (!atk.open) return;
+        G.glow(g, ex, ey, 22 + Math.sin(t * 20) * 3, col, 0.95);
+        const P = LM.game && LM.game.player;
+        if (atk.looking && P) {
+          const k = U.clamp(atk.stare / (a.petrify || 1), 0, 1);
+          g.strokeStyle = U.rgba(col, 0.25 + k * 0.5);
+          g.lineWidth = 1 + k * 3;
+          g.beginPath();
+          g.moveTo(ex, ey);
+          g.lineTo(P.x, P.y);
+          g.stroke();
+          G.glow(g, P.x, P.y, 16 + k * 12, col, 0.3 + k * 0.5);
+        }
+      },
+    },
+    // there, then not, then beside you: a step through nowhere, and a strike. { minRange, maxRange, windup,
+    // delay (from arriving to striking), damage, distance (how far from you it arrives, 54), behind (true:
+    // where you aren't looking), color (the puff), sound, arriveSound, status }
+    blink: {
+      canStart: (e, a, game) => {
+        const F = AI.foe(e, game);
+        return F && e.seeLos && e.distP >= (a.minRange || 90) && e.distP <= (a.maxRange || 460);
+      },
+      start(e, atk, game) {
+        LM.audio.play(atk.def.sound || 'blinkOut', { vol: game.vol(e.x, e.y) });
+        game.particles.burst(e.x, e.y, 12, { type: 'smoke', color: atk.def.color || '#d8d4cc', speed: 60, life: 0.5, size: 3, alpha: 0.45 });
+      },
+      update(e, atk, dt, game) {
+        const a = atk.def, F = AI.foe(e, game), L = game.level;
+        e.speedMul = 0;
+        if (!F) return (atk.done = true);
+        const wind = a.windup || 0.35;
+        atk.fade = atk.moved ? Math.max(0, 1 - (atk.t - atk.movedAt) / 0.15) : Math.min(1, atk.t / wind);
+        if (!atk.moved && atk.t >= wind) {
+          atk.moved = true;
+          atk.movedAt = atk.t;
+          const look = F.isPlayer ? F.aim : Math.atan2(e.y - F.y, e.x - F.x) + Math.PI;
+          const base = a.behind === false ? Math.atan2(e.y - F.y, e.x - F.x) : look + Math.PI;
+          const dist = a.distance || 54;
+          const free = (x, y) => {
+            for (const [dx, dy] of [[0, 0], [-e.r, -e.r], [e.r, -e.r], [-e.r, e.r], [e.r, e.r]]) if (!L.walkable(Math.floor((x + dx) / T), Math.floor((y + dy) / T))) return false;
+            return true;
+          };
+          for (const off of [0, 0.5, -0.5, 1, -1, 1.6, -1.6, Math.PI]) {
+            const x = F.x + Math.cos(base + off) * dist, y = F.y + Math.sin(base + off) * dist;
+            if (!free(x, y) || !LM.physics.los(L, F.x, F.y, x, y, 'shot')) continue;
+            game.particles.burst(e.x, e.y, 8, { type: 'smoke', color: a.color || '#d8d4cc', speed: 40, life: 0.4, size: 3, alpha: 0.4 });
+            e.x = x;
+            e.y = y;
+            e.vx = e.vy = e.kvx = e.kvy = 0;
+            game.particles.burst(x, y, 12, { type: 'smoke', color: a.color || '#d8d4cc', speed: 70, life: 0.45, size: 3, alpha: 0.45 });
+            break;
+          }
+          e.facing = Math.atan2(F.y - e.y, F.x - e.x);
+          LM.audio.play(a.arriveSound || 'blinkIn', { vol: Math.max(0.6, game.vol(e.x, e.y)) });
+        }
+        if (atk.moved && !atk.struck && atk.t >= atk.movedAt + (a.delay || 0.28)) {
+          atk.struck = true;
+          const d = U.dist(e.x, e.y, F.x, F.y), ang = Math.atan2(F.y - e.y, F.x - e.x);
+          LM.audio.play('swing', { vol: game.vol(e.x, e.y) });
+          if (d <= e.r + F.r + (a.range || 26) && !F.dead && LM.physics.los(L, e.x, e.y, F.x, F.y, 'shot')) LM.combat.hurt(game, F, a.damage || 16, { kx: Math.cos(ang) * 180, ky: Math.sin(ang) * 180, source: 'enemy', type: 'melee', status: a.status, by: e });
+        }
+        if (atk.struck && atk.t >= atk.movedAt + (a.delay || 0.28) + (a.recover || 0.3)) atk.done = true;
+      },
+      drawGlow(g, e, atk) {
+        const col = atk.def.color || '#d8d4cc';
+        if (!atk.moved) G.glow(g, e.x, e.y, 26, col, (atk.t / (atk.def.windup || 0.35)) * 0.5);
+        else if (!atk.struck) G.glow(g, e.x + Math.cos(e.facing) * 14, e.y + Math.sin(e.facing) * 14, 12, '#ffffff', 0.45);
       },
     },
     summon: {
@@ -12642,7 +13679,7 @@ LM.defineGame({
  *   spawn    { tag, enemy | enemies[], count, faction }  summon enemies at tagged floor tiles (faction: whose side they're on)
  *   seal     { tag, text }                               slam and lock doors with this tag until the spawned foes die
  *   unseal   { tag, text }                               release doors
- *   open     { tag }                                     unlock and open doors
+ *   open     { tag, hold }                               unlock doors (hold: swing them open and keep them open)
  *   alarm    { radius, text }                            wake every enemy within radius of the player
  *   lights   { tag, on }                                 switch tagged light sources off or on
  *   explode  { tag, radius, damage, stagger }            blasts at tagged tiles
@@ -12726,6 +13763,7 @@ LM.defineGame({
           d.sealed = false;
           d.unlocked = true;
           d.lock = null;
+          if (ef.hold) d.held = true;
         }
         LM.audio.play('door');
         if (ef.text) game.toast(ef.text, 'good');
@@ -23816,7 +24854,7 @@ LM.definePack({
         g.fillStyle = 'rgba(0,0,0,0.12)';
         for (let i = 0; i < 4; i++) g.fillRect(x, y + 3 + i * (h / 4) + r() * 2, T, 0.6);
         // book tops along every side that faces open floor
-        const open = (dx, dy) => !info.n(dx, dy).tall;
+        const open = (dx, dy) => !info.n(dx, dy).tall && !info.n(dx, dy).curve;
         const books = p.books || BOOKS;
         const strip = (horizontal, sx, sy, len) => {
           let k = 0;

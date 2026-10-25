@@ -7,7 +7,7 @@
  *   spawn    { tag, enemy | enemies[], count, faction }  summon enemies at tagged floor tiles (faction: whose side they're on)
  *   seal     { tag, text }                               slam and lock doors with this tag until the spawned foes die
  *   unseal   { tag, text }                               release doors
- *   open     { tag }                                     unlock and open doors
+ *   open     { tag, hold }                               unlock doors (hold: swing them open and keep them open)
  *   alarm    { radius, text }                            wake every enemy within radius of the player
  *   lights   { tag, on }                                 switch tagged light sources off or on
  *   explode  { tag, radius, damage, stagger }            blasts at tagged tiles
@@ -91,6 +91,7 @@
           d.sealed = false;
           d.unlocked = true;
           d.lock = null;
+          if (ef.hold) d.held = true;
         }
         LM.audio.play('door');
         if (ef.text) game.toast(ef.text, 'good');

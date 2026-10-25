@@ -206,7 +206,7 @@
   SC.TRAP_EFFECTS = {
     darts: { tag: 'tag', volleys: 'number', interval: 'number', damage: 'number', speed: 'number' },
     spawn: { tag: 'tag', enemy: 'id:enemies', enemies: 'ids:enemies', count: 'number', faction: 'text', as: 'text' },
-    seal: { tag: 'tag', text: 'text' }, unseal: { tag: 'tag', text: 'text' }, open: { tag: 'tag', text: 'text' },
+    seal: { tag: 'tag', text: 'text' }, unseal: { tag: 'tag', text: 'text' }, open: { tag: 'tag', hold: 'bool', text: 'text' },
     alarm: { radius: 'number', text: 'text' },
     lights: { tag: 'tag', on: 'bool', text: 'text' },
     explode: { tag: 'tag', radius: 'number', damage: 'number', stagger: 'number' },

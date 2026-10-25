@@ -282,7 +282,9 @@
         this.vx = U.damp(this.vx, ix * speed, rate, dt);
         this.vy = U.damp(this.vy, iy * speed, rate, dt);
       }
-      if (I.anyHit('ShiftLeft', 'ShiftRight', 'Space') && this.dashCd <= 0 && !swim) {
+      // held fast (a status with bound: webbed, turned to stone): no dash, no shooting
+      const bound = LM.status ? LM.status.bound(this) : false;
+      if (I.anyHit('ShiftLeft', 'ShiftRight', 'Space') && this.dashCd <= 0 && !swim && !bound) {
         let dx = ix, dy = iy;
         if (!dx && !dy) {
           dx = Math.cos(this.aim);
@@ -319,7 +321,12 @@
 
       // firing
       const w = this.currentWeapon();
-      if (!this.isArmed(game)) {
+      if (bound) {
+        if (I.mouse.clicked && this.emptyWarn <= 0) {
+          LM.audio.play('empty');
+          this.emptyWarn = 0.6;
+        }
+      } else if (!this.isArmed(game)) {
         const gd = this.heldGadget();
         if (I.mouse.clicked && gd && gd.primary && this.gadgetCd <= 0 && game.state === 'play') gd.primary(game, this);
       } else if (I.mouse.down && this.fireCd <= 0 && game.state === 'play') {
@@ -486,6 +493,14 @@
         ctx.fillRect(3, -1.4, 2.2, 2.8);
       }
       ctx.restore();
+      // a status that colours you (def.tint: turning to stone, wrapped in silk)
+      const tint = LM.status ? LM.status.tint(this) : null;
+      if (tint) {
+        ctx.fillStyle = U.rgba(tint.color, tint.a * Math.min(1, 0.4 + (tint.s.n || 1) * 0.2));
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, (this.r + 1.5) * k, 0, U.TAU);
+        ctx.fill();
+      }
 
       // water line
       if (this.swimming) {

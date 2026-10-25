@@ -542,7 +542,7 @@
         g.fillRect(x, y, T, T);
         g.fillStyle = 'rgba(255,255,255,0.08)';
         g.fillRect(x, y, T, 1.4);
-        if (!info.n(0, 1).tall) {
+        if (!info.n(0, 1).tall && !info.n(0, 1).curve) {
           g.fillStyle = (info.env.wall && info.env.wall.face) || '#25282c';
           g.fillRect(x, y + T - 9, T, 9);
         }

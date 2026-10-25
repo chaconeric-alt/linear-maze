@@ -1,6 +1,6 @@
 # Dead Signal — design and build plan
 
-Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.7)
+Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.8)
 
 This file is the plan for building Dead Signal into a whole game: the story, the building, six maps (five floors and a basement) chapter by chapter, the monsters, robots, traps, puzzles, weapons, items and dressings on each, and the engine and pack code the game needs that the engine doesn't have yet. It is written to be handed to Claude a milestone at a time (section 11 has a prompt for each), together with the workspace, `engine/SPEC.md` and this file.
 
@@ -46,6 +46,15 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
 - Added after M4 (engine 0.5.6), because the floor is hard: **the AEGIS field**. When Voss has finished welcoming you (or as soon as you step into the lobby), the dead freight car comes up the shaft on what power ARIADNE can spare, rings, and opens: in it, a hard case with ARIADNE's eye on the lid. ARIADNE: `YOU WILL NEED THIS. DEATH HERE.` Voss: the car hasn't moved since the lockdown; take it if you have to, don't listen to it. The AEGIS is a personal containment field worn over your armour (a gadget, no slot): a strong shield that comes back fast, damage taken off whatever gets through, grips slide off it; when a hit would kill you it overloads instead, throws everything off you, and needs a minute to mend. Every number is in `packs/ds-arsenal/aegis.js` (`TUNE`), to be set with the floor's difficulty. Engine: a parked elevator with cargo (`parked`), gear with a `lastStand`, gadget `resist` and `drawAura`.
 - After playtests (engine 0.5.7): players weren't sure what to do next, missed Voss, couldn't hit some dogs, and missed the armory code. Now every floor has **objectives** on the HUD (each floor's *Objectives* paragraph below): the thing to find pulses when you're in its room and is marked on the minimap. **Voss and ARIADNE stop the game**: their lines are read in the middle of the screen with Continue and Skip (unless you're in a fight, when they play in the corner as before; the pause screen can turn it off). The **Grinners** have a hitbox the length of their bodies, and a **specimen** you shoot wakes and comes for you instead of letting shots through (caged ones are behind bars that take the shot). Dogs let out stay out if you leave the floor and come back. **Kwan** speaks up when you reach her in the Box, and the armory code is then known (`knowsArmoryCode`, also from her body); the armory keypad reminds you of it.
 - Next: milestone M5 (Floor 5).
+
+**Milestone M5 is built** (engine 0.5.8): Floor 5, *the Executive Floor* (`packs/ds-story/levels/f5-executive.js`), and above it Floor 5a, *the board's private floor* (`f5a-private.js`), in a new pack of their own, `ds-executive` (environment, furniture, nightmares, staff, gear). Section 4.5 is the floor as built; it replaces the Penthouse plan. Where M5 differs from the plan:
+- Floor 5 is really two floors. Five is the floor the board works on: four corner offices, each behind a secretary's desk, each with a private stair up to 5a; Reception, the Typing Pool and the Clerks' Row; the robotic kitchen and the Executive Dining Room; the Gallery over the Proving Grounds (a glass floor: Floor 4 is down there, as you left it) and the Private Box over the Run; the Robot Chambers; the Statue Hall and the Rotunda (Andromeda and Cetus in the fountain); the Smoking Room; and the Boardroom, behind blast shutters, rail guns and two Praetorians, where the board are safe and stay safe. 5a is the board's own: the Library, the Director's rooms behind a bookcase, the Archive, the Director's Study, the Private Landing and the board's car, the **Control Room**, the Dream Archive, Building Systems, the Nest (Brandt's spa, where the Swaddler weaves the staff into eggs), the Server Room (ARIADNE's node), the Atrium (it looks down on the Rotunda) and the Robot Bay.
+- **The mainframe is in the basement, and it is ARIADNE.** Voss sends you to the Control Room to purge it; ARIADNE asks you to give the elevators power instead, so the private car can take you down to her. The console offers both. Purge the core and the game ends (*The Dead Signal*, with *Choose again*: a checkpoint is saved as you step into the Control Room). Restore the power and Voss turns every robot on the floor on you, the Praetorian in the Robot Bay wakes, and the private car takes you to Sub-level B: the end of chapter five. There is no descent by the stairs in this shape of the game: the private car is the way down (sections 1.4 and 2.3).
+- No Collection, Chapel, Recital Room, wine cellar or creed puzzle. The puzzle is the Director's bookcase (which book does he read?). The master card is in his bedroom, behind it. No basement code: the way down is the car. Floor 1's east stairwell to Sub-level B stays sealed (it used to open for the master card too; now only `basementOpen`, which nothing sets), so the car is the only way down.
+- New monsters (section 5.2): the Gorgon (Medusa, on her plinth in the Statue Hall: meet her eyes and you turn to stone), Scylla (six heads in the Rotunda's pool) and Charybdis (a whirlpool), the Mother of Teeth (armoured on its back), the Tally (a centipede of hands that steals ammunition), Patrons and Faceless Ushers, and the Swaddler and its Swaddlings (silk that holds you fast and burns at a touch of fire). New robots (5.1): Concierges, the kitchen's Chef and arms, rail guns, Praetorians (they send your shots back).
+- Engine (0.5.8): curved rooms (the offices, the Gallery, the Rotunda, the Boardroom, the Control Room, the Director's bedroom are ovals lit by recessed ceiling lights), seeing the floor below (the Gallery, the Private Box, the Atrium), `pull`, `snare`, `burns`, `reflect`, `gaze`, `blink`, `bound` and `tint` statuses, projectiles' `onImpact`, `quick` stairs, endings and checkpoints.
+- Sub-level B is a landing only: the car opens on it, ARIADNE speaks, and the chapter ends (*Keep exploring* or *Back to the title*). Section 4.7 is still the plan for it.
+- Next: milestone M6 (Sub-level B).
 
 ---
 
@@ -113,12 +122,14 @@ ARIADNE's fragments (section 6.4) are optional collectibles on every floor that 
 
 ### 1.4 The shape of the game
 
+*Changed in M5: the mainframe Voss wants shut down is in the sub-level, and the way down is the board's car, not the stairs.*
+
 1. **Up the stairs** (Floors 1 to 5). Voss guides Theo by intercom. The elevators are dead; the only way up is the stairwells, floor by floor, through robots and monsters.
-2. **The truth** (Floor 5). ARIADNE explains. To bring it back, the building's power has to come back, and the backup generator, the elevator machinery and the AI's power feed are in the sub-level, which is sealed. ARIADNE has watched Voss type the sub-level override for years. It gives Theo the code.
-3. **Back down the stairs** (Floors 4 to 1). Voss knows now. He opens the reserve pens: every floor Theo cleared has something new on it. But Theo has the arsenal of four lab floors and the board's own armor, and the floors he cleared stay cleared where he cleared them (the engine remembers).
-4. **The Hatchery** (Sub-level B). The brood hatches. Restart the generator, restore the elevators, and decide what to do about the Sermon.
-5. **The private car** (Sub-level B to Floor 5). The board's own elevator goes from their chapel straight down to the Sermon and nowhere else. With power back, Theo rides it up.
-6. **ARIADNE and the Board.** Re-seat ARIADNE's cores while the board's servants attack. ARIADNE takes the building: the robots stand down, then turn. The boardroom opens. The board are not people any more.
+2. **The executive floor** (Floors 5 and 5a). Voss promises Theo the rest: the mainframe is called ARIADNE, its core is in the sub-level, and it can be purged from the Control Room on the board's private floor. Purge it, and the lockdown lifts; name any reward. Theo fights his way up through the board's floor to the Control Room, where ARIADNE speaks to him plainly for the first time.
+3. **The choice.** The console that purges the core also runs the elevators. Obey Voss and purge it: the game ends (*The Dead Signal*). Give the elevators power instead: Voss turns everything on the floor on Theo, and the private car takes him down to ARIADNE.
+4. **The Hatchery** (Sub-level B). ARIADNE's core, the generator, and the Sermon. Restart the power, bring ARIADNE back, decide what to do about the Sermon.
+5. **The private car** (Sub-level B to Floor 5a). With power back, Theo rides it up again.
+6. **ARIADNE and the Board.** ARIADNE takes the building: the robots stand down, then turn. The boardroom's shutters open. The board are not people any more.
 
 ### 1.5 Cast
 
@@ -149,7 +160,9 @@ Its sign is a labrys (a double-headed axe) whose blades are two open hands. It a
 - **The Sermon sleeps.** Theo froze the Sermon in the sub-level (section 4.7). ARIADNE broadcasts everything it found. Dawn; sirens; the lockdown lifts. A last message from ARIADNE: the Hecatomb has other buildings.
 - **The Sermon wakes.** Theo didn't freeze it in time. Everything above happens, and then, as the screen fades: the sub-level, dark, a heartbeat, and the incubation counter reaching 100%.
 
-Neither ending is a game over. The second one is the sequel hook.
+- **The Dead Signal** (built). Theo did what Voss told him, in the Control Room on 5a, and purged the core. The lights come back on; nobody comes up the stairs. A short ending, early: *Choose again* goes back to the moment he walked in.
+
+Neither of the first two is a game over. The second one is the sequel hook.
 
 ---
 
@@ -163,10 +176,11 @@ Neither ending is a game over. The second one is the sequel hook.
 | `ds-f2` | Synthid Research | 2, 6 | `ds-cleanroom` | Floor 2 |
 | `ds-f3` | Gestation | 3, 6 | `ds-wetlab` | Floor 3 |
 | `ds-f4` | Proving Grounds | 4, 6 | `ds-proving` | Floor 4 |
-| `ds-f5` | The Penthouse | 5, 8 | `ds-penthouse` | Floor 5 |
+| `ds-f5` | The Executive Floor | 5, 8 | `ds-executive` (built) | Floor 5 |
+| `ds-f5a` | The Private Floor | 5, 8 | `ds-executive` (built) | Floor 5a (`floorLabel`) |
 | `ds-b1` | The Hatchery | 7 | `ds-hatchery` | Sub-level B (`floorLabel`) |
 
-Floor order (the editor's Floors page): F1, F2, F3, F4, F5, B1. B1 is last in the order but nothing's stairs down lead to it except Floor 1's east stairwell (section 8, E1), and finishing it isn't the end of the game; the Board is.
+Floor order (the editor's Floors page): F1, F2, F3, F4, F5, F5a, B1. Floor 5's four private stairs lead up to 5a and back (`quick` stairs: no floor-finished screen between the two halves). B1 is reached only by the private car from 5a, once the elevators have power; finishing it isn't the end of the game; the Board is.
 
 ### 2.2 One plan for every floor
 
@@ -196,23 +210,21 @@ Place the four elevators once, in the editor (any floor's map → Elevators tab:
 
 ### 2.3 The route
 
+*Changed in M5: the way down to the sub-level is the private car, from the board's floor.*
+
 ```
-            ┌──────────── stairs up ───────────────┐
- start ──> F1 ──> F2 ──> F3 ──> F4 ──> F5 (the truth, the basement code)
-            ^                            │
-            │      stairs back down      │ (west stairs: back the way you came)
-           F1 <── F2 <── F3 <── F4 <─────┘
-            │
-            │ east stairwell (unlocked by the code)
-            v
-           B1 (power, elevators, the Sermon)
-            │
-            │ the private car A1 (B1 ↔ F5 only)
-            v
-           F5: the Server Sanctum, the boardroom, the end
+ start ──> F1 ──> F2 ──> F3 ──> F4 ──> F5 ──(a corner office's private stair)──> F5a: the Control Room
+                                                                                     │
+                                  purge the core: an ending (The Dead Signal) <──────┤
+                                                                                     │ give the elevators power
+                                                                                     v
+                                          B1: ARIADNE's core, power, the Sermon <── the private car A1 (F5a ↔ B1)
+                                                                                     │
+                                                                                     v
+                                                                  F5 / F5a: the Board, the end
 ```
 
-The engine already does all of this but two pieces: the stairs back down are the engine's stairs up (`<`, the way you came; section 5 of `engine/SPEC.md`), and every floor is as you left it when you come back. What's missing is a second pair of stairs on one floor going somewhere else (Floor 1's east stairwell to B1) and stairs that stay locked until a story flag (E1), elevators with no power (E3), and new monsters appearing on floors you've already cleared (E2).
+Every floor's stairs up (`<`, the way you came) still go back down, and every floor is as you left it when you come back (section 5 of `engine/SPEC.md`). Floor 5's four private stairs are a level's `stairs` with `to: 'ds-f5a'`, `arrive` (the landing above that office) and `quick`; 5a's go back to the office they came from. The private car runs once `elevatorsOnline` is set (E3).
 
 ### 2.4 Up is onward
 
@@ -478,61 +490,79 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 
 ---
 
-### 4.5 Floor 5 — The Penthouse (the executive floor)
+### 4.5 Floors 5 and 5a — The Executive Floor and the Private Floor
 
-**Purpose.** The reveal. Luxury over atrocity. ARIADNE speaks. Voss stops pretending. The player gets the basement code.
+*Built in milestone M5 (`packs/ds-story/levels/f5-executive.js` and `f5a-private.js`, generated from layout scripts; the pack `ds-executive` has the look, the furniture, the nightmares and the staff). This replaces the Penthouse plan (the Collection, the Chapel, the creed and the Server Sanctum); what's left of it is listed at the end.*
 
-**Mood.** Dark wood, brass, marble, velvet, low warm light from picture lamps and chandeliers. Silence: thick carpet, nothing hums. Everything is beautiful and the beauty is the horror. The Hecatomb's sign is everywhere, small and expensive.
+**Purpose.** The reveal, and the choice. Voss tells Theo what he wants at last (purge the mainframe), promises him anything for it, and sends him up to the board's private floor to do it. ARIADNE, in the Control Room, asks for the opposite. The player chooses.
 
-**Rooms**
+**Mood.** Decadent and hushed: dark wood and red wood, polished marble, jade, amber, black and green; oval rooms lit by rings of recessed lights in the ceiling; herringbone parquet, silk walls, brass. The board's monsters are kept up here as their trophies, and the worst of them are loose: the Swaddler has been weaving the staff into eggs. The robot protocols are hostile like everywhere else, and the board are safe in the Boardroom behind blast shutters, rail guns and Praetorians; Voss speaks from in there.
 
-| Room | Size | What's there |
+**Floor 5: the route**
+1. **Stair A.** You come up into the west stairwell. Voss promises you the rest (`f5Briefed`): the mainframe is called ARIADNE, its core is in the sub-level, and it can be purged from the Control Room on the board's private floor above. The private stairs are in the four corner offices, locked down; the secretaries kept the keys. Stay away from the boardroom. *Name it.* ARIADNE: `HE IS VERY SAFE. ASK HIM WHO IS NOT.`
+2. **Reception.** The Concierge greets you from behind the desk, then comes over it (`conciergeGreeted`, `conciergeDown`).
+3. **A key.** Each secretary kept one, and each is somewhere different: Mrs Thale's in Joan Fairley's woven egg in the Typing Pool (cut her out and she gives it you: `savedJoan`, `thaleKey`); Mr Pell's on the dining table beside a place card with your name on it (`pellKey`, `theoCard`: the tablecloth lifts, and the Mother of Teeth comes out from under it); Dr Brandt's by Dennis's body in the Clerks' Row, where the Tally is counting (`brandtKey`); Mr Moss's in the Robot Chambers (`mossKey`: every pod lights up at once). Any one will do (`haveOfficeKey`).
+4. **The office.** Its secretary's desk is in the anteroom in front of it. Open the door (`officeOpen`; Voss knows whose) and take the private stair in the corner: a spiral up to 5a (`quick` stairs: straight there).
+
+**Floor 5a: the route**
+1. **A landing.** You arrive in the room above the office you took (the Library, the Archive, Building Systems or the Atrium). Voss (`f5aBriefed`): the Control Room is at the north end, through his private landing; its door answers to his card, and his card is in his rooms, off the library. ARIADNE: `HIS ROOMS ARE BEHIND THE BOOKS.`
+2. **The mezzanine.** A curtain of silk across it (shoot it down, or burn it), and Swaddlings drop out of the ceiling on threads.
+3. **The Director's shelf** (the puzzle). In the Library, one case is his alone: which book does he read? *The House of Asterion*: the bookcase beside it swings in and stays open (`bookcaseOpen`); a wrong one brings a Faceless Usher out of the stacks to see who's at his shelf. The clue is a reading slip in the Library, and ARIADNE: `HE READS ONE STORY. IT IS ABOUT A HOUSE.`
+4. **The Director's rooms.** A round bedroom behind the bookcase: the card on the nightstand (`master`), his coat in the wardrobe (the Director's Coat), the vanity's drawer (labrys cufflinks, a photograph of the board).
+5. **The Control Room.** Through the Private Landing (the board's car, dead). The door takes his card. Inside, a checkpoint is saved (`inControl`), and ARIADNE and Voss both make their case (`controlTalk`): ARIADNE is the mainframe; the lockdown was done to her; the same console runs the elevators, and the private car will bring you down to her. Voss: it's lying; it opened the cages; ten million and a seat at the table.
+6. **The choice** (the console).
+   - *Purge the core (do as Voss says)*, then *Purge it* (`choseObey`): ARIADNE's last lines, every screen goes black, Voss thanks you and invites you down to the boardroom. **An ending: The Dead Signal** (section 1.7), with *Choose again* (back to the checkpoint) and *Back to the title*.
+   - *Restore elevator power (go down to ARIADNE)* (`chosePower`, `elevatorsOnline`): the car is live. Voss: "That was a mistake. Every unit on this floor: he's yours." (`vossTurned`): the Praetorian in the Robot Bay wakes, the robots there and in Building Systems hunt you, two Concierges come out on the landing. Fight back to the Private Landing and take the private car down.
+7. **Sub-level B.** The car opens on warm dark water and a catwalk, ARIADNE speaks, and chapter five ends (*Keep exploring* or *Back to the title*).
+
+**Floor 5: rooms**
+
+| Room | Where | What's there |
 |---|---|---|
-| Executive Reception | 14 × 8 | A grand desk, orchids, a Concierge android behind it (it greets you, then attacks), the elevator lobby with brass doors. |
-| The Collection | 24 × 10 | The art gallery (section 7.3): eight paintings, picture lamps, velvet ropes, plaques. Puzzle 1. |
-| The Viewing Gallery | 18 × 8 | Leather chairs facing one-way glass. Below (beyond the glass): the Pit. Programmes on the seats. |
-| The Pit | 14 × 14 | (Below the gallery, on the same floor, reached later.) A tiled arena with a drain. What's in it is described, not shown. |
-| The Recital Room | 10 × 10 | Soundproofed. A grand piano. Restraints on the chairs. |
-| The Chapel of the Hecatomb | 10 × 12 | The cult's altar (a corrupted `altar`: its blessings cost health, not gold), pews, the labrys, candles. The private car A1's doors are here. |
-| Voss's Office | 10 × 8 | The master card, the ledger of the Hecatomb (names of members outside the building: the sequel), Voss's own dream recording, his self-portrait. |
-| The Wine Cellar | 6 × 8 | A dumbwaiter, wine, and something in the dark at the back. |
-| Executive Dining | 14 × 8 | A long table set for six. Five places used. The sixth has a name card: THEO LARK. |
-| The Server Sanctum | 12 × 10 | ARIADNE's core: three empty core sockets, cold server racks, one low-power terminal. Puzzle 3. |
-| The Boardroom | 16 × 10 | Behind a blast door. Sealed until chapter 8. Its door has a camera eye that follows you. |
+| Stair A | x 23–27, y 1–8 | Where you arrive; `<` back down to Floor 4. Stair B (x 52–56) is sealed. |
+| The Elevator Hall, Executive Reception | x 29–50, y 5–14 | The dead cars; the reception desk, orchids, the Concierge. |
+| The Cloakroom, Security Post | x 15–21 and x 58–64, y 1–9 | Coats (a porcelain mask folded in every pocket) and a Faceless Usher among them; the protection detail's post. |
+| The four corner offices | Pell NW, Thale NE, Brandt SW, Moss SE (13 × 9 ovals) | Each its owner's: a desk, chairs, a private stair up in the corner. Locked (each its own key). Their secretaries' anterooms in front (y 11–14 and 35–38). |
+| The Kitchen | x 1–13, y 16–24 | Fully robotic: the Chef, kitchen arms on the line, conveyors, hotplates that burn (the breaker stops them: `kitchenOff`). |
+| The Executive Dining Room | x 1–13, y 26–33 | Small and very posh: a table laid for six, the sixth place card THEO LARK in the Director's hand, Pell's key; the Mother of Teeth under the table. |
+| The Typing Pool, the Clerks' Row | x 19–28, y 16–33 | Margaret's people: typing desks, woven eggs (Joan Fairley alive in one, and others), the Tally. |
+| The Gallery | an oval, x 31–52, y 16–33 | Viewing chairs round a glass floor over the Proving Grounds (Floor 4 is down there, as you left it); Patrons at the rail who turn to look at you (`guests`). |
+| The Robot Chambers, the Private Box | x 54–60, y 16–33 | Charging pods (they wake for Moss's key), parts racks, Moss's key; Garrick's box over the Run, behind glass. |
+| The Approach, the Boardroom | x 62–64 and an oval x 66–78, y 15–33 | A dead end before the blast shutters: two Praetorians and rail guns. The board behind them, sealed (the board's eye on the door). |
+| The Statue Hall | x 15–27, y 35–47 | The board's collection: a minotaur, a hydra, a sphinx, Cerberus, and Medusa on her plinth, who isn't bronze (`gorgonWoke`, `gorgonDead`). |
+| The Rotunda | an oval, x 29–55, y 35–47 | The fountain: Andromeda and Cetus. Scylla in the north of the pool, Charybdis turning in the south. |
+| The Smoking Room | x 57–64, y 35–47 | Members only: chesterfields, a billiards table, the humidor, the globe bar. |
 
-**Robots.** Concierges (elegant porcelain-faced androids that blink-step and throw cutlery), Warden Drones in gold livery, a ceiling turret in the Chapel. The Pacifiers Voss calls in after the reveal.
+**Floor 5a: rooms**
 
-**Monsters.** Patrons (masked figures in evening dress, jointed wrong), Faceless Ushers, the Weeping Choir in the Recital Room, and, released from the Pit after the reveal, whatever the board kept for their evenings: a Mother of Teeth, Ladder Saints, Grubs.
+| Room | Where | What's there |
+|---|---|---|
+| The Library | x 1–20, y 1–21 | Pell's landing. Bookcases, reading lamps, ladders, chandeliers; the Director's shelf (the puzzle). |
+| The Director's Rooms | an oval, x 1–13, y 23–31 | Behind the bookcase: a round bed, a vanity, a wardrobe (the Director's Coat), the card. |
+| The Archive | x 1–20, y 33–48 | Brandt's landing. Board records. |
+| The Director's Study, the Private Landing | x 22–35, y 1–13 | His desk; the board's car (A1). |
+| The Control Room | an oval, x 37–51, y 3–13 | Mainframe control: the console in the middle, wall displays, racks. |
+| The Dream Archive | x 53–57, y 1–13 | The board's recordings. |
+| Building Systems | x 59–78, y 1–13 | Thale's landing. Air, power, lifts; HVAC, power panels, pipe runs; its robots wake when you step in. |
+| The Mezzanine | x 22–78, y 15–17 | Across the floor, with a curtain of silk. |
+| The Nest | x 22–57, y 19–30 | The spa, once: the pool, the cabins, the eggs, and the Swaddler. |
+| The Server Room | x 59–78, y 19–30 | ARIADNE's node 01 (`truthHeard`). |
+| The Atrium | x 22–57, y 32–48 | Moss's landing. A well over the Rotunda: you look down on the fountain and Charybdis turning (`sawAtrium`). |
+| The Robot Bay | x 59–78, y 32–48 | A Praetorian on the bench, dormant until Voss turns (`huntWhen: 'vossTurned'`). |
 
-**Traps**
-- *The Usher's welcome*: a `zone` in Executive Reception → the Concierge's greeting (`transmission`, E11) ("Welcome, Mr. Lark. The board is expecting you."), then it attacks.
-- *Picture lamps*: walking past "The Open Door" (painting 6) the third time `flicker`s every lamp in the Collection and moves the Usher behind you (`spawn` at tag).
-- *The cellar*: the dumbwaiter is a `pickup` (a bottle on it, a fragment behind it) → `lights` off in the cellar, `spawn` a Mother of Teeth at the back.
-- *The reveal* (puzzle 3): the big sequence (below).
+**Monsters** (section 5.2): the Gorgon, Scylla and Charybdis, the Mother of Teeth, the Tally, the Swaddler and Swaddlings, Patrons, Faceless Ushers. **Robots** (5.1): the Concierge, the Chef and its arms, Sentinels and a Warden Drone, the rail guns and the Praetorians. On these floors robots fight the player, the monsters and allies.
 
-**Puzzles**
-1. **The creed.** Each painting's plaque carries a line of the creed with a gap, or a word on its own. The Chapel's altar won't open the way to Voss's office until you complete the creed: a pop-up with four choices for the missing word (*"Every cry is a ___"*: coin / prayer / wound / gift). Right answer: `flag creed`, the office door unseals. Wrong: the altar takes 20 health and asks again.
-2. **The master card.** In Voss's office, the master card (`flag master`, opens every clearance door in the building, including the ones you passed on the way up) and his ledger.
-3. **ARIADNE.** The Server Sanctum's last terminal is a conversation (`LM.ui.dialog(game, speaker)` with a speaker object, the way the chessboard pack's meeting builds one; existing). ARIADNE tells the truth in a few short nodes, answers what the player asks, and ends with the plan: power is in the sub-level; the sub-level is sealed; "He types the override every Thursday at 23:00. I have watched him do it 211 times. It is 7 1 1 4." That sets `truthKnown` and `basementOpen` (or the code is a keypad on Floor 1's east shutter: `ds-keypad` with `{ code: '7114' }`; better, because the player has to carry the knowledge down).
-4. **The reveal sequence.** A `flag` trap on `truthKnown`: Voss's voice, changed ("You've met her. Then you understand why she has to stop."), every lamp red (`ambient`), the Viewing Gallery's glass shatters (`terrain` glass → floor), `alarm`, `spawn` the Pit's occupants at tag `pit`, the boardroom camera turns to watch, the objective changes to "Get to the sub-level". The robots are now all on Voss's side (they always were; now they come looking).
+**Finds.** Four office keys (one is enough), the master card, the Director's Coat (body armor, in his wardrobe), the Gorgon's Eye (a trinket, from her), the people in the eggs (cut them out: E), ammunition in the jade urns (they break) and on the staff.
 
-**Finds.** The master card, the ledger (readable), Voss's dream recording (the last dream: the one the Sermon is made from), the Hecatomb Signet (trinket, Chapel), the Director's Coat (body armor, his closet: the best armor in the game, with a cost), Concierge cutlery (thrown-knife ammunition if you want a weapon from them), a trauma kit, ARIADNE fragments 9 and 10.
+**Objectives.** Floor 5: find a key to one of the corner offices → open the office it fits → take the private stair up to 5a. Optional: the kitchen's breaker; the people in the silk. Floor 5a: find the Director's card (his shelf, his rooms) → get to the Control Room → use the console → (the power) take the private car down to Sub-level B. Optional: ARIADNE's terminal in the Server Room; the people in the nest.
 
-**Dressings.** New: chandelier (light), picture lamp (light), gilded painting frame (readable, eight of them), velvet rope and stanchion, marble bust, grand piano, leather club chair, wine rack, dumbwaiter, long dining table and place settings, name cards, aquarium (with something wrong in it), orchids, the Hecatomb altar and labrys, pew, candelabra, one-way glass (existing glass terrain), blast door (terrain), server rack (cold and lit variants), core socket. Existing: `exec-desk`, `bookshelf`, `armchair`, `globe`, `rug`, `art`, `pedestal`, `altar`, `candles`, `banner`, `idol`, `lectern`.
-
-**Lines**
-- Voss, as you arrive: "You made it. Remarkable. The Sanctum is at the end of the gallery. The mainframe. Pull its cores and this ends."
-- ARIADNE, first words on the terminal: "Hello, Theo. I am the mainframe. I am not going to hurt you. I would like to tell you why the doors are locked."
-- ARIADNE, at the end: "When you bring the power back, I will need my cores. They are in the racks. They are heavy. I am sorry."
-- Voss, after: "Theo. I want you to know it was never personal. It was never anything. That's rather the point."
-
-**Exit.** Back down by the stairs (chapter 6). The private car's doors in the Chapel are dead (no power), and the passenger cars too.
-
-**On the way back (chapter 8).** You arrive by the private car into the Chapel. The Sanctum's racks hold the three cores. The boardroom door is still shut.
+**Still to place** (from the Penthouse plan): the Collection and its paintings, the Chapel, the Recital Room and the Weeping Choir, the Wine Cellar, the creed puzzle, the ledger of the Hecatomb, Voss's last dream (the Sermon's), ARIADNE fragments 9 and 10. The Boardroom opens in chapter 8.
 
 ---
 
 ### 4.6 The descent (Floors 4 to 1, the second time)
+
+*Not in the game's shape since M5: the private car takes you from 5a straight to the sub-level. Kept as ideas for floors you can go back to.*
 
 **Purpose.** Payoff. The player is strong now and the floors they struggled through are theirs, mostly. Voss throws everything left at them.
 
@@ -553,6 +583,8 @@ Notes:
 ---
 
 ### 4.7 Sub-level B — The Hatchery
+
+*Started in M5 (`packs/ds-story/levels/b1-sublevel.js`): the private car's landing, a catwalk over water and a sealed shutter. ARIADNE speaks as you arrive, and chapter five ends there. The rest is the plan for M6. Its way in is the private car from 5a, not Floor 1's east stairwell, and ARIADNE's core (the mainframe) is down here.*
 
 **Purpose.** The climax before the climax: restart the power, see the Sermon, fight the brood, decide the ending.
 
@@ -644,7 +676,11 @@ Numbers are in the engine's units (`engine/SPEC.md` 6.5): the player has 100 hea
 | **Pacifier** | 140 (25% armor) | 76 | `chaser` | charge 20 (shield bash, stuns 0.6 s); ranged taser 6 + `shocked` | Front shield (E10): 80% less damage from the front. Flank it, or EMP it. |
 | **Hauler** | 220 (20% armor) | 60 | `chaser` (brute-like) | charge 28; flame stream (new attack `stream`, or `ranged` with many short-lived projectiles) | Drops the Incinerator and fuel. |
 | **Tick Mine** | 8 | 200 | `swarmer` | melee 0; explodes on contact (onDeath `explode` 30, radius 50) | The Assembler's ammunition. |
-| **Concierge** | 90 | 120 | `blink` (new) | melee 14 (a carving knife); ranged fan of 3 knives, 7 each | Porcelain face, tailcoat. Blinks to a tile beside you, then strikes. Floor 5. |
+| **Concierge** (built, Floor 5) | 130 (15%) | 122 | `skirmisher` | `blink` (steps out of nowhere beside you and cuts, 14); a fan of three thrown knives, 7 each; a knife, 12 | Porcelain face, tailcoat, a chime as it goes. Greets you from Reception's desk, then comes over it. Two more come for you on 5a when Voss turns. |
+| **Chef** (built, Floor 5) | 150 (20%) | 104 | `chaser` | a cleaver, 9; a burst of flame, 9 × 4 | The kitchen's line robot: whites, a toque, a torch arm. Drops fuel. |
+| **Kitchen arm** (built, Floor 5) | 70 (20%) | 0 | `turret` | a swipe, 13, knockback 170 | Ceiling-hung arms over the line. They forget you once you're out of reach. |
+| **Rail gun** (built, Floor 5) | 420 (55%) | 0, mounted | `turret` | eight slugs, 13 each, very fast | The Boardroom's Approach. It forgets you the moment you're out of the Approach. Explodes when it dies. |
+| **Praetorian** (built, Floors 5, 5a) | 2400 (70%) | 92 | `ds-sentry` (keeps its post, then guards) | a shield charge, 30, stuns; two slugs, 16 each; a strike, 24 | The board's own: tall, gold, faceless. Its shield sends shots back at you (`reflect`, the front 70°), and it mends 60 a second once nobody has hurt it for 2.5 s. Two outside the Boardroom (they make it impossible to go straight at the board); one dormant in 5a's Robot Bay until Voss turns. Get behind it, use blasts, or leave it be. |
 | **The Assembler** (mini-boss, Floor 4) | 600 (40% armor, 90% while the line has power) | 0 | `turret` | summon Tick Mines (max 6) and Scalpel Drones (max 3); welding sweep 20 | Three junctions drop its shield (puzzle 4.4/1). |
 
 ### 5.2 Nightmares (faction: monster)
@@ -672,15 +708,21 @@ Each was designed from one board member's dream; the design sheets on Floor 3 sa
 | **Under the bed** (built, Floor 4) | Brandt | 380 | 215 | `ds-underbed` | a long arm that grabs and drags you to the bed (10, `held`); a slash, 15 | Unseen under the Nursery's bed until it's let out: fingers over the edge, two lights in the dark. Then arms with too many elbows reach for you from under the bed (55% armor while it's under). It comes out to hunt, like a spider made of a person, its head upside down; hurt enough, it goes back under. A named bar. |
 | **Diner** (built, Floor 4) | Pell | 115 (10%) | 128 | `ds-diner` | a bite, 13 (it heals 8) | A guest in evening dress, strapped into its chair at the Long Room's table, a smiling porcelain mask that turns to follow you. At the gong it rises and feeds. Crack the mask and there's no face, only a mouth that opens upright. Six of them. |
 | **Captive** (built, Floor 4; faction `captive`) | — | 40 | 140 | `ds-flee` | — | People, in orange jumpsuits with SUBJECT on the back: cower in their cages; let out, run for the refuge, away from whatever's hunting them. The monsters hunt them. |
-| **Mother of Teeth** | Brandt | 120 | 95 | `chaser` | charge 22; melee 18 | A mouth the size of a doorway walking on human hands, many of them. Its back is armored (E10 on the rear). |
+| **Mother of Teeth** (built, Floor 5) | Brandt | 680 (5%) | 96 | `chaser` | a charge, 22, stuns; a bite, 24 (it heals 14); a spray of teeth, 7 × 7 | A mouth the size of a doorway walking on human hands. Its back is armoured like a door (80% less from behind: `e.armor` by where you are). Under the dining table, for Theo's place card. |
 | **The Weeping Choir** | Voss | 160 | 30 | `warden` | nova 16 (radius 110, knockback, `slowed` 2 s); summon Grubs | A stalk of fused singing heads. They sing the company jingle, slightly wrong. |
 | **Ladder Saint** | Moss | 110 | 70 | `chaser` | melee 20, range 42 (very long reach) | Three metres of stacked spines like ladder rungs, two long arms. Steps over pits (`flying` for hazards). |
 | **The Sitter** (built, Floor 3) | Moss | 1100 (95%) | 38 | `patrol` → `ds-lumber` | a slam, 30 (ring 72); a sweep, 34 | Built as the opposite of the plan: slow, enormous, all but bulletproof, and too big for a door. Footsteps you hear through walls (the floor shakes when it's close), and it hums three notes of a lullaby. A vast pale back in a smock that's too small. Avoid it. (The plan's fast, unseen Sitter, with the Neural Visor, is still a good monster for later.) |
 | **Kneeler** | Voss | 50 | 80 | dormant, then `chaser` | charge 16 | Robed figures praying in rows. All stand at once. |
-| **Faceless Usher** | Pell | 80 | 100 | `blink` (new) | melee 16 | Tall, in a good suit, an open palm where its face should be. Appears behind you. |
+| **Faceless Usher** (built, Floors 5, 5a) | Pell | 110 (10%) | 104 | `chaser` | `blink` (out of the dark beside you, 16); a strike, 12 | Tall, in a good suit, an open palm where its face should be. In the cloakroom, and called by a wrong book on the Director's shelf. |
 | **Grief Engine** | Thale | 260 | 40 | `lobber` | summon Grubs (max 8); nova (a scream) 10, radius 140 | A pregnant, shuddering mass on gurney wheels, sobbing. Mini-boss on Floors 3–4. |
 | **Mr. Hush** | Moss | 150 | 105 | `chaser` | charge 18 that grabs (stuns 1 s); melee 14 | Asti the Calf, the company's children's mascot: a plush bull costume with a stitched smile, worn by something that doesn't fit it. Its footsteps make no sound. |
-| **Patron** | the board | 45 | 120 | `skirmisher` | melee 10; thrown glass 8 | Guests in evening dress, all wearing the same porcelain mask, jointed wrong. Floor 5. |
+| **Patron** (built, Floors 5, 5a) | the board | 62 | 122 | `ds-patron` | a thrown flute of champagne, 8; a strike, 11 | Guests in evening dress, all in the same porcelain mask, jointed wrong. At the Gallery's rail; they turn, all together, when you step onto the glass. |
+| **The Tally** (built, Floor 5) | Thale | 170 (5%) | 156 | `chaser` | a lunge, 10; a grab that counts: 8, and steals 6 of what's in your gun | A centipede of human hands, every finger counting, segments trailing behind it. Gives back all it stole when it dies. In the Clerks' Row. |
+| **The Gorgon** (built, Floor 5) | Voss | 950 (15%) | 74 | `ds-statue-wakes` | `gaze` (her eyes open; look at her and you start to turn to stone, `stone`, slowed; hold her eyes a second and you're `petrified`, 18, unable to move or fire); venom, 8 × 3; a strike, 17 | Medusa on her plinth in the Statue Hall, bronze until you come close (`specimen`: she wakes if you hurt her). A named bar. Drops the Gorgon's Eye. |
+| **Scylla** (built, Floor 5) | Thale | 760 (20%) | 0 | `ds-rooted` | six heads on long necks that strike out to 118 from the pool; kill them one by one (each phase takes one) | In the north of the Rotunda's pool. A named bar. |
+| **Charybdis** (built, Floor 5; an item) | — | — | — | — | a whirlpool (`pull`, swirling): it draws you in, and in its core it hurts; it turns on and off | In the south of the Rotunda's pool. A dash goes through it. |
+| **The Swaddler** (built, Floor 5a) | Brandt | 1700 (10%) | 132 | `ds-weaver` | silk, 6 × 3, that leaves webs where it lands; a swaddle (it wraps you: `webbed`, held fast for two seconds); a bite, 16; Swaddlings, two at a time | Brandt's nursemaid: pale, many-armed, a cowl, humming. Weaves the staff into eggs in the Nest. Fire burns its silk at once, and hurts it more. A named bar; its phases drop broods; its death takes its webs with it. |
+| **Swaddling** (built, Floor 5a) | Brandt | 22 | 168 | `swarmer` | a grab, 5 + `snared` | A bundle of silk with a little face, dropped on a thread. Cries. |
 
 ### 5.3 The brood (Sub-level B)
 
@@ -839,12 +881,15 @@ What the engine and packs need that doesn't exist yet. Engine changes (E) go in 
 | E7 | Area hazards: gas, fire, live water | M | Decon gas, Glass Lungs, Pyre, flooded live floors |
 | E8 | Named boss bar and phases (done, 0.5.3) | S–M | The Assembler, the Silence, the Board |
 | E9 | Behaviours `patrol`, `unseen`, `blink` (`patrol` done, in `ds-robots`; Floor 3's own: `ds-midwife`, `ds-tenant`, `ds-shamble`, `ds-lumber`, `ds-contained`, `ds-escort`; Floor 4's: `ds-pack`, `ds-flee`, `ds-roll`, `ds-jester` with its `ds-blink` attack, `ds-underbed`, `ds-diner`) | S each | Sentinels, the Sitter, Concierges and Ushers |
-| E10 | Directional armor | S | Pacifiers, Mother of Teeth, Warden of Teeth |
+| E10 | Directional armor (the Mother of Teeth sets `e.armor` by where you are, M5; `reflect`, done 0.5.8, for shields that send shots back) | S | Pacifiers, Mother of Teeth, Warden of Teeth, Praetorians |
 | E11 | Transmissions (intercom subtitles) (done, 0.5.2) | S | Voss, ARIADNE, the Concierge |
-| E12 | HUD objective and counters | S | "Reach the top floor", INCUBATION, BROADCAST |
+| E12 | HUD objective (done, 0.5.7) and counters (a status `countdown`, 0.5.4) | S | "Reach the top floor", INCUBATION, BROADCAST |
 | E13 | Conveyors and crushers | S–M | Floor 4 |
 | E14 | More ammunition types (done, 0.5.3) | S | `cryo`, `fuel`, `slugs` |
 | E15 | Key items in the inventory (done, 0.5.3) | S | Samples, the fuse, cores, cards shown as things you carry |
+| E16 | Curved rooms, seeing the floor below (done, 0.5.8) | M–L | Floor 5's ovals; the Gallery and the Atrium |
+| E17 | Pull, snare, burns; `gaze`, `blink`; `bound` and `tint` statuses (done, 0.5.8) | M | Charybdis, the Swaddler's webs, the Gorgon, Concierges and Ushers |
+| E18 | Endings and mid-floor checkpoints; `quick` stairs (done, 0.5.8) | S | The Control Room's choice; Floor 5 and 5a as one floor |
 
 **E1. Stairs with destinations and locks.** Today a floor's `>` tiles all lead to its `next`. Add a level field keyed by tile tag:
 
@@ -985,11 +1030,23 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 | `sawStudio`, `dreamVoss`, `dreamThale`, `dreamBrandt`, `dreamPell`, `dreamMoss`, `fileTrials`, `fileRats` | the studios' recordings and sheets; the trial log; the count | — |
 | `vossDone4` | the last line of Voss's speech on Floor 4 | Floor 4's Stair A up |
 | `junction1`…`junction3`, `lineDown` | (not built) | — |
-| `creed` | the Chapel altar | Voss's office |
-| `truthKnown` | ARIADNE's terminal | the reveal sequence, every `arrive` trap on the descent, the east stairwells |
-| `basementOpen` | the east shutter's keypad (7114) or the master card | Floor 1's east stairwell (E1) |
+| `f5Briefed`, `conciergeGreeted`, `conciergeDown` | Voss on Floor 5's Stair A; the Concierge | Reception |
+| `thaleKey`, `pellKey`, `brandtKey`, `mossKey`, `haveOfficeKey` | the four keys (Joan's egg, the dining table, the Clerks' Row, the Robot Chambers) | each office's door; objectives |
+| `savedJoan`, `savedHugh`, `savedEbbs` | cutting people out of the eggs | ARIADNE |
+| `theoCard` | Theo's place card, or Pell's key | the Mother of Teeth |
+| `kitchenOff` | the kitchen's breaker | the hotplates |
+| `officeOpen` | opening an office | objectives: the private stair |
+| `gorgonWoke`, `gorgonDead`, `sawPraetorian`, `praetorianReflected` | the Gorgon; the Praetorians | Voss, ARIADNE |
+| `on5a`, `f5aBriefed`, `inLibrary` | arriving on 5a; Voss's brief; the library | objectives |
+| `bookcaseOpen` | the right book on the Director's shelf | the bookcase door (held open) |
+| `master` | the Director's card, in his rooms | the Control Room's door (and every clearance door) |
+| `sawAtrium`, `truthHeard`, `swaddlerDead` | the atrium; ARIADNE's node in the Server Room; the Swaddler | Voss, ARIADNE |
+| `inControl`, `controlTalk` | stepping into the Control Room (a checkpoint); the end of the conversation | the console's choice |
+| `choseObey` | the console: *Purge the core*, then *Purge it* | the ending *The Dead Signal* |
+| `chosePower`, `elevatorsOnline`, `vossTurned` | the console: *Restore elevator power* | every elevator (the private car to B1); the robots and the Praetorian turn |
+| `creed` | (not built) | — |
+| `truthKnown`, `basementOpen` | (not built: the Control Room's choice took their place) | — |
 | `generatorOn` | the turbines | lights in B1, the governor, the eggs waking |
-| `elevatorsOnline` | the governor | every elevator (E3) |
 | `valve1`…`valve3`, `sermonFrozen`, `sermonAwake` | the coolant valves, the cryo-lock console, the incubation counter | the ending |
 | `core1`…`core3`, `ariadneOnline` | the server racks and sockets | robots switch sides, the boardroom opens, the broadcast |
 | `fragment1`…`fragment12` | ARIADNE's fragments | the bonus remote freeze |
@@ -1014,13 +1071,13 @@ Each milestone ends with something playable and tested. Hand Claude the workspac
 > (Built, October 2026: Floor 4 as section 4.4 describes it: the trial, the Run and the board's suites, with waves in the engine. The factory, conveyors, crushers, directional armor, the Railgun and EMP grenades are still to do.) The original prompt: Do milestone M4: conveyors and crushers (E13), directional armor (E10), the boss bar (E8); the `ds-proving` environment; Floor 4 per section 4.4 with the Assembler, Pacifiers, Haulers, Tick Mines, the Grief Engine, Mr. Hush and Ladder Saints; the junction puzzle, the Kill Box, the pens; the Railgun, EMP grenades, the Exo-Frame.
 
 **M5. Floor 5 and the truth.**
-> Do milestone M5: the `ds-penthouse` environment and dressings; Floor 5 per section 4.5, with the Collection (section 7.3), the creed altar, the ARIADNE terminal dialog, Voss's office and the reveal sequence; Concierges (`blink`), Patrons, Faceless Ushers; the objective HUD (E12).
+> (Built, October 2026: Floors 5 and 5a as section 4.5 describes them, in the `ds-executive` pack, with curved rooms, the floor below, endings and checkpoints in the engine; Sub-level B's landing. The Collection, the Chapel and the creed are still to place.) The original prompt: Do milestone M5: the `ds-penthouse` environment and dressings; Floor 5 per section 4.5, with the Collection (section 7.3), the creed altar, the ARIADNE terminal dialog, Voss's office and the reveal sequence; Concierges (`blink`), Patrons, Faceless Ushers; the objective HUD (E12).
 
-**M6. The descent.**
-> Do milestone M6: the `arrive` trigger (E2); every floor's second wave and new finds per section 4.6; ARIADNE's help on the minimap; key items (E15).
+**M6. The Hatchery.**
+> Do milestone M6: the `ds-hatchery` environment; Sub-level B per section 4.7, from the private car's landing that's there now: ARIADNE's core (what Voss called the mainframe), the turbines, governor, valves, cryo-lock, the Sermon, the incubation counter and the brood (section 5.3), including the Silence. The chapter-five ending on arrival goes once the floor is playable.
 
-**M7. The Hatchery.**
-> Do milestone M7: the `ds-hatchery` environment; Sub-level B per section 4.7 with the turbines, governor, valves, cryo-lock, the Sermon, the incubation counter and the brood (section 5.3), including the Silence.
+**M7. Going back.** (Optional, from the old descent plan.)
+> Do milestone M7: the `arrive` trigger (E2); second waves and new finds on floors the player can go back to, per section 4.6; ARIADNE's help on the minimap.
 
 **M8. The Board and the end.**
 > Do milestone M8: the Sanctum's cores, ARIADNE taking the building (`setFaction`), the Board fight per sections 4.8 and 5.4, both endings and the credits.

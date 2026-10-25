@@ -8,7 +8,9 @@
  *     shocked: { name: 'Shocked', seconds: 4, stun: true, only: 'robot' },
  *   }
  *
- * Fields: name (the HUD chip), seconds (how long, unless the hit says), speedMul (movement ×), dps (damage
+ * Fields: name (the HUD chip), seconds (how long, unless the hit says), speedMul (movement ×), bound (no dashing
+ * and no firing while it lasts: webbed, turned to stone), tint (a colour washed over the target, tintAlpha how
+ * strongly, default 0.45), fire (it counts as fire: burnable things go up, see an item's `burns`), dps (damage
  * a second, in ticks of `interval` seconds, default 0.5), stun (an enemy can't act while it lasts),
  * vulnerable (+ fraction of damage taken: 0.2 = 20% more), color (the chip, and a glow under an enemy),
  * only ('player' | 'robot' | 'monster': who it can land on; robots are enemies with `robot: true`),
@@ -78,8 +80,9 @@
     const r = S.resist(target, id);
     if (r >= 1) return null;
     const secs = ((opts && opts.seconds) || (typeof spec === 'object' && spec.seconds) || d.seconds || 2) * (1 - r);
-    const list = S.list(target);
+    // cure first: clearing replaces the target's list, so take the list after
     for (const c of d.cures || []) S.clear(game, target, c);
+    const list = S.list(target);
     let s = list.find((x) => x.id === id);
     if (s && d.stack) {
       s.n = Math.min(s.n + 1, d.stack === true ? 99 : d.stack);
@@ -112,6 +115,19 @@
       const d = def(o.id);
       if (d && o.t > 0) target.statuses.push({ id: o.id, def: d, t: o.t, max: o.max || o.t, tick: 0, n: o.n || 1 });
     }
+  };
+  /** Is the target held fast by a status (def.bound: no dashing, no firing, while it lasts)? */
+  S.bound = function (target) {
+    if (!target || !target.statuses || !target.statuses.length) return false;
+    for (const s of target.statuses) if (s.def.bound) return true;
+    return false;
+  };
+  /** The colour a status washes over its target while it lasts (def.tint), strongest last; or null. */
+  S.tint = function (target) {
+    if (!target || !target.statuses || !target.statuses.length) return null;
+    let out = null;
+    for (const s of target.statuses) if (s.def.tint) out = { color: s.def.tint, a: s.def.tintAlpha == null ? 0.45 : s.def.tintAlpha, s };
+    return out;
   };
   /** Movement multiplier from everything the target has (1 when nothing slows it). */
   S.speedMul = function (target) {

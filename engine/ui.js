@@ -390,7 +390,8 @@
         const i = y * L.w + x;
         if (!L.explored[i]) continue;
         const td = L.terrain[i];
-        const col = td.mapColor || (td.solid ? '#6b6556' : 'rgba(205,190,160,0.16)');
+        // a curve tile is floor on the map if its middle is (engine/curves.js)
+        const col = td.curve ? (L.curveIn[i] ? 'rgba(205,190,160,0.16)' : '#6b6556') : td.mapColor || (td.solid ? '#6b6556' : 'rgba(205,190,160,0.16)');
         if (col === 'none') continue;
         g.fillStyle = col;
         g.fillRect(ox + x * s, oy + y * s, s + 0.4, s + 0.4);
@@ -810,6 +811,24 @@
       dismissable: false,
     });
     ui.prevState = 'victory';
+  };
+  /** An ending, or the end of a chapter (game.ending): a card with the story's last words and what to do next. */
+  ui.showEnding = function (game, spec) {
+    const acts = (spec.actions && spec.actions.length ? spec.actions : [{ label: LM.text('backToTitle'), do: 'title', primary: true }]).map((a) => ({
+      label: a.label || 'Continue', primary: !!a.primary, quiet: !!a.quiet, onClick: () => setTimeout(() => game.endingAction(a.do || a.action), 0),
+    }));
+    ui.open({
+      kicker: spec.kicker || '',
+      title: spec.title || LM.text('victoryTitle'),
+      body: h('div', { class: 'ending-card' + (spec.tone ? ' ' + spec.tone : '') },
+        spec.text ? String(spec.text).split('\n\n').map((t) => h('p', { class: 'lore' }, t)) : null,
+        spec.stats ? statsTable(game) : null),
+      actions: acts,
+      dismissable: false,
+      wide: !!spec.wide,
+      className: 'ending' + (spec.tone ? ' ' + spec.tone : ''),
+    });
+    ui.prevState = 'ending';
   };
   ui.showDeath = function (game) {
     ui.open({

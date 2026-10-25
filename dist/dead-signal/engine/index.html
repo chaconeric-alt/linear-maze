@@ -204,6 +204,16 @@ kbd {
 .hint { color: var(--muted); font-size: 12px; }
 .lore { font: italic 400 17px/1.55 var(--font-lore); color: #d9d0bd; max-width: 60ch; }
 .lore-block { border-left: 1px solid var(--line); padding-left: 16px; }
+/* an ending, or the end of a chapter (game.ending): bad red, good gold, chapter the game's accent */
+.panel.ending { --tone: var(--brass); }
+.panel.ending.bad { --tone: #d9584c; }
+.panel.ending.good { --tone: #f0c45a; }
+.panel.ending::before { border-color: var(--tone); width: 34px; height: 34px; }
+.panel.ending::after { border-color: var(--tone); width: 34px; height: 34px; }
+.panel.ending .kicker { color: var(--tone); }
+.panel.ending h2 { font-size: 40px; }
+.ending-card .lore { margin-bottom: 14px; }
+.ending-card .lore:first-child { margin-top: 6px; }
 
 .btn {
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer;
@@ -450,6 +460,7 @@ kbd {
 <script src="audio.js"></script>
 <script src="level.js"></script>
 <script src="physics.js"></script>
+<script src="curves.js"></script>
 <script src="render.js"></script>
 <script src="particles.js"></script>
 <script src="combat.js"></script>

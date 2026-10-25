@@ -11,7 +11,9 @@
  * the break room and his badge give the locker code 0214 (sidearm, vest); Facilities has the hard hat;
  * the mail room shuts you in with Nursery Grubs; HR has a Hollow Coat; ARIADNE's fragments 1–3 are
  * behind the reception desk, in the lobby screen (stand at it) and under the network room floor.
- * Stair B, down to Sub-level B, stays shut until basementOpen (DESIGN.md 4.6).
+ * Stair B, down to Sub-level B, stays shut until basementOpen (DESIGN.md 4.6); since M5 the way down is the
+ * board's private car from Floor 5a, and nothing sets basementOpen, so the stairwell stays sealed (the master card
+ * opens its shutter, not the stairs).
  *
  * Elevators are the game's (packs/ds-story/story.js) and are stamped over the map at y 1-5, x 31-46.
  * Generated from a layout script, then meant to be tuned in the editor. Two layers: map (terrain,
@@ -30,7 +32,7 @@ LM.definePack({
       loadout: {"weapons": ["ds-bolt-driver"]},
       liveWaterOff: "corridorPowerOff",
       attractPath: [[40, 30], [40, 20], [30, 12], [16, 30], [40, 42]],
-      stairs: {"westUp": {"dir": "up"}, "eastDown": {"to": "ds-b1", "dir": "down", "until": ["basementOpen", "master"], "locked": "Sub-level B is sealed: LOCKDOWN LEVEL 5.", "go": "Go down to {floor}: {name}"}},
+      stairs: {"westUp": {"dir": "up"}, "eastDown": {"to": "ds-b1", "dir": "down", "until": "basementOpen", "locked": "Sub-level B is sealed: LOCKDOWN LEVEL 5.", "go": "Go down to {floor}: {name}"}},
       legend: {
         ".": {"terrain": "floor", "variant": 0},
         ",": {"terrain": "floor", "variant": 1},

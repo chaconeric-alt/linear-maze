@@ -304,6 +304,133 @@
         }
       },
     },
+    // a look that does something to you if you meet it (the engine's gaze): its eyes open (a windup you can see
+    // coming), and while they're open, looking toward it (aiming within `cone` of it, with nothing between)
+    // puts `status` on you every `every` seconds; meet it for `petrify` seconds in a row and `petrifyStatus`
+    // lands (and `damage`). Look away, or put something between you. { range, windup, duration, recover,
+    // cone, status, every, petrify, petrifyStatus, damage, move (speed × while it stares), color }
+    gaze: {
+      canStart: (e, a, game) => {
+        const F = AI.foe(e, game);
+        return F && F.isPlayer && e.seeLos && e.distP <= (a.range || 380) && e.distP >= (a.minRange || 0);
+      },
+      start(e, atk, game) {
+        atk.stare = 0;
+        atk.tick = 0;
+        LM.audio.play(atk.def.sound || 'gazeOpen', { vol: Math.max(0.5, game.vol(e.x, e.y)) });
+      },
+      update(e, atk, dt, game) {
+        const a = atk.def, F = AI.foe(e, game);
+        if (!F || F.dead) return (atk.done = true);
+        e.speedMul *= a.move == null ? 0.15 : a.move;
+        const wind = a.windup || 0.9, hold = a.duration || 2.4;
+        atk.open = atk.t >= wind && atk.t < wind + hold;
+        atk.looking = false;
+        if (atk.open && F.isPlayer && atk.stare >= 0) {
+          const toE = Math.atan2(e.y - F.y, e.x - F.x);
+          const d = U.dist(e.x, e.y, F.x, F.y);
+          atk.looking = d <= (a.range || 380) * 1.15 && Math.abs(U.angDiff(F.aim, toE)) < (a.cone || 0.55) && LM.physics.los(game.level, F.x, F.y, e.x, e.y, 'light');
+          if (atk.looking) {
+            atk.stare += dt;
+            atk.tick -= dt;
+            if (atk.tick <= 0 && a.status && LM.status) {
+              atk.tick = a.every || 0.25;
+              LM.status.apply(game, F, a.status);
+            }
+            if (a.petrify && atk.stare >= a.petrify) {
+              atk.stare = -1;
+              if (a.petrifyStatus && LM.status) LM.status.apply(game, F, a.petrifyStatus);
+              if (a.damage) LM.combat.hurt(game, F, a.damage, { source: 'enemy', type: 'gaze', by: e });
+              LM.audio.play(a.petrifySound || 'petrify', { vol: 1 });
+              game.addShake(0.3);
+            }
+          } else atk.stare = Math.max(0, atk.stare - dt * 0.6);
+        }
+        if (atk.t >= wind + hold + (a.recover || 0.5)) atk.done = true;
+      },
+      drawGlow(g, e, atk, t) {
+        const a = atk.def, wind = a.windup || 0.9, col = a.color || '#c8ff9a';
+        const ex = e.x + Math.cos(e.facing) * e.r * 0.6, ey = e.y + Math.sin(e.facing) * e.r * 0.6;
+        if (atk.t < wind) {
+          const k = atk.t / wind;
+          g.strokeStyle = U.rgba(col, 0.2 + k * 0.6);
+          g.lineWidth = 1.5;
+          g.beginPath();
+          g.arc(e.x, e.y, e.r * (3.4 - k * 2), 0, U.TAU);
+          g.stroke();
+          G.glow(g, ex, ey, 10 + k * 10, col, k * 0.8);
+          return;
+        }
+        if (!atk.open) return;
+        G.glow(g, ex, ey, 22 + Math.sin(t * 20) * 3, col, 0.95);
+        const P = LM.game && LM.game.player;
+        if (atk.looking && P) {
+          const k = U.clamp(atk.stare / (a.petrify || 1), 0, 1);
+          g.strokeStyle = U.rgba(col, 0.25 + k * 0.5);
+          g.lineWidth = 1 + k * 3;
+          g.beginPath();
+          g.moveTo(ex, ey);
+          g.lineTo(P.x, P.y);
+          g.stroke();
+          G.glow(g, P.x, P.y, 16 + k * 12, col, 0.3 + k * 0.5);
+        }
+      },
+    },
+    // there, then not, then beside you: a step through nowhere, and a strike. { minRange, maxRange, windup,
+    // delay (from arriving to striking), damage, distance (how far from you it arrives, 54), behind (true:
+    // where you aren't looking), color (the puff), sound, arriveSound, status }
+    blink: {
+      canStart: (e, a, game) => {
+        const F = AI.foe(e, game);
+        return F && e.seeLos && e.distP >= (a.minRange || 90) && e.distP <= (a.maxRange || 460);
+      },
+      start(e, atk, game) {
+        LM.audio.play(atk.def.sound || 'blinkOut', { vol: game.vol(e.x, e.y) });
+        game.particles.burst(e.x, e.y, 12, { type: 'smoke', color: atk.def.color || '#d8d4cc', speed: 60, life: 0.5, size: 3, alpha: 0.45 });
+      },
+      update(e, atk, dt, game) {
+        const a = atk.def, F = AI.foe(e, game), L = game.level;
+        e.speedMul = 0;
+        if (!F) return (atk.done = true);
+        const wind = a.windup || 0.35;
+        atk.fade = atk.moved ? Math.max(0, 1 - (atk.t - atk.movedAt) / 0.15) : Math.min(1, atk.t / wind);
+        if (!atk.moved && atk.t >= wind) {
+          atk.moved = true;
+          atk.movedAt = atk.t;
+          const look = F.isPlayer ? F.aim : Math.atan2(e.y - F.y, e.x - F.x) + Math.PI;
+          const base = a.behind === false ? Math.atan2(e.y - F.y, e.x - F.x) : look + Math.PI;
+          const dist = a.distance || 54;
+          const free = (x, y) => {
+            for (const [dx, dy] of [[0, 0], [-e.r, -e.r], [e.r, -e.r], [-e.r, e.r], [e.r, e.r]]) if (!L.walkable(Math.floor((x + dx) / T), Math.floor((y + dy) / T))) return false;
+            return true;
+          };
+          for (const off of [0, 0.5, -0.5, 1, -1, 1.6, -1.6, Math.PI]) {
+            const x = F.x + Math.cos(base + off) * dist, y = F.y + Math.sin(base + off) * dist;
+            if (!free(x, y) || !LM.physics.los(L, F.x, F.y, x, y, 'shot')) continue;
+            game.particles.burst(e.x, e.y, 8, { type: 'smoke', color: a.color || '#d8d4cc', speed: 40, life: 0.4, size: 3, alpha: 0.4 });
+            e.x = x;
+            e.y = y;
+            e.vx = e.vy = e.kvx = e.kvy = 0;
+            game.particles.burst(x, y, 12, { type: 'smoke', color: a.color || '#d8d4cc', speed: 70, life: 0.45, size: 3, alpha: 0.45 });
+            break;
+          }
+          e.facing = Math.atan2(F.y - e.y, F.x - e.x);
+          LM.audio.play(a.arriveSound || 'blinkIn', { vol: Math.max(0.6, game.vol(e.x, e.y)) });
+        }
+        if (atk.moved && !atk.struck && atk.t >= atk.movedAt + (a.delay || 0.28)) {
+          atk.struck = true;
+          const d = U.dist(e.x, e.y, F.x, F.y), ang = Math.atan2(F.y - e.y, F.x - e.x);
+          LM.audio.play('swing', { vol: game.vol(e.x, e.y) });
+          if (d <= e.r + F.r + (a.range || 26) && !F.dead && LM.physics.los(L, e.x, e.y, F.x, F.y, 'shot')) LM.combat.hurt(game, F, a.damage || 16, { kx: Math.cos(ang) * 180, ky: Math.sin(ang) * 180, source: 'enemy', type: 'melee', status: a.status, by: e });
+        }
+        if (atk.struck && atk.t >= atk.movedAt + (a.delay || 0.28) + (a.recover || 0.3)) atk.done = true;
+      },
+      drawGlow(g, e, atk) {
+        const col = atk.def.color || '#d8d4cc';
+        if (!atk.moved) G.glow(g, e.x, e.y, 26, col, (atk.t / (atk.def.windup || 0.35)) * 0.5);
+        else if (!atk.struck) G.glow(g, e.x + Math.cos(e.facing) * 14, e.y + Math.sin(e.facing) * 14, 12, '#ffffff', 0.45);
+      },
+    },
     summon: {
       canStart: (e, a, game) => e.seeLos && game.enemies.filter((o) => o.summoner === e && !o.dead).length < (a.max || 4),
       update(e, atk, dt, game) {

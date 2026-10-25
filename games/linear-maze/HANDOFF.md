@@ -254,6 +254,17 @@ New flags: `slept`, `woke`, `dressed`, `aliceCalled`, `townPlaque`, `visited-<pl
 
 No existing floor changes: every door on every floor of both games runs the same way as before (checked), and no floor had a `rot`.
 
+## 0.5.8: curved rooms, the floor below, pulls and snares, reflecting, endings
+
+Built for Dead Signal's Floors 5 and 5a. `engine/curves.js` (a level's `ovals`: curve tiles made from the wall, `level.curveAt` / `curveIn`; collision pushes a body inside the ellipse off the curve, shots and sight and light are cut by the true arc, the bake draws the curve, its face along the northern arc and its lip; recessed lights in a ring with glowing lenses and a cove). The floor below (a level's `below`, terrain `seeBelow`; `render.js` bakes the other level's chunks at a smaller scale and draws them under this floor with parallax, darkened, with a rim shadow). An item's `pull` (`LM.physics.pull`), `snare` and `burns`; an enemy's `reflect` (`LM.combat.reflects`, `reflect`; `def.onReflect`); a projectile's `onImpact`; a status's `bound`, `tint`, `tintAlpha` and `fire` (`LM.status.bound`, `tint`); `game.checkpointHere`, `game.ending` / `endingAction`, `LM.ui.showEnding` and the trap effects `checkpoint` and `ending` (`engine/comms.js`); stairs that are `quick`; held-open doors (`door.held`, remembered); `level.walkable(x, y)`. The editor's floor settings → *Curved rooms* and *The floor below*; the `open` effect's *hold*. Engine spec sections 5, 6.2, 6.4–6.6, 6.8, 6.17 and 6.22–6.24. Fixed: a status with `cures` was lost when it cured something (clearing replaced the list it was about to be added to).
+
+**This game's packs.**
+- `packs/core/enemies.js`: two new attacks, `gaze` (meet its eyes and a status lands, then another) and `blink` (vanish, arrive beside the foe, strike). Nothing in this game uses them.
+- `packs/core/effects.js`: the `open` effect's `hold`.
+- `packs/core/environments.js` (`LM.paintWall`) and `packs/library/environment.js`: a wall next to a curve tile doesn't paint a face toward it (the curve has its own).
+
+No floor of this game has ovals, a floor below, or any of the new fields, so every floor plays and looks as before (checked).
+
 ## 0.5.7: objectives, story lines that stop the game, hitboxes, waking sides
 
 Built from Dead Signal's playtests. `engine/objectives.js` (a level's `objectives`: when / any / not / done flags, optional, targets by tag, item, enemy, npc, tile or room; the HUD plate under the health, targets pulsing near you and marked on the minimap, the pause screen's list; render and minimap hooks; the editor's floor settings → Objectives). `engine/comms.js`: a speaker's `pause` (and a line's `pause`) stops the game for a conversation in the middle of the screen, Continue / Skip, game state `'talk'`, not in a fight; the pause screen's *Story lines* choice (localStorage `lm-talk-pauses`); the transmission form's pause field. An enemy def's `hitbox` (`LM.combat.touches`), a pack's `factionWake` (`LM.factions.wake`, `playerHits`), and floor memory keeps `aggro` and a runtime tag. Engine spec sections 5, 6.5, 6.8, 6.16, 6.20, 6.21 and 15.5.

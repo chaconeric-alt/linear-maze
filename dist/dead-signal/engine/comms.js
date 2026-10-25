@@ -493,6 +493,22 @@
           C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag, pause: ef.pause });
         },
       },
+      // (the game's own flow, here with the other story effects)
+      checkpoint: {
+        params: { text: 'text' },
+        run(game, ef) {
+          // after whatever's being said has been said, so a line queued with it isn't lost on a retry
+          game.checkpointHere(ef.text === '' ? false : ef.text);
+        },
+      },
+      ending: {
+        params: { kicker: 'text', title: 'text', text: 'longtext', tone: ['bad', 'good', 'chapter'], stats: 'bool', final: 'bool', flag: 'text', actions: 'json' },
+        run(game, ef) {
+          // wait for a line that stops the game to be read first
+          const go = () => (C.talking && C.talking() ? game.schedule(0.3, go, true) : game.ending(ef));
+          go();
+        },
+      },
     },
   });
 })();

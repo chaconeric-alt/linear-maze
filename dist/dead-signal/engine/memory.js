@@ -11,7 +11,8 @@
  *   terrain   { tileIndex: terrainId } tiles changed while playing (setTerrain)
  *   explored  the minimap, as bits (base64)
  *   rooms     indexes of rooms already announced
- *   doors     { tileIndex: bits } 1 unlocked (a key or clearance door), 2 sealed, 4 has opened (door triggers fired)
+ *   doors     { tileIndex: bits } 1 unlocked (a key or clearance door), 2 sealed, 4 has opened (door triggers fired),
+ *             8 held open
  *   gone      map items no longer there (indexes into the level's spawns)
  *   items     { spawnIndex: { field: value } } map items that changed (used, opened, hp...)
  *   extra     items that weren't on the map (loot, drops): { id, tx, ty, props, tag, s: fields }
@@ -172,7 +173,7 @@
     const doors = {};
     let nd = 0;
     for (const d of game.doors) {
-      const bits = (d.unlocked && (d.lock || d.flag) ? 1 : 0) | (d.sealed && !lockdown.has(d) ? 2 : 0) | (d.opened ? 4 : 0);
+      const bits = (d.unlocked && (d.lock || d.flag) ? 1 : 0) | (d.sealed && !lockdown.has(d) ? 2 : 0) | (d.opened ? 4 : 0) | (d.held ? 8 : 0);
       doors[L.idx(d.tx, d.ty)] = bits;
       nd++;
     }
@@ -339,6 +340,7 @@
       if (bits & 1) d.unlocked = true;
       d.sealed = !!(bits & 2);
       d.opened = !!(bits & 4);
+      d.held = !!(bits & 8);
     }
     // traps
     for (const [i, v] of Object.entries(m.traps || {})) {
