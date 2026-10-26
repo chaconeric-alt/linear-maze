@@ -458,7 +458,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.8';
+  LM.VERSION = '0.5.9';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -1493,7 +1493,8 @@ kbd {
    */
   P.pull = function (game, src, sp, dt) {
     const L = game.level, R = sp.radius || 120, S = sp.strength == null ? 220 : sp.strength, sw = U.clamp(sp.swirl || 0, -1, 1), core = sp.core || 16;
-    const list = sp.enemies === false ? [game.player] : [game.player].concat(game.enemies);
+    // sp.enemies: false pulls only the player; sp.player: false only enemies (the player's own black hole)
+    const list = sp.enemies === false ? [game.player] : (sp.player === false ? [] : [game.player]).concat(game.enemies);
     for (const e of list) {
       if (!e || e.dead) continue;
       if (e.isEnemy && (e.spawning > 0 || e.def.stationary || e.def.pullImmune || (e.def.flying && !sp.flying))) continue;
@@ -2582,12 +2583,13 @@ kbd {
 
       // 3. world objects
       const pad = 48;
-      const inView = (x, y) => x > view.x0 - pad && x < view.x1 + pad && y > view.y0 - pad && y < view.y1 + pad;
+      // a def's drawRadius: something drawn far out from where it stands (a titan in its cell) stays drawn
+      const inView = (x, y, r) => x > view.x0 - pad - (r || 0) && x < view.x1 + pad + (r || 0) && y > view.y0 - pad - (r || 0) && y < view.y1 + pad + (r || 0);
       const drawables = this._drawables || (this._drawables = []);
       drawables.length = 0;
-      for (const it of game.items) if (!it.dead && inView(it.x, it.y)) drawables.push(it);
+      for (const it of game.items) if (!it.dead && inView(it.x, it.y, it.def.drawRadius)) drawables.push(it);
       for (const d of game.doors) if (inView(d.x, d.y)) drawables.push(d);
-      for (const e of game.enemies) if (!e.dead && inView(e.x, e.y) && (game.attract || e.visible)) drawables.push(e);
+      for (const e of game.enemies) if (!e.dead && inView(e.x, e.y, e.def.drawRadius) && (game.attract || e.visible)) drawables.push(e);
       for (const n of game.npcs) if (inView(n.x, n.y) && n.vis > 0.01) drawables.push(n);
       if (game.player && !game.attract) drawables.push(game.player);
       drawables.sort((a, b) => (a.z || 0) - (b.z || 0) || a.y - b.y);
@@ -3343,7 +3345,7 @@ kbd {
               }
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
-              if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status });
+              if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status, proj: this });
               game.particles.burst(this.x, this.y, 5, {
                 type: 'dot', color: e.def.blood || '#7a1f1f', speed: 120, life: 0.35, angle: this.angle, spread: 0.6, size: [0.8, 1.8], drag: 6,
               });
@@ -3517,7 +3519,8 @@ kbd {
    */
   C.reflects = function (game, e, p) {
     const r = e.def.reflect;
-    if (!r || e.noReflect || p.reflected > 2) return false;
+    // a projectile that can't be turned (def.reflectable: false) goes through the mirror
+    if (!r || e.noReflect || p.reflected > 2 || p.def.reflectable === false || p.unreflectable) return false;
     if (r.when && !r.when(e, game)) return false;
     if (r.chance != null && Math.random() >= r.chance) return false;
     const from = Math.atan2(p.y - p.vy * 0.02 - e.y, p.x - p.vx * 0.02 - e.x);
@@ -3562,6 +3565,15 @@ kbd {
         target.aggro = true;
         target.knowsP = true;
         target.alertT = 1;
+      }
+      // def.immune: nothing ordinary hurts it (true, or (e, game, opts) => true for the hits it shrugs off;
+      // opts.proj is the projectile that hit, if one did)
+      if (def.immune && (def.immune === true || def.immune(target, game, o))) {
+        target.flash = Math.max(target.flash, 0.04);
+        if (!target.aggro) target.alert(game, true);
+        game.particles.add({ type: 'text', x: target.x + U.rand(-4, 4), y: target.y - target.r - 4, vy: -30, drag: 3, life: 0.5, text: def.immuneText || 'no effect', color: '#9aa4ae', size: 7 });
+        if (def.onImmune) def.onImmune(target, game, o);
+        return 0;
       }
       const armor = target.armor != null ? target.armor : def.armor || 0;
       const vul = LM.status ? LM.status.vulnerable(target) : 0;
@@ -4680,6 +4692,7 @@ kbd {
       this.knowsP = this.aggro; // spawned hunting: hunting you
       this.pDist = 9999;
       this.pSee = false;
+      this._props = props; // (what it was placed or spawned with: init can read it)
       if (def.init) def.init(this, game);
     }
     /** Something woke it. foe: what it should go after (another enemy); left out, the player. */
@@ -5109,6 +5122,13 @@ kbd {
       this.t += dt;
       this.flash -= dt;
       const d = this.def;
+      // something that lasts a while and goes (def.life or props.life, seconds; def.onExpire hears it)
+      const life = this.props.life || d.life;
+      if (life && (this.age = (this.age || 0) + dt) >= life) {
+        if (d.onExpire) d.onExpire(this, game);
+        this.remove(game);
+        return;
+      }
       // a current that draws things in (def.pull, or props.pull; it.pullOff stops it): a whirlpool, a drain
       if ((d.pull || this.props.pull) && !this.pullOff) LM.physics.pull(game, this, this.props.pull ? Object.assign({}, d.pull, this.props.pull) : d.pull, dt);
       // something that catches you as you cross it (def.snare: webs, glue)
@@ -5865,7 +5885,8 @@ kbd {
  * A trap = one trigger + a list of effects, declared in a level file:
  *
  *   traps: [{
- *     trigger: { type: 'plate', tag: 'p1' },   // plate | beam | door | pickup | zone | clear
+ *     trigger: { type: 'plate', tag: 'p1' },   // plate | beam | door | pickup | zone | clear | flag | arrive
+ *                                              // (any trigger: when (flags, all), unless (flags, any))
  *     effects: [{ type: 'darts', tag: 'd1', volleys: 3 }, { type: 'message', text: '...' }],
  *     once: true, cooldown: 2,
  *   }]
@@ -5893,7 +5914,7 @@ kbd {
       this.fired = 0;
       const L = game.level, tr = this.trigger;
       const tiles = (tr.tag && L.tags[tr.tag]) || [];
-      if (tr.tag && !L.tags[tr.tag] && !['door', 'pickup', 'clear', 'flag'].includes(tr.type)) {
+      if (tr.tag && !L.tags[tr.tag] && !['door', 'pickup', 'clear', 'flag', 'arrive'].includes(tr.type)) {
         console.warn('[LM] Trap trigger tag "' + tr.tag + '" not found in level ' + L.id);
       }
       this.tiles = tiles;
@@ -5942,8 +5963,16 @@ kbd {
       }
       if (!this.beams.length) console.warn('[LM] Beam trap in ' + L.id + ' found no aligned emitter pairs for tag ' + this.trigger.tag);
     }
+    /** A trigger's conditions: `when` (a flag or a list: all set) and `unless` (any set: no). A trap whose
+     *  conditions don't hold doesn't fire, and stays armed for later. */
+    condOk(game) {
+      const tr = this.trigger;
+      if (tr.when && ![].concat(tr.when).every((f) => game.hasFlag(f))) return false;
+      if (tr.unless && [].concat(tr.unless).some((f) => game.hasFlag(f))) return false;
+      return true;
+    }
     fire(game) {
-      if (!this.armed) return;
+      if (!this.armed || !this.condOk(game)) return;
       this.fired++;
       LM.audio.play('trap');
       for (const ef of this.def.effects || []) {
@@ -5966,6 +5995,12 @@ kbd {
       const P = game.player;
       const L = game.level;
       const tr = this.trigger;
+      // arrive: once, as the floor is entered (any arrival: stairs, an elevator, a new game, a retry), if its
+      // conditions hold then
+      if (tr.type === 'arrive' && !this.arriveChecked) {
+        this.arriveChecked = true;
+        if (this.armed) this.fire(game);
+      }
       if (P && !P.dead && P.falling <= 0) {
         if (tr.type === 'plate' || tr.type === 'zone') {
           const tx = Math.floor(P.x / T), ty = Math.floor(P.y / T);

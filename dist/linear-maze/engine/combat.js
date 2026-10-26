@@ -89,7 +89,7 @@
               }
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
-              if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status });
+              if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status, proj: this });
               game.particles.burst(this.x, this.y, 5, {
                 type: 'dot', color: e.def.blood || '#7a1f1f', speed: 120, life: 0.35, angle: this.angle, spread: 0.6, size: [0.8, 1.8], drag: 6,
               });
@@ -263,7 +263,8 @@
    */
   C.reflects = function (game, e, p) {
     const r = e.def.reflect;
-    if (!r || e.noReflect || p.reflected > 2) return false;
+    // a projectile that can't be turned (def.reflectable: false) goes through the mirror
+    if (!r || e.noReflect || p.reflected > 2 || p.def.reflectable === false || p.unreflectable) return false;
     if (r.when && !r.when(e, game)) return false;
     if (r.chance != null && Math.random() >= r.chance) return false;
     const from = Math.atan2(p.y - p.vy * 0.02 - e.y, p.x - p.vx * 0.02 - e.x);
@@ -308,6 +309,15 @@
         target.aggro = true;
         target.knowsP = true;
         target.alertT = 1;
+      }
+      // def.immune: nothing ordinary hurts it (true, or (e, game, opts) => true for the hits it shrugs off;
+      // opts.proj is the projectile that hit, if one did)
+      if (def.immune && (def.immune === true || def.immune(target, game, o))) {
+        target.flash = Math.max(target.flash, 0.04);
+        if (!target.aggro) target.alert(game, true);
+        game.particles.add({ type: 'text', x: target.x + U.rand(-4, 4), y: target.y - target.r - 4, vy: -30, drag: 3, life: 0.5, text: def.immuneText || 'no effect', color: '#9aa4ae', size: 7 });
+        if (def.onImmune) def.onImmune(target, game, o);
+        return 0;
       }
       const armor = target.armor != null ? target.armor : def.armor || 0;
       const vul = LM.status ? LM.status.vulnerable(target) : 0;

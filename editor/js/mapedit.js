@@ -313,11 +313,13 @@
       };
       if (dashed) out.push({ level: 'info', text: 'Getting around needs a dash over pits somewhere.' });
       if (exits.length && !exits.some(near)) out.push({ level: 'bad', text: 'The exit can’t be reached from the start' + (keys.size ? ' (even with the ' + [...keys].join(', ') + ' key)' : '') + '.', i: exits[0] });
-      // what doesn't need reaching: lights and emitters, pure decoration (nothing to use or pick up), and
-      // enemies on a side nobody fights (a specimen in its cell, a robot with no power)
+      // what doesn't need reaching: lights and emitters, pure decoration (nothing to use or pick up), things
+      // marked caged, and enemies on a side nobody fights (a specimen in its cell, a robot with no power)
       const LMx = ED.engine.LM;
       const skip = (t) => {
         if (t.kind === 'items' && ['wall-torch', 'dart-emitter', 'beam-emitter'].includes(t.id)) return true;
+        // placed to be looked at, not reached (props.caged: behind glass, in a vault)
+        if (t.props && t.props.caged) return true;
         const d = LMx.find(t.kind, t.id);
         if (t.kind === 'items' && d && !d.interact && !d.onTouch && !d.destructible) return true;
         if (t.kind === 'enemies' && LMx.factions) {

@@ -1,6 +1,6 @@
 # Dead Signal — design and build plan
 
-Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.8)
+Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.9)
 
 This file is the plan for building Dead Signal into a whole game: the story, the building, six maps (five floors and a basement) chapter by chapter, the monsters, robots, traps, puzzles, weapons, items and dressings on each, and the engine and pack code the game needs that the engine doesn't have yet. It is written to be handed to Claude a milestone at a time (section 11 has a prompt for each), together with the workspace, `engine/SPEC.md` and this file.
 
@@ -56,6 +56,16 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
 - Sub-level B is a landing only: the car opens on it, ARIADNE speaks, and the chapter ends (*Keep exploring* or *Back to the title*). Section 4.7 is still the plan for it.
 - Next: milestone M6 (Sub-level B).
 
+**Milestone M6 is built** (engine 0.5.9), and with it the end of the game: Sub-level B, *Tartarus* (`packs/ds-story/levels/b1-sublevel.js`, in a new pack, `ds-tartarus`), and the return to Five, where the board are. Sections 4.7 and 4.8 are the floor and the ending as built; they replace the Hatchery and the Board-fight plans (and M8 with them). Where M6 differs from the plan:
+- **Sub-level B is Tartarus**, a dungeon of failed experiments that are too powerful to destroy and can only be kept: bronze vault doors like a bank's, each with windows so the board could come down and look. In them, the **Titans**: synthids that don't age, don't die and grow back from almost anything (the Leviathan, the Behemoth, Tiamat, the Eye of Judgment, the Circle of Wings, the Frog, the Crystal Garden, the Hundred-Handed). Bronze Wardens walk the halls. Things from the floors above have got loose down here. No generator, no Sermon, no brood, no puzzles of valves and turbines.
+- **ARIADNE's core** is behind nine armoured plates, and the board's plate cutters are taking them off, one a minute, while you explore (they stop at eight). You can't stop them with what you carry. ARIADNE sends you to Containment Control, which can open the **Tartarus Armory**: weapons built to fight the Titans (the Prometheus Lance, the Stasis Projector, the Singularity Driver, the containment suit).
+- **The Heirs** (Line H) are in Containment Control: grown from the board's own tissue to inherit the earth, better than us in every way they can measure. Their offer: kneel, lay down your weapons and armour, and be kept as a pet; or be eaten. Kneel and they really do take it all, mock you and eat you (*Good Pet*). Refuse (or shoot first) and the ones at the console start opening the Behemoth's vault: kill them before the countdown ends, or it's out, and that's the end (*Tartarus*).
+- Step into the core and the cutters start on the ninth plate: kill them before it falls (*The Dead Signal* again if it does). Reconnect ARIADNE, and she takes the building: the Wardens are hers, the lights come up, the car goes to Five.
+- **ARIADNE can't harm the board**: she was made not to, and won't unmake it. She opens doors. On Five, the boardroom's Praetorians and rail guns answer to the room, not to her, and the board's Enforcers come up behind you. Put the guards down and she opens the shutters.
+- **The board are five frightened people**, not monsters, and there is no boss fight. Voss makes his case (the courts, due process, don't become what you think we are); you can ask him three things, and ARIADNE records his answers. Let them go, or don't. The ending depends on who's alive and what the world gets to see (section 1.7): the best is all of it, *The Signal*.
+- Engine (0.5.9): enemies that can't be hurt (`immune`), shots no mirror turns (`reflectable: false`), items with a lifetime (`life`, `onExpire`), a draw radius for big pieces (`drawRadius`), a pull that leaves the player alone (`player: false`), the `arrive` trap trigger (E2) and trigger conditions (`when`, `unless`), the `open` effect's `hold`, `e._props` for an enemy's `init`; fixes to statuses with `cures`, doors held open, and baked floor-below dimming. The editor's reach check skips things marked `caged`.
+- Next: milestone M9 (polish). M7 (going back down) is optional; M8 is done as part of M6.
+
 ---
 
 ## Contents
@@ -70,8 +80,8 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
    - 4.4 Floor 4 — The Proving Grounds (the trial, the Run and the board's suites)
    - 4.5 Floor 5 — The Penthouse (the executive floor)
    - 4.6 The descent (floors 4 to 1, the second time)
-   - 4.7 Sub-level B — The Hatchery
-   - 4.8 The ascent and the Board
+   - 4.7 Sub-level B — Tartarus
+   - 4.8 The return to Five, and the Board
 5. Bestiary
 6. Arsenal, armor and items
 7. Dressings, environments and the art
@@ -103,7 +113,7 @@ ARIADNE isn't the enemy Voss describes. It's cut off from the world and running 
 
 The board isn't trapped either. The boardroom is their sanctum. They watch the building on their cameras, and they send Theo up because they need someone to reach the Server Sanctum and finish off ARIADNE for them; the robots won't let *them* through.
 
-In the sub-level is Voss's last experiment: **the Sermon**, a living egg the size of a truck, incubating something big enough to end a city. Around it, in the brood nursery, are its smaller siblings: a clutch of eggs, each holding a small apocalypse.
+In the sub-level is **Tartarus**, where Asterion keeps what it made and couldn't unmake: the **Titans**, synthids grown from the board's worst dreams that don't age, don't die and grow back from almost any wound, held in bronze vaults because there is no way to destroy them. The board's plan was never to sell a Titan (nobody can take delivery of one); it was to sell the only cage that holds one, to every government that would pay, and a Titan to whoever paid last. And **Line H, the Heirs**: grown from donor stock and the board's own tissue, selected for intelligence, appetite and loyalty to their makers, and raised to inherit the earth. They believe it. *(Changed in M6: this replaces the Sermon and the brood.)*
 
 ### 1.3 How the truth comes out
 
@@ -127,20 +137,22 @@ ARIADNE's fragments (section 6.4) are optional collectibles on every floor that 
 1. **Up the stairs** (Floors 1 to 5). Voss guides Theo by intercom. The elevators are dead; the only way up is the stairwells, floor by floor, through robots and monsters.
 2. **The executive floor** (Floors 5 and 5a). Voss promises Theo the rest: the mainframe is called ARIADNE, its core is in the sub-level, and it can be purged from the Control Room on the board's private floor. Purge it, and the lockdown lifts; name any reward. Theo fights his way up through the board's floor to the Control Room, where ARIADNE speaks to him plainly for the first time.
 3. **The choice.** The console that purges the core also runs the elevators. Obey Voss and purge it: the game ends (*The Dead Signal*). Give the elevators power instead: Voss turns everything on the floor on Theo, and the private car takes him down to ARIADNE.
-4. **The Hatchery** (Sub-level B). ARIADNE's core, the generator, and the Sermon. Restart the power, bring ARIADNE back, decide what to do about the Sermon.
-5. **The private car** (Sub-level B to Floor 5a). With power back, Theo rides it up again.
-6. **ARIADNE and the Board.** ARIADNE takes the building: the robots stand down, then turn. The boardroom's shutters open. The board are not people any more.
+4. **Tartarus** (Sub-level B; built in M6). ARIADNE's core is behind nine plates the board's machines are cutting through. The Titans are in their vaults; the Heirs are in Containment Control, and they have an offer. Refuse it, stop them opening the Behemoth's vault, open the armory, take the weapons made for the Titans, kill the cutters, reconnect ARIADNE.
+5. **The private car** (Sub-level B to Floor 5). ARIADNE has the building; she can't harm the board, but she can open doors.
+6. **The board.** Their guards first (the Praetorians and rail guns answer to the room, not to her), then the shutters, then five frightened people round a table and Voss's case for letting them go. Spare them or kill them. What the world gets to see depends on what you found on the way up and what you kept him saying.
 
 ### 1.5 Cast
+
+*Changed in M6: the board don't turn into monsters. They're five people in a room, and the last fight is with their machines (section 4.8).*
 
 | Who | Role | Notes |
 |---|---|---|
 | **Theo Lark** | The player. Facilities technician, night shift. | Practical, frightened, decent. Fixes things. Starts with his tool bag. |
-| **Dr. Aurelian Voss** | Lab director; head of the Hecatomb. | Warm, fatherly, precise on the intercom. Never raises his voice. Becomes **the Chairman**. |
-| **Margaret Thale** | Chief financial officer. | Counts everything. Her nightmares are about numbers that never stop. Becomes **the Ledger**. |
-| **Dr. Ilse Brandt** | Chief science officer. | Built the specimens. Her nightmares are about birth. Becomes **the Mother**. |
-| **Garrick Moss** | Head of security. | Ex-military, bought the robots. His nightmares are about being held down. Becomes **the Warden of Teeth**. |
-| **Simon Pell** | General counsel. | Writes the contracts nobody reads. His nightmares are faceless. Becomes **the Clause**. |
+| **Dr. Aurelian Voss** | Lab director; head of the Hecatomb. | Warm, fatherly, precise on the intercom. Never raises his voice. |
+| **Margaret Thale** | Chief financial officer. | Counts everything. Her nightmares are about numbers that never stop. |
+| **Dr. Ilse Brandt** | Chief science officer. | Built the specimens. Her nightmares are about birth. |
+| **Garrick Moss** | Head of security. | Ex-military, bought the robots. His nightmares are about being held down. |
+| **Simon Pell** | General counsel. | Writes the contracts nobody reads. His nightmares are faceless. |
 | **ARIADNE** | The building's research integrity and safety AI. | Calm, literal, a little formal, very tired. Speaks in short lines. Was doing its job. |
 | The dead | Night staff: security guards, a vet tech, two postdocs, a cleaner, the night receptionist. | Their badges, logs and lockers are how the floors tell their stories. |
 
@@ -157,12 +169,23 @@ Its sign is a labrys (a double-headed axe) whose blades are two open hands. It a
 
 ### 1.7 Endings
 
-- **The Sermon sleeps.** Theo froze the Sermon in the sub-level (section 4.7). ARIADNE broadcasts everything it found. Dawn; sirens; the lockdown lifts. A last message from ARIADNE: the Hecatomb has other buildings.
-- **The Sermon wakes.** Theo didn't freeze it in time. Everything above happens, and then, as the screen fades: the sub-level, dark, a heartbeat, and the incubation counter reaching 100%.
+*As built in M6.* Two kinds: endings that come too soon, each with *Choose again* (back to the last checkpoint), and the end itself (the run is over: *New game* or *Back to the title*).
 
-- **The Dead Signal** (built). Theo did what Voss told him, in the Control Room on 5a, and purged the core. The lights come back on; nobody comes up the stairs. A short ending, early: *Choose again* goes back to the moment he walked in.
+**Too soon**
+- **The Dead Signal** (5a). Theo did what Voss told him in the Control Room and purged the core. The lights come back on; nobody comes up the stairs. *Choose again* goes back to the moment he walked in.
+- **Good Pet** (Sub-level B). Theo knelt to the Heirs, laid his weapons and armour down in front of them, and they ate him, talking the whole while about the cities they'll have.
+- **Tartarus** (Sub-level B). The Heirs opened Vault 2, and the Behemoth came out. Nothing in the building slows it down.
+- **The Dead Signal** (Sub-level B). The ninth plate fell, and the cutters went in after it.
 
-Neither of the first two is a game over. The second one is the sequel hook.
+**The end** (`ds-final`, in `ds-story/tartarus.js`), by what happened to the board and what the world gets to see. *Full exposure* is at least two of Voss's three answers on tape (`confessTitans`, `confessTrials`, `confessThreat`) and at least four of eight kinds of evidence found on the way: Moss's log; the shelter and the colony; the specimen files; the trials (the programme, the betting board, the trial log); *Containment as a product*; ARIADNE's node; the Heirs' writing on the wall; six of ARIADNE's twelve fragments.
+- **The Signal** (the best). You let them go, and the world gets everything: the audits, the trials, the Titans, the Heirs, and Voss in his own voice. The board walk out of the lobby into the police. None of them sees the outside again.
+- **The Verdict.** You killed all five, and the world still gets everything, including what you did. There's a trial: yours.
+- **The Settlement.** You let them go without it. A malfunctioning machine, a technician with a grudge, a containment accident; they settle, and rename the company, and open a new facility overseas.
+- **The Massacre.** You killed them without it. Five executives shot dead by a night technician is the story for a long time.
+
+If you kill some of the board and then let the rest go, the ending is one of the first or third, and it says how many you killed. The card ends with the record: how many of the eight things were found, how many answers are on tape, who is alive.
+
+*The old plan's endings (the Sermon sleeps; the Sermon wakes) went with the Sermon.*
 
 ---
 
@@ -178,9 +201,9 @@ Neither of the first two is a game over. The second one is the sequel hook.
 | `ds-f4` | Proving Grounds | 4, 6 | `ds-proving` | Floor 4 |
 | `ds-f5` | The Executive Floor | 5, 8 | `ds-executive` (built) | Floor 5 |
 | `ds-f5a` | The Private Floor | 5, 8 | `ds-executive` (built) | Floor 5a (`floorLabel`) |
-| `ds-b1` | The Hatchery | 7 | `ds-hatchery` | Sub-level B (`floorLabel`) |
+| `ds-b1` | Tartarus | 7 | `ds-tartarus` (built) | Sub-level B (`floorLabel`) |
 
-Floor order (the editor's Floors page): F1, F2, F3, F4, F5, F5a, B1. Floor 5's four private stairs lead up to 5a and back (`quick` stairs: no floor-finished screen between the two halves). B1 is reached only by the private car from 5a, once the elevators have power; finishing it isn't the end of the game; the Board is.
+Floor order (the editor's Floors page): F1, F2, F3, F4, F5, F5a, B1. Floor 5's four private stairs lead up to 5a and back (`quick` stairs: no floor-finished screen between the two halves). B1 is reached only by the private car from 5a, once the elevators have power; finishing it isn't the end of the game: the board is, back on Five, by the same car.
 
 ### 2.2 One plan for every floor
 
@@ -201,7 +224,7 @@ x:   22   26        31  34  37  40  42   46       53   57
 |---|---|---|
 | West stairwell | x 22–27, y 1–8 | The main stairs. On each floor: `<` (back down to the floor below) and `>` (up to the floor above), a landing between. |
 | Passenger cars A2, A3 | elevators at x 34 and x 37, y 1, doors south | Floors 1–5. 2 × 2 cars, sharing walls. |
-| The private car A1 | elevator at x 31, y 1, doors south | Sub-level B and Floor 5 only: the board's own lift from their chapel to the Sermon. On Floors 1–4 draw solid wall where its shaft passes. |
+| The private car A1 | elevator at x 31, y 1, doors south | Sub-level B, Floor 5 and 5a only: the board's own lift down to Tartarus. Its stops on 5 and 5a are locked from above until ARIADNE is back (`stops`, `until: 'ariadneOnline'`). On Floors 1–4 draw solid wall where its shaft passes. |
 | Freight car F | elevator at x 42, y 1, `w: 3, d: 3, door: 2`, doors south | Sub-level B to Floor 4: the labs' service lift. Parked on Floor 4 by `aegisSent` (`parked`, engine 0.5.6): ARIADNE sends it up with the AEGIS field in it. |
 | Elevator lobby | x 30–49, y 5–9 | Open floor in front of every car on every floor. (A 2 × 2 car's shaft is 4 × 4 tiles with its walls, so the passenger doors open onto row 5 and the freight doors onto row 6.) |
 | East stairwell | x 52–57, y 1–8 | Floor 1: the only stairs down to Sub-level B, behind a lockdown shutter. Floors 2–5: a second way between floors, locked until the descent (it becomes the fast route down in chapter 6). |
@@ -218,10 +241,10 @@ Place the four elevators once, in the editor (any floor's map → Elevators tab:
                                   purge the core: an ending (The Dead Signal) <──────┤
                                                                                      │ give the elevators power
                                                                                      v
-                                          B1: ARIADNE's core, power, the Sermon <── the private car A1 (F5a ↔ B1)
-                                                                                     │
+                     B1, Tartarus: the Heirs, the armory, ARIADNE's core <── the private car A1 (F5a ↔ B1)
+                                                                                     │ ARIADNE reconnected
                                                                                      v
-                                                                  F5 / F5a: the Board, the end
+                                                         F5: the boardroom, the board, the end
 ```
 
 Every floor's stairs up (`<`, the way you came) still go back down, and every floor is as you left it when you come back (section 5 of `engine/SPEC.md`). Floor 5's four private stairs are a level's `stairs` with `to: 'ds-f5a'`, `arrive` (the landing above that office) and `quick`; 5a's go back to the office they came from. The private car runs once `elevatorsOnline` is set (E3).
@@ -556,7 +579,7 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 
 **Objectives.** Floor 5: find a key to one of the corner offices → open the office it fits → take the private stair up to 5a. Optional: the kitchen's breaker; the people in the silk. Floor 5a: find the Director's card (his shelf, his rooms) → get to the Control Room → use the console → (the power) take the private car down to Sub-level B. Optional: ARIADNE's terminal in the Server Room; the people in the nest.
 
-**Still to place** (from the Penthouse plan): the Collection and its paintings, the Chapel, the Recital Room and the Weeping Choir, the Wine Cellar, the creed puzzle, the ledger of the Hecatomb, Voss's last dream (the Sermon's), ARIADNE fragments 9 and 10. The Boardroom opens in chapter 8.
+**Still to place** (from the Penthouse plan): the Collection and its paintings, the Chapel, the Recital Room and the Weeping Choir, the Wine Cellar, the creed puzzle, the ledger of the Hecatomb, ARIADNE fragments 9 and 10. The Boardroom opens when you come back up from Tartarus with ARIADNE (section 4.8).
 
 ---
 
@@ -582,75 +605,73 @@ Notes:
 
 ---
 
-### 4.7 Sub-level B — The Hatchery
+### 4.7 Sub-level B — Tartarus
 
-*Started in M5 (`packs/ds-story/levels/b1-sublevel.js`): the private car's landing, a catwalk over water and a sealed shutter. ARIADNE speaks as you arrive, and chapter five ends there. The rest is the plan for M6. Its way in is the private car from 5a, not Floor 1's east stairwell, and ARIADNE's core (the mainframe) is down here.*
+*Built in M6: `packs/ds-story/levels/b1-sublevel.js` (generated by a layout script, then meant to be tuned in the editor), and the pack `ds-tartarus` (environment, Titans, machines, the Heirs, the armory, dressings). It replaces the Hatchery plan. The way in is the private car from 5a; Floor 1's east stairwell stays sealed.*
 
-**Purpose.** The climax before the climax: restart the power, see the Sermon, fight the brood, decide the ending.
+**Purpose.** The last act's first half: what the board made and couldn't unmake; the Heirs and their offer; weapons made for things that can't be killed; ARIADNE back.
 
-**Mood.** Underground plant. Pipes, steam, catwalks over dark water, rust, the hum of a dead generator. At the centre, the Sermon's chamber: a cathedral-sized room of wet stone and amber light, with the egg in a pool, beating like a heart (the camera shakes a little on every beat). The Hecatomb's sign scratched into the concrete a hundred times.
+**Mood.** Black basalt, bronze and verdigris. A long hall between vault doors like a bank's, round and riveted, each vault with windows so the board could come down and look. Behind the glass the Titans move: the Leviathan going round and round, the Eye drifting with its gaze searching, the Circle of Wings pulsing, the Behemoth pacing. Hulking bronze Wardens walk the halls, and don't distinguish. Some of what got loose upstairs has come down here. Warm amber light in the halls, cold blue in the core.
 
-**Rooms**
+**Rooms** (80 × 50)
 
 | Room | Size | What's there |
 |---|---|---|
-| East stair landing | 6 × 8 | The way in from Floor 1. |
-| Generator Hall | 24 × 12 | Three turbines, stopped. The control desk. Puzzle 1. |
-| Elevator Machine Room | 12 × 8 | The cars' motors, the governor, the power bus (puzzle 2). The private car A1 and the freight car F open here. |
-| Coolant Plant | 14 × 10 | Pumps, coolant valves (puzzle 3, valve 1), cryo lines. |
-| The Brood Nursery | 20 × 14 | Eggs in rows in warm sand. Puzzle 4. |
-| The Sermon's Chamber | 26 × 18 | The egg (6 × 6 tiles), the amniotic pool, catwalks, the cryo-lock console (puzzle 3), the incubation monitor. |
-| Catwalks | — | Over pits of dark water connecting everything. |
-| The Ossuary | 10 × 8 | Where the Pit's leftovers went. Readables. ARIADNE fragments 11 and 12. |
+| The Landing | 22 × 7 | The private car and the freight car open here. A board guest in evening dress who came down to look at the vaults. The rules on a sign: no lights near Vault 4, a minute at most at Vault 5's glass, don't smile back at Vault 6, nothing living touches Vault 7. |
+| Records | 14 × 11 | The index of the vaults (each Titan's source: Voss, Moss, Brandt, Pell, Thale, and one all five dreamt together), *Containment as a product*, *Line H*, the Heirs' writing on the wall, fragment 11. |
+| The Wardens' Bay | 12 × 11 | Charging pods; one Warden asleep in its bay. |
+| The Antechamber | 7 × 11 | The Heirs' nest (a technician's bones, neatly). The Firstborn and two of its brood wait here. |
+| Containment Control | 19 × 11 | The release console (every vault from one place), three more Heirs at it, the night supervisor's body with his hand on the plate. |
+| The Admin Corridor | 78 × 3 | East–west under the north rooms; drains; a Warden's round; loose hounds, a Ridden, a Tenant. |
+| The Descent | 4 × 11 | From the corridor down to the Long Hall. |
+| The Long Hall | 78 × 5 | Between the vaults, their windows on both sides; drains in the floor; two Wardens on their rounds; Flesh Lanterns and Swaddlings. A plaque at every vault. |
+| The north vaults | | Vault 1, the Leviathan (26 × 9, jade glass, its own round door); Vault 4, the Eye (amber glass); Vault 5, the Circle of Wings (white glass); Vault 6, the Frog (jade glass); Vault 8, the Hundred-Handed (bars, not glass: it pulls glass apart). |
+| The south vaults | | Vault 2, the Behemoth (22 × 10, red glass, the vault the Heirs want open); Vault 3, Tiamat (a round basin, sea-blue glass); Vault 7, the Crystal Garden (its glass cracked: it's growing out into the hall). |
+| The Tartarus Armory | 11 × 10 | Behind a round vault door the console opens: four cases (the Lance, the Stasis Projector, the Singularity Driver, the containment suit), titan cells, cryo, a trauma kit. |
+| The Core | an oval, 13 × 16 | ARIADNE's core behind nine plates, three plate cutters at work, the console to reconnect her. Fragment 12. |
 
-**Robots.** Few and old: maintenance Sweepers, a Hauler in the Generator Hall. The brood eats robots.
+**The Titans** (section 5.3) can't be hurt by anything Theo carries, and they're all behind glass or bars, so the danger is what they do through it: the Eye judges what it can see; the Wings pull you to the glass and every beat hurts there; the Hundred-Handed grabs whoever walks near its bars; the Garden has grown out into the hall and six touches make you part of it; Tiamat seeds its young up through the drains; the Behemoth charges the glass when it sees you (it holds).
 
-**Monsters (the brood).** Each egg in the Brood Nursery holds a small apocalypse (section 5.3): Deluge Larva, Pyre Hatchling, Blight Seedling, Famine. One large egg holds the Silence (mini-boss). Nursery Grubs and a Mother of Teeth guard the Sermon.
+**The route**
+1. The car comes down onto the landing. Voss: you don't understand what you're standing in; every door holds something we couldn't kill; there are fates worse than death, and we built most of them. ARIADNE: she's in the core, behind nine plates, and his machines are cutting them; you can't stop them with what you carry; there's an armory down here for the vaults, and Containment Control can open it; something is in Containment Control already.
+2. Containment Control. A checkpoint outside the antechamber's door. Inside, the Heirs: the Firstborn's speech (Line H, the inheritance, succession; *we are not monsters: we will keep some of you*) and the offer (a pop-up): **Refuse**, or **Kneel** (lay down your weapons, take off your armour).
+   - Kneel: you really do. Every weapon and every piece of armour goes on the floor in front of them, the AEGIS too. They laugh, and say so, and eat you: *Good Pet*. *Choose again* goes back outside the door.
+   - Refuse (or shoot one before they've made the offer): the brood comes for you, and the three at the console start opening Vault 2 (`vaultRelease`, 100 s, on the HUD). Kill them before it runs out, or the Behemoth gets out: the seal goes, it comes for you, and after twenty-odd seconds the ending *Tartarus*.
+3. The console, with them dead: seal the vaults and open the armory.
+4. The armory, south across the Long Hall past the Garden. Taking anything from it is noticed: four Enforcers come down in the freight car. ARIADNE opens the core's door.
+5. The core. A checkpoint at its door. While you were exploring, the cutters took a plate a minute, up to eight (ARIADNE tells you when six are down). Step in and they see you: what's left of the eight comes down fast, and then the ninth (`ninthPlate`, 70 s). Kill the cutters before it falls (*The Dead Signal* if not; *Choose again* at the door).
+6. The console by the core: reconnect her. The lights come up; the Wardens are hers (green visors); she has the lines out, and she's talking. Voss: you don't know what the world does with everything. ARIADNE: she can't harm the board, she was made not to and won't unmake it; she can open doors; the car will take you to Five, and from now on she's recording everything he says.
 
-**Traps**
-- *Hatching*: brood eggs (`ds-brood-egg` items) hatch when you come within a few tiles (or after a timer once the generator's running: the warmth wakes them). Shoot an egg before it hatches and it dies in the shell (a smaller fight); let it hatch and it's a full one.
-- *Steam*: broken pipes vent steam on a timer (existing `fire-jet` re-skinned as steam).
-- *Flooding*: the Deluge Larva floods tiles as it moves (`terrain` to water) and, once the generator's on, live cables make flooded tiles dangerous (E7).
-- *The heartbeat*: every few seconds in the Sermon's chamber, `quake` 1 and a pulse of light. On hatching milestones (25%, 50%, 75%), bigger quakes and a spawn of Grubs from the pool.
+**Objectives.** Get to Containment Control; stop the Heirs at the console before Vault 2 opens; use the console; get into the armory; get into the core and stop the cutters; reconnect ARIADNE; take the private car up to Five. Optional: Records (what the vaults are for).
 
-**Puzzles**
-1. **The turbines.** Each turbine (`ds-turbine` item) starts with a lever. Started out of order, it trips and sparks (damage, the order resets). The right order is on the stopped flywheel gauges (each gauge needle points at the next turbine), or on a maintenance checklist in the Ossuary. All three running: `flag generatorOn`, the lights come up, the hum starts, and the brood eggs start to stir.
-2. **The elevators.** In the machine room, reset the governor (`ds-governor` item; requires `generatorOn`): `flag elevatorsOnline`. Every car in the building now runs (E3 `power: 'elevatorsOnline'`). The private car A1 is here. ARIADNE: "Thank you. My feed is live. My cores are not. Take the board's car; it goes where they keep them."
-3. **The Sermon.** When you first enter its chamber (`zone`), the incubation monitor starts: `INCUBATION 0%` on the HUD (E12), counting up over about six minutes of play (or a fixed number of seconds; tune it). Freezing it needs three coolant valves opened (Coolant Plant, the catwalk over the pool, behind the Ossuary: three items setting `valve1..3`), then the cryo-lock console (needs all three): `flag sermonFrozen`, the counter stops and frosts over. If the counter reaches 100% first, `flag sermonAwake`: no fight now (it's too big to hatch here), but the ending changes. Make this tense but fair: valves are on the way to things you need anyway.
-4. **The brood.** No puzzle: a fight, but the eggs give the player a choice of how to fight it (shoot early, or let them hatch for their drops: each hatchling drops ammunition the player is likely low on).
+**Finds.** The armory's four cases, titan cells (the Heirs drop a few), trauma kits and med-gel, ARIADNE's fragments 11 and 12, the files in Records (`fileTitans` and the Heirs' writing count toward the ending), the vault plaques.
 
-**Finds.** Ammunition everywhere (the brood drops it), trauma kits, the Hazmat Suit (Coolant Plant locker; fire and gas resistance, for the Pyre and Blight hatchlings), the maintenance checklist, ARIADNE fragments 11 and 12, Voss's notes on the Sermon (readable).
+**Factions on this floor.** The Wardens are the building's (`robot`) until ARIADNE is back (`ally`); they fight what's loose, and the board's Enforcers, and you. The board's machines (`board`) fight you, ARIADNE's side and anything loose. The Heirs wait (`specimen`) until the offer is refused, or you shoot one. The Titans fight nobody (`titan`), and the Behemoth, let out, becomes a `monster`.
 
-**Dressings.** New: turbine, control desk, pipe runs, steam vent, catwalk (terrain over pit), coolant valve, cryo-lock console, incubation monitor, brood egg (closed, hatching, hatched), the Sermon (6 × 6 item), amniotic pool (terrain: water variant), warm sand (floor), cable bundles, rusted lockers. Existing: `barrel`, `crate`, `toolbox`, `bones`, `candles`, water, pit.
-
-**Lines**
-- Voss (the only time he loses his composure): "Don't touch the egg. Theo. Don't touch the egg."
-- ARIADNE, at the Sermon: "It has his dream in it. I would prefer it stayed asleep."
-
-**Exit.** The private car A1, from the Elevator Machine Room straight to the Chapel on Floor 5.
+**Exit.** The private car, up to Five (5a's objective points you down to Five if you go there first).
 
 ---
 
-### 4.8 The ascent and the Board
+### 4.8 The return to Five, and the Board
 
-**Purpose.** Restore ARIADNE, turn the building, kill the board.
+*Built in M6, on Floor 5 (`f5-executive.js`) and in `ds-story/tartarus.js`. It replaces the Sanctum-and-transformations plan: there are no cores to seat, and the board stay people.*
 
-**The Sanctum.** Arriving in the Chapel by the private car, the Sanctum is two rooms away. Three core modules are in three cold server racks (`ds-server-rack`: interact to pull a core; flag `core1..3`), and the sockets are in the core (`ds-core-socket`: requires the matching flag). Each core seated brings ARIADNE further back (lights, a line, a door). While you do it, Concierges, Patrons and the board's last Pacifiers come through every door. With all three: `flag ariadneOnline`.
+**Purpose.** The end: the board's last defences, and then a choice about five people.
 
-**ARIADNE takes the building.** A `flag` trap on `ariadneOnline`:
-- every robot in the building switches faction to ally (E5: `game.setFaction('robot', 'ally')`), with a visor change from red to green;
-- the minimap reveals the floor;
-- a line to the outside opens: ARIADNE begins its broadcast (a HUD line, `BROADCAST 0%`, which completes during the boss fight; a nice clock that doesn't punish);
-- the boardroom's blast door opens.
+**Arriving.** The private car opens on Five's elevator hall. An `arrive` trap (only once ARIADNE is back): the Praetorians and rail guns at the boardroom become the board's (`board`), the house robots in their pods become ARIADNE's (`ally`), and three Enforcers come up behind you in the freight car. ARIADNE: the guards answer to the room, not to her; put them down and she'll open it. Voss: you look like one of ours now.
 
-**The Board** (section 5.4). The boardroom unfolds into the Theatre: the board's private arena, a glass floor over the Pit, seats for five. The fight has phases:
+**The guards.** Kill the Praetorians and ARIADNE opens the shutters. (If they died on the first visit, the shutters open as soon as you're back.) The Praetorians still send your shots back; the Prometheus Lance goes straight through them.
 
-1. **Moss and Pell.** The Warden of Teeth charges; the Clause blinks and writes glyphs on the floor that explode a moment later. ARIADNE's robots fight beside you.
-2. **Thale and Brandt.** The Ledger is a swarm (invulnerable while scattered, hit it when it gathers); the Mother births Grubs and lobs acid.
-3. **The Chairman.** Voss, alone, in what's left of his suit, with his ribs opened like a lectern. Novas of black hands, summoned Patrons, a speech.
-4. **The Hecatomb.** At half health the Chairman pulls the dead board into himself (each crony's corpse is dragged to him and absorbed: he heals a little and gains that crony's attack). The glass floor cracks; the last phase is fought over the Pit's edge.
+**The boardroom.** Five people round a table, frightened: Voss, Thale, Brandt, Moss, Pell (`ds-board-member`: 60 health; they fight nobody, back away into corners, and beg when hurt). A checkpoint as you step in. Thale: *Aurelian, do something.* Pell: *Nobody say anything.* ARIADNE: she's recording; ask him; he'll want to explain.
 
-**The end.** Voss dies. ARIADNE's broadcast completes. The lockdown lifts: the shutters rise, morning light through the lobby glass. The ending (section 1.7) depends on `sermonFrozen`. Credits over the Collection, one painting at a time.
+**Voss's case** (talk to him): put it down; there are courts for this, due process; let your machine send its file to whoever it likes and we'll answer for it in a courtroom, the way civilised people do; what you're thinking of doing makes you what you think we are, and worse, because you knew better; the only decent thing left is to open the door and let the system decide. You can ask him three things, and ARIADNE records each answer:
+- what the Titans were for (*insurance: we were selling the cage; the Titans were the brochure*);
+- Shelter B and the trials (*people nobody looks for; you'd be surprised what the right people will pay to sit in that box*);
+- what he meant by fates worse than death (*the Heirs. There are other buildings. In a generation people like you will be grateful for a bowl and a name. That isn't a threat, it's a business plan*).
+
+Then **let them go** (it asks you to be sure: ARIADNE opens the other door, and Voss smiles at you as if you'd passed an examination), or don't. Shoot Voss first and whoever's left does the talking instead (Pell first: he'll testify to anything).
+
+**The end** (section 1.7) comes when you let them go, or when the last of them dies.
 
 ---
 
@@ -724,29 +745,41 @@ Each was designed from one board member's dream; the design sheets on Floor 3 sa
 | **The Swaddler** (built, Floor 5a) | Brandt | 1700 (10%) | 132 | `ds-weaver` | silk, 6 × 3, that leaves webs where it lands; a swaddle (it wraps you: `webbed`, held fast for two seconds); a bite, 16; Swaddlings, two at a time | Brandt's nursemaid: pale, many-armed, a cowl, humming. Weaves the staff into eggs in the Nest. Fire burns its silk at once, and hurts it more. A named bar; its phases drop broods; its death takes its webs with it. |
 | **Swaddling** (built, Floor 5a) | Brandt | 22 | 168 | `swarmer` | a grab, 5 + `snared` | A bundle of silk with a little face, dropped on a thread. Cries. |
 
-### 5.3 The brood (Sub-level B)
+### 5.3 Tartarus (Sub-level B)
 
-Small apocalypses. Each drops plenty of ammunition.
+*Built in M6, pack `ds-tartarus`. The brood plan went with the Sermon.*
 
-| Hatchling | HP | Speed | Behaviour | Attacks | Notes |
+**The Titans.** Nothing Theo carries hurts them. All but the Behemoth are pieces (items) drawn and run by their own code; the Behemoth is an enemy that is `immune`.
+
+| Titan | Vault | What it does |
+|---|---|---|
+| **Leviathan** | 1 | A jade serpent forty tiles long, one tile thick, covered in eyes, going round its pit in a figure of eight with its head chasing its tail; the eyes blink. Its head is all mouth. |
+| **Behemoth** | 2 | Six tiles by three: black scales, bronze horns, armoured like a lorry. Paces its vault, paws the floor, breathes fire, and when it sees you through the glass it charges it (the glass holds; the hall rings). Let out: it hunts you (charge 80, a fan of fire, a stamp of 60) and nothing stops it. |
+| **Tiamat** | 3 | Living water: a dark cell eight tiles across, never round, ebbing; a nucleus dividing to thirty-two and becoming one again. Reaches for you with pseudopods and throws waves at its glass. Seeds its young up through the floor drains (**Brine**: 80 health, a chaser; a touch engulfs you, `engulfed`, held and drowning). |
+| **The Eye of Judgment** | 4 | A floating amber crystal with one eye. It drifts; its gaze searches (a cone of amber); hold still in its gaze through the glass and it judges you (`judged`: fire). With nobody to judge, it fixes on whatever else moves, and burns it. |
+| **The Circle of Wings** | 5 | A white light inside twelve white wings, pulsing. It loves you: it draws you toward the glass from 8.5 tiles, harder on every beat, and up against the glass every beat goes through you. |
+| **The Frog** | 6 | A huge frog with a hole where its head should be. Telemetry from a probe sent in on a line came back for nine days. Come near the glass and it smiles, all teeth. |
+| **The Crystal Garden** | 7 | A white crystal tree that grows a crystal every seven seconds, out through its cracked glass into the hall. Touch one: `crystallizing` (it stacks; six and you're part of the garden). Crystals break (22 health), to fire and hard knocks. |
+| **The Hundred-Handed** | 8 | Fifty heads, a hundred hands, behind bronze bars (it pulls glass apart). Walk within reach of the bars and it grabs you (14 and `grasped`: held, pulled to the bars). |
+
+**Line H, the Heirs** (faction `specimen` until the offer is refused or one is hurt; then `monster`)
+
+| Heir | HP | Speed | Behaviour | Attacks | Notes |
 |---|---|---|---|---|---|
-| **Deluge Larva** | 90 | 80 | `skirmisher` | ranged water jet 10 + knockback | Floods the tiles it crosses (`terrain` → water). With the generator on, flooded tiles near cables are live. |
-| **Pyre Hatchling** | 90 | 110 | `chaser` | melee 12 + `burning`; leaves fire pools (E7) | Its shell is still on fire. |
-| **Blight Seedling** | 70 | 0 after it roots | `turret` | spore lob (gas cloud) | Roots where it hatches and grows a spore tower over 20 s if left. |
-| **Famine** | 60 | 190 | `swarmer` | melee 6, steals health | Eats pickups on the floor on its way to you. |
-| **The Silence** (mini-boss) | 400 | 70 | `warden` | nova 20; ranged | Eats sound and light: every light within 200 of it goes out; the HUD's sound icon shows muted near it. A jaw that is speaking every language at once, inaudibly. |
+| **Heir** | 170 (12% armor) | 158 | `skirmisher` | charge 16, claws 12, a pistol (2 × 8) | Beautiful and all the same. Barks: *Little brother. You were the draft; we are the book.* Drops titan cells sometimes. |
+| **The Firstborn** | 1300 (20% armor) | 146 | `skirmisher`, boss bar | a step through nowhere (`blink`, 22), nova 16 + staggered, a fan of shots, claws 20 | Its brood come at two-thirds and one-third health. |
 
-### 5.4 The Board (final boss)
+**The board's machines** (faction `board`) **and the building's**
 
-`boss: true` (gold health bar; E8 adds a named boss bar with phases).
+| Machine | HP | Behaviour | Notes |
+|---|---|---|---|
+| **Tartarus Warden** | 900 (45% armor) | patrols its route, then hunts | Hulking bronze guardian: stomp nova, punches, a bolt. The building's (`robot`) until ARIADNE is back. |
+| **Plate cutter** | 560 (40% armor) | `ds-cutter`: at the core, cutting | Turns on you when it sees you in the core. |
+| **Enforcer** | 300 (30% armor) | `skirmisher` | The board's guard, sent after you; a mirror shield sends back 55% of shots (not the Lance's). |
 
-| Form | Who | HP | Behaviour | Attacks |
-|---|---|---|---|---|
-| **The Warden of Teeth** | Moss | 700 (30% armor) | `boss` | charge 30; shockwave nova 24; front armor |
-| **The Clause** | Pell | 500 | `blink` | glyphs: telegraphed explosions on the floor (new attack `glyph`: marks 3 tiles, explodes after 1.2 s); melee 16 |
-| **The Ledger** | Thale | 450 | `skirmisher` | paper-cut fan (7 × 6); scatters into a swarm (untargetable 3 s) every 25% health |
-| **The Mother** | Brandt | 650 | `lobber` | summon Grubs (max 10); acid lob 22 radius 60 |
-| **The Chairman** | Voss | 1400 (20% armor) | `boss` | nova of black hands 28 (radius 150); summon Patrons (max 4); charge 34; at 50% health absorbs the dead board (gains one attack from each) |
+### 5.4 The Board
+
+*Changed in M6: not a fight.* `ds-board-member` (`ds-story/tartarus.js`): Voss, Thale, Brandt, Moss and Pell, 60 health each, faction `boardroom` (they fight nobody; on Five your shots can find them). They back away from you into corners and crouch when there's nowhere left; hurt, they beg (Thale offers money; Brandt has a daughter; Moss says you haven't the stomach; Pell threatens to sue). Dead, they leave a body. Voss does the talking (`ds-voss-voice`, section 4.8).
 
 ---
 
@@ -766,6 +799,9 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | **Incinerator** (built) | Floor 4, Moss's armory (code 4471) | fuel (max 240) | 3.4 | 14 | A riot-squad flamethrower. A short roaring jet (range 215) that goes through three things and sets them `burning` (3 s). The answer to rats. (The plan: a Hauler drops it.) |
 | **Railgun** (not built) | Floor 4, the Armory | slugs (new, max 12) | 120 | 0.6 | Pierces everything in a line, including thin walls (glass). Big kick. |
 | **EMP Grenade** (not built) | Floor 4, the Armory | rockets ("Charges") | 10 + `shocked` (robots stop 4 s) in radius 90 | 1 | Bursts at the cursor (`range: 'cursor'`, like the Ember Mortar). Harmless to monsters. |
+| **Prometheus Lance** (built) | Sub-level B, the Tartarus Armory | titan (new, max 60) | 75 | 1.5 | A plasma lance built to cut a Titan apart faster than it grows back (it doesn't, quite). Goes through eight things in a line and sets them `burning`; no mirror turns it (`reflectable: false`). |
+| **Stasis Projector** (built) | Sub-level B, the Tartarus Armory | cryo (2 a shot) | 5 × 4 | 2.6 | A spray of stasis: what it catches can't move or fight for 2.6 s and takes 35% more damage (`stasis`). |
+| **Singularity Driver** (built) | Sub-level B, the Tartarus Armory | titan (4 a shot) | 10 | 0.65 | Throws the seed of a black hole to the cursor: for three seconds it drags in everything near it (not you) and crushes what reaches the middle, then lets go all at once (an explosion). |
 
 ### 6.2 Armor
 
@@ -778,7 +814,8 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | Body | Security Vest | Floor 1, the locker | +10% reduction |
 | Body | Lead Apron | Floor 2, Dispatch's lift (descent) | +15% reduction, −8 speed, `shocked` immunity |
 | Body | Exo-Frame (built) | Floor 4, the Party Room (off Leon) | +16% reduction, +30 max health, −12 speed; can't be held, `staggered` halved |
-| Body | Hazmat Suit | Sub-level B, Coolant Plant | gas and fire immunity, −10 speed |
+| Body | Hazmat Suit (not built) | — | gas and fire immunity, −10 speed |
+| Body | Titan containment suit (built) | Sub-level B, the Tartarus Armory | +28% reduction, +50 shield (14 a second), −8 speed; the Titans' statuses (engulfed, crystallizing, judged, grasped), burning and staggered last about half as long |
 | Body | The Director's Coat | Floor 5, Voss's closet | +30% reduction, +20% damage, −20 max health ("It fits. It shouldn't.") |
 | Feet | Clean-room Boots | not placed yet | +20 speed, faster dash |
 | Feet | Handler's Boots (built) | Floor 4, the Handlers' Room | +10 speed, dash 0.15 s sooner |
@@ -812,7 +849,7 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 - **Badges and logs** of the dead (existing `readable` data on any item: title, text, flag). One per room that has a body. Each says who they were in a line, then what they saw.
 - **Design sheets** (Floor 3): one per monster, with its source dreamer and the dream in the dreamer's words.
 - **Trial programmes** (Floor 4) and **gallery programmes** (Floor 5): printed, cream card, the Hecatomb's sign on the back.
-- **ARIADNE's fragments**, twelve, two per map: a little rack-mounted memory card with a blue light. Each is a short entry from ARIADNE's audit log, in order, telling its side ("Audit 2,014: intake manifests do not reconcile. Escalating."… "Audit 2,031: escalation refused by the Director."… "02:13: external line open. Transmitting."). With all twelve, ARIADNE can also freeze the Sermon remotely during the boss fight, if you didn't, which turns the second ending into the first (a reward, not a requirement).
+- **ARIADNE's fragments**, twelve, two per map: a little rack-mounted memory card with a blue light. Each is a short entry from ARIADNE's audit log, in order, telling its side ("Audit 2,014: intake manifests do not reconcile. Escalating."… "Audit 2,031: escalation refused by the Director."… "02:13: external line open. Transmitting."). Six or more count as one kind of evidence for the ending (section 1.7).
 
 ---
 
@@ -829,7 +866,7 @@ Palettes in `engine/SPEC.md` 6.1 terms. Painters: reuse what exists (`carpet-til
 | `ds-wetlab` (built) | `#28322e` | wet-tile (corridors), grate over drainage (vat hall), resin (labs, cells, the dark lab), carpet (Brandt), terrazzo (briefing suite), sawdust (pens), concrete (stairs); biocontainment foam (a wall) | drywall, dark green | vats glow from inside; ceiling panels with gaps; Lab 3-D unlit but for its Lanterns |
 | `ds-proving` (built) | `#2c2622` | concrete (corridors, stairs), plates (the Run), the board's carpet (the Box, Moss's office), starry carpet (the Nursery), parquet (the Long Room), party tiles, kennel floor, dark panel (the studios), sawdust (the arena); papered walls for the suites | bulkhead | sodium orange, one in two; candles in the Long Room, pink in the Party Room, violet in the studios; the arena lit bright |
 | `ds-penthouse` | `#251c18` | marble, rug-red carpet, dark wood planks | dark wood panel (new `wood-panel` wall) | picture lamps, chandeliers, candles; warm and low |
-| `ds-hatchery` | `#14181a` | concrete, sand (brood), wet stone | bulkhead, rusted | amber from the Sermon, emergency bulbs |
+| `ds-tartarus` (built) | `#1a1714` | basalt hexes (the halls), bronze deck (admin, armory), clean panel (Containment Control), the vaults' floors, sand (the Leviathan's pit), the basin's water, rime (the Garden), circuit (the core), carpet (Records), straw (the Hundred-Handed) | basalt and bronze; vault walls | warm amber in the halls, white in Containment Control, each vault lit for viewing, blue in the core and Tiamat's basin |
 
 ### 7.2 Dressings to build
 
@@ -842,7 +879,7 @@ By floor; everything listed in the chapters as "new". Most are simple `draw` fun
 | Wet lab (built: `packs/ds-lab/wetlab.js`, `gestation.js`) | growth vat (occupied, turning, drained, broken; five shapes), cell placard, specimen file terminal, briefing screen (slides), poster, HELIOS model, egg clutch (hatches), Tenant tank, steel table, painted staff route, scratches, feeding hatch; foam, containment door, Level 3 door, broken glass and vat fluid (terrain); ARIADNE's relay (`ds-robots`), purge station (`ds-arsenal`). Still to build: crib, mobile, sleep pod, recording console, design-sheet wall, specimen jar shelf, operating table, surgical light, barricade |
 | Proving (built: `packs/ds-lab/proving.js`, `trials.js`) | cage bars and barred gates, blade floors, shock plates, trial gates, suite doors, the armory door, papered walls (terrain); odds board, trial horn, trial console, betting board, champagne, kennel, feed bin, leash rack, jumpsuits; sleep pod, dream playback, design sheet, hologram; child's bed, nightlight, toy box, rocking horse, mobile, music box; dining table, restraint chair, the covered main course, gong, place card, candelabrum; balloons, birthday cake, bunting, stage and curtain, party hat, jack-in-the-box, present. Still to build: conveyor (terrain), crusher, welding arm, charging dock, half-built robot, target stand, lane divider, concrete barrier, cable run |
 | Penthouse | chandelier, picture lamp, gilded frame (painting, readable), velvet rope, marble bust, grand piano, club chair, wine rack, dumbwaiter, dining table and settings, name card, aquarium, orchids, Hecatomb altar, labrys, pew, candelabra, blast door (terrain), server rack (cold / lit), core socket |
-| Hatchery | turbine, control desk, pipe run, steam vent, catwalk (terrain), coolant valve, cryo-lock console, incubation monitor, brood egg (3 states), the Sermon (6 × 6), amniotic pool (terrain), warm sand (floor), rusted locker |
+| Tartarus (built: `packs/ds-tartarus/`) | vault glass (five tints, and cracked), vault seals, bronze bars, drains, bronze doors, the core's door (terrain); round vault doors (they roll aside), vault plaques, beacons, chains, feathers, bones, the Heirs' nest and their writing on the wall, the release console, weapon cases, ARIADNE's core with its nine plates, the core console |
 
 ### 7.3 The Collection (Floor 5)
 
@@ -873,7 +910,7 @@ What the engine and packs need that doesn't exist yet. Engine changes (E) go in 
 | # | Change | Size | Used for |
 |---|---|---|---|
 | E1 | Stairs with their own destinations and locks (done, 0.5.2) | S–M | Floor 1's east stairwell to B1; locked stairwells |
-| E2 | `arrive` trap trigger; spawned waves a `clear` trap can watch (waves done, 0.5.5; `arrive` still to do) | S | The descent's second waves; Floor 4's arena |
+| E2 | `arrive` trap trigger; spawned waves a `clear` trap can watch (waves done, 0.5.5; `arrive` done, 0.5.9, with `when` and `unless`) | S | The return to Five; Sub-level B's briefing; Floor 4's arena |
 | E3 | Elevator power and per-stop access (done, 0.5.2) | S | Every car dead until `elevatorsOnline`; the private car |
 | E4 | Doors that open for a flag (clearance) (done, 0.5.2) | S | Clearance cards and the master card |
 | E5 | Factions (done, 0.5.4) | M–L | Robots against everything; robots on your side at the end |
@@ -890,6 +927,7 @@ What the engine and packs need that doesn't exist yet. Engine changes (E) go in 
 | E16 | Curved rooms, seeing the floor below (done, 0.5.8) | M–L | Floor 5's ovals; the Gallery and the Atrium |
 | E17 | Pull, snare, burns; `gaze`, `blink`; `bound` and `tint` statuses (done, 0.5.8) | M | Charybdis, the Swaddler's webs, the Gorgon, Concierges and Ushers |
 | E18 | Endings and mid-floor checkpoints; `quick` stairs (done, 0.5.8) | S | The Control Room's choice; Floor 5 and 5a as one floor |
+| E19 | `immune` enemies, `reflectable: false` shots, item lifetimes, `drawRadius`, `pull` with `player: false`, trigger conditions (`when`, `unless`), the `open` effect's `hold` (done, 0.5.9) | S | The Titans, the Lance, the Singularity Driver, the return to Five |
 
 **E1. Stairs with destinations and locks.** Today a floor's `>` tiles all lead to its `next`. Add a level field keyed by tile tag:
 
@@ -1046,11 +1084,27 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 | `chosePower`, `elevatorsOnline`, `vossTurned` | the console: *Restore elevator power* | every elevator (the private car to B1); the robots and the Praetorian turn |
 | `creed` | (not built) | — |
 | `truthKnown`, `basementOpen` | (not built: the Control Room's choice took their place) | — |
-| `generatorOn` | the turbines | lights in B1, the governor, the eggs waking |
-| `valve1`…`valve3`, `sermonFrozen`, `sermonAwake` | the coolant valves, the cryo-lock console, the incubation counter | the ending |
-| `core1`…`core3`, `ariadneOnline` | the server racks and sockets | robots switch sides, the boardroom opens, the broadcast |
-| `fragment1`…`fragment12` | ARIADNE's fragments | the bonus remote freeze |
-| `boardDead` | the Chairman's death | the ending |
+| `onB1`, `b1Briefed`, `sawTartarus` | arriving in Sub-level B (an `arrive` trap); the end of ARIADNE's briefing; the Long Hall | objectives |
+| `readTartarusIndex`, `fileTitans`, `fileLineH`, `heirsWall` | Records: the index, *Containment as a product*, *Line H*; the Heirs' writing on the wall | the ending's evidence (`fileTitans`, `heirsWall`) |
+| `judged`, `behemothCharged`, `frogSmiled`, `crystalTouched`, `handsGrabbed` | the Titans, the first time | Voss, messages |
+| `heirsAngry` | hurting an Heir before the offer is made | no offer: `refusedHeirs` |
+| `knelt`, `endedPet` | *Kneel*, in the offer | the ending *Good Pet* |
+| `refusedHeirs` | *Refuse*, or `heirsAngry` | the Heirs attack; `releaseStarted` |
+| `releaseStarted`, `releaseStopped`, `behemothFree` | the release (the `vaultRelease` countdown); the releasers dead; the countdown out | the console; Vault 2's seal; the Behemoth; the ending *Tartarus* |
+| `firstbornDead` | the Firstborn | Voss |
+| `vaultsSealed`, `armoryOverride` | Containment Control's console | the armory's vault door |
+| `armoryTaken`, `tookLance`, `armoryOpen` | a case in the armory; the Lance | the Enforcers; the core's door (`ds-door-core`) |
+| `inCoreHall`, `cuttersDown`, `coreBreached` | stepping into the core (the `ninthPlate` countdown); the cutters dead; the countdown out | the core; the ending *The Dead Signal* |
+| `ariadneOnline`, `ariadneBack` | the core's console: *Reconnect her* | the Wardens; the private car to Five (and Floor 1's freight stops); Five's return |
+| `f5Return` | arriving on Five with ARIADNE back (an `arrive` trap) | the guards turn `board`; the Enforcers |
+| `guardsDown`, `shuttersOpen` | the Praetorians dead (or already dead) | the boardroom's shutters |
+| `inBoardroom` | stepping into the boardroom | Voss's case |
+| `confessTitans`, `confessTrials`, `confessThreat` | asking Voss | the ending (two of three: full exposure) |
+| `spareBoard` | *Let them go*, then *Let them go* | the ending |
+| `killed_voss`, `killed_thale`, `killed_brandt`, `killed_moss`, `killed_pell` (and `P.data.boardDead`) | the board | the ending |
+| `gameOver` | the ending | — |
+| `generatorOn`, `valve1`…`valve3`, `sermonFrozen`, `sermonAwake`, `core1`…`core3`, `boardDead` | (not built: Tartarus and the return took their place) | — |
+| `fragment1`…`fragment12` | ARIADNE's fragments | the ending's evidence (six or more count) |
 
 ---
 
@@ -1073,14 +1127,14 @@ Each milestone ends with something playable and tested. Hand Claude the workspac
 **M5. Floor 5 and the truth.**
 > (Built, October 2026: Floors 5 and 5a as section 4.5 describes them, in the `ds-executive` pack, with curved rooms, the floor below, endings and checkpoints in the engine; Sub-level B's landing. The Collection, the Chapel and the creed are still to place.) The original prompt: Do milestone M5: the `ds-penthouse` environment and dressings; Floor 5 per section 4.5, with the Collection (section 7.3), the creed altar, the ARIADNE terminal dialog, Voss's office and the reveal sequence; Concierges (`blink`), Patrons, Faceless Ushers; the objective HUD (E12).
 
-**M6. The Hatchery.**
-> Do milestone M6: the `ds-hatchery` environment; Sub-level B per section 4.7, from the private car's landing that's there now: ARIADNE's core (what Voss called the mainframe), the turbines, governor, valves, cryo-lock, the Sermon, the incubation counter and the brood (section 5.3), including the Silence. The chapter-five ending on arrival goes once the floor is playable.
+**M6. Tartarus, and the end.**
+> (Built, October 2026: Sub-level B as section 4.7 describes it, in the `ds-tartarus` pack, and the return to Five and the board as section 4.8 does, with every ending in section 1.7. The Hatchery plan, the Sermon and the brood are gone.) The original prompt: Do milestone M6: the `ds-hatchery` environment; Sub-level B per section 4.7, from the private car's landing that's there now: ARIADNE's core (what Voss called the mainframe), the turbines, governor, valves, cryo-lock, the Sermon, the incubation counter and the brood (section 5.3), including the Silence. The chapter-five ending on arrival goes once the floor is playable.
 
 **M7. Going back.** (Optional, from the old descent plan.)
 > Do milestone M7: the `arrive` trigger (E2); second waves and new finds on floors the player can go back to, per section 4.6; ARIADNE's help on the minimap.
 
 **M8. The Board and the end.**
-> Do milestone M8: the Sanctum's cores, ARIADNE taking the building (`setFaction`), the Board fight per sections 4.8 and 5.4, both endings and the credits.
+> (Done in M6: the return to Five, the board and the endings, section 4.8. Credits are left for M9.) The original prompt: Do milestone M8: the Sanctum's cores, ARIADNE taking the building (`setFaction`), the Board fight per sections 4.8 and 5.4, both endings and the credits.
 
 **M9. Polish.** Balance from playtests, sounds for every robot and monster, the title screen, a full headless run from the closet to the credits, and packaging (`dist/`).
 
@@ -1091,7 +1145,7 @@ Each milestone ends with something playable and tested. Hand Claude the workspac
 - **Theo.** Name, look, and whether he speaks (thoughts as italic toasts, like the rotary pack's `LM.think`, copied into `ds-story`; or silent).
 - **How much gore.** The plan describes horror more than it shows it (the Pit is described, not drawn). Decide how far the drawings go.
 - **Who writes what.** Every line here is a placeholder. The dream recordings, the paintings, the creed, ARIADNE's log and Voss's voice are where the writing lives; the plan leaves them marked TODO.
-- **The Sermon.** Is it ever fought (a sequel), or only ever an egg? Should the timer be real time or tied to progress?
-- **ARIADNE's ending.** Does it survive, leave, or ask the player what to do with itself?
+- **The Titans.** Should one ever be fought (the Behemoth, with the armory's weapons, as an optional hard ending), or are they always only looked at? Should the Garden's spread in the hall be faster or slower?
+- **ARIADNE's ending.** She survives in every ending but the two *Dead Signal* ones and offers you a job in *The Signal*. Credits are still to write.
 - **Difficulty of the descent.** "Much easier" is the brief; the second waves are tuned to feel like payoff, not a repeat. Playtesting decides.
 - **Robots after ARIADNE.** Allies only in the final fight, or for the rest of the game (if there's a post-game)?

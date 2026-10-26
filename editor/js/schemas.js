@@ -202,7 +202,7 @@
   };
 
   // ------------------------------------------------------------ level traps
-  SC.TRIGGERS = [['plate', 'Pressure plate (step on a tagged tile)'], ['zone', 'Zone (walk onto a tagged tile, invisible)'], ['beam', 'Laser beam (between tagged wall emitters)'], ['door', 'A tagged door first opens'], ['pickup', 'A tagged item is taken'], ['clear', 'Every enemy with the tag is dead'], ['flag', 'A story flag is set (tag = flag name)']];
+  SC.TRIGGERS = [['plate', 'Pressure plate (step on a tagged tile)'], ['zone', 'Zone (walk onto a tagged tile, invisible)'], ['beam', 'Laser beam (between tagged wall emitters)'], ['door', 'A tagged door first opens'], ['pickup', 'A tagged item is taken'], ['clear', 'Every enemy with the tag is dead'], ['flag', 'A story flag is set (tag = flag name)'], ['arrive', 'Arriving on this floor (with its conditions: when / unless flags)']];
   SC.TRAP_EFFECTS = {
     darts: { tag: 'tag', volleys: 'number', interval: 'number', damage: 'number', speed: 'number' },
     spawn: { tag: 'tag', enemy: 'id:enemies', enemies: 'ids:enemies', count: 'number', faction: 'text', as: 'text' },

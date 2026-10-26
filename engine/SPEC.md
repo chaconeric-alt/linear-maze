@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.5.8 · October 2026
+Engine 0.5.9 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -25,6 +25,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.7:** objectives: what to do next on the HUD, with the thing to find picked out when you're near it and marked on the minimap (a level's `objectives`; section 6.21, `engine/objectives.js`). Story lines that stop the game: a speaker with `pause` (or a line's own `pause: true`) is read in the middle of the screen with the game stopped, Continue and Skip, unless you're in a fight; the player can turn it off on the pause screen (section 6.16). A long body can have a `hitbox` (a capsule along the way it faces) so shots land on all of it (section 6.5). A side can wake when you hurt it (a pack's `factionWake`: your shots land on it, and it turns on you; section 6.20). Floors remember a monster's hunting and a tag it was given while playing (section 5).
 
 **New in 0.5.8:** curved rooms: a level's `ovals` fit an ellipse into a rectangle of the map, and its wall is a true curve for walking, shots, sight and light, baked smooth, with a ring of recessed ceiling lights (section 6.22, `engine/curves.js`). Seeing the floor below: tiles with `seeBelow` (glass floors, an atrium's open well) show another level under this one, baked from its map, with parallax and its own darkness (a level's `below`, section 6.23). Things that pull you in (an item's `pull`: a whirlpool, a drain), catch you as you cross them (`snare`) and go up at a touch of fire (`burns`, section 6.6). Enemies that send your shots back (`reflect`, section 6.5), two new core attacks, `gaze` (meet its eyes and you turn to stone) and `blink` (a step through nowhere), and statuses that hold you fast (`bound`) and show on you (`tint`, section 6.17). A projectile can do something where it lands (`onImpact`, section 6.4). Endings: a trap or a pack can end the game, or a chapter of it, with a card and a choice (`ending`), and save a checkpoint mid-floor (`checkpoint`; section 6.24). Stairs that are `quick` skip the floor-finished screen (two halves of one floor, section 5). `level.walkable(x, y)`.
+
+**New in 0.5.9:** enemies that can't be hurt (`immune`, section 6.5: hits flash and say so, and do nothing), shots no mirror turns (a projectile's `reflectable: false`, section 6.4), items that last a while and go (`life` and `onExpire`, section 6.6), a draw radius for big pieces drawn far from where they stand (`drawRadius`, items and enemies), and a pull that leaves the player alone (`pull`'s `player: false`). Traps: the `arrive` trigger (arriving on the floor), and conditions on any trigger (`when`: these flags set; `unless`: none of these), so a trap can wait for the story (section 6.8). An enemy's `init` can read its placement's props (`e._props`). Fixes: a status with `cures` now lands after clearing what it cures; a door held open by the `open` effect's `hold` stays open (and is remembered); the floor below's dimming is baked with it (cheaper). The editor's reach check skips things placed with `props.caged` (section 15).
 
 ---
 
@@ -352,7 +354,7 @@ A legend entry is `{ terrain, item, enemy, npc, tag, props, variant, rot, start 
 | `length`, `drawHeld(g, player, kick)` | How it looks in hand; also used for icons. |
 | `status` | A status every projectile carries to what it hits (section 6.17): `'chilled'` or `{ id, seconds }`. |
 
-Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `sparkColor`, `light: { r, color, intensity }`, `status` (as the weapon's), `quiet` (no sparks, smoke or sound against walls: sprays and mists), `onImpact(p, game, hitWall)` (something happens where it lands: Dead Signal's silk lays a web), and optional `draw(g, p, t)` / `drawGlow(g, p, t)`.
+Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `sparkColor`, `light: { r, color, intensity }`, `status` (as the weapon's), `quiet` (no sparks, smoke or sound against walls: sprays and mists), `onImpact(p, game, hitWall)` (something happens where it lands: Dead Signal's silk lays a web), `reflectable: false` (no `reflect` sends it back: a lance, a beam; a single shot can carry `unreflectable: true`), and optional `draw(g, p, t)` / `drawGlow(g, p, t)`. Hits pass the projectile to `LM.combat.hurt` as `o.proj`.
 
 ### 6.5 Enemies, behaviours and attacks
 
@@ -373,8 +375,10 @@ Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `
 | `reflect: { arc, aim, damage, speed, color, sound, chance, when(e, game) }` | It sends the player's shots back: a shot arriving within `arc` (radians, 1.2) of the way it faces bounces off unhurt, aimed back at the player (`aim: false`: straight back the way it came), at `speed` × its speed, doing `damage` × its damage, now an enemy shot. `chance` (0–1) lets some through; `when` turns it on and off (a shield that drops); a behaviour can set `e.noReflect`. A shot bounces three times at most. `def.onReflect(e, game, p)` hears each. Shoot it from behind, or with blasts. `LM.combat.reflects(game, e, p)`, `reflect(game, e, p)`. |
 | `hitbox: { front, back, r }` | A long body: shots land anywhere on a capsule along the way it faces, from `back` behind its centre to `front` ahead of it, `r` wide from the middle (the radius if left out); scaled with its radius. Without it, a circle of its radius. Movement and walls still use the radius. `LM.combat.touches(e, x, y, r)`. |
 | `blood`, `gib`, `deathGlow`, `deathSound`, `bark`, `color` | Feel. |
-| `draw(g, e, t)`, `drawGlow(g, e, t)` | Body (in local space, call `g.rotate(e.facing)` yourself) and emissive bits. |
-| `init`, `update`, `onDeath` | Hooks `(e, game)` / `(e, dt, game)`. |
+| `draw(g, e, t)`, `drawGlow(g, e, t)` | Body (in local space, call `g.rotate(e.facing)` yourself) and emissive bits (in world space: use `e.x`, `e.y`). |
+| `drawRadius` | How far from its centre its drawing reaches, in units, if that's more than its radius plus a margin: it stays drawn while any of it is on screen (a beast six tiles long). Items take it too. |
+| `immune`, `immuneText`, `onImmune(e, game, o)` | Nothing hurts it: `true`, or `(e, game, o) => bool` for some hits only. A hit flashes it, alerts it, floats `immuneText` ('no effect'), calls `onImmune` and does nothing. Statuses still land unless it resists them. |
+| `init`, `update`, `onDeath` | Hooks `(e, game)` / `(e, dt, game)`. In `init`, `e._props` is the placement's props. |
 | `onHurt(e, game, dmg, opts)` | Every hit that lands, after damage (before death). A behaviour can set `e.armor` (a number, even negative) to change the enemy's damage reduction as it fights: shields up, a weak spot showing. |
 
 Core behaviours: `chaser`, `swarmer`, `skirmisher`, `lobber`, `turret`, `warden`, `boss`. A behaviour is `{ update(e, dt, game) }` that adds to `e.mx`, `e.my` and may scale `e.speedMul`. Helpers: `LM.ai.chase`, `away`, `strafe` (all toward or around the foe), `goTo(e, game, x, y, weight, lim)` (a point, the long way round if need be; it searches out to `lim` tiles, 40 by default, and returns false when there's no way), `wander`, `separate`, `avoidHazards`, `foe` (who it's after), `hostilesNear(e, game, x, y, R)` (everything its blast would hurt).
@@ -413,10 +417,12 @@ An attack type is `{ canStart(e, a, game), start?(e, atk, game), update(e, atk, 
 | `solid: 'rect'` | Box collision instead of a circle: set `it.box = [w, h]` and optional `it.boxOff = [dx, dy]` in `init` (desks, counters, tables). |
 | `cache`, `cacheRadius`, `cacheKey(item, game)` | Paint `draw` once into a sprite of half-size `cacheRadius` (a number, or a function of the item) and reuse it. Only for drawings that never animate; `cacheKey` returns a string that changes whenever the picture should (a flag, a used state). `drawGlow` still runs every frame. |
 | `reach` | Extra interaction range in units (someone behind a desk). |
-| `pull: { radius, strength, swirl, core, damage, interval, status, enemies, flying }` | A current that draws things in (a whirlpool, a drain, a black hole): within `radius` (120), bodies are moved toward the item at up to `strength` (220) units a second, stronger nearer; `swirl` (−1 to 1) turns the pull into a spiral; inside `core` (16) they take `damage` every `interval` seconds (0.5), with `status`. `enemies: false` pulls only the player; `flying: true` pulls flyers too (an enemy def's `pullImmune` keeps it out). A dash goes through. A placement's `props.pull` is laid over the def's; `it.pullOff = true` stops it (a cycle, a valve). `LM.physics.pull(game, src, spec, dt)` for code. |
+| `pull: { radius, strength, swirl, core, damage, interval, status, enemies, flying }` | A current that draws things in (a whirlpool, a drain, a black hole): within `radius` (120), bodies are moved toward the item at up to `strength` (220) units a second, stronger nearer; `swirl` (−1 to 1) turns the pull into a spiral; inside `core` (16) they take `damage` every `interval` seconds (0.5), with `status`. `enemies: false` pulls only the player, `player: false` only enemies; `flying: true` pulls flyers too (an enemy def's `pullImmune` keeps it out). A dash goes through. A placement's `props.pull` is laid over the def's; `it.pullOff = true` stops it (a cycle, a valve). `LM.physics.pull(game, src, spec, dt)` for code. |
 | `snare: { status, seconds, when(item, game), onCatch(item, game, P) }` | Crossing it puts `status` on the player for `seconds` (0.35) each frame they're in it: webs, glue. Use a status with `speedMul` or `bound`. |
 | `burns` | A destructible item that fire takes at once: a hit carrying `burning` or any status with `fire`, or `type: 'fire'`, destroys it whatever its hit points (webs, paper, hay). |
 | `seenBelow: false` | Not drawn when its floor is seen from the floor above (section 6.23). |
+| `life`, `onExpire(item, game)` | It lasts `life` seconds (or a placement's `props.life`), then `onExpire` runs and it goes: a black hole that collapses, a flare that burns out. `it.age` counts up. (`it.t` starts at a random phase for drawing, so time a lifetime with `it.age`.) |
+| `drawRadius` | As an enemy's: it stays drawn while any of its drawing is on screen. |
 
 Placement props every item understands: `ox`, `oy` (a nudge in units, for pieces that sit between tiles), `turn` (quarter turns clockwise, `1`–`3`, for any piece that isn't wall-mounted: the engine turns its drawing, its sprite, its glow, its solid box and, for a piece that spans several tiles, its footprint, which keeps its top-left tile where it was placed; `it.box` and `it.boxOff` stay in the piece's own frame and `it.getRect()` gives the turned box) and, on wall-mounted items, `face: 'n' | 's' | 'e' | 'w'` to choose which side of a wall it hangs on (otherwise the first open side, checked south, east, west, north). Office furniture also takes `dir` (the side its front faces; a piece that reads `dir` draws its own front, and the editor uses `dir` for it rather than `turn`) and, for multi-tile pieces, `w` and `h` in tiles anchored at the top-left tile. Drawing code must take randomness from a seeded generator (`U.mulberry32`, `U.hash2`, `info.rnd`), never `Math.random`, or the piece changes every frame.
 
@@ -495,6 +501,19 @@ Map rows may differ in length (short rows are padded with void). Unknown charact
 | `pickup` | an item with the tag is taken |
 | `clear` | every enemy with the tag is dead: placed with it, or spawned with it (a `spawn` effect's `as`); until there are any, it waits |
 | `flag` | the story flag named by `tag` is set (by a conversation, an item or another trap) |
+| `arrive` | the player arrives on the floor (from the stairs, a lift, a load or a checkpoint): checked once each time the floor is loaded. With no conditions it fires on the first arrival only (fired traps are remembered); with `when` or `unless` it waits for an arrival that meets them |
+
+Any trigger can wait for the story: `when` (a flag, or a list: all of them must be set) and `unless` (a flag or a list: none of them may be). Until they agree it doesn't fire, and isn't used up: a `zone` fires the next time you step on it, a `clear` as soon as they agree. The return to a floor with something changed:
+
+```js
+{ trigger: { type: 'arrive', when: 'ariadneOnline', unless: 'f5Return' }, effects: [
+  { type: 'flag', name: 'f5Return' },
+  { type: 'faction', tag: 'praetorian', faction: 'board' },
+  { type: 'spawn', tag: 'returnSpawn', enemy: 'ds-enforcer', count: 3, faction: 'board', as: 'enforcers', delay: 7 } ] },
+{ trigger: { type: 'clear', tag: 'praetorian', when: 'ariadneOnline' }, effects: [{ type: 'flag', name: 'guardsDown' }] },
+```
+
+(A `clear` trap only counts the group it saw on the floor: if they all died on an earlier visit, it has nothing to count; set the flag from code, or from an `arrive` trap, in that case.)
 
 | Effect `type` | Parameters |
 |---|---|
@@ -903,7 +922,7 @@ Both are trap effects too: `checkpoint` (`text`) and `ending` (the same fields a
 
 **A new trap.** Tag the trigger tiles and the target tiles in the level legend, then add a `traps` entry. Only write a new effect type when combining existing ones can't express it.
 
-**A new floor.** Make it in the editor (Floors → New floor, then paint it), or copy a level file into a pack's `levels/` folder and add it to that pack's `pack.js` `levels` list. Set `order` and `environment`; the floor before it decides `next` (or reorder floors on the editor's Floors page). Make sure every key the floor needs is reachable before its door, and that the exit is reachable (the map editor's Check does both).
+**A new floor.** Make it in the editor (Floors → New floor, then paint it), or copy a level file into a pack's `levels/` folder and add it to that pack's `pack.js` `levels` list. Set `order` and `environment`; the floor before it decides `next` (or reorder floors on the editor's Floors page). Make sure every key the floor needs is reachable before its door, and that the exit is reachable (the map editor's Check does both). Check also warns about things that can't be reached on foot; it leaves out lights and pure decoration, enemies on a side nobody fights, and anything placed with `props.caged` (to be looked at through glass, not reached: a vault's contents).
 
 **A bank of elevators.** In the editor: on any floor's map, the palette's Elevators tab, choose the car's size and which way its doors face, click Place an elevator and click the map; then, in its settings, **+ Car after it** for the next car in the bank (it shares a wall). Every floor gets the same bank. Untick floors it shouldn't stop at; if a floor's map is drawn somewhere else, shift that floor's elevators (Floor settings → Stairs and elevators). By hand: an `elevators` entry per car in any pack, `x` stepping by the car's width + 1.
 

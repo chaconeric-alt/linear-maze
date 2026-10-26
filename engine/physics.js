@@ -99,7 +99,8 @@
    */
   P.pull = function (game, src, sp, dt) {
     const L = game.level, R = sp.radius || 120, S = sp.strength == null ? 220 : sp.strength, sw = U.clamp(sp.swirl || 0, -1, 1), core = sp.core || 16;
-    const list = sp.enemies === false ? [game.player] : [game.player].concat(game.enemies);
+    // sp.enemies: false pulls only the player; sp.player: false only enemies (the player's own black hole)
+    const list = sp.enemies === false ? [game.player] : (sp.player === false ? [] : [game.player]).concat(game.enemies);
     for (const e of list) {
       if (!e || e.dead) continue;
       if (e.isEnemy && (e.spawning > 0 || e.def.stationary || e.def.pullImmune || (e.def.flying && !sp.flying))) continue;

@@ -422,12 +422,13 @@
 
       // 3. world objects
       const pad = 48;
-      const inView = (x, y) => x > view.x0 - pad && x < view.x1 + pad && y > view.y0 - pad && y < view.y1 + pad;
+      // a def's drawRadius: something drawn far out from where it stands (a titan in its cell) stays drawn
+      const inView = (x, y, r) => x > view.x0 - pad - (r || 0) && x < view.x1 + pad + (r || 0) && y > view.y0 - pad - (r || 0) && y < view.y1 + pad + (r || 0);
       const drawables = this._drawables || (this._drawables = []);
       drawables.length = 0;
-      for (const it of game.items) if (!it.dead && inView(it.x, it.y)) drawables.push(it);
+      for (const it of game.items) if (!it.dead && inView(it.x, it.y, it.def.drawRadius)) drawables.push(it);
       for (const d of game.doors) if (inView(d.x, d.y)) drawables.push(d);
-      for (const e of game.enemies) if (!e.dead && inView(e.x, e.y) && (game.attract || e.visible)) drawables.push(e);
+      for (const e of game.enemies) if (!e.dead && inView(e.x, e.y, e.def.drawRadius) && (game.attract || e.visible)) drawables.push(e);
       for (const n of game.npcs) if (inView(n.x, n.y) && n.vis > 0.01) drawables.push(n);
       if (game.player && !game.attract) drawables.push(game.player);
       drawables.sort((a, b) => (a.z || 0) - (b.z || 0) || a.y - b.y);

@@ -1205,7 +1205,7 @@
       },
     },
     'ds-cloche': {
-      name: 'Main course', radius: 12, z: 1, reach: 22, dressing: 'Decor', mapColor: '#c9ced4',
+      name: 'Main course', radius: 12, z: 1, reach: 30, dressing: 'Decor', mapColor: '#c9ced4',
       init(it) {
         it.x = it.tx * T + T;
         it.y = it.ty * T + T / 2;

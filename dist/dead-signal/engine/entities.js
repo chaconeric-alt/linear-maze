@@ -166,6 +166,7 @@
       this.knowsP = this.aggro; // spawned hunting: hunting you
       this.pDist = 9999;
       this.pSee = false;
+      this._props = props; // (what it was placed or spawned with: init can read it)
       if (def.init) def.init(this, game);
     }
     /** Something woke it. foe: what it should go after (another enemy); left out, the player. */
@@ -595,6 +596,13 @@
       this.t += dt;
       this.flash -= dt;
       const d = this.def;
+      // something that lasts a while and goes (def.life or props.life, seconds; def.onExpire hears it)
+      const life = this.props.life || d.life;
+      if (life && (this.age = (this.age || 0) + dt) >= life) {
+        if (d.onExpire) d.onExpire(this, game);
+        this.remove(game);
+        return;
+      }
       // a current that draws things in (def.pull, or props.pull; it.pullOff stops it): a whirlpool, a drain
       if ((d.pull || this.props.pull) && !this.pullOff) LM.physics.pull(game, this, this.props.pull ? Object.assign({}, d.pull, this.props.pull) : d.pull, dt);
       // something that catches you as you cross it (def.snare: webs, glue)
