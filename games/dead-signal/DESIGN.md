@@ -69,6 +69,7 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
   - **The armory is a place on the map.** In her briefing ARIADNE says where it is (the south side of the Long Hall, beside her core) and that she's put it on your map: from then on it's on the minimap, walls and all, labelled ARMORY, though it's sealed. Once the console opens it, the objective is to go there (a marker on its vault door), then to take what's in its cases (each full case marked; taking the last sets `armoryEmptied`).
   - **After the armory it's a mop-up.** The Lance, the Stasis Projector and the Singularity Driver do six times what they did (the Driver's well and its burst too, and the burst never hurts you), never run dry, and no mirror sends any of their shots back. The Lance kills an Enforcer in one shot and a plate cutter in three; standing in the corridor on Five and firing, the two Praetorians and three Enforcers go down in about twelve seconds without touching your health (tested). Nothing drops titan cells any more.
   - **The earlier weapons hit harder**: the Cryo Sprayer and the Plasma Cutter three times, the Riot Shotgun twice, the Incinerator four times (section 6). The floors above will play easier for it.
+- After playtests of Floor 5 (Dead Signal 0.6.2): players ran out of ammunition there. A **supply cabinet** (`ds-supply-cabinet`, `packs/ds-arsenal/supply.js`) is on the Elevator Hall's north wall, between car A3 and the freight shaft, where you come in from Stair A and where the private car brings you back. It holds one full load of rounds, shells, cryo, cells and fuel; opening it fills every weapon you carry to the top, and what you don't take stays in it for later (the floor remembers). `refill: true` on a placement makes it full again every time.
 - Next: milestone M9 (polish). M7 (going back down) is optional; M8 is done as part of M6.
 
 ---
@@ -548,7 +549,7 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 | Room | Where | What's there |
 |---|---|---|
 | Stair A | x 23–27, y 1–8 | Where you arrive; `<` back down to Floor 4. Stair B (x 52–56) is sealed. |
-| The Elevator Hall, Executive Reception | x 29–50, y 5–14 | The dead cars; the reception desk, orchids, the Concierge. |
+| The Elevator Hall, Executive Reception | x 29–50, y 5–14 | The dead cars; a security supply cabinet on the wall between car A3 and the freight shaft (after playtests: a full load of every ordinary ammunition, section 6.3); the reception desk, orchids, the Concierge. |
 | The Cloakroom, Security Post | x 15–21 and x 58–64, y 1–9 | Coats (a porcelain mask folded in every pocket) and a Faceless Usher among them; the protection detail's post. |
 | The four corner offices | Pell NW, Thale NE, Brandt SW, Moss SE (13 × 9 ovals) | Each its owner's: a desk, chairs, a private stair up in the corner. Locked (each its own key). Their secretaries' anterooms in front (y 11–14 and 35–38). |
 | The Kitchen | x 1–13, y 16–24 | Fully robotic: the Chef, kitchen arms on the line, conveyors, hotplates that burn (the breaker stops them: `kitchenOff`). |
@@ -580,7 +581,7 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 
 **Monsters** (section 5.2): the Gorgon, Scylla and Charybdis, the Mother of Teeth, the Tally, the Swaddler and Swaddlings, Patrons, Faceless Ushers. **Robots** (5.1): the Concierge, the Chef and its arms, Sentinels and a Warden Drone, the rail guns and the Praetorians. On these floors robots fight the player, the monsters and allies.
 
-**Finds.** Four office keys (one is enough), the master card, the Director's Coat (body armor, in his wardrobe), the Gorgon's Eye (a trinket, from her), the people in the eggs (cut them out: E), ammunition in the jade urns (they break) and on the staff.
+**Finds.** The supply cabinet in the Elevator Hall (ammunition), four office keys (one is enough), the master card, the Director's Coat (body armor, in his wardrobe), the Gorgon's Eye (a trinket, from her), the people in the eggs (cut them out: E), ammunition in the jade urns (they break) and on the staff.
 
 **Objectives.** Floor 5: find a key to one of the corner offices → open the office it fits → take the private stair up to 5a. Optional: the kitchen's breaker; the people in the silk. Floor 5a: find the Director's card (his shelf, his rooms) → get to the Control Room → use the console → (the power) take the private car down to Sub-level B. Optional: ARIADNE's terminal in the Server Room; the people in the nest.
 
@@ -848,6 +849,7 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | Recharge station | Existing | Refills cells and shields; put one on Floors 3 and 4. |
 | Purge injector (built) | Flushes `implanted` and `infected` | Floor 3. It only goes in when you need it: walk over it clean and it stays. |
 | Purge station (built) | Three flushes | A violet wall unit at Floor 3's labs and corridors. |
+| Supply cabinet (built, 0.6.2) | Fills every weapon you carry | A steel wall cabinet, SECURITY · RESUPPLY (`ds-supply-cabinet`): one full load each of rounds, shells, cryo, cells and fuel; you take what you need and the rest stays. Floor 5's Elevator Hall. Props: `dir`, `w`, `ammo` (the kinds), `refill` (full every time). |
 
 ### 6.4 Readables and collectibles
 
