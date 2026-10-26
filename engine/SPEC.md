@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.5.9 · October 2026
+Engine 0.5.10 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -27,6 +27,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.8:** curved rooms: a level's `ovals` fit an ellipse into a rectangle of the map, and its wall is a true curve for walking, shots, sight and light, baked smooth, with a ring of recessed ceiling lights (section 6.22, `engine/curves.js`). Seeing the floor below: tiles with `seeBelow` (glass floors, an atrium's open well) show another level under this one, baked from its map, with parallax and its own darkness (a level's `below`, section 6.23). Things that pull you in (an item's `pull`: a whirlpool, a drain), catch you as you cross them (`snare`) and go up at a touch of fire (`burns`, section 6.6). Enemies that send your shots back (`reflect`, section 6.5), two new core attacks, `gaze` (meet its eyes and you turn to stone) and `blink` (a step through nowhere), and statuses that hold you fast (`bound`) and show on you (`tint`, section 6.17). A projectile can do something where it lands (`onImpact`, section 6.4). Endings: a trap or a pack can end the game, or a chapter of it, with a card and a choice (`ending`), and save a checkpoint mid-floor (`checkpoint`; section 6.24). Stairs that are `quick` skip the floor-finished screen (two halves of one floor, section 5). `level.walkable(x, y)`.
 
 **New in 0.5.9:** enemies that can't be hurt (`immune`, section 6.5: hits flash and say so, and do nothing), shots no mirror turns (a projectile's `reflectable: false`, section 6.4), items that last a while and go (`life` and `onExpire`, section 6.6), a draw radius for big pieces drawn far from where they stand (`drawRadius`, items and enemies), and a pull that leaves the player alone (`pull`'s `player: false`). Traps: the `arrive` trigger (arriving on the floor), and conditions on any trigger (`when`: these flags set; `unless`: none of these), so a trap can wait for the story (section 6.8). An enemy's `init` can read its placement's props (`e._props`). Fixes: a status with `cures` now lands after clearing what it cures; a door held open by the `open` effect's `hold` stays open (and is remembered); the floor below's dimming is baked with it (cheaper). The editor's reach check skips things placed with `props.caged` (section 15).
+
+**New in 0.5.10:** places on the minimap. A level's room can carry a name for the minimap (`mapLabel`: text, or `true` for the room's own name), drawn over the room once its middle is on the map, and can be put on the map before the player has been there (`mapWhen`: a story flag, or a list, any one of them set; `true` from the start), walls and all, the way a voice on the radio might mark somewhere for you (section 6.21, `LM.ui.revealRooms`, `LM.ui.drawRoomLabels`). The editor's room list edits both.
 
 ---
 
@@ -473,7 +475,8 @@ LM.definePack({
       below: { level, dx, dy, depth, dim, tint, rim, decals },   // optional: the floor seen through seeBelow tiles (section 6.23)
       legend: { /* per-floor terrain overrides */ },
       objectLegend: { /* characters for the objects layer */ },
-      rooms: [{ name, rect: [x, y, w, h], note }],   // announced on first entry; first match wins where rects overlap
+      rooms: [{ name, rect: [x, y, w, h], note, mapLabel, mapWhen }],   // announced on first entry; first match wins where rects overlap;
+                                                     // mapLabel: its name on the minimap; mapWhen: flags (any) that put it on the map unvisited (section 6.21)
       traps: [ /* see below */ ],
       objectives: [{ id, text, when, any, not, done, optional, target, map }],   // optional: what to do next (section 6.21)
       ceilingLights: [{ variants: [0, 1], every: 4, offset: [2, 2], color, radius, intensity, flicker, skip, tag }],
@@ -845,6 +848,8 @@ objectives: [
 
 The main objective is the first in the list that's showing and not done. When it changes the plate flashes and a chime plays. A target in the same room as the player (the level's `rooms`), or within 8 tiles, pulses: a glow, four ticks round it and a marker bobbing over it, drawn over the lighting so it shows in the dark. Every target is marked on the minimap, with an arrow on the edge for one that's off it. The pause screen lists what's open. `LM.objectives.color` is the marker colour (`#ffd36a`); `LM.objectives.showing(game)`, `points(target, game)`, `near(game, p)`.
 
+**Places on the minimap** (0.5.10). An objective's target says *where to go now*; a room can also be somewhere the player knows about. A room's `mapLabel` (text, or `true` for its `name`) is written over it on the minimap, in capitals, once its middle tile is explored. A room's `mapWhen` (a flag, or a list: any one of them set; or `true`) puts it on the map, its rectangle and the walls round it, before the player has been there: it marks those tiles explored, so it stays on the map and in the floor's memory. Dead Signal's Tartarus Armory has both (`mapLabel: 'ARMORY'`, `mapWhen: ['armoryOnMap', 'b1Briefed']`): ARIADNE says she's put it on your map, and there it is. `LM.ui.revealRooms(game)` and `LM.ui.drawRoomLabels(g, game, ox, oy, scale, W, H)` do it; the minimap calls both.
+
 ### 6.22 Curved rooms
 
 `engine/curves.js`. A level's `ovals` each name a rectangle of the map, and the engine fits an ellipse into it: inside is floor, the ring the ellipse crosses is part floor and part wall, and the rest of the rectangle is wall. The wall is a true curve for everything: bodies slide round it, shots stop on it, sight and light are cut by it (the visibility polygon follows the arc), and it is baked as one smooth piece: the floor, the wall's top outside the curve, and along the northern arc a curved front face, lip and contact shadow where a straight wall would show its face.
@@ -1100,7 +1105,7 @@ A placed item's `title`, `deity`, `name` and `text` props override the popup's. 
 
 The map editor keeps each tile as a legend entry (terrain, variant, rot, tag, start, and at most one item, enemy or NPC) plus an optional objects-layer entry. Turning a tile writes its `rot` (a door keeps an explicit `rot: 0`, which pins it east–west; other tiles drop a turn of 0). Turning furniture writes `props.dir` for pieces that draw their own front and `props.turn` for the rest, taking a piece as drawn facing south: facing west is `turn: 1`, north `2`, east `3`. Untouched tiles keep their characters; a changed tile reuses a character whose entry matches, or gets a new one in the level's own `legend` (or `objectLegend`). A changed level is saved as a patch with the full `map` (and `objects`) plus the legend entries it added or changed. Characters the editor added and no longer uses are dropped.
 
-The level panel edits what isn't on the map: its settings, stairs and elevators, rooms, traps, objectives, ceiling lights, the map's size, and (0.5.8) *Curved rooms* (`ovals`: one entry each, `rect` and `lights` as JSON) and *The floor below* (`below`: pick the level, then its offsets, depth, dim, tint and rim). The map is rebuilt after each change, so a new oval shows its curve straight away.
+The level panel edits what isn't on the map: its settings, stairs and elevators, rooms (with, from 0.5.10, each room's *Name on the minimap* and *On the minimap once*: story flags, any one, or `always`), traps, objectives, ceiling lights, the map's size, and (0.5.8) *Curved rooms* (`ovals`: one entry each, `rect` and `lights` as JSON) and *The floor below* (`below`: pick the level, then its offsets, depth, dim, tint and rim). The map is rebuilt after each change, so a new oval shows its curve straight away.
 
 ### 15.4 Dressings
 

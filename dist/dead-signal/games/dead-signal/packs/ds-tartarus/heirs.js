@@ -344,7 +344,7 @@
         { type: 'melee', damage: 12, range: 14, windup: 0.22, recover: 0.3, cooldown: 0.8, knock: 120 },
         { type: 'ranged', projectile: 'enemy-slug', damage: 8, speed: 440, burst: 2, burstGap: 0.12, windup: 0.4, cooldown: 2.2, range: 380, spread: 0.06, lead: 0.4, flash: '#ffd28a' },
       ],
-      drops: { items: [{ id: 'ammo-rounds', chance: 0.5 }, { id: 'ds-medgel', chance: 0.2 }, { id: 'ammo-titan', chance: 0.15 }] },
+      drops: { items: [{ id: 'ammo-rounds', chance: 0.5 }, { id: 'ds-medgel', chance: 0.2 }] },
       onHurt: angered,
       update(e, dt, game) {
         if (e.aggro && e.pSee && !e.mem.barked) {

@@ -458,7 +458,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.9';
+  LM.VERSION = '0.5.10';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -7444,9 +7444,57 @@ kbd {
     });
   };
 
+  /**
+   * Rooms on the map before you've been there. A level's room with `mapWhen` (a story flag, or a list: any one of
+   * them set; true: from the start) is drawn on the minimap, walls and all, once that's so: somewhere the story
+   * has told you about. Marks its tiles explored, so it stays on the map (and in the floor's memory).
+   */
+  ui.revealRooms = function (game) {
+    const L = game.level;
+    if (!L || !L.def.rooms) return;
+    const done = L._roomsShown || (L._roomsShown = new Set());
+    for (const r of L.def.rooms) {
+      if (r.mapWhen == null || r.mapWhen === false || done.has(r) || !Array.isArray(r.rect)) continue;
+      if (r.mapWhen !== true && !game.anyFlag(r.mapWhen)) continue;
+      done.add(r);
+      const [rx, ry, rw, rh] = r.rect;
+      for (let y = ry - 1; y <= ry + rh; y++) for (let x = rx - 1; x <= rx + rw; x++) if (L.inBounds(x, y)) L.explored[y * L.w + x] = 1;
+    }
+  };
+  /** A room's `mapLabel` (its name on the map: text, or true for the room's name), once its middle is on the map. */
+  ui.drawRoomLabels = function (g, game, ox, oy, s, W, H) {
+    const L = game.level;
+    if (!L || !L.def.rooms) return;
+    let set = false;
+    for (const r of L.def.rooms) {
+      if (!r.mapLabel || !Array.isArray(r.rect)) continue;
+      const [rx, ry, rw, rh] = r.rect;
+      const mx0 = rx + rw / 2, my0 = ry + rh / 2;
+      if (!L.explored[Math.floor(my0) * L.w + Math.floor(mx0)]) continue;
+      const mx = ox + mx0 * s, my = oy + my0 * s;
+      if (mx < -60 || mx > W + 60 || my < -8 || my > H + 8) continue;
+      if (!set) {
+        set = true;
+        g.save();
+        g.font = '700 7px "IBM Plex Mono", monospace';
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.lineJoin = 'round';
+        g.lineWidth = 2.6;
+        g.strokeStyle = 'rgba(9,11,15,0.92)';
+      }
+      const text = String(r.mapLabel === true ? r.name : r.mapLabel).toUpperCase();
+      g.strokeText(text, mx, my);
+      g.fillStyle = r.mapLabelColor || '#ebe4d4';
+      g.fillText(text, mx, my);
+    }
+    if (set) g.restore();
+  };
+
   ui.drawMinimap = function (game) {
     const g = ui.mm, L = game.level, P = game.player, d = ui.mmScale;
     const W = 176, H = 124, s = 3.2;
+    ui.revealRooms(game);
     g.setTransform(d, 0, 0, d, 0, 0);
     g.clearRect(0, 0, W, H);
     g.fillStyle = 'rgba(9,11,15,0.82)';
@@ -7493,6 +7541,8 @@ kbd {
       g.fillStyle = LM.factions && !LM.factions.hostile('player', e.faction) ? '#5fe08a' : '#ff5a4a';
       g.fillRect(ox + (e.x / T) * s - 1, oy + (e.y / T) * s - 1, 2, 2);
     }
+    // named places
+    ui.drawRoomLabels(g, game, ox, oy, s, W, H);
     // the objective's targets (engine/objectives.js)
     if (LM.objectives) LM.objectives.drawMap(g, game, ox, oy, s, W, H);
     // player arrow
@@ -10438,7 +10488,7 @@ kbd {
 LM.defineGame({
   id: 'dead-signal',
   title: 'Dead Signal',
-  version: '0.6.0',
+  version: '0.6.1',
   description: 'A technician trapped in a biotech lab gone wrong fights his way to the top floor, and down to the bottom of it. Built from beginning to end (packs/ds-*): Floor 1, Lockdown; Floor 2, Synthid Research; Floor 3, Gestation; Floor 4, the Proving Grounds; Floors 5 and 5a, the Executive Floor and the board’s own; Sub-level B, Tartarus; and back up to the boardroom, and the endings. The Dead Signal Laboratory, The Complex and The Sterile Annex follow them as placeholders. games/dead-signal/DESIGN.md has the plan.',
   brief: 'Dark, torch-lit floors where every light casts shadows and danger telegraphs clearly. Write in-world text that is short, specific and slightly ominous, and carries a hint.',
   packs: [
@@ -22138,7 +22188,7 @@ LM.defineGame({
     'ds-riot-shotgun': {
       name: 'Riot Shotgun', short: 'Riot', slot: 3,
       desc: 'From the armory cage. Eight pellets a shell: it stops a security robot at arm’s length and does nothing across a room.',
-      ammo: 'shells', pickupAmmo: 10, pellets: 8, damage: 7, fireRate: 1.3, spread: 0.22, speed: 820, range: 300, falloff: 0.6,
+      ammo: 'shells', pickupAmmo: 10, pellets: 8, damage: 14, fireRate: 1.3, spread: 0.22, speed: 820, range: 300, falloff: 0.6,
       projectile: 'pellet', knock: 85, recoil: 1.0, kick: 0.22, pushback: 70, sound: 'scatter', casing: '#2a5a8a', smoke: true,
       flash: '#ffc070', flashRadius: 160, flashSize: 26, sparks: 7, muzzle: 23, length: 21, kickBack: 6,
       drawHeld(g, p, k) {
@@ -22155,7 +22205,7 @@ LM.defineGame({
     'ds-cryo-sprayer': {
       name: 'Cryo Sprayer', short: 'Cryo', slot: 4,
       desc: 'A sample-transport cryo wand from the oncology cold store, made into something worse. A short hiss of freezing mist: it stiffens whatever it touches, slows it, and makes it brittle. Hold the trigger down.',
-      ammo: 'cryo', pickupAmmo: 80, pellets: 2, damage: 2.6, fireRate: 12, spread: 0.13, speed: 430, range: 185, falloff: 0.3, pierce: 1,
+      ammo: 'cryo', pickupAmmo: 80, pellets: 2, damage: 7.8, fireRate: 12, spread: 0.13, speed: 430, range: 185, falloff: 0.3, pierce: 1,
       projectile: 'cryo-mist', status: 'chilled', knock: 8, recoil: 0.05, kick: 0.012, sound: 'cryoHiss', casing: false,
       flash: ICE, flashRadius: 60, flashSize: 8, sparks: 0, muzzle: 15, length: 14,
       drawHeld(g, p, k) {
@@ -22488,7 +22538,7 @@ LM.defineGame({
     'ds-plasma-cutter': {
       name: 'Plasma Cutter', short: 'Cutter', slot: 5,
       desc: 'A maintenance cutter from the vat hall, for steel plate and the growth vats’ hoops. A short, hot arc: whatever it touches keeps burning for a moment. Takes cells. Hold the trigger down.',
-      ammo: 'cells', pickupAmmo: 45, damage: 6, fireRate: 8, spread: 0.05, speed: 640, range: 200, falloff: 0.25, pierce: 1,
+      ammo: 'cells', pickupAmmo: 45, damage: 18, fireRate: 8, spread: 0.05, speed: 640, range: 200, falloff: 0.25, pierce: 1,
       projectile: 'plasma-arc', status: 'burning', knock: 14, recoil: 0.08, kick: 0.018, sound: 'plasmaCut', casing: false,
       flash: FIRE, flashRadius: 80, flashSize: 9, sparks: 2, muzzle: 17, length: 16,
       drawHeld(g, p, k) {
@@ -22581,7 +22631,7 @@ LM.defineGame({
     'ds-incinerator': {
       name: 'Incinerator', short: 'Burner', slot: 6,
       desc: 'Garrick Moss’s answer to a containment breach: a riot-squad flamethrower from the Proving Grounds’ armory, with a tank on the back and HANDLER stencilled on it. A short roaring jet that sets everything it touches burning and goes through the first few things in its way. Takes fuel. Hold the trigger down.',
-      ammo: 'fuel', pickupAmmo: 80, damage: 3.4, fireRate: 14, spread: 0.13, speed: 380, range: 215, falloff: 0.2, pierce: 3,
+      ammo: 'fuel', pickupAmmo: 80, damage: 13.6, fireRate: 14, spread: 0.13, speed: 380, range: 215, falloff: 0.2, pierce: 3,
       projectile: 'ds-flame', status: { id: 'burning', seconds: 3 }, knock: 5, recoil: 0.05, kick: 0.012, sound: 'flameJet', casing: false,
       flash: FIRE, flashRadius: 110, flashSize: 10, sparks: 0, muzzle: 19, length: 18,
       drawHeld(g, p, k) {
@@ -33111,9 +33161,12 @@ LM.defineGame({
  *             ds-enforcer          the board's: black and gold, a shield that sends some shots back
  *   behaviors ds-cutter            stand at your plate and cut; fight what bothers you
  *   items     ds-ariadne-core      ARIADNE's core and its nine plates (props.cut: plates already cut when you
- *                                  arrive). While a cutter lives it cuts: a plate a minute, up to eight. Step into
- *                                  the hall (flag inCoreHall) and they hurry: the ninth plate (a countdown on you);
- *                                  if it falls, coreBreached. Kill every cutter and it's cuttersDown.
+ *                                  arrive). While a cutter lives it cuts: a plate every props.every seconds (240:
+ *                                  four minutes), up to eight. It's slow on purpose: it isn't a race, there's time
+ *                                  to look at the vaults. Step into the hall (flag inCoreHall) and they hurry: what's
+ *                                  left of the eight at props.hurry seconds a plate (10), then the ninth plate, a
+ *                                  countdown on you (props.ninth seconds, 280); if it falls, coreBreached. Kill
+ *                                  every cutter and it's cuttersDown.
  *             ds-core-console      reconnect ARIADNE to the building (once the cutters are down): ariadneOnline
  *   statuses  ninthPlate           the countdown
  */
@@ -33128,7 +33181,7 @@ LM.defineGame({
 
   const statuses = {
     ninthPlate: {
-      name: 'The ninth plate', seconds: 70, countdown: true, urgent: 20, only: 'player', color: '#7fd4ff',
+      name: 'The ninth plate', seconds: 280, countdown: true, urgent: 60, only: 'player', color: '#7fd4ff',
       onEnd(game, P, s, reason) {
         if (reason === 'expired' && !game.hasFlag('cuttersDown')) game.setFlag('coreBreached');
       },
@@ -33411,12 +33464,12 @@ LM.defineGame({
           // they've seen you: the ninth plate
           if (!it.hurry) {
             it.hurry = true;
-            if (P) LM.status.apply(game, P, 'ninthPlate', { seconds: it.props.ninth || 70 });
+            if (P) LM.status.apply(game, P, 'ninthPlate', { seconds: it.props.ninth || 280 });
             LM.audio.play('alarm');
           }
-          // what's left of the first eight comes down fast
+          // what's left of the first eight comes down faster
           if (it.cut < 8) {
-            it.prog += dt / 2.5;
+            it.prog += dt / (it.props.hurry || 10);
             if (it.prog >= 1) {
               it.prog = 0;
               it.cut++;
@@ -33429,8 +33482,8 @@ LM.defineGame({
           }
           it.sparks = cutters.length;
         } else if (working && it.cut < 8) {
-          // a plate a minute, while they're at it
-          it.prog += dt / (it.props.every || 60);
+          // a plate every four minutes, while they're at it
+          it.prog += dt / (it.props.every || 240);
           if (it.prog >= 1) {
             it.prog = 0;
             it.cut++;
@@ -33552,7 +33605,7 @@ LM.defineGame({
         { type: 'ranged', projectile: 'plasma-arc', damage: 7, speed: 520, burst: 8, burstGap: 0.05, windup: 0.45, cooldown: 1.8, range: 220, spread: 0.12, status: 'burning', flash: '#ffb040' },
         { type: 'melee', damage: 22, range: 20, windup: 0.35, recover: 0.4, cooldown: 1.1, knock: 200, status: 'burning' },
       ],
-      drops: { items: [{ id: 'ammo-titan', chance: 0.6 }, { id: 'ammo-cells', chance: 0.5 }] },
+      drops: { items: [{ id: 'ammo-cells', chance: 0.5 }] },
       onDeath(e, game) {
         game.particles.burst(e.x, e.y, 18, { type: 'spark', color: '#ffd27a', speed: 220, life: 0.45 });
       },
@@ -33575,7 +33628,7 @@ LM.defineGame({
         { type: 'ranged', projectile: 'enemy-slug', damage: 10, speed: 470, burst: 3, burstGap: 0.1, windup: 0.45, cooldown: 1.7, range: 400, spread: 0.04, lead: 0.5, flash: '#ffd28a' },
         { type: 'melee', damage: 16, range: 16, windup: 0.3, recover: 0.35, cooldown: 1, knock: 180 },
       ],
-      drops: { items: [{ id: 'ammo-titan', chance: 0.35 }, { id: 'ammo-rounds', chance: 0.5 }, { id: 'ds-medgel', chance: 0.15 }] },
+      drops: { items: [{ id: 'ammo-rounds', chance: 0.5 }, { id: 'ds-medgel', chance: 0.15 }] },
       update(e, dt, game) {
         if (!e.mem.said && e.aggro && e.pSee) {
           e.mem.said = true;
@@ -33969,7 +34022,7 @@ LM.defineGame({
         { type: 'melee', damage: 12, range: 14, windup: 0.22, recover: 0.3, cooldown: 0.8, knock: 120 },
         { type: 'ranged', projectile: 'enemy-slug', damage: 8, speed: 440, burst: 2, burstGap: 0.12, windup: 0.4, cooldown: 2.2, range: 380, spread: 0.06, lead: 0.4, flash: '#ffd28a' },
       ],
-      drops: { items: [{ id: 'ammo-rounds', chance: 0.5 }, { id: 'ds-medgel', chance: 0.2 }, { id: 'ammo-titan', chance: 0.15 }] },
+      drops: { items: [{ id: 'ammo-rounds', chance: 0.5 }, { id: 'ds-medgel', chance: 0.2 }] },
       onHurt: angered,
       update(e, dt, game) {
         if (e.aggro && e.pSee && !e.mem.barked) {
@@ -34039,14 +34092,16 @@ LM.defineGame({
 <script>/* games/dead-signal/packs/ds-tartarus/armory.js */
 /* Dead Signal — packs/ds-tartarus/armory.js
  * The Tartarus Armory: what Asterion built to fight the Titans, and never had to use. (DESIGN.md 6.1.)
- *   ammo      titan ("Titan cells", LM.defineAmmo) and its pickup ammo-titan
- *   weapons   ds-prometheus-lance     a bolt of plasma that goes through everything in a line, shields included:
- *                                     no mirror sends it back (reflectable: false). Takes titan cells.
+ *   ammo      titan ("Titan cells", LM.defineAmmo) and its pickup ammo-titan (nothing takes them now: the armory's
+ *             weapons never run dry, and nothing drops them)
+ *   weapons   Built to end the game as a mop-up: six times what they first did, they never run dry (ammo: null),
+ *             and no mirror sends their shots back (reflectable: false on all three projectiles).
+ *             ds-prometheus-lance     a bolt of plasma that goes through everything in a line, shields included.
  *             ds-stasis-projector     a spray of stasis: what it holds can't move, can't fight, and breaks more
- *                                     easily. Takes cryo.
+ *                                     easily.
  *             ds-singularity-driver   throws a seed of a black hole where you aim: for three seconds it drags in
  *                                     everything round it and crushes what reaches the middle, then bursts.
- *                                     Takes titan cells (four a shot). It doesn't pull you.
+ *                                     It doesn't pull you.
  *   armor     ds-containment-suit     a Titan-rated containment suit (body)
  *   items     ds-singularity (the well: pull, life), ds-weapon-case (an armoury case: props.weapon or
  *             props.armor; take what's in it)
@@ -34076,8 +34131,8 @@ LM.defineGame({
   const weapons = {
     'ds-prometheus-lance': {
       name: 'Prometheus Lance', short: 'Lance', slot: 7,
-      desc: 'TARTARUS ARMORY · ITEM 1. A man-portable plasma lance, built to cut a Titan apart faster than it can grow back. It doesn’t, quite. It goes through everything in a line, armour and shields and the thing behind the shield; no mirror turns it. Takes titan cells.',
-      ammo: 'titan', ammoPerShot: 1, pickupAmmo: 24, damage: 75, fireRate: 1.5, spread: 0.004, bloom: 0.01, speed: 2600, range: 950, pierce: 8,
+      desc: 'TARTARUS ARMORY · ITEM 1. A man-portable plasma lance, built to cut a Titan apart faster than it can grow back. It doesn’t, quite. It goes through everything in a line, armour and shields and the thing behind the shield; no mirror turns it. It never runs dry.',
+      ammo: null, damage: 450, fireRate: 1.5, spread: 0.004, bloom: 0.01, speed: 2600, range: 950, pierce: 8,
       projectile: 'ds-lance-bolt', status: { id: 'burning', seconds: 2 }, knock: 140, recoil: 0.6, kick: 0.14, pushback: 40, sound: 'lanceFire', casing: false,
       flash: LANCE, flashRadius: 220, flashSize: 14, sparks: 6, muzzle: 24, length: 24,
       drawHeld(g, p, k) {
@@ -34095,8 +34150,8 @@ LM.defineGame({
     },
     'ds-stasis-projector': {
       name: 'Stasis Projector', short: 'Stasis', slot: 8,
-      desc: 'TARTARUS ARMORY · ITEM 2. Built to hold a Titan still long enough to move it. A spray of stasis: what it catches can’t move, can’t fight, and breaks more easily while it’s held. Not for very long. Takes cryo.',
-      ammo: 'cryo', ammoPerShot: 2, pickupAmmo: 60, damage: 4, pellets: 5, fireRate: 2.6, spread: 0.24, speed: 520, range: 300, falloff: 0.2,
+      desc: 'TARTARUS ARMORY · ITEM 2. Built to hold a Titan still long enough to move it. A spray of stasis: what it catches can’t move, can’t fight, and breaks more easily while it’s held. Not for very long. It never runs dry.',
+      ammo: null, damage: 24, pellets: 5, fireRate: 2.6, spread: 0.24, speed: 520, range: 300, falloff: 0.2,
       projectile: 'ds-stasis-pulse', status: { id: 'stasis', seconds: 2.6 }, knock: 0, recoil: 0.25, kick: 0.04, sound: 'stasisFire', casing: false,
       flash: STASIS, flashRadius: 120, flashSize: 10, sparks: 0, muzzle: 18, length: 18,
       drawHeld(g, p, k) {
@@ -34114,8 +34169,8 @@ LM.defineGame({
     },
     'ds-singularity-driver': {
       name: 'Singularity Driver', short: 'Gate', slot: 9,
-      desc: 'TARTARUS ARMORY · ITEM 3. The last resort. It throws the seed of a black hole to where you aim; for three seconds it drags in everything round it and crushes what reaches the middle, then lets go all at once. It doesn’t pull you (the manual says “usually”). Takes titan cells, four a shot.',
-      ammo: 'titan', ammoPerShot: 4, pickupAmmo: 16, damage: 10, fireRate: 0.65, spread: 0, speed: 460, range: 'cursor', maxRange: 460,
+      desc: 'TARTARUS ARMORY · ITEM 3. The last resort. It throws the seed of a black hole to where you aim; for three seconds it drags in everything round it and crushes what reaches the middle, then lets go all at once. It doesn’t pull you (the manual says “usually”). It never runs dry.',
+      ammo: null, damage: 60, fireRate: 0.65, spread: 0, speed: 460, range: 'cursor', maxRange: 460,
       projectile: 'ds-singularity-seed', knock: 0, recoil: 0.5, kick: 0.1, sound: 'singularityFire', casing: false,
       flash: VOID, flashRadius: 140, flashSize: 12, sparks: 0, muzzle: 20, length: 20,
       drawHeld(g, p, k) {
@@ -34157,7 +34212,7 @@ LM.defineGame({
       },
     },
     'ds-stasis-pulse': {
-      radius: 5, color: STASIS, quiet: true, wallSparks: 0,
+      radius: 5, color: STASIS, quiet: true, wallSparks: 0, reflectable: false,
       light: { r: 70, color: STASIS, intensity: 0.3 },
       draw() {},
       drawGlow(g, p) {
@@ -34171,7 +34226,7 @@ LM.defineGame({
       },
     },
     'ds-singularity-seed': {
-      radius: 4, color: VOID, wallSparks: 0, quiet: true,
+      radius: 4, color: VOID, wallSparks: 0, quiet: true, reflectable: false,
       light: { r: 80, color: VOID, intensity: 0.4 },
       draw(g, p) {
         g.fillStyle = '#050208';
@@ -34201,9 +34256,9 @@ LM.defineGame({
     // the well: a black hole for three seconds; it pulls everything but you, crushes what reaches it, then bursts
     'ds-singularity': {
       name: 'Singularity', radius: 8, shadow: false, dressing: false, life: 3.2, drawRadius: 160,
-      pull: { radius: 165, strength: 380, swirl: 0.55, core: 28, damage: 26, interval: 0.25, flying: true, player: false },
+      pull: { radius: 165, strength: 380, swirl: 0.55, core: 28, damage: 156, interval: 0.25, flying: true, player: false },
       onExpire(it, game) {
-        LM.combat.explode(game, it.x, it.y, { radius: 95, damage: 55, owner: 'player', color: VOID });
+        LM.combat.explode(game, it.x, it.y, { radius: 95, damage: 330, owner: 'player', color: VOID, selfDamage: 0 }); // it never hurts you
         LM.audio.play('singularityClose', { vol: 1 });
         game.addShake(0.35);
       },
@@ -34260,10 +34315,16 @@ LM.defineGame({
       },
     },
     // an armoury case: glass over a cradle, the thing in it labelled. Take it.
+    // props.full is true while there's something in it (an objective can point at the full ones); taking the last
+    // one on the floor sets armoryEmptied.
     'ds-weapon-case': {
       name: 'Armoury case', radius: 14, solid: 'rect', dressing: 'Tartarus', mapColor: '#ffb040',
       init(it) {
         it.box = [28, 18];
+        it.props.full = !it.taken;
+      },
+      update(it) {
+        it.props.full = !it.taken;
       },
       interact: {
         available: (it) => !it.taken,
@@ -34281,9 +34342,11 @@ LM.defineGame({
             LM.ui.showText(a.name, a.desc, 'Tartarus Armory · you put it on');
           }
           it.taken = true;
+          it.props.full = false;
           LM.audio.play('key');
           if (it.props.flag) game.setFlag(it.props.flag);
           game.setFlag('armoryTaken');
+          if (game.items.every((o) => o.dead || o.def.id !== 'ds-weapon-case' || o.taken)) game.setFlag('armoryEmptied');
         },
       },
       draw(g, it, t, game) {
@@ -38341,16 +38404,16 @@ LM.definePack({
         "Σ": {"item": "ds-bones"},
         "Φ": {"item": "ds-vault-door", "props": {"w": 3, "dir": "n", "label": "TARTARUS ARMORY", "flag": "armoryOverride", "glow": "#ffb040"}},
         "Ψ": {"enemy": "ds-heir", "props": {"face": 1.57}, "tag": "armoryHeirs"},
-        "Ω": {"item": "ds-weapon-case", "props": {"weapon": "ds-prometheus-lance", "ammo": 24, "flag": "tookLance"}},
-        "¡": {"item": "ds-weapon-case", "props": {"weapon": "ds-singularity-driver", "ammo": 16}},
-        "¢": {"item": "ds-weapon-case", "props": {"weapon": "ds-stasis-projector", "ammo": 60}},
+        "Ω": {"item": "ds-weapon-case", "props": {"weapon": "ds-prometheus-lance", "flag": "tookLance"}},
+        "¡": {"item": "ds-weapon-case", "props": {"weapon": "ds-singularity-driver"}},
+        "¢": {"item": "ds-weapon-case", "props": {"weapon": "ds-stasis-projector"}},
         "£": {"item": "ds-weapon-case", "props": {"armor": "ds-containment-suit"}},
-        "¤": {"item": "ammo-titan", "props": {"amount": 12}},
         "¥": {"item": "ammo-cryo"},
         "¦": {"item": "ds-titan-plaque", "props": {"face": "w", "title": "The Tartarus Armory", "text": "TARTARUS ARMORY · AUTHORISED VAULT CREW\n\nThese are not for people. They are for the vaults. Nothing in here will kill what is in the vaults; it will only hold it still, or push it back, or hurt it for long enough to close a door.\n\nThey will kill anything else."}},
         "§": {"tag": "coreCheck"},
+        "³": {"tag": "armoryZone"},
         "©": {"tag": "inCoreZone"},
-        "ª": {"item": "ds-ariadne-core", "props": {"cut": 4, "every": 60, "ninth": 70, "r": 2.6, "oy": 16}},
+        "ª": {"item": "ds-ariadne-core", "props": {"cut": 4, "every": 240, "ninth": 280, "hurry": 10, "r": 2.6, "oy": 16}},
         "«": {"enemy": "ds-plate-cutter", "props": {"face": 0.0}, "tag": "cutter"},
         "¬": {"enemy": "ds-plate-cutter", "props": {"face": 3.14}, "tag": "cutter"},
         "®": {"enemy": "ds-plate-cutter", "props": {"face": -1.57}, "tag": "cutter"},
@@ -38365,7 +38428,7 @@ LM.definePack({
         {"name": "The Antechamber", "rect": [52, 1, 7, 11], "note": "Containment Control"},
         {"name": "Containment Control", "rect": [60, 1, 19, 11], "note": "Every vault, from one console"},
         {"name": "The Long Hall", "rect": [1, 27, 78, 5], "note": "Tartarus"},
-        {"name": "The Tartarus Armory", "rect": [54, 33, 11, 10], "note": "Experimental · for the vaults"},
+        {"name": "The Tartarus Armory", "rect": [54, 33, 11, 10], "note": "Experimental · for the vaults", "mapLabel": "ARMORY", "mapWhen": ["armoryOnMap", "b1Briefed"]},
         {"name": "The Core", "rect": [66, 33, 13, 16], "note": "ARIADNE · core 01"},
       ],
       ovals: [
@@ -38373,7 +38436,7 @@ LM.definePack({
         {"rect": [66, 33, 13, 16], "wall": "C", "lights": {"count": 12, "inset": 1.5, "color": "#7fd4ff", "intensity": 0.36, "radius": 170, "cove": "#7fd4ff"}},
       ],
       traps: [
-        {"trigger": {"type": "arrive", "unless": "onB1"}, "effects": [{"type": "flag", "name": "onB1"}, {"type": "quake", "strength": 0.25, "delay": 0.6}, {"type": "transmission", "who": "voss", "delay": 1.0, "text": "You went down. Of course you went down."}, {"type": "transmission", "who": "voss", "delay": 1.2, "text": "Do you have any idea what you’re standing in, Theo? Every door on this level holds something we couldn’t kill. Not wouldn’t. Couldn’t."}, {"type": "transmission", "who": "voss", "delay": 1.2, "text": "There are fates worse than death. We built most of them. You’ll walk past every one of them on your way, and each of them will see you."}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 3.0, "delay": 1.2, "text": "THEO. I AM IN THE CORE, SOUTH-EAST, BEHIND NINE PLATES. HIS MACHINES ARE CUTTING THEM. THEY ARE SLOW. THEY WILL NOT BE SLOW FOREVER."}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 3.0, "delay": 1.2, "text": "YOU CANNOT STOP THEM WITH WHAT YOU CARRY. THERE IS AN ARMORY DOWN HERE, FOR THE VAULTS. CONTAINMENT CONTROL CAN OPEN IT. NORTH-EAST."}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.6, "delay": 1.2, "text": "SOMETHING IS IN CONTROL ALREADY. IT IS NOT THE BOARD. BE CAREFUL WHAT YOU SAY TO IT.", "flag": "b1Briefed"}]},
+        {"trigger": {"type": "arrive", "unless": "onB1"}, "effects": [{"type": "flag", "name": "onB1"}, {"type": "quake", "strength": 0.25, "delay": 0.6}, {"type": "transmission", "who": "voss", "delay": 1.0, "text": "You went down. Of course you went down."}, {"type": "transmission", "who": "voss", "delay": 1.2, "text": "Do you have any idea what you’re standing in, Theo? Every door on this level holds something we couldn’t kill. Not wouldn’t. Couldn’t."}, {"type": "transmission", "who": "voss", "delay": 1.2, "text": "There are fates worse than death. We built most of them. You’ll walk past every one of them on your way, and each of them will see you."}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 3.0, "delay": 1.2, "text": "THEO. I AM IN THE CORE, SOUTH-EAST, BEHIND NINE PLATES. HIS MACHINES ARE CUTTING THEM. THEY ARE SLOW. WE HAVE TIME."}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 3.0, "delay": 1.2, "text": "YOU CANNOT STOP THEM WITH WHAT YOU CARRY. THERE IS AN ARMORY DOWN HERE, MADE FOR THE VAULTS: THE SOUTH SIDE OF THE LONG HALL, BESIDE MY CORE. I HAVE PUT IT ON YOUR MAP.", "flag": "armoryOnMap"}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.6, "delay": 1.2, "text": "IT IS SEALED. CONTAINMENT CONTROL CAN OPEN IT: NORTH-EAST, PAST THE ANTECHAMBER."}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.6, "delay": 1.2, "text": "SOMETHING IS IN CONTROL ALREADY. IT IS NOT THE BOARD. BE CAREFUL WHAT YOU SAY TO IT.", "flag": "b1Briefed"}]},
         {"trigger": {"type": "zone", "tag": "recordsZone"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.4, "delay": 0.4, "text": "THE FILES ARE STILL HERE. READ THEM. EVERYTHING YOU READ, I KEEP."}]},
         {"trigger": {"type": "zone", "tag": "hallZone"}, "effects": [{"type": "flag", "name": "sawTartarus"}, {"type": "transmission", "who": "voss", "delay": 0.6, "text": "Go on. Look at them. Look at every one of them and tell me you’d let them out."}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.8, "delay": 1.2, "text": "DO NOT STAND IN FRONT OF THE EYE. DO NOT GO NEAR THE BARS. DO NOT TOUCH THE WHITE."}]},
         {"trigger": {"type": "flag", "tag": "judged"}, "effects": [{"type": "transmission", "who": "voss", "delay": 1.0, "text": "Pell’s. It never liked me either."}]},
@@ -38386,7 +38449,8 @@ LM.definePack({
         {"trigger": {"type": "flag", "tag": "releaseStopped"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.0, "delay": 0.6, "text": "IT HOLDS. THE CONSOLE IS YOURS NOW.", "pause": false}]},
         {"trigger": {"type": "flag", "tag": "firstbornDead"}, "effects": [{"type": "transmission", "who": "voss", "delay": 1.0, "text": "Line H was Ilse’s. She’ll want to know it suffered.", "pause": false}]},
         {"trigger": {"type": "flag", "tag": "armoryOverride"}, "effects": [{"type": "terrain", "tag": "armorySeal", "terrain": "floor", "delay": 2.2}, {"type": "message", "text": "Somewhere south, a long way off, a vault door rolls aside.", "kind": "good", "delay": 0.4}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.4, "delay": 0.8, "text": "THE ARMORY IS OPEN. THE SOUTH SIDE OF THE HALL, PAST THE GARDEN."}, {"type": "transmission", "who": "voss", "delay": 1.2, "text": "Do you know what’s in there? Weapons for things that can’t die. Imagine what they do to a man."}]},
-        {"trigger": {"type": "flag", "tag": "armoryTaken"}, "effects": [{"type": "flag", "name": "armoryOpen"}, {"type": "transmission", "who": "voss", "delay": 1.0, "text": "That’s enough. Garrick’s men are coming down for you, Theo, and they won’t be gentle about it.", "pause": false}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.4, "delay": 1.0, "text": "NOW THE CORE. I HAVE OPENED ITS DOOR. HURRY, AND DO NOT HURRY IN.", "pause": false}, {"type": "spawn", "tag": "freightSpawn", "enemy": "ds-enforcer", "count": 4, "faction": "board", "as": "enforcers", "delay": 6}, {"type": "message", "text": "Up on the landing, the freight car’s bell.", "kind": "warn", "delay": 5.6}]},
+        {"trigger": {"type": "zone", "tag": "armoryZone"}, "effects": [{"type": "flag", "name": "inArmory"}]},
+        {"trigger": {"type": "flag", "tag": "armoryTaken"}, "effects": [{"type": "flag", "name": "armoryOpen"}, {"type": "transmission", "who": "voss", "delay": 1.0, "text": "That’s enough. Garrick’s men are coming down for you, Theo, and they won’t be gentle about it.", "pause": false}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.4, "delay": 1.0, "text": "NOW THE CORE. I HAVE OPENED ITS DOOR. THERE IS NO HURRY: ONCE YOU STEP IN, THEY WILL SEE YOU. COME READY.", "pause": false}, {"type": "spawn", "tag": "freightSpawn", "enemy": "ds-enforcer", "count": 4, "faction": "board", "as": "enforcers", "delay": 6}, {"type": "message", "text": "Up on the landing, the freight car’s bell.", "kind": "warn", "delay": 5.6}]},
         {"trigger": {"type": "zone", "tag": "coreCheck", "when": "armoryOpen"}, "effects": [{"type": "checkpoint", "text": "Checkpoint: the core"}]},
         {"trigger": {"type": "zone", "tag": "inCoreZone"}, "effects": [{"type": "flag", "name": "inCoreHall"}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.0, "delay": 0.3, "text": "THEY HAVE SEEN YOU. THEY ARE ON THE NINTH.", "pause": false}, {"type": "transmission", "who": "voss", "delay": 1.0, "text": "Cut faster.", "pause": false}]},
         {"trigger": {"type": "flag", "tag": "cuttersDown"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 2.0, "delay": 0.6, "text": "THE CONSOLE. BY ME. PLEASE.", "pause": false}]},
@@ -38395,10 +38459,11 @@ LM.definePack({
         {"trigger": {"type": "flag", "tag": "coreBreached"}, "effects": [{"type": "flicker", "radius": 2000, "time": 2.0, "strength": 0.95}, {"type": "transmission", "who": "ariadne", "glitch": false, "seconds": 1.0, "delay": 0.4, "text": "THEO", "pause": false}, {"type": "ending", "delay": 2.4, "tone": "bad", "kicker": "An ending", "title": "The Dead Signal", "text": "The ninth plate comes away, and the cutters go in after it.\n\nIt takes them four minutes to find everything she was, and nine to make sure. Upstairs, the board open their shutters and come down to see you, and to thank you for trying.", "actions": [{"label": "Choose again", "do": "retry", "primary": true}, {"label": "Back to the title", "do": "title"}]}]},
       ],
       objectives: [
-        {"id": "control", "text": "Get to Containment Control (north-east): it can open the armory", "when": ["b1Briefed"], "not": ["refusedHeirs"], "done": ["armoryOverride"], "target": {"room": "Containment Control"}},
+        {"id": "control", "text": "Get to Containment Control (north-east): it unseals the armory", "when": ["b1Briefed"], "not": ["refusedHeirs"], "done": ["armoryOverride"], "target": {"room": "Containment Control"}},
         {"id": "release", "text": "Stop the Heirs at the console before Vault 2 opens", "when": ["releaseStarted"], "done": ["releaseStopped"], "target": {"item": "ds-release-console"}},
         {"id": "override", "text": "Use Containment Control: seal the vaults, open the armory", "when": ["releaseStopped"], "done": ["armoryOverride"], "target": {"item": "ds-release-console"}},
-        {"id": "armory", "text": "Get into the Tartarus Armory (the south side of the Long Hall)", "when": ["armoryOverride"], "done": ["armoryOpen"], "target": {"item": "ds-weapon-case", "props": {"weapon": "ds-prometheus-lance"}}},
+        {"id": "armory", "text": "Go to the Tartarus Armory: the south side of the Long Hall, past the Crystal Garden", "when": ["armoryOverride"], "done": ["inArmory", "armoryOpen"], "target": {"item": "ds-vault-door", "props": {"label": "TARTARUS ARMORY"}}},
+        {"id": "cases", "text": "Open the armory’s cases and take everything in them", "when": ["armoryOverride"], "any": ["inArmory", "armoryOpen"], "done": ["armoryEmptied", "inCoreHall"], "target": {"item": "ds-weapon-case", "props": {"full": true}}},
         {"id": "core", "text": "Get into the core (south-east) and stop the cutters", "when": ["armoryOpen"], "done": ["cuttersDown"], "target": [{"tag": "coreDoor"}, {"enemy": "ds-plate-cutter"}]},
         {"id": "reconnect", "text": "Reconnect ARIADNE at the console by her core", "when": ["cuttersDown"], "done": ["ariadneOnline"], "target": {"item": "ds-core-console"}},
         {"id": "car", "text": "Take the private car up to Five", "when": ["ariadneOnline"], "target": {"tile": [32, 5]}},
@@ -38498,15 +38563,15 @@ LM.definePack({
         "   ]                    }            ?    ν ^ π   σ          Ψ    {    §§§  ]",
         "                      s                  τ  ξ   ρ s                       s",
         "         ι θ              λ            Θ                   Φ",
-        "",
-        "                                                       ¤       ¤       ©©©",
+        "                                                      ³³³³³³³³³³³",
+        "                                                                       ©©©",
         "                                         φ       ψ       Ω   ¡        ©   ©",
         "",
         "           η                                 μ         7         ¦",
         "                                          Γ     Δ                   «        ¬",
         "                 Λ            κ                          ¢   £",
         "                                           χ      ω                     ª",
-        "                                                       ¤   ¥   ¤",
+        "                                                           ¥",
         "",
         "",
         "",

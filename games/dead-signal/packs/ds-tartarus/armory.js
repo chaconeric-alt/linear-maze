@@ -1,13 +1,15 @@
 /* Dead Signal — packs/ds-tartarus/armory.js
  * The Tartarus Armory: what Asterion built to fight the Titans, and never had to use. (DESIGN.md 6.1.)
- *   ammo      titan ("Titan cells", LM.defineAmmo) and its pickup ammo-titan
- *   weapons   ds-prometheus-lance     a bolt of plasma that goes through everything in a line, shields included:
- *                                     no mirror sends it back (reflectable: false). Takes titan cells.
+ *   ammo      titan ("Titan cells", LM.defineAmmo) and its pickup ammo-titan (nothing takes them now: the armory's
+ *             weapons never run dry, and nothing drops them)
+ *   weapons   Built to end the game as a mop-up: six times what they first did, they never run dry (ammo: null),
+ *             and no mirror sends their shots back (reflectable: false on all three projectiles).
+ *             ds-prometheus-lance     a bolt of plasma that goes through everything in a line, shields included.
  *             ds-stasis-projector     a spray of stasis: what it holds can't move, can't fight, and breaks more
- *                                     easily. Takes cryo.
+ *                                     easily.
  *             ds-singularity-driver   throws a seed of a black hole where you aim: for three seconds it drags in
  *                                     everything round it and crushes what reaches the middle, then bursts.
- *                                     Takes titan cells (four a shot). It doesn't pull you.
+ *                                     It doesn't pull you.
  *   armor     ds-containment-suit     a Titan-rated containment suit (body)
  *   items     ds-singularity (the well: pull, life), ds-weapon-case (an armoury case: props.weapon or
  *             props.armor; take what's in it)
@@ -37,8 +39,8 @@
   const weapons = {
     'ds-prometheus-lance': {
       name: 'Prometheus Lance', short: 'Lance', slot: 7,
-      desc: 'TARTARUS ARMORY · ITEM 1. A man-portable plasma lance, built to cut a Titan apart faster than it can grow back. It doesn’t, quite. It goes through everything in a line, armour and shields and the thing behind the shield; no mirror turns it. Takes titan cells.',
-      ammo: 'titan', ammoPerShot: 1, pickupAmmo: 24, damage: 75, fireRate: 1.5, spread: 0.004, bloom: 0.01, speed: 2600, range: 950, pierce: 8,
+      desc: 'TARTARUS ARMORY · ITEM 1. A man-portable plasma lance, built to cut a Titan apart faster than it can grow back. It doesn’t, quite. It goes through everything in a line, armour and shields and the thing behind the shield; no mirror turns it. It never runs dry.',
+      ammo: null, damage: 450, fireRate: 1.5, spread: 0.004, bloom: 0.01, speed: 2600, range: 950, pierce: 8,
       projectile: 'ds-lance-bolt', status: { id: 'burning', seconds: 2 }, knock: 140, recoil: 0.6, kick: 0.14, pushback: 40, sound: 'lanceFire', casing: false,
       flash: LANCE, flashRadius: 220, flashSize: 14, sparks: 6, muzzle: 24, length: 24,
       drawHeld(g, p, k) {
@@ -56,8 +58,8 @@
     },
     'ds-stasis-projector': {
       name: 'Stasis Projector', short: 'Stasis', slot: 8,
-      desc: 'TARTARUS ARMORY · ITEM 2. Built to hold a Titan still long enough to move it. A spray of stasis: what it catches can’t move, can’t fight, and breaks more easily while it’s held. Not for very long. Takes cryo.',
-      ammo: 'cryo', ammoPerShot: 2, pickupAmmo: 60, damage: 4, pellets: 5, fireRate: 2.6, spread: 0.24, speed: 520, range: 300, falloff: 0.2,
+      desc: 'TARTARUS ARMORY · ITEM 2. Built to hold a Titan still long enough to move it. A spray of stasis: what it catches can’t move, can’t fight, and breaks more easily while it’s held. Not for very long. It never runs dry.',
+      ammo: null, damage: 24, pellets: 5, fireRate: 2.6, spread: 0.24, speed: 520, range: 300, falloff: 0.2,
       projectile: 'ds-stasis-pulse', status: { id: 'stasis', seconds: 2.6 }, knock: 0, recoil: 0.25, kick: 0.04, sound: 'stasisFire', casing: false,
       flash: STASIS, flashRadius: 120, flashSize: 10, sparks: 0, muzzle: 18, length: 18,
       drawHeld(g, p, k) {
@@ -75,8 +77,8 @@
     },
     'ds-singularity-driver': {
       name: 'Singularity Driver', short: 'Gate', slot: 9,
-      desc: 'TARTARUS ARMORY · ITEM 3. The last resort. It throws the seed of a black hole to where you aim; for three seconds it drags in everything round it and crushes what reaches the middle, then lets go all at once. It doesn’t pull you (the manual says “usually”). Takes titan cells, four a shot.',
-      ammo: 'titan', ammoPerShot: 4, pickupAmmo: 16, damage: 10, fireRate: 0.65, spread: 0, speed: 460, range: 'cursor', maxRange: 460,
+      desc: 'TARTARUS ARMORY · ITEM 3. The last resort. It throws the seed of a black hole to where you aim; for three seconds it drags in everything round it and crushes what reaches the middle, then lets go all at once. It doesn’t pull you (the manual says “usually”). It never runs dry.',
+      ammo: null, damage: 60, fireRate: 0.65, spread: 0, speed: 460, range: 'cursor', maxRange: 460,
       projectile: 'ds-singularity-seed', knock: 0, recoil: 0.5, kick: 0.1, sound: 'singularityFire', casing: false,
       flash: VOID, flashRadius: 140, flashSize: 12, sparks: 0, muzzle: 20, length: 20,
       drawHeld(g, p, k) {
@@ -118,7 +120,7 @@
       },
     },
     'ds-stasis-pulse': {
-      radius: 5, color: STASIS, quiet: true, wallSparks: 0,
+      radius: 5, color: STASIS, quiet: true, wallSparks: 0, reflectable: false,
       light: { r: 70, color: STASIS, intensity: 0.3 },
       draw() {},
       drawGlow(g, p) {
@@ -132,7 +134,7 @@
       },
     },
     'ds-singularity-seed': {
-      radius: 4, color: VOID, wallSparks: 0, quiet: true,
+      radius: 4, color: VOID, wallSparks: 0, quiet: true, reflectable: false,
       light: { r: 80, color: VOID, intensity: 0.4 },
       draw(g, p) {
         g.fillStyle = '#050208';
@@ -162,9 +164,9 @@
     // the well: a black hole for three seconds; it pulls everything but you, crushes what reaches it, then bursts
     'ds-singularity': {
       name: 'Singularity', radius: 8, shadow: false, dressing: false, life: 3.2, drawRadius: 160,
-      pull: { radius: 165, strength: 380, swirl: 0.55, core: 28, damage: 26, interval: 0.25, flying: true, player: false },
+      pull: { radius: 165, strength: 380, swirl: 0.55, core: 28, damage: 156, interval: 0.25, flying: true, player: false },
       onExpire(it, game) {
-        LM.combat.explode(game, it.x, it.y, { radius: 95, damage: 55, owner: 'player', color: VOID });
+        LM.combat.explode(game, it.x, it.y, { radius: 95, damage: 330, owner: 'player', color: VOID, selfDamage: 0 }); // it never hurts you
         LM.audio.play('singularityClose', { vol: 1 });
         game.addShake(0.35);
       },
@@ -221,10 +223,16 @@
       },
     },
     // an armoury case: glass over a cradle, the thing in it labelled. Take it.
+    // props.full is true while there's something in it (an objective can point at the full ones); taking the last
+    // one on the floor sets armoryEmptied.
     'ds-weapon-case': {
       name: 'Armoury case', radius: 14, solid: 'rect', dressing: 'Tartarus', mapColor: '#ffb040',
       init(it) {
         it.box = [28, 18];
+        it.props.full = !it.taken;
+      },
+      update(it) {
+        it.props.full = !it.taken;
       },
       interact: {
         available: (it) => !it.taken,
@@ -242,9 +250,11 @@
             LM.ui.showText(a.name, a.desc, 'Tartarus Armory · you put it on');
           }
           it.taken = true;
+          it.props.full = false;
           LM.audio.play('key');
           if (it.props.flag) game.setFlag(it.props.flag);
           game.setFlag('armoryTaken');
+          if (game.items.every((o) => o.dead || o.def.id !== 'ds-weapon-case' || o.taken)) game.setFlag('armoryEmptied');
         },
       },
       draw(g, it, t, game) {

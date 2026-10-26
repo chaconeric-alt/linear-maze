@@ -464,7 +464,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.9';
+  LM.VERSION = '0.5.10';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -7450,9 +7450,57 @@ kbd {
     });
   };
 
+  /**
+   * Rooms on the map before you've been there. A level's room with `mapWhen` (a story flag, or a list: any one of
+   * them set; true: from the start) is drawn on the minimap, walls and all, once that's so: somewhere the story
+   * has told you about. Marks its tiles explored, so it stays on the map (and in the floor's memory).
+   */
+  ui.revealRooms = function (game) {
+    const L = game.level;
+    if (!L || !L.def.rooms) return;
+    const done = L._roomsShown || (L._roomsShown = new Set());
+    for (const r of L.def.rooms) {
+      if (r.mapWhen == null || r.mapWhen === false || done.has(r) || !Array.isArray(r.rect)) continue;
+      if (r.mapWhen !== true && !game.anyFlag(r.mapWhen)) continue;
+      done.add(r);
+      const [rx, ry, rw, rh] = r.rect;
+      for (let y = ry - 1; y <= ry + rh; y++) for (let x = rx - 1; x <= rx + rw; x++) if (L.inBounds(x, y)) L.explored[y * L.w + x] = 1;
+    }
+  };
+  /** A room's `mapLabel` (its name on the map: text, or true for the room's name), once its middle is on the map. */
+  ui.drawRoomLabels = function (g, game, ox, oy, s, W, H) {
+    const L = game.level;
+    if (!L || !L.def.rooms) return;
+    let set = false;
+    for (const r of L.def.rooms) {
+      if (!r.mapLabel || !Array.isArray(r.rect)) continue;
+      const [rx, ry, rw, rh] = r.rect;
+      const mx0 = rx + rw / 2, my0 = ry + rh / 2;
+      if (!L.explored[Math.floor(my0) * L.w + Math.floor(mx0)]) continue;
+      const mx = ox + mx0 * s, my = oy + my0 * s;
+      if (mx < -60 || mx > W + 60 || my < -8 || my > H + 8) continue;
+      if (!set) {
+        set = true;
+        g.save();
+        g.font = '700 7px "IBM Plex Mono", monospace';
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.lineJoin = 'round';
+        g.lineWidth = 2.6;
+        g.strokeStyle = 'rgba(9,11,15,0.92)';
+      }
+      const text = String(r.mapLabel === true ? r.name : r.mapLabel).toUpperCase();
+      g.strokeText(text, mx, my);
+      g.fillStyle = r.mapLabelColor || '#ebe4d4';
+      g.fillText(text, mx, my);
+    }
+    if (set) g.restore();
+  };
+
   ui.drawMinimap = function (game) {
     const g = ui.mm, L = game.level, P = game.player, d = ui.mmScale;
     const W = 176, H = 124, s = 3.2;
+    ui.revealRooms(game);
     g.setTransform(d, 0, 0, d, 0, 0);
     g.clearRect(0, 0, W, H);
     g.fillStyle = 'rgba(9,11,15,0.82)';
@@ -7499,6 +7547,8 @@ kbd {
       g.fillStyle = LM.factions && !LM.factions.hostile('player', e.faction) ? '#5fe08a' : '#ff5a4a';
       g.fillRect(ox + (e.x / T) * s - 1, oy + (e.y / T) * s - 1, 2, 2);
     }
+    // named places
+    ui.drawRoomLabels(g, game, ox, oy, s, W, H);
     // the objective's targets (engine/objectives.js)
     if (LM.objectives) LM.objectives.drawMap(g, game, ox, oy, s, W, H);
     // player arrow

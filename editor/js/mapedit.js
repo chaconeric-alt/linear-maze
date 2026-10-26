@@ -1707,7 +1707,13 @@
       sect('rooms', 'Rooms (' + (d.rooms || []).length + ')', () => F().list(d.rooms || [], (r, n, set) => h('div', null,
         F().field('Name', F().text(r.name, (v) => set(Object.assign({}, r, { name: v })))),
         F().field('Small line', F().text(r.note, (v) => set(Object.assign({}, r, { note: v || undefined })), { emptyUndefined: true })),
-        F().field('x, y, width, height', F().text((r.rect || []).join(', '), (v) => { const a = v.split(/[,\s]+/).map(Number); if (a.length === 4 && a.every((z) => !Number.isNaN(z))) set(Object.assign({}, r, { rect: a })); }, { mono: true }))), {
+        F().field('x, y, width, height', F().text((r.rect || []).join(', '), (v) => { const a = v.split(/[,\s]+/).map(Number); if (a.length === 4 && a.every((z) => !Number.isNaN(z))) set(Object.assign({}, r, { rect: a })); }, { mono: true })),
+        // the minimap (engine/ui.js): a name on it, and being on it before the player has been there
+        F().field('Name on the minimap', F().text(r.mapLabel === true ? r.name : r.mapLabel, (v) => set(Object.assign({}, r, { mapLabel: v || undefined })), { emptyUndefined: true })),
+        F().field('On the minimap once (story flags, any one; or "always")', F().text(r.mapWhen === true ? 'always' : [].concat(r.mapWhen || []).join(', '), (v) => {
+          const l = String(v || '').split(/[,\s]+/).filter(Boolean);
+          set(Object.assign({}, r, { mapWhen: l.length === 1 && l[0] === 'always' ? true : l.length ? (l.length === 1 ? l[0] : l) : undefined }));
+        }, { mono: true, emptyUndefined: true }))), {
         onChange: (l) => { d.rooms = l; commit(); this.dirty = true; }, title: (r) => r.name + ' · ' + (r.rect || []).join(','), addLabel: 'Add a room (or drag one with the Room tool)', newItem: () => ({ name: 'New room', rect: [1, 1, 5, 5] }),
       }));
       sect('traps', 'Traps and scripted events (' + (d.traps || []).length + ')', () => this.trapsEditor(d, commit));

@@ -316,3 +316,9 @@ Built for Dead Signal's Floor 1; nothing in The Linear Maze uses them, and none 
 - `CB.saveProgress` (Chessboard 1's own checkpoint) writes through `LM.saves.write`, which now adds the floors' memory to it.
 
 No level files changed. The Linear Maze has no elevators; its elevators are still decoration.
+
+## 0.5.10: places on the minimap
+
+A level's room can carry `mapLabel` (its name on the minimap, once its middle is explored) and `mapWhen` (flags, any one of them, that put it on the minimap before the player has been there). `LM.ui.revealRooms` and `LM.ui.drawRoomLabels`, called by the minimap. The editor's room list edits both.
+
+**This game's packs.** Nothing changed. No Linear Maze room has `mapLabel` or `mapWhen`, so the minimap draws as before (every floor checked).

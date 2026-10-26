@@ -8,9 +8,12 @@
  *             ds-enforcer          the board's: black and gold, a shield that sends some shots back
  *   behaviors ds-cutter            stand at your plate and cut; fight what bothers you
  *   items     ds-ariadne-core      ARIADNE's core and its nine plates (props.cut: plates already cut when you
- *                                  arrive). While a cutter lives it cuts: a plate a minute, up to eight. Step into
- *                                  the hall (flag inCoreHall) and they hurry: the ninth plate (a countdown on you);
- *                                  if it falls, coreBreached. Kill every cutter and it's cuttersDown.
+ *                                  arrive). While a cutter lives it cuts: a plate every props.every seconds (240:
+ *                                  four minutes), up to eight. It's slow on purpose: it isn't a race, there's time
+ *                                  to look at the vaults. Step into the hall (flag inCoreHall) and they hurry: what's
+ *                                  left of the eight at props.hurry seconds a plate (10), then the ninth plate, a
+ *                                  countdown on you (props.ninth seconds, 280); if it falls, coreBreached. Kill
+ *                                  every cutter and it's cuttersDown.
  *             ds-core-console      reconnect ARIADNE to the building (once the cutters are down): ariadneOnline
  *   statuses  ninthPlate           the countdown
  */
@@ -25,7 +28,7 @@
 
   const statuses = {
     ninthPlate: {
-      name: 'The ninth plate', seconds: 70, countdown: true, urgent: 20, only: 'player', color: '#7fd4ff',
+      name: 'The ninth plate', seconds: 280, countdown: true, urgent: 60, only: 'player', color: '#7fd4ff',
       onEnd(game, P, s, reason) {
         if (reason === 'expired' && !game.hasFlag('cuttersDown')) game.setFlag('coreBreached');
       },
@@ -308,12 +311,12 @@
           // they've seen you: the ninth plate
           if (!it.hurry) {
             it.hurry = true;
-            if (P) LM.status.apply(game, P, 'ninthPlate', { seconds: it.props.ninth || 70 });
+            if (P) LM.status.apply(game, P, 'ninthPlate', { seconds: it.props.ninth || 280 });
             LM.audio.play('alarm');
           }
-          // what's left of the first eight comes down fast
+          // what's left of the first eight comes down faster
           if (it.cut < 8) {
-            it.prog += dt / 2.5;
+            it.prog += dt / (it.props.hurry || 10);
             if (it.prog >= 1) {
               it.prog = 0;
               it.cut++;
@@ -326,8 +329,8 @@
           }
           it.sparks = cutters.length;
         } else if (working && it.cut < 8) {
-          // a plate a minute, while they're at it
-          it.prog += dt / (it.props.every || 60);
+          // a plate every four minutes, while they're at it
+          it.prog += dt / (it.props.every || 240);
           if (it.prog >= 1) {
             it.prog = 0;
             it.cut++;
@@ -449,7 +452,7 @@
         { type: 'ranged', projectile: 'plasma-arc', damage: 7, speed: 520, burst: 8, burstGap: 0.05, windup: 0.45, cooldown: 1.8, range: 220, spread: 0.12, status: 'burning', flash: '#ffb040' },
         { type: 'melee', damage: 22, range: 20, windup: 0.35, recover: 0.4, cooldown: 1.1, knock: 200, status: 'burning' },
       ],
-      drops: { items: [{ id: 'ammo-titan', chance: 0.6 }, { id: 'ammo-cells', chance: 0.5 }] },
+      drops: { items: [{ id: 'ammo-cells', chance: 0.5 }] },
       onDeath(e, game) {
         game.particles.burst(e.x, e.y, 18, { type: 'spark', color: '#ffd27a', speed: 220, life: 0.45 });
       },
@@ -472,7 +475,7 @@
         { type: 'ranged', projectile: 'enemy-slug', damage: 10, speed: 470, burst: 3, burstGap: 0.1, windup: 0.45, cooldown: 1.7, range: 400, spread: 0.04, lead: 0.5, flash: '#ffd28a' },
         { type: 'melee', damage: 16, range: 16, windup: 0.3, recover: 0.35, cooldown: 1, knock: 180 },
       ],
-      drops: { items: [{ id: 'ammo-titan', chance: 0.35 }, { id: 'ammo-rounds', chance: 0.5 }, { id: 'ds-medgel', chance: 0.15 }] },
+      drops: { items: [{ id: 'ammo-rounds', chance: 0.5 }, { id: 'ds-medgel', chance: 0.15 }] },
       update(e, dt, game) {
         if (!e.mem.said && e.aggro && e.pSee) {
           e.mem.said = true;

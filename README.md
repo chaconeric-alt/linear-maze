@@ -1,8 +1,10 @@
 # Linear Maze workspace
 
-Version 0.5.9. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+Version 0.5.10. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
 
 Hosted (once GitHub Pages is on for this repo: Settings → Pages → Deploy from a branch, `main`, `/ (root)`): the launcher is at `https://chaconeric-alt.github.io/linear-maze/`, Dead Signal at `https://chaconeric-alt.github.io/linear-maze/dist/dead-signal.html`, The Linear Maze at `…/dist/linear-maze.html`, and the editor at `…/editor/`. `.nojekyll` tells Pages to serve the files as they are.
+
+New in 0.5.10: from Dead Signal's playtests of the end. On Sub-level B the board's cutters take four times as long over ARIADNE's plates (four minutes a plate while you explore, and 280 seconds on the ninth once you step into the core), so there's time to look at the Titans. The Tartarus Armory is on the map from ARIADNE's briefing, labelled, and getting there is an objective with a marker on its vault door, then one for its cases. Its weapons do six times the damage and never run dry: after the armory the game is a mop-up. And the Cryo Sprayer and Plasma Cutter do three times their damage, the Riot Shotgun twice, the Incinerator four times. Engine: rooms can be named on the minimap and put on it before you've been there (`mapLabel`, `mapWhen`; `engine/SPEC.md` section 6.21).
 
 New in 0.5.9: the end of Dead Signal. Sub-level B, *Tartarus*: a dungeon of things the board made and couldn't kill, the Titans, behind bronze vault doors with windows (the Leviathan, the Behemoth, Tiamat, the Eye of Judgment, the Circle of Wings, the Frog, the Crystal Garden, the Hundred-Handed); bronze Wardens on their rounds; the Heirs, who offer you a collar; an armory of weapons made for the vaults; ARIADNE's core behind nine plates the board's machines are cutting. Then back up to Five, the board's last guards, and five frightened people in a boardroom, with Voss making his case for letting them go. Seven endings. Engine: `immune` enemies, shots no mirror turns, item lifetimes, `drawRadius`, the `arrive` trap trigger and trigger conditions (`when`, `unless`). See `games/dead-signal/DESIGN.md` (sections 1.7, 4.7, 4.8) and `engine/SPEC.md` (sections 6.4–6.6, 6.8).
 

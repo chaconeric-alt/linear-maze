@@ -175,7 +175,7 @@
     'ds-plasma-cutter': {
       name: 'Plasma Cutter', short: 'Cutter', slot: 5,
       desc: 'A maintenance cutter from the vat hall, for steel plate and the growth vats’ hoops. A short, hot arc: whatever it touches keeps burning for a moment. Takes cells. Hold the trigger down.',
-      ammo: 'cells', pickupAmmo: 45, damage: 6, fireRate: 8, spread: 0.05, speed: 640, range: 200, falloff: 0.25, pierce: 1,
+      ammo: 'cells', pickupAmmo: 45, damage: 18, fireRate: 8, spread: 0.05, speed: 640, range: 200, falloff: 0.25, pierce: 1,
       projectile: 'plasma-arc', status: 'burning', knock: 14, recoil: 0.08, kick: 0.018, sound: 'plasmaCut', casing: false,
       flash: FIRE, flashRadius: 80, flashSize: 9, sparks: 2, muzzle: 17, length: 16,
       drawHeld(g, p, k) {

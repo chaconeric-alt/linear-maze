@@ -25,7 +25,7 @@
     'ds-incinerator': {
       name: 'Incinerator', short: 'Burner', slot: 6,
       desc: 'Garrick Moss’s answer to a containment breach: a riot-squad flamethrower from the Proving Grounds’ armory, with a tank on the back and HANDLER stencilled on it. A short roaring jet that sets everything it touches burning and goes through the first few things in its way. Takes fuel. Hold the trigger down.',
-      ammo: 'fuel', pickupAmmo: 80, damage: 3.4, fireRate: 14, spread: 0.13, speed: 380, range: 215, falloff: 0.2, pierce: 3,
+      ammo: 'fuel', pickupAmmo: 80, damage: 13.6, fireRate: 14, spread: 0.13, speed: 380, range: 215, falloff: 0.2, pierce: 3,
       projectile: 'ds-flame', status: { id: 'burning', seconds: 3 }, knock: 5, recoil: 0.05, kick: 0.012, sound: 'flameJet', casing: false,
       flash: FIRE, flashRadius: 110, flashSize: 10, sparks: 0, muzzle: 19, length: 18,
       drawHeld(g, p, k) {
