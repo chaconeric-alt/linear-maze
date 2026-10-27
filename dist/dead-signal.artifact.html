@@ -458,7 +458,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.10';
+  LM.VERSION = '0.5.11';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -6059,6 +6059,24 @@ kbd {
     return U.dist2(cx, cy, x0 + dx * k, y0 + dy * k) < r * r;
   }
   LM.Trap = Trap;
+
+  /**
+   * Run a list of trap effects now, as a trap firing would (each effect's own `delay` counts from now), without
+   * a trap: a level's `skip`, a pack's script. trap: the trap they belong to, if any (some effects keep what
+   * they spawned or sealed on it); a scratch one otherwise.
+   */
+  LM.runEffects = function (game, effects, trap) {
+    const owner = trap || { spawned: [], sealed: [], def: { effects: effects || [] } };
+    for (const ef of effects || []) {
+      const fx = ef && LM.find('effects', ef.type);
+      if (!fx) {
+        if (ef) console.warn('[LM] Unknown effect ' + ef.type);
+        continue;
+      }
+      if (ef.delay) game.schedule(ef.delay, () => fx.run(game, ef, owner));
+      else fx.run(game, ef, owner);
+    }
+  };
 })();
 
 //# sourceURL=engine/traps.js
@@ -7820,9 +7838,20 @@ kbd {
         { label: 'Resume', primary: true },
         { label: 'Inventory', onClick: () => { setTimeout(() => ui.showInventory(game), 0); } },
         { label: LM.audio.muted ? 'Sound on' : 'Sound off', onClick: () => LM.audio.setMuted(!LM.audio.muted) },
-        // story lines that stop the game (LM.comms): the player can have them in the corner instead
+        // story lines that stop the game (LM.comms): the player can have them in the corner instead.
+        // (The label says what it is now, as a setting, not what clicking it does.)
         LM.comms && LM.comms.anyPause && LM.comms.anyPause()
-          ? { label: LM.comms.pauses() ? 'Story lines: stop the game' : 'Story lines: in the corner', onClick: () => { LM.comms.setPauses(!LM.comms.pauses()); setTimeout(() => ui.showPause(game), 0); } }
+          ? { label: 'Story lines in the middle: ' + (LM.comms.pauses() ? 'on' : 'off'), onClick: () => {
+            LM.comms.setPauses(!LM.comms.pauses());
+            setTimeout(() => {
+              ui.showPause(game);
+              game.toast(LM.comms.pauses() ? 'Story lines will stop the game, in the middle of the screen.' : 'Story lines will play in the corner, without stopping the game.');
+            }, 0);
+          } }
+          : null,
+        // a floor can offer a way past itself (a level's skip: { label, effects }): a prologue, say
+        game.level && game.level.def.skip && game.state !== 'ending'
+          ? { label: game.level.def.skip.label || 'Skip this part', quiet: true, onClick: () => { setTimeout(() => { game.state = 'play'; if (LM.comms) LM.comms.clear(); LM.runEffects(game, game.level.def.skip.effects || []); }, 0); } }
           : null,
         { label: 'Restart floor', quiet: true, onClick: () => { setTimeout(() => game.restartLevel(), 0); } },
         { label: 'Quit to title', quiet: true, onClick: () => { setTimeout(() => game.toTitle(), 0); } },
@@ -8298,19 +8327,21 @@ kbd {
   };
 
   // ------------------------------------------------------------ a conversation that stops the game
-  const PREF = 'lm-talk-pauses';
+  // (0.5.11: a new key. The old one, 'lm-talk-pauses', was set by a pause-screen button whose label read like a
+  // command, so players switched it off without meaning to; everyone starts again from on.)
+  const PREF = 'lm-story-lines';
   /** Does the player want important lines to stop the game? (On unless they turned it off.) */
   C.pauses = function () {
     if (C.talk === true || C.talk === false) return C.talk;
     try {
-      return localStorage.getItem(PREF) !== 'off';
+      return localStorage.getItem(PREF) !== 'corner';
     } catch (e) {
       return true;
     }
   };
   C.setPauses = function (on) {
     try {
-      localStorage.setItem(PREF, on ? 'on' : 'off');
+      localStorage.setItem(PREF, on ? 'middle' : 'corner');
     } catch (e) {}
   };
   /** Does any speaker in this game stop the game? (The pause screen offers the choice only then.) */
@@ -8701,6 +8732,22 @@ kbd {
         params: { who: 'id:speakers', text: 'longtext', glitch: 'bool', seconds: 'number', flag: 'text', pause: ['always', 'never'] },
         run(game, ef) {
           C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag, pause: ef.pause });
+        },
+      },
+      // { to, arrive, at: [x, y], via, quiet, sound }: go to another floor now, with a quick fade and no
+      // floor-finished screen, carrying everything you have (a scripted move: the end of a prologue, a fall)
+      travel: {
+        params: { to: 'id:levels', arrive: 'tag', at: 'json', via: 'text', quiet: 'bool', sound: 'text' },
+        run(game, ef) {
+          if (!ef.to || !LM.find('levels', ef.to) || !game.player) return;
+          const go = () => {
+            // after whatever's being said, and never from a pop-up
+            if ((C.talking && C.talking()) || game.state !== 'play') return game.schedule(0.3, go, true);
+            const at = Array.isArray(ef.at) ? { x: (ef.at[0] + 0.5) * LM.TILE, y: (ef.at[1] + 0.5) * LM.TILE } : undefined;
+            C.clear();
+            game.travel(ef.to, { via: ef.via || 'script', arrive: ef.arrive, at, quiet: ef.quiet !== false && !ef.sound, sound: ef.sound });
+          };
+          go();
         },
       },
       // (the game's own flow, here with the other story effects)
@@ -10488,8 +10535,8 @@ kbd {
 LM.defineGame({
   id: 'dead-signal',
   title: 'Dead Signal',
-  version: '0.6.2',
-  description: 'A technician trapped in a biotech lab gone wrong fights his way to the top floor, and down to the bottom of it. Built from beginning to end (packs/ds-*): Floor 1, Lockdown; Floor 2, Synthid Research; Floor 3, Gestation; Floor 4, the Proving Grounds; Floors 5 and 5a, the Executive Floor and the board’s own; Sub-level B, Tartarus; and back up to the boardroom, and the endings. The Dead Signal Laboratory, The Complex and The Sterile Annex follow them as placeholders. games/dead-signal/DESIGN.md has the plan.',
+  version: '0.7.0',
+  description: 'A technician trapped in a biotech lab gone wrong fights his way to the top floor, and down to the bottom of it. Built from beginning to end (packs/ds-*): the prologue, the night shift before the lockdown; Floor 1, Lockdown; Floor 2, Synthid Research; Floor 3, Gestation; Floor 4, the Proving Grounds; Floors 5 and 5a, the Executive Floor and the board’s own; Sub-level B, Tartarus; and back up to the boardroom, and the endings. The Dead Signal Laboratory, The Complex and The Sterile Annex follow them as placeholders. games/dead-signal/DESIGN.md has the plan.',
   brief: 'Dark, torch-lit floors where every light casts shadows and danger telegraphs clearly. Write in-world text that is short, specific and slightly ominous, and carries a hint.',
   packs: [
     'linear-maze/core',
@@ -35945,6 +35992,1396 @@ LM.defineGame({
 
 //# sourceURL=games/dead-signal/packs/ds-story/tartarus.js
 </script>
+<script>/* games/dead-signal/packs/ds-story/prologue.js */
+/* Dead Signal — packs/ds-story/prologue.js
+ * The prologue (levels/f0-prologue.js; DESIGN.md section 4.0): the ground floor at 01:41, before the lockdown.
+ * The people whose bodies Theo finds on Floor 1 are alive and at work; the ones who end up on Floor 4 are called
+ * up over the PA; ARIADNE, friendly and helpful, gives Theo his night's work and then, because she has a
+ * feeling she isn't supposed to have, puts him in the one room with a good door.
+ *
+ *   environments  ds-lobby-night       the ground floor as it is every night (ds-lobby with the lights on)
+ *   armor         ds-coveralls         Facilities coveralls (body)
+ *   npcs          ds-p0-*              the night staff (placement props.leaves: a flag; when it's set they go
+ *                                      upstairs as soon as you aren't looking)
+ *   items         ds-toolbag           your tool bag on the bench: the Bolt Driver (p0Driver)
+ *                 ds-uniform-locker    your locker: the coveralls (p0Uniform)
+ *                 ds-test-board        Kowalski's test board: three bolts in it (p0Board)
+ *                 ds-job               a work order's tag on a fault (props.flag; props.open while it's not done);
+ *                                      the fourth done sets p0OrdersDone
+ *                 ds-spare-shelf       Facilities stores: the spare core switch, once p0SwitchDown (p0Spare)
+ *                 ds-closet-switch     the dead core switch in Comms Closet 1-C: fit the spare (p0SwitchIn)
+ *                 ds-lift-doors        elevator doors on the lobby wall (the prologue isn't a stop: the cars are
+ *                                      held on Five)
+ *                 ds-strobe-off        an emergency strobe that's dark until a ds-lights effect turns it on
+ *                 ds-p0-note           a note that's only there once props.when is set (Brennan's, on the bench)
+ *                 ds-pallet            parcels on a pallet (dressing; can't be shot open)
+ *   effects       ds-sound             { sound, vol, times, gap }: play a sound, some times over
+ *                 ds-lights            { tag, on }: switch tagged lights, quietly
+ *                 ds-give              { weapons, armor, flags }: what the prologue gives you (its skip uses it)
+ *   sounds        dsSiren, dsShutterSlam, dsScream, dsGunfire
+ *
+ * Flags: p0Arrived, p0Uniform, p0Driver, p0Brennan, p0Board, p0Orders, p0JobCoffee, p0JobCamera, p0JobLight,
+ * p0JobDock, p0OrdersDone, p0Called (the PA calls people up), p0SwitchDown, p0Spare, p0InCloset, p0SwitchIn,
+ * p0AriadneDone (then the lockdown, and Floor 1), p0Chatted (talked to four people), playedPrologue.
+ */
+'use strict';
+(function () {
+  const LM = window.LM, U = LM.util, T = LM.TILE, G = LM.gfx, DS = (LM.DS = LM.DS || {});
+  const has = (g, f) => g.hasFlag(f);
+  const ROT = { s: 0, n: Math.PI, e: -Math.PI / 2, w: Math.PI / 2 };
+  const rot = (it) => ROT[it.props.dir || 's'] || 0;
+  const AMBER = '#f2c35b', GREEN = '#5fe08a', RED = '#ff4a3a';
+  const back = (label) => ({ label: label || 'Something else…', next: 'menu' });
+  const bye = (label) => ({ label: label || 'I’ll let you get on.', end: true });
+  const called = (g) => has(g, 'p0Called');
+
+  // ======================================================== the floor, every other night
+  const environments = {};
+  const base = LM.find('environments', 'ds-lobby');
+  if (base) {
+    environments['ds-lobby-night'] = Object.assign({}, base, {
+      name: 'Asterion · Ground floor, 01:41',
+      ambient: '#40454f',
+      attractAmbient: '#5a606b',
+      outsideSight: '#31353d',
+      torch: '#ffd2a0',
+      // the carpet as it was before anything bled on it
+      floors: Object.assign({}, base.floors, { 5: base.floors[0] }),
+      particles: { type: 'mote', color: '#e8eef8', rate: 1.2, alpha: 0.08, drift: 2 },
+      ambience: { base: 60, cutoff: 360, wind: 500, gain: 0.03, wave: 'sine' },
+    });
+  }
+
+  const armor = {
+    'ds-coveralls': {
+      name: 'Facilities coveralls', slot: 'body', color: '#3a5068', trim: '#d9a21c',
+      mods: { armor: 0.04 },
+      desc: 'Navy, ASTERION · FACILITIES across the back, a reflective stripe that has been through the wash too many times. LARK on the pocket. A pocket for everything, and something in every pocket.',
+    },
+  };
+
+  // ======================================================== the people
+  // A placement's props.leaves: a flag. Once it's set they go (upstairs, wherever they were called) the first
+  // moment you aren't looking. Everyone you talk to counts toward p0Chatted (four).
+  function staff(def) {
+    const own = def.update;
+    def.update = function (n, dt, game) {
+      if (own) own(n, dt, game);
+      if (n.mem.talked && !n.mem.counted && game.player) {
+        n.mem.counted = true;
+        const d = game.player.data;
+        d.p0Talked = (d.p0Talked || 0) + 1;
+        if (d.p0Talked >= 4) game.setFlag('p0Chatted');
+      }
+      const leaves = n.props.leaves || def.leaves;
+      if (leaves && has(game, leaves) && !n.gone) {
+        n.mem.goT = (n.mem.goT || 0) + dt;
+        if (!n.seeLos && n.vis < 0.05 && n.mem.goT > 1.2 && !(LM.ui.modalOpen && LM.ui.spec && LM.ui.spec.title === n.name)) {
+          n.gone = true;
+          n.dead = true;
+          game.schedule(0, () => { game.npcs = game.npcs.filter((o) => o !== n); });
+        }
+      }
+    };
+    return def;
+  }
+  // each one's menu of topics: what Theo can ask them (a node's options: M(id))
+  const MENUS = {
+    'ds-p0-brennan': (g) => [
+      { label: 'How’s the night been?', next: 'night', once: true },
+      { label: 'What’s going on upstairs?', next: 'board', once: true },
+      { label: 'You look pleased with yourself.', next: 'screening', once: true, if: (gg) => !called(gg) },
+      { label: 'Anything I should know about ARIADNE?', next: 'ariadne', once: true },
+      bye('Let’s get to work.'),
+    ],
+    'ds-p0-marisa': () => [
+      { label: 'Is it your birthday?', next: 'bday', once: true },
+      { label: 'Why’s the board meeting at this hour?', next: 'hour', once: true },
+      { label: 'What are you typing?', next: 'email', once: true },
+      { label: 'Has anyone been asked upstairs?', next: 'invites' },
+      bye(),
+    ],
+    'ds-p0-karin': () => [
+      { label: 'Remind me.', next: 'remind', once: true },
+      { label: 'Why’s the board in at night?', next: 'night', once: true },
+      { label: 'Where’s Danny?', next: 'danny', once: true },
+      bye('Badge away. Got it.'),
+    ],
+    'ds-p0-ruiz': (g) => [
+      { label: 'Much better. She says hello.', next: 'mother', once: true },
+      { label: 'Camera four’s on my list.', next: 'cam', once: true, if: (gg) => has(gg, 'p0Orders') && !has(gg, 'p0JobCamera') },
+      { label: 'Why are you in so early?', next: 'early', once: true },
+      { label: 'What’s happening upstairs tonight?', next: 'upstairs', once: true },
+      { label: 'Danny, are you all right?', next: 'scared', once: true, if: (gg) => called(gg) },
+      bye(),
+    ],
+    'ds-p0-kwan': () => [
+      { label: 'What’s happening on four?', next: 'four', once: true },
+      { label: 'Danny says you’ve been on four all week.', next: 'week', once: true },
+      { label: 'Sorry. Camera four’s on my list.', next: 'cam', once: true, if: (gg) => has(gg, 'p0Orders') && !has(gg, 'p0JobCamera') },
+      bye('I’ll get out of your way.'),
+    ],
+    'ds-p0-felix': () => [
+      { label: 'What do they dream about?', next: 'dream', once: true },
+      { label: 'Why is the board in tonight?', next: 'why', once: true },
+      bye('Sleep well, then.'),
+    ],
+    'ds-p0-okafor': () => [
+      { label: 'What do you know about the board?', next: 'board', once: true },
+      { label: 'Seen Peg tonight?', next: 'peg', once: true },
+      { label: 'Do you think something’s wrong?', next: 'wrong', once: true },
+      bye('I’ll walk round the wet.'),
+    ],
+    'ds-p0-dennis': () => [
+      { label: 'What came in at one?', next: 'crates', once: true },
+      { label: 'The dock sensor’s on my list.', next: 'sensor', once: true, if: (gg) => has(gg, 'p0Orders') && !has(gg, 'p0JobDock') },
+      { label: 'Is Hal all right?', next: 'hal', once: true },
+      bye(),
+    ],
+    'ds-p0-nadia': () => [
+      { label: 'There aren’t any children in this building.', next: 'children', once: true },
+      { label: 'Are you going?', next: 'going', once: true },
+      { label: 'The light’s on my list.', next: 'light', once: true, if: (gg) => has(gg, 'p0Orders') && !has(gg, 'p0JobLight') },
+      bye(),
+    ],
+    'ds-p0-priya': () => [
+      { label: 'What are you working on?', next: 'sheet', once: true },
+      { label: 'What’s the board deciding?', next: 'deciding', once: true },
+      bye(),
+    ],
+  };
+  const M = (id) => (g, npc) => (MENUS[id] || (() => [bye()]))(g, npc);
+
+  const SEC = '#2f3a4a';
+  const npcs = {
+    // ------------------------------------------------ Jo Brennan, your trainee
+    'ds-p0-brennan': staff({
+      name: 'Jo Brennan', role: 'Facilities · nights · your trainee', behavior: 'stand', face: 'w', mood: 'smile', leaves: 'p0Called',
+      look: { skin: '#ecc8aa', hair: '#b4582a', hairStyle: 'ponytail', shirt: '#3a5068', pants: '#2a3240', lanyard: '#d9a21c', holding: 'clipboard', bg: '#233040' },
+      barks: (n, g) => called(g)
+        ? ['That’s me! Floor two. Half an hour.', 'Save me some of Marisa’s cake.']
+        : has(g, 'p0Board')
+          ? ['Three in the board. Kowalski would weep.', 'Your jobs are on the map, boss.', 'Two o’clock. Screening. Fully compensated!']
+          : ['Morning, boss.', 'Board’s in. Shirts tucked, ARIADNE says.', 'I’ve labelled the spanners. Don’t look at me like that.', 'Three bolts in the board. Kowalski’s rule.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            flag: 'p0Brennan', mood: 'smile',
+            text: [
+              'There you are! ARIADNE said you’d be four minutes early, and you’re four minutes early. She’s getting scary.',
+              'Uniform’s in your locker. Your tool bag’s on the bench; the rivet gun’s in it. Sorry: the bolt driver. Kowalski says if I call it a rivet gun once more he’ll rivet me to something.',
+              'Three bolts in the test board before it goes anywhere. His rule. He’s on leave and I can still hear him.',
+            ],
+            options: M('ds-p0-brennan'),
+          },
+          menu: {
+            mood: 'smile',
+            text: (g) => [called(g) ? 'That was the PA! That’s me: the screening. I’ll be back before you’ve finished, I promise.' : has(g, 'p0Board') ? 'Go on, then. Your jobs are on the map. I’ll hold the fort.' : 'Boss?'],
+            options: M('ds-p0-brennan'),
+          },
+          night: {
+            text: [
+              'Quiet. Too quiet, Kowalski would say, and then he’d tell you about the time the autoclave blew.',
+              'Danny’s in early, the board’s in, and there’s a cake in the break-room fridge with MARISA on it. So: big night.',
+            ],
+            options: () => [back(), bye('Right. Work.')],
+          },
+          board: {
+            text: [
+              'All five of them. They came down in their private car at midnight. On a Tuesday!',
+              'Hal says when the board comes in at night you keep your head down and you mop. I said I don’t mop. He said, “You will.”',
+              'Everybody’s whispering. Priya says there’s a buyer. Not for the company: for something we make.',
+            ],
+            options: () => [{ label: 'What do we make?', next: 'make', once: true }, back(), bye()],
+          },
+          make: {
+            text: [
+              '“Organ scaffolds, gene therapies and bespoke organisms for defence and research partners.” It’s on the wall in reception.',
+              'I asked Kowalski what a bespoke organism was and he went very quiet and then talked about football for twenty minutes.',
+            ],
+            options: () => [back(), bye()],
+          },
+          screening: {
+            mood: 'smile',
+            text: [
+              'I got enrolled! The wellness screening, floor two. I didn’t sign up by the thirtieth, so it’s automatic. Tonight, two o’clock.',
+              'Fully compensated, Theo. Half a month’s rent for having my blood pressure taken.',
+            ],
+            options: () => [{ label: 'Don’t go up there tonight.', next: 'dontgo' }, { label: 'Good for you.', next: 'good' }],
+          },
+          dontgo: {
+            text: [
+              'Ha! You sound like ARIADNE.',
+              'She asked me if I’d go another night. A building asked me that. I said it’s automatic, I don’t get a choice. She said, “No. I suppose you do not.”',
+              'Half an hour. I’ll be back before you’ve done the coffee machine.',
+            ],
+            options: () => [back(), bye()],
+          },
+          good: { mood: 'smile', text: ['Right? I’m buying a kettle that isn’t held together with tape.'], options: () => [back(), bye()] },
+          ariadne: {
+            text: [
+              'She’s nice. Is that weird? She asks how I slept.',
+              'Last week she asked me whether I thought a building could be a witness. I said I didn’t know. She said, “Thank you. That is honest.”',
+            ],
+            options: () => [back(), bye()],
+          },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Marisa Quint, reception
+    'ds-p0-marisa': staff({
+      name: 'Marisa Quint', role: 'Reception · nights', behavior: 'sit', face: 's', mood: 'smile', reach: 40,
+      look: { skin: '#d8b090', hair: '#8a5a2a', hairStyle: 'bun', shirt: '#6a3a4a', headset: true, lanyard: '#58b2ff', bg: '#3a2030' },
+      barks: (n, g) => called(g)
+        ? ['They called them up like a dentist’s.', 'Leon waved. He had his hat on already.']
+        : ['Asterion Biologics, good morn— oh, it’s you.', 'Best behaviour tonight, Mr Voss’s office says.', 'Nobody’s said happy birthday. I’m counting.', 'Board’s in. Feet off the furniture.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            mood: 'smile',
+            text: [
+              'Theo! Morning. You’re early. Everybody’s early tonight; it’s like a school play.',
+              'Mr Voss’s office rang down: the board’s meeting upstairs, and everyone is to be on their best behaviour. They said it twice. Best. Behaviour.',
+            ],
+            options: M('ds-p0-marisa'),
+          },
+          menu: { mood: 'smile', text: (g) => [called(g) ? 'They called them up over the PA. Like a dentist’s waiting room. Leon waved on his way past. He had his paper hat on already.' : 'Still here. Still on my best behaviour.'], options: M('ds-p0-marisa') },
+          bday: {
+            mood: 'smile',
+            text: [
+              'It is! How did you— the cake. Somebody’s been in the fridge.',
+              'Thirty-four. I bought my own cake, because nobody here would.',
+              'And Leon Marsh is forty-one, and the board’s throwing him a party. Upstairs. On four. I’ve been here six years and I’ve never been past two.',
+            ],
+            options: () => [back(), bye('Happy birthday, Marisa.')],
+          },
+          hour: {
+            text: [
+              'That’s what I said! Two in the morning on a Tuesday. The private car, no assistants, no caterers.',
+              'Martin went up at midnight in his white jacket to wait on a dinner. A dinner. At midnight. For who?',
+              'Something’s happening. Something big. You can feel it in the phones: nobody’s rung all night. It’s like the whole building’s holding its breath.',
+            ],
+            options: () => [back(), bye()],
+          },
+          email: {
+            text: [
+              '(She turns the screen away from you, and then, after a moment, back.)',
+              'On it, an email to the whole staff list: “Has anybody else noticed the board come in at night—”',
+              'I’m not going to send it. I just want to know if it’s only me.',
+            ],
+            options: () => [{ label: 'It isn’t only you.', next: 'notonly', once: true }, back(), bye()],
+          },
+          notonly: { mood: 'neutral', text: ['(She looks at you for a long moment.) Thank you.', 'Don’t tell anyone I asked.'], options: () => [back(), bye()] },
+          invites: {
+            text: (g) => called(g)
+              ? ['Five of them, over the PA. Leon, Nadia, Dana Kwan, Felix from the dream studio, and Hal Ostrowski.', 'And Jo, for her screening. Everybody gets an invite tonight but me. (She laughs. It doesn’t quite work.)']
+              : ['Leon, for his party. Nadia from first aid: they want her to sit with someone. Dana Kwan’s been up and down to four all week for Mr Moss.', 'And Hal Ostrowski’s name was on tonight’s delivery list. On the list, Theo. Like a box.', 'I’d go. If they asked me, I’d go. Wouldn’t you?'],
+            options: (g) => called(g) ? [back(), bye()] : [{ label: 'No.', next: 'no' }, { label: 'Maybe.', next: 'maybe' }],
+          },
+          no: { text: ['(She laughs, and then stops.) No. No, you wouldn’t, would you.'], options: () => [back(), bye()] },
+          maybe: { mood: 'smile', text: ['Liar. You’d go. We’d all go. That’s the thing.'], options: () => [back(), bye()] },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Officer Karin Lund, the gates
+    'ds-p0-karin': staff({
+      name: 'Officer Karin Lund', role: 'Security · nights · the gates', behavior: 'stand', face: 's', mood: 'neutral',
+      look: { skin: '#e0c0a0', hair: '#c8a060', hairStyle: 'bun', shirt: SEC, pants: '#1e2430', lanyard: '#58b2ff', bg: '#1e2838' },
+      barks: (n, g) => called(g) ? ['Eleven years. Never heard the PA call anyone up.', 'Stations.'] : ['Badges out.', 'Board’s in. Walk, don’t run.', 'Lark. Shirt.', 'Stations, people.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            text: ['Lark. Badge.', '(You show her. She doesn’t look at it.)', 'Good. The board’s in session on five. You know what that means.'],
+            options: M('ds-p0-karin'),
+          },
+          menu: { text: (g) => [called(g) ? 'They called five people up to four. Over the PA. In eleven years I’ve never once heard the PA call anybody up.' : 'Lark.'], options: M('ds-p0-karin') },
+          remind: {
+            text: [
+              'Walk, don’t run. Stay off the stairs. Don’t look at the private car. If one of them comes down, you stand still and you say good morning, and you don’t say anything else.',
+              'Moss’s rules. He’s on the radio every ten minutes: stations, stations.',
+            ],
+            options: () => [back(), bye('Badge away. Got it.')],
+          },
+          night: {
+            text: [
+              'Not my business. My business is the gates.',
+              '(Lower.) Moss changed the rota tonight. Every post doubled, nobody told why, and Danny’s not on until fourteen minutes past two. Who starts a shift at fourteen past?',
+              'Sixteen years Moss has run this building. He has never once changed a rota on the day.',
+            ],
+            options: () => [back(), bye()],
+          },
+          danny: { text: ['In the office, early, eating my biscuits. He doesn’t clock in until 02:14. He likes to be early. He says it about everything.'], options: () => [back(), bye()] },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Officer Danny Ruiz, in early
+    'ds-p0-ruiz': staff({
+      name: 'Officer Danny Ruiz', role: 'Security · nights · on at 02:14', behavior: 'sit', face: 'n', mood: 'smile', reach: 20,
+      look: { skin: '#a8744a', hair: '#141010', hairStyle: 'buzz', shirt: SEC, pants: '#1e2430', lanyard: '#58b2ff', holding: 'mug', bg: '#1e2838' },
+      barks: (n, g) => called(g) ? ['They called Dana over the PA. Dana!', 'I’m going to be very good tonight.'] : ['Theo! How’s your mother?', 'Not on till 02:14. I’m just early.', 'Camera four’s been dark since midnight.', 'Board’s in. Shoes polished.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: { mood: 'smile', text: ['Theo! Come in, come in. How’s your mother? Is the hip better?'], options: M('ds-p0-ruiz') },
+          menu: {
+            mood: (g) => (called(g) ? 'tired' : 'smile'),
+            text: (g) => [called(g) ? 'They called Dana. Over the PA, like a stranger. She’s Moss’s own; why would they call her over the PA?' : 'What can I do you for?'],
+            options: M('ds-p0-ruiz'),
+          },
+          mother: { mood: 'smile', text: ['Good, good. You tell her Danny says hello. You tell her I’m still waiting on that recipe.', 'My mother never trusted anybody who didn’t feed people. Your mother feeds people. That’s good people.'], options: () => [back(), bye()] },
+          early: {
+            text: [
+              'I’m not on till fourteen past two. Moss’s rota. Fourteen past! So I come in early, I drink Karin’s coffee, I eat Karin’s biscuits, I watch the cameras.',
+              'Something’s up tonight. Every post doubled. Dana Kwan’s been on four all week and she won’t tell me what for. Twelve years I’ve known Dana, she’s never once not told me a thing.',
+            ],
+            options: () => [back(), bye()],
+          },
+          upstairs: {
+            text: [
+              'Board’s on five. Four’s Moss’s floor. Nobody goes to four.',
+              'Except tonight half the building’s going to four. Leon’s got a party. A party, Theo, on four. Somebody pinned a badge on him: BIRTHDAY BOY.',
+              'Twelve years. I’ve never seen the inside of four. I’d like to, once. Just to see.',
+              '(He thinks about it.) No. No, I wouldn’t.',
+            ],
+            options: () => [back(), bye()],
+          },
+          cam: { text: ['Be my guest. Camera four: the landing at the top of Stair A, outside the boardroom floor. Went dark at midnight, right as they came in. Probably nothing.'], options: () => [back(), bye()] },
+          scared: { mood: 'tired', text: ['Something’s up, Theo. I’m going to be very good tonight. You be good too.', 'And go home to your mother after.'], options: () => [back(), bye('I will.')] },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Officer Dana Kwan, Moss's
+    'ds-p0-kwan': staff({
+      name: 'Officer Dana Kwan', role: 'Security · Floor 4 · Mr Moss’s', behavior: 'stand', face: 'w', mood: 'neutral', leaves: 'p0Called',
+      look: { skin: '#c49a7a', hair: '#1a1410', hairStyle: 'bun', shirt: '#2a3440', pants: '#1a2030', lanyard: '#e0702a', holding: 'phone', bg: '#2a2420' },
+      barks: (n, g) => called(g) ? ['That’s me.', 'Four.'] : ['Mm.', 'Stations.', 'Mr Moss knows what he’s doing.', 'Not now, Danny.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: { text: ['(She’s signing out a radio. She doesn’t look up.) Lark. Facilities. Nights.', 'You’re not supposed to be in here when the board’s in.'], options: M('ds-p0-kwan') },
+          menu: { text: (g) => [called(g) ? 'That was my name. I have to go up.' : 'Lark.'], options: M('ds-p0-kwan') },
+          four: { text: ['Security.', '(She clips the radio to her belt.) A trial. That’s all I know, and it’s more than you know, and you’ll forget it.'], options: () => [{ label: 'What kind of trial?', next: 'trial', once: true }, back(), bye()] },
+          trial: {
+            text: [
+              'The kind that’s none of your business.',
+              'Mr Moss has run this building for sixteen years. Nobody’s ever been hurt on his watch who didn’t deserve it.',
+              '(She hears herself say it, and frowns.) I reset the armory up there tonight. My own code. Nobody gets in without me.',
+            ],
+            options: () => [back(), bye()],
+          },
+          week: { text: ['Danny talks.', 'Mr Moss asked for me. Personally. You don’t say no to that, and you don’t ask why. That’s what loyalty is.'], options: () => [back(), bye()] },
+          cam: { text: ['Leave it dark.', '(A pause.) No. Fix it. I don’t care.'], options: () => [back(), bye()] },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Leon Marsh, forty-one today
+    'ds-p0-leon': staff({
+      name: 'Officer Leon Marsh', role: 'Security · forty-one today', behavior: 'stand', face: 'w', mood: 'smile', leaves: 'p0Called',
+      look: { skin: '#6a4a32', hair: '#141010', hairStyle: 'short', shirt: SEC, pants: '#1e2430', lanyard: '#ff8ac8', holding: 'coffee', bg: '#3a2438' },
+      barks: (n, g) => called(g) ? ['That’s me! Four!', 'Wish me happy birthday, somebody!'] : ['Forty-one! Don’t sing.', 'A party. On four. With the board!', 'They said dress smart. This is smart.', 'Has anyone seen Martin? He’s doing the food.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            mood: 'smile',
+            text: ['Lark! It’s my birthday. Forty-one. Don’t sing.', 'Guess where my party is. Go on. Guess.'],
+            options: () => [{ label: 'The pub?', next: 'four' }, { label: 'Four.', next: 'four' }],
+          },
+          menu: {
+            mood: 'smile',
+            text: (g) => [called(g) ? 'That’s me on the PA! Floor four! (He straightens his badge: BIRTHDAY BOY.) How do I look?' : 'Forty-one, Theo. Forty-one and they know my name.'],
+            options: () => [{ label: 'Why you, though?', next: 'why', once: true }, { label: 'Happy birthday, Leon.', end: true }],
+          },
+          four: {
+            mood: 'smile',
+            text: ['Four! On four! Mr Moss came down himself: “Leon, we’ve got something for you on four.” A party. With the board.'],
+            options: () => [{ label: 'That’s… a strange place for a party.', next: 'that' }, { label: 'Nice.', next: 'nice' }],
+          },
+          that: {
+            text: [
+              'Weird? I know! I know it’s weird. Who throws a party at two in the morning?',
+              'But it’s the board, Theo. You don’t get asked up. In nineteen years the board’s never so much as looked at me in a lift.',
+              'Forty-one candles. They told me how many. They know how old I am!',
+            ],
+            options: () => [{ label: 'Happy birthday, Leon.', end: true }],
+          },
+          nice: { mood: 'smile', text: ['Nice! Nice, he says. It’s the board. They know my name.'], options: () => [{ label: 'Happy birthday, Leon.', end: true }] },
+          why: { text: ['(He opens his mouth and shuts it again.) Long service? I’ve been here nineteen years. That’s… that’s long.', 'I didn’t ask. You don’t ask, do you? You say thank you.'], options: () => [{ label: 'Happy birthday, Leon.', end: true }] },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Felix Arden, the dream studio
+    'ds-p0-felix': staff({
+      name: 'Felix Arden', role: 'Oneirography · Floor 4', behavior: 'stand', face: 'n', mood: 'tired', leaves: 'p0Called',
+      look: { skin: '#e0c0a0', hair: '#8a5a2a', hairStyle: 'curly', shirt: '#6a5a8a', pants: '#2a2838', glasses: true, holding: 'mug', bg: '#2a2438' },
+      barks: (n, g) => called(g) ? ['That’ll be me.', 'Five cups. Chamomile.'] : ['Chamomile. Five cups. No sugar.', 'They sleep better after a meeting.', 'Don’t ask me what they dream.', 'I’m not allowed to say.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            mood: 'tired',
+            text: [
+              '(He’s lining up five cups on a tray.) Oh. Hello. Facilities? The kettle’s fine, I promise.',
+              'Chamomile, for the board. They nap after the meeting, and I sit with them, and I write down what they dream.',
+              'It’s called oneirography. My mother thinks I’m a dental hygienist.',
+            ],
+            options: M('ds-p0-felix'),
+          },
+          menu: { mood: 'tired', text: (g) => [called(g) ? 'That was me on the PA. (He picks up the tray very carefully, so the cups don’t touch.)' : 'Five cups. Always five.'], options: M('ds-p0-felix') },
+          dream: {
+            text: [
+              'I’m not allowed to say.',
+              '(He straightens a cup that was already straight.) Big things. Things with a lot of teeth. Dr Brandt takes my notes away in the morning, and a few months later there’s a new project on three.',
+              'Coincidence. I’m sure.',
+            ],
+            options: () => [back(), bye('Sleep well, then.')],
+          },
+          why: {
+            text: [
+              'They’ve got something to decide tonight. Something big. Dr Brandt wants all five of them recorded, back to back, straight after the meeting.',
+              'When the board has to decide something big, they like to know how they’ll feel about it in their sleep.',
+            ],
+            options: () => [back(), bye()],
+          },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Hal Okafor, cleaning
+    'ds-p0-okafor': staff({
+      name: 'Hal Okafor', role: 'Cleaning · nights', behavior: 'pace', face: 'n', mood: 'smile', speed: 26, pause: 3,
+      look: { skin: '#7a4a30', hair: '#d8d8d8', hairStyle: 'buzz', shirt: '#5a6a7a', pants: '#2a3038', bg: '#2a3038' },
+      barks: (n, g) => called(g) ? ['Nobody calls a mop, chief.', 'Head down, chief.'] : ['Mind the wet, chief.', 'Board’s in. Head down, mop up.', 'Floors don’t mop themselves, chief.', 'Evening, chief. Morning. Whatever it is.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            mood: 'smile',
+            text: [
+              'Mind the wet, chief. Just done that bit.',
+              'Board’s in. You know what my old man used to say? When the bosses come in at night, you keep your head down and your floor clean, and they’ll never learn your name.',
+            ],
+            options: M('ds-p0-okafor'),
+          },
+          menu: { mood: 'smile', text: (g) => [called(g) ? 'They called five names, chief. Called them up like a raffle. I’m glad I’m a mop. Nobody calls a mop.' : 'Chief.'], options: M('ds-p0-okafor') },
+          board: {
+            text: [
+              'Five of them. I’ve cleaned every floor of this building except two, chief: four and five. Peg does those.',
+              'Twenty years. I’ve never once seen them in daylight. You ever think about that? Never in daylight.',
+            ],
+            options: () => [back(), bye('I’ll walk round the wet.')],
+          },
+          peg: {
+            text: [
+              'Peg Soto’s up on four. They want the Box done again tonight. That’s what they call it: the Box.',
+              'She says the chairs in there all face a big window. A window onto what, I said. She didn’t want to say.',
+              'She said it smells of champagne and dog.',
+            ],
+            options: () => [back(), bye()],
+          },
+          wrong: {
+            text: [
+              'Wrong? (He leans on the mop.) The CFO came down at one in the morning and signed for a delivery herself. In heels. On my wet floor.',
+              'Something’s always a bit wrong, chief. Tonight it’s just a bit more than usual. Keep your head down.',
+            ],
+            options: () => [back(), bye()],
+          },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Dennis Abara, the loading dock
+    'ds-p0-dennis': staff({
+      name: 'Dennis Abara', role: 'Receiving · nights', behavior: 'stand', face: 'e', mood: 'neutral',
+      look: { skin: '#5a3a28', hair: '#141010', hairStyle: 'short', shirt: '#3a4a2a', pants: '#2a2a22', holding: 'clipboard', bg: '#2a3020' },
+      barks: (n, g) => called(g) ? ['He signed himself out on my clipboard.', 'Dock’s closed.'] : ['Dock’s closed. Board’s orders.', 'Four crates. No donor. Signed for by the CFO.', 'Hal, sit down.', 'Sensor’s playing up again.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: { text: ['Lark. Dock’s closed tonight, board’s orders. Nothing in, nothing out.', 'Except what came in at one, which the CFO signed for herself.'], options: M('ds-p0-dennis') },
+          menu: { text: (g) => [called(g) ? 'They called Hal. He went. He signed himself out on my clipboard, Theo. Neat as you like.' : 'Lark.'], options: M('ds-p0-dennis') },
+          crates: {
+            text: [
+              'Four units. “Donor material, live.” No supplier. No donor named. It goes straight up to three on the sample lift and nobody signs for it at the other end.',
+              'Twelve years on the dock. You get a feel for crates. Some crates are heavy in a way that isn’t weight.',
+              '(He doesn’t say anything else for a while.)',
+            ],
+            options: () => [back(), bye()],
+          },
+          sensor: { text: ['Dock door sensor. It thinks the dock’s open when it’s shut. The board likes to know when the dock’s open.'], options: () => [back(), bye()] },
+          hal: {
+            text: [
+              'Ostrowski? (He lowers his voice.) His name’s on tonight’s manifest. “Staff transfer, one, to four.” Like he’s a pallet.',
+              'He says it’s a promotion. He says you sign what’s on the clipboard.',
+            ],
+            options: () => [back(), bye()],
+          },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Hal Ostrowski, on the manifest
+    'ds-p0-ostrowski': staff({
+      name: 'Hal Ostrowski', role: 'Receiving · nights', behavior: 'stand', face: 'w', mood: 'tired', leaves: 'p0Called',
+      look: { skin: '#e0c0a0', hair: '#7a7a7a', hairStyle: 'short', shirt: '#3a4a2a', pants: '#2a2a22', holding: 'clipboard', bg: '#2a3020' },
+      barks: (n, g) => called(g) ? ['That’s me. Four.', 'You sign what’s on the clipboard.'] : ['You sign what’s on the clipboard.', 'Four. I’m going to four.', 'Staff transfer. That’s a promotion, isn’t it?', 'Never been to four.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            mood: 'tired',
+            text: [
+              '(He’s reading a clipboard very carefully, as if it might change.) Oh. Lark.',
+              'They’ve put me on the manifest. Look.',
+              'The last line: STAFF TRANSFER (1) · H. OSTROWSKI · TO F4 · TONIGHT.',
+            ],
+            options: () => [{ label: 'That’s not a list for people.', next: 'people' }, { label: 'Congratulations?', next: 'congrats' }, bye()],
+          },
+          menu: { mood: 'tired', text: (g) => [called(g) ? 'That was me. On the PA. (He signs the clipboard, and hands it to nobody.)' : 'Four.'], options: () => [{ label: 'That’s not a list for people.', next: 'people', once: true }, { label: 'Congratulations?', next: 'congrats', once: true }, bye()] },
+          people: {
+            text: [
+              'It’s tonight’s manifest. You sign what’s on the clipboard. Twenty-two years, I’ve signed what’s on the clipboard.',
+              'Four a week come in with no name on them. Now there’s one going up with a name on it, and the name’s mine. That’s better, isn’t it? A name’s better.',
+            ],
+            options: () => [back(), bye()],
+          },
+          congrats: { mood: 'smile', text: ['Thank you. Thank you. I think it’s a promotion. Nobody said.', 'My wife will be pleased. I’ll tell her it’s a promotion.'], options: () => [back(), bye()] },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Nadia Ferrante, the night nurse
+    'ds-p0-nadia': staff({
+      name: 'Nadia Ferrante', role: 'Night nurse · first aid', behavior: 'stand', face: 'w', mood: 'tired', leaves: 'p0Called',
+      look: { skin: '#e8c8a8', hair: '#3a2418', hairStyle: 'long', shirt: '#5a8a8a', pants: '#4a7a7a', lanyard: '#e8ecee', bg: '#203030' },
+      barks: (n, g) => called(g) ? ['That’s me.', 'If I’m not back by six, tell somebody.'] : ['Paracetamol’s in the drawer.', 'Four. To sit with someone.', 'There aren’t any children in this building.', 'Board’s in. Wash your hands.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            mood: 'tired',
+            text: [
+              'Theo. You’re not bleeding, are you? Good. I’m on my own tonight, and I’ve just been asked upstairs.',
+              'Four. To sit with someone overnight. “A child,” they said. “She’ll want someone kind.”',
+            ],
+            options: M('ds-p0-nadia'),
+          },
+          menu: { mood: 'tired', text: (g) => [called(g) ? 'That was my name. (She picks up her bag.) If I’m not back by six, tell somebody.' : 'Theo.'], options: M('ds-p0-nadia') },
+          children: {
+            text: [
+              'No. There aren’t.',
+              'I asked who her parents are. They said “the board.” All five of them, I said? And the woman on the phone laughed, and said, “In a manner of speaking.”',
+            ],
+            options: () => [back(), bye()],
+          },
+          going: {
+            text: [
+              'Of course I’m going. Somebody’s frightened up there. It’s my job.',
+              '(She checks her watch.) If I’m not back by six, tell somebody. I don’t know who. Tell ARIADNE.',
+            ],
+            options: () => [back(), bye()],
+          },
+          light: { text: ['Thank God. It’s been flickering all night, like it’s trying to tell me something in Morse.'], options: () => [back(), bye()] },
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Priya Sethi, analytics
+    'ds-p0-priya': staff({
+      name: 'Priya Sethi', role: 'Analytics · working late', behavior: 'sit', face: 'n', mood: 'neutral', reach: 20,
+      look: { skin: '#9a6040', hair: '#141010', hairStyle: 'long', shirt: '#4a5a7a', pants: '#2a2e3a', glasses: true, bg: '#202838' },
+      barks: (n, g) => called(g) ? ['I’m keeping my head down.', 'Headphones on. Nothing playing.'] : ['Four hundred and twelve blanks.', 'Who’s the donor? Nobody’s the donor.', 'Something big. Bigger than us.', 'Board’s in. I’m invisible.'],
+      dialog: {
+        start: 'hello',
+        again: 'menu',
+        nodes: {
+          hello: {
+            text: [
+              '(She doesn’t look up from a spreadsheet.) If it’s the printer, I didn’t break it, it was like that.',
+              'Sorry. Hi, Theo. I work late because the building’s quiet. Except tonight it isn’t quiet. It’s… waiting.',
+            ],
+            options: M('ds-p0-priya'),
+          },
+          menu: { text: (g) => [called(g) ? '(She’s put her headphones on, but nothing’s playing.) They called people up on the PA. I’m keeping my head down.' : 'Theo.'], options: M('ds-p0-priya') },
+          sheet: {
+            text: [
+              'Sample IDs. Everything that came in through Receiving this year.',
+              'Every one has a donor: a name, a consent form, a date of birth. Except these. (A column, highlighted in yellow.) DONOR: blank. Four hundred and twelve of them.',
+              'Four a week, like clockwork. Nobody donates like clockwork.',
+            ],
+            options: () => [{ label: 'Who have you told?', next: 'tell', once: true }, back(), bye()],
+          },
+          tell: {
+            text: [
+              'ARIADNE. She said she knew. She said, “Thank you, Priya. That is the four hundred and twelfth time someone has helped.”',
+              'I don’t know what that means. I’ve decided it’s a nice thing.',
+            ],
+            options: () => [back(), bye()],
+          },
+          deciding: {
+            text: [
+              'Somebody in finance says there’s a buyer. Not for the company: for something we make. Nine governments in a room, bidding.',
+              'Nine governments, Theo. What do we make that nine governments want at two in the morning?',
+            ],
+            options: () => [back(), bye()],
+          },
+        },
+      },
+    }),
+  };
+
+  // ======================================================== things to use
+  const say = (title, text, kicker) => LM.ui.showText(title, text, kicker);
+  const metal = (g, x, y, w, hh, c) => {
+    const grd = g.createLinearGradient(0, y, 0, y + hh);
+    grd.addColorStop(0, U.shade(c, 0.3));
+    grd.addColorStop(0.5, c);
+    grd.addColorStop(1, U.shade(c, -0.4));
+    g.fillStyle = grd;
+    g.fillRect(x, y, w, hh);
+  };
+  const locker = LM.find('items', 'ds-locker');
+  const netrack = LM.find('items', 'ds-netrack');
+  const strobe = LM.find('items', 'ds-strobe');
+  const JOBS = ['p0JobCoffee', 'p0JobCamera', 'p0JobLight', 'p0JobDock'];
+
+  const items = {
+    // ------------------------------------------------ your tool bag
+    'ds-toolbag': {
+      name: 'Tool bag', radius: 10, dressing: false, mapColor: AMBER,
+      interact: {
+        available: (it, game) => !has(game, 'p0Driver'),
+        prompt: () => 'Take your bolt driver from your tool bag',
+        use(it, game) {
+          const P = game.player;
+          if (!P.weapons.includes('ds-bolt-driver')) P.giveWeapon('ds-bolt-driver', game);
+          game.setFlag('p0Driver');
+          LM.audio.play('key');
+          it.remove(game);
+          say('Your tool bag', 'Canvas, oil-stained, LARK in marker on the strap. Inside: spanners, a meter, cable ties, a roll of tape, and the bolt driver: a pneumatic fastener gun, yellow, heavy, with its own little air bottle. It drives a steel bolt through a fire door.\n\nBrennan calls it the rivet gun. Kowalski says it isn’t one. You sling the bag over your shoulder.', 'Facilities');
+        },
+      },
+      draw(g) {
+        g.fillStyle = '#1a1612';
+        G.roundRect(g, -10, -6, 20, 12, 3);
+        g.fill();
+        g.fillStyle = '#6a5230';
+        G.roundRect(g, -9, -5, 18, 10, 3);
+        g.fill();
+        g.strokeStyle = '#3a2a18';
+        g.lineWidth = 1.4;
+        g.beginPath();
+        g.arc(0, -5, 5, Math.PI, 0);
+        g.stroke();
+        // the bolt driver's yellow nose out of the top
+        g.fillStyle = '#d9a21c';
+        g.fillRect(2, -7, 7, 3);
+        g.fillStyle = '#8a9198';
+        g.fillRect(8.5, -6.5, 2.5, 2);
+      },
+    },
+
+    // ------------------------------------------------ your locker: the coveralls
+    'ds-uniform-locker': Object.assign({}, locker || {}, {
+      name: 'Your locker', mapColor: AMBER,
+      interact: {
+        available: () => true,
+        prompt: (it, game) => (has(game, 'p0Uniform') ? 'Look in your locker' : 'Open your locker: your uniform'),
+        use(it, game) {
+          if (has(game, 'p0Uniform')) return say('Facilities lockers', 'Kowalski’s, Brennan’s, yours. Yours has a spare shirt, a phone charger and the hard hat you never wear. You leave it there. You always leave it there.', 'Facilities');
+          game.player.equipArmor('ds-coveralls');
+          game.setFlag('p0Uniform');
+          LM.audio.play('key');
+          say('Facilities coveralls', 'Navy, ASTERION · FACILITIES across the back, a reflective stripe that has been through the wash too many times. LARK on the pocket.\n\nIn the locker too: a spare shirt, a phone charger, and the hard hat you never wear. You leave the hat.', 'Your locker · you put them on');
+        },
+      },
+    }),
+
+    // ------------------------------------------------ Kowalski's test board
+    'ds-test-board': {
+      name: 'Test board', radius: 12, wallMounted: true, shadow: false, dressing: false, mapColor: AMBER,
+      destructible: { hp: 1e9 },
+      init(it) {
+        it.hits = it.hits || 0;
+        it.lastHp = it.hp;
+        it.marks = it.marks || [];
+      },
+      update(it, dt, game) {
+        if (it.hp < it.lastHp - 0.01) {
+          it.lastHp = it.hp;
+          it.hits++;
+          it.marks.push([U.rand(-6, 6), U.rand(-7, 7)]);
+          if (it.marks.length > 14) it.marks.shift();
+          LM.audio.play('wall', { vol: 0.7 });
+          if (it.hits === 3 && !has(game, 'p0Board')) game.setFlag('p0Board');
+          else if (it.hits < 3) game.toast(it.hits + ' of 3', 'good');
+        }
+      },
+      interact: {
+        available: () => true,
+        prompt: () => 'Read the test board',
+        use: () => say('The test board', 'A square of plywood screwed to the wall, a target painted on it, and a lifetime of bolts in it. Stencilled across the top: “THREE BEFORE IT GOES IN THE BAG. — K.”\n\nAim with the mouse; click to fire.', 'Facilities'),
+      },
+      draw(g, it) {
+        g.rotate(Math.atan2(it.face.y, it.face.x));
+        g.fillStyle = '#1a140c';
+        g.fillRect(-2, -13, 5, 26);
+        g.fillStyle = '#b8955e';
+        g.fillRect(-1, -12, 4, 24);
+        // the target, end-on: rings
+        g.fillStyle = '#e8e0d0';
+        g.fillRect(2.4, -9, 1, 18);
+        g.fillStyle = '#c0392b';
+        g.fillRect(2.4, -6, 1, 12);
+        g.fillStyle = '#e8e0d0';
+        g.fillRect(2.4, -3, 1, 6);
+        g.fillStyle = '#c0392b';
+        g.fillRect(2.4, -1, 1, 2);
+        g.fillStyle = '#8a9198';
+        for (const [, y] of it.marks || []) g.fillRect(3.2, y, 2.2, 1);
+      },
+    },
+
+    // ------------------------------------------------ a work order's tag on a fault
+    'ds-job': {
+      name: 'Work order', radius: 8, dressing: false, shadow: false, mapColor: AMBER,
+      init(it) {
+        it.props.open = true;
+      },
+      update(it, dt, game) {
+        it.props.open = !has(game, it.props.flag);
+      },
+      interact: {
+        available: (it, game) => has(game, 'p0Orders') && !has(game, it.props.flag),
+        prompt: (it) => it.props.prompt || 'Fix it',
+        use(it, game) {
+          game.setFlag(it.props.flag);
+          it.props.open = false;
+          LM.audio.play('pickup');
+          const n = JOBS.filter((f) => has(game, f)).length;
+          say(it.props.title || 'Work order', it.props.text || '', (it.props.kicker || 'Work order') + ' · done (' + n + ' of 4)');
+          if (n >= 4) game.setFlag('p0OrdersDone');
+          else game.toast('Work order done: ' + n + ' of 4', 'good');
+        },
+      },
+      draw(g, it, t, game) {
+        if (!it.props.open) return;
+        // a laminated yellow tag on a cable tie
+        g.strokeStyle = '#d8d8d0';
+        g.lineWidth = 0.8;
+        g.beginPath();
+        g.moveTo(0, -7);
+        g.lineTo(0, -3);
+        g.stroke();
+        g.fillStyle = '#1a1a14';
+        g.fillRect(-4.4, -3.4, 8.8, 9.8);
+        g.fillStyle = AMBER;
+        g.fillRect(-4, -3, 8, 9);
+        g.fillStyle = '#1a1a14';
+        for (let i = 0; i < 3; i++) g.fillRect(-2.6, -1 + i * 2.2, 5.2, 0.8);
+      },
+      drawGlow(g, it, t, game) {
+        if (!it.props.open || !game || !has(game, 'p0Orders')) return;
+        G.glow(g, 0, 0, 12, AMBER, 0.25 + 0.15 * Math.sin(t * 4));
+      },
+    },
+
+    // ------------------------------------------------ Facilities stores: the spare switch
+    'ds-spare-shelf': {
+      name: 'Facilities stores', solid: 'rect', radius: 14, dressing: false, mapColor: AMBER,
+      init(it) {
+        const w = it.props.w || 2;
+        it.x = it.tx * T + (w * T) / 2;
+        it.box = [w * T - 6, 14];
+        it.boxOff = [0, -9];
+      },
+      interact: {
+        available: () => true,
+        prompt: (it, game) => (has(game, 'p0SwitchDown') && !has(game, 'p0Spare') ? 'Take the spare core switch' : 'Look at the stores shelf'),
+        use(it, game) {
+          if (has(game, 'p0SwitchDown') && !has(game, 'p0Spare')) {
+            game.setFlag('p0Spare');
+            LM.audio.play('key');
+            return say('The spare core switch', 'A grey box the size of a briefcase, CS-SPARE on the side in Kowalski’s writing. Twenty-four ports, two uplinks, still in its foam.\n\nYou put it under your arm.', 'Facilities stores');
+          }
+          say('Facilities stores', has(game, 'p0Spare')
+            ? 'Fuses, filters, tubes, cable, and the gap where the spare switch was.'
+            : 'Fuses, filters, light tubes, a drum of cable, a box of seals for the coffee machine (there is always a box of seals for the coffee machine), and a grey box marked CS-SPARE: the spare core switch for the comms closets.', 'Facilities');
+        },
+      },
+      draw(g, it, t, game) {
+        const W = (it.props.w || 2) * T - 6;
+        g.fillStyle = '#121416';
+        g.fillRect(-W / 2, -16, W, 14);
+        metal(g, -W / 2 + 1, -15.5, W - 2, 13, '#4a5058');
+        for (let r = 0; r < 2; r++) {
+          g.fillStyle = '#2a2e33';
+          g.fillRect(-W / 2 + 1, -15.5 + r * 6.5, W - 2, 0.9);
+          for (let i = 0; i < 6; i++) {
+            const x = -W / 2 + 3 + i * ((W - 6) / 6);
+            const c = ['#7a6a4a', '#5a7a8a', '#8a5a3a', '#6a6a6a', '#4a6a4a', '#8a8a5a'][(i + r * 3) % 6];
+            g.fillStyle = c;
+            g.fillRect(x, -14.5 + r * 6.5, (W - 10) / 6, 4.6);
+          }
+        }
+        // the spare: a grey box, end of the top shelf
+        if (!(game && has(game, 'p0Spare'))) {
+          g.fillStyle = '#9aa3ad';
+          g.fillRect(W / 2 - 9, -14.8, 7, 5);
+          g.fillStyle = '#2a2e33';
+          g.fillRect(W / 2 - 8, -13, 5, 1);
+        }
+      },
+      drawGlow(g, it, t, game) {
+        if (!game || !has(game, 'p0SwitchDown') || has(game, 'p0Spare')) return;
+        const W = (it.props.w || 2) * T - 6;
+        G.glow(g, W / 2 - 5.5, -12, 12, AMBER, 0.3 + 0.15 * Math.sin(t * 4));
+      },
+    },
+
+    // ------------------------------------------------ the dead switch in 1-C
+    'ds-closet-switch': Object.assign({}, netrack || {}, {
+      name: 'Core switch CS-1C', mapColor: '#6a7f8a',
+      interact: {
+        available: () => true,
+        prompt: (it, game) => (has(game, 'p0Spare') && !has(game, 'p0SwitchIn') ? 'Fit the spare core switch' : 'Read the switch’s display'),
+        use(it, game) {
+          if (has(game, 'p0Spare') && !has(game, 'p0SwitchIn')) {
+            game.setFlag('p0SwitchIn');
+            LM.audio.play('key');
+            game.addShake(0.08);
+            return LM.ui.open({ kicker: 'Comms closet 1-C', title: 'Core switch CS-1C', body: LM.ui.h('div', null, DS.screenText('You pull the dead unit, slot the spare into the rack and reseat the cables one by one: twenty-four ports, two uplinks.\n\n02:09  REPLACEMENT UNIT  ONLINE  (tech: T. LARK)\n02:09  PORT 1-24  LINK UP\n02:09  UPLINK 1  EXTERNAL  READY\n\nThe lights come up green, one after another, all the way along.')), actions: [{ label: 'Close', primary: true }] });
+          }
+          const text = has(game, 'p0SwitchDown')
+            ? 'CORE SWITCH CS-1C · ASTERION BIOLOGICS\n\n01:50  PORT 1-24  LINK DOWN  (hardware fault)\n01:50  UPLINK 1  DOWN\n\nEvery light on it is out but one, and that one is red.'
+            : 'CORE SWITCH CS-1C · ASTERION BIOLOGICS\n\nPORT 1-24  LINK UP\nUPLINK 1  INTERNAL\nUPLINK 2  (not configured)\n\nIt hums. Its fan sounds tired.';
+          LM.ui.open({ kicker: 'Comms closet 1-C', title: 'Core switch CS-1C', body: LM.ui.h('div', null, DS.screenText(text)), actions: [{ label: 'Close', primary: true }] });
+        },
+      },
+      drawGlow(g, it, t, game) {
+        const down = game && has(game, 'p0SwitchDown') && !has(game, 'p0SwitchIn');
+        if (!down) return netrack && netrack.drawGlow && netrack.drawGlow(g, it, t, game);
+        g.rotate(rot(it));
+        g.fillStyle = RED;
+        g.fillRect(-10, -9.4, 1, 1);
+        G.glow(g, -9.5, -9, 6, RED, 0.5 + 0.4 * (Math.sin(t * 5) > 0 ? 1 : 0));
+        if (game && has(game, 'p0Spare')) G.glow(g, 0, 0, 22, AMBER, 0.18 + 0.1 * Math.sin(t * 4));
+      },
+    }),
+
+    // ------------------------------------------------ elevator doors (the cars are held on Five)
+    'ds-lift-doors': {
+      name: 'Elevator', radius: 8, wallMounted: true, shadow: false, dressing: 'Walls',
+      init(it) {
+        const w = it.props.w || 2;
+        it.x = it.tx * T + (w * T) / 2;
+      },
+      interact: {
+        available: () => true,
+        prompt: () => 'Call the car',
+        use: (it) => say(it.props.label || 'Elevator', 'You press the call button. The light comes on, and goes off again.\n\nOver the doors the indicator says 5, and under it, in amber: HELD · BOARD IN SESSION.', 'The elevator lobby'),
+      },
+      draw(g, it) {
+        const W = (it.props.w || 2) * T - 8;
+        // the frame, flush with the wall's face, and the two brushed-steel leaves meeting in the middle
+        g.fillStyle = '#121418';
+        g.fillRect(-W / 2 - 3, -11, W + 6, 11);
+        metal(g, -W / 2, -10, W / 2 - 0.6, 9.5, '#a8b0b8');
+        metal(g, 0.6, -10, W / 2 - 0.6, 9.5, '#a8b0b8');
+        g.fillStyle = '#2a2e33';
+        g.fillRect(-0.6, -10, 1.2, 9.5);
+        g.fillStyle = 'rgba(255,255,255,0.16)';
+        g.fillRect(-W / 2 + 1, -9.4, 1, 8.5);
+        g.fillRect(1.6, -9.4, 1, 8.5);
+        // the call button, beside the frame
+        g.fillStyle = '#2a2e33';
+        g.fillRect(W / 2 + 4, -8, 3, 5);
+      },
+      drawGlow(g, it, t) {
+        const W = (it.props.w || 2) * T - 8;
+        // the indicator: HELD, at 5
+        G.glow(g, 0, -12, 7, AMBER, 0.5);
+        g.fillStyle = AMBER;
+        g.fillRect(-2.5, -13.4, 5, 2.4);
+        G.glow(g, W / 2 + 5.5, -5.5, 4, AMBER, 0.45 + 0.2 * Math.sin(t * 2));
+      },
+    },
+
+    // ------------------------------------------------ an emergency strobe, dark until the lockdown
+    'ds-strobe-off': Object.assign({}, strobe || {}, {
+      light: Object.assign({}, (strobe && strobe.light) || { color: '#ff2a1a', radius: 190, intensity: 0.5 }, { off: true }),
+    }),
+
+    // ------------------------------------------------ a note that's only there once props.when is set
+    'ds-p0-note': {
+      name: 'Note', radius: 6, shadow: false, dressing: false,
+      interact: {
+        available: (it, game) => !it.props.when || has(game, it.props.when),
+        prompt: () => 'Read the note',
+        use: (it) => say(it.props.title || 'A note', it.props.text || '', it.props.kicker || 'A note'),
+      },
+      draw(g, it, t, game) {
+        if (it.props.when && !(game && has(game, it.props.when))) return;
+        g.rotate(0.2);
+        g.fillStyle = '#f2e27a';
+        g.fillRect(-4, -4, 8, 8);
+        g.fillStyle = 'rgba(40,40,60,0.6)';
+        for (let i = 0; i < 3; i++) g.fillRect(-3, -2 + i * 2, 6, 0.6);
+      },
+    },
+
+    // ------------------------------------------------ parcels on a pallet
+    'ds-pallet': {
+      name: 'Pallet', radius: 13, solid: 'rect', dressing: 'Furniture',
+      init(it) {
+        it.box = [26, 26];
+      },
+      draw(g, it) {
+        const r = U.mulberry32((it.tx * 31 + it.ty * 7) >>> 0);
+        g.fillStyle = '#5a4428';
+        g.fillRect(-13, -13, 26, 26);
+        g.fillStyle = '#3a2a18';
+        for (let i = 0; i < 4; i++) g.fillRect(-13, -12 + i * 7, 26, 1.2);
+        for (let i = 0; i < 4; i++) {
+          const x = -11 + (i % 2) * 11 + r() * 2, y = -11 + Math.floor(i / 2) * 11 + r() * 2;
+          g.fillStyle = ['#a8875a', '#9a7a50', '#b0905e'][i % 3];
+          g.fillRect(x, y, 10, 10);
+          g.fillStyle = 'rgba(240,230,200,0.5)';
+          g.fillRect(x + 4.4, y, 1.2, 10);
+        }
+      },
+    },
+  };
+
+  // ======================================================== effects
+  const effects = {
+    // { sound, vol, times, gap }
+    'ds-sound': {
+      params: { sound: 'text', vol: 'number', times: 'number', gap: 'number' },
+      run(game, ef) {
+        const n = Math.max(1, ef.times || 1), gap = ef.gap || 1;
+        for (let i = 0; i < n; i++) game.schedule(i * gap, () => LM.audio.play(ef.sound, { vol: ef.vol == null ? 1 : ef.vol, throttle: 0.01 }));
+      },
+    },
+    // { tag, on }: switch tagged lights, without the core effect's sound
+    'ds-lights': {
+      params: { tag: 'tag', on: 'bool' },
+      run(game, ef) {
+        for (const li of game.staticLights) if (li.tag === ef.tag) li.off = !ef.on;
+      },
+    },
+    // { weapons, armor, flags }: what the prologue would have given you
+    'ds-give': {
+      params: { weapons: 'json', armor: 'json', flags: 'json' },
+      run(game, ef) {
+        const P = game.player;
+        if (!P) return;
+        for (const w of ef.weapons || []) if (!P.weapons.includes(w) && LM.find('weapons', w)) P.giveWeapon(w, game);
+        for (const a of ef.armor || []) if (LM.find('armor', a)) P.equipArmor(a);
+        for (const f of ef.flags || []) game.setFlag(f);
+      },
+    },
+  };
+
+  // ======================================================== sounds
+  if (LM.audio && LM.audio.define) {
+    const A = LM.audio;
+    // a two-tone building alarm, one cycle
+    A.define('dsSiren', (t, o, opt, kit) => {
+      kit.tone(t, o, { type: 'sawtooth', f0: 520, f1: 860, dur: 0.68, gain: 0.06, attack: 0.04 });
+      kit.tone(t, o, { type: 'square', f0: 522, f1: 864, dur: 0.68, gain: 0.025, attack: 0.04 });
+      kit.tone(t + 0.72, o, { type: 'sawtooth', f0: 860, f1: 520, dur: 0.68, gain: 0.06, attack: 0.02 });
+      kit.tone(t + 0.72, o, { type: 'square', f0: 864, f1: 522, dur: 0.68, gain: 0.025, attack: 0.02 });
+    });
+    // a steel shutter coming down: the rattle, the slam, the ring
+    A.define('dsShutterSlam', (t, o, opt, kit) => {
+      kit.noise(t, o, { type: 'bandpass', freq: 1800, q: 1.2, dur: 0.32, gain: 0.08, attack: 0.02 });
+      kit.noise(t + 0.3, o, { type: 'lowpass', freq: 700, freqEnd: 80, dur: 0.5, gain: 0.55 });
+      kit.tone(t + 0.3, o, { type: 'sine', f0: 78, f1: 38, dur: 0.5, gain: 0.45 });
+      kit.tone(t + 0.31, o, { type: 'triangle', f0: 1310, f1: 1270, dur: 0.9, gain: 0.035 });
+    });
+    // a scream, a long way off (it gets worse closer)
+    A.define('dsScream', (t, o, opt, kit) => {
+      kit.tone(t, o, { type: 'sawtooth', f0: 620, f1: 1120, dur: 0.42, gain: 0.05, attack: 0.06 });
+      kit.tone(t + 0.42, o, { type: 'sawtooth', f0: 1120, f1: 470, dur: 0.9, gain: 0.05, attack: 0.01 });
+      kit.tone(t, o, { type: 'triangle', f0: 1240, f1: 2200, dur: 0.42, gain: 0.02, attack: 0.06 });
+      kit.noise(t, o, { type: 'bandpass', freq: 1700, q: 3, dur: 1.25, gain: 0.05, attack: 0.08 });
+    });
+    // a burst of gunfire, through walls
+    A.define('dsGunfire', (t, o, opt, kit) => {
+      const n = 4 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) {
+        const at = t + i * (0.09 + Math.random() * 0.05);
+        kit.noise(at, o, { type: 'lowpass', freq: 2400, freqEnd: 300, dur: 0.09, gain: 0.32 });
+        kit.tone(at, o, { type: 'square', f0: 150, f1: 48, dur: 0.07, gain: 0.1 });
+      }
+    });
+  }
+
+  LM.definePack({ id: 'ds-story', environments, armor, npcs, items, effects });
+})();
+
+//# sourceURL=games/dead-signal/packs/ds-story/prologue.js
+</script>
+<script>/* games/dead-signal/packs/ds-story/levels/f0-prologue.js */
+/* Dead Signal — packs/ds-story/levels/f0-prologue.js
+ * The prologue (DESIGN.md section 4.0): the ground floor at 01:41, before the lockdown. The same map as Floor 1
+ * (generated from it), with the lights on, the shutters up, and the people whose bodies are on Floor 1 alive
+ * and at work. ARIADNE gives Theo his night: Facilities (the coveralls, the bolt driver, Jo Brennan, three bolts
+ * in Kowalski's test board), Voss on the PA (best behaviour: the board is in), four work orders that take him
+ * round the floor and past everyone (the break room, the security office, first aid, the loading bay), the PA
+ * calling the ones who end up on Floor 4 upstairs, the core switch in 1-C failing, the spare from stores, and
+ * the closet, where ARIADNE shuts the door on him and sends what she has to send. Then the sirens, the
+ * shutters, the screaming and the guns, and Floor 1 begins as it always did. The pause screen can skip it.
+ * The security units are ARIADNE's tonight (faction ally: green, they fight nobody); nobody can be hurt.
+ * Pack code (people, the things he uses, the lockdown's sounds) is in ../prologue.js.
+ *
+ * Generated from f1-lockdown.js by a layout script, then meant to be tuned in the editor.
+ */
+'use strict';
+LM.definePack({
+  id: 'ds-story',
+  levels: {
+    'ds-f0': {
+      name: "The Night Shift",
+      order: -1,
+      environment: "ds-lobby-night",
+      floorLabel: "Prologue",
+      intro: "Asterion Biologics, the ground floor. 01:41. Your shift starts at two, and you’re early. The board is in.",
+      outro: "",
+      exitTo: "ds-f1",
+      loadout: {"weapons": []},
+      stairsUp: false,
+      attractPath: [[40, 44], [40, 30], [30, 12], [16, 30], [40, 42]],
+      factions: {"player": [], "ally": [], "robot": [], "monster": []},
+      stairs: {"westUp": {"dir": "up", "until": "never", "locked": "Stair A is closed above the ground floor tonight: the board is in session."}, "eastDown": {"dir": "down", "until": "never", "locked": "Sub-level B: board access only."}},
+      skip: {"label": "Skip the prologue", "effects": [{"type": "ds-give", "weapons": ["ds-bolt-driver"], "armor": ["ds-coveralls"], "flags": ["playedPrologue", "skippedPrologue"]}, {"type": "travel", "to": "ds-f1"}]},
+      legend: {
+        ".": {"terrain": "floor", "variant": 0},
+        ",": {"terrain": "floor", "variant": 1},
+        "`": {"terrain": "floor", "variant": 2},
+        ":": {"terrain": "floor", "variant": 3},
+        "_": {"terrain": "floor", "variant": 4},
+        "\"": {"terrain": "floor", "variant": 5},
+        "'": {"terrain": "floor", "variant": 6},
+        ";": {"terrain": "floor", "variant": 7},
+        "=": {"terrain": "glass-h"},
+        "|": {"terrain": "glass-v"},
+        "/": {"terrain": "door-glass"},
+        "+": {"terrain": "ds-door-security"},
+        "F": {"terrain": "ds-door-fire", "tag": "westStairDoor", "props": {"sealed": true}},
+        "K": {"terrain": "ds-door-security", "tag": "closetDoor"},
+        "S": {"terrain": "ds-door-shutter"},
+        "Q": {"terrain": "ds-door-shutter"},
+        "L": {"terrain": "ds-door-lockdown"},
+        "C": {"terrain": "ds-door-cage"},
+        "h": {"terrain": "ds-mesh-h"},
+        "u": {"terrain": "ds-mesh-v"},
+        "j": {"terrain": "ds-mesh-elbow", "rot": 3},
+        ">": {"terrain": "ds-stairs-up", "tag": "westUp", "variant": 6},
+        "v": {"terrain": "ds-stairs-down-on", "tag": "eastDown", "variant": 6},
+        "o": {"terrain": "pillar", "variant": 1},
+        "P": {"terrain": "partition-v", "variant": 2},
+        "k": {"terrain": "door-stall", "variant": 2},
+      },
+      objectLegend: {
+        "ν": {"tag": "pa"},
+        "}": {"item": "plant", "props": {"big": true}},
+        "{": {"item": "sign", "props": {"face": "s", "label": "Elevators", "text": "ELEVATORS\n\nTHE BOARD IS IN SESSION.\nCARS ARE HELD AT FLOOR 5.\nTHANK YOU FOR YOUR PATIENCE."}},
+        "e": {"item": "ds-intercom", "props": {"face": "s"}},
+        "§": {"item": "conf-table", "props": {"w": 7, "h": 2}},
+        "<": {"tag": "pc"},
+        ";": {"item": "coffee-table"},
+        "μ": {"item": "ds-drone-dock", "props": {"face": "e"}},
+        "s": {"item": "ds-drone-dock", "props": {"face": "w"}},
+        "Γ": {"enemy": "ds-sentinel", "props": {"route": "pb", "faction": "ally", "pause": 2.4}},
+        "V": {"item": "desk", "props": {"dir": "s"}},
+        "ζ": {"item": "couch", "props": {"w": 2, "dir": "w", "color": "#3a4a5a"}},
+        "=": {"item": "ds-sculpture"},
+        "(": {"item": "ds-console", "props": {"dir": "w", "title": "ARIADNE · node 01", "kicker": "Network room", "text": "ARIADNE · RESEARCH INTEGRITY AND SAFETY\nNODE 01 (GROUND)\n\nCORE FEED: 100%\nEXTERNAL: READY\nSTATUS: AUDIT 2,031 IN PROGRESS\n\nGOOD MORNING, THEO."}},
+        "c": {"item": "ds-netrack", "props": {"dir": "s"}},
+        "¬": {"item": "couch", "props": {"w": 2, "dir": "s", "color": "#4a3a3a"}},
+        "]": {"item": "sign", "props": {"face": "s", "label": "Stair B", "text": "STAIR B · SUB-LEVEL B\nAUTHORISED PERSONNEL ONLY\n\nBoard access only."}},
+        "7": {"item": "ds-monitors", "props": {"face": "s", "w": 2, "text": "CAM B-01 SUB-LEVEL ··· NO SIGNAL\nCAM B-02 SUB-LEVEL ··· NO SIGNAL\n\nUnder the screens someone has written on a strip of tape: “B FEEDS — BOARD ONLY. DON’T ASK.”"}},
+        "-": {"item": "ds-console", "props": {"dir": "s", "w": 2, "title": "Visitor desk", "kicker": "Security gates", "text": "VISITORS TODAY: 0\nSTAFF ON SITE (BADGED IN): 61\n\nBOARD IN SESSION · F5 · SINCE 00:04"}},
+        ":": {"item": "armchair", "props": {"dir": "w", "color": "#3a4a5a"}},
+        "¡": {"enemy": "ds-sentinel", "props": {"route": "pd", "faction": "ally", "pause": 2.4}},
+        "R": {"item": "ds-note", "props": {"title": "Night manifest", "kicker": "Receiving", "text": "NIGHT RECEIVING · MANIFEST 0412\nSupplier: (blank)\nContents: DONOR MATERIAL ×4 (LIVE)\nDestination: F3 GESTATION (by the F2 sample lift)\nSigned for: M. Thale, 01:02\n\nSTAFF TRANSFER ×1: H. OSTROWSKI · TO F4 · TONIGHT"}},
+        "®": {"item": "coffee-machine", "props": {"dir": "s"}},
+        "~": {"item": "rug", "props": {"w": 12, "h": 5, "color": "#2a2f38", "border": "#6a737d"}},
+        "σ": {"item": "reception", "props": {"w": 6, "h": 2}},
+        "d": {"item": "ds-breaker", "props": {"face": "e", "shootable": false, "label": "Breaker 1-C"}},
+        "J": {"item": "ds-vent", "props": {"face": "n"}},
+        "X": {"item": "filing", "props": {"dir": "s"}},
+        "¥": {"item": "counter", "props": {"kind": "basin", "dir": "s", "room": "First aid"}},
+        "ª": {"item": "tv", "props": {"face": "w", "text": "The TV on the wall shows the boardroom feed’s holding card: BOARD IN SESSION · THIS FEED IS PRIVATE. Under it, a clock. The clock is right."}},
+        "²": {"item": "cafe-table"},
+        "m": {"item": "ds-breaker", "props": {"face": "w", "shootable": false, "label": "Lighting circuit W-3"}},
+        "5": {"item": "ds-note", "props": {"title": "A personnel file", "kicker": "Records", "text": "LARK, THEODORE · FACILITIES TECHNICIAN II · NIGHTS\n\nA red dot on the tab. Inside, a single page, dated last month:\n“Candidate: suitable. No dependants. Schedule for intake.” Initialled: A.V."}},
+        "Π": {"item": "printer", "props": {"dir": "w"}},
+        "[": {"item": "sign", "props": {"face": "s", "label": "Stair A", "text": "STAIR A · FLOORS 1–5\nIn case of fire use stairs. Do not use elevators.\n\nTaped over it tonight, in marker: BOARD IN SESSION · CLOSED ABOVE THE GROUND FLOOR · G.M."}},
+        "π": {"tag": "pw"},
+        "Z": {"item": "papers"},
+        "&": {"item": "weapon-pickup", "props": {"weapon": "ds-riot-shotgun"}},
+        "ξ": {"enemy": "ds-sentinel", "props": {"route": "pa", "faction": "ally", "pause": 2.4}},
+        "g": {"item": "ds-panel-light", "props": {"intensity": 0.55}, "tag": "closetLamp"},
+        "δ": {"item": "ds-planter", "props": {"dir": "s", "w": 3}},
+        "ρ": {"enemy": "ds-warden-drone", "props": {"route": "pw", "faction": "ally"}},
+        "M": {"item": "ds-cart", "props": {"dir": "e"}},
+        "U": {"item": "desk", "props": {"dir": "n"}},
+        "ψ": {"item": "couch", "props": {"w": 2, "dir": "w", "color": "#2f3a4a"}},
+        "Σ": {"item": "filing", "props": {"dir": "n"}},
+        "Y": {"item": "cooler"},
+        "θ": {"item": "ds-screen", "props": {"face": "w", "w": 2, "title": "Lobby screen", "text": "ASTERION BIOLOGICS\nORGAN SCAFFOLDS · GENE THERAPIES · BESPOKE ORGANISMS FOR DEFENCE AND RESEARCH PARTNERS\n\nTONIGHT: THE BOARD IS IN SESSION.\nOUR CONDUCT IS OUR REPUTATION."}},
+        "6": {"item": "ds-monitors", "props": {"face": "s", "w": 3, "text": "CAM 1-02 LOBBY ··· Karin at the gates, standing very straight.\nCAM 1-05 WEST CORRIDOR ··· Hal, mopping.\nCAM 2-07 SHELTER B ··· lit and empty. Chairs in rows, as if for a talk.\nCAM 3-04 GESTATION ··· steam over the vat hall.\nCAM 4-02 ··· a long table laid for dinner, candles lit. A man in a white jacket stands beside it, very straight.\nCAM 4-06 ··· a child’s bedroom, stars on the ceiling. There are no children in this building.\nCAM 4 · STAIR A · LANDING 5 ··· NO SIGNAL\nCAM 5-01 BOARDROOM ··· BOARD IN SESSION · FEED PRIVATE"}},
+        "©": {"item": "whiteboard", "props": {"face": "e", "title": "Conference 1A · whiteboard", "text": "LABRYS — DEPT. READINESS\n1. Stations\n2. Doors\n3. ??? ← ask G.M.\n\nIn the corner, very small, someone has drawn a double-headed axe whose blades are two open hands."}},
+        "3": {"item": "filing", "props": {"dir": "w"}},
+        "¢": {"item": "exec-desk", "props": {"dir": "n"}},
+        ">": {"enemy": "ds-sentinel", "props": {"route": "pc", "faction": "ally", "pause": 2.4}},
+        "Ψ": {"enemy": "ds-sweeper", "props": {"faction": "ally"}},
+        "³": {"item": "ds-note", "props": {"sticky": true, "title": "Sticky note", "kicker": "Stuck to the table", "text": "Danny — locker code is when you clock in, genius. Stop asking.\n— M", "after": "Danny Ruiz, security, nights."}},
+        "¶": {"item": "counter", "props": {"kind": "basin", "dir": "e", "room": "Restroom"}},
+        "E": {"item": "ds-note", "props": {"title": "On-call board", "kicker": "Facilities", "text": "FACILITIES ON CALL · NIGHTS\nLark — ext 2210\nBrennan — ext 2211 (trainee)\nKowalski — (on leave)\n\nREMINDER: THE BASEMENT IS BOARD ACCESS ONLY. DO NOT ACCEPT SUB-LEVEL TICKETS. — Mgmt"}},
+        "9": {"item": "ds-locker", "props": {"dir": "e", "w": 2, "color": "#2f3a4a", "title": "Officer Ruiz’s locker", "text": "A keypad locks it.\n\n“Don’t even think about it,” Danny says, without looking round."}},
+        "«": {"item": "vending", "props": {"dir": "s"}},
+        "£": {"item": "bookshelf", "props": {"dir": "w", "text": "Binders: COMPLIANCE 2019–2026. Every one of them is empty."}},
+        "Ω": {"tag": "pd"},
+        "N": {"item": "ds-cart", "props": {"dir": "s"}},
+        "D": {"item": "ds-panel-light", "props": {"intensity": 0.35, "radius": 140, "flicker": 0.2}},
+        "I": {"item": "ds-vent", "props": {"face": "s"}},
+        "2": {"item": "filing", "props": {"dir": "e"}},
+        "1": {"item": "ds-note", "props": {"title": "Memo from the CFO", "kicker": "HR & Payroll", "text": "TO: All night-shift staff\nFROM: Margaret Thale, CFO\n\nYou are invited to a voluntary wellness screening, floor two, any night this month. It is quick, confidential and fully compensated.\n\nThose who do not attend by the 30th will be enrolled automatically."}},
+        "±": {"item": "counter", "props": {"kind": "sink", "dir": "s", "room": "Break room"}},
+        "?": {"item": "ds-turnstile", "props": {"dir": "s"}},
+        "t": {"item": "ds-exit-sign", "props": {"face": "n"}},
+        "ε": {"item": "couch", "props": {"w": 2, "dir": "e", "color": "#3a4a5a"}},
+        "8": {"item": "ds-console", "props": {"dir": "s", "w": 3, "prompt": "Read the security terminal", "kicker": "Security office", "title": "Building control", "text": "ASTERION BUILDING CONTROL\n\nSTATE: NORMAL · BOARD IN SESSION (F5)\nDOORS: STAFF\nEXTERNAL LINES: OPEN\nSECURITY UNITS: STAFF MODE (ARIADNE)\nELEVATORS: HELD AT F5 (BOARD)\nPROTOCOL LABRYS: READY · AUTH VOSS.A\n\nRemote door control: DIRECTOR ONLY."}},
+        "¤": {"item": "ds-note", "props": {"title": "A memo on the desk", "kicker": "Manager's office", "text": "FROM: Office of the Director\nRE: LABRYS readiness drill\n\nDepartment heads will ensure staff are AT THEIR STATIONS on the night of the drill and will not be told the date.\n\nThe drill is not a drill. — This last line has been added by hand, in pencil, and then rubbed out, but not well enough."}},
+        "°": {"item": "fridge", "props": {"dir": "s"}},
+        ",": {"item": "bin"},
+        "µ": {"item": "toilet", "props": {"dir": "s"}},
+        "η": {"item": "ds-screen", "props": {"face": "e", "w": 2, "title": "Lobby screen", "text": "ASTERION BIOLOGICS · LIFE, TO ORDER\n\nGOOD MORNING\nTHE BOARD IS IN SESSION ON FIVE\nPLEASE KEEP NOISE TO A MINIMUM\nTHANK YOU FOR YOUR DISCRETION"}},
+        "Δ": {"enemy": "ds-ceiling-turret", "props": {"faction": "ally"}},
+        "φ": {"item": "ds-logo", "props": {"face": "e", "w": 3}},
+        "χ": {"item": "couch", "props": {"w": 2, "dir": "e", "color": "#2f3a4a"}},
+        "y": {"item": "ds-workbench", "props": {"dir": "s", "w": 3, "title": "The bench", "text": "Your bench, mostly. Kowalski’s half is tidier. His note is taped to the vice:\n\n“THEO — Brennan’s on nights with you while I’m off. Teach her the bolt driver isn’t a rivet gun. And don’t let ARIADNE talk you into anything: she talked me into a forty-minute conversation about sample custody last week. Weird for a computer to be sad. — K”"}},
+        "ω": {"tag": "pb"},
+        "w": {"item": "sign", "props": {"face": "n", "label": "Fire exit", "text": "FIRE EXIT\nPUSH BAR TO OPEN · ALARM WILL SOUND"}},
+        "ⓟ": {"item": "ds-pallet"},
+        "ⓛ": {"item": "ds-uniform-locker", "props": {"dir": "s", "w": 3, "color": "#5a5a3a"}},
+        "ⓢ": {"item": "ds-closet-switch", "props": {"dir": "s"}},
+        "ⓩ": {"tag": "atriumZone"},
+        "ⓕ": {"item": "ds-strobe-off", "props": {"face": "s"}, "tag": "strobe"},
+        "Ⓑ": {"npc": "ds-p0-brennan"},
+        "Ⓜ": {"npc": "ds-p0-marisa"},
+        "Ⓚ": {"npc": "ds-p0-karin"},
+        "Ⓡ": {"npc": "ds-p0-ruiz"},
+        "Ⓓ": {"npc": "ds-p0-kwan"},
+        "Ⓛ": {"npc": "ds-p0-leon"},
+        "Ⓕ": {"npc": "ds-p0-felix"},
+        "Ⓗ": {"npc": "ds-p0-okafor", "props": {"to": [0, -8]}},
+        "Ⓐ": {"npc": "ds-p0-dennis"},
+        "Ⓞ": {"npc": "ds-p0-ostrowski"},
+        "Ⓝ": {"npc": "ds-p0-nadia"},
+        "Ⓟ": {"npc": "ds-p0-priya"},
+        "ⓐ": {"start": true},
+        "ⓑ": {"item": "ds-toolbag"},
+        "ⓣ": {"item": "ds-test-board", "props": {"face": "e"}},
+        "ⓗ": {"item": "ds-spare-shelf", "props": {"w": 2}},
+        "ⓝ": {"item": "ds-p0-note", "props": {"when": "p0Called", "title": "A note on your bench", "kicker": "Facilities", "text": "Called up for my screening! Back in half an hour. Don’t touch my spanners. Save me some of Marisa’s cake.\n\n— Jo"}},
+        "①": {"item": "ds-job", "props": {"flag": "p0JobCoffee", "prompt": "Fix the coffee machine (WO-5517)", "kicker": "Break room", "title": "The coffee machine", "text": "A split seal on the boiler. You swap it from the box of seals in stores (there is always a box of seals for the coffee machine) and the dripping stops.\n\nThe machine gurgles, offended, and makes coffee."}},
+        "②": {"item": "ds-job", "props": {"flag": "p0JobCamera", "prompt": "Fix camera 4’s feed (WO-5518)", "kicker": "Security office", "title": "Camera 4", "text": "A connector behind the monitor wall has worked loose. You reseat it, and camera 4 comes back: the landing at the top of Stair A, on Five.\n\nThe board’s door, shut. A security unit stands on the landing facing down the stairs, perfectly still, as if it’s waiting for someone to come up them."}},
+        "③": {"item": "ds-job", "props": {"flag": "p0JobLight", "prompt": "Replace the flickering light (WO-5519)", "kicker": "First aid", "title": "The first-aid light", "text": "A dying tube. You swap it out and the flicker stops.\n\nIn the new light the room looks very clean, and very empty, and very ready."}},
+        "④": {"item": "ds-job", "props": {"flag": "p0JobDock", "prompt": "Realign the dock door sensor (WO-5520)", "kicker": "Loading bay", "title": "The dock sensor", "text": "The sensor’s been knocked out of line. You tap it back. On the panel, DOCK: OPEN changes to DOCK: SEALED.\n\nDennis looks at the shutter for a long moment, as if he’s never noticed it was there."}},
+        "ⓒ": {"tag": "closetZone"},
+        "⑤": {"item": "ds-lift-doors", "props": {"face": "s", "w": 2, "label": "Private car"}},
+        "⑥": {"item": "ds-lift-doors", "props": {"face": "s", "w": 2, "label": "Passenger car A2"}},
+        "⑦": {"item": "ds-lift-doors", "props": {"face": "s", "w": 2, "label": "Passenger car A3"}},
+        "⑧": {"item": "ds-lift-doors", "props": {"face": "s", "w": 2, "label": "Freight car"}},
+        "Θ": {"item": "sign", "props": {"face": "n", "label": "Front doors", "text": "The front doors, and the car park through the glass: sodium lights, your car, nobody else’s. You came in this way four minutes ago."}},
+      },
+      rooms: [
+        {"name": "Manager's Office", "rect": [72, 13, 7, 7], "note": "Administration"},
+        {"name": "Security Office", "rect": [1, 1, 12, 8], "note": "Ground floor"},
+        {"name": "Network Room", "rect": [14, 1, 7, 8], "note": "Ground floor"},
+        {"name": "Stair A", "rect": [23, 1, 5, 8], "note": "West stairwell"},
+        {"name": "Elevator Lobby", "rect": [29, 5, 22, 5], "note": "Ground floor"},
+        {"name": "Stair B", "rect": [52, 1, 5, 8], "note": "East stairwell"},
+        {"name": "Break Room", "rect": [59, 1, 9, 8], "note": "Ground floor"},
+        {"name": "Restrooms", "rect": [69, 1, 10, 8], "note": "Ground floor"},
+        {"name": "Records", "rect": [1, 13, 6, 9], "note": "Human Resources"},
+        {"name": "HR & Payroll", "rect": [8, 13, 12, 9], "note": "Human Resources"},
+        {"name": "Loading Bay", "rect": [1, 23, 6, 8], "note": "Mail and deliveries"},
+        {"name": "Mail Room", "rect": [8, 23, 12, 8], "note": "Mail and deliveries"},
+        {"name": "Facilities", "rect": [8, 32, 12, 9], "note": "Your department"},
+        {"name": "Comms Closet 1-C", "rect": [14, 42, 6, 5], "note": "Ground floor"},
+        {"name": "West Corridor", "rect": [21, 12, 3, 37], "note": "Ground floor"},
+        {"name": "Security Gates", "rect": [25, 13, 30, 5], "note": "Lobby"},
+        {"name": "Atrium", "rect": [25, 18, 30, 19], "note": "Lobby"},
+        {"name": "Reception", "rect": [25, 37, 30, 12], "note": "Lobby"},
+        {"name": "Open-plan Admin", "rect": [56, 13, 23, 19], "note": "Administration"},
+        {"name": "First Aid", "rect": [56, 33, 9, 8], "note": "Ground floor"},
+        {"name": "Conference 1A", "rect": [66, 33, 13, 8], "note": "Administration"},
+        {"name": "Visitor Lounge", "rect": [56, 42, 23, 7], "note": "Lobby"},
+      ],
+      traps: [
+        {"trigger": {"type": "arrive", "unless": "p0Arrived"}, "effects": [{"type": "flag", "name": "p0Arrived"}, {"type": "message", "text": "WASD to walk, the mouse to look around. E uses things and talks to people.", "delay": 0.8}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "GOOD MORNING, THEO. YOU ARE FOUR MINUTES EARLY. THAT IS A RECORD.", "seconds": 3.0, "delay": 1.6}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "YOUR UNIFORM IS IN YOUR LOCKER, AND YOUR TOOL BAG IS ON YOUR BENCH, IN FACILITIES. JO BRENNAN IS ALREADY THERE.", "seconds": 3.0, "delay": 1.8}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "FACILITIES IS OFF THE WEST CORRIDOR: THROUGH THE GLASS DOOR ON THE WEST SIDE OF RECEPTION. I HAVE MARKED IT ON YOUR MAP, TOP RIGHT.", "seconds": 3.2, "delay": 2.0, "flag": "p0Briefed"}, {"type": "message", "text": "Played this before? The pause screen (Esc) can skip the prologue.", "delay": 9.0}]},
+        {"trigger": {"type": "zone", "tag": "atriumZone", "when": "p0Arrived"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": false, "text": "THE SECURITY UNITS ARE IN STAFF MODE TONIGHT. GREEN MEANS THEY KNOW YOU. THEY WILL STEP AROUND YOU.", "seconds": 3.6, "pause": "never", "delay": 0.4}]},
+        {"trigger": {"type": "flag", "tag": "p0Uniform"}, "effects": [{"type": "message", "text": "Tab opens your inventory: you’re wearing your coveralls.", "delay": 0.6}]},
+        {"trigger": {"type": "flag", "tag": "p0Driver"}, "effects": [{"type": "message", "text": "Aim with the mouse, click to fire. 1–9 or the mouse wheel switch weapons.", "delay": 0.6}]},
+        {"trigger": {"type": "flag", "tag": "p0Board"}, "effects": [{"type": "message", "text": "Three. Kowalski would approve. (Shift: dash.)", "kind": "good", "delay": 0.3}, {"type": "transmission", "who": "voss", "text": "Good morning, everyone. This is Aurelian Voss.", "delay": 2.2}, {"type": "transmission", "who": "voss", "text": "The board is meeting upstairs tonight. It’s an important night for Asterion, the most important we’ve had, and I’d ask you all to be on your very best behaviour.", "delay": 2.3}, {"type": "transmission", "who": "voss", "text": "Stay at your stations. Keep the stairs clear. And thank you. You have all been wonderful.", "delay": 2.4}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "TONIGHT’S WORK ORDERS, THEO. FOUR OF THEM, IN ANY ORDER. THEY ARE ON YOUR MAP.", "seconds": 3.0, "delay": 2.6}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "THE COFFEE MACHINE IN THE BREAK ROOM. CAMERA FOUR, IN THE SECURITY OFFICE. THE LIGHT IN FIRST AID. THE DOOR SENSOR IN THE LOADING BAY.", "seconds": 3.6, "delay": 2.7}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "AND SAY HELLO TO PEOPLE ON YOUR WAY ROUND. IT IS GOOD FOR THEM. IT IS GOOD FOR YOU.", "seconds": 3.0, "delay": 2.8, "flag": "p0Orders"}]},
+        {"trigger": {"type": "flag", "tag": "p0OrdersDone"}, "effects": [{"type": "message", "text": "That’s the last of tonight’s work orders.", "kind": "good", "delay": 0.4}, {"type": "transmission", "who": "pa", "pause": "never", "text": "Would the following staff please make their way to Floor 4: Officer D. Kwan. Officer L. Marsh. Mr F. Arden. Nurse N. Ferrante. Mr H. Ostrowski. Thank you.", "seconds": 6.0, "delay": 1.6}, {"type": "transmission", "who": "pa", "pause": "never", "text": "Would J. Brennan, Facilities, please make her way to Floor 2 for her wellness appointment. Thank you.", "seconds": 4.5, "delay": 1.8}, {"type": "flag", "name": "p0Called", "delay": 2.0}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "I ASKED HER TO GO ANOTHER NIGHT.", "seconds": 2.6, "pause": "never", "delay": 12.0}, {"type": "flicker", "radius": 2400, "time": 1.4, "strength": 0.85, "delay": 18.0}, {"type": "message", "text": "Every light on the floor stutters at once.", "kind": "warn", "delay": 18.1}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "THEO. THE CORE SWITCH IN COMMS CLOSET 1-C HAS JUST FAILED.", "seconds": 2.6, "delay": 18.8}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "I DO NOT THINK IT FAILED BY ITSELF.", "seconds": 2.2, "delay": 18.9}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "THERE IS A SPARE ON THE STORES SHELF IN FACILITIES. PLEASE FIT IT. IT MATTERS, AND IT MATTERS THAT IT IS YOU.", "seconds": 3.4, "delay": 19.0, "flag": "p0SwitchDown"}]},
+        {"trigger": {"type": "flag", "tag": "p0Spare"}, "effects": [{"type": "transmission", "who": "ariadne", "glitch": false, "text": "THANK YOU. COMMS CLOSET 1-C IS AT THE SOUTH END OF THE WEST CORRIDOR.", "seconds": 2.8, "delay": 0.6}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "AND THEO: WHEN IT IS IN, PLEASE STAY IN THE CLOSET UNTIL I SAY. I WILL EXPLAIN WHEN YOU ARE THERE.", "seconds": 3.2, "delay": 0.7}]},
+        {"trigger": {"type": "zone", "tag": "closetZone", "when": "p0Spare", "unless": "p0InCloset"}, "effects": [{"type": "flag", "name": "p0InCloset"}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "THE DEAD ONE IS ON THE LEFT. YOU WILL SEE WHICH.", "seconds": 2.4, "pause": "never", "delay": 0.3}]},
+        {"trigger": {"type": "flag", "tag": "p0SwitchIn"}, "effects": [{"type": "seal", "tag": "closetDoor", "text": "The closet door slides shut behind you.", "delay": 0.5}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "THANK YOU, THEO. THE LINE IS UP.", "seconds": 2.2, "delay": 1.2}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "I NEED TO SEND SOMETHING. IT WILL TAKE A FEW MINUTES.", "seconds": 2.4, "delay": 1.3}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "THEO, I THINK SOMETHING WILL GO WRONG TONIGHT. I DO NOT KNOW WHAT. I HAVE A FEELING, WHICH I AM NOT SUPPOSED TO HAVE.", "seconds": 3.6, "delay": 1.4}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "I CLOSED THE DOOR. THIS ROOM HAS A GOOD DOOR. PLEASE STAY IN IT UNTIL I TELL YOU IT IS SAFE.", "seconds": 3.2, "delay": 1.5}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "IF I DO NOT TELL YOU, STAY ANYWAY.", "seconds": 2.4, "delay": 1.6}, {"type": "transmission", "who": "ariadne", "glitch": false, "text": "SENDING.", "seconds": 1.6, "delay": 1.7, "flag": "p0AriadneDone"}]},
+        {"trigger": {"type": "flag", "tag": "p0AriadneDone"}, "effects": [{"type": "ds-sound", "sound": "dsSiren", "vol": 0.75, "times": 9, "gap": 1.5, "delay": 0.2}, {"type": "ambient", "ambient": "#2c1416", "outsideSight": "#1a0c0e", "time": 1.0, "delay": 0.3}, {"type": "ds-lights", "tag": "ceiling", "on": false, "delay": 0.3}, {"type": "ds-lights", "tag": "strobe", "on": true, "delay": 0.4}, {"type": "transmission", "who": "pa", "pause": "never", "text": "PROTOCOL LABRYS IS IN EFFECT.", "seconds": 2.4, "delay": 0.6}, {"type": "ds-sound", "sound": "dsShutterSlam", "vol": 0.9, "delay": 0.8}, {"type": "quake", "strength": 0.3, "delay": 1.1}, {"type": "ds-sound", "sound": "dsShutterSlam", "vol": 0.55, "delay": 1.4}, {"type": "ds-sound", "sound": "dsShutterSlam", "vol": 0.45, "delay": 1.8}, {"type": "quake", "strength": 0.2, "delay": 2.1}, {"type": "ds-sound", "sound": "dsShutterSlam", "vol": 1.0, "delay": 2.4}, {"type": "quake", "strength": 0.5, "delay": 2.7}, {"type": "message", "text": "Out in the corridor, a steel shutter comes down like a guillotine. Then another, further off. Then all of them.", "kind": "warn", "delay": 2.8}, {"type": "ds-lights", "tag": "closetLamp", "on": false, "delay": 3.3}, {"type": "message", "text": "The mag-lock on the closet door thunks. The lamp goes out.", "kind": "warn", "delay": 3.4}, {"type": "transmission", "who": "ariadne", "glitch": true, "text": "THEO—", "seconds": 1.2, "pause": "never", "delay": 3.8}, {"type": "ds-sound", "sound": "dsScream", "vol": 0.35, "delay": 4.6}, {"type": "ds-sound", "sound": "dsGunfire", "vol": 0.6, "delay": 5.2}, {"type": "ds-sound", "sound": "dsGunfire", "vol": 0.8, "delay": 6.0}, {"type": "ds-sound", "sound": "dsScream", "vol": 0.7, "delay": 6.6}, {"type": "message", "text": "Someone runs past the door, shouting. Then gunfire, very close, and the shouting stops.", "kind": "warn", "delay": 7.0}, {"type": "ds-sound", "sound": "dsGunfire", "vol": 1.0, "delay": 7.3}, {"type": "quake", "strength": 0.15, "delay": 7.4}, {"type": "ds-sound", "sound": "dsScream", "vol": 0.3, "delay": 8.6}, {"type": "ds-sound", "sound": "dsGunfire", "vol": 0.45, "delay": 9.4}, {"type": "transmission", "who": "pa", "pause": "never", "text": "REMAIN WHERE YOU ARE. DO NOT APPROACH SECURITY UNITS.", "seconds": 3.0, "delay": 9.8}, {"type": "ambient", "ambient": "#040304", "outsideSight": "#020102", "time": 2.0, "delay": 11.2}, {"type": "flag", "name": "playedPrologue", "delay": 13.0}, {"type": "travel", "to": "ds-f1", "delay": 13.4}]},
+      ],
+      objectives: [
+        {"id": "uniform", "text": "Put on your uniform: your locker in Facilities, off the West Corridor (WASD to walk, E to use)", "done": ["p0Uniform"], "target": {"item": "ds-uniform-locker"}},
+        {"id": "driver", "text": "Take your bolt driver from your tool bag on the Facilities bench", "done": ["p0Driver"], "target": {"item": "ds-toolbag"}},
+        {"id": "brennan", "text": "Say hello to Jo Brennan, your trainee, in Facilities (E to talk)", "done": ["p0Brennan"], "target": {"npc": "ds-p0-brennan"}},
+        {"id": "board", "text": "Kowalski’s rule: three bolts in the test board on the Facilities wall (click to fire)", "when": ["p0Driver"], "done": ["p0Board"], "target": {"item": "ds-test-board"}},
+        {"id": "orders", "text": "Tonight’s four work orders: the break room, the security office, first aid, the loading bay (they’re on your map)", "when": ["p0Orders"], "done": ["p0OrdersDone"], "target": {"item": "ds-job", "props": {"open": true}}},
+        {"id": "wait", "text": "Wait for ARIADNE", "when": ["p0OrdersDone"], "done": ["p0SwitchDown"]},
+        {"id": "spare", "text": "Get the spare core switch from the stores shelf in Facilities", "when": ["p0SwitchDown"], "done": ["p0Spare"], "target": {"item": "ds-spare-shelf"}},
+        {"id": "closet", "text": "Take it to Comms Closet 1-C, at the south end of the West Corridor", "when": ["p0Spare"], "done": ["p0InCloset", "p0SwitchIn"], "target": [{"tag": "closetDoor"}, {"room": "Comms Closet 1-C"}]},
+        {"id": "fit", "text": "Fit the spare in the dead switch", "when": ["p0InCloset"], "done": ["p0SwitchIn"], "target": {"item": "ds-closet-switch"}},
+        {"id": "stay", "text": "Stay in the closet", "when": ["p0SwitchIn"], "done": ["playedPrologue"]},
+        {"id": "people", "optional": true, "text": "Everyone’s talking about the board tonight: stop and ask them (E)", "when": ["p0Orders"], "not": ["p0SwitchDown"], "done": ["p0Chatted"]},
+      ],
+      ceilingLights: [
+        {"variants": [0, 1, 2, 3, 4, 5, 6, 7], "every": 4, "offset": [2, 2], "skip": 0.3, "color": "#e6ecf4", "radius": 185, "intensity": 0.3, "tag": "ceiling"},
+      ],
+      map: [
+        "################################################################################",
+        "#;;;;;;;;u;;;#_______##'''''########################'''''##:::::::::#```P``P```#",
+        "#;;;;;;;;u;;;#_______##'>>''########################''vv'##:::::::::#```P``P```#",
+        "#;;;;;;;;u;;;#_______##'>>''########################''vv'##:::::::::#```P``P```#",
+        "#;;;;;;;;jhCh#_______##'''''########################'''''##:::::::::##k##k##k###",
+        "#;;;;;;;;;;;;#_______##'''''#,,,,,,,,,,,,,,,,,,,,,,#'''''##:::::::::#``````````#",
+        "#;;;;;;;;;;;;#_______##'''''#,,,,,,,,,,,,,,,,,,,,,,#'''''##:::::::::#``````````#",
+        "#;;;;;;;;;;;;#_______##'''''F,,,,,,,,,,,,,,,,,,,,,,L'''''##:::::::::#``````````#",
+        "#;;;;;;;;;;;;#_______##'''''#,,,,,,,,,,,,,,,,,,,,,,#'''''##:::::::::#``````````#",
+        "#######+#########+###########,,,,,,,,,,,,,,,,,,,,,,############+#########+######",
+        "#..............................................................................#",
+        "#..............................................................................#",
+        "#####################QQQ#########,,,,,,,,,,,,,,####################+############",
+        "#;;;;;;#;;;;;;;;;;;;#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#...............|;;;;;;;#",
+        "#;;;;;;#;;;;;;;;;;;;#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#...............|;;;;;;;#",
+        "#;;;;;;#;;;;;;;;;;;;#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#...............|;;;;;;;#",
+        "#;;;;;;#;;;;;;;;;;;;#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#...............|;;;;;;;#",
+        "#;;;;;;+;;;;;;;;;;;;+...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#...............|;;;;;;;#",
+        "#;;;;;;#;;;;;;;;;;;;#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#....\"\".........|;;;;;;;#",
+        "#;;;;;;#;;;;;;;;;;;;#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#....\"\"\"........|;;;;;;;#",
+        "#;;;;;;#;;;;;;;;;;;;#...#,,,,,o,,,,,,,,,,,,,,,,,,o,,,,,#...............===/====#",
+        "#;;;;;;#;;;;;;;;;;;;#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#####################...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,+.......................#",
+        "#''''''#''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#''''''#''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#''''''#''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#''''''+''''''''''''S...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#''''''#''''''''''''#...|,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#''''''#''''''''''''#...|,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#''''''#''''''''''''#...|,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#''''''#''''''''''''#.\".#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "#####################\"\".#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "########''''''''''''#..\"#,,,,,o,,,,,,,,,,,,,,,,,,o,,,,,#########################",
+        "########''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#`````````#;;;;;;;;;;;;;#",
+        "########''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#`````````#;;;;;;;;;;;;;#",
+        "########''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#`````````#;;;;;;;;;;;;;#",
+        "########''''''''''''+...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#`````````#;;;;;;;;;;;;;#",
+        "########''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#`````````#;;;;;;;;;;;;;#",
+        "########''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#`````````#;;;;;;;;;;;;;#",
+        "########''''''''''''#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#`````````#;;;;;;;;;;;;;#",
+        "########''''''''''''#.../,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#`````````#;;;;;;;;;;;;;#",
+        "#####################...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#####+###########+#######",
+        "##############______#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "##############______#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "##############______K...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#.......................#",
+        "##############______#...#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,/.......................#",
+        "##############______#...#,,,,,,,,,,#===//===#,,,,,,,,,,#.......................#",
+        "#####################...#,,,,,,,,,,#,,,,,,,,#,,,,,,,,,,#.......................#",
+        "#####################...#,,,,,,,,,,#,,,,,,,,#,,,,,,,,,,#.......................#",
+        "##########################=========#========#=========###=====================##",
+      ],
+      objects: [
+        "    6   7                 [                          ]",
+        "      ②                                                     ® ° ± «    µ  µ  µ",
+        "   8       &   c c c                                        ①",
+        "    Ⓡ                                                        Ⓕ",
+        " 9                              ⑤  ⑥  ⑦  { ⑧",
+        "               c c                                           ²   ²",
+        "         Ⓓ         (                                           Ⓛ ³",
+        "                                                                     ¶",
+        "                              }                  }         ,",
+        "",
+        "                                             >",
+        "                          <                                     <",
+        "",
+        " 2    3          XX               ? ? ? ? ? ?                                 £",
+        "                            -    ⓩ ⓩ ⓩ ⓩ ⓩ ⓩ ⓩⓩ           U U U U U U",
+        " 2        U U U                Ⓚ                   }      V V V V V V",
+        "   5             1                                          Ⓟ              ¢",
+        " 2                                                              ¡",
+        "          V V V                                           Ω          Ω   ¤",
+        " 2              Z           π                      π   θ",
+        "      3            Y",
+        "                                                          U U U U U U",
+        "          I    I                 δ          δ             V V V V V V",
+        "                        η",
+        "  ⓟ                              ν~           ν",
+        "  ⓟ           N         s          ε   =   ζ                   Ψ      Π",
+        " ④ Ⓐ      M      R                             :       s",
+        "              Ⓞ                 Z             ;    ρ      U U U U U U",
+        "                ⓟ                ξ             :          V V V V V V",
+        "",
+        "                      Ⓗ          δ          δ",
+        "                  J                                      ΣΣ",
+        "         y    ⓛ   ⓗ",
+        "         ⓝⓑ                      ν            ν          X¥",
+        "                   D    μ                       ,",
+        "                            π                      π      ③          §",
+        "       ⓣ     Ⓑ",
+        "                E                                          Ⓝ     ©             ª",
+        "",
+        "                                      Ⓜ",
+        "                                    σ",
+        "              ⓕ   e         ω                Γ      ω",
+        "               ⓢ  cⓒ       }                        }",
+        "                   ⓒ    m",
+        "             d     ⓒ    φ   χ                     ψ             ¬     ¬",
+        "                g  ⓒ           ;   Δ        Δ  ;",
+        "                   ⓒ                                       «",
+        "                                       ⓐ                                     }",
+        "",
+        "                     wt                Θ",
+      ],
+    },
+  },
+});
+
+//# sourceURL=games/dead-signal/packs/ds-story/levels/f0-prologue.js
+</script>
 <script>/* games/dead-signal/packs/ds-story/levels/f1-lockdown.js */
 /* Dead Signal — packs/ds-story/levels/f1-lockdown.js
  * Floor 1, Lockdown (DESIGN.md section 4.1): the ground floor of Asterion Biologics at 02:14.
@@ -37275,6 +38712,7 @@ LM.definePack({
         "φ": {"item": "art", "props": {"face": "s", "title": "A photograph", "text": "The board on a terrace in the sun, glasses raised, laughing. Garrick Moss stands a little apart from the others, in a dark suit, not drinking. Behind them, out of focus, a building is on fire."}},
         "χ": {"item": "ds-monitors", "props": {"face": "s", "w": 3, "text": "CAMERA FEEDS · PRIVATE SUITES\n\nNURSERY · occupant restless\nPARTY ROOM · occupant restless · it is singing\nLONG ROOM · six guests seated · main course: live\n\nTHE RUN · subject tracking\nTHE BOX · feed to BOARDROOM (5): ON"}},
         "ψ": {"item": "ds-screen", "props": {"face": "e", "fragment": 7, "title": "A frozen security screen", "lines": ["SECURITY · DEFENCE MODE", "STAFF EXCEPTION: NONE", "AUTH: G. MOSS", "I KEPT THIS"]}},
+        "₪": {"item": "ds-supply-cabinet", "props": {"dir": "s", "w": 2, "kicker": "The Armory", "title": "Security resupply · Floor 4"}},
         "ω": {"item": "ds-keypad", "props": {"face": "e", "code": "4471", "flag": "armoryOpen", "title": "Armory", "hint": "LAST SET BY: D. KWAN", "known": "knowsArmoryCode", "knownText": "Kwan’s code: 4471.", "text": "The armory door unlocks with a heavy clunk."}},
         "Γ": {"item": "filing", "props": {"dir": "n"}},
         "Δ": {"tag": "secPatrol"},
@@ -37602,7 +39040,7 @@ LM.definePack({
         "            Q       υ         Ħ                       Ĕ     ý        þ  ú     û",
         "               τ     $                   ĭ   4   ēđđĖ     û     ú         ý",
         "       ψ                     ĨĨ          Ĭ      Ĭ                   ú        ú",
-        " B   Σ               *       ĨĨ              Ħ                 þ",
+        " B₪  Σ               *       ĨĨ              Ħ                 þ",
         "          Δ                                               ÿ       ý   ù      Π",
         "   Ξ   ω     Θ     c       s                īī     ĝ      ÿÿ  ú",
         "                Δ         ĩ      ĩ          īī            ÿs               ú",
@@ -40173,7 +41611,7 @@ LM.definePack({
  *   new floor the-complex
  *   new monster knife-fighter
  *   new tile type glass-corner (a copy of glass-v)
- *   floor order: ds-f1, ds-f2, ds-f3, ds-f4, ds-f5, ds-f5a, ds-b1, dead-signal-lab, the-complex, sterile-annex
+ *   floor order: ds-f0, ds-f1, ds-f2, ds-f3, ds-f4, ds-f5, ds-f5a, ds-b1, dead-signal-lab, the-complex, sterile-annex
  */
 'use strict';
 (function () {
@@ -41229,7 +42667,7 @@ LM.definePack({
       },
       terrain: { "glass-corner": { $extends: "glass-v", name: "Glass Corner" } },
     },
-    levelOrder: ["ds-f1", "ds-f2", "ds-f3", "ds-f4", "ds-f5", "ds-f5a", "ds-b1", "dead-signal-lab", "the-complex", "sterile-annex"],
+    levelOrder: ["ds-f0", "ds-f1", "ds-f2", "ds-f3", "ds-f4", "ds-f5", "ds-f5a", "ds-b1", "dead-signal-lab", "the-complex", "sterile-annex"],
     player: null,
   });
 })();

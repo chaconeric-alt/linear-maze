@@ -7,8 +7,8 @@
 LM.defineGame({
   id: 'dead-signal',
   title: 'Dead Signal',
-  version: '0.6.2',
-  description: 'A technician trapped in a biotech lab gone wrong fights his way to the top floor, and down to the bottom of it. Built from beginning to end (packs/ds-*): Floor 1, Lockdown; Floor 2, Synthid Research; Floor 3, Gestation; Floor 4, the Proving Grounds; Floors 5 and 5a, the Executive Floor and the board’s own; Sub-level B, Tartarus; and back up to the boardroom, and the endings. The Dead Signal Laboratory, The Complex and The Sterile Annex follow them as placeholders. games/dead-signal/DESIGN.md has the plan.',
+  version: '0.7.0',
+  description: 'A technician trapped in a biotech lab gone wrong fights his way to the top floor, and down to the bottom of it. Built from beginning to end (packs/ds-*): the prologue, the night shift before the lockdown; Floor 1, Lockdown; Floor 2, Synthid Research; Floor 3, Gestation; Floor 4, the Proving Grounds; Floors 5 and 5a, the Executive Floor and the board’s own; Sub-level B, Tartarus; and back up to the boardroom, and the endings. The Dead Signal Laboratory, The Complex and The Sterile Annex follow them as placeholders. games/dead-signal/DESIGN.md has the plan.',
   brief: 'Dark, torch-lit floors where every light casts shadows and danger telegraphs clearly. Write in-world text that is short, specific and slightly ominous, and carries a hint.',
   packs: [
     'linear-maze/core',

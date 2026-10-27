@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.5.10 · October 2026
+Engine 0.5.11 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -29,6 +29,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.9:** enemies that can't be hurt (`immune`, section 6.5: hits flash and say so, and do nothing), shots no mirror turns (a projectile's `reflectable: false`, section 6.4), items that last a while and go (`life` and `onExpire`, section 6.6), a draw radius for big pieces drawn far from where they stand (`drawRadius`, items and enemies), and a pull that leaves the player alone (`pull`'s `player: false`). Traps: the `arrive` trigger (arriving on the floor), and conditions on any trigger (`when`: these flags set; `unless`: none of these), so a trap can wait for the story (section 6.8). An enemy's `init` can read its placement's props (`e._props`). Fixes: a status with `cures` now lands after clearing what it cures; a door held open by the `open` effect's `hold` stays open (and is remembered); the floor below's dimming is baked with it (cheaper). The editor's reach check skips things placed with `props.caged` (section 15).
 
 **New in 0.5.10:** places on the minimap. A level's room can carry a name for the minimap (`mapLabel`: text, or `true` for the room's own name), drawn over the room once its middle is on the map, and can be put on the map before the player has been there (`mapWhen`: a story flag, or a list, any one of them set; `true` from the start), walls and all, the way a voice on the radio might mark somewhere for you (section 6.21, `LM.ui.revealRooms`, `LM.ui.drawRoomLabels`). The editor's room list edits both.
+
+**New in 0.5.11:** a scripted move to another floor: the trap effect `travel` (`to`, and optionally `arrive`, `at`, `via`, `sound`), a quick fade with no floor-finished screen, carrying everything you have, after whatever's being said (section 6.24). A floor can offer a way past itself on the pause screen: a level's `skip: { label, effects }` (section 6.8), the effects run by `LM.runEffects(game, effects)`, which runs any list of trap effects without a trap. The setting for story lines that stop the game is kept under a new key (`lm-story-lines`: `middle` or `corner`); the pause screen's button now names the setting (*Story lines in the middle: on*) instead of reading like a command, and says what it changed (section 6.16). Dead Signal's prologue uses all three.
 
 ---
 
@@ -467,6 +469,7 @@ LM.definePack({
       floorLabel: '14th floor',      // replaces "Floor N" (labelled floors don't take a number)
       armed: false,                  // peaceful floor: no firing, combat HUD hidden, the held gadget is used instead
       loadout: { weapons: [], gadgets: ['phone'], gold: 0 },  // a new run that starts here starts with this
+      skip: { label: 'Skip the prologue', effects: [ /* trap effects */ ] },  // optional: offered on the pause screen while on this floor (0.5.11)
       attractPath: [[x, y], ...],    // title-screen camera path, tile coords (the first floor that has one, unless the manifest names one)
       stairsUp: 'a-floor',           // optional: where its stairs up (<) lead; false closes them; default: the floor you came from (section 5)
       stairs: { tag: { to, until, locked, arrive, dir, go } },   // optional: stairs of their own, by the tag on their tiles (section 5)
@@ -720,7 +723,7 @@ speakers: {
 
 The trap effect `transmission` takes the same fields (and `delay`, as every effect; give a trap's lines the same delay and they play in order). `LM.comms.busy()` says whether anything is playing or queued; `LM.comms.speaking()` is the id of who is talking now (a speaker on the wall can light up for them); `LM.comms.clear()` drops it all. Each entry in `LM.comms.log` has the speaker's `who` (name) and `id`.
 
-**Lines that stop the game.** A speaker with `pause: true` carries the story: what they say stops the game and is read in the middle of the screen, larger, with Continue (E, Enter, Space or a click; the first press finishes a line still typing) and Skip (Esc: the rest of this conversation, every line still logged and every flag still set). Whatever is queued behind it carries on in the same box, whoever says it; then the game goes on. In a fight (a hunting enemy that's hostile to the player within 200, or within 420 in sight) a line plays in the corner as usual. A line's own `pause` overrides its speaker: `true` (or `'always'`) stops the game even in a fight, `false` (or `'never'`) never does. The player can turn it off on the pause screen (*Story lines: stop the game / in the corner*, kept in the browser), which is offered only when some speaker pauses. While a conversation is up the game's state is `'talk'`: nothing moves and no timer runs. `LM.comms.talking()`, `next()`, `skip()`, `pauses()` / `setPauses(on)`, `inFight(game)`; `LM.comms.talk = true | false` overrides the player's choice (tests).
+**Lines that stop the game.** A speaker with `pause: true` carries the story: what they say stops the game and is read in the middle of the screen, larger, with Continue (E, Enter, Space or a click; the first press finishes a line still typing) and Skip (Esc: the rest of this conversation, every line still logged and every flag still set). Whatever is queued behind it carries on in the same box, whoever says it; then the game goes on. In a fight (a hunting enemy that's hostile to the player within 200, or within 420 in sight) a line plays in the corner as usual. A line's own `pause` overrides its speaker: `true` (or `'always'`) stops the game even in a fight, `false` (or `'never'`) never does. The player can turn it off on the pause screen (*Story lines in the middle: on / off*, kept in the browser under `lm-story-lines`; before 0.5.11 the button read *Story lines: stop the game*, like a command, and players switched it off by accident, so the old key, `lm-talk-pauses`, is ignored), which is offered only when some speaker pauses. While a conversation is up the game's state is `'talk'`: nothing moves and no timer runs. `LM.comms.talking()`, `next()`, `skip()`, `pauses()` / `setPauses(on)`, `inFight(game)`; `LM.comms.talk = true | false` overrides the player's choice (tests).
 
 ### 6.17 Statuses
 
@@ -912,6 +915,8 @@ game.checkpointHere('Checkpoint');
 `game.checkpointHere(text)` saves the game as it is now, mid-floor: this floor's state (section 5, *Floors remember*), the player as they are, and where they stand become what dying and *Try again* return to, and what Continue on the title screen loads. `text` is a toast (`'Checkpoint'`; `false` for none). Use it before a choice that ends the game, so *Choose again* doesn't send the player back across the floor.
 
 Both are trap effects too: `checkpoint` (`text`) and `ending` (the same fields as the spec, `actions` as a list). An `ending` effect waits while a line that stops the game (section 6.16) is being read, so a speech can lead into it.
+
+**Moving the player on** (0.5.11). The trap effect `travel` (`to`: a floor; `arrive`: a tag on it to arrive on, or `at: [x, y]` in tiles; `via`: the word passed to `loadLevel`, `script` by default; `sound`, else quiet) takes you to another floor at once, with the quick fade the stairs up and elevators use and no floor-finished screen, carrying everything you have, the way a prologue ends or a floor gives way. Like `ending`, it waits until nothing is being read and the game isn't in a pop-up, and it clears what's queued to be said. Without `arrive` or `at` you arrive at the floor's start. A level's `skip` (`{ label, effects }`) puts a button on the pause screen while you're on that floor; clicking it closes the pause screen and runs `effects` through `LM.runEffects(game, effects)`, which runs a list of trap effects (each with its own `delay`) without a trap. Dead Signal's prologue ends with a `travel` to Floor 1, and its `skip` gives what the prologue would have and travels there too.
 
 ---
 

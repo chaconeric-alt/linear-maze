@@ -1,6 +1,6 @@
 # Dead Signal — design and build plan
 
-Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.10)
+Plan · October 2026 · for the Linear Maze engine 0.5.1 (built so far on 0.5.11)
 
 This file is the plan for building Dead Signal into a whole game: the story, the building, six maps (five floors and a basement) chapter by chapter, the monsters, robots, traps, puzzles, weapons, items and dressings on each, and the engine and pack code the game needs that the engine doesn't have yet. It is written to be handed to Claude a milestone at a time (section 11 has a prompt for each), together with the workspace, `engine/SPEC.md` and this file.
 
@@ -70,6 +70,10 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
   - **After the armory it's a mop-up.** The Lance, the Stasis Projector and the Singularity Driver do six times what they did (the Driver's well and its burst too, and the burst never hurts you), never run dry, and no mirror sends any of their shots back. The Lance kills an Enforcer in one shot and a plate cutter in three; standing in the corridor on Five and firing, the two Praetorians and three Enforcers go down in about twelve seconds without touching your health (tested). Nothing drops titan cells any more.
   - **The earlier weapons hit harder**: the Cryo Sprayer and the Plasma Cutter three times, the Riot Shotgun twice, the Incinerator four times (section 6). The floors above will play easier for it.
 - After playtests of Floor 5 (Dead Signal 0.6.2): players ran out of ammunition there. A **supply cabinet** (`ds-supply-cabinet`, `packs/ds-arsenal/supply.js`) is on the Elevator Hall's north wall, between car A3 and the freight shaft, where you come in from Stair A and where the private car brings you back. It holds one full load of rounds, shells, cryo, cells and fuel; opening it fills every weapon you carry to the top, and what you don't take stays in it for later (the floor remembers). `refill: true` on a placement makes it full again every time.
+- After a full playthrough (Dead Signal 0.7.0, engine 0.5.11):
+  - **A prologue** (section 4.0): the ground floor at 01:41, before the lockdown, as the tutorial. The people whose bodies are on Floor 1 are alive; the ones who end up on Floor 4 are called up over the PA; ARIADNE, friendly and helpful, gives Theo his night's work and, because she has a feeling she isn't supposed to have, puts him in Comms Closet 1-C and shuts the door. Then the sirens, the shutters, the screaming and the gunfire, and Floor 1 begins as before. The pause screen can skip it.
+  - **Floor 4's armory** has a supply cabinet too (behind Kwan's 4471): a full load of every ordinary ammunition.
+  - **Story lines in the corner.** Voss and ARIADNE had stopped appearing in the middle of the screen. Nothing in the game had changed: the pause screen's button for it, *Story lines: stop the game*, read like a command, and clicking it switched them to the corner for good in that browser. It now reads *Story lines in the middle: on* (or *off*), says what it changed, and the saved choice starts again from on (a new key, `lm-story-lines`).
 - Next: milestone M9 (polish). M7 (going back down) is optional; M8 is done as part of M6.
 
 ---
@@ -80,6 +84,7 @@ Everything here is a suggestion to be argued with. Names, numbers and lines of d
 2. The building
 3. What the player can do (systems)
 4. Chapters
+   - 4.0 The prologue — The Night Shift (the ground floor, before)
    - 4.1 Floor 1 — Lockdown (lobby and administration)
    - 4.2 Floor 2 — Synthid Research (the labs, the Discovery Center, Shelter B)
    - 4.3 Floor 3 — Gestation (the containment ring, the vat hall and the labs)
@@ -160,7 +165,8 @@ ARIADNE's fragments (section 6.4) are optional collectibles on every floor that 
 | **Garrick Moss** | Head of security. | Ex-military, bought the robots. His nightmares are about being held down. |
 | **Simon Pell** | General counsel. | Writes the contracts nobody reads. His nightmares are faceless. |
 | **ARIADNE** | The building's research integrity and safety AI. | Calm, literal, a little formal, very tired. Speaks in short lines. Was doing its job. |
-| The dead | Night staff: security guards, a vet tech, two postdocs, a cleaner, the night receptionist. | Their badges, logs and lockers are how the floors tell their stories. |
+| The dead | Night staff: security guards, a vet tech, two postdocs, a cleaner, the night receptionist. | Their badges, logs and lockers are how the floors tell their stories. In the prologue they're alive (section 4.0): Officers Danny Ruiz and Karin Lund, Marisa Quint at reception (her birthday), Hal Okafor mopping, Dennis Abara on the dock, Priya Sethi working late. |
+| The called | Staff the board sends for, tonight: Officer Dana Kwan, Officer Leon Marsh (forty-one today: a party), Felix Arden (the dream studio), Nadia Ferrante (the night nurse: “to sit with a child”), Hal Ostrowski (Receiving: his name is on the manifest). And Jo Brennan, Theo's trainee, to the wellness screening on two. | Met in the prologue; called up over the PA at its end; found on Floor 4 (and, for Brennan, not found at all). |
 
 ### 1.6 The Hecatomb
 
@@ -201,6 +207,7 @@ If you kill some of the board and then let the rest go, the ending is one of the
 
 | Map | Name | Chapter | Environment (new, section 7.1) | Floor label |
 |---|---|---|---|---|
+| `ds-f0` | The Night Shift | the prologue | `ds-lobby-night` (built: `ds-lobby` with the lights on) | Prologue (`floorLabel`: it takes no number) |
 | `ds-f1` | Lockdown | 1, 6 | `ds-lobby` | Floor 1 |
 | `ds-f2` | Synthid Research | 2, 6 | `ds-cleanroom` | Floor 2 |
 | `ds-f3` | Gestation | 3, 6 | `ds-wetlab` | Floor 3 |
@@ -209,7 +216,7 @@ If you kill some of the board and then let the rest go, the ending is one of the
 | `ds-f5a` | The Private Floor | 5, 8 | `ds-executive` (built) | Floor 5a (`floorLabel`) |
 | `ds-b1` | Tartarus | 7 | `ds-tartarus` (built) | Sub-level B (`floorLabel`) |
 
-Floor order (the editor's Floors page): F1, F2, F3, F4, F5, F5a, B1. Floor 5's four private stairs lead up to 5a and back (`quick` stairs: no floor-finished screen between the two halves). B1 is reached only by the private car from 5a, once the elevators have power; finishing it isn't the end of the game: the board is, back on Five, by the same car.
+Floor order (the editor's Floors page): F0 (the prologue), F1, F2, F3, F4, F5, F5a, B1. A new game starts on F0; its end takes you straight into F1's closet (a `travel` effect), and its pause screen can skip there. Floor 5's four private stairs lead up to 5a and back (`quick` stairs: no floor-finished screen between the two halves). B1 is reached only by the private car from 5a, once the elevators have power; finishing it isn't the end of the game: the board is, back on Five, by the same car.
 
 ### 2.2 One plan for every floor
 
@@ -294,6 +301,30 @@ Controls are the engine's: WASD, mouse, click to fire, Shift to dash, E to use, 
 ## 4. Chapters
 
 Each chapter lists its rooms (with suggested sizes in tiles), robots, monsters, traps, puzzles, finds, dressings, the lines that move the story, and what changes on the way back. "Tag" means a tile tag painted with the editor's Tag tool, which traps are wired to. Trap triggers and effects in `code` are the engine's (`engine/SPEC.md` 6.8) unless marked new.
+
+### 4.0 The prologue — The Night Shift (the ground floor, before)
+
+*Built in 0.7.0 (`packs/ds-story/levels/f0-prologue.js`, generated from Floor 1's map, with the pack code in `packs/ds-story/prologue.js`).*
+
+**Purpose.** The tutorial, and the building as it was. Teach walking, using and talking, the inventory, firing, the minimap and objectives. Meet the people Floor 1 will show you dead, and the people Floor 4 will show you in cages, beds and party hats. Plant the board, the night, the invitations. Make ARIADNE someone you'd trust before Voss tells you not to.
+
+**Mood.** The same ground floor at 01:41, with the lights on (one ceiling panel in three off, as offices are at night), the shutters up and the carpet clean (`ds-lobby-night`). Quiet; the phones haven't rung all night. Everyone is on their best behaviour and nobody knows why. The security units walk their rounds with green visors: ARIADNE's tonight (faction `ally`, fighting nobody; the level's `factions` give every side an empty row, so nothing can be hurt). The elevators are held on Five (`ds-lift-doors`: the prologue isn't a stop), Stair A is closed above the ground floor, Stair B is board access only.
+
+**The route** (each step an objective; ARIADNE's lines stop the game, in the middle)
+1. **The front doors.** Theo comes in through the vestibule. ARIADNE: good morning, four minutes early, a record; your uniform and tool bag are in Facilities, Jo Brennan is there; it's on your map. A hint: WASD, the mouse, E; the pause screen can skip the prologue. In the atrium, ARIADNE (in the corner): the security units are in staff mode, green means they know you.
+2. **Facilities.** The locker (the coveralls, `p0Uniform`: Tab shows them on), the tool bag on the bench (the bolt driver, `p0Driver`; Brennan calls it the rivet gun), Jo Brennan (`p0Brennan`), and Kowalski's rule: three bolts in the test board on the wall (`p0Board`: aim, click).
+3. **Voss on the PA** (in the middle): the board is meeting upstairs, the most important night Asterion has had; best behaviour; stay at your stations, keep the stairs clear; *you have all been wonderful*. Then ARIADNE: four work orders, any order, on the map; and say hello to people.
+4. **The work orders** (`ds-job`, a yellow tag on each fault): the break-room coffee machine (Felix Arden making chamomile for five, Leon Marsh and his BIRTHDAY BOY badge), camera 4 in the security office (Danny Ruiz in early, Dana Kwan signing out a radio; the camera comes back on the landing outside the boardroom, where a security unit stands facing down the stairs), the first-aid light (Nadia Ferrante, asked upstairs to sit with a child), the loading-bay door sensor (Dennis Abara and the CFO's delivery; Hal Ostrowski and the manifest with his name on it). On the way: Karin Lund at the gates, Marisa Quint at reception, Hal Okafor mopping the West Corridor, Priya Sethi and her four hundred and twelve blank donors. Talking to four of them is optional (`p0Chatted`).
+5. **The PA calls them up** (`p0Called`): Kwan, Marsh, Arden, Ferrante and Ostrowski to Floor 4; Brennan to Floor 2 for her wellness appointment. They go the first moment you aren't looking (placement `leaves`). Brennan leaves a note on the bench. ARIADNE (in the corner): `I ASKED HER TO GO ANOTHER NIGHT.`
+6. **The switch.** The lights stutter. ARIADNE: the core switch in Comms Closet 1-C has failed; she doesn't think it failed by itself; the spare is on the stores shelf; it matters, and it matters that it's you. The spare (`p0Spare`); ARIADNE: when it's in, stay in the closet until she says.
+7. **The closet.** Fit the spare (`p0SwitchIn`: the switch log reads 02:09, T. LARK, as Floor 1's does). The door slides shut. ARIADNE: the line is up; she needs to send something; she thinks something will go wrong tonight and doesn't know what, a feeling she isn't supposed to have; this room has a good door; stay, even if she doesn't tell you to. *Sending.*
+8. **The lockdown** (`p0AriadneDone`, then about thirteen seconds): the siren; the lights go out and the closet's strobe comes on; the PA: PROTOCOL LABRYS IS IN EFFECT; shutters slamming, near and far; the mag-lock thunks and the lamp goes out; ARIADNE, cut off: `THEO—`; screams, gunfire, someone running past the door; REMAIN WHERE YOU ARE; black. Then Floor 1, in the same closet, with Voss on the intercom (`travel`, `playedPrologue`).
+
+**What it keeps from Floor 1, and what it plants.** Ruiz asks after Theo's mother; Marisa is writing the email that's still on her screen on Floor 1; Hal calls everyone chief; Dennis's manifest has four lines; Karin and Danny work the gates; Ruiz doesn't clock in until 02:14 (Moss's rota). For Floor 4: Leon's party (forty-one candles), Nadia's child's bedroom, Martin Pryce already upstairs in his white jacket, Peg Soto cleaning the Box, Felix and the board's sleep, Kwan's armory code (she reset it tonight), Ostrowski signing for himself. For the end: Priya's buyer, nine governments. ARIADNE doesn't say what she's sending, and Voss's later story (the mainframe went rogue) still fits what Theo saw.
+
+**Finds.** The bolt driver and the coveralls; nothing else (no ammunition, no health: nothing to carry into Floor 1 that it didn't give you before). The skip (`skip` on the level: the pause screen) gives the same two and goes to the closet.
+
+**Objectives**: the uniform → the bolt driver → Brennan → three bolts in the test board → the four work orders → wait for ARIADNE → the spare → Comms Closet 1-C → fit the spare → stay in the closet. Optional: talk to people.
 
 ### 4.1 Floor 1 — Lockdown (lobby and administration)
 
@@ -493,7 +524,7 @@ Every lab, the briefing suite, the vat hall, S-41 and the relay have a Voss line
 | The arena | x 35–48, y 20–28 | Sawdust; hatches in the north wall; the final round. |
 | Dream Studios | x 1–20, y 26–35 | The board's five sleep pods; pod 6, induction, with a donor asleep in it for nineteen days (ARIADNE: `I CANNOT WAKE HER.`); five playback desks, one dream each (`dreamVoss` … `dreamMoss`); five design sheets; five holograms of the nightmares, one of which comes at you. |
 | Security Command | x 8–20, y 37–48 | Moss's office: his incident log (`mossLog`: the truth about LABRYS), the suites' camera feeds, a photograph, a child's smock the size of a car (G.M. AGE 6), fragment 7 on a frozen screen; a Sentinel and a turret. |
-| Armory | x 1–6, y 42–48 | Behind a keypad (4471, `armoryOpen`): the Incinerator, fuel, shells, a trauma kit. |
+| Armory | x 1–6, y 42–48 | Behind a keypad (4471, `armoryOpen`): the Incinerator, fuel, shells, a trauma kit, and (0.7.0) a supply cabinet with a full load of every ordinary ammunition. |
 | The Nursery | x 1–9, y 14–21 | Sealed. A starry room, a music box that plays while you're near, a rocking horse that rocks, a mobile, a nightlight. In the child's bed, a grown woman, dead (Nadia Ferrante, night nurse). Go near the bed and the music box winds down, the nightlight goes out, and what's under the bed reaches out (`nurseryAwake`). The Nightlight (trinket). |
 | The Party Room | x 11–20, y 14–24 | Sealed. Balloons, bunting (HAPPY BIRTHDAY LEON), a cake with forty-one candles, four guests in paper hats, presents (shells, a trauma kit, fuel). Go near the stage and the curtain opens (`partyStarted`): the Jester. The Exo-Frame, off Leon. |
 | The Long Room | x 1–20, y 1–8 | Sealed. A long table laid for dinner; six Diners strapped into the chairs, masks turning to follow you; place cards, the menu ("The main course (staff, live)"); the gong. Under the cover, Martin Pryce, the night porter, alive: cut him loose, the gong goes and the straps give (`mainCourse`, `dinnerServed`), and he runs for Stair A. Go to the head of the table and the gong goes anyway. The Riot Helmet, on the host's chair. |
@@ -849,7 +880,7 @@ Ammunition types: the engine's four (`shells`, `rounds`, `cells`, `rockets`; the
 | Recharge station | Existing | Refills cells and shields; put one on Floors 3 and 4. |
 | Purge injector (built) | Flushes `implanted` and `infected` | Floor 3. It only goes in when you need it: walk over it clean and it stays. |
 | Purge station (built) | Three flushes | A violet wall unit at Floor 3's labs and corridors. |
-| Supply cabinet (built, 0.6.2) | Fills every weapon you carry | A steel wall cabinet, SECURITY · RESUPPLY (`ds-supply-cabinet`): one full load each of rounds, shells, cryo, cells and fuel; you take what you need and the rest stays. Floor 5's Elevator Hall. Props: `dir`, `w`, `ammo` (the kinds), `refill` (full every time). |
+| Supply cabinet (built, 0.6.2) | Fills every weapon you carry | A steel wall cabinet, SECURITY · RESUPPLY (`ds-supply-cabinet`): one full load each of rounds, shells, cryo, cells and fuel; you take what you need and the rest stays. Floor 5's Elevator Hall, and (0.7.0) Floor 4's armory. Props: `dir`, `w`, `ammo` (the kinds), `refill` (full every time). |
 
 ### 6.4 Readables and collectibles
 
@@ -1032,6 +1063,12 @@ Title screen: keep the title. Tagline suggestion: "The building is locked. The l
 
 | Flag | Set by | Read by |
 |---|---|---|
+| `p0Arrived`, `p0Briefed` | arriving in the prologue; ARIADNE's welcome | the atrium's line; the first objectives |
+| `p0Uniform`, `p0Driver`, `p0Brennan`, `p0Board` | your locker; your tool bag; Brennan's first line; three bolts in the test board | objectives; `p0Board` starts Voss's PA and the work orders (`p0Orders`) |
+| `p0JobCoffee`, `p0JobCamera`, `p0JobLight`, `p0JobDock`, `p0OrdersDone` | the four work orders (`ds-job`); all four | the PA call (`p0Called`: the called go upstairs), then the switch (`p0SwitchDown`) |
+| `p0Spare`, `p0InCloset`, `p0SwitchIn`, `p0AriadneDone` | the stores shelf; stepping into 1-C with it; fitting it; ARIADNE's last line | the closet door; the lockdown |
+| `p0Chatted` | talking to four people | the optional objective |
+| `playedPrologue`, `skippedPrologue` | the end of the lockdown; the pause screen's skip | — (for later floors, if they want to know) |
 | `breakerOn` | the breaker in Comms Closet 1-C | unseals the closet |
 | `lockerOpen` | the Security Office keypad | the sidearm and vest |
 | `stairsWest` | reaching the Security Office (after Voss's line) | unseals the west stairwell |

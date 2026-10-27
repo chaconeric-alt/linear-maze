@@ -88,19 +88,21 @@
   };
 
   // ------------------------------------------------------------ a conversation that stops the game
-  const PREF = 'lm-talk-pauses';
+  // (0.5.11: a new key. The old one, 'lm-talk-pauses', was set by a pause-screen button whose label read like a
+  // command, so players switched it off without meaning to; everyone starts again from on.)
+  const PREF = 'lm-story-lines';
   /** Does the player want important lines to stop the game? (On unless they turned it off.) */
   C.pauses = function () {
     if (C.talk === true || C.talk === false) return C.talk;
     try {
-      return localStorage.getItem(PREF) !== 'off';
+      return localStorage.getItem(PREF) !== 'corner';
     } catch (e) {
       return true;
     }
   };
   C.setPauses = function (on) {
     try {
-      localStorage.setItem(PREF, on ? 'on' : 'off');
+      localStorage.setItem(PREF, on ? 'middle' : 'corner');
     } catch (e) {}
   };
   /** Does any speaker in this game stop the game? (The pause screen offers the choice only then.) */
@@ -491,6 +493,22 @@
         params: { who: 'id:speakers', text: 'longtext', glitch: 'bool', seconds: 'number', flag: 'text', pause: ['always', 'never'] },
         run(game, ef) {
           C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag, pause: ef.pause });
+        },
+      },
+      // { to, arrive, at: [x, y], via, quiet, sound }: go to another floor now, with a quick fade and no
+      // floor-finished screen, carrying everything you have (a scripted move: the end of a prologue, a fall)
+      travel: {
+        params: { to: 'id:levels', arrive: 'tag', at: 'json', via: 'text', quiet: 'bool', sound: 'text' },
+        run(game, ef) {
+          if (!ef.to || !LM.find('levels', ef.to) || !game.player) return;
+          const go = () => {
+            // after whatever's being said, and never from a pop-up
+            if ((C.talking && C.talking()) || game.state !== 'play') return game.schedule(0.3, go, true);
+            const at = Array.isArray(ef.at) ? { x: (ef.at[0] + 0.5) * LM.TILE, y: (ef.at[1] + 0.5) * LM.TILE } : undefined;
+            C.clear();
+            game.travel(ef.to, { via: ef.via || 'script', arrive: ef.arrive, at, quiet: ef.quiet !== false && !ef.sound, sound: ef.sound });
+          };
+          go();
         },
       },
       // (the game's own flow, here with the other story effects)

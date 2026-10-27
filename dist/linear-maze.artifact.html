@@ -458,7 +458,7 @@ kbd {
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.5.10';
+  LM.VERSION = '0.5.11';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -6059,6 +6059,24 @@ kbd {
     return U.dist2(cx, cy, x0 + dx * k, y0 + dy * k) < r * r;
   }
   LM.Trap = Trap;
+
+  /**
+   * Run a list of trap effects now, as a trap firing would (each effect's own `delay` counts from now), without
+   * a trap: a level's `skip`, a pack's script. trap: the trap they belong to, if any (some effects keep what
+   * they spawned or sealed on it); a scratch one otherwise.
+   */
+  LM.runEffects = function (game, effects, trap) {
+    const owner = trap || { spawned: [], sealed: [], def: { effects: effects || [] } };
+    for (const ef of effects || []) {
+      const fx = ef && LM.find('effects', ef.type);
+      if (!fx) {
+        if (ef) console.warn('[LM] Unknown effect ' + ef.type);
+        continue;
+      }
+      if (ef.delay) game.schedule(ef.delay, () => fx.run(game, ef, owner));
+      else fx.run(game, ef, owner);
+    }
+  };
 })();
 
 //# sourceURL=engine/traps.js
@@ -7820,9 +7838,20 @@ kbd {
         { label: 'Resume', primary: true },
         { label: 'Inventory', onClick: () => { setTimeout(() => ui.showInventory(game), 0); } },
         { label: LM.audio.muted ? 'Sound on' : 'Sound off', onClick: () => LM.audio.setMuted(!LM.audio.muted) },
-        // story lines that stop the game (LM.comms): the player can have them in the corner instead
+        // story lines that stop the game (LM.comms): the player can have them in the corner instead.
+        // (The label says what it is now, as a setting, not what clicking it does.)
         LM.comms && LM.comms.anyPause && LM.comms.anyPause()
-          ? { label: LM.comms.pauses() ? 'Story lines: stop the game' : 'Story lines: in the corner', onClick: () => { LM.comms.setPauses(!LM.comms.pauses()); setTimeout(() => ui.showPause(game), 0); } }
+          ? { label: 'Story lines in the middle: ' + (LM.comms.pauses() ? 'on' : 'off'), onClick: () => {
+            LM.comms.setPauses(!LM.comms.pauses());
+            setTimeout(() => {
+              ui.showPause(game);
+              game.toast(LM.comms.pauses() ? 'Story lines will stop the game, in the middle of the screen.' : 'Story lines will play in the corner, without stopping the game.');
+            }, 0);
+          } }
+          : null,
+        // a floor can offer a way past itself (a level's skip: { label, effects }): a prologue, say
+        game.level && game.level.def.skip && game.state !== 'ending'
+          ? { label: game.level.def.skip.label || 'Skip this part', quiet: true, onClick: () => { setTimeout(() => { game.state = 'play'; if (LM.comms) LM.comms.clear(); LM.runEffects(game, game.level.def.skip.effects || []); }, 0); } }
           : null,
         { label: 'Restart floor', quiet: true, onClick: () => { setTimeout(() => game.restartLevel(), 0); } },
         { label: 'Quit to title', quiet: true, onClick: () => { setTimeout(() => game.toTitle(), 0); } },
@@ -8298,19 +8327,21 @@ kbd {
   };
 
   // ------------------------------------------------------------ a conversation that stops the game
-  const PREF = 'lm-talk-pauses';
+  // (0.5.11: a new key. The old one, 'lm-talk-pauses', was set by a pause-screen button whose label read like a
+  // command, so players switched it off without meaning to; everyone starts again from on.)
+  const PREF = 'lm-story-lines';
   /** Does the player want important lines to stop the game? (On unless they turned it off.) */
   C.pauses = function () {
     if (C.talk === true || C.talk === false) return C.talk;
     try {
-      return localStorage.getItem(PREF) !== 'off';
+      return localStorage.getItem(PREF) !== 'corner';
     } catch (e) {
       return true;
     }
   };
   C.setPauses = function (on) {
     try {
-      localStorage.setItem(PREF, on ? 'on' : 'off');
+      localStorage.setItem(PREF, on ? 'middle' : 'corner');
     } catch (e) {}
   };
   /** Does any speaker in this game stop the game? (The pause screen offers the choice only then.) */
@@ -8701,6 +8732,22 @@ kbd {
         params: { who: 'id:speakers', text: 'longtext', glitch: 'bool', seconds: 'number', flag: 'text', pause: ['always', 'never'] },
         run(game, ef) {
           C.say({ who: ef.who, text: ef.text, glitch: ef.glitch, seconds: ef.seconds, flag: ef.flag, pause: ef.pause });
+        },
+      },
+      // { to, arrive, at: [x, y], via, quiet, sound }: go to another floor now, with a quick fade and no
+      // floor-finished screen, carrying everything you have (a scripted move: the end of a prologue, a fall)
+      travel: {
+        params: { to: 'id:levels', arrive: 'tag', at: 'json', via: 'text', quiet: 'bool', sound: 'text' },
+        run(game, ef) {
+          if (!ef.to || !LM.find('levels', ef.to) || !game.player) return;
+          const go = () => {
+            // after whatever's being said, and never from a pop-up
+            if ((C.talking && C.talking()) || game.state !== 'play') return game.schedule(0.3, go, true);
+            const at = Array.isArray(ef.at) ? { x: (ef.at[0] + 0.5) * LM.TILE, y: (ef.at[1] + 0.5) * LM.TILE } : undefined;
+            C.clear();
+            game.travel(ef.to, { via: ef.via || 'script', arrive: ef.arrive, at, quiet: ef.quiet !== false && !ef.sound, sound: ef.sound });
+          };
+          go();
         },
       },
       // (the game's own flow, here with the other story effects)

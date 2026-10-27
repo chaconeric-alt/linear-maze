@@ -322,3 +322,9 @@ No level files changed. The Linear Maze has no elevators; its elevators are stil
 A level's room can carry `mapLabel` (its name on the minimap, once its middle is explored) and `mapWhen` (flags, any one of them, that put it on the minimap before the player has been there). `LM.ui.revealRooms` and `LM.ui.drawRoomLabels`, called by the minimap. The editor's room list edits both.
 
 **This game's packs.** Nothing changed. No Linear Maze room has `mapLabel` or `mapWhen`, so the minimap draws as before (every floor checked).
+
+## 0.5.11: travel, a floor's skip, the story-lines setting
+
+The trap effect `travel` (to another floor at once, with the quick fade, carrying everything), a level's `skip: { label, effects }` on the pause screen, and `LM.runEffects(game, effects)`. The setting for story lines that stop the game moved to a new key (`lm-story-lines`) and its pause-screen button names the setting.
+
+**This game's packs.** Nothing changed. No Linear Maze floor uses `travel` or `skip`, and none of its speakers stops the game, so its pause screen is as before (every floor checked).

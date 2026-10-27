@@ -1,8 +1,10 @@
 # Linear Maze workspace
 
-Version 0.5.10. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+Version 0.5.11. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
 
 Hosted (once GitHub Pages is on for this repo: Settings → Pages → Deploy from a branch, `main`, `/ (root)`): the launcher is at `https://chaconeric-alt.github.io/linear-maze/`, Dead Signal at `https://chaconeric-alt.github.io/linear-maze/dist/dead-signal.html`, The Linear Maze at `…/dist/linear-maze.html`, and the editor at `…/editor/`. `.nojekyll` tells Pages to serve the files as they are.
+
+New in 0.5.11: Dead Signal's prologue, *The Night Shift*: the ground floor at 01:41, before the lockdown, as the tutorial. The night staff are alive and talking about the board, which is meeting upstairs at two in the morning; ARIADNE gives you your work (your uniform and bolt driver, Jo Brennan, Kowalski's test board, four work orders round the floor); the PA calls the ones who end up on Floor 4 upstairs; and ARIADNE puts you in Comms Closet 1-C and shuts the door, just before the sirens, the shutters, the screaming and the gunfire. Then Floor 1 as before. The pause screen can skip it. Also: a supply cabinet in Floor 4's armory, and the pause screen's setting for story lines in the middle of the screen now says what it is (it read like a command, and got switched off by accident) and starts again from on. Engine: the `travel` trap effect, a level's `skip` on the pause screen, `LM.runEffects` (`engine/SPEC.md` sections 6.8, 6.16, 6.24).
 
 New in 0.5.10: from Dead Signal's playtests of the end. On Sub-level B the board's cutters take four times as long over ARIADNE's plates (four minutes a plate while you explore, and 280 seconds on the ninth once you step into the core), so there's time to look at the Titans. The Tartarus Armory is on the map from ARIADNE's briefing, labelled, and getting there is an objective with a marker on its vault door, then one for its cases. Its weapons do six times the damage and never run dry: after the armory the game is a mop-up. And the Cryo Sprayer and Plasma Cutter do three times their damage, the Riot Shotgun twice, the Incinerator four times. Engine: rooms can be named on the minimap and put on it before you've been there (`mapLabel`, `mapWhen`; `engine/SPEC.md` section 6.21).
 
@@ -34,7 +36,7 @@ New in 0.5.1: the stairs you arrived by take you back up, and every floor is as 
 
 The games:
 - **`games/linear-maze/`: The Linear Maze.** Its eleven packs are in their own folders: core, maze, office, memos, chessboard, apartment, rotary, dressings, home-story, library and town.
-- **`games/dead-signal/`: Dead Signal.** A technician trapped in a biotech lab gone wrong fights his way to the top floor. The plan is `games/dead-signal/DESIGN.md`. Floors 1 to 4 (*Lockdown*, *Synthid Research*, *Gestation*, *the Proving Grounds*) are built, in Dead Signal's own packs (`packs/ds-*`); the floors you made in the editor on October 14 (*The Sterile Annex*, *The Dead Signal Laboratory*, *The Complex*) follow it as placeholders. It loads the Linear Maze's core, office (without its people and phone) and dressings packs.
+- **`games/dead-signal/`: Dead Signal.** A technician trapped in a biotech lab gone wrong fights his way to the top floor. The plan is `games/dead-signal/DESIGN.md`. A prologue (*The Night Shift*) and Floors 1 to 4 (*Lockdown*, *Synthid Research*, *Gestation*, *the Proving Grounds*) are built, in Dead Signal's own packs (`packs/ds-*`); the floors you made in the editor on October 14 (*The Sterile Annex*, *The Dead Signal Laboratory*, *The Complex*) follow it as placeholders. It loads the Linear Maze's core, office (without its people and phone) and dressings packs.
 
 ## Play
 

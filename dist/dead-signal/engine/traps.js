@@ -176,4 +176,22 @@
     return U.dist2(cx, cy, x0 + dx * k, y0 + dy * k) < r * r;
   }
   LM.Trap = Trap;
+
+  /**
+   * Run a list of trap effects now, as a trap firing would (each effect's own `delay` counts from now), without
+   * a trap: a level's `skip`, a pack's script. trap: the trap they belong to, if any (some effects keep what
+   * they spawned or sealed on it); a scratch one otherwise.
+   */
+  LM.runEffects = function (game, effects, trap) {
+    const owner = trap || { spawned: [], sealed: [], def: { effects: effects || [] } };
+    for (const ef of effects || []) {
+      const fx = ef && LM.find('effects', ef.type);
+      if (!fx) {
+        if (ef) console.warn('[LM] Unknown effect ' + ef.type);
+        continue;
+      }
+      if (ef.delay) game.schedule(ef.delay, () => fx.run(game, ef, owner));
+      else fx.run(game, ef, owner);
+    }
+  };
 })();

@@ -750,9 +750,20 @@
         { label: 'Resume', primary: true },
         { label: 'Inventory', onClick: () => { setTimeout(() => ui.showInventory(game), 0); } },
         { label: LM.audio.muted ? 'Sound on' : 'Sound off', onClick: () => LM.audio.setMuted(!LM.audio.muted) },
-        // story lines that stop the game (LM.comms): the player can have them in the corner instead
+        // story lines that stop the game (LM.comms): the player can have them in the corner instead.
+        // (The label says what it is now, as a setting, not what clicking it does.)
         LM.comms && LM.comms.anyPause && LM.comms.anyPause()
-          ? { label: LM.comms.pauses() ? 'Story lines: stop the game' : 'Story lines: in the corner', onClick: () => { LM.comms.setPauses(!LM.comms.pauses()); setTimeout(() => ui.showPause(game), 0); } }
+          ? { label: 'Story lines in the middle: ' + (LM.comms.pauses() ? 'on' : 'off'), onClick: () => {
+            LM.comms.setPauses(!LM.comms.pauses());
+            setTimeout(() => {
+              ui.showPause(game);
+              game.toast(LM.comms.pauses() ? 'Story lines will stop the game, in the middle of the screen.' : 'Story lines will play in the corner, without stopping the game.');
+            }, 0);
+          } }
+          : null,
+        // a floor can offer a way past itself (a level's skip: { label, effects }): a prologue, say
+        game.level && game.level.def.skip && game.state !== 'ending'
+          ? { label: game.level.def.skip.label || 'Skip this part', quiet: true, onClick: () => { setTimeout(() => { game.state = 'play'; if (LM.comms) LM.comms.clear(); LM.runEffects(game, game.level.def.skip.effects || []); }, 0); } }
           : null,
         { label: 'Restart floor', quiet: true, onClick: () => { setTimeout(() => game.restartLevel(), 0); } },
         { label: 'Quit to title', quiet: true, onClick: () => { setTimeout(() => game.toTitle(), 0); } },
