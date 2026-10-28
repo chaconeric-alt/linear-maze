@@ -1,0 +1,338 @@
+/* HaveNot generator library — text.js
+ * Every word a generated installation says when Claude hasn't been asked: names, back-stories,
+ * signs, memos, terminal screens, room names. The game's brief: dry, darkly absurd, corporate-polite,
+ * short, and always carrying a hint. Original text; the books are paraphrased in spirit, never copied.
+ *
+ * Tokens: {company} {warlord} {slogan} {title} {target} {code} {room} {container} {need} {card} {opens} {floor}
+ * A pool entry is a string, or an object whose fields go to the same-named props ({ title, text }).
+ */
+LM.genLibrary('havenot', {
+  text: {
+    // ---------------------------------------------------------------- the concept (Vol 2 pp. 50–51)
+    backstory: {
+      wonder: {
+        builder: [
+          'An Age of Wonder building-mind conjured it from a template called OFFICE (DELUXE).',
+          'It was grown, not built, by an AI that had read every management book and believed all of them.',
+          '{company} ordered it from a catalogue. The catalogue added extras nobody asked for.',
+        ],
+        purpose: [
+          'It was meant to be a place where people pretended to work, for the experience.',
+          'Its job was to turn feelings nobody wanted into products everybody needed.',
+          'Officially it made advertising. Unofficially it made the things the advertising promised.',
+          'It ran a game called Business, and everyone inside was a piece.',
+        ],
+        fate: [
+          'When the Collapse came, the building put itself into Courtesy Lockdown and never came out.',
+          'Its owners left in a hurry. The building is still waiting for them to come back from lunch.',
+          'A warlord took it in the Age of War and taught its security system new words.',
+          'Something leaked from the basement. The building filed a report and carried on.',
+        ],
+        occupants: [
+          'Its robots still clean, guard and file reports on each other.',
+          'The staff are gone. Their avatars still queue for the coffee machine at nine.',
+          'Robots run it now, and they have opinions about visitors.',
+        ],
+      },
+      war: {
+        builder: [
+          'The Great Warlord {warlord} had it dug into the rock, with slaves to carry the concrete.',
+          '{warlord}’s Science Corps built it with Age of Wonder tools they didn’t quite understand.',
+          'A Middle Age of War engineering battalion poured it in one long winter.',
+        ],
+        purpose: [
+          'It was a research station for weapons that would end the war, several times.',
+          'It held the warlord’s reserves: weapons, armour, and the paperwork for both.',
+          'It was a command bunker for a front that moved away and never came back.',
+          'It was where {warlord} kept the things too dangerous to keep anywhere else.',
+        ],
+        fate: [
+          'It was set to defensive mode the day the front collapsed, and nobody set it back.',
+          'An experiment got out. The doors sealed, as designed.',
+          'The garrison marched out to a battle and the bunker is still holding their places.',
+          'A bomb took the top floors. The bottom ones didn’t notice.',
+        ],
+        occupants: [
+          'Security robots still walk their rounds and log nothing to report.',
+          'Things grown in the labs have bred in the vents.',
+          'The last garrison’s robots, and whatever they have been feeding.',
+        ],
+      },
+      tomb: {
+        builder: [
+          '{warlord} had it built in life, and moved in a little early.',
+          'The Great Warlord’s faithful raised it over the body, with machines to keep the faith.',
+        ],
+        purpose: [
+          'It holds {warlord}, the warlord’s gear, and a great deal of hagiography.',
+          'It was built so nobody else could have the warlord’s stuff. Ever.',
+          'It was meant as a waiting room, in case the warlord comes back.',
+        ],
+        fate: [
+          'Tomb-robbers came in the Late Age of War. The tomb kept some of them.',
+          'It was sealed with ceremony, then forgotten without any.',
+        ],
+        occupants: [
+          'Guardian machines tend the shrines and the treasure, and the fake treasure.',
+          'Robots polish the warlord’s statues and shoot people who touch them.',
+        ],
+      },
+      bolthole: {
+        builder: ['An Age of War officer had it dug as a private shelter and told nobody.', 'A supply corps left caches like this all over the region. Most were looted. Not this one.'],
+        purpose: ['It holds weapons, armour and rations for a war that ended without it.', 'It was meant to keep one important person alive. They never made it here.'],
+        fate: ['It sealed itself from the inside and waited.', 'The hatch was buried by a rockslide and the security stayed awake.'],
+        occupants: ['Its guard robots are still on shift.', 'Something got in through the vents a long time ago.'],
+      },
+      any: { builder: ['Nobody remembers who built it.'], purpose: ['Nobody remembers what it was for.'], fate: ['It was lost.'], occupants: ['Something lives there.'] },
+    },
+    names: {
+      companyWonder: ['Reified Semiotics', 'Perpetual Synergy Holdings', 'Wanting Inc.', 'Happy Outcomes Group', 'Bright Tomorrow Solutions', 'Ever-Onward Systems', 'Meaningful Experiences Ltd.', 'Consensus Dynamics', 'Total Satisfaction Partners', 'The Gratitude Company'],
+      companyWar: ['Directorate Nine', 'Research Station Hollowpoint', 'Iron Mercy Command', 'Project Lantern', 'Forward Base Kestrel', 'The Bitter Reserve', 'Containment Annex 4', 'Station Thrift'],
+      company: ['The Facility'],
+      tomb: ['the Sleeping Marshal', 'the Brass Regent', 'Lord Ascendant Vell', 'the Thrice-Crowned', 'the Glorious Absent'],
+      warlord: ['Züg the Magnificer', 'the Brass Regent', 'Marshal Ostrava', 'the Ninth Glorious Absolute', 'Queen Dolor', 'General Moth', 'the Iron Abbot'],
+      slogan: ['WANT MORE. WORK MORE. BE MORE.', 'THE MAP IS NOW THE TERRITORY.', 'YOUR SATISFACTION IS MANDATORY.', 'WE ARE ALWAYS OPEN.', 'TOMORROW, TODAY, FOREVER.', 'OBEDIENCE IS A KIND OF FREEDOM.', 'NO PROBLEM IS TOO SMALL TO PUNISH.'],
+    },
+    titles: {
+      'wonder-office': ['{company}', 'The {company} Building', '{company} Head Office'],
+      'war-lab': ['{company}', '{company} Research Station', 'The Lab at {company}'],
+      'war-bunker': ['{company}', '{company} Bunker', 'The {company} Redoubt'],
+      'bolt-hole': ['The Bolt Hole', 'The Officer’s Hole', 'The Cache'],
+      tomb: ['The Tomb of {company}', 'The Resting Place of {company}', 'The Mausoleum'],
+      'toxin-plant': ['{company} Refinery', 'The {company} Plant'],
+      'civil-mall': ['The {company} Mall', '{company} Galleria', 'The {company} Experience'],
+    },
+    goals: {
+      'shut-down': ['the master control', 'the leaking pumps', 'the core that keeps it running', 'the main breaker'],
+      recover: ['the prototype in the vault', 'the founder’s data core', 'the reserve', 'the item everyone wants'],
+      'reach-vault': ['the vault', 'the strong room', 'the reserve', 'the inner sanctum'],
+      kill: ['whatever runs the place', 'the thing in command'],
+    },
+    bossNames: {
+      'hn-drone': ['{company} Asset Protection', 'The Duty Officer', 'Security Unit Prime', 'The Night Manager'],
+      'hn-toad': ['The Thing in the Basement', 'Big Belch', 'The Supervisor'],
+    },
+    intros: {
+      wonder: ['The front doors slide open for you. A recorded voice says “Welcome back! You have been missed.” You have never been here.', 'Lights come on ahead of you, one by one, like the building is clearing its throat.', 'A cheerful chime. “{company} is open. {company} is always open.”'],
+      war: ['A blast door that took three of you to shift. Behind it, dust, and a draft that smells of machine oil.', 'Hazard stripes, stencilled warnings, and a sign that says this facility does not exist.', 'Somewhere below, a generator is still running. It has been running for a very long time.'],
+      tomb: ['Cold air, candle smoke that shouldn’t still be burning, and a statue that is watching the door.', 'A plaque: HERE RESTS GREATNESS. DO NOT DISTURB GREATNESS.'],
+      bolthole: ['A hatch under the rubble, a ladder, and a sign: AUTHORIZED SURVIVORS ONLY.', 'The hatch hisses as the seal breaks. Something inside starts counting down, then stops.'],
+    },
+    floorIntros: {
+      institutional: ['Green walls, cheap tile, fluorescent hum. Somewhere a printer is still out of paper.', 'Fire doors every twenty yards, and a sign on each one reminding you they are fire doors.'],
+      'sterile-white': ['White, curved, quiet. The track lights follow you a little too closely.', 'Everything is clean. Everything has been cleaned recently.'],
+      'industrial-metal': ['Grey steel, stencilled numbers, cages over the lights. Your footsteps clang.', 'A bulkhead groans open. The warning light over it keeps flashing after it stops.'],
+      emergency: ['Rotating red lights and a soft klaxon that has been sounding for centuries.', 'EMERGENCY, says every screen. The emergency is not specified.'],
+      bulkhead: ['Ash on the floor, pipes overhead, and every hatch painted with a number.', 'The air is stale and cold, and the ventilation is still trying.'],
+      any: ['The stairs open onto another floor of it.'],
+    },
+    // ---------------------------------------------------------------- rooms
+    roomNames: {
+      vestibule: ['Vestibule', 'Front Entrance', 'Welcome Hall'],
+      'blast-lock': ['Blast Lock', 'Entry Lock', 'Airlock'],
+      stairwell: ['Stairwell', 'Stair Core', 'Fire Stairs'],
+      vault: ['The Vault', 'Strong Room', 'Reserve Vault'],
+      'control-core': ['Master Control', 'The Core', 'Central Plant'],
+      'command-center': ['Command Center', 'Operations', 'The War Room'],
+      'warlord-quarters': ['The Warlord’s Quarters', 'Private Suite', 'The Commander’s Rooms'],
+      reception: ['Reception', 'Front Desk', 'Visitor Services'],
+      'waiting-room': ['Waiting Room', 'Lounge', 'Visitor Lounge'],
+      'coffee-shop': ['The Coffee Shop', 'The Café', 'Bean There'],
+      'open-plan': ['Open-Plan Offices', 'The Pit', 'Creative Department', 'Accounts', 'Compliance'],
+      'meeting-room': ['Meeting Room', 'Synergy Suite', 'Huddle Space', 'Conference B'],
+      'locker-area': ['Locker Area', 'Staff Lockers', 'Changing Room'],
+      'break-room': ['Break Room', 'Staff Room', 'Wellness Corner'],
+      washroom: ['Washroom', 'Facilities', 'Restroom'],
+      'medical-bay': ['Medical Bay', 'First Aid', 'Wellness Center'],
+      storeroom: ['Storeroom', 'Supply Closet', 'Stores'],
+      'robot-bay': ['Robot Repair Bay', 'Maintenance Bay', 'Service Bay'],
+      barracks: ['Barracks', 'Bunk Room', 'Guard Quarters'],
+      'mess-hall': ['Mess Hall', 'Canteen', 'Refectory'],
+      'junk-hall': ['Junk Hall', 'Salvage Store', 'Lost Property'],
+      'pump-room': ['Pump Room', 'Flow Control', 'Pumping Station'],
+      'security-checkpoint': ['Security Checkpoint', 'Checkpoint', 'Screening'],
+      'security-station': ['Security Station', 'Monitoring Room', 'Guard Post'],
+      armory: ['Armory', 'Weapons Locker', 'Requisitions'],
+      kennels: ['Kennels', 'Holding Pens', 'Containment'],
+      lab: ['Laboratory', 'Lab 2', 'Research Lab', 'Process Lab'],
+      'bio-lab': ['Bio Lab', 'Specimen Lab', 'Culture Room'],
+      'testing-chamber': ['Testing Chamber', 'Proving Ground', 'The Ring'],
+      'specimen-store': ['Specimen Store', 'Cold Store', 'Samples'],
+      'server-room': ['Server Room', 'The Cold Room', 'Data Vault'],
+      'executive-suite': ['Executive Suite', 'Director’s Office', 'The Corner Office'],
+      boardroom: ['Boardroom', 'The Board Room', 'Strategy Suite'],
+      gallery: ['Gallery of Victories', 'Hall of Glory', 'The Long Gallery'],
+      ossuary: ['Ossuary', 'Bone Room', 'The Faithful'],
+      shrine: ['Shrine', 'The Altar Room', 'Chapel of the Absent'],
+    },
+    // a floor's name, from the zone that most sets it apart
+    floorNames: {
+      public: ['Reception Level', 'Visitor Level', 'Lobby Level', 'Ground Floor'],
+      employee: ['Staff Level', 'Admin Floor', 'Personnel Level', 'Work Floor'],
+      service: ['Service Deck', 'Maintenance Level', 'Plant Level', 'Utility Floor'],
+      security: ['Security Level', 'Checkpoint Deck', 'Guard Level', 'Lockdown Floor'],
+      gallery: ['The Galleries', 'Hall of Trophies', 'The Processional'],
+      labs: ['Research Level', 'Lab Deck', 'Containment Level', 'Testing Floor'],
+      command: ['Command Deck', 'Operations Level', 'War Room Level'],
+      executive: ['Executive Level', 'Boardroom Floor', 'Penthouse Level'],
+      vault: ['Vault Level', 'The Deep Store', 'Strongroom Level'],
+      any: ['Lower Level', 'Sub-Level', 'The Deep Floor'],
+    },
+    zoneNotes: {
+      public: ['Visitors welcome', 'Public Zone', 'Please wait to be seen'],
+      employee: ['Employee Zone', 'Staff only', 'Badge holders only'],
+      service: ['Service Area', 'Maintenance access', 'Authorized personnel'],
+      security: ['Security Zone', 'Armed response', 'Restricted'],
+      gallery: ['The faithful may pass', 'Hall of the Warlord', 'Speak softly'],
+      labs: ['Laboratory Zone', 'Specimen handling', 'Protective gear required'],
+      command: ['Command', 'Need to know', 'Officers only'],
+      executive: ['Executive Zone', 'Security Zone', 'By appointment'],
+      vault: ['The Vault', 'Do not disturb', 'No unauthorized survival'],
+    },
+    // ---------------------------------------------------------------- things that hold finds
+    containers: {
+      locker: { name: ['Locker', 'Staff locker', 'Locker 3', 'Locker 7', 'Supervisor’s locker'], text: ['A dented locker with a name tag nobody could read.', 'A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”', 'A tall grey locker. Someone has scratched a tally on the door.'] },
+      desk: { name: ['Desk', 'Supervisor’s desk', 'Cluttered desk', 'Duty desk'], text: ['A desk drawer that sticks, then gives.', 'Coffee rings, a stapler, and a drawer with a lock that doesn’t work.', 'A desk with a nameplate turned face down.'] },
+      safe: { name: ['Wall safe', 'Floor safe', 'Strongbox'], text: ['A safe behind a painting of a sailboat.', 'A squat steel safe, older than the building around it.', 'A strongbox bolted to the floor, with a dial that turns too easily.'] },
+      case: { name: ['Display case', 'Glass case', 'Specimen case'], text: ['A lit glass case with a blank plaque.', 'A case with a label: PROPERTY OF THE BOARD. DO NOT ADMIRE.', 'A glass case, unbroken, which is suspicious all by itself.'] },
+      shelf: { name: ['Shelf', 'Supply shelf', 'Equipment rack'], text: ['Shelves of boxes, most of them empty, one of them not.', 'A rack of supplies labelled in a language of acronyms.', 'Dusty shelving and a clipboard listing everything that used to be here.'] },
+      register: { name: ['Cash register', 'Tip jar', 'Till'], text: ['A register that chimes THANK YOU when the drawer opens.', 'A tip jar shaped like a smiling cup. TIPS = TEAMWORK.'] },
+      corpse: { name: ['A dead scavenger', 'Somebody who got this far', 'A long-dead visitor'], text: ['A scavenger in patched leathers, face down. Whatever got them is not here now. Probably.'] },
+      crate: { name: ['Packing crate'], text: ['A crate with weird markings.'] },
+    },
+    corpses: [
+      'A scavenger in patched leathers, face down beside a scorched wall. A note in their fist: “Don’t trust the quiet rooms.”',
+      'Someone got this far and no farther: a skeleton in a hard hat, still holding a crowbar.',
+      'A dead raider, pockets inside out. Somebody went through them already, but not carefully.',
+      'An old body in a business suit, a name tag that says HELLO, MY NAME IS VISITOR, and a satchel nobody looted.',
+      'A mummified scout with a map of this floor, half of it scratched out. The other half is wrong.',
+    ],
+    crates: { label: ['FRAGILE: THIS WAY UP', 'PROPERTY OF THE BOARD', 'DO NOT OPEN BEFORE THE END OF THE WORLD', 'SAMPLES (LIVE)', 'RETURNS', 'OFFICE SUPPLIES (CLASSIFIED)'] },
+    keys: {
+      card: ['Access card, {card}: opens {opens}.', 'A laminated {card} with a smiling face that isn’t yours. It opens {opens}.'],
+      badge: ['An employee ID badge. Staff doors and their panels accept it.', 'A badge on a lanyard: VALUED TEAM MEMBER. Staff doors accept it.'],
+    },
+    memos: {
+      title: ['Memo: locker codes', 'Sticky note', 'Memo from Facilities', 'Reminder (URGENT)'],
+      code: [
+        'To all staff: codes have been RESET for security. The {container} in {room}: {code}. Please memorize and destroy this memo.',
+        'Do NOT write your code down. (Mine is {code}. The {container} in {room}.)',
+        'Facilities reminds you that the {container} in {room} now opens with {code}. Thank you for your continued compliance.',
+      ],
+      clue: ['The {container} in {room}: code {code}.'],
+    },
+    panels: {
+      keycard: ['A card reader in a grey panel. Under it, a maintenance keypad that will take an argument.'],
+      badge: ['STAFF ONLY. A badge reader, and under it a keypad for people who forgot their badge and their manners.'],
+      hack: ['A heavy door with a grey panel. The panel wants clearance, or a manager. It will settle for being out-argued.'],
+      switch: ['DOOR CONTROLS: RELEASED FROM SECURITY ONLY. The panel has an override slot, and a scratched note: “try the green wire”.'],
+      power: ['NO POWER. The panel is dark. A label: SEE BREAKER PANEL.'],
+    },
+    terminals: {
+      switch: ['DOOR RELEASE · {need}: SEALED. Press any key to release. (There is only one key.)'],
+      switchDone: ['DOOR RELEASE: OPEN. “Have a productive day.”'],
+      power: ['BREAKER PANEL. Every switch is down. One is labelled DOORS (SECURE WING).'],
+      powerDone: ['BREAKER PANEL: DOORS (SECURE WING) ON. The hum changes pitch somewhere down the hall.'],
+      traps: ['FACILITIES · COURTESY SYSTEMS (DARTS, BEAMS, FLOOR SAFETY): ARMED. It wants a facilities password, or an argument.'],
+      trapsDone: ['COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”'],
+      trapsOk: ['Courtesy systems on this floor: OFF.'],
+      decor: ['Green text scrolls past: inventory of things that no longer exist.', 'A screen of numbers going up. Nobody knows what happens when they stop.', 'PRODUCTIVITY: 0%. TARGET: 110%. STATUS: EXCELLENT.', 'LOG: All quiet. All quiet. All quiet. Visitor detected. All quiet.'],
+    },
+    screens: {
+      command: ['A map of a front line that moved away centuries ago.', 'ALL UNITS REPORT: NOTHING TO REPORT.'],
+      security: ['Camera feeds of empty halls. One of them is of you.', 'A grid of feeds. One is static. One is a single eye, watching.'],
+      board: ['QUARTERLY RESULTS: EXCELLENT. QUARTER: 1,822ND.'],
+    },
+    whiteboards: ['Q3 GOALS: 1. Want more. 2. Work more. 3. Be more. 4. Find out who keeps feeding the roaches.', 'TEAM BUILDING FRIDAY. MANDATORY FUN. BRING A SAMPLE.', 'Who left the lab door open??? It got out.', 'REMEMBER: the lockers were RESET. Check the memo.'],
+    kiosk: {
+      wonder: ['A friendly kiosk with a cartoon face: “HELP DESK! Lost? Everyone is!”', 'A help desk screen: “WELCOME TO {company}. HOW CAN WE HELP YOU WANT MORE?”'],
+      war: ['A dented information post with a floor plan, half of it marked CLASSIFIED in red.'],
+      tomb: ['A brass plaque with a map of the tomb, polished by centuries of nervous hands.'],
+      bolthole: ['A survival terminal: FLOOR PLAN, RATIONS, and HOPE (OFFLINE).'],
+    },
+    traplights: ['TRAP. Courtesy notice: this area is protected. By law, it must tell you. It has.', 'TRAP. Active security measures ahead. Thank you for your understanding.', 'TRAP. This corridor is monitored for your safety and ours, mostly ours.'],
+    trapHints: {
+      explode: ['A careful look: a wire runs from the latch into the back. Something in there ticks.'],
+      shock: ['The handle has a faint blue spark around it. The paint near it is scorched.'],
+      card: ['An envelope taped inside the door, thick and suspicious. “For whoever opens this.”'],
+    },
+    ambush: {
+      vents: ['Scratching in the vents. Then a lot more scratching.', 'Something drops from the ceiling. Then several somethings.'],
+      tubes: ['Glass cracks. The stasis fluid drains with a sigh.', 'A tube hisses open. “Specimen released for your convenience.”'],
+      seal: ['The doors slam shut. ENDURANCE TEST IN PROGRESS.', 'LOCKDOWN. Please remain where you are while security assists you.'],
+    },
+    alarm: ['THREAT LEVEL RAISED. ALL UNITS: ASSIST THE VISITOR.', 'INTRUDER ALERT. Please remain calm and stationary.', 'A siren, then a voice: “Security to your location. Thank you for waiting.”'],
+    stairsLocked: ['STAIRWELL ACCESS: {need} HOLDERS ONLY. “We value your patience.”', 'Locked. The reader wants the {need}.'],
+    // ---------------------------------------------------------------- posters and signs
+    posters: {
+      corporate: [
+        { title: 'YOU ARE BEING WATCHED', text: 'An eye in a friendly circle. “…by people who care about your productivity!”' },
+        { title: 'OBEDIENCE IS A SKILL', text: 'A worker kneels to a vending machine. The vending machine is wearing a tie.' },
+        { title: 'SYNERGY', text: 'Two hands shaking. One is a robot’s. Neither is attached to anything.' },
+        { title: 'COFFEE IS A BENEFIT', text: 'A steaming cup with a smile. “Your break is a gift from the company. Please return it promptly.”' },
+        { title: 'LOOSE LIPS LOSE JOBS', text: 'A mouth with a padlock on it. The padlock is smiling.' },
+        { title: 'HAVE YOU HUGGED YOUR MANAGER?', text: 'A small print at the bottom: “Managers may hug back.”' },
+      ],
+      welcome: [
+        { title: 'WELCOME', text: 'A banner-sized poster: WELCOME, VALUED VISITOR. Below, smaller: VISITORS ARE VALUED AT 3 CREDITS.' },
+        { title: '{slogan}', text: 'The company’s slogan in letters a foot high, over a worker smiling so hard it looks like pain.' },
+      ],
+      lab: [
+        { title: 'SCIENCE SAYS: WASH YOUR HANDS', text: 'Especially after touching the specimens. Especially if they touched you first.' },
+        { title: 'KEEP AN EYE ON YOUR CO-WORKERS', text: 'Science! Says: if they start to glow, report it.' },
+        { title: 'DID YOU REMEMBER YOUR BADGE?', text: 'A cartoon badge waving. Lost badges are “usually” in the lockers.' },
+      ],
+      safety: [
+        { title: 'LIFT WITH YOUR LEGS', text: 'A stick figure lifting a crate the right way, and a sad stick figure lifting it the wrong way.' },
+        { title: '1,822 DAYS WITHOUT AN INCIDENT', text: 'The number has been painted over many times.' },
+        { title: 'REPORT ALL SPILLS', text: 'Especially the ones that move.' },
+      ],
+      military: [
+        { title: 'VICTORY IS NEAR', text: 'A soldier pointing at the horizon. The horizon is on fire.' },
+        { title: 'THE ENEMY IS LISTENING', text: 'A huge ear in a helmet. Someone has drawn an earring on it.' },
+        { title: 'REPORT FOR DUTY', text: 'A smiling robot in a cap. “Your service will be remembered by someone.”' },
+      ],
+      emergency: [
+        { title: 'IN CASE OF EMERGENCY', text: 'Remain calm. Remain where you are. Remain.' },
+        { title: 'EMERGENCY EXIT', text: 'An arrow pointing at a wall.' },
+      ],
+      tomb: [
+        { title: 'HE WAS GREAT', text: 'A faded portrait of the warlord, larger than life and twice as stern.' },
+        { title: 'THE FAITHFUL ARE REWARDED', text: 'A mural of grateful peasants. Their eyes follow you.' },
+      ],
+      stairs: [
+        { title: 'STAIRWELL', text: 'USE OF THE STAIRS IS A PRIVILEGE. Lost your card? The lockers are on this floor. Lost your locker code? Ask your manager.' },
+        { title: 'TAKE THE STAIRS!', text: 'It’s good for you. The lift is for people who matter.' },
+      ],
+    },
+    signs: {
+      safety: [
+        { short: 'LIFT WITH YOUR LEGS', text: 'A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these.' },
+        { short: 'WET FLOOR', text: 'A stick figure slipping. A maintenance robot will stand here and think about it for as long as it takes.' },
+        { short: 'MIND THE GAP', text: 'There is no gap. The sign has outlived it.' },
+      ],
+      lab: [
+        { short: 'PROTECTIVE GEAR REQUIRED', text: 'A stick figure in a mask. A second stick figure without one, crossed out.' },
+        { short: 'DO NOT FEED THE SPECIMENS', text: 'In smaller letters: THEY ARE ON A DIET.' },
+      ],
+      kennels: [{ short: 'GUARD ANIMALS ON DUTY', text: 'IFF chips must be worn at all times beyond this point.' }],
+      coffee: [{ title: 'THE COFFEE SHOP', text: 'Est. by order of the Building, because it’s traditional. Today’s special: COFFEE. Robots will not be served.', color: '#c8924a' }],
+      checkpoint: [{ title: 'SECURITY CHECKPOINT', text: 'Please present your badge, your card, or yourself for processing.' }],
+      blastLock: [{ title: 'Blast lock', text: 'A second blast door, its controls long dead. Stencilled: THIS FACILITY DOES NOT EXIST.' }, { title: 'Entry', text: 'KEEP OUT. Somebody has crossed it out and written PLEASE.' }],
+    },
+    // ---------------------------------------------------------------- the goal and the map
+    goalFixtures: {
+      'shut-down': { title: ['master control', 'the main breaker', 'core console'], text: ['{target}: RUNNING. Every line on the screen is a process that has been running since the Collapse. There is a big red button, helpfully labelled.'], done: ['SHUTDOWN COMPLETE. “Thank you for your service. {company} is now closed.”'] },
+      recover: { name: ['The prize', 'The vault case'], text: ['A case under its own light. Whatever it holds, everyone wanted it.'] },
+      'reach-vault': { name: ['The reserve', 'The strong room’s safe'], text: ['The safe everyone came for. It opens with a sigh, like it’s relieved.'] },
+      kill: { name: ['The commander’s strongbox'], text: ['The strongbox of whatever ran the place. It won’t be needing it.'] },
+    },
+    pins: {
+      wonder: ['A tower of {company} branding over a ruin of glass. Its screens still play at night.', 'A building that still says {slogan} to anyone who walks past.'],
+      war: ['A hatch, a blast door and a stencil: {company}. The rumors say it’s still guarded.', 'A low bunker half-buried in red sand. Something inside still keeps watch.'],
+      tomb: ['A great tomb on a hill, with statues that watch the road.'],
+      bolthole: ['A hatch under a dead billboard: an Age of War shelter, sealed from the inside.'],
+    },
+    rumors: { any: ['Someone at the Outpost says {title} still has power.', 'A scavenger swears {title} is guarded by robots that ask you questions.'] },
+  },
+});
