@@ -304,7 +304,8 @@
     L.push('');
     L.push('**Back-story.** ' + [c.backstory.builder, c.backstory.purpose, c.backstory.fate, c.backstory.occupants].filter(Boolean).join(' '));
     L.push('');
-    L.push('**Goal.** ' + c.goal.kind.replace(/-/g, ' ') + ': ' + c.goal.target + (c.boss ? '. Boss: ' + c.boss.name + '.' : '.'));
+    const verb = { 'shut-down': 'Shut down', recover: 'Recover', 'reach-vault': 'Reach', kill: 'Destroy' }[c.goal.kind] || G.titleCase(c.goal.kind.replace(/-/g, ' ')) + ':';
+    L.push('**Goal.** ' + verb + ' ' + c.goal.target + '.' + (c.boss ? ' Boss: ' + c.boss.name + '.' : ''));
     L.push('');
     L.push('| Floor | Look | Size | Rooms | Monsters (points / budget) | Treasure (credits / target) | Traps | Checks |');
     L.push('| --- | --- | --- | --- | --- | --- | --- | --- |');

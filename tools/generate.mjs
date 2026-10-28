@@ -5,6 +5,8 @@
 //   ... --replaces bunker        it takes over that stub's pin (and the stub's level leaves the manifest with --add)
 //   ... --add                    also add the pack to the game's manifest and to gen/corpus.json
 //   ... --dry                    generate and check, write nothing (prints the report)
+//   node tools/generate.mjs havenot --brief bunker --add
+//       a brief from games/havenot/gen/briefs/bunker.json: type, seed, title, story, words; options still win
 //   node tools/generate.mjs havenot --batch 100 [--type t] [--tl n] [--size s] [--floors n]
 //       generate many seeds without writing; prints failures and how budgets spread
 //   node tools/generate.mjs havenot --check <slug>      re-validate a written installation from its generation.json
@@ -168,7 +170,16 @@ if (isMain) {
       date: new Date().toISOString().slice(0, 10),
     };
     if (opt('pin')) brief.pinAt = String(opt('pin')).split(',').map(Number);
-    for (const k of Object.keys(brief)) if (brief[k] === undefined || brief[k] === true) delete brief[k];
+    for (const k of Object.keys(brief)) if (brief[k] === undefined || brief[k] === true || (Array.isArray(brief[k]) && !brief[k].length)) delete brief[k];
+    // a brief file (games/<game>/gen/briefs/*.json) gives the rest; options on the command line win
+    if (opt('brief') && opt('brief') !== true) {
+      const file = String(opt('brief'));
+      const path = existsSync(join(root, file)) ? join(root, file) : join(root, 'games', game, 'gen', 'briefs', file.replace(/\.json$/, '') + '.json');
+      const fromFile = JSON.parse(readFileSync(path, 'utf8'));
+      delete fromFile.$comment;
+      for (const [k, v] of Object.entries(fromFile)) if (!(k in brief) || k === 'date') brief[k] = v;
+      brief.date = new Date().toISOString().slice(0, 10);
+    }
     const res = G.generate(brief, lib, reg);
     if (!res.ok) {
       console.error('Generation failed: ' + (res.error ? res.error.stack : res.problems.map((p) => p.text).join('\n')));

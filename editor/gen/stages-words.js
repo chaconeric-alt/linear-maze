@@ -17,7 +17,9 @@
   G.stageWords = function (plan, lib) {
     const old = plan.words || {};
     const words = {};
-    const keep = (id) => old[id] && (old[id].src === 'claude' || old[id].src === 'edited') ? old[id] : null;
+    // words the brief sets (brief.words: { slotId: text }) win; then words Claude wrote or someone edited
+    const briefWords = plan.brief.words || {};
+    const keep = (id) => (briefWords[id] != null ? { text: briefWords[id], src: 'brief' } : old[id] && (old[id].src === 'claude' || old[id].src === 'edited') ? old[id] : null);
     const set = (id, text, src) => {
       words[id] = { text, src: src || 'pool' };
       return text;
@@ -59,9 +61,14 @@
         const t = lib.rooms[r.template] || {};
         const id = 'f' + floor.n + '.' + r.id + '.name';
         let name = (keep(id) || {}).text || G.say(lib, rng, t.names || 'roomNames.' + r.template, vars()) || G.titleCase(r.template.replace(/-/g, ' '));
+        if (names.has(name) && !keep(id)) {
+          // another name from the pool before a number
+          const left = G.textPool(lib, t.names || 'roomNames.' + r.template).map((v) => G.fill(v, vars())).filter((v) => !names.has(v));
+          if (left.length) name = rng.pick(left);
+        }
         let k = 2;
         const baseName = name;
-        while (names.has(name)) name = baseName + ' ' + ['B', 'C', 'D', 'E', 'F', 'G'][k++ - 2];
+        while (names.has(name)) name = baseName + ' ' + k++;
         names.add(name);
         r.name = set(id, name, keep(id) ? keep(id).src : 'pool');
         const nid = 'f' + floor.n + '.' + r.id + '.note';

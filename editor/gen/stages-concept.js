@@ -58,6 +58,9 @@
       c.boss = { monster: bossId, enemy: m.id || bossId, name: (story.boss && story.boss.name) || G.say(lib, rng, 'bossNames.' + bossId, vars) || m.name };
     }
     c.intro = G.say(lib, rng, 'intros.' + (type.backstory || 'war'), vars) || '';
+    // a brief's story can set the back-story and the way-in line itself
+    if (story.backstory) Object.assign(c.backstory, story.backstory);
+    if (story.intro) c.intro = story.intro;
     plan.concept = c;
     plan.vars = Object.assign({ title: c.title, slogan: c.slogan, target: c.goal.target }, vars);
   };

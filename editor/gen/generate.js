@@ -2,7 +2,9 @@
  * Running the pipeline: a brief in, a validated plan (and its files) out.
  *
  *   const res = LMGen.generate(brief, lib, registry)
- *     brief: { type, tl, floors, size, seed, slug, title, looks: [...], replaces, story, pins }
+ *     brief: { type, tl, floors, size, seed, slug, title, company, looks: [...], replaces, pins, story, words }
+ *       story: { intro, backstory: { builder, purpose, fate, occupants }, goal: { kind, target }, boss: { monster, name } }
+ *       words: { slotId: text } fixes any text slot (pin.desc, f1.intro, f2.goal.name, f1.r3.name...)
  *     → { ok, plan, problems, error }      plan.validation says what the checks found
  *   LMGen.rerun(plan, lib, registry, stage, floor)
  *     → reroll one stage (for one floor, or all) and everything after it, keeping the rest

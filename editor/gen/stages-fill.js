@@ -699,15 +699,22 @@
       floor.containerTraps = 0;
       let made = 0, firstTrapRoom = null;
       const traps = G.usable(lib, 'traps', tl).map(([id, t]) => [id, t.weight || 1]);
+      // a trap that can't be built on this floor isn't tried again; one trapped container a floor until nothing
+      // else fits, so the traps people can see and play around aren't crowded out by the ones that always fit
+      const cantBuild = new Set();
+      let inContainers = 0;
       for (let guard = 0; made < n && guard < 30; guard++) {
-        const id = rng.weighted(traps);
+        const left = traps.filter(([id]) => !cantBuild.has(id));
+        const varied = left.filter(([id]) => !(lib.traps[id].build === 'container' && inContainers >= 1));
+        const id = rng.weighted(varied.length ? varied : left);
         if (!id) break;
         const t = lib.traps[id];
         const ok = buildTrap(P, rng, plan, lib, floor, id, t, dmg, offFlag);
         if (ok) {
           made++;
+          if (t.build === 'container') inContainers++;
           if (firstTrapRoom == null && ok.room != null) firstTrapRoom = ok.room;
-        }
+        } else cantBuild.add(id);
       }
       floor.trapCount = made;
       // the off-switch: a facilities terminal past the first switchable trap (Vol 2: on the far side)
@@ -749,50 +756,42 @@
         P.slot('tl' + s[0] + '-' + s[1], 'traplights', { obj: K(s[0], s[1]), prop: 'text' });
       }
     };
-    if (t.build === 'darts-corridor') {
-      const runs = rng.shuffle(corridorRuns(P, floor)).filter((c) => !c.cells.some(([x, y]) => P.taken(x, y)));
-      const run = runs[0];
-      if (!run) return null;
-      const vertical = run.side === 'N' || run.side === 'S';
-      const w = run.width;
-      // the middle row of the corridor
-      const lines = {};
-      for (const [x, y] of run.cells) {
-        const k2 = vertical ? y : x;
-        (lines[k2] = lines[k2] || []).push([x, y]);
+    // a straight corridor whose middle row is free, with a wall tile free at each end of that row
+    const crossing = () => {
+      for (const run of rng.shuffle(corridorRuns(P, floor))) {
+        const vertical = run.side === 'N' || run.side === 'S';
+        const lines = {};
+        for (const [x, y] of run.cells) (lines[vertical ? y : x] = lines[vertical ? y : x] || []).push([x, y]);
+        const keys = Object.keys(lines).map(Number).sort((a, b) => a - b);
+        const mid = lines[keys[Math.floor(keys.length / 2)]];
+        if (!mid || mid.length !== run.width || mid.some(([x, y]) => P.taken(x, y))) continue;
+        mid.sort((a, b) => (vertical ? a[0] - b[0] : a[1] - b[1]));
+        const a = mid[0], b = mid[mid.length - 1];
+        const e1 = vertical ? [a[0] - 1, a[1], 'e'] : [a[0], a[1] - 1, 's'];
+        const e2 = vertical ? [b[0] + 1, b[1], 'w'] : [b[0], b[1] + 1, 'n'];
+        if (P.base(e1[0], e1[1]) !== '#' || P.base(e2[0], e2[1]) !== '#' || P.floor.objs[K(e1[0], e1[1])] || P.floor.objs[K(e2[0], e2[1])]) continue;
+        return { run, mid, a, e1, e2 };
       }
-      const keys = Object.keys(lines).map(Number).sort((a, b) => a - b);
-      const mid = lines[keys[Math.floor(keys.length / 2)]];
-      if (!mid || mid.length !== w) return null;
-      mid.sort((a, b) => (vertical ? a[0] - b[0] : a[1] - b[1]));
-      const a = mid[0], b = mid[mid.length - 1];
-      const e1 = vertical ? [a[0] - 1, a[1], 'e'] : [a[0], a[1] - 1, 's'];
-      const e2 = vertical ? [b[0] + 1, b[1], 'w'] : [b[0], b[1] + 1, 'n'];
-      if (P.base(e1[0], e1[1]) !== '#' || P.base(e2[0], e2[1]) !== '#' || P.floor.objs[K(e1[0], e1[1])] || P.floor.objs[K(e2[0], e2[1])]) return null;
-      for (const [x, y] of mid) P.tile(x, y, { terrain: 'plate', tag: tag + '_p' });
-      P.put(e1[0], e1[1], { item: 'dart-emitter', props: { face: e1[2] }, tag: tag + '_d' });
-      P.put(e2[0], e2[1], { item: 'dart-emitter', props: { face: e2[2] }, tag: tag + '_d' });
+      return null;
+    };
+    if (t.build === 'darts-corridor') {
+      const c = crossing();
+      if (!c) return null;
+      for (const [x, y] of c.mid) P.tile(x, y, { terrain: 'plate', tag: tag + '_p' });
+      P.put(c.e1[0], c.e1[1], { item: 'dart-emitter', props: { face: c.e1[2] }, tag: tag + '_d' });
+      P.put(c.e2[0], c.e2[1], { item: 'dart-emitter', props: { face: c.e2[2] }, tag: tag + '_d' });
       floor.traps.push({ trigger: { type: 'plate', tag: tag + '_p' }, once: false, cooldown: 2.5, gen: 'switch', lib: id, effects: [{ type: 'darts', tag: tag + '_d', volleys: t.volleys || 2, interval: 0.3, damage: dmg(t.lethality || 'medium') }] });
-      lightNear(a[0], a[1], floor.rooms[run.edge.a]);
-      return { room: run.edge.a };
+      lightNear(c.a[0], c.a[1], floor.rooms[c.run.edge.a]);
+      return { room: c.run.edge.a };
     }
     if (t.build === 'alarm-beam') {
-      const runs = rng.shuffle(corridorRuns(P, floor)).filter((c) => !c.cells.some(([x, y]) => P.taken(x, y)));
-      const run = runs[0];
-      if (!run) return null;
-      const vertical = run.side === 'N' || run.side === 'S';
-      const lines = {};
-      for (const [x, y] of run.cells) (lines[vertical ? y : x] = lines[vertical ? y : x] || []).push([x, y]);
-      const keys = Object.keys(lines).map(Number).sort((a, b) => a - b);
-      const mid = lines[keys[Math.floor(keys.length / 2)]].sort((a, b) => (vertical ? a[0] - b[0] : a[1] - b[1]));
-      const a = mid[0], b = mid[mid.length - 1];
-      const e1 = vertical ? [a[0] - 1, a[1], 'e'] : [a[0], a[1] - 1, 's'];
-      const e2 = vertical ? [b[0] + 1, b[1], 'w'] : [b[0], b[1] + 1, 'n'];
-      if (P.base(e1[0], e1[1]) !== '#' || P.base(e2[0], e2[1]) !== '#' || P.floor.objs[K(e1[0], e1[1])] || P.floor.objs[K(e2[0], e2[1])]) return null;
-      P.put(e1[0], e1[1], { item: 'beam-emitter', props: { face: e1[2] }, tag: tag + '_b' });
-      P.put(e2[0], e2[1], { item: 'beam-emitter', props: { face: e2[2] }, tag: tag + '_b' });
+      const c = crossing();
+      if (!c) return null;
+      P.put(c.e1[0], c.e1[1], { item: 'beam-emitter', props: { face: c.e1[2] }, tag: tag + '_b' });
+      P.put(c.e2[0], c.e2[1], { item: 'beam-emitter', props: { face: c.e2[2] }, tag: tag + '_b' });
+      for (const [x, y] of c.mid) P.reserved.add(K(x, y));
       // something comes to look: robots from the room the corridor leads to
-      const to = floor.rooms[run.edge.b];
+      const to = floor.rooms[c.run.edge.b];
       const spawnCells = rng.shuffle(P.free(to, 1)).slice(0, 2);
       const effects = [{ type: 'alarm', radius: 900, text: '{say:alarm}' }];
       const robot = rng.weighted(monsterCands(plan, lib, (mid2, m) => m.kind === 'robot' && !m.boss && m.cost <= 4 && m.placement !== 'post'));
@@ -801,7 +800,7 @@
         effects.push({ type: 'spawn', tag: tag + '_s', enemy: lib.monsters[robot].id || robot, count: spawnCells.length, delay: 1.5 });
       }
       floor.traps.push({ trigger: { type: 'beam', tag: tag + '_b' }, once: true, gen: 'switch', lib: id, effects });
-      return { room: run.edge.a };
+      return { room: c.run.edge.a };
     }
     if (t.build === 'spikes') {
       const rooms = rng.shuffle(floor.rooms.filter((r) => !r.isEntry && !r.isExit && !r.shape && r.rect[2] >= 5 && r.rect[3] >= 5));
@@ -869,10 +868,12 @@
       const value = (id) => (TR.items[id].value != null ? TR.items[id].value : reg && reg.hnItems[id] ? reg.hnItems[id].value : 0);
       // containers that exist (fixtures and key lockers), then new ones per room template
       const conts = () => Object.entries(floor.objs).filter(([, o]) => o.container);
-      for (const r of rooms) {
+      // no more containers than the budget can fill with something worth finding (about 70 credits each)
+      const most = Math.max(6, Math.round(target / 70));
+      for (const r of rng.shuffle(rooms.slice())) {
         const t = lib.rooms[r.template] || {};
         const want = rng.range((t.slots || {}).treasure || [0, 1]) - conts().filter(([, o]) => o.room === r.i).length;
-        for (let i = 0; i < want; i++) putCache(P, rng, r, {}, t.containers);
+        for (let i = 0; i < want && conts().length < most; i++) putCache(P, rng, r, {}, t.containers);
       }
       // an adventurer who got this far (Vol 2 p. 157)
       if (rng.chance(TR.corpseChance || 0.6)) {
@@ -914,7 +915,10 @@
       const goalC = all.find((o) => o.goal && o.container);
       if (goalC) add(goalC, { type: 'gold', amount: Math.max(50, Math.round((target * 0.2) / 10) * 10) }, Math.max(50, Math.round((target * 0.2) / 10) * 10));
       let guard = 0, extra = 0;
-      while (spent < target * 0.95 && guard++ < 120) {
+      // gold comes in bigger handfuls where floors are richer; every empty container will get junk (8 credits)
+      const goldScale = Math.max(1, target / ((B.treasurePerFloor || {})[2] || 1700));
+      const junkOwed = () => 8 * all.filter((o) => !(o.props.loot || []).length).length;
+      while (spent + junkOwed() < target * 0.95 && guard++ < 160) {
         if (all.every((o) => (o.props.loot || []).length >= 4) && extra < 8) {
           const r = rng.pick(rooms.filter((x) => !x.isEntry));
           const c = r && putCache(P, rng, r, {}, (lib.rooms[r.template] || {}).containers);
@@ -927,13 +931,14 @@
         const t = TR.items[id];
         let v, entry;
         if (t.kind === 'gold') {
-          const amt = Math.min(Math.max(5, Math.round((target - spent) * rng.real(0.15, 0.4) / 5) * 5), t.max || 400);
+          const amt = Math.min(Math.max(5, Math.round((target - spent) * rng.real(0.15, 0.4) / 5) * 5), Math.round(((t.max || 400) * goldScale) / 10) * 10);
           entry = { type: 'gold', amount: amt };
           v = amt;
         } else {
           const n = t.stack ? rng.int(1, t.stack) : 1;
           v = value(id) * n;
-          if (v > (target - spent) * 1.6 && v > 100) continue;
+          // nothing that would take the floor more than a tenth over its target, except small things
+          if (spent + v > target * 1.1 && v > Math.max(60, target * 0.04)) continue;
           if (t.rare && !rng.chance(t.rare)) continue;
           entry = n > 1 ? { hn: id, n } : { hn: id };
         }

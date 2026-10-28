@@ -1,0 +1,5902 @@
+{
+ "v": 1,
+ "generator": "0.1.0",
+ "game": "havenot",
+ "slug": "bunker",
+ "seed": "11",
+ "brief": {
+  "size": "standard",
+  "floors": 2,
+  "tl": 1,
+  "looks": [],
+  "pins": {},
+  "date": "2026-10-28",
+  "type": "war-bunker",
+  "seed": "11",
+  "slug": "bunker",
+  "title": "The Bunker",
+  "replaces": "bunker",
+  "story": {
+   "intro": "Behind the blast door: a guard post, a dead light, and a second blast door with PLEASE painted on it in red. On its inside, someone scratched a tally into the steel: hundreds of marks, then nothing. The weld has been cut.",
+   "backstory": {
+    "builder": "A warlord’s army cut it into the hill as a forward command post.",
+    "purpose": "It was meant to run the war for the near-area. The war moved on and forgot to tell it.",
+    "fate": "The garrison sealed the doors against the Burners and waited for relief, counting the days on the inner door.",
+    "occupants": "The guard robots never got the order to stand down. The roaches got in anyway."
+   },
+   "goal": {
+    "kind": "recover",
+    "target": "the duty log"
+   }
+  },
+  "words": {
+   "pin.desc": "A blast door in a hillside, half-buried in red sand. Someone has painted KEEP OUT on it, then crossed it out and painted PLEASE.",
+   "f2.goal.name": "The duty log",
+   "f2.goal.text": "A steel case bolted to the command desk, still locked. Inside: the garrison’s last log, the tally finished in a neat hand, and the pay nobody was left to collect."
+  },
+  "game": "havenot",
+  "order": 1380
+ },
+ "libHash": "1ebxgef",
+ "salt": {},
+ "report": {
+  "fallbacks": [],
+  "problems": []
+ },
+ "words": {
+  "pin.desc": {
+   "text": "A blast door in a hillside, half-buried in red sand. Someone has painted KEEP OUT on it, then crossed it out and painted PLEASE.",
+   "src": "brief"
+  },
+  "pin.rumor": {
+   "text": "A scavenger swears The Bunker is guarded by robots that ask you questions.",
+   "src": "pool"
+  },
+  "f1.r0.name": {
+   "text": "Entry Lock",
+   "src": "pool"
+  },
+  "f1.r0.note": {
+   "text": "Visitors welcome",
+   "src": "pool"
+  },
+  "f1.r1.name": {
+   "text": "Waiting Room",
+   "src": "pool"
+  },
+  "f1.r1.note": {
+   "text": "Please wait to be seen",
+   "src": "pool"
+  },
+  "f1.r2.name": {
+   "text": "Stores",
+   "src": "pool"
+  },
+  "f1.r2.note": {
+   "text": "Authorized personnel",
+   "src": "pool"
+  },
+  "f1.r3.name": {
+   "text": "Canteen",
+   "src": "pool"
+  },
+  "f1.r3.note": {
+   "text": "Maintenance access",
+   "src": "pool"
+  },
+  "f1.r4.name": {
+   "text": "Service Bay",
+   "src": "pool"
+  },
+  "f1.r4.note": {
+   "text": "Security Zone",
+   "src": "pool"
+  },
+  "f1.r5.name": {
+   "text": "Fire Stairs",
+   "src": "pool"
+  },
+  "f1.r5.note": {
+   "text": "Security Zone",
+   "src": "pool"
+  },
+  "f1.r6.name": {
+   "text": "Data Vault",
+   "src": "pool"
+  },
+  "f1.r6.note": {
+   "text": "Restricted",
+   "src": "pool"
+  },
+  "f1.r7.name": {
+   "text": "Washroom",
+   "src": "pool"
+  },
+  "f1.r7.note": {
+   "text": "Public Zone",
+   "src": "pool"
+  },
+  "f1.r8.name": {
+   "text": "Barracks",
+   "src": "pool"
+  },
+  "f1.r8.note": {
+   "text": "Authorized personnel",
+   "src": "pool"
+  },
+  "f1.r9.name": {
+   "text": "Visitor Lounge",
+   "src": "pool"
+  },
+  "f1.r9.note": {
+   "text": "Visitors welcome",
+   "src": "pool"
+  },
+  "f1.r10.name": {
+   "text": "Lost Property",
+   "src": "pool"
+  },
+  "f1.r10.note": {
+   "text": "Public Zone",
+   "src": "pool"
+  },
+  "f1.name": {
+   "text": "Security Level",
+   "src": "pool"
+  },
+  "f1.intro": {
+   "text": "Behind the blast door: a guard post, a dead light, and a second blast door with PLEASE painted on it in red. On its inside, someone scratched a tally into the steel: hundreds of marks, then nothing. The weld has been cut.",
+   "src": "pool"
+  },
+  "f1.lockL1.panel": {
+   "text": "DOOR CONTROLS: RELEASED FROM SECURITY ONLY. The panel has an override slot, and a scratched note: “try the green wire”.",
+   "src": "pool"
+  },
+  "f1.lockL2.panel": {
+   "text": "DOOR CONTROLS: RELEASED FROM SECURITY ONLY. The panel has an override slot, and a scratched note: “try the green wire”.",
+   "src": "pool"
+  },
+  "f1.lockL4.panel": {
+   "text": "A heavy door with a grey panel. The panel wants clearance, or a manager. It will settle for being out-argued.",
+   "src": "pool"
+  },
+  "f1.swL1.text": {
+   "text": "DOOR RELEASE · the door release: SEALED. Press any key to release. (There is only one key.)",
+   "src": "pool"
+  },
+  "f1.swL1.done": {
+   "text": "DOOR RELEASE: OPEN. “Have a productive day.”",
+   "src": "pool"
+  },
+  "f1.swL2.text": {
+   "text": "DOOR RELEASE · the door release: SEALED. Press any key to release. (There is only one key.)",
+   "src": "pool"
+  },
+  "f1.swL2.done": {
+   "text": "DOOR RELEASE: OPEN. “Have a productive day.”",
+   "src": "pool"
+  },
+  "f1.c58-35.name": {
+   "text": "Supervisor’s locker",
+   "src": "pool"
+  },
+  "f1.c58-35.text": {
+   "text": "A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”",
+   "src": "pool"
+  },
+  "f1.keyL3.text": {
+   "text": "A laminated Blue card with a smiling face that isn’t yours. It opens the stairs on.",
+   "src": "pool"
+  },
+  "f1.o38-37": {
+   "text": {
+    "title": "Entry",
+    "text": "KEEP OUT. Somebody has crossed it out and written PLEASE."
+   },
+   "src": "pool"
+  },
+  "f1.o19-33": {
+   "text": "DO NOT OPEN BEFORE THE END OF THE WORLD",
+   "src": "pool"
+  },
+  "f1.c19-33.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f1.c19-33.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f1.o17-36": {
+   "text": "DO NOT OPEN BEFORE THE END OF THE WORLD",
+   "src": "pool"
+  },
+  "f1.c17-36.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f1.c17-36.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f1.o21-36": {
+   "text": "DO NOT OPEN BEFORE THE END OF THE WORLD",
+   "src": "pool"
+  },
+  "f1.c21-36.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f1.c21-36.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f1.o19-8": {
+   "text": {
+    "short": "WET FLOOR",
+    "text": "A stick figure slipping. A maintenance robot will stand here and think about it for as long as it takes."
+   },
+   "src": "pool"
+  },
+  "f1.o12-9": {
+   "text": {
+    "short": "MIND THE GAP",
+    "text": "There is no gap. The sign has outlived it."
+   },
+   "src": "pool"
+  },
+  "f1.o14-14": {
+   "text": "FRAGILE: THIS WAY UP",
+   "src": "pool"
+  },
+  "f1.c14-14.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f1.c14-14.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f1.o4-14": {
+   "text": "LOG: All quiet. All quiet. All quiet. Visitor detected. All quiet.",
+   "src": "pool"
+  },
+  "f1.o3-14": {
+   "text": "Green text scrolls past: inventory of things that no longer exist.",
+   "src": "pool"
+  },
+  "f1.c5-35.name": {
+   "text": "Locker 3",
+   "src": "pool"
+  },
+  "f1.c5-35.text": {
+   "text": "A dented locker with a name tag nobody could read.",
+   "src": "pool"
+  },
+  "f1.o50-35": {
+   "text": "RETURNS",
+   "src": "pool"
+  },
+  "f1.c50-35.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f1.c50-35.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f1.kiosk.text": {
+   "text": "A dented information post with a floor plan, half of it marked CLASSIFIED in red.",
+   "src": "pool"
+  },
+  "f1.crate6-37": {
+   "text": "FRAGILE: THIS WAY UP",
+   "src": "pool"
+  },
+  "f1.tl13-20": {
+   "text": "TRAP. Courtesy notice: this area is protected. By law, it must tell you. It has.",
+   "src": "pool"
+  },
+  "f1.trapsoff.text": {
+   "text": "FACILITIES · COURTESY SYSTEMS (DARTS, BEAMS, FLOOR SAFETY): ARMED. It wants a facilities password, or an argument.",
+   "src": "pool"
+  },
+  "f1.trapsoff.done": {
+   "text": "COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”",
+   "src": "pool"
+  },
+  "f1.trapsoff.ok": {
+   "text": "Courtesy systems on this floor: OFF.",
+   "src": "pool"
+  },
+  "f1.c36-23.name": {
+   "text": "A dead scavenger",
+   "src": "pool"
+  },
+  "f1.c36-23.text": {
+   "text": "A scavenger in patched leathers, face down. Whatever got them is not here now. Probably.",
+   "src": "pool"
+  },
+  "f1.c39-32.name": {
+   "text": "A long-dead visitor",
+   "src": "pool"
+  },
+  "f1.c39-32.text": {
+   "text": "A scavenger in patched leathers, face down. Whatever got them is not here now. Probably.",
+   "src": "pool"
+  },
+  "f1.c44-26.name": {
+   "text": "Duty desk",
+   "src": "pool"
+  },
+  "f1.c44-26.text": {
+   "text": "Coffee rings, a stapler, and a drawer with a lock that doesn’t work.",
+   "src": "pool"
+  },
+  "f1.c7-14.name": {
+   "text": "A long-dead visitor",
+   "src": "pool"
+  },
+  "f1.corpse7,14": {
+   "text": "A mummified scout with a map of this floor, half of it scratched out. The other half is wrong.",
+   "src": "pool"
+  },
+  "f1.o42-38": {
+   "text": {
+    "title": "1,822 DAYS WITHOUT AN INCIDENT",
+    "text": "The number has been painted over many times."
+   },
+   "src": "pool"
+  },
+  "f1.o29-37": {
+   "text": {
+    "short": "LIFT WITH YOUR LEGS",
+    "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+   },
+   "src": "pool"
+  },
+  "f1.o32-37": {
+   "text": {
+    "title": "1,822 DAYS WITHOUT AN INCIDENT",
+    "text": "The number has been painted over many times."
+   },
+   "src": "pool"
+  },
+  "f1.o23-22": {
+   "text": {
+    "short": "MIND THE GAP",
+    "text": "There is no gap. The sign has outlived it."
+   },
+   "src": "pool"
+  },
+  "f1.o18-30": {
+   "text": {
+    "short": "LIFT WITH YOUR LEGS",
+    "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+   },
+   "src": "pool"
+  },
+  "f1.o22-20": {
+   "text": {
+    "title": "LIFT WITH YOUR LEGS",
+    "text": "A stick figure lifting a crate the right way, and a sad stick figure lifting it the wrong way."
+   },
+   "src": "pool"
+  },
+  "f1.o21-10": {
+   "text": {
+    "short": "WET FLOOR",
+    "text": "A stick figure slipping. A maintenance robot will stand here and think about it for as long as it takes."
+   },
+   "src": "pool"
+  },
+  "f1.o21-14": {
+   "text": {
+    "title": "REPORT ALL SPILLS",
+    "text": "Especially the ones that move."
+   },
+   "src": "pool"
+  },
+  "f1.o19-6": {
+   "text": {
+    "short": "LIFT WITH YOUR LEGS",
+    "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+   },
+   "src": "pool"
+  },
+  "f1.o3-7": {
+   "text": {
+    "short": "LIFT WITH YOUR LEGS",
+    "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+   },
+   "src": "pool"
+  },
+  "f1.o11-31": {
+   "text": {
+    "short": "MIND THE GAP",
+    "text": "There is no gap. The sign has outlived it."
+   },
+   "src": "pool"
+  },
+  "f1.o46-25": {
+   "text": {
+    "short": "WET FLOOR",
+    "text": "A stick figure slipping. A maintenance robot will stand here and think about it for as long as it takes."
+   },
+   "src": "pool"
+  },
+  "f1.o53-38": {
+   "text": {
+    "short": "LIFT WITH YOUR LEGS",
+    "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+   },
+   "src": "pool"
+  },
+  "f1.o57-30": {
+   "text": {
+    "title": "1,822 DAYS WITHOUT AN INCIDENT",
+    "text": "The number has been painted over many times."
+   },
+   "src": "pool"
+  },
+  "f1.trap0.e0": {
+   "text": "A siren, then a voice: “Security to your location. Thank you for waiting.”",
+   "src": "pool"
+  },
+  "f1.stairs": {
+   "text": "STAIRWELL ACCESS: Blue card HOLDERS ONLY. “We value your patience.”",
+   "src": "pool"
+  },
+  "f2.r0.name": {
+   "text": "Fire Stairs",
+   "src": "pool"
+  },
+  "f2.r0.note": {
+   "text": "Authorized personnel",
+   "src": "pool"
+  },
+  "f2.r1.name": {
+   "text": "Storeroom",
+   "src": "pool"
+  },
+  "f2.r1.note": {
+   "text": "Authorized personnel",
+   "src": "pool"
+  },
+  "f2.r2.name": {
+   "text": "Supply Closet",
+   "src": "pool"
+  },
+  "f2.r2.note": {
+   "text": "Armed response",
+   "src": "pool"
+  },
+  "f2.r3.name": {
+   "text": "Security Checkpoint",
+   "src": "pool"
+  },
+  "f2.r3.note": {
+   "text": "Security Zone",
+   "src": "pool"
+  },
+  "f2.r4.name": {
+   "text": "Requisitions",
+   "src": "pool"
+  },
+  "f2.r4.note": {
+   "text": "Need to know",
+   "src": "pool"
+  },
+  "f2.r5.name": {
+   "text": "The War Room",
+   "src": "pool"
+  },
+  "f2.r5.note": {
+   "text": "Officers only",
+   "src": "pool"
+  },
+  "f2.r6.name": {
+   "text": "Kennels",
+   "src": "pool"
+  },
+  "f2.r6.note": {
+   "text": "Security Zone",
+   "src": "pool"
+  },
+  "f2.r7.name": {
+   "text": "Maintenance Bay",
+   "src": "pool"
+  },
+  "f2.r7.note": {
+   "text": "Restricted",
+   "src": "pool"
+  },
+  "f2.r8.name": {
+   "text": "First Aid",
+   "src": "pool"
+  },
+  "f2.r8.note": {
+   "text": "Service Area",
+   "src": "pool"
+  },
+  "f2.r9.name": {
+   "text": "Staff Lockers",
+   "src": "pool"
+  },
+  "f2.r9.note": {
+   "text": "Security Zone",
+   "src": "pool"
+  },
+  "f2.r10.name": {
+   "text": "Server Room",
+   "src": "pool"
+  },
+  "f2.r10.note": {
+   "text": "Armed response",
+   "src": "pool"
+  },
+  "f2.r11.name": {
+   "text": "Restroom",
+   "src": "pool"
+  },
+  "f2.r11.note": {
+   "text": "Authorized personnel",
+   "src": "pool"
+  },
+  "f2.name": {
+   "text": "Guard Level",
+   "src": "pool"
+  },
+  "f2.intro": {
+   "text": "Ash on the floor, pipes overhead, and every hatch painted with a number.",
+   "src": "pool"
+  },
+  "f2.lockL5.panel": {
+   "text": "DOOR CONTROLS: RELEASED FROM SECURITY ONLY. The panel has an override slot, and a scratched note: “try the green wire”.",
+   "src": "pool"
+  },
+  "f2.lockL6.panel": {
+   "text": "A heavy door with a grey panel. The panel wants clearance, or a manager. It will settle for being out-argued.",
+   "src": "pool"
+  },
+  "f2.lockL7.panel": {
+   "text": "A card reader in a grey panel. Under it, a maintenance keypad that will take an argument.",
+   "src": "pool"
+  },
+  "f2.lockL8.panel": {
+   "text": "A heavy door with a grey panel. The panel wants clearance, or a manager. It will settle for being out-argued.",
+   "src": "pool"
+  },
+  "f2.swL5.text": {
+   "text": "DOOR RELEASE · the door release: SEALED. Press any key to release. (There is only one key.)",
+   "src": "pool"
+  },
+  "f2.swL5.done": {
+   "text": "DOOR RELEASE: OPEN. “Have a productive day.”",
+   "src": "pool"
+  },
+  "f2.c37-22.name": {
+   "text": "Locker 3",
+   "src": "pool"
+  },
+  "f2.c37-22.text": {
+   "text": "A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”",
+   "src": "pool"
+  },
+  "f2.keyL7.text": {
+   "text": "Access card, Yellow card: opens the way to the duty log.",
+   "src": "pool"
+  },
+  "f2.memoL7.title": {
+   "text": "Memo from Facilities",
+   "src": "pool"
+  },
+  "f2.memoL7.text": {
+   "text": "To all staff: codes have been RESET for security. The locker in Staff Lockers: 193. Please memorize and destroy this memo.",
+   "src": "pool"
+  },
+  "f2.memoL7.clue": {
+   "text": "The locker in Staff Lockers: code 193.",
+   "src": "pool"
+  },
+  "f2.goal.name": {
+   "text": "The duty log",
+   "src": "brief"
+  },
+  "f2.goal.text": {
+   "text": "A steel case bolted to the command desk, still locked. Inside: the garrison’s last log, the tally finished in a neat hand, and the pay nobody was left to collect.",
+   "src": "brief"
+  },
+  "f2.o25-35": {
+   "text": {
+    "title": "TAKE THE STAIRS!",
+    "text": "It’s good for you. The lift is for people who matter."
+   },
+   "src": "pool"
+  },
+  "f2.o39-29": {
+   "text": "OFFICE SUPPLIES (CLASSIFIED)",
+   "src": "pool"
+  },
+  "f2.c39-29.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f2.c39-29.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f2.o51-34": {
+   "text": "OFFICE SUPPLIES (CLASSIFIED)",
+   "src": "pool"
+  },
+  "f2.c51-34.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f2.c51-34.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f2.o46-30": {
+   "text": "FRAGILE: THIS WAY UP",
+   "src": "pool"
+  },
+  "f2.c46-30.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f2.c46-30.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f2.o51-30": {
+   "text": "SAMPLES (LIVE)",
+   "src": "pool"
+  },
+  "f2.c51-30.name": {
+   "text": "Packing crate",
+   "src": "pool"
+  },
+  "f2.c51-30.text": {
+   "text": "A crate with weird markings.",
+   "src": "pool"
+  },
+  "f2.o46-29": {
+   "text": {
+    "title": "SECURITY CHECKPOINT",
+    "text": "Please present your badge, your card, or yourself for processing."
+   },
+   "src": "pool"
+  },
+  "f2.c41-19.name": {
+   "text": "Glass case",
+   "src": "pool"
+  },
+  "f2.c41-19.text": {
+   "text": "A lit glass case with a blank plaque.",
+   "src": "pool"
+  },
+  "f2.c37-18.name": {
+   "text": "Equipment rack",
+   "src": "pool"
+  },
+  "f2.c37-18.text": {
+   "text": "Dusty shelving and a clipboard listing everything that used to be here.",
+   "src": "pool"
+  },
+  "f2.o50-5": {
+   "text": "ALL UNITS REPORT: NOTHING TO REPORT.",
+   "src": "pool"
+  },
+  "f2.o39-0": {
+   "text": "ALL UNITS REPORT: NOTHING TO REPORT.",
+   "src": "pool"
+  },
+  "f2.o42-1": {
+   "text": "PRODUCTIVITY: 0%. TARGET: 110%. STATUS: EXCELLENT.",
+   "src": "pool"
+  },
+  "f2.o55-14": {
+   "text": {
+    "short": "MIND THE GAP",
+    "text": "There is no gap. The sign has outlived it."
+   },
+   "src": "pool"
+  },
+  "f2.o54-22": {
+   "text": {
+    "short": "LIFT WITH YOUR LEGS",
+    "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+   },
+   "src": "pool"
+  },
+  "f2.c18-32.name": {
+   "text": "Equipment rack",
+   "src": "pool"
+  },
+  "f2.c18-32.text": {
+   "text": "A rack of supplies labelled in a language of acronyms.",
+   "src": "pool"
+  },
+  "f2.c37-25.name": {
+   "text": "Staff locker",
+   "src": "pool"
+  },
+  "f2.c37-25.text": {
+   "text": "A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”",
+   "src": "pool"
+  },
+  "f2.c35-22.name": {
+   "text": "Locker",
+   "src": "pool"
+  },
+  "f2.c35-22.text": {
+   "text": "A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”",
+   "src": "pool"
+  },
+  "f2.c39-25.name": {
+   "text": "Locker 7",
+   "src": "pool"
+  },
+  "f2.c39-25.text": {
+   "text": "A dented locker with a name tag nobody could read.",
+   "src": "pool"
+  },
+  "f2.c35-25.name": {
+   "text": "Supervisor’s locker",
+   "src": "pool"
+  },
+  "f2.c35-25.text": {
+   "text": "A dented locker with a name tag nobody could read.",
+   "src": "pool"
+  },
+  "f2.o27-22": {
+   "text": "PRODUCTIVITY: 0%. TARGET: 110%. STATUS: EXCELLENT.",
+   "src": "pool"
+  },
+  "f2.tl38-13": {
+   "text": "TRAP. Active security measures ahead. Thank you for your understanding.",
+   "src": "pool"
+  },
+  "f2.trapsoff.text": {
+   "text": "FACILITIES · COURTESY SYSTEMS (DARTS, BEAMS, FLOOR SAFETY): ARMED. It wants a facilities password, or an argument.",
+   "src": "pool"
+  },
+  "f2.trapsoff.done": {
+   "text": "COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”",
+   "src": "pool"
+  },
+  "f2.trapsoff.ok": {
+   "text": "Courtesy systems on this floor: OFF.",
+   "src": "pool"
+  },
+  "f2.c4-32.name": {
+   "text": "Somebody who got this far",
+   "src": "pool"
+  },
+  "f2.corpse4,32": {
+   "text": "A mummified scout with a map of this floor, half of it scratched out. The other half is wrong.",
+   "src": "pool"
+  },
+  "f2.trap4,32": {
+   "text": "An envelope taped inside the door, thick and suspicious. “For whoever opens this.”",
+   "src": "pool"
+  },
+  "f2.o21-35": {
+   "text": {
+    "title": "THE ENEMY IS LISTENING",
+    "text": "A huge ear in a helmet. Someone has drawn an earring on it."
+   },
+   "src": "pool"
+  },
+  "f2.o52-33": {
+   "text": {
+    "title": "VICTORY IS NEAR",
+    "text": "A soldier pointing at the horizon. The horizon is on fire."
+   },
+   "src": "pool"
+  },
+  "f2.o39-20": {
+   "text": {
+    "title": "REPORT FOR DUTY",
+    "text": "A smiling robot in a cap. “Your service will be remembered by someone.”"
+   },
+   "src": "pool"
+  },
+  "f2.o48-0": {
+   "text": {
+    "title": "VICTORY IS NEAR",
+    "text": "A soldier pointing at the horizon. The horizon is on fire."
+   },
+   "src": "pool"
+  },
+  "f2.o50-6": {
+   "text": {
+    "title": "REPORT FOR DUTY",
+    "text": "A smiling robot in a cap. “Your service will be remembered by someone.”"
+   },
+   "src": "pool"
+  },
+  "f2.o56-31": {
+   "text": {
+    "title": "VICTORY IS NEAR",
+    "text": "A soldier pointing at the horizon. The horizon is on fire."
+   },
+   "src": "pool"
+  },
+  "f2.o61-18": {
+   "text": {
+    "title": "VICTORY IS NEAR",
+    "text": "A soldier pointing at the horizon. The horizon is on fire."
+   },
+   "src": "pool"
+  },
+  "f2.o11-33": {
+   "text": {
+    "title": "REPORT FOR DUTY",
+    "text": "A smiling robot in a cap. “Your service will be remembered by someone.”"
+   },
+   "src": "pool"
+  },
+  "f2.o40-22": {
+   "text": {
+    "title": "VICTORY IS NEAR",
+    "text": "A soldier pointing at the horizon. The horizon is on fire."
+   },
+   "src": "pool"
+  },
+  "f2.o25-26": {
+   "text": {
+    "title": "VICTORY IS NEAR",
+    "text": "A soldier pointing at the horizon. The horizon is on fire."
+   },
+   "src": "pool"
+  },
+  "f2.cp8-29": {
+   "text": {
+    "title": "REPORT FOR DUTY",
+    "text": "A smiling robot in a cap. “Your service will be remembered by someone.”"
+   },
+   "src": "pool"
+  },
+  "f2.trap0.e0": {
+   "text": "Something drops from the ceiling. Then several somethings.",
+   "src": "pool"
+  },
+  "f2.trap1.e0": {
+   "text": "INTRUDER ALERT. Please remain calm and stationary.",
+   "src": "pool"
+  },
+  "f2.stairs": {
+   "text": "Locked. The reader wants the a card.",
+   "src": "pool"
+  }
+ },
+ "concept": {
+  "type": "war-bunker",
+  "typeName": "Age of War command bunker",
+  "era": "war-middle",
+  "company": "The Bitter Reserve",
+  "warlord": "Züg the Magnificer",
+  "slogan": "OBEDIENCE IS A KIND OF FREEDOM.",
+  "backstory": {
+   "builder": "A warlord’s army cut it into the hill as a forward command post.",
+   "purpose": "It was meant to run the war for the near-area. The war moved on and forgot to tell it.",
+   "fate": "The garrison sealed the doors against the Burners and waited for relief, counting the days on the inner door.",
+   "occupants": "The guard robots never got the order to stand down. The roaches got in anyway."
+  },
+  "title": "The Bunker",
+  "goal": {
+   "kind": "recover",
+   "target": "the duty log"
+  },
+  "boss": null,
+  "intro": "Behind the blast door: a guard post, a dead light, and a second blast door with PLEASE painted on it in red. On its inside, someone scratched a tally into the steel: hundreds of marks, then nothing. The weld has been cut.",
+  "pinDesc": "A blast door in a hillside, half-buried in red sand. Someone has painted KEEP OUT on it, then crossed it out and painted PLEASE.",
+  "rumor": "A scavenger swears The Bunker is guarded by robots that ask you questions."
+ },
+ "floors": [
+  {
+   "n": 1,
+   "id": "hn-g-bunker-f1",
+   "role": "entry",
+   "look": "emergency",
+   "zones": [
+    "public",
+    "service",
+    "security"
+   ],
+   "roomCount": 11,
+   "goalKind": null,
+   "path": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "rooms": [
+    {
+     "id": "r0",
+     "i": 0,
+     "template": "blast-lock",
+     "zone": "public",
+     "rank": 0,
+     "role": "entrance",
+     "parent": null,
+     "critical": true,
+     "depth": 0,
+     "kids": [
+      1,
+      10
+     ],
+     "isEntry": true,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      39,
+      32,
+      6,
+      6
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Entry Lock",
+     "note": "Visitors welcome"
+    },
+    {
+     "id": "r1",
+     "i": 1,
+     "template": "waiting-room",
+     "zone": "public",
+     "rank": 0,
+     "role": "path",
+     "parent": 0,
+     "critical": true,
+     "depth": 1,
+     "kids": [
+      2,
+      7
+     ],
+     "edge": 0,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      29,
+      32,
+      9,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Waiting Room",
+     "note": "Please wait to be seen"
+    },
+    {
+     "id": "r2",
+     "i": 2,
+     "template": "storeroom",
+     "zone": "service",
+     "rank": 1,
+     "role": "path",
+     "parent": 1,
+     "critical": true,
+     "depth": 2,
+     "kids": [
+      3,
+      8
+     ],
+     "edge": 1,
+     "region": 1,
+     "opt": null,
+     "rect": [
+      16,
+      33,
+      7,
+      4
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Stores",
+     "note": "Authorized personnel"
+    },
+    {
+     "id": "r3",
+     "i": 3,
+     "template": "mess-hall",
+     "zone": "service",
+     "rank": 1,
+     "role": "path",
+     "parent": 2,
+     "critical": true,
+     "depth": 3,
+     "kids": [
+      4
+     ],
+     "edge": 2,
+     "region": 1,
+     "opt": null,
+     "rect": [
+      11,
+      21,
+      12,
+      9
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Canteen",
+     "note": "Maintenance access"
+    },
+    {
+     "id": "r4",
+     "i": 4,
+     "template": "robot-bay",
+     "zone": "security",
+     "rank": 2,
+     "role": "path",
+     "parent": 3,
+     "critical": true,
+     "depth": 4,
+     "kids": [
+      5,
+      6
+     ],
+     "edge": 3,
+     "region": 2,
+     "opt": null,
+     "rect": [
+      13,
+      9,
+      8,
+      6
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Service Bay",
+     "note": "Security Zone"
+    },
+    {
+     "id": "r5",
+     "i": 5,
+     "template": "stairwell",
+     "zone": "security",
+     "rank": 2,
+     "role": "stairs",
+     "parent": 4,
+     "critical": true,
+     "depth": 5,
+     "kids": [],
+     "edge": 4,
+     "isExit": true,
+     "region": 2,
+     "opt": null,
+     "rect": [
+      16,
+      1,
+      5,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Fire Stairs",
+     "note": "Security Zone"
+    },
+    {
+     "id": "r6",
+     "i": 6,
+     "template": "server-room",
+     "zone": "security",
+     "rank": 2,
+     "role": "side",
+     "parent": 4,
+     "critical": false,
+     "depth": 5,
+     "kids": [],
+     "edge": 5,
+     "region": 2,
+     "opt": null,
+     "rect": [
+      1,
+      8,
+      7,
+      7
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Data Vault",
+     "note": "Restricted"
+    },
+    {
+     "id": "r7",
+     "i": 7,
+     "template": "washroom",
+     "zone": "public",
+     "rank": 0,
+     "role": "side",
+     "parent": 1,
+     "critical": false,
+     "depth": 2,
+     "kids": [
+      9
+     ],
+     "edge": 6,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      33,
+      23,
+      4,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Washroom",
+     "note": "Public Zone"
+    },
+    {
+     "id": "r8",
+     "i": 8,
+     "template": "barracks",
+     "zone": "service",
+     "rank": 1,
+     "role": "side",
+     "parent": 2,
+     "critical": false,
+     "depth": 3,
+     "kids": [],
+     "edge": 7,
+     "region": 1,
+     "opt": "L4",
+     "rect": [
+      5,
+      32,
+      10,
+      6
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Barracks",
+     "note": "Authorized personnel"
+    },
+    {
+     "id": "r9",
+     "i": 9,
+     "template": "waiting-room",
+     "zone": "public",
+     "rank": 0,
+     "role": "side",
+     "parent": 7,
+     "critical": false,
+     "depth": 3,
+     "kids": [],
+     "edge": 8,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      38,
+      22,
+      8,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Visitor Lounge",
+     "note": "Visitors welcome"
+    },
+    {
+     "id": "r10",
+     "i": 10,
+     "template": "junk-hall",
+     "zone": "public",
+     "rank": 0,
+     "role": "side",
+     "parent": 0,
+     "critical": false,
+     "depth": 1,
+     "kids": [],
+     "edge": 9,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      49,
+      31,
+      10,
+      7
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Lost Property",
+     "note": "Public Zone"
+    }
+   ],
+   "edges": [
+    {
+     "i": 0,
+     "a": 0,
+     "b": 1,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       38,
+       34
+      ]
+     ],
+     "cells": [],
+     "side": "W",
+     "k": 0,
+     "width": 1
+    },
+    {
+     "i": 1,
+     "a": 1,
+     "b": 2,
+     "tree": true,
+     "lock": "L1",
+     "doors": [
+      [
+       28,
+       36
+      ],
+      [
+       23,
+       36
+      ]
+     ],
+     "cells": [
+      [
+       27,
+       36
+      ],
+      [
+       26,
+       36
+      ],
+      [
+       25,
+       36
+      ],
+      [
+       24,
+       36
+      ]
+     ],
+     "side": "W",
+     "k": 4,
+     "width": 1
+    },
+    {
+     "i": 2,
+     "a": 2,
+     "b": 3,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       21,
+       32
+      ],
+      [
+       21,
+       30
+      ]
+     ],
+     "cells": [
+      [
+       21,
+       31
+      ]
+     ],
+     "side": "N",
+     "k": 1,
+     "width": 1
+    },
+    {
+     "i": 3,
+     "a": 3,
+     "b": 4,
+     "tree": true,
+     "lock": "L2",
+     "doors": [
+      [
+       15,
+       20
+      ],
+      [
+       15,
+       15
+      ]
+     ],
+     "cells": [
+      [
+       14,
+       19
+      ],
+      [
+       15,
+       19
+      ],
+      [
+       16,
+       19
+      ],
+      [
+       14,
+       18
+      ],
+      [
+       15,
+       18
+      ],
+      [
+       16,
+       18
+      ],
+      [
+       14,
+       17
+      ],
+      [
+       15,
+       17
+      ],
+      [
+       16,
+       17
+      ],
+      [
+       14,
+       16
+      ],
+      [
+       15,
+       16
+      ],
+      [
+       16,
+       16
+      ]
+     ],
+     "side": "N",
+     "k": 4,
+     "width": 3
+    },
+    {
+     "i": 4,
+     "a": 4,
+     "b": 5,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       17,
+       8
+      ],
+      [
+       17,
+       6
+      ]
+     ],
+     "cells": [
+      [
+       17,
+       7
+      ]
+     ],
+     "side": "N",
+     "k": 1,
+     "width": 1
+    },
+    {
+     "i": 5,
+     "a": 4,
+     "b": 6,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       12,
+       13
+      ],
+      [
+       8,
+       13
+      ]
+     ],
+     "cells": [
+      [
+       11,
+       13
+      ],
+      [
+       10,
+       13
+      ],
+      [
+       9,
+       13
+      ]
+     ],
+     "side": "W",
+     "k": 3,
+     "width": 1
+    },
+    {
+     "i": 6,
+     "a": 1,
+     "b": 7,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       34,
+       31
+      ],
+      [
+       34,
+       28
+      ]
+     ],
+     "cells": [
+      [
+       34,
+       30
+      ],
+      [
+       34,
+       29
+      ]
+     ],
+     "side": "N",
+     "k": 2,
+     "width": 1
+    },
+    {
+     "i": 7,
+     "a": 2,
+     "b": 8,
+     "tree": true,
+     "lock": "L4",
+     "doors": [
+      [
+       15,
+       35
+      ]
+     ],
+     "cells": [],
+     "side": "W",
+     "k": 0,
+     "width": 1
+    },
+    {
+     "i": 8,
+     "a": 7,
+     "b": 9,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       37,
+       25
+      ]
+     ],
+     "cells": [],
+     "side": "E",
+     "k": 0,
+     "width": 1
+    },
+    {
+     "i": 9,
+     "a": 0,
+     "b": 10,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       45,
+       36
+      ],
+      [
+       48,
+       36
+      ]
+     ],
+     "cells": [
+      [
+       46,
+       36
+      ],
+      [
+       47,
+       36
+      ]
+     ],
+     "side": "E",
+     "k": 2,
+     "width": 1
+    }
+   ],
+   "maxRegion": 2,
+   "loops": 0,
+   "layout": {
+    "w": 60,
+    "h": 39,
+    "cells": [
+     "               #######                                      ",
+     "               #.....#                                      ",
+     "               #.....#                                      ",
+     "               #.....#                                      ",
+     "               #.....#                                      ",
+     "               #.....#                                      ",
+     "               ##+####                                      ",
+     "#########       #,#                                         ",
+     "#.......#   #####+####                                      ",
+     "#.......#   #........#                                      ",
+     "#.......#   #........#                                      ",
+     "#.......#   #........#                                      ",
+     "#.......#####........#                                      ",
+     "#.......+,,,+........#                                      ",
+     "#.......#####........#                                      ",
+     "#########   ###+######                                      ",
+     "             #,,,#                                          ",
+     "             #,,,#                                          ",
+     "             #,,,#                                          ",
+     "             #,,,#                                          ",
+     "          #####+########                                    ",
+     "          #............#             ##########             ",
+     "          #............#        ######........#             ",
+     "          #............#        #....#........#             ",
+     "          #............#        #....#........#             ",
+     "          #............#        #....+........#             ",
+     "          #............#        #....#........#             ",
+     "          #............#        #....##########             ",
+     "          #............#        ##+###                      ",
+     "          #............#         #,#                        ",
+     "          ###########+##         #,#            ############",
+     "    ############    #,#     ######+###########  #..........#",
+     "    #..........######+##    #.........#......#  #..........#",
+     "    #..........#.......#    #.........#......#  #..........#",
+     "    #..........#.......#    #.........+......#  #..........#",
+     "    #..........+.......######.........#......####..........#",
+     "    #..........#.......+,,,,+.........#......+,,+..........#",
+     "    #..........########################......####..........#",
+     "    ############                      ########  ############"
+    ]
+   },
+   "tiles": {
+    "20,1": {
+     "terrain": "exit",
+     "tag": "bunker_f1_on"
+    },
+    "28,36": {
+     "terrain": "door",
+     "props": {
+      "flag": [
+       "hnG_bunker_f1_l1",
+       "hnG_bunker_f1_l1_hack"
+      ],
+      "need": "the door release (or hack the panel)",
+      "color": "#e8a23a"
+     }
+    },
+    "15,20": {
+     "terrain": "door",
+     "props": {
+      "flag": [
+       "hnG_bunker_f1_l2",
+       "hnG_bunker_f1_l2_hack"
+      ],
+      "need": "the door release (or hack the panel)",
+      "color": "#e8a23a"
+     }
+    },
+    "15,35": {
+     "terrain": "door",
+     "props": {
+      "flag": [
+       "hnG_bunker_f1_l4_hack"
+      ],
+      "need": "security clearance: hack the panel",
+      "color": "#ff5a3a"
+     }
+    },
+    "19,36": {
+     "tag": "bunker_f1_t0_s"
+    },
+    "17,33": {
+     "tag": "bunker_f1_t0_s"
+    },
+    "14,18": {
+     "terrain": "plate",
+     "tag": "bunker_f1_t1_p"
+    },
+    "15,18": {
+     "terrain": "plate",
+     "tag": "bunker_f1_t1_p"
+    },
+    "16,18": {
+     "terrain": "plate",
+     "tag": "bunker_f1_t1_p"
+    }
+   },
+   "objs": {
+    "42,36": {
+     "start": true
+    },
+    "42,37": {
+     "item": "hn-exit",
+     "props": {
+      "prompt": "Leave for the near-area map"
+     },
+     "solid": false
+    },
+    "28,35": {
+     "item": "hn-sec-panel",
+     "props": {
+      "face": "e",
+      "flag": "hnG_bunker_f1_l1_hack",
+      "title": "door controls",
+      "difficulty": 7,
+      "fail": "shock",
+      "text": "DOOR CONTROLS: RELEASED FROM SECURITY ONLY. The panel has an override slot, and a scratched note: “try the green wire”."
+     },
+     "solid": false
+    },
+    "16,20": {
+     "item": "hn-sec-panel",
+     "props": {
+      "face": "s",
+      "flag": "hnG_bunker_f1_l2_hack",
+      "title": "door controls",
+      "difficulty": 8,
+      "fail": "alarm",
+      "text": "DOOR CONTROLS: RELEASED FROM SECURITY ONLY. The panel has an override slot, and a scratched note: “try the green wire”."
+     },
+     "solid": false
+    },
+    "15,36": {
+     "item": "hn-sec-panel",
+     "props": {
+      "face": "e",
+      "flag": "hnG_bunker_f1_l4_hack",
+      "title": "security door",
+      "difficulty": 7,
+      "fail": "shock",
+      "text": "A heavy door with a grey panel. The panel wants clearance, or a manager. It will settle for being out-argued."
+     },
+     "solid": false
+    },
+    "43,22": {
+     "item": "hn-terminal",
+     "props": {
+      "flag": "hnG_bunker_f1_l1",
+      "title": "door release",
+      "text": "DOOR RELEASE · the door release: SEALED. Press any key to release. (There is only one key.)",
+      "doneText": "DOOR RELEASE: OPEN. “Have a productive day.”"
+     },
+     "room": 9,
+     "keep": true,
+     "solid": true
+    },
+    "22,28": {
+     "item": "hn-terminal",
+     "props": {
+      "flag": "hnG_bunker_f1_l2",
+      "title": "door release",
+      "text": "DOOR RELEASE · the door release: SEALED. Press any key to release. (There is only one key.)",
+      "doneText": "DOOR RELEASE: OPEN. “Have a productive day.”"
+     },
+     "room": 3,
+     "keep": true,
+     "solid": true
+    },
+    "58,35": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "locker",
+      "uid": "bunker-f1-r10-58-35",
+      "loot": [
+       {
+        "type": "keyItem",
+        "id": "hnG_bunker_blue",
+        "info": {
+         "name": "Blue card",
+         "color": "#3a7aff",
+         "flag": "hnG_bunker_blue",
+         "text": "A laminated Blue card with a smiling face that isn’t yours. It opens the stairs on."
+        }
+       }
+      ],
+      "name": "Supervisor’s locker",
+      "text": "A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”"
+     },
+     "room": 10,
+     "container": true,
+     "solid": true
+    },
+    "38,37": {
+     "item": "hn-sign",
+     "props": {
+      "face": "e",
+      "title": "Entry",
+      "text": "KEEP OUT. Somebody has crossed it out and written PLEASE."
+     },
+     "room": 0,
+     "solid": false
+    },
+    "30,36": {
+     "item": "couch",
+     "props": {
+      "dir": "n"
+     },
+     "room": 1,
+     "solid": true,
+     "covers": [
+      "31,36"
+     ]
+    },
+    "31,36": {
+     "cover": "30,36",
+     "solid": true
+    },
+    "33,33": {
+     "item": "coffee-table",
+     "props": {},
+     "room": 1,
+     "solid": true
+    },
+    "37,32": {
+     "item": "plant",
+     "props": {},
+     "room": 1,
+     "solid": true
+    },
+    "19,33": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f1-r2-19-33",
+      "loot": [
+       {
+        "hn": "hn-desktop-defender"
+       }
+      ],
+      "label": "DO NOT OPEN BEFORE THE END OF THE WORLD",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 2,
+     "solid": true,
+     "container": true
+    },
+    "17,36": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f1-r2-17-36",
+      "loot": [
+       {
+        "hn": "hn-mug"
+       }
+      ],
+      "label": "DO NOT OPEN BEFORE THE END OF THE WORLD",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 2,
+     "solid": true,
+     "container": true
+    },
+    "21,36": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f1-r2-21-36",
+      "loot": [
+       {
+        "hn": "hn-ping-pong"
+       }
+      ],
+      "label": "DO NOT OPEN BEFORE THE END OF THE WORLD",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 2,
+     "solid": true,
+     "container": true
+    },
+    "16,25": {
+     "item": "table",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "15,26": {
+     "item": "table",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "17,27": {
+     "item": "table",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "17,26": {
+     "item": "bench",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "11,29": {
+     "item": "counter",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "22,26": {
+     "item": "vending",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "19,8": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "s",
+      "short": "WET FLOOR",
+      "text": "A stick figure slipping. A maintenance robot will stand here and think about it for as long as it takes."
+     },
+     "room": 4,
+     "solid": false
+    },
+    "12,9": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "e",
+      "short": "MIND THE GAP",
+      "text": "There is no gap. The sign has outlived it."
+     },
+     "room": 4,
+     "solid": false
+    },
+    "14,14": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f1-r4-14-14",
+      "loot": [
+       {
+        "hn": "hn-presentation"
+       }
+      ],
+      "label": "FRAGILE: THIS WAY UP",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 4,
+     "solid": true,
+     "container": true
+    },
+    "2,9": {
+     "item": "filing",
+     "props": {},
+     "room": 6,
+     "solid": true
+    },
+    "5,9": {
+     "item": "filing",
+     "props": {},
+     "room": 6,
+     "solid": true
+    },
+    "5,12": {
+     "item": "filing",
+     "props": {},
+     "room": 6,
+     "solid": true
+    },
+    "2,12": {
+     "item": "filing",
+     "props": {},
+     "room": 6,
+     "solid": true
+    },
+    "4,14": {
+     "item": "hn-terminal",
+     "props": {
+      "text": "LOG: All quiet. All quiet. All quiet. Visitor detected. All quiet."
+     },
+     "room": 6,
+     "solid": true
+    },
+    "3,14": {
+     "item": "hn-terminal",
+     "props": {
+      "text": "Green text scrolls past: inventory of things that no longer exist."
+     },
+     "room": 6,
+     "solid": true
+    },
+    "33,23": {
+     "item": "toilet",
+     "props": {},
+     "room": 7,
+     "solid": true
+    },
+    "32,26": {
+     "item": "mirror",
+     "props": {
+      "face": "e"
+     },
+     "room": 7,
+     "solid": false
+    },
+    "14,36": {
+     "item": "bench",
+     "props": {},
+     "room": 8,
+     "solid": true
+    },
+    "5,37": {
+     "item": "bench",
+     "props": {},
+     "room": 8,
+     "solid": true
+    },
+    "6,34": {
+     "item": "table",
+     "props": {},
+     "room": 8,
+     "solid": true
+    },
+    "11,36": {
+     "item": "table",
+     "props": {},
+     "room": 8,
+     "solid": true
+    },
+    "5,35": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "locker",
+      "uid": "bunker-f1-r8-5-35",
+      "loot": [
+       {
+        "hn": "hn-insulting-card"
+       }
+      ],
+      "name": "Locker 3",
+      "text": "A dented locker with a name tag nobody could read."
+     },
+     "room": 8,
+     "solid": true,
+     "container": true
+    },
+    "41,22": {
+     "item": "couch",
+     "props": {
+      "dir": "s"
+     },
+     "room": 9,
+     "solid": true,
+     "covers": [
+      "42,22"
+     ]
+    },
+    "42,22": {
+     "cover": "41,22",
+     "solid": true
+    },
+    "44,22": {
+     "item": "couch",
+     "props": {
+      "dir": "s"
+     },
+     "room": 9,
+     "solid": true,
+     "covers": [
+      "45,22"
+     ]
+    },
+    "45,22": {
+     "cover": "44,22",
+     "solid": true
+    },
+    "44,25": {
+     "item": "coffee-table",
+     "props": {},
+     "room": 9,
+     "solid": true
+    },
+    "45,26": {
+     "item": "plant",
+     "props": {},
+     "room": 9,
+     "solid": true
+    },
+    "38,26": {
+     "item": "plant",
+     "props": {},
+     "room": 9,
+     "solid": true
+    },
+    "39,22": {
+     "item": "vending",
+     "props": {},
+     "room": 9,
+     "solid": true
+    },
+    "50,35": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f1-r10-50-35",
+      "loot": [
+       {
+        "hn": "hn-ping-pong"
+       }
+      ],
+      "label": "RETURNS",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 10,
+     "solid": true,
+     "container": true
+    },
+    "51,32": {
+     "item": "crate",
+     "props": {},
+     "room": 10,
+     "solid": true
+    },
+    "55,32": {
+     "item": "crate",
+     "props": {},
+     "room": 10,
+     "solid": true
+    },
+    "51,33": {
+     "item": "ceiling-debris",
+     "props": {},
+     "room": 10,
+     "solid": false
+    },
+    "14,30": {
+     "item": "hn-health-station",
+     "props": {
+      "face": "n",
+      "charge": 55
+     },
+     "solid": false
+    },
+    "43,25": {
+     "item": "hn-kiosk",
+     "props": {
+      "text": "A dented information post with a floor plan, half of it marked CLASSIFIED in red."
+     },
+     "solid": true
+    },
+    "16,10": {
+     "enemy": "hn-knife",
+     "props": {},
+     "room": 4,
+     "cost": 2,
+     "lib": "hn-knife",
+     "solid": false
+    },
+    "13,14": {
+     "enemy": "hn-knife",
+     "props": {},
+     "room": 4,
+     "cost": 2,
+     "lib": "hn-knife",
+     "solid": false
+    },
+    "14,9": {
+     "enemy": "hn-knife",
+     "props": {},
+     "room": 4,
+     "cost": 2,
+     "lib": "hn-knife",
+     "solid": false
+    },
+    "6,37": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "robots",
+      "enemy": "hn-monoid",
+      "count": 1,
+      "label": "FRAGILE: THIS WAY UP"
+     },
+     "room": 8,
+     "solid": true
+    },
+    "13,25": {
+     "enemy": "hn-knife",
+     "props": {},
+     "room": 3,
+     "cost": 2,
+     "lib": "hn-knife",
+     "solid": false
+    },
+    "15,24": {
+     "enemy": "hn-knife",
+     "props": {},
+     "room": 3,
+     "cost": 2,
+     "lib": "hn-knife",
+     "solid": false
+    },
+    "16,28": {
+     "enemy": "hn-knife",
+     "props": {},
+     "room": 3,
+     "cost": 2,
+     "lib": "hn-knife",
+     "solid": false
+    },
+    "11,21": {
+     "enemy": "hn-knife",
+     "props": {},
+     "room": 3,
+     "cost": 2,
+     "lib": "hn-knife",
+     "solid": false
+    },
+    "26,35": {
+     "item": "beam-emitter",
+     "props": {
+      "face": "s"
+     },
+     "tag": "bunker_f1_t0_b",
+     "solid": false
+    },
+    "26,37": {
+     "item": "beam-emitter",
+     "props": {
+      "face": "n"
+     },
+     "tag": "bunker_f1_t0_b",
+     "solid": false
+    },
+    "13,18": {
+     "item": "dart-emitter",
+     "props": {
+      "face": "e"
+     },
+     "tag": "bunker_f1_t1_d",
+     "solid": false
+    },
+    "17,18": {
+     "item": "dart-emitter",
+     "props": {
+      "face": "w"
+     },
+     "tag": "bunker_f1_t1_d",
+     "solid": false
+    },
+    "13,20": {
+     "item": "hn-trap-light",
+     "props": {
+      "face": "s",
+      "text": "TRAP. Courtesy notice: this area is protected. By law, it must tell you. It has."
+     },
+     "solid": false
+    },
+    "18,36": {
+     "item": "hn-terminal",
+     "props": {
+      "flag": "hnG_bunker_f1_trapsoff",
+      "title": "facilities terminal",
+      "difficulty": 7,
+      "text": "FACILITIES · COURTESY SYSTEMS (DARTS, BEAMS, FLOOR SAFETY): ARMED. It wants a facilities password, or an argument.",
+      "doneText": "COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”",
+      "successText": "Courtesy systems on this floor: OFF."
+     },
+     "solid": true
+    },
+    "36,23": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "corpse",
+      "uid": "bunker-f1-r7-36-23",
+      "loot": [
+       {
+        "hn": "hn-ping-pong"
+       }
+      ],
+      "name": "A dead scavenger",
+      "text": "A scavenger in patched leathers, face down. Whatever got them is not here now. Probably."
+     },
+     "room": 7,
+     "container": true,
+     "solid": true
+    },
+    "39,32": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "corpse",
+      "uid": "bunker-f1-r0-39-32",
+      "loot": [
+       {
+        "hn": "hn-circuit"
+       }
+      ],
+      "name": "A long-dead visitor",
+      "text": "A scavenger in patched leathers, face down. Whatever got them is not here now. Probably."
+     },
+     "room": 0,
+     "container": true,
+     "solid": true
+    },
+    "44,26": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "desk",
+      "uid": "bunker-f1-r9-44-26",
+      "loot": [
+       {
+        "hn": "hn-override"
+       }
+      ],
+      "name": "Duty desk",
+      "text": "Coffee rings, a stapler, and a drawer with a lock that doesn’t work."
+     },
+     "room": 9,
+     "container": true,
+     "solid": true
+    },
+    "7,14": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "corpse",
+      "uid": "bunker-f1-r6-7-14",
+      "loot": [
+       {
+        "hn": "hn-circuit"
+       }
+      ],
+      "name": "A long-dead visitor",
+      "text": "A mummified scout with a map of this floor, half of it scratched out. The other half is wrong."
+     },
+     "room": 6,
+     "container": true,
+     "solid": true
+    },
+    "42,38": {
+     "item": "hn-poster",
+     "props": {
+      "face": "n",
+      "title": "1,822 DAYS WITHOUT AN INCIDENT",
+      "text": "The number has been painted over many times."
+     },
+     "room": 0,
+     "solid": false
+    },
+    "44,32": {
+     "item": "barrel",
+     "props": {},
+     "room": 0,
+     "solid": true
+    },
+    "43,37": {
+     "item": "crate",
+     "props": {},
+     "room": 0,
+     "solid": true
+    },
+    "39,35": {
+     "item": "ceiling-debris",
+     "props": {},
+     "room": 0,
+     "solid": false
+    },
+    "29,37": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "n",
+      "short": "LIFT WITH YOUR LEGS",
+      "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+     },
+     "room": 1,
+     "solid": false
+    },
+    "32,37": {
+     "item": "hn-poster",
+     "props": {
+      "face": "n",
+      "title": "1,822 DAYS WITHOUT AN INCIDENT",
+      "text": "The number has been painted over many times."
+     },
+     "room": 1,
+     "solid": false
+    },
+    "29,32": {
+     "item": "barrel",
+     "props": {},
+     "room": 1,
+     "solid": true
+    },
+    "35,32": {
+     "item": "ceiling-debris",
+     "props": {},
+     "room": 1,
+     "solid": false
+    },
+    "22,33": {
+     "item": "barrel",
+     "props": {},
+     "room": 2,
+     "solid": true
+    },
+    "23,22": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "w",
+      "short": "MIND THE GAP",
+      "text": "There is no gap. The sign has outlived it."
+     },
+     "room": 3,
+     "solid": false
+    },
+    "18,30": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "n",
+      "short": "LIFT WITH YOUR LEGS",
+      "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+     },
+     "room": 3,
+     "solid": false
+    },
+    "22,20": {
+     "item": "hn-poster",
+     "props": {
+      "face": "s",
+      "title": "LIFT WITH YOUR LEGS",
+      "text": "A stick figure lifting a crate the right way, and a sad stick figure lifting it the wrong way."
+     },
+     "room": 3,
+     "solid": false
+    },
+    "22,29": {
+     "item": "barrel",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "20,21": {
+     "item": "crate",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "19,29": {
+     "item": "crate",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "20,22": {
+     "item": "ceiling-debris",
+     "props": {},
+     "room": 3,
+     "solid": false
+    },
+    "21,10": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "w",
+      "short": "WET FLOOR",
+      "text": "A stick figure slipping. A maintenance robot will stand here and think about it for as long as it takes."
+     },
+     "room": 4,
+     "solid": false
+    },
+    "21,14": {
+     "item": "hn-poster",
+     "props": {
+      "face": "w",
+      "title": "REPORT ALL SPILLS",
+      "text": "Especially the ones that move."
+     },
+     "room": 4,
+     "solid": false
+    },
+    "20,12": {
+     "item": "crate",
+     "props": {},
+     "room": 4,
+     "solid": true
+    },
+    "19,10": {
+     "item": "ceiling-debris",
+     "props": {},
+     "room": 4,
+     "solid": false
+    },
+    "19,6": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "n",
+      "short": "LIFT WITH YOUR LEGS",
+      "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+     },
+     "room": 5,
+     "solid": false
+    },
+    "20,3": {
+     "item": "crate",
+     "props": {},
+     "room": 5,
+     "solid": true
+    },
+    "3,7": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "s",
+      "short": "LIFT WITH YOUR LEGS",
+      "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+     },
+     "room": 6,
+     "solid": false
+    },
+    "1,14": {
+     "item": "barrel",
+     "props": {},
+     "room": 6,
+     "solid": true
+    },
+    "4,10": {
+     "item": "ceiling-debris",
+     "props": {},
+     "room": 6,
+     "solid": false
+    },
+    "11,31": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "s",
+      "short": "MIND THE GAP",
+      "text": "There is no gap. The sign has outlived it."
+     },
+     "room": 8,
+     "solid": false
+    },
+    "12,37": {
+     "item": "crate",
+     "props": {},
+     "room": 8,
+     "solid": true
+    },
+    "7,34": {
+     "item": "ceiling-debris",
+     "props": {},
+     "room": 8,
+     "solid": false
+    },
+    "46,25": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "w",
+      "short": "WET FLOOR",
+      "text": "A stick figure slipping. A maintenance robot will stand here and think about it for as long as it takes."
+     },
+     "room": 9,
+     "solid": false
+    },
+    "53,38": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "n",
+      "short": "LIFT WITH YOUR LEGS",
+      "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+     },
+     "room": 10,
+     "solid": false
+    },
+    "57,30": {
+     "item": "hn-poster",
+     "props": {
+      "face": "s",
+      "title": "1,822 DAYS WITHOUT AN INCIDENT",
+      "text": "The number has been painted over many times."
+     },
+     "room": 10,
+     "solid": false
+    },
+    "49,37": {
+     "item": "barrel",
+     "props": {},
+     "room": 10,
+     "solid": true
+    },
+    "49,31": {
+     "item": "crate",
+     "props": {},
+     "room": 10,
+     "solid": true
+    }
+   },
+   "traps": [
+    {
+     "trigger": {
+      "type": "beam",
+      "tag": "bunker_f1_t0_b"
+     },
+     "once": true,
+     "gen": "switch",
+     "lib": "alarm-beam",
+     "effects": [
+      {
+       "type": "alarm",
+       "radius": 900,
+       "text": "A siren, then a voice: “Security to your location. Thank you for waiting.”"
+      },
+      {
+       "type": "spawn",
+       "tag": "bunker_f1_t0_s",
+       "enemy": "hn-knife",
+       "count": 2,
+       "delay": 1.5
+      }
+     ]
+    },
+    {
+     "trigger": {
+      "type": "plate",
+      "tag": "bunker_f1_t1_p"
+     },
+     "once": false,
+     "cooldown": 2.5,
+     "gen": "switch",
+     "lib": "courtesy-darts",
+     "effects": [
+      {
+       "type": "darts",
+       "tag": "bunker_f1_t1_d",
+       "volleys": 2,
+       "interval": 0.3,
+       "damage": 5
+      }
+     ]
+    }
+   ],
+   "slots": [
+    {
+     "id": "f1.lockL1.panel",
+     "pool": "panels.switch",
+     "target": {
+      "obj": "28,35",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "the door release"
+     }
+    },
+    {
+     "id": "f1.lockL2.panel",
+     "pool": "panels.switch",
+     "target": {
+      "obj": "16,20",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "the door release"
+     }
+    },
+    {
+     "id": "f1.lockL4.panel",
+     "pool": "panels.hack",
+     "target": {
+      "obj": "15,36",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "security clearance: hack the panel"
+     }
+    },
+    {
+     "id": "f1.swL1.text",
+     "pool": "terminals.switch",
+     "target": {
+      "obj": "43,22",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "the door release"
+     }
+    },
+    {
+     "id": "f1.swL1.done",
+     "pool": "terminals.switchDone",
+     "target": {
+      "obj": "43,22",
+      "prop": "doneText"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.swL2.text",
+     "pool": "terminals.switch",
+     "target": {
+      "obj": "22,28",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "the door release"
+     }
+    },
+    {
+     "id": "f1.swL2.done",
+     "pool": "terminals.switchDone",
+     "target": {
+      "obj": "22,28",
+      "prop": "doneText"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c58-35.name",
+     "pool": "containers.locker.name",
+     "target": {
+      "obj": "58,35",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c58-35.text",
+     "pool": "containers.locker.text",
+     "target": {
+      "obj": "58,35",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.keyL3.text",
+     "pool": "keys.card",
+     "target": {
+      "loot": "58,35",
+      "prop": "text"
+     },
+     "vars": {
+      "card": "Blue card",
+      "opens": "the stairs on"
+     }
+    },
+    {
+     "id": "f1.o38-37",
+     "pool": "signs.blastLock",
+     "target": {
+      "obj": "38,37",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o19-33",
+     "pool": "crates.label",
+     "target": {
+      "obj": "19,33",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c19-33.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "19,33",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c19-33.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "19,33",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o17-36",
+     "pool": "crates.label",
+     "target": {
+      "obj": "17,36",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c17-36.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "17,36",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c17-36.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "17,36",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o21-36",
+     "pool": "crates.label",
+     "target": {
+      "obj": "21,36",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c21-36.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "21,36",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c21-36.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "21,36",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o19-8",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "19,8",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o12-9",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "12,9",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o14-14",
+     "pool": "crates.label",
+     "target": {
+      "obj": "14,14",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c14-14.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "14,14",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c14-14.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "14,14",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o4-14",
+     "pool": "terminals.decor",
+     "target": {
+      "obj": "4,14",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o3-14",
+     "pool": "terminals.decor",
+     "target": {
+      "obj": "3,14",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c5-35.name",
+     "pool": "containers.locker.name",
+     "target": {
+      "obj": "5,35",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c5-35.text",
+     "pool": "containers.locker.text",
+     "target": {
+      "obj": "5,35",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o50-35",
+     "pool": "crates.label",
+     "target": {
+      "obj": "50,35",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c50-35.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "50,35",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c50-35.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "50,35",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.kiosk.text",
+     "pool": "kiosk.war",
+     "target": {
+      "obj": "43,25",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.crate6-37",
+     "pool": "crates.label",
+     "target": {
+      "obj": "6,37",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.tl13-20",
+     "pool": "traplights",
+     "target": {
+      "obj": "13,20",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.trapsoff.text",
+     "pool": "terminals.traps",
+     "target": {
+      "obj": "18,36",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.trapsoff.done",
+     "pool": "terminals.trapsDone",
+     "target": {
+      "obj": "18,36",
+      "prop": "doneText"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.trapsoff.ok",
+     "pool": "terminals.trapsOk",
+     "target": {
+      "obj": "18,36",
+      "prop": "successText"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c36-23.name",
+     "pool": "containers.corpse.name",
+     "target": {
+      "obj": "36,23",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c36-23.text",
+     "pool": "containers.corpse.text",
+     "target": {
+      "obj": "36,23",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c39-32.name",
+     "pool": "containers.corpse.name",
+     "target": {
+      "obj": "39,32",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c39-32.text",
+     "pool": "containers.corpse.text",
+     "target": {
+      "obj": "39,32",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c44-26.name",
+     "pool": "containers.desk.name",
+     "target": {
+      "obj": "44,26",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c44-26.text",
+     "pool": "containers.desk.text",
+     "target": {
+      "obj": "44,26",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.c7-14.name",
+     "pool": "containers.corpse.name",
+     "target": {
+      "obj": "7,14",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.corpse7,14",
+     "pool": "corpses",
+     "target": {
+      "obj": "7,14",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o42-38",
+     "pool": "posters.safety",
+     "target": {
+      "obj": "42,38",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o29-37",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "29,37",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o32-37",
+     "pool": "posters.safety",
+     "target": {
+      "obj": "32,37",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o23-22",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "23,22",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o18-30",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "18,30",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o22-20",
+     "pool": "posters.safety",
+     "target": {
+      "obj": "22,20",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o21-10",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "21,10",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o21-14",
+     "pool": "posters.safety",
+     "target": {
+      "obj": "21,14",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o19-6",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "19,6",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o3-7",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "3,7",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o11-31",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "11,31",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o46-25",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "46,25",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o53-38",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "53,38",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f1.o57-30",
+     "pool": "posters.safety",
+     "target": {
+      "obj": "57,30",
+      "prop": "text"
+     },
+     "vars": {}
+    }
+   ],
+   "reserved": [
+    "39,34",
+    "37,34",
+    "29,36",
+    "27,36",
+    "24,36",
+    "22,36",
+    "21,31",
+    "21,33",
+    "21,29",
+    "15,19",
+    "15,21",
+    "15,14",
+    "15,16",
+    "17,7",
+    "17,9",
+    "17,5",
+    "13,13",
+    "11,13",
+    "9,13",
+    "7,13",
+    "34,30",
+    "34,32",
+    "34,27",
+    "34,29",
+    "16,35",
+    "14,35",
+    "38,25",
+    "36,25",
+    "46,36",
+    "44,36",
+    "49,36",
+    "47,36",
+    "42,35",
+    "43,36",
+    "42,37",
+    "41,36",
+    "20,0",
+    "21,1",
+    "20,2",
+    "19,1",
+    "29,35",
+    "16,21",
+    "16,36",
+    "39,37",
+    "19,9",
+    "13,9",
+    "33,26",
+    "14,29"
+   ],
+   "startAt": [
+    42,
+    36
+   ],
+   "stairsTag": "bunker_f1_on",
+   "exitAt": [
+    20,
+    1
+   ],
+   "encounter": {
+    "budget": 18,
+    "spent": 18,
+    "pieces": [
+     {
+      "kind": "meeting",
+      "room": 4,
+      "cost": 6
+     },
+     {
+      "kind": "crate",
+      "room": 8,
+      "cost": 4
+     },
+     {
+      "kind": "meeting",
+      "room": 3,
+      "cost": 8
+     }
+    ]
+   },
+   "trapsOff": "hnG_bunker_f1_trapsoff",
+   "containerTraps": 0,
+   "trapCount": 2,
+   "treasure": {
+    "target": 850,
+    "spent": 864
+   },
+   "name": "Security Level",
+   "intro": "Behind the blast door: a guard post, a dead light, and a second blast door with PLEASE painted on it in red. On its inside, someone scratched a tally into the steel: hundreds of marks, then nothing. The weld has been cut.",
+   "stairsLocked": "STAIRWELL ACCESS: Blue card HOLDERS ONLY. “We value your patience.”",
+   "check": {
+    "keysOnly": 457,
+    "sure": 511,
+    "all": 511
+   }
+  },
+  {
+   "n": 2,
+   "id": "hn-g-bunker-f2",
+   "role": "goal",
+   "look": "bulkhead",
+   "zones": [
+    "service",
+    "security",
+    "command"
+   ],
+   "roomCount": 12,
+   "goalKind": "recover",
+   "path": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "rooms": [
+    {
+     "id": "r0",
+     "i": 0,
+     "template": "stairwell",
+     "zone": "service",
+     "rank": 1,
+     "role": "stairs",
+     "parent": null,
+     "critical": true,
+     "depth": 0,
+     "kids": [
+      1,
+      8
+     ],
+     "isEntry": true,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      20,
+      29,
+      7,
+      6
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Fire Stairs",
+     "note": "Authorized personnel"
+    },
+    {
+     "id": "r1",
+     "i": 1,
+     "template": "storeroom",
+     "zone": "service",
+     "rank": 1,
+     "role": "path",
+     "parent": 0,
+     "critical": true,
+     "depth": 1,
+     "kids": [
+      2
+     ],
+     "edge": 0,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      32,
+      28,
+      8,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Storeroom",
+     "note": "Authorized personnel"
+    },
+    {
+     "id": "r2",
+     "i": 2,
+     "template": "storeroom",
+     "zone": "security",
+     "rank": 2,
+     "role": "path",
+     "parent": 1,
+     "critical": true,
+     "depth": 2,
+     "kids": [
+      3
+     ],
+     "edge": 1,
+     "region": 1,
+     "opt": null,
+     "rect": [
+      44,
+      30,
+      8,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Supply Closet",
+     "note": "Armed response"
+    },
+    {
+     "id": "r3",
+     "i": 3,
+     "template": "security-checkpoint",
+     "zone": "security",
+     "rank": 2,
+     "role": "path",
+     "parent": 2,
+     "critical": true,
+     "depth": 3,
+     "kids": [
+      4,
+      6,
+      9
+     ],
+     "edge": 2,
+     "region": 1,
+     "opt": null,
+     "rect": [
+      41,
+      24,
+      6,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Security Checkpoint",
+     "note": "Security Zone"
+    },
+    {
+     "id": "r4",
+     "i": 4,
+     "template": "armory",
+     "zone": "command",
+     "rank": 3,
+     "role": "path",
+     "parent": 3,
+     "critical": true,
+     "depth": 4,
+     "kids": [
+      5
+     ],
+     "edge": 3,
+     "region": 2,
+     "opt": null,
+     "rect": [
+      37,
+      14,
+      8,
+      6
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Requisitions",
+     "note": "Need to know"
+    },
+    {
+     "id": "r5",
+     "i": 5,
+     "template": "command-center",
+     "zone": "command",
+     "rank": 3,
+     "role": "goal",
+     "parent": 4,
+     "critical": true,
+     "depth": 5,
+     "kids": [],
+     "edge": 4,
+     "isExit": true,
+     "region": 3,
+     "opt": null,
+     "rect": [
+      39,
+      1,
+      11,
+      8
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "The War Room",
+     "note": "Officers only"
+    },
+    {
+     "id": "r6",
+     "i": 6,
+     "template": "kennels",
+     "zone": "security",
+     "rank": 2,
+     "role": "side",
+     "parent": 3,
+     "critical": false,
+     "depth": 4,
+     "kids": [
+      7
+     ],
+     "edge": 5,
+     "region": 1,
+     "opt": null,
+     "rect": [
+      53,
+      23,
+      7,
+      8
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Kennels",
+     "note": "Security Zone"
+    },
+    {
+     "id": "r7",
+     "i": 7,
+     "template": "robot-bay",
+     "zone": "security",
+     "rank": 2,
+     "role": "side",
+     "parent": 6,
+     "critical": false,
+     "depth": 4,
+     "kids": [],
+     "edge": 6,
+     "region": 1,
+     "opt": null,
+     "rect": [
+      50,
+      15,
+      11,
+      7
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Maintenance Bay",
+     "note": "Restricted"
+    },
+    {
+     "id": "r8",
+     "i": 8,
+     "template": "medical-bay",
+     "zone": "service",
+     "rank": 1,
+     "role": "side",
+     "parent": 0,
+     "critical": false,
+     "depth": 1,
+     "kids": [
+      11
+     ],
+     "edge": 7,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      12,
+      30,
+      7,
+      6
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "First Aid",
+     "note": "Service Area"
+    },
+    {
+     "id": "r9",
+     "i": 9,
+     "template": "locker-area",
+     "zone": "security",
+     "rank": 2,
+     "role": "side",
+     "parent": 3,
+     "critical": false,
+     "depth": 4,
+     "kids": [
+      10
+     ],
+     "edge": 8,
+     "region": 1,
+     "opt": null,
+     "rect": [
+      35,
+      22,
+      5,
+      4
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Staff Lockers",
+     "note": "Security Zone"
+    },
+    {
+     "id": "r10",
+     "i": 10,
+     "template": "server-room",
+     "zone": "security",
+     "rank": 2,
+     "role": "side",
+     "parent": 9,
+     "critical": false,
+     "depth": 4,
+     "kids": [],
+     "edge": 9,
+     "region": 1,
+     "opt": "L8",
+     "rect": [
+      26,
+      22,
+      8,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Server Room",
+     "note": "Armed response"
+    },
+    {
+     "id": "r11",
+     "i": 11,
+     "template": "washroom",
+     "zone": "service",
+     "rank": 1,
+     "role": "side",
+     "parent": 8,
+     "critical": false,
+     "depth": 2,
+     "kids": [],
+     "edge": 10,
+     "region": 0,
+     "opt": null,
+     "rect": [
+      1,
+      28,
+      5,
+      5
+     ],
+     "shape": null,
+     "shapeWant": null,
+     "name": "Restroom",
+     "note": "Authorized personnel"
+    }
+   ],
+   "edges": [
+    {
+     "i": 0,
+     "a": 0,
+     "b": 1,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       27,
+       30
+      ],
+      [
+       31,
+       30
+      ]
+     ],
+     "cells": [
+      [
+       28,
+       29
+      ],
+      [
+       28,
+       30
+      ],
+      [
+       28,
+       31
+      ],
+      [
+       29,
+       29
+      ],
+      [
+       29,
+       30
+      ],
+      [
+       29,
+       31
+      ],
+      [
+       30,
+       29
+      ],
+      [
+       30,
+       30
+      ],
+      [
+       30,
+       31
+      ]
+     ],
+     "side": "E",
+     "k": 3,
+     "width": 3
+    },
+    {
+     "i": 1,
+     "a": 1,
+     "b": 2,
+     "tree": true,
+     "lock": "L5",
+     "doors": [
+      [
+       40,
+       32
+      ],
+      [
+       43,
+       32
+      ]
+     ],
+     "cells": [
+      [
+       41,
+       32
+      ],
+      [
+       42,
+       32
+      ]
+     ],
+     "side": "E",
+     "k": 2,
+     "width": 1
+    },
+    {
+     "i": 2,
+     "a": 2,
+     "b": 3,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       44,
+       29
+      ]
+     ],
+     "cells": [],
+     "side": "N",
+     "k": 0,
+     "width": 1
+    },
+    {
+     "i": 3,
+     "a": 3,
+     "b": 4,
+     "tree": true,
+     "lock": "L6",
+     "doors": [
+      [
+       42,
+       23
+      ],
+      [
+       42,
+       20
+      ]
+     ],
+     "cells": [
+      [
+       41,
+       22
+      ],
+      [
+       42,
+       22
+      ],
+      [
+       43,
+       22
+      ],
+      [
+       41,
+       21
+      ],
+      [
+       42,
+       21
+      ],
+      [
+       43,
+       21
+      ]
+     ],
+     "side": "N",
+     "k": 2,
+     "width": 3
+    },
+    {
+     "i": 4,
+     "a": 4,
+     "b": 5,
+     "tree": true,
+     "lock": "L7",
+     "doors": [
+      [
+       40,
+       13
+      ],
+      [
+       40,
+       9
+      ]
+     ],
+     "cells": [
+      [
+       40,
+       12
+      ],
+      [
+       40,
+       11
+      ],
+      [
+       40,
+       10
+      ]
+     ],
+     "side": "N",
+     "k": 3,
+     "width": 1
+    },
+    {
+     "i": 5,
+     "a": 3,
+     "b": 6,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       47,
+       25
+      ],
+      [
+       52,
+       25
+      ]
+     ],
+     "cells": [
+      [
+       48,
+       24
+      ],
+      [
+       48,
+       25
+      ],
+      [
+       48,
+       26
+      ],
+      [
+       49,
+       24
+      ],
+      [
+       49,
+       25
+      ],
+      [
+       49,
+       26
+      ],
+      [
+       50,
+       24
+      ],
+      [
+       50,
+       25
+      ],
+      [
+       50,
+       26
+      ],
+      [
+       51,
+       24
+      ],
+      [
+       51,
+       25
+      ],
+      [
+       51,
+       26
+      ]
+     ],
+     "side": "E",
+     "k": 4,
+     "width": 3
+    },
+    {
+     "i": 6,
+     "a": 6,
+     "b": 7,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       58,
+       22
+      ]
+     ],
+     "cells": [],
+     "side": "N",
+     "k": 0,
+     "width": 1
+    },
+    {
+     "i": 7,
+     "a": 0,
+     "b": 8,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       19,
+       31
+      ]
+     ],
+     "cells": [],
+     "side": "W",
+     "k": 0,
+     "width": 1
+    },
+    {
+     "i": 8,
+     "a": 3,
+     "b": 9,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       40,
+       24
+      ]
+     ],
+     "cells": [],
+     "side": "W",
+     "k": 0,
+     "width": 1
+    },
+    {
+     "i": 9,
+     "a": 9,
+     "b": 10,
+     "tree": true,
+     "lock": "L8",
+     "doors": [
+      [
+       34,
+       24
+      ]
+     ],
+     "cells": [],
+     "side": "W",
+     "k": 0,
+     "width": 1
+    },
+    {
+     "i": 10,
+     "a": 8,
+     "b": 11,
+     "tree": true,
+     "lock": null,
+     "doors": [
+      [
+       11,
+       30
+      ],
+      [
+       6,
+       30
+      ]
+     ],
+     "cells": [
+      [
+       10,
+       30
+      ],
+      [
+       9,
+       30
+      ],
+      [
+       8,
+       30
+      ],
+      [
+       7,
+       30
+      ]
+     ],
+     "side": "W",
+     "k": 4,
+     "width": 1
+    }
+   ],
+   "maxRegion": 3,
+   "loops": 0,
+   "layout": {
+    "w": 62,
+    "h": 37,
+    "cells": [
+     "                                      #############           ",
+     "                                      #...........#           ",
+     "                                      #...........#           ",
+     "                                      #...........#           ",
+     "                                      #...........#           ",
+     "                                      #...........#           ",
+     "                                      #...........#           ",
+     "                                      #...........#           ",
+     "                                      #...........#           ",
+     "                                      ##+##########           ",
+     "                                       #,#                    ",
+     "                                       #,#                    ",
+     "                                       #,#                    ",
+     "                                    ####+#####                ",
+     "                                    #........#   #############",
+     "                                    #........#   #...........#",
+     "                                    #........#   #...........#",
+     "                                    #........#   #...........#",
+     "                                    #........#   #...........#",
+     "                                    #........#   #...........#",
+     "                                    ######+###   #...........#",
+     "                         ################,,,#    #...........#",
+     "                         #........#.....#,,,#    #########+###",
+     "                         #........#.....##+##########.......# ",
+     "                         #........+.....+......#,,,,#.......# ",
+     "                         #........#.....#......+,,,,+.......# ",
+     "                         #........#######......#,,,,#.......# ",
+     "#######                  ################......######.......# ",
+     "#.....#            #############........#......#    #.......# ",
+     "#.....##############.......#,,,#........####+########.......# ",
+     "#.....+,,,,+.......#.......+,,,+........#  #........#.......# ",
+     "#.....######.......+.......#,,,#........####........######### ",
+     "#.....#    #.......#.......#####........+,,+........#         ",
+     "#######    #.......#.......#   #############........#         ",
+     "           #.......#.......#               #........#         ",
+     "           #.......#########               ##########         ",
+     "           #########                                          "
+    ]
+   },
+   "tiles": {
+    "23,34": {
+     "terrain": "entry"
+    },
+    "40,32": {
+     "terrain": "door",
+     "props": {
+      "flag": [
+       "hnG_bunker_f2_l5",
+       "hnG_bunker_f2_l5_hack"
+      ],
+      "need": "the door release (or hack the panel)",
+      "color": "#e8a23a"
+     }
+    },
+    "42,23": {
+     "terrain": "door",
+     "props": {
+      "flag": [
+       "hnG_bunker_f2_l6_hack"
+      ],
+      "need": "security clearance: hack the panel",
+      "color": "#ff5a3a"
+     }
+    },
+    "40,13": {
+     "terrain": "door",
+     "props": {
+      "flag": [
+       "hnG_bunker_yellow",
+       "hnG_bunker_f2_l7_hack"
+      ],
+      "need": "Yellow card (or hack the panel)",
+      "color": "#ffd23a"
+     }
+    },
+    "34,24": {
+     "terrain": "door",
+     "props": {
+      "flag": [
+       "hnG_bunker_f2_l8_hack"
+      ],
+      "need": "security clearance: hack the panel",
+      "color": "#ff5a3a"
+     }
+    },
+    "1,30": {
+     "terrain": "hn-vent",
+     "tag": "roachSpawn"
+    },
+    "3,28": {
+     "terrain": "hn-vent",
+     "tag": "roachSpawn"
+    },
+    "3,29": {
+     "terrain": "hn-vent",
+     "tag": "roachSpawn"
+    },
+    "4,28": {
+     "terrain": "hn-vent",
+     "tag": "roachSpawn"
+    },
+    "2,31": {
+     "tag": "bunker_f2_r11_amb"
+    },
+    "5,32": {
+     "tag": "bunker_f2_r11_amb"
+    },
+    "4,31": {
+     "tag": "bunker_f2_r11_amb"
+    },
+    "2,32": {
+     "tag": "bunker_f2_r11_amb"
+    },
+    "1,32": {
+     "tag": "bunker_f2_r11_amb"
+    },
+    "3,32": {
+     "tag": "bunker_f2_r11_amb"
+    },
+    "56,29": {
+     "tag": "bunker_f2_t1_s"
+    },
+    "57,25": {
+     "tag": "bunker_f2_t1_s"
+    },
+    "40,11": {
+     "terrain": "plate",
+     "tag": "bunker_f2_t2_p"
+    }
+   },
+   "objs": {
+    "40,31": {
+     "item": "hn-sec-panel",
+     "props": {
+      "face": "w",
+      "flag": "hnG_bunker_f2_l5_hack",
+      "title": "door controls",
+      "difficulty": 8,
+      "fail": "alarm",
+      "text": "DOOR CONTROLS: RELEASED FROM SECURITY ONLY. The panel has an override slot, and a scratched note: “try the green wire”."
+     },
+     "solid": false
+    },
+    "43,23": {
+     "item": "hn-sec-panel",
+     "props": {
+      "face": "s",
+      "flag": "hnG_bunker_f2_l6_hack",
+      "title": "security door",
+      "difficulty": 9,
+      "fail": "shock",
+      "text": "A heavy door with a grey panel. The panel wants clearance, or a manager. It will settle for being out-argued."
+     },
+     "solid": false
+    },
+    "41,13": {
+     "item": "hn-sec-panel",
+     "props": {
+      "face": "s",
+      "flag": "hnG_bunker_f2_l7_hack",
+      "title": "card reader",
+      "difficulty": 9,
+      "fail": "alarm",
+      "cardFlag": "hnG_bunker_yellow",
+      "cardName": "The Yellow card",
+      "text": "A card reader in a grey panel. Under it, a maintenance keypad that will take an argument."
+     },
+     "solid": false
+    },
+    "34,23": {
+     "item": "hn-sec-panel",
+     "props": {
+      "face": "e",
+      "flag": "hnG_bunker_f2_l8_hack",
+      "title": "security door",
+      "difficulty": 8,
+      "fail": "shock",
+      "text": "A heavy door with a grey panel. The panel wants clearance, or a manager. It will settle for being out-argued."
+     },
+     "solid": false
+    },
+    "18,35": {
+     "item": "hn-terminal",
+     "props": {
+      "flag": "hnG_bunker_f2_l5",
+      "title": "door release",
+      "text": "DOOR RELEASE · the door release: SEALED. Press any key to release. (There is only one key.)",
+      "doneText": "DOOR RELEASE: OPEN. “Have a productive day.”"
+     },
+     "room": 8,
+     "keep": true,
+     "solid": true
+    },
+    "37,22": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "locker",
+      "uid": "bunker-f2-r9-37-22",
+      "loot": [
+       {
+        "type": "keyItem",
+        "id": "hnG_bunker_yellow",
+        "info": {
+         "name": "Yellow card",
+         "color": "#ffd23a",
+         "flag": "hnG_bunker_yellow",
+         "text": "Access card, Yellow card: opens the way to the duty log."
+        }
+       }
+      ],
+      "code": "193",
+      "codeFlag": "hnG_bunker_f2_codel7",
+      "hackDiff": 9,
+      "name": "Locker 3",
+      "text": "A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”"
+     },
+     "room": 9,
+     "container": true,
+     "solid": true
+    },
+    "36,28": {
+     "item": "hn-memo",
+     "props": {
+      "flag": "hnG_bunker_f2_codel7",
+      "title": "Memo from Facilities",
+      "text": "To all staff: codes have been RESET for security. The locker in Staff Lockers: 193. Please memorize and destroy this memo.",
+      "clue": "The locker in Staff Lockers: code 193."
+     },
+     "room": 1,
+     "keep": true,
+     "solid": true
+    },
+    "49,1": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "case",
+      "uid": "bunker-f2-r5-49-1",
+      "loot": [
+       {
+        "type": "gold",
+        "amount": 170
+       },
+       {
+        "hn": "hn-health-charge",
+        "n": 2
+       }
+      ],
+      "flag": "hnG_bunker_done",
+      "name": "The duty log",
+      "text": "A steel case bolted to the command desk, still locked. Inside: the garrison’s last log, the tally finished in a neat hand, and the pay nobody was left to collect."
+     },
+     "room": 5,
+     "container": true,
+     "solid": true,
+     "goal": true,
+     "keep": true
+    },
+    "25,35": {
+     "item": "hn-poster",
+     "props": {
+      "face": "n",
+      "title": "TAKE THE STAIRS!",
+      "text": "It’s good for you. The lift is for people who matter."
+     },
+     "room": 0,
+     "solid": false
+    },
+    "39,29": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f2-r1-39-29",
+      "loot": [
+       {
+        "hn": "hn-fuel-cell"
+       }
+      ],
+      "label": "OFFICE SUPPLIES (CLASSIFIED)",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 1,
+     "solid": true,
+     "container": true
+    },
+    "37,32": {
+     "item": "crate",
+     "props": {},
+     "room": 1,
+     "solid": true
+    },
+    "51,34": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f2-r2-51-34",
+      "loot": [
+       {
+        "hn": "hn-presentation"
+       }
+      ],
+      "label": "OFFICE SUPPLIES (CLASSIFIED)",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 2,
+     "solid": true,
+     "container": true
+    },
+    "46,30": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f2-r2-46-30",
+      "loot": [
+       {
+        "hn": "hn-sprocket"
+       }
+      ],
+      "label": "FRAGILE: THIS WAY UP",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 2,
+     "solid": true,
+     "container": true
+    },
+    "51,30": {
+     "item": "hn-crate",
+     "props": {
+      "contents": "treasure",
+      "kind": "crate",
+      "uid": "bunker-f2-r2-51-30",
+      "loot": [
+       {
+        "hn": "hn-pen"
+       }
+      ],
+      "label": "SAMPLES (LIVE)",
+      "name": "Packing crate",
+      "text": "A crate with weird markings."
+     },
+     "room": 2,
+     "solid": true,
+     "container": true
+    },
+    "45,28": {
+     "item": "counter",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "42,28": {
+     "item": "counter",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "46,29": {
+     "item": "hn-sign",
+     "props": {
+      "face": "n",
+      "title": "SECURITY CHECKPOINT",
+      "text": "Please present your badge, your card, or yourself for processing."
+     },
+     "room": 3,
+     "solid": false
+    },
+    "41,19": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "case",
+      "uid": "bunker-f2-r4-41-19",
+      "loot": [
+       {
+        "hn": "hn-mug"
+       }
+      ],
+      "name": "Glass case",
+      "text": "A lit glass case with a blank plaque."
+     },
+     "room": 4,
+     "solid": true,
+     "container": true
+    },
+    "37,18": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "shelf",
+      "uid": "bunker-f2-r4-37-18",
+      "loot": [
+       {
+        "hn": "hn-pen"
+       },
+       {
+        "hn": "hn-override"
+       }
+      ],
+      "name": "Equipment rack",
+      "text": "Dusty shelving and a clipboard listing everything that used to be here."
+     },
+     "room": 4,
+     "solid": true,
+     "container": true
+    },
+    "42,5": {
+     "item": "conf-table",
+     "props": {},
+     "room": 5,
+     "solid": true,
+     "covers": [
+      "43,5",
+      "44,5",
+      "45,5",
+      "42,6",
+      "43,6",
+      "44,6",
+      "45,6"
+     ]
+    },
+    "43,5": {
+     "cover": "42,5",
+     "solid": true
+    },
+    "44,5": {
+     "cover": "42,5",
+     "solid": true
+    },
+    "45,5": {
+     "cover": "42,5",
+     "solid": true
+    },
+    "42,6": {
+     "cover": "42,5",
+     "solid": true
+    },
+    "43,6": {
+     "cover": "42,5",
+     "solid": true
+    },
+    "44,6": {
+     "cover": "42,5",
+     "solid": true
+    },
+    "45,6": {
+     "cover": "42,5",
+     "solid": true
+    },
+    "50,5": {
+     "item": "tv",
+     "props": {
+      "face": "w",
+      "text": "ALL UNITS REPORT: NOTHING TO REPORT."
+     },
+     "room": 5,
+     "solid": false
+    },
+    "39,0": {
+     "item": "tv",
+     "props": {
+      "face": "s",
+      "text": "ALL UNITS REPORT: NOTHING TO REPORT."
+     },
+     "room": 5,
+     "solid": false
+    },
+    "42,1": {
+     "item": "hn-terminal",
+     "props": {
+      "text": "PRODUCTIVITY: 0%. TARGET: 110%. STATUS: EXCELLENT."
+     },
+     "room": 5,
+     "solid": true
+    },
+    "54,29": {
+     "item": "bones",
+     "props": {},
+     "room": 6,
+     "solid": false
+    },
+    "56,24": {
+     "item": "bones",
+     "props": {},
+     "room": 6,
+     "solid": false
+    },
+    "59,23": {
+     "item": "bones",
+     "props": {},
+     "room": 6,
+     "solid": false
+    },
+    "57,28": {
+     "item": "bones",
+     "props": {},
+     "room": 6,
+     "solid": false
+    },
+    "55,14": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "s",
+      "short": "MIND THE GAP",
+      "text": "There is no gap. The sign has outlived it."
+     },
+     "room": 7,
+     "solid": false
+    },
+    "54,22": {
+     "item": "hn-safety-sign",
+     "props": {
+      "face": "n",
+      "short": "LIFT WITH YOUR LEGS",
+      "text": "A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these."
+     },
+     "room": 7,
+     "solid": false
+    },
+    "60,21": {
+     "item": "barrel",
+     "props": {},
+     "room": 7,
+     "solid": true
+    },
+    "50,21": {
+     "item": "barrel",
+     "props": {},
+     "room": 7,
+     "solid": true
+    },
+    "16,29": {
+     "item": "hn-health-station",
+     "props": {
+      "charge": 50,
+      "face": "s"
+     },
+     "room": 8,
+     "solid": false
+    },
+    "18,30": {
+     "item": "counter",
+     "props": {},
+     "room": 8,
+     "solid": true
+    },
+    "13,35": {
+     "item": "counter",
+     "props": {},
+     "room": 8,
+     "solid": true
+    },
+    "18,32": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "shelf",
+      "uid": "bunker-f2-r8-18-32",
+      "loot": [
+       {
+        "hn": "hn-insulting-card"
+       }
+      ],
+      "name": "Equipment rack",
+      "text": "A rack of supplies labelled in a language of acronyms."
+     },
+     "room": 8,
+     "solid": true,
+     "container": true
+    },
+    "37,25": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "locker",
+      "uid": "bunker-f2-r9-37-25",
+      "loot": [
+       {
+        "hn": "hn-circuit"
+       }
+      ],
+      "name": "Staff locker",
+      "text": "A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”"
+     },
+     "room": 9,
+     "solid": true,
+     "container": true
+    },
+    "35,22": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "locker",
+      "uid": "bunker-f2-r9-35-22",
+      "loot": [
+       {
+        "hn": "hn-fuel-cell",
+        "n": 2
+       },
+       {
+        "type": "gold",
+        "amount": 30
+       }
+      ],
+      "name": "Locker",
+      "text": "A locker with a sticky note: “DO NOT OPEN. (This means you, Gary.)”"
+     },
+     "room": 9,
+     "solid": true,
+     "container": true
+    },
+    "39,25": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "locker",
+      "uid": "bunker-f2-r9-39-25",
+      "loot": [
+       {
+        "hn": "hn-presentation"
+       }
+      ],
+      "name": "Locker 7",
+      "text": "A dented locker with a name tag nobody could read."
+     },
+     "room": 9,
+     "solid": true,
+     "container": true
+    },
+    "35,25": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "locker",
+      "uid": "bunker-f2-r9-35-25",
+      "loot": [
+       {
+        "hn": "hn-ping-pong"
+       }
+      ],
+      "name": "Supervisor’s locker",
+      "text": "A dented locker with a name tag nobody could read."
+     },
+     "room": 9,
+     "solid": true,
+     "container": true
+    },
+    "27,23": {
+     "item": "filing",
+     "props": {},
+     "room": 10,
+     "solid": true
+    },
+    "30,23": {
+     "item": "filing",
+     "props": {},
+     "room": 10,
+     "solid": true
+    },
+    "27,22": {
+     "item": "hn-terminal",
+     "props": {
+      "text": "PRODUCTIVITY: 0%. TARGET: 110%. STATUS: EXCELLENT."
+     },
+     "room": 10,
+     "solid": true
+    },
+    "1,28": {
+     "item": "toilet",
+     "props": {},
+     "room": 11,
+     "solid": true
+    },
+    "6,28": {
+     "item": "mirror",
+     "props": {
+      "face": "w"
+     },
+     "room": 11,
+     "solid": false
+    },
+    "60,25": {
+     "item": "hn-health-station",
+     "props": {
+      "face": "w",
+      "charge": 44
+     },
+     "solid": false
+    },
+    "47,35": {
+     "item": "hn-health-station",
+     "props": {
+      "face": "n",
+      "charge": 54
+     },
+     "solid": false
+    },
+    "26,24": {
+     "enemy": "hn-monoid",
+     "props": {},
+     "room": 10,
+     "cost": 4,
+     "lib": "hn-monoid",
+     "solid": false
+    },
+    "32,23": {
+     "enemy": "hn-monoid",
+     "props": {},
+     "room": 10,
+     "cost": 4,
+     "lib": "hn-monoid",
+     "solid": false
+    },
+    "28,26": {
+     "enemy": "hn-monoid",
+     "props": {},
+     "room": 10,
+     "cost": 4,
+     "lib": "hn-monoid",
+     "solid": false
+    },
+    "30,25": {
+     "enemy": "hn-monoid",
+     "props": {},
+     "room": 10,
+     "cost": 4,
+     "lib": "hn-monoid",
+     "solid": false
+    },
+    "50,23": {
+     "item": "beam-emitter",
+     "props": {
+      "face": "s"
+     },
+     "tag": "bunker_f2_t1_b",
+     "solid": false
+    },
+    "50,27": {
+     "item": "beam-emitter",
+     "props": {
+      "face": "n"
+     },
+     "tag": "bunker_f2_t1_b",
+     "solid": false
+    },
+    "39,11": {
+     "item": "dart-emitter",
+     "props": {
+      "face": "e"
+     },
+     "tag": "bunker_f2_t2_d",
+     "solid": false
+    },
+    "41,11": {
+     "item": "dart-emitter",
+     "props": {
+      "face": "w"
+     },
+     "tag": "bunker_f2_t2_d",
+     "solid": false
+    },
+    "38,13": {
+     "item": "hn-trap-light",
+     "props": {
+      "face": "s",
+      "text": "TRAP. Active security measures ahead. Thank you for your understanding."
+     },
+     "solid": false
+    },
+    "53,28": {
+     "item": "hn-terminal",
+     "props": {
+      "flag": "hnG_bunker_f2_trapsoff",
+      "title": "facilities terminal",
+      "difficulty": 0,
+      "text": "FACILITIES · COURTESY SYSTEMS (DARTS, BEAMS, FLOOR SAFETY): ARMED. It wants a facilities password, or an argument.",
+      "doneText": "COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”",
+      "successText": "Courtesy systems on this floor: OFF."
+     },
+     "solid": true
+    },
+    "4,32": {
+     "item": "hn-cache",
+     "props": {
+      "kind": "corpse",
+      "uid": "bunker-f2-r11-4-32",
+      "loot": [
+       {
+        "hn": "hn-insulting-card"
+       }
+      ],
+      "trap": "card",
+      "name": "Somebody who got this far",
+      "text": "A mummified scout with a map of this floor, half of it scratched out. The other half is wrong.",
+      "trapHint": "An envelope taped inside the door, thick and suspicious. “For whoever opens this.”"
+     },
+     "room": 11,
+     "container": true,
+     "solid": true
+    },
+    "21,35": {
+     "item": "hn-poster",
+     "props": {
+      "face": "n",
+      "title": "THE ENEMY IS LISTENING",
+      "text": "A huge ear in a helmet. Someone has drawn an earring on it."
+     },
+     "room": 0,
+     "solid": false
+    },
+    "20,29": {
+     "item": "crate",
+     "props": {},
+     "room": 0,
+     "solid": true
+    },
+    "20,34": {
+     "item": "barrel",
+     "props": {},
+     "room": 0,
+     "solid": true
+    },
+    "26,32": {
+     "item": "bones",
+     "props": {},
+     "room": 0,
+     "solid": false
+    },
+    "36,31": {
+     "item": "bones",
+     "props": {},
+     "room": 1,
+     "solid": false
+    },
+    "37,30": {
+     "item": "papers",
+     "props": {},
+     "room": 1,
+     "solid": false
+    },
+    "52,33": {
+     "item": "hn-poster",
+     "props": {
+      "face": "w",
+      "title": "VICTORY IS NEAR",
+      "text": "A soldier pointing at the horizon. The horizon is on fire."
+     },
+     "room": 2,
+     "solid": false
+    },
+    "44,34": {
+     "item": "barrel",
+     "props": {},
+     "room": 2,
+     "solid": true
+    },
+    "41,28": {
+     "item": "crate",
+     "props": {},
+     "room": 3,
+     "solid": true
+    },
+    "39,20": {
+     "item": "hn-poster",
+     "props": {
+      "face": "n",
+      "title": "REPORT FOR DUTY",
+      "text": "A smiling robot in a cap. “Your service will be remembered by someone.”"
+     },
+     "room": 4,
+     "solid": false
+    },
+    "48,0": {
+     "item": "hn-poster",
+     "props": {
+      "face": "s",
+      "title": "VICTORY IS NEAR",
+      "text": "A soldier pointing at the horizon. The horizon is on fire."
+     },
+     "room": 5,
+     "solid": false
+    },
+    "50,6": {
+     "item": "hn-poster",
+     "props": {
+      "face": "w",
+      "title": "REPORT FOR DUTY",
+      "text": "A smiling robot in a cap. “Your service will be remembered by someone.”"
+     },
+     "room": 5,
+     "solid": false
+    },
+    "49,8": {
+     "item": "crate",
+     "props": {},
+     "room": 5,
+     "solid": true
+    },
+    "39,8": {
+     "item": "barrel",
+     "props": {},
+     "room": 5,
+     "solid": true
+    },
+    "46,1": {
+     "item": "papers",
+     "props": {},
+     "room": 5,
+     "solid": false
+    },
+    "56,31": {
+     "item": "hn-poster",
+     "props": {
+      "face": "n",
+      "title": "VICTORY IS NEAR",
+      "text": "A soldier pointing at the horizon. The horizon is on fire."
+     },
+     "room": 6,
+     "solid": false
+    },
+    "55,23": {
+     "item": "crate",
+     "props": {},
+     "room": 6,
+     "solid": true
+    },
+    "58,30": {
+     "item": "bones",
+     "props": {},
+     "room": 6,
+     "solid": false
+    },
+    "61,18": {
+     "item": "hn-poster",
+     "props": {
+      "face": "w",
+      "title": "VICTORY IS NEAR",
+      "text": "A soldier pointing at the horizon. The horizon is on fire."
+     },
+     "room": 7,
+     "solid": false
+    },
+    "50,17": {
+     "item": "crate",
+     "props": {},
+     "room": 7,
+     "solid": true
+    },
+    "50,15": {
+     "item": "barrel",
+     "props": {},
+     "room": 7,
+     "solid": true
+    },
+    "56,17": {
+     "item": "bones",
+     "props": {},
+     "room": 7,
+     "solid": false
+    },
+    "11,33": {
+     "item": "hn-poster",
+     "props": {
+      "face": "e",
+      "title": "REPORT FOR DUTY",
+      "text": "A smiling robot in a cap. “Your service will be remembered by someone.”"
+     },
+     "room": 8,
+     "solid": false
+    },
+    "13,30": {
+     "item": "bones",
+     "props": {},
+     "room": 8,
+     "solid": false
+    },
+    "40,22": {
+     "item": "hn-poster",
+     "props": {
+      "face": "w",
+      "title": "VICTORY IS NEAR",
+      "text": "A soldier pointing at the horizon. The horizon is on fire."
+     },
+     "room": 9,
+     "solid": false
+    },
+    "39,23": {
+     "item": "crate",
+     "props": {},
+     "room": 9,
+     "solid": true
+    },
+    "25,26": {
+     "item": "hn-poster",
+     "props": {
+      "face": "e",
+      "title": "VICTORY IS NEAR",
+      "text": "A soldier pointing at the horizon. The horizon is on fire."
+     },
+     "room": 10,
+     "solid": false
+    },
+    "33,26": {
+     "item": "crate",
+     "props": {},
+     "room": 10,
+     "solid": true
+    },
+    "30,24": {
+     "item": "bones",
+     "props": {},
+     "room": 10,
+     "solid": false
+    },
+    "29,24": {
+     "item": "papers",
+     "props": {},
+     "room": 10,
+     "solid": false
+    },
+    "8,29": {
+     "item": "hn-poster",
+     "props": {
+      "face": "s",
+      "title": "REPORT FOR DUTY",
+      "text": "A smiling robot in a cap. “Your service will be remembered by someone.”"
+     },
+     "solid": false
+    }
+   },
+   "traps": [
+    {
+     "trigger": {
+      "type": "zone",
+      "tag": "bunker_f2_r11_amb"
+     },
+     "once": true,
+     "effects": [
+      {
+       "type": "message",
+       "text": "Something drops from the ceiling. Then several somethings.",
+       "kind": "warn"
+      },
+      {
+       "type": "spawn",
+       "tag": "roachSpawn",
+       "enemy": "hn-roach",
+       "count": 2,
+       "delay": 0.5
+      }
+     ],
+     "room": 11,
+     "cost": 2
+    },
+    {
+     "trigger": {
+      "type": "beam",
+      "tag": "bunker_f2_t1_b"
+     },
+     "once": true,
+     "gen": "switch",
+     "lib": "alarm-beam",
+     "effects": [
+      {
+       "type": "alarm",
+       "radius": 900,
+       "text": "INTRUDER ALERT. Please remain calm and stationary."
+      },
+      {
+       "type": "spawn",
+       "tag": "bunker_f2_t1_s",
+       "enemy": "hn-knife",
+       "count": 2,
+       "delay": 1.5
+      }
+     ]
+    },
+    {
+     "trigger": {
+      "type": "plate",
+      "tag": "bunker_f2_t2_p"
+     },
+     "once": false,
+     "cooldown": 2.5,
+     "gen": "switch",
+     "lib": "courtesy-darts",
+     "effects": [
+      {
+       "type": "darts",
+       "tag": "bunker_f2_t2_d",
+       "volleys": 2,
+       "interval": 0.3,
+       "damage": 5
+      }
+     ]
+    }
+   ],
+   "slots": [
+    {
+     "id": "f2.lockL5.panel",
+     "pool": "panels.switch",
+     "target": {
+      "obj": "40,31",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "the door release"
+     }
+    },
+    {
+     "id": "f2.lockL6.panel",
+     "pool": "panels.hack",
+     "target": {
+      "obj": "43,23",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "security clearance: hack the panel"
+     }
+    },
+    {
+     "id": "f2.lockL7.panel",
+     "pool": "panels.keycard",
+     "target": {
+      "obj": "41,13",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "Yellow card"
+     }
+    },
+    {
+     "id": "f2.lockL8.panel",
+     "pool": "panels.hack",
+     "target": {
+      "obj": "34,23",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "security clearance: hack the panel"
+     }
+    },
+    {
+     "id": "f2.swL5.text",
+     "pool": "terminals.switch",
+     "target": {
+      "obj": "18,35",
+      "prop": "text"
+     },
+     "vars": {
+      "need": "the door release"
+     }
+    },
+    {
+     "id": "f2.swL5.done",
+     "pool": "terminals.switchDone",
+     "target": {
+      "obj": "18,35",
+      "prop": "doneText"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c37-22.name",
+     "pool": "containers.locker.name",
+     "target": {
+      "obj": "37,22",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c37-22.text",
+     "pool": "containers.locker.text",
+     "target": {
+      "obj": "37,22",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.keyL7.text",
+     "pool": "keys.card",
+     "target": {
+      "loot": "37,22",
+      "prop": "text"
+     },
+     "vars": {
+      "card": "Yellow card",
+      "opens": "the way to the duty log"
+     }
+    },
+    {
+     "id": "f2.memoL7.title",
+     "pool": "memos.title",
+     "target": {
+      "obj": "36,28",
+      "prop": "title"
+     },
+     "vars": {
+      "code": "193",
+      "container": "locker",
+      "room": "{room:9}"
+     }
+    },
+    {
+     "id": "f2.memoL7.text",
+     "pool": "memos.code",
+     "target": {
+      "obj": "36,28",
+      "prop": "text"
+     },
+     "vars": {
+      "code": "193",
+      "container": "locker",
+      "room": "{room:9}"
+     }
+    },
+    {
+     "id": "f2.memoL7.clue",
+     "pool": "memos.clue",
+     "target": {
+      "obj": "36,28",
+      "prop": "clue"
+     },
+     "vars": {
+      "code": "193",
+      "container": "locker",
+      "room": "{room:9}"
+     }
+    },
+    {
+     "id": "f2.goal.name",
+     "pool": "goalFixtures.recover.name",
+     "target": {
+      "obj": "49,1",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.goal.text",
+     "pool": "goalFixtures.recover.text",
+     "target": {
+      "obj": "49,1",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o25-35",
+     "pool": "posters.stairs",
+     "target": {
+      "obj": "25,35",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o39-29",
+     "pool": "crates.label",
+     "target": {
+      "obj": "39,29",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c39-29.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "39,29",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c39-29.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "39,29",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o51-34",
+     "pool": "crates.label",
+     "target": {
+      "obj": "51,34",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c51-34.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "51,34",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c51-34.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "51,34",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o46-30",
+     "pool": "crates.label",
+     "target": {
+      "obj": "46,30",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c46-30.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "46,30",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c46-30.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "46,30",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o51-30",
+     "pool": "crates.label",
+     "target": {
+      "obj": "51,30",
+      "prop": "label"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c51-30.name",
+     "pool": "containers.crate.name",
+     "target": {
+      "obj": "51,30",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c51-30.text",
+     "pool": "containers.crate.text",
+     "target": {
+      "obj": "51,30",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o46-29",
+     "pool": "signs.checkpoint",
+     "target": {
+      "obj": "46,29",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c41-19.name",
+     "pool": "containers.case.name",
+     "target": {
+      "obj": "41,19",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c41-19.text",
+     "pool": "containers.case.text",
+     "target": {
+      "obj": "41,19",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c37-18.name",
+     "pool": "containers.shelf.name",
+     "target": {
+      "obj": "37,18",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c37-18.text",
+     "pool": "containers.shelf.text",
+     "target": {
+      "obj": "37,18",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o50-5",
+     "pool": "screens.command",
+     "target": {
+      "obj": "50,5",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o39-0",
+     "pool": "screens.command",
+     "target": {
+      "obj": "39,0",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o42-1",
+     "pool": "terminals.decor",
+     "target": {
+      "obj": "42,1",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o55-14",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "55,14",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o54-22",
+     "pool": "signs.safety",
+     "target": {
+      "obj": "54,22",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c18-32.name",
+     "pool": "containers.shelf.name",
+     "target": {
+      "obj": "18,32",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c18-32.text",
+     "pool": "containers.shelf.text",
+     "target": {
+      "obj": "18,32",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c37-25.name",
+     "pool": "containers.locker.name",
+     "target": {
+      "obj": "37,25",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c37-25.text",
+     "pool": "containers.locker.text",
+     "target": {
+      "obj": "37,25",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c35-22.name",
+     "pool": "containers.locker.name",
+     "target": {
+      "obj": "35,22",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c35-22.text",
+     "pool": "containers.locker.text",
+     "target": {
+      "obj": "35,22",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c39-25.name",
+     "pool": "containers.locker.name",
+     "target": {
+      "obj": "39,25",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c39-25.text",
+     "pool": "containers.locker.text",
+     "target": {
+      "obj": "39,25",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c35-25.name",
+     "pool": "containers.locker.name",
+     "target": {
+      "obj": "35,25",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c35-25.text",
+     "pool": "containers.locker.text",
+     "target": {
+      "obj": "35,25",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o27-22",
+     "pool": "terminals.decor",
+     "target": {
+      "obj": "27,22",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.tl38-13",
+     "pool": "traplights",
+     "target": {
+      "obj": "38,13",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.trapsoff.text",
+     "pool": "terminals.traps",
+     "target": {
+      "obj": "53,28",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.trapsoff.done",
+     "pool": "terminals.trapsDone",
+     "target": {
+      "obj": "53,28",
+      "prop": "doneText"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.trapsoff.ok",
+     "pool": "terminals.trapsOk",
+     "target": {
+      "obj": "53,28",
+      "prop": "successText"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.c4-32.name",
+     "pool": "containers.corpse.name",
+     "target": {
+      "obj": "4,32",
+      "prop": "name"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.corpse4,32",
+     "pool": "corpses",
+     "target": {
+      "obj": "4,32",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.trap4,32",
+     "pool": "trapHints.card",
+     "target": {
+      "obj": "4,32",
+      "prop": "trapHint"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o21-35",
+     "pool": "posters.military",
+     "target": {
+      "obj": "21,35",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o52-33",
+     "pool": "posters.military",
+     "target": {
+      "obj": "52,33",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o39-20",
+     "pool": "posters.military",
+     "target": {
+      "obj": "39,20",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o48-0",
+     "pool": "posters.military",
+     "target": {
+      "obj": "48,0",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o50-6",
+     "pool": "posters.military",
+     "target": {
+      "obj": "50,6",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o56-31",
+     "pool": "posters.military",
+     "target": {
+      "obj": "56,31",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o61-18",
+     "pool": "posters.military",
+     "target": {
+      "obj": "61,18",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o11-33",
+     "pool": "posters.military",
+     "target": {
+      "obj": "11,33",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o40-22",
+     "pool": "posters.military",
+     "target": {
+      "obj": "40,22",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.o25-26",
+     "pool": "posters.military",
+     "target": {
+      "obj": "25,26",
+      "prop": "text"
+     },
+     "vars": {}
+    },
+    {
+     "id": "f2.cp8-29",
+     "pool": "posters.military",
+     "target": {
+      "obj": "8,29",
+      "prop": "text"
+     },
+     "vars": {}
+    }
+   ],
+   "reserved": [
+    "28,30",
+    "26,30",
+    "32,30",
+    "30,30",
+    "41,32",
+    "39,32",
+    "44,32",
+    "42,32",
+    "44,28",
+    "44,30",
+    "42,22",
+    "42,24",
+    "42,19",
+    "42,21",
+    "40,12",
+    "40,14",
+    "40,8",
+    "40,10",
+    "48,25",
+    "46,25",
+    "53,25",
+    "51,25",
+    "58,21",
+    "58,23",
+    "20,31",
+    "18,31",
+    "41,24",
+    "39,24",
+    "35,24",
+    "33,24",
+    "12,30",
+    "10,30",
+    "7,30",
+    "5,30",
+    "23,33",
+    "24,34",
+    "23,35",
+    "22,34",
+    "39,31",
+    "43,24",
+    "41,14",
+    "35,23",
+    "25,34",
+    "46,28",
+    "49,5",
+    "39,1",
+    "55,15",
+    "54,21",
+    "16,30",
+    "5,28",
+    "59,25",
+    "47,34"
+   ],
+   "startAt": [
+    23,
+    34
+   ],
+   "encounter": {
+    "budget": 18,
+    "spent": 18,
+    "pieces": [
+     {
+      "kind": "meeting",
+      "room": 10,
+      "cost": 16
+     },
+     {
+      "kind": "vents",
+      "room": 11,
+      "cost": 2
+     }
+    ]
+   },
+   "trapsOff": "hnG_bunker_f2_trapsoff",
+   "containerTraps": 1,
+   "trapCount": 3,
+   "treasure": {
+    "target": 850,
+    "spent": 856
+   },
+   "name": "Guard Level",
+   "intro": "Ash on the floor, pipes overhead, and every hatch painted with a number.",
+   "stairsLocked": "Locked. The reader wants the a card.",
+   "check": {
+    "keysOnly": 381,
+    "sure": 553,
+    "all": 553
+   }
+  }
+ ],
+ "locks": [
+  {
+   "id": "L1",
+   "floor": 1,
+   "kind": "switch",
+   "critical": true,
+   "edge": 1,
+   "from": 1,
+   "to": 2,
+   "keyKind": "switch",
+   "flag": "hnG_bunker_f1_l1",
+   "hackFlag": "hnG_bunker_f1_l1_hack",
+   "keyRoom": 9,
+   "needText": "the door release",
+   "doorAt": [
+    28,
+    36
+   ]
+  },
+  {
+   "id": "L2",
+   "floor": 1,
+   "kind": "switch",
+   "critical": true,
+   "edge": 3,
+   "from": 3,
+   "to": 4,
+   "keyKind": "switch",
+   "flag": "hnG_bunker_f1_l2",
+   "hackFlag": "hnG_bunker_f1_l2_hack",
+   "keyRoom": 3,
+   "needText": "the door release",
+   "doorAt": [
+    15,
+    20
+   ]
+  },
+  {
+   "id": "L3",
+   "floor": 1,
+   "kind": "keycard",
+   "tier": "blue",
+   "critical": true,
+   "edge": null,
+   "stairs": true,
+   "from": 5,
+   "to": null,
+   "keyKind": "card",
+   "flag": "hnG_bunker_blue",
+   "hackFlag": "hnG_bunker_f1_l3_hack",
+   "keyRoom": 10,
+   "needText": "Blue card",
+   "keyAt": "58,35"
+  },
+  {
+   "id": "L4",
+   "floor": 1,
+   "kind": "hack",
+   "critical": false,
+   "edge": 7,
+   "from": 2,
+   "to": 8,
+   "keyKind": "none",
+   "hackFlag": "hnG_bunker_f1_l4_hack",
+   "flag": "hnG_bunker_f1_l4_hack",
+   "needText": "security clearance: hack the panel",
+   "doorAt": [
+    15,
+    35
+   ]
+  },
+  {
+   "id": "L5",
+   "floor": 2,
+   "kind": "switch",
+   "critical": true,
+   "edge": 1,
+   "from": 1,
+   "to": 2,
+   "keyKind": "switch",
+   "flag": "hnG_bunker_f2_l5",
+   "hackFlag": "hnG_bunker_f2_l5_hack",
+   "keyRoom": 8,
+   "needText": "the door release",
+   "doorAt": [
+    40,
+    32
+   ]
+  },
+  {
+   "id": "L6",
+   "floor": 2,
+   "kind": "hack",
+   "critical": true,
+   "edge": 3,
+   "from": 3,
+   "to": 4,
+   "keyKind": "none",
+   "hackFlag": "hnG_bunker_f2_l6_hack",
+   "flag": "hnG_bunker_f2_l6_hack",
+   "needText": "security clearance: hack the panel",
+   "doorAt": [
+    42,
+    23
+   ]
+  },
+  {
+   "id": "L7",
+   "floor": 2,
+   "kind": "keycard",
+   "tier": "yellow",
+   "critical": true,
+   "edge": 4,
+   "from": 4,
+   "to": 5,
+   "goal": true,
+   "keyKind": "card",
+   "flag": "hnG_bunker_yellow",
+   "hackFlag": "hnG_bunker_f2_l7_hack",
+   "keyRoom": 9,
+   "code": "193",
+   "codeFlag": "hnG_bunker_f2_codel7",
+   "clueRoom": 1,
+   "needText": "Yellow card",
+   "doorAt": [
+    40,
+    13
+   ],
+   "keyAt": "37,22"
+  },
+  {
+   "id": "L8",
+   "floor": 2,
+   "kind": "hack",
+   "critical": false,
+   "edge": 9,
+   "from": 9,
+   "to": 10,
+   "keyKind": "none",
+   "hackFlag": "hnG_bunker_f2_l8_hack",
+   "flag": "hnG_bunker_f2_l8_hack",
+   "needText": "security clearance: hack the panel",
+   "doorAt": [
+    34,
+    24
+   ]
+  }
+ ],
+ "doneFlag": "hnG_bunker_done",
+ "validation": {
+  "ok": true,
+  "problems": [
+   {
+    "level": "info",
+    "text": "Floor 2: the goal needs a hack on the way (a panel anyone can beat by retrying).",
+    "where": null
+   }
+  ]
+ }
+}

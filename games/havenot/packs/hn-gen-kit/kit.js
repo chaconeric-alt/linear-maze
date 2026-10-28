@@ -4,7 +4,7 @@
  *
  *   HN.addLocation(pin)     a new pin on the near-area map (and in HN.START_LOCS, so new runs see it)
  *   HN.genSite(spec)        a generated installation's site.js: { slug, replaces, levels, pin }
- *                           With `replaces` it takes over that pin (a stub's): same place, new level, new words.
+ *                           With `replaces` it takes over that pin (a stub's): same place and label, new level, new words.
  *   level.hn.gen            on every generated floor: { slug, trapsOff, done, roaches }
  *     trapsOff              a flag: once set (the floor's facilities terminal), traps marked gen: 'switch' stop
  *     done                  the installation's goal flag: a toast and a line in the Expedition Ledger
@@ -44,7 +44,7 @@
     if (spec.replaces && HN.loc(spec.replaces)) {
       const l = HN.loc(spec.replaces);
       delete l.stub;
-      Object.assign(l, pin, { id: l.id, x: pin.x == null ? l.x : pin.x, y: pin.y == null ? l.y : pin.y, art: l.art, state: l.state });
+      Object.assign(l, pin, { id: l.id, kind: l.kind || pin.kind, x: pin.x == null ? l.x : pin.x, y: pin.y == null ? l.y : pin.y, art: l.art, state: l.state });
       return l;
     }
     if (pin.x == null || pin.y == null) [pin.x, pin.y] = freeSpot(spec.slug);
