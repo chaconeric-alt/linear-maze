@@ -45,7 +45,10 @@ A brief says what to make. On the command line it's the options; in a file it's 
 }
 ```
 
-- `type`: from the library's types (`--types`). `tl`: Threat Level 1–6. `size`: small, standard or large.
+- `type`: from the library's types (`--types`). `tl`: Threat Level 1–10 (budgets past 6 grow by 1.4 a level). `size`: small, standard or large.
+- `tlStep` (CLI `--tl-step`): raise the Threat Level by one every that many floors; `tl` is the first floor's. Each floor's
+  monsters, traps, treasure and hacks follow its own level, and the level file says it (`hn.threat`).
+- `anyFloors` (CLI `--any-floors`): take `floors` as given, up to 10, instead of the type's own range.
 - `story` sets the concept; anything left out comes from the text pools.
 - `words` fixes any text slot by its id. The ids are in the pack's `generation.json` under `words`.
 
@@ -93,6 +96,12 @@ books, never placed) and a `ref` to the page it comes from. `--library` checks t
 built entry that names a monster, item or terrain the game doesn't have is an error.
 
 To add something new to the generator's choices, build it in the game first, then mark its entry built.
+
+## In the game
+
+HaveNot runs the generator in the game too: the `hn-ruins` pack loads `editor/gen/` and the library and builds a
+fresh Bunker and three Installation-Ruins when a run starts (`games/havenot/packs/hn-ruins/ruins.js`). Their briefs
+are saved with the run, so Continue rebuilds the same ones.
 
 ## What isn't built yet
 

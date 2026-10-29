@@ -47,11 +47,16 @@
     const s = HN.st(g);
     const P0 = g.player;
     P0.weapons = []; P0.equip = {}; P0.bag = []; P0.statuses = []; P0.buffs = [];
-    HN.createCharacter(g, { name: 'Sim', origin: job.origin, gear: job.gear, kit: 'hack', mutations: job.mutations || [], seed: 1 });
+    HN.createCharacter(g, { name: 'Sim', origin: job.origin, gear: job.gear, kit: job.kit || 'hack', mutations: job.mutations || [], seed: 1, noRuins: true });
     if (job.weapons) { P0.weapons = job.weapons.slice(); P0.weaponIdx = 0; }
     if (job.armor) { P0.equip = {}; for (const a of job.armor) P0.equipArmor(a); }
     if (job.ammo) Object.assign(P0.ammo, job.ammo);
     s.level = job.level || 1;
+    // improvements picked on the way up: { id: count }
+    s.boons = Object.assign({}, job.boons || {});
+    for (const [id, n] of Object.entries(s.boons)) for (let i = 0; i < n; i++) if (HN.IMPROVEMENTS[id].apply) HN.IMPROVEMENTS[id].apply(s);
+    s.kitLeft = HN.kitFor(s);
+    if (s.kitLeft.med && !P0.gadgets.includes('hn-medkit')) P0.gadgets.push('hn-medkit');
     P0.statsDirty = true;
     g.loadLevel('sim-' + job.threat, P0.serialize(), false, {});
     g.state = 'play';
@@ -68,13 +73,16 @@
     g.enemies = [];
     g.timers = [];
     SIM.died = false;
-    // spawn the group in the east half
+    // spawn the group in the east half; job.waves: more groups, each when the last is down (a floor's fights
+    // back to back, with no rest between)
     const spawned = [];
-    job.group.forEach((id, i) => {
+    const waves = (job.waves || []).slice();
+    const spawnGroup = (group) => group.forEach((id, i) => {
       const x = (19 + (i % 3) * 2.2 + Math.random()) * T, y = (6 + Math.floor(i / 3) * 3.2 + Math.random() * 2) * T;
-      const e = g.spawnEnemy(id, x, y, { aggro: true });
+      const e = g.spawnEnemy(id, x, y, job.hpMul ? { aggro: true, hpMul: job.hpMul } : { aggro: true });
       if (e) { e.aggro = true; spawned.push(e); }
     });
+    spawnGroup(job.group);
     // the princess needs waking
     for (const e of spawned) if (e.def.id === 'hn-princess') { e.mem.awake = true; e.mem.mood = 'regal'; }
     const maxHp = P.stats().maxHp;
@@ -88,7 +96,11 @@
     const solid = (x, y) => L.solidAt(Math.floor(x / T), Math.floor(y / T));
     const keys = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
     while (t < job.maxT) {
-      const alive = g.enemies.filter((e) => !e.dead && !(e.def.id === 'hn-cocoon'));
+      let alive = g.enemies.filter((e) => !e.dead && !(e.def.id === 'hn-cocoon'));
+      if (!alive.length && waves.length && !SIM.died) {
+        spawnGroup(waves.shift());
+        alive = g.enemies.filter((e) => !e.dead && !(e.def.id === 'hn-cocoon'));
+      }
       if (!alive.length || SIM.died) break;
       // target: nearest visible
       let best = null, bd = 1e9;
@@ -146,6 +158,9 @@
       // dash out of a pile-up
       const close = alive.filter((o) => Math.hypot(o.x - P.x, o.y - P.y) < 42).length;
       if (close && P.dashCd <= 0 && Math.random() < job.dashSkill) I.pressed.add('Space');
+      // a med-kit charge when it gets bad, and a swing at anything in reach
+      if (s.kitLeft.med > 0 && P.hp < P.stats().maxHp * 0.35) LM.get('gadgets', 'hn-medkit').use(g, P);
+      if (job.melee !== false && Math.hypot(best.x - P.x, best.y - P.y) < 34 + best.r) HN.melee(g, P);
       const hp0 = alive.reduce((a, o) => a + o.hp, 0);
       g.update(dt, dt);
       I.endFrame();

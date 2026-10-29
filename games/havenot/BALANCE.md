@@ -63,6 +63,48 @@ A human at Level 2 (115 health) with a Soot-Coat, against the same groups (Threa
 - With the Egg-Mask flattery (her field drops and she takes half again as much while she preens), an Egg Grenade
   or two, the med-bay and the pillars in her hall, a careful Level 2 or 3 player should beat her.
 
+## Levels: what a level gives, and the level-up improvements
+
+The rules are in `packs/hn-rules/levels.js`. A level is +15 max health and +2 melee damage, plus one improvement
+picked from four offered at random (`HN.IMPROVEMENTS`, plain data). The target: a Level N character with
+Level N+1 gear has a fair but dangerous time on a Threat N+1 floor, and no improvement is the obvious pick.
+
+The sim now also swings at anything in reach, uses a med-kit charge below 35% health, and can fight a **floor**:
+three groups back to back with no rest between. That is what a floor is in play, and one group at a time hides the
+danger (a Level 2 character with Level 3 gear wins any single Threat 3 group 95–100% of the time, with 44–93% of
+their health left).
+
+Whole floors, 30 runs each (hacker kit, so no med-kit unless an improvement gives one):
+
+| Character | Floor | Win | HP left |
+|---|---|---|---|
+| Level 1, Arc Carbine + vest (Level 2 gear) | Threat 2: six Alphas, four Eggbots, the Slop-Tread and two Alphas | 100% | 78% |
+| Level 1, Plasma Musket + Coltron (Level 2 gear) | Threat 2, the same | 80% | 40% |
+| Level 2, Soot-Line Carbine + Soot-Coat (Level 3 gear) | Threat 3: two Gammas, the Grease Monkey, six Eggbots | 60% | 22% |
+| Level 2, Fouler + Soot-Coat (Level 3 gear) | Threat 3, the same | 70% | 24% |
+
+Each improvement on its own, on the two Level 2 builds (win rate averaged over both; with 30 runs a number moves
+about 9 points from noise):
+
+| Improvement | Floor win (first try) | After tuning |
+|---|---|---|
+| none | 65% | 65% |
+| Hard to kill: +20 max health | 88% | 88% |
+| Thick hide: damage reduction | 74% (8%) | 90% (12%) |
+| Quick hands: reload and overheat | 90% (25%) | 79% (20%) |
+| Quick on your feet: +12 speed | 84% | 84% |
+| Slippery: dash recovers sooner | 75% (0.2 s) | 83% (0.25 s) |
+| Brawler: melee damage | 69% (+5) | 82% (+8) |
+| Field medic: +1 med-kit charge a mission | 99% | 99% |
+| Sharp senses, Tinker | no change in a fight | (they pay off outside fights) |
+
+- One level and one improvement turn a coin-flip floor into a fair one: 78–90% for every pick but one.
+- **Field medic** tops a single floor because the sim spends its one extra charge there. A mission is 3–10 floors,
+  and the charge is spent once while the others work on every floor; for a character who took the med-kit it is a
+  fourth charge, not the first. Watch it in play: if it is still the only pick people make, make its charge heal
+  less or only every other mission.
+- Sharp senses and Tinker do nothing in a fight on purpose: they find loot and open doors, which a level needs too.
+
 ## Running it again
 
 From this folder, with Playwright's Chromium available (`NODE_PATH` pointing at the global node modules):
@@ -73,3 +115,9 @@ From this folder, with Playwright's Chromium available (`NODE_PATH` pointing at 
 
 `run.js` opens four pages of the game, `page.js` takes over the game loop and fights each job `trials` times.
 About two thousand fights take a minute and a half.
+
+    python3 mkjobs.py levels 30     # per-level numbers, each improvement, and whole floors
+
+Without Playwright: serve the repository, open the game in a few browser tabs, load `browser-run.js` in each
+and call `SIMRUN.start('/games/havenot/tools/balance/jobs-levels.json', part, parts)`; `SIMRUN.summary()` gives the
+same numbers as `run.js`.

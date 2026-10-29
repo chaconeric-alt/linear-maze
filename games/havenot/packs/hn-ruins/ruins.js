@@ -110,8 +110,11 @@
   const createCharacter = HN.createCharacter;
   HN.createCharacter = function (game, choice) {
     const s = HN.st(game);
-    s.ruins = HN.rollRuins((choice.seed ^ Date.now()) >>> 0);
-    HN.buildRuins(s.ruins);
+    // (the balance sim makes a character every trial and has no use for ruins)
+    if (!choice.noRuins) {
+      s.ruins = HN.rollRuins((choice.seed ^ Date.now()) >>> 0);
+      HN.buildRuins(s.ruins);
+    }
     return createCharacter.call(this, game, choice);
   };
 

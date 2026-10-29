@@ -1,14 +1,15 @@
 # Play-testing generated installations
 
-The first one in the game is **the Bunker** (Installation B): two floors at Threat Level 1, generated from
-`briefs/bunker.json`. It replaces the stub, so it's on the near-area map from the start.
+Every new run generates **the Bunker** (Installation B: two floors at Threat Level 1, the story from
+`briefs/bunker.json`) and **Installation-Ruins 1–3** (3–10 floors, the Threat Level rising as you go down),
+each with a fresh seed (pack `hn-ruins`). They're on the near-area map from the start.
 
 ## Playing it
 
 - Serve the repository and open `engine/index.html?game=havenot`, or open a packaged `havenot.html`
   (`node tools/package.mjs havenot`).
-- Make a scavenger, leave home, pick **The Bunker** on the map. The goal is on floor 2: recover the duty log.
-- The pack's `REPORT.md` has every lock and key, if you get stuck or want to check a route.
+- Make a scavenger, leave home, pick **The Bunker** or a ruin on the map. The Bunker's goal is on floor 2: recover the duty log.
+- To see a run's locks and keys, preview the same brief from the CLI (`--dry` prints the report).
 
 ## What to look for
 
@@ -24,7 +25,5 @@ The first one in the game is **the Bunker** (Installation B): two floors at Thre
 6. **Rooms.** Do the rooms look like what they're called? Any furniture in the way, or a spot you got stuck in?
 7. **Words.** Names, memos, terminals, posters: do they sound like HaveNot?
 
-Anything that's wrong with this installation in particular, the fix is usually a different seed (change
-`seed` in the brief and run `node tools/generate.mjs havenot --brief bunker --add`; `--dry` previews without
-writing). Anything that's wrong with every installation is a library or generator fix: say what you saw, and
+Anything that's wrong with one installation in particular is usually its seed: the next run rolls new ones. Anything that's wrong with every installation is a library or generator fix: say what you saw, and
 which floor and room.

@@ -22,7 +22,7 @@
   const lore = (t) => h('p', { class: 'lore' }, t);
   const say = (game, e, text, color) => game.particles.add({ type: 'text', x: e.x, y: e.y - e.r - 10, vy: -12, drag: 1, life: 2.6, text, color: color || '#ff9ad8', size: 7 });
 
-  HN.INSTALLATIONS.greasy = { name: 'The Greasy Bolt Hole', threat: 3, done: 'hnPrincessDone', doneText: 'a Princess has fallen, and the Egg doctrine has lost its loudest voice' };
+  HN.INSTALLATIONS.greasy = { name: 'The Greasy Bolt Hole', threat: 3, done: 'hnPrincessDone', bossName: 'Princess Eggbot', doneText: 'a Princess has fallen, and the Egg doctrine has lost its loudest voice' };
 
   // ------------------------------------------------------------ who talks
   const speakers = {

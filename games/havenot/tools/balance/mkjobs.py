@@ -1,5 +1,7 @@
-# HaveNot balance job lists: python3 mkjobs.py start|l2 TRIALS  ->  jobs-start.json / jobs-l2.json
-# start: the six starting builds against Threat 1-3 groups; l2: Level 2 characters with Level 3 gear.
+# HaveNot balance job lists: python3 mkjobs.py start|l2|levels TRIALS  ->  jobs-<which>.json
+# start: the six starting builds against Threat 1-3 groups; l2: Level 2 characters with Level 3 gear;
+# levels: a Level N character with Level N+1 gear on Threat N+1 (the per-level numbers), and each level-up
+# improvement on its own (is any of them clearly the best pick?).
 import json, sys
 SK = dict(aimErr=0.12, lag=0.2, leadSkill=0.5, careless=0.3, dashSkill=0.15)
 G = {
@@ -31,6 +33,46 @@ B = {
  'L2 human gauss': dict(origin='human', gear='gauss', level=2),
 }
 which = sys.argv[1]; trials = int(sys.argv[2])
+if which == 'levels':
+    AMMO = {'rounds': 600, 'shells': 200, 'cells': 300, 'grease': 300}
+    L1 = {
+     'L1 arc carbine+vest': dict(origin='human', gear='handgun', weapons=['hn-arc-carbine'], armor=['hn-vest'], ammo=AMMO, level=1),
+     'L1 plasma musket+coltron': dict(origin='human', gear='handgun', weapons=['hn-plasma-musket'], armor=['hn-coltron'], ammo=AMMO, level=1),
+    }
+    L2 = {
+     'L2 carbine+coat': dict(origin='human', gear='handgun', weapons=['hn-soot-carbine'], armor=['hn-sootcoat'], ammo=AMMO, level=2),
+     'L2 fouler+coat': dict(origin='human', gear='handgun', weapons=['hn-fouler'], armor=['hn-sootcoat'], ammo=AMMO, level=2),
+     'L2 grease+coat': dict(origin='human', gear='handgun', weapons=['hn-grease-thrower'], armor=['hn-sootcoat'], ammo=AMMO, level=2),
+    }
+    T2 = [g for g in G if g.startswith('T2')]
+    T3 = ['T3 chatter-g x2', 'T3 grease monkey', 'T3 eggbot x6']
+    jobs = []
+    def add(name, b, gn, extra=None):
+        th, grp = G[gn]
+        j = dict(name=name + ' | ' + gn, group=grp, threat=th, level=1, trials=trials, maxT=90)
+        j.update(SK); j.update(b)
+        if extra: j.update(extra)
+        jobs.append(j)
+    for bn, b in L1.items():
+        for gn in T2: add(bn, b, gn)
+    for bn, b in L2.items():
+        for gn in T3: add(bn, b, gn)
+    for boon in ['none', 'tough', 'brawler', 'quick', 'senses', 'tinker', 'hide', 'hands', 'dash', 'medic']:
+        for gn in T3: add('L2 carbine+coat +' + boon, L2['L2 carbine+coat'], gn, dict(boons={} if boon == 'none' else {boon: 1}))
+    # a whole floor: the three Threat 3 groups back to back, no rest between (maxT covers all three)
+    FLOOR = [G[gn][1] for gn in T3]
+    for boon in ['none', 'tough', 'brawler', 'quick', 'hide', 'hands', 'dash', 'medic']:
+        for bn in ['L2 carbine+coat', 'L2 fouler+coat']:
+            j = dict(name=bn + ' +' + boon + ' | T3 floor (3 groups)', group=FLOOR[0], waves=FLOOR[1:], threat=3, level=1, trials=trials, maxT=200)
+            j.update(SK); j.update(L2[bn]); j.update(boons={} if boon == 'none' else {boon: 1})
+            jobs.append(j)
+    for bn, b in L1.items():
+        j = dict(name=bn + ' +none | T2 floor (3 groups)', group=G['T2 chatter-a x6'][1], waves=[G['T2 eggbot x4'][1], G['T2 slop-tread+2'][1]], threat=2, level=1, trials=trials, maxT=200)
+        j.update(SK); j.update(b)
+        jobs.append(j)
+    json.dump(jobs, open('jobs-levels.json', 'w'))
+    print(len(jobs))
+    sys.exit(0)
 jobs = []
 for bn, b in B.items():
     if which == 'start' and bn.startswith('L2'): continue
