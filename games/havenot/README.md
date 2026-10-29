@@ -8,7 +8,7 @@ You make a scavenger, leave a home bunker, and loot the near-area. A **mission**
 
 | Pack | What's in it |
 |---|---|
-| `hn-rules` | Run state (`LM.HN`), character creation (3 origins, 3 gear packages, 3 kits, random mutations), the item catalog, weapons and armour, melee and bites, grenades, cookies as bait, hacking, the bestiary, world fixtures (caches, crates, terminals, security panels, kiosk, mists, health stations, the Personal Shopper), and the epilogues |
+| `hn-rules` | Run state (`LM.HN`), character creation (3 origins, 3 gear packages, 3 kits, random mutations), how the character looks on the map (hyena fur, muzzle and tail; mutant skin and visible mutations), the item catalog, weapons and armour, melee and bites, grenades, cookies as bait, hacking, the bestiary, world fixtures (caches, crates, terminals, security panels, kiosk, mists, health stations, the Personal Shopper), and the epilogues |
 | `hn-world` | The area map: 12 pins, location panels (with each installation's Threat Level against yours), travel, discovery |
 | `hn-sites` | Home, the Out-rider Outpost, Boom-Town and Mother Long-Legs' den; vendors (buy, and sell at a tenth), medics, rumors, the Expedition Ledger, NPCs and their small quests |
 | `hn-anomalous` | The Anomalous Structure, three floors: the Sphinx Gun, kiosk, Blue/Yellow/Red cards, the Monoid, the round Testing Chamber (three modes), the bio lab, the prototype vault, the Security Station, the Repair Bay, the armory and the inner core |

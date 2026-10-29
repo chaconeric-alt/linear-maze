@@ -515,6 +515,9 @@
       const body = this.equip.body ? LM.get('armor', this.equip.body) : null;
       const head = this.equip.head ? LM.get('armor', this.equip.head) : null;
       const coat = body ? body.color : '#4d5a6e';
+      // a game can change how its player looks: LM.playerLook(player, game) → { skin, under, over, head } (SPEC 6.20)
+      const L = (LM.playerLook && LM.playerLook(this, game)) || {};
+      const skin = L.skin || '#d9b48f';
       const k = this.falling > 0 ? Math.max(0.05, this.falling / 0.6) : 1;
       if (this.invuln > 0 && this.dashT <= 0 && this.invuln < 1.2 && Math.floor(t * 20) % 2 === 0 && this.hurtFlash < 0.05) return;
 
@@ -557,6 +560,7 @@
         ctx.fillStyle = '#2b2b30';
         ctx.fillRect(4 - kick, -2, w.length || 14, 4);
       }
+      if (L.under) L.under(ctx, this, game, t, kick);
       // torso / shoulders
       ctx.fillStyle = U.shade(coat, -0.35);
       ctx.beginPath();
@@ -579,20 +583,24 @@
       ctx.ellipse(5 - kick * 0.5, 4.2, 4, 2.4, -0.3, 0, U.TAU);
       ctx.ellipse(5 - kick * 0.5, -4.2, 4, 2.4, 0.3, 0, U.TAU);
       ctx.fill();
-      ctx.fillStyle = '#d9b48f';
+      ctx.fillStyle = skin;
       ctx.beginPath();
       ctx.arc(8.5 - kick * 0.5, 2.6, 1.9, 0, U.TAU);
       ctx.fill();
+      if (L.over) L.over(ctx, this, game, t, kick);
       // head
       const hc = head ? head.color : '#2e2a27';
-      ctx.fillStyle = '#d9b48f';
-      ctx.beginPath();
-      ctx.arc(0.5, 0, 4.6, 0, U.TAU);
-      ctx.fill();
-      ctx.fillStyle = hc;
-      ctx.beginPath();
-      ctx.arc(-0.6, 0, 4.9, Math.PI * 0.42, Math.PI * 1.58);
-      ctx.fill();
+      if (L.head) L.head(ctx, this, game, t, hc, head);
+      else {
+        ctx.fillStyle = skin;
+        ctx.beginPath();
+        ctx.arc(0.5, 0, 4.6, 0, U.TAU);
+        ctx.fill();
+        ctx.fillStyle = hc;
+        ctx.beginPath();
+        ctx.arc(-0.6, 0, 4.9, Math.PI * 0.42, Math.PI * 1.58);
+        ctx.fill();
+      }
       if (head && head.lamp) {
         ctx.fillStyle = '#fff3c4';
         ctx.fillRect(3, -1.4, 2.2, 2.8);
