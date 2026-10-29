@@ -70,10 +70,10 @@ drawing sweep in the game of every object, material state, light, decal and haza
 | Floor tiles (29) | 29 | 29, ×3 states (18 painters) | — | yes: all baked in 3 states |
 | Wall tiles (29) | 29 | 29, ×3 states (21 painters) | — | yes: all baked in 3 states |
 | Lights (20) | 20 | 20 (11 fitting styles) | light colour and radius; tint and dim by descriptor | yes |
-| Furniture groups (200) / objects (591) | 200 / 591 | 591, 45 drawing families, setting palettes, name-seeded detail, states | placement rules, footprints | yes: all 591 drawn; 544 placed in the sweep |
-| Interactables (200) | 200 | as their objects | 10 device kinds with state machines | 198 placed in the sweep; actions spot-checked |
-| Loot (200) | 200 (375 items) | category icons | recoverable satchel items, budgeted | 162 dropped in the sweep (the budget cap stops the rest) |
-| Hazards (200) | 200 | 10 behaviour visuals | 10 behaviours, clue, countermeasure, control | yes: all 200 placed; behaviours spot-checked |
+| Furniture groups (200) / objects (591) | 200 / 591 | 591, 45 drawing families, setting palettes, name-seeded detail, wear and device states, turned to face | placement roles (focal, seating rows, working space, chairs round tables, aisles, consoles by machines), footprints, centrepieces, stripping for salvage | yes: all 591 drawn in every state; 548 placed in the sweep |
+| Interactables (200) | 200 | as their objects; status lamp and 7 state looks | 10 device kinds with state machines; wired to lights, traps, turrets, doors, other machines, lockers, alarms | 199 placed in the sweep; actions and power cuts tested in the game |
+| Loot (200) | 200 (375 items) | category icons | satchel items in six tiers, budgeted; salvage by function | 170 dropped in the sweep (the budget cap stops the rest) |
+| Hazards (200) | 200 | 12 behaviour visuals | 12 behaviours (with alarm and identity), attached to room, door, floor, wall, device or container; clue, countermeasure, control, re-arming | yes: 194 placed in the sweep; attachments and identity checks tested in the game |
 
 ## Coverage (library 2: ten more settings, another schema)
 
@@ -116,10 +116,10 @@ hazard behaviours, device kinds and loot rules are tried after library 2's own).
 | Floor tiles (30) | 30 (none defined in the source) | 30, ×3 states | — | yes: all baked in 3 states |
 | Wall tiles (30) | 30 (none defined) | 30, ×3 states | — | yes: all baked in 3 states |
 | Lights (30) | 30 (none defined) | 30 (10 fitting styles) | colour and radius | yes |
-| Furniture: 20 shared pieces, 40 template fixtures, 10 setting features / 109 objects | 109 | 109, 31 drawing families, setting palettes, states | placement rules; home vs mismatch | yes: all 109 drawn in 3 states; 105 placed in the sweep |
-| Interactables (20, as 200 room devices) | 200 | as their objects | 8 device kinds | 199 placed in the sweep; all opened in the game |
-| Treasure (20) + key objects (10) | 200 loot records, 610 items | category icons | satchel items, budgeted | 157 dropped in the sweep (budget cap) |
-| Hazards: 10 decay + 10 traps | 200 room hazards | behaviour visuals | 8 behaviours | 194 placed in the sweep; all opened in the game |
+| Furniture: 20 shared pieces, 40 template fixtures, 10 setting features, 20 devices / 129 objects | 129 | 129, 32 drawing families, setting palettes, states | as library 1; home vs mismatch pool | yes: all 129 drawn in every state; 104 placed in the sweep (devices besides) |
+| Interactables (20, as 200 room devices) | 200 | as their objects; status lamp and state looks | 8 device kinds, wired as library 1's | 200 placed in the sweep; all opened in the game |
+| Treasure (20) + key objects (10) | 200 loot records, 610 items | category icons | satchel items in six tiers, budgeted | 166 dropped in the sweep (budget cap) |
+| Hazards: 10 decay + 10 traps | 200 room hazards | behaviour visuals | 9 behaviours (with identity), attached as library 1's | 193 placed in the sweep; all opened in the game |
 
 ## Done since the first milestone
 
@@ -139,15 +139,39 @@ hazard behaviours, device kinds and loot rules are tried after library 2's own).
   setting, function, cluster, condition, history, materials, furniture, device and state, treasure, hazards and
   traps; the overlay marks every hazard's room, emitter and control and armed traps' trigger tiles.
 
+- **Placement** (`arrange` in stages-function.js): a throne, altar or dais stands against the wall farthest from
+  the doors and faces them, the room's seating in rows before it; an operating table keeps a ring of working
+  space; chairs surround conference and dining tables; shelving in storage rooms and shops forms aisles; consoles
+  stand by the room's machine; pieces are drawn turned to face what they're for; a hazard's control hangs by the
+  door.
+- **Devices wired to the floor**: a machine's room lights go with it; a power source (generator, core, turbine,
+  reactor, furnace) shut down, wrecked or cut at its breaker kills lights, switch traps, turrets and machines
+  within 12 tiles and unseals sealed doors; data consoles pull locker codes; security consoles stand alarms
+  and identity checks down. Kept with the run.
+- **Hazards attached** to the room, a doorway, a section of floor, a wall, the room's device (using it springs it)
+  or a container (opening it does), re-arming after 45 s; two new behaviours, **alarm** and **identity** (a human
+  waved through, anyone else jolted and reported). The panel gives threat category, suggested level, detection,
+  countermeasure and GM notes (no invented JAGS numbers).
+- **Device looks** for every state: a status lamp on each, damaged, disabled, active (faster), triggered (red flash)
+  and destroyed (charred, split, smoking). Sheet: `device-states.png`.
+- **Walls**: windows in thin walls (sight and light through, not shots) and displays or machine panels set into
+  rooms' walls, for every wall material. Sheet: `wall-variants.png`.
+- **Loot tiers** (ordinary salvage, decorative curiosity, useful equipment, valuable collectible, rare artifact,
+  exceptional discovery) and **salvage by function** (machines give parts, thrones fittings, beds medical
+  supplies, weapons weapon parts); any library furniture can be stripped once.
+- **Names**: atmosphere, historical, corporate, HaveNot and title words beside colours and status, each with its
+  effect, a quarter with a colour as well (Crimson Executive ...); a repeated function name takes its setting.
+- **Advanced generation**: hazards, loot, historical damage and anomalies each have their own control. "One
+  setting" is one setting now (its own rooms, but for one anomaly in ten).
+- **Tests** (`tools/gen-tests.mjs`, section `functional rooms`): every size, functional off and classic, the
+  default rate, each library alone with one setting leading, chaotic mixing, sparse against crowded, low against
+  high hazard, both eras, every functional room complete and drawable, determinism.
+
 ## Not done yet (and what remains)
 
-- **Library 2's furniture is thinner than library 1's**: 109 objects against 591, because its rooms are 20
-  templates repeated per setting. Each setting's rooms differ by materials, palette, the setting feature and its
-  own shared pieces. Remaining: more setting-specific pieces per template, if wanted.
-- **"One setting" isn't only one**: a floor's main setting leads, but rooms still join their neighbours by the
-  adjacency weights (10% unrelated), so other settings appear. Remaining, if wanted: a strict mode.
-- **Doorway transitions are floor-only**: wall materials meet at corners without a trim piece.
-- **Interactive objects' animation states** are drawn for working, malfunctioning (sparks), disabled and destroyed
-  (dark); 'triggered' shares 'active'.
-- **Wall art**: walls get the room's material with trim and damage, but no embedded displays or window openings
-  of their own beyond the wall-mounted pieces.
+- **Library 2's furniture is thinner than library 1's**: 129 objects against 591, because its rooms are 20
+  templates repeated per setting. Each setting's rooms differ by materials, palette, the setting feature, its
+  devices and its own shared pieces. Remaining, if wanted: more setting-specific pieces per template.
+- **Doorway transitions are floor-only**: where two wall materials meet there's no trim piece between them.
+- **Sound**: devices and hazards use the engine's existing sounds (alarm, pickup, trap, shock); there are no
+  per-object sound sets.

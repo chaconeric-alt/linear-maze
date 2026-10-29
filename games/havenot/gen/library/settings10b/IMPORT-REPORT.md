@@ -11,11 +11,11 @@ Made by `node tools/import-content.mjs havenot settings10b` from the source file
 | interactables | 200 |
 | loot | 200 |
 | hazards | 200 |
-| distinct furniture objects | 109 |
+| distinct furniture objects | 129 |
 
 ## What it became
 
-**Furniture families** (the drawing each object uses): console 13, screen 11, drum 11, shelf 7, desk 5, pews 5, crate 5, table 4, sign 3, conveyor 3, lamp 3, press 3, bed 3, vat 3, chair 3, locker 3, pipes 3, hatch 3, mirror 2, rail 2, altar 2, tower 2, turbine 2, coffin 1, dais 1, cage 1, bath 1, washroom 1, furnace 1, arch 1, mannequin 1.
+**Furniture families** (the drawing each object uses): console 18, screen 12, drum 12, shelf 8, pews 6, press 6, desk 5, pipes 5, vat 5, table 5, crate 5, sign 3, conveyor 3, lamp 3, bed 3, chair 3, locker 3, turbine 3, hatch 3, mirror 2, rail 2, altar 2, bath 2, tower 2, coffin 1, dais 1, cage 1, washroom 1, arm 1, furnace 1, arch 1, mannequin 1.
 
 **Floor painters:** marble ×3, ceramic ×2, glassfloor ×2, drain, carpet ×5, mosaic, tile ×5, concrete ×2, terrazzo ×2, resin ×2, elastomer, porcelain, grate, stone, plate.
 

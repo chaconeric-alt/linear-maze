@@ -167,6 +167,7 @@
       const devs = (r.interactive_pool || []).map((i) => ({ id: i, device: (comp.names || {})[i] || words(i, /^INT_/), use: (comp.device_uses || {})[i] || shared('interactive', i).interaction || '' }));
       if (devs.length) {
         const d = devs[0], m = firstMatch(intRules, d.device + ' ' + d.use);
+        object(d.device);
         out.interactables['INT_' + id] = Object.assign({ id: 'INT_' + id, room_id: id, source: d.id, device: d.device, possible_use: d.use, current_behavior: shared('interactive', d.id).current_behavior, alternatives: devs.slice(1).map((x) => x.device), kind: m ? m[1] : fallbackOf(comp, 'interactables', 'show') }, ov['INT_' + id] || {});
       }
       // loot: the treasures in its pool, and in the setting's heart room its key object

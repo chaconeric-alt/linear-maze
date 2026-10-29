@@ -142,7 +142,12 @@
         // neighbours already given a function steer this one
         const near = [r.parent].concat(r.kids || []).map((i) => floor.rooms[i]).filter((n) => n && n.fn);
         const pool = b.functionPool ? all.filter((c) => b.functionPool.includes(c.id)) : all;
-        const cands = pool.filter((c) => fits(C, c, r) && !used.has(c.id));
+        let cands = pool.filter((c) => fits(C, c, r) && !used.has(c.id));
+        // one setting means one setting: its own rooms, but for the odd anomaly (one in ten)
+        if (sets.mode === 'single' && !rng.chance(0.1)) {
+          const own = cands.filter((c) => c.setting_id === areaSet);
+          if (own.length) cands = own;
+        }
         if (!cands.length) continue;
         const relOf = (c) => {
           const ref = near.length ? near[0].fn : { setting: areaSet, cluster: null };

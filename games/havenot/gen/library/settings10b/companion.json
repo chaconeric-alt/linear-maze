@@ -198,7 +198,13 @@
       ["sun-lounger|lounger", "bed", [1, 2], "wall-row"],
       ["tumbler|dryer drum", "drum", [1, 1], "corner"],
       ["pulper", "press", [2, 1], "wall-row"],
-      ["hatch", "hatch", [1, 1], "middle"]
+      ["hatch", "hatch", [1, 1], "middle"],
+      ["sprinkler", "pipes", [1, 1], "wall-row"],
+      ["choir loft", "pews", [2, 1], "wall-row"],
+      ["applause meter", "screen", [2, 1], "wall"],
+      ["cuteness ray", "arm", [1, 1], "middle"],
+      ["audit stamp", "press", [1, 1], "wall-row"],
+      ["wine that remembers", "shelf", [2, 1], "wall-row"]
     ]
   },
 
