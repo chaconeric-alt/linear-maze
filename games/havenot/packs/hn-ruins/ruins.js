@@ -64,7 +64,10 @@
     era: { label: 'Era emphasis', options: [['', 'None'], ['Age of Wonders', 'Age of Wonders'], ['Age of War', 'Age of War']] },
     clusterStrength: { label: 'How rooms group', options: [['', 'Normal'], ['0.5', 'Loosely'], ['2', 'Tightly']] },
     density: { label: 'Furniture', options: [['', 'Rolled per room'], ['sparse', 'Sparse'], ['normal', 'Normal'], ['crowded', 'Crowded'], ['excessive', 'Excessive']] },
-    twists: { label: 'Twists, history, hazards, loot', options: [['', 'Standard'], ['0', 'Fewer'], ['2', 'More']] },
+    hazards: { label: 'Hazards', options: [['', 'Standard (1 room in 5)'], ['0', 'Fewer'], ['2', 'More']], freq: 'probability_room_hazard' },
+    loot: { label: 'Loot', options: [['', 'Standard'], ['0', 'Less'], ['2', 'More']], freq: 'probability_room_loot' },
+    history: { label: 'Historical damage', options: [['', 'Standard (a third)'], ['0', 'Less'], ['2', 'More']], freq: 'probability_history_overlay' },
+    anomalies: { label: 'HaveNot anomalies', options: [['', 'Standard'], ['0', 'Fewer'], ['2', 'More']], freq: 'probability_place_room_rare_twist' },
     preserveOld: { label: 'Generator', options: [['', 'With functional rooms'], ['1', 'Classic (as before them)']] },
   };
   /** Turn the panel's choices into brief fields. */
@@ -77,7 +80,10 @@
     if (o.era) b.era = o.era;
     if (o.clusterStrength) b.clusterStrength = Number(o.clusterStrength);
     if (o.density) b.density = o.density;
-    if (o.twists !== undefined && o.twists !== '') b.frequencies = Object.fromEntries(Object.entries(GEN_FREQ).map(([k, v]) => [k, v[Number(o.twists)]]));
+    for (const [key, d] of Object.entries(HN.GEN_OPTIONS)) {
+      if (!d.freq || o[key] === undefined || o[key] === '') continue;
+      (b.frequencies = b.frequencies || {})[d.freq] = GEN_FREQ[d.freq][Number(o[key])];
+    }
     return b;
   };
   /** The "Advanced generation" section of character creation: choice.gen holds what's picked. */
@@ -166,6 +172,19 @@
 
   // content libraries' floor and wall tiles are terrains (hn-gen-kit/materials.js), registered before any level names them
   for (const content of Object.values((G.libraries.havenot || {}).content || {})) for (const t of Object.values(content.tiles || {})) if (t.kind !== 'light' && HN.materialTerrain) HN.materialTerrain(t);
+  /** A loot item's tier, from its category and value: ordinary salvage, decorative curiosity, useful equipment,
+   *  valuable collectible, rare artifact, exceptional discovery (a setting's heart). */
+  const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+  HN.LOOT_TIERS = ['ordinary salvage', 'decorative curiosity', 'useful equipment', 'valuable collectible', 'rare artifact', 'exceptional discovery'];
+  HN.lootTier = function (it) {
+    const v = it.value || 0;
+    if (v >= 160) return 'exceptional discovery';
+    if (v >= 120) return 'rare artifact';
+    if (v >= 100) return 'valuable collectible';
+    if (['Medical', 'Military', 'Access', 'Component', 'Food', 'Data'].includes(it.cat)) return v < 30 ? 'ordinary salvage' : 'useful equipment';
+    if (it.cat === 'Valuable') return 'decorative curiosity';
+    return 'ordinary salvage';
+  };
   // and their loot records are satchel items
   const ICON = { Access: ['K', '#e8c030'], Valuable: ['$', '#ffd060'], Data: ['D', '#7ad8ff'], Component: ['C', '#a8b8c8'], Medical: ['+', '#ff6a6a'], Food: ['F', '#c8a060'], Military: ['M', '#c84a3a'], Salvage: ['S', '#9a9a8a'] };
   for (const content of Object.values((G.libraries.havenot || {}).content || {})) {
@@ -174,7 +193,8 @@
       const room = content.rooms[L.room_id] || {};
       const set = content.settings[room.setting_id] || {};
       const ic = ICON[it.cat] || ICON.Salvage;
-      defs[it.id] = { name: it.name, cat: it.cat, era: set.era || 'Age of Wonders', value: it.value, rarity: it.value >= 100 ? 'rare' : 'common', icon: { glyph: ic[0], color: ic[1] }, desc: it.name + ', from ' + (room.name ? 'a ' + room.name.toLowerCase() : 'a ruin') + (set.name ? ' in ' + set.name : '') + '. ' + (L.discovery ? 'It was ' + L.discovery.split(';')[0] + '.' : '') };
+      const tier = HN.lootTier(it);
+      defs[it.id] = { name: it.name, cat: it.cat, era: set.era || 'Age of Wonders', value: it.value, tier, rarity: /rare|exceptional/.test(tier) ? 'rare' : 'common', icon: { glyph: ic[0], color: ic[1] }, desc: cap(tier) + '. ' + it.name + ', from ' + (room.name ? 'a ' + room.name.toLowerCase() : 'a ruin') + (set.name ? ' in ' + set.name : '') + '. ' + (L.discovery ? 'It was ' + L.discovery.split(';')[0] + '.' : '') };
     }
     HN.defineItems(defs);
   }

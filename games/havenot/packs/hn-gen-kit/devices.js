@@ -42,13 +42,45 @@
   };
   const roomOf = (game, it) => (game.level.def.rooms || []).find((r) => it.tx >= r.rect[0] && it.ty >= r.rect[1] && it.tx < r.rect[0] + r.rect[2] && it.ty < r.rect[1] + r.rect[3]);
   const hazardIn = (game, it) => game.items.find((x) => x.def.id === 'hn-hazard' && x.props.rect && it.tx >= x.props.rect[0] && it.ty >= x.props.rect[1] && it.tx < x.props.rect[0] + x.props.rect[2] && it.ty < x.props.rect[1] + x.props.rect[3]);
-  const salvageItem = (game, it) => {
-    const C = content(), tl = HN.threatHere(game) || 1;
-    const name = (it.props.name || 'device') + ' parts';
-    HN.award(game, 'salv:' + it.props.uid, [{ type: 'gold', amount: 10 + tl * 8 }], it.name);
-    game.toast('You strip the ' + (it.props.name || 'device') + ' for parts worth a little.', 'good');
-    return name && C;
+  // what a piece yields when it's stripped: by what it is (a robot workshop's machines give parts, a palace's
+  // thrones give fittings, a clinic's beds give supplies), as many as the floor's Threat Level warrants
+  const SALVAGE = {
+    'hn-salv-parts': { name: 'Machine parts', cat: 'Component', value: 30, icon: { glyph: 'C', color: '#a8b8c8' }, fams: ['machine', 'console', 'turbine', 'press', 'conveyor', 'drum', 'pipes', 'arm', 'tower', 'drone', 'furnace', 'screen', 'vat', 'window'] },
+    'hn-salv-fittings': { name: 'Decorative fittings', cat: 'Valuable', value: 45, icon: { glyph: '$', color: '#ffd060' }, fams: ['throne', 'altar', 'statue', 'chandelier', 'dais', 'arch', 'coffin', 'fountain', 'mirror', 'sign', 'lamp', 'pews'] },
+    'hn-salv-medical': { name: 'Medical supplies', cat: 'Medical', value: 35, icon: { glyph: '+', color: '#ff6a6a' }, fams: ['bed', 'pod', 'bath', 'washroom'] },
+    'hn-salv-arms': { name: 'Weapon parts', cat: 'Military', value: 40, icon: { glyph: 'M', color: '#c84a3a' }, fams: ['weapon', 'cage'] },
+    'hn-salv-scrap': { name: 'Scrap and fabric', cat: 'Salvage', value: 15, icon: { glyph: 'S', color: '#9a9a8a' }, fams: [] },
   };
+  HN.defineItems(Object.fromEntries(Object.entries(SALVAGE).map(([id, d]) => [id, { name: d.name, cat: d.cat, value: d.value, icon: d.icon, tier: d.cat === 'Salvage' ? 'ordinary salvage' : 'useful equipment', desc: d.name + ', stripped from furniture and machinery in the ruins.' }])));
+  HN.salvageOf = function (it) {
+    const fam = it.props.fam || 'machine', name = String(it.props.name || '');
+    if (/surg|medic|clinic|operating|triage|gurney/.test(name)) return 'hn-salv-medical';
+    if (/weapon|gun|cannon|howitzer|missile|armou?r/.test(name)) return 'hn-salv-arms';
+    for (const [id, d] of Object.entries(SALVAGE)) if (d.fams.includes(fam)) return id;
+    return 'hn-salv-scrap';
+  };
+  const salvageItem = (game, it) => {
+    const tl = HN.threatHere(game) || 1, id = HN.salvageOf(it);
+    if (!HN.award(game, 'salv:' + it.props.uid, [{ type: 'gold', amount: 10 + tl * 8 }], it.name)) return;
+    HN.give(game, id, 1 + Math.floor(tl / 3), { from: it.props.name });
+    game.toast('You strip the ' + (it.props.name || 'device') + ' for parts.', 'good');
+  };
+  // stripping ordinary furniture: once a piece, kept with the run, and it stays stripped
+  const pieceKey = (game, it) => game.level.def.id + ':' + it.tx + ',' + it.ty;
+  const stripped = (game, it) => !!(HN.st(game).stripped || {})[pieceKey(game, it)];
+  const stripPiece = (game, it) => {
+    const s = HN.st(game);
+    (s.stripped = s.stripped || {})[pieceKey(game, it)] = true;
+    const tl = HN.threatHere(game) || 1;
+    HN.give(game, HN.salvageOf(it), 1 + Math.floor(tl / 4), { from: it.props.name });
+    it.props.state = 2;
+    it.props.stripped = true;
+  };
+  LM.on('levelLoaded', (game) => {
+    if (!game.player || game.attract) return;
+    const s = HN.st(game);
+    if (s.stripped) for (const it of game.items) if (/^hn-s10w?$/.test(it.def.id) && s.stripped[pieceKey(game, it)]) Object.assign(it.props, { state: 2, stripped: true });
+  });
   const zap = (game, n, why) => {
     HN.shockPlayer ? HN.shockPlayer(game, n) : LM.combat.hurtPlayer(game, game.player, n, { source: 'hazard' });
     if (why) game.toast(why, 'warn');
@@ -232,7 +264,15 @@
   const examine = (game, it) => {
     const C = content(), rm = roomOf(game, it);
     const set = C && C.settings[it.props.set];
-    LM.ui.showText(it.name, 'A ' + it.props.name + (it.props.odd ? ' that has no business being in here' : '') + '.' + (rm ? ' ' + rm.name + (rm.note ? ': ' + rm.note : '') : '') + (set ? '\n\n' + set.name + ' (' + set.era + ').' : ''), 'Fixture');
+    const done = stripped(game, it), yields = HN.ITEMS[HN.salvageOf(it)];
+    LM.ui.open({
+      kicker: (rm ? rm.name : 'Fixture') + (done ? ' · stripped' : ''), title: it.name,
+      body: h('div', { class: 'hn-panel' },
+        lore('A ' + it.props.name + (it.props.odd ? ' that has no business being in here' : '') + '.' + (done ? ' Everything useful has been had off it.' : '')),
+        rm && rm.note ? h('p', { class: 'muted' }, rm.name + ': ' + rm.note) : null,
+        set ? h('p', { class: 'muted' }, set.name + ' (' + set.era + ').') : null),
+      actions: (done ? [] : [{ label: 'Strip it for ' + yields.name.toLowerCase(), onClick: () => stripPiece(game, it) }]).concat([{ label: 'Leave it', quiet: true }]),
+    });
   };
   for (const id of ['hn-s10', 'hn-s10w']) {
     const def = LM.find('items', id);

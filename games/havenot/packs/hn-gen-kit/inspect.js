@@ -64,7 +64,7 @@
     const loot = [];
     for (const it of items) for (const e of it.props.loot || []) {
       const d = e.hn && HN.ITEMS[e.hn];
-      loot.push((d ? d.name : e.item || e.type || 'something') + (it.props.looted || it.opened ? ' (taken)' : ''));
+      loot.push((d ? d.name + (d.tier ? ' (' + d.tier + ')' : '') : e.item || e.type || 'something') + (it.props.looted || it.opened ? ' (taken)' : ''));
     }
     row('Treasure', loot.length ? loot.join(', ') : '');
     // hazards and traps

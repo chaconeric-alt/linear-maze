@@ -45,13 +45,33 @@
     colour: [
       { word: 'Crimson', tint: '#ff4a3a' }, { word: 'Ivory', tint: '#fff0d0' }, { word: 'Verdant', tint: '#7aff7a' },
       { word: 'Ultraviolet', tint: '#b07aff' }, { word: 'Golden', tint: '#ffd060' }, { word: 'Grey', tint: '#c8ccd0', dim: true },
+      { word: 'Platinum', tint: '#e8eef4', extra: 1 }, { word: 'Obsidian', tint: '#6a5a8a', dim: true }, { word: 'Chartreuse', tint: '#c8ff3a' },
     ],
     status: [
       { word: 'Abandoned', worn: 2, debris: 3, dim: true }, { word: 'Condemned', worn: 2, debris: 2 }, { word: 'Substandard', worn: 1 },
       { word: 'Imperial', extra: 2 }, { word: 'Deluxe', extra: 1 }, { word: 'Executive', extra: 1 }, { word: 'Provisional', sparse: true },
       { word: 'Emergency', tint: '#ff3a2a' }, { word: 'Restored', worn: 0 }, { word: 'Mandatory' }, { word: 'Employee Happiness' },
     ],
+    atmosphere: [
+      { word: 'Silent', dim: true }, { word: 'Humming' }, { word: 'Weeping', worn: 1, debris: 1 }, { word: 'Frozen', tint: '#a8d8ff' },
+      { word: 'Smouldering', tint: '#ff8a3a', worn: 1, debris: 2 }, { word: 'Whispering', dim: true }, { word: 'Sunlit', tint: '#fff0c0' },
+    ],
+    historical: [
+      { word: 'Ancestral', worn: 1 }, { word: 'Pre-Collapse' }, { word: 'Victory', extra: 1 }, { word: 'Reconstruction', sparse: true }, { word: 'Last' }, { word: 'Wonder-Age', extra: 1 },
+    ],
+    corporate: [
+      { word: 'Synergy™' }, { word: 'OmniCorp' }, { word: 'Premium Plus', extra: 1 }, { word: 'Sponsored', tint: '#ffe04a' }, { word: 'Brand-Loyal' }, { word: 'Value Tier', sparse: true },
+    ],
+    havenot: [
+      { word: 'Wondermade', extra: 1 }, { word: 'Burner-Proof', worn: 1 }, { word: 'Neo-Sovereign', extra: 2 }, { word: 'Gladhand' }, { word: 'Licensed' }, { word: 'Recompensed' },
+    ],
+    title: [
+      { word: 'Grand', extra: 1 }, { word: 'Royal', extra: 2 }, { word: 'Ministerial' }, { word: 'Supreme', extra: 1 }, { word: 'Regulatory' }, { word: 'Behavioral Correction' },
+    ],
   };
+  // how often each kind of descriptor is chosen
+  G.FN_DESCRIPTOR_KINDS = { colour: 28, status: 28, atmosphere: 12, historical: 8, corporate: 10, havenot: 8, title: 6 };
+
   G.FN_OVERLAYS = ['scavenged', 'damaged', 'repurposed', 'blast', 'fire', 'flooding', 'biological growth', 'cult conversion', 'improvised habitation', 'automated restoration', 'collapse', 'robotic modification', 'contamination'];
 
   function cellsOf(r) {
@@ -144,9 +164,16 @@
         fn.density = rng.weighted(Object.assign({ sparse: 0.2, normal: 0.55, crowded: 0.2, excessive: 0.05 }, b.density ? { [b.density]: 100 } : P0.room_furniture_density || {}));
         // the name: sometimes a descriptor that changes the room, now and then a misleading one
         if (rng.chance(0.18)) {
-          const d = rng.pick(rng.chance(0.4) ? G.FN_DESCRIPTORS.colour : G.FN_DESCRIPTORS.status);
-          fn.descriptor = d;
+          const kind = rng.weighted(G.FN_DESCRIPTOR_KINDS);
+          let d = rng.pick(G.FN_DESCRIPTORS[kind]);
           fn.name = d.word + ' ' + fn.name;
+          // now and then a colour in front as well (Crimson Executive Throne Room): its tint over the other's effects
+          if (kind !== 'colour' && rng.chance(0.25)) {
+            const c = rng.pick(G.FN_DESCRIPTORS.colour);
+            fn.name = c.word + ' ' + fn.name;
+            d = Object.assign({}, d, { word: c.word + ' ' + d.word, tint: c.tint, dim: d.dim || c.dim });
+          }
+          fn.descriptor = d;
           if (d.sparse) fn.density = 'sparse';
           if (d.extra) fn.density = d.extra > 1 ? 'excessive' : 'crowded';
         }
