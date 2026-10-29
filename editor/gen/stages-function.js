@@ -191,6 +191,8 @@
     const props = objProps(C, name, fn, extra);
     const wall = WALL_FAMS.includes(o.fam);
     const tries = wall ? [{ item: 'hn-s10w', place: 'wall' }] : [
+      // a centrepiece in a big room: bigger, in the middle, so the room reads as what it is at normal zoom
+      ...(extra && extra.grow ? [{ item: 'hn-s10', place: 'center', grow: extra.grow }] : []),
       { item: 'hn-s10', place: o.place === 'wall' ? 'wall-row' : o.place },
       { item: 'hn-s10', place: 'any', swap: true },
       { item: 'hn-s10', place: 'any', small: true },
@@ -199,6 +201,12 @@
       const pr = G.clone(props);
       if (t.swap) [pr.w, pr.h] = [props.h, props.w];
       if (t.small) pr.w = pr.h = 1;
+      if (t.grow) {
+        pr.w = Math.max(props.w + t.grow, 1 + t.grow);
+        pr.h = Math.max(props.h + t.grow, 1 + t.grow);
+        pr.centre = true;
+      }
+      delete pr.grow;
       if (t.swap && pr.w === props.w && pr.h === props.h) continue;
       const n = G.placeFixtureIn(P, rng, r, { item: t.item, props: pr, place: t.place, count: 1 });
       if (n) {
@@ -209,6 +217,15 @@
     return null;
   }
   const DENSITY_EXTRA = { sparse: 0, normal: 1, crowded: 3, excessive: 6 };
+  // centrepieces: the families and names that carry a room (a throne room's throne, a lab's vat)
+  const CENTRE_FAMS = ['throne', 'vat', 'altar', 'coffin', 'turbine', 'dais', 'fountain', 'statue', 'furnace', 'bath', 'cage', 'pod'];
+  const CENTRE_NAMES = /surgical|operating|autopsy|cannon|howitzer|reactor|core|centrifuge|stage|tank/;
+  /** How much bigger a room's required piece is drawn: +1 a side in a room of 50 floor cells, +2 from 110. */
+  const growOf = (C, name, cells) => {
+    const o = C.objects[name] || {};
+    if (!(CENTRE_FAMS.includes(o.fam) || CENTRE_NAMES.test(name)) || WALL_FAMS.includes(o.fam)) return 0;
+    return cells >= 110 ? 2 : cells >= 50 ? 1 : 0;
+  };
 
   /** A functional room's furniture (stage access, in place of the template's fixtures). */
   G.placeFunctionFurniture = function (P, rng, r, plan, lib) {
@@ -217,8 +234,12 @@
     fn.placed = [];
     fn.missing = [];
     // the two required fixtures first: the room should read as what it is
+    let grown = false;
     for (const name of (rec.mandatory_features || []).slice(0, 2)) {
-      const e = placeObject(P, rng, r, C, name, fn, { key: true });
+      // the first centrepiece grows with the room (one per room)
+      const grow = grown ? 0 : growOf(C, name, cells);
+      const e = placeObject(P, rng, r, C, name, fn, grow ? { key: true, grow } : { key: true });
+      if (e && e.props && e.props.centre) grown = true;
       if (e) {
         e.keep = true;
         fn.placed.push(name);

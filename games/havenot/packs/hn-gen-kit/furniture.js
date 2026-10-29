@@ -360,6 +360,17 @@
     const fam = FAM[it.props.fam] || FAM.machine;
     g.save();
     if (it.props.odd) g.rotate(0.12);
+    // a room's centrepiece stands on a plinth with a lit rim, so it carries the room at normal zoom
+    if (it.props.centre) {
+      g.fillStyle = 'rgba(0,0,0,0.35)';
+      G.roundRect(g, -W / 2 - 4, -H / 2 - 2, W + 8, H + 8, 6);
+      g.fill();
+      rbox(g, -W / 2 - 3, -H / 2 - 3, W + 6, H + 6, 5, sh(p.base, -0.35));
+      g.strokeStyle = U.rgba(p.accent, 0.45 + 0.1 * Math.sin(t * 1.3));
+      g.lineWidth = 1.5;
+      G.roundRect(g, -W / 2 - 2.5, -H / 2 - 2.5, W + 5, H + 5, 5);
+      g.stroke();
+    }
     fam(g, W, H, p, r, it.props.devState === 'disabled' || it.props.devState === 'destroyed' ? 0 : t, it);
     // state: grime and damage; a broken device goes dark
     const st = it.props.state || 0;
