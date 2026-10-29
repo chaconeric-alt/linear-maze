@@ -382,6 +382,7 @@
       this.el = el;
       this.tool = ED.store.get('mapTool', 'paint');
       this.lit = ED.store.get('mapLit', true);
+      this.ngView = ED.store.get('mapNgView', false); // draw a next-generation floor tilted, with its ceiling and neon (js/ng.js)
       this.grid = ED.store.get('mapGrid', true);
       this.showTags = ED.store.get('mapTags', true);
       this.showRooms = ED.store.get('mapRooms', true);
@@ -399,6 +400,10 @@
       const find = extra[0] === 'find' && extra[1];
       if (find) this.findThing(find);
       if (extra[0] === 'settings') this.showLevelPanel(true);
+      if (extra[0] === 'nextgen') {
+        this.setNgView(true);
+        this.showLevelPanel(false, 'nextgen');
+      }
       this.problems = ME.validate(this.doc, M().raw('levels', id));
       this.drawStatus();
       ED.onLeave(() => this.destroy());
@@ -445,8 +450,9 @@
         return b;
       };
       const litBtn = h('button', { type: 'button', class: 'btn small' + (this.lit ? ' on' : ''), title: 'Torchlight: the floor’s own light and darkness. Off: flat light.', on: { click: () => { this.lit = !this.lit; ED.store.set('mapLit', this.lit); litBtn.classList.toggle('on', this.lit); this.renderer.flat = !this.lit; this.dirty = true; } } }, 'Torchlight');
+      this.ngBtn = h('button', { type: 'button', class: 'btn small' + (this.ngView ? ' on' : ''), title: 'Next-gen view: a floor with the next-generation look (Floor settings → Next generation) is drawn tilted, with its ceiling and neon. Off: drawn flat, which is easier to paint.', on: { click: () => this.setNgView(!this.ngView) } }, 'Next-gen view');
       tb.append(lvl, tg,
-        h('span', { class: 'sep' }), litBtn, toggle('Grid', 'grid', 'mapGrid'), toggle('Tags', 'showTags', 'mapTags'), toggle('Rooms', 'showRooms', 'mapRooms'),
+        h('span', { class: 'sep' }), litBtn, this.ngBtn, toggle('Grid', 'grid', 'mapGrid'), toggle('Tags', 'showTags', 'mapTags'), toggle('Rooms', 'showRooms', 'mapRooms'),
         h('button', { class: 'btn small', title: 'Zoom out (-)', on: { click: () => this.zoomBy(-1) } }, '−'),
         h('button', { class: 'btn small', title: 'Zoom in (+)', on: { click: () => this.zoomBy(1) } }, '+'),
         h('button', { class: 'btn small', title: 'Show the whole floor', on: { click: () => this.fit() } }, 'Fit'),
@@ -796,6 +802,7 @@
     loadGame() {
       this.renderer = ED.engine.makeRenderer(this.canvas);
       this.renderer.flat = !this.lit;
+      this.renderer.ngOff = !this.ngView;
       this.game = ED.engine.fakeGame(this.renderer);
       const saved = ED.store.get('mapCam:' + this.id);
       this.reload(true);
@@ -819,7 +826,8 @@
         if (!this.alive) return;
         this.raf = requestAnimationFrame(loop);
         if (!this.canvas.isConnected) return this.destroy();
-        const animate = this.lit;
+        // torchlight flickers; a next-generation floor's fans turn and its camera sways
+        const animate = this.lit || !!(this.ngView && this.game && this.game.level && this.game.level.ng);
         const gap = this.lastCost > 30 ? 140 : this.lastCost > 16 ? 50 : 0;
         if (!(this.dirty || (animate && now - (this.lastDraw || 0) >= gap))) return;
         this.dirty = false;
@@ -854,6 +862,20 @@
         }
       }
       this.dirty = true;
+    }
+    setNgView(v) {
+      this.ngView = !!v;
+      ED.store.set('mapNgView', this.ngView);
+      if (this.ngBtn) this.ngBtn.classList.toggle('on', this.ngView);
+      if (this.renderer) this.renderer.ngOff = !this.ngView;
+      this.dirty = true;
+    }
+    /** Every tag painted on this floor (tiles and things). */
+    tagsOnFloor() {
+      const tags = new Set();
+      for (const g of this.doc.ground) if (g && g.tag) tags.add(g.tag);
+      for (const o of this.doc.objs) if (o && typeof o === 'object' && o.tag) tags.add(o.tag);
+      return [...tags];
     }
     scheduleReload() {
       clearTimeout(this.reloadT);
@@ -957,10 +979,14 @@
           ctx.strokeStyle = 'rgba(224,178,90,0.55)';
           ctx.strokeRect(x * T, y * T, w * T, hh * T);
           ctx.setLineDash([]);
+          // a shaped room (engine/shapes.js): its outline over the rect
+          if (room.shape && window.LM_SHAPES) drawOutline(ctx, LM_SHAPES.outline(LM_SHAPES.fromRoom(room)), 'rgba(92,200,232,0.9)', 2 / s);
           ctx.fillStyle = 'rgba(224,178,90,0.85)';
           ctx.fillText(room.name, x * T + 4, y * T + Math.max(12, 14 / r.zoom));
         }
       }
+      // free shapes (round pillars, polygons): engine/shapes.js
+      if (this.showRooms && window.LM_SHAPES) for (const sh of this.def.shapes || []) drawOutline(ctx, LM_SHAPES.outline(sh), sh.solid ? 'rgba(232,120,92,0.9)' : 'rgba(92,200,232,0.9)', 2 / s);
       // tags, start, unknowns
       for (let ty = v.ty0; ty <= v.ty1; ty++) {
         for (let tx = v.tx0; tx <= v.tx1; tx++) {
@@ -1708,6 +1734,9 @@
         F().field('Name', F().text(r.name, (v) => set(Object.assign({}, r, { name: v })))),
         F().field('Small line', F().text(r.note, (v) => set(Object.assign({}, r, { note: v || undefined })), { emptyUndefined: true })),
         F().field('x, y, width, height', F().text((r.rect || []).join(', '), (v) => { const a = v.split(/[,\s]+/).map(Number); if (a.length === 4 && a.every((z) => !Number.isNaN(z))) set(Object.assign({}, r, { rect: a })); }, { mono: true })),
+        F().field('Shape', F().select(r.shape, [[undefined, 'Square (as drawn)'], ['circle', 'Circle'], ['ellipse', 'Oval'], ['octagon', 'Octagon'], ['hexagon', 'Hexagon'], ['diamond', 'Diamond'], [{ type: 'rounded', radius: 1.5 }, 'Rounded corners']],
+          (v) => { const n = Object.assign({}, r); if (v === undefined) delete n.shape; else n.shape = v; set(n); this.scheduleReload && this.scheduleReload(); }),
+          'Trims the room’s floor to this shape and stands curved walls round it. Corridors and doors on the rect’s edge stay open.'),
         // the minimap (engine/ui.js): a name on it, and being on it before the player has been there
         F().field('Name on the minimap', F().text(r.mapLabel === true ? r.name : r.mapLabel, (v) => set(Object.assign({}, r, { mapLabel: v || undefined })), { emptyUndefined: true })),
         F().field('On the minimap once (story flags, any one; or "always")', F().text(r.mapWhen === true ? 'always' : [].concat(r.mapWhen || []).join(', '), (v) => {
@@ -1716,7 +1745,11 @@
         }, { mono: true, emptyUndefined: true }))), {
         onChange: (l) => { d.rooms = l; commit(); this.dirty = true; }, title: (r) => r.name + ' · ' + (r.rect || []).join(','), addLabel: 'Add a room (or drag one with the Room tool)', newItem: () => ({ name: 'New room', rect: [1, 1, 5, 5] }),
       }));
+      sect('shapes', 'Round pillars and free shapes (' + (d.shapes || []).length + ')', () => h('div', null,
+        h('p', { class: 'muted' }, 'Positions and sizes in tiles. { "type": "circle", "x": 12.5, "y": 8.5, "r": 1.5, "solid": true } is a round pillar; leave out solid for a round opening. Types: circle, ellipse (rx, ry), ngon (r, sides), polygon (points), rounded (rect, radius).'),
+        F().json(d.shapes || [], (v) => { if (Array.isArray(v) && v.length) d.shapes = v; else delete d.shapes; commit(); this.dirty = true; this.scheduleReload && this.scheduleReload(); })));
       sect('traps', 'Traps and scripted events (' + (d.traps || []).length + ')', () => this.trapsEditor(d, commit));
+      sect('nextgen', 'Next generation' + (d.nextGen && d.nextGen.enabled ? ' (on)' : ''), () => ED.ng.levelSection(d, () => { commit(); this.scheduleReload(); }, this));
       sect('objectives', 'Objectives (' + (d.objectives || []).length + ')', () => this.objectivesEditor(d, commit));
       sect('lights', 'Ceiling lights', () => F().list(d.ceilingLights || [], (cl, n, set) => F().params({ variants: 'json', every: 'number', offset: 'json', color: 'color', radius: 'number', intensity: 'number', flicker: 'number', skip: 'number', tag: 'tag' }, cl, (v) => set(v)), {
         onChange: (l) => { if (l.length) d.ceilingLights = l; else delete d.ceilingLights; commit(); this.scheduleReload(); }, title: (cl) => 'every ' + (cl.every || 4) + ' tiles on floor ' + JSON.stringify(cl.variants || 'any'), addLabel: 'Add a grid of lights', newItem: () => ({ variants: [0], every: 4, offset: [2, 2], color: '#f2f5ff', radius: 180, intensity: 0.5 }),
@@ -1839,6 +1872,18 @@
     }
   }
   ED.MapEditor = MapEditor;
+  /** A shape's outline (points in tiles, from engine/shapes.js) over the map. */
+  function drawOutline(ctx, pts, color, lw) {
+    if (!pts || pts.length < 3) return;
+    const T = 32;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0] * T, pts[0][1] * T);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * T, pts[i][1] * T);
+    ctx.closePath();
+    ctx.stroke();
+  }
   function tagColor(tag) {
     let hsh = 0;
     for (const c of tag) hsh = (hsh * 31 + c.charCodeAt(0)) >>> 0;

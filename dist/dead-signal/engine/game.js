@@ -259,6 +259,8 @@
           if (spec) this.addStaticLight(Object.assign({ x: x * T + T / 2, y: y * T + T / 2 }, spec));
         }
       }
+      // a next-generation floor's fixtures: ceiling silhouettes and neon (engine/nextgen.js)
+      if (LM.ng) LM.ng.attach(this, L);
       // where you arrive: given, the stairs you came up by, or the floor's start
       let at = opts.at && Number.isFinite(opts.at.x) && Number.isFinite(opts.at.y) ? opts.at : null;
       if (!at && opts.arrive) {

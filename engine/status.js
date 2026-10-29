@@ -16,7 +16,8 @@
  * only ('player' | 'robot' | 'monster': who it can land on; robots are enemies with `robot: true`),
  * cures (statuses it ends when it lands), hud: false (no chip), onApply(game, target, s),
  * onEnd(game, target, s, reason) (reason 'expired' when it ran out, 'cleared' when something ended it),
- * update(game, target, s, dt) (every frame while it lasts).
+ * update(game, target, s, dt) (every frame while it lasts), damageType (what its ticks count as, for an enemy's
+ * `takes`), ignoreArmor (its ticks go straight through armor: acid).
  * Long ones: countdown: true (the chip shows the seconds left), urgent: seconds (the chip pulses from then
  * on), stack: n (applying it again adds one, up to n, as s.n, instead of more time, and its dps counts
  * once per stack; refresh: true also restarts the clock), keep: true (the player carries it up and down the stairs: saved with them).
@@ -162,9 +163,9 @@
             // a status ticks through the short invulnerability a hit gives, and doesn't give any itself
             const saved = target.invuln;
             target.invuln = 0;
-            LM.combat.hurt(game, target, dmg, { source: 'status', type: 'status', status: null });
+            LM.combat.hurt(game, target, dmg, { source: 'status', type: 'status', status: null, damageType: d.damageType, ignoreArmor: d.ignoreArmor });
             if (!target.dead) target.invuln = saved;
-          } else LM.combat.hurt(game, target, dmg, { source: 'status', type: 'status' });
+          } else LM.combat.hurt(game, target, dmg, { source: 'status', type: 'status', damageType: d.damageType, ignoreArmor: d.ignoreArmor });
         }
       }
       if (d.stun && target.isEnemy && s.t > 0) target.stunned = Math.max(target.stunned || 0, Math.min(s.t, 0.2));

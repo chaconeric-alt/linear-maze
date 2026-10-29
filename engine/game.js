@@ -9,6 +9,9 @@
 
   // ------------------------------------------------------------ the game being played
   /** Choose the game (its manifest, with defaults filled in) without starting it. */
+  /** Death-screen hooks (Game.playerDied): fn(game, cause) returning true replaces the engine's death screen. */
+  LM.deathHooks = [];
+  LM.onDeath = (fn) => LM.deathHooks.push(fn);
   LM.useGame = function (id) {
     const m = LM.games[id];
     if (!m) throw new Error('There is no game called ' + id + ' (no LM.defineGame({ id: "' + id + '" }) has run).');
@@ -259,6 +262,8 @@
           if (spec) this.addStaticLight(Object.assign({ x: x * T + T / 2, y: y * T + T / 2 }, spec));
         }
       }
+      // a next-generation floor's fixtures: ceiling silhouettes and neon (engine/nextgen.js)
+      if (LM.ng) LM.ng.attach(this, L);
       // where you arrive: given, the stairs you came up by, or the floor's start
       let at = opts.at && Number.isFinite(opts.at.x) && Number.isFinite(opts.at.y) ? opts.at : null;
       if (!at && opts.arrive) {
@@ -513,9 +518,13 @@
       }
     }
 
-    playerDied() {
+    /** cause: the hit that did it (LM.combat.hurt's options). A game can replace the death screen: a function given to
+     *  LM.onDeath(fn) runs first, fn(game, cause), and one that returns true has shown its own (an epilogue, say). */
+    playerDied(cause) {
       const P = this.player;
       if (P.dead) return;
+      this.deathCause = cause || null;
+      LM.emit('playerDied', { game: this, cause: this.deathCause });
       P.dead = true;
       this.state = 'dying';
       this.hitStop = 0.25;
@@ -524,6 +533,13 @@
       LM.audio.play('lose');
       this.schedule(1.1, () => {
         this.state = 'dead';
+        for (const fn of LM.deathHooks) {
+          try {
+            if (fn(this, this.deathCause)) return;
+          } catch (e) {
+            console.error(e);
+          }
+        }
         LM.ui.showDeath(this);
       }, true);
     }
@@ -660,6 +676,7 @@
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) this.renderer.invalidateTile(tx + dx, ty + dy);
       for (const li of this.staticLights) if (U.dist(li.x, li.y, tx * T + T / 2, ty * T + T / 2) < li.r + T) li.dirty = true;
       L.navDirty = true;
+      L.navClearDirty = true;
     }
     addStaticLight(spec) {
       const li = Object.assign({ r: spec.radius || 160, color: '#ffb060', intensity: 0.8, flicker: 0, phase: Math.random() * 10, poly: null, dirty: true }, spec);
@@ -886,6 +903,7 @@
       this.navT = (this.navT || 0) - dt;
       if ((pi !== L.navFrom && this.navT <= 0) || L.navDirty) {
         if (L.inBounds(ptx, pty) && L.walkable(ptx, pty)) LM.nav.compute(L, ptx, pty);
+        LM.nav.checkClearance(L, this);
         this.navT = 0.15;
       }
 

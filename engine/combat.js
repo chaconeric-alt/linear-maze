@@ -33,6 +33,8 @@
       this.age = 0;
       this.falloff = o.falloff || 0;
       this.status = o.status || this.def.status || null; // a status the hit carries (engine/status.js)
+      this.damageType = o.damageType || this.def.damageType || null; // 'electric', 'fire'...: what an enemy's `takes` reads
+      this.ignoreArmor = !!(o.ignoreArmor || this.def.ignoreArmor);
       // engine factions: an enemy's shot (o.faction, or its shooter o.by's) hits whatever that faction
       // attacks; without one, an enemy shot hits only the player, as it always has
       this.by = o.by || null;
@@ -43,7 +45,7 @@
       // def.onImpact(p, game, hitWall): where it lands, something happens (silk leaves a web)
       if (this.def.onImpact) this.def.onImpact(this, game, hitWall);
       if (this.aoe) {
-        C.explode(game, this.x - this.vx * 0.004, this.y - this.vy * 0.004, Object.assign({ owner: this.owner, status: this.status, faction: this.owner === 'player' ? undefined : this.faction, by: this.by }, this.aoe));
+        C.explode(game, this.x - this.vx * 0.004, this.y - this.vy * 0.004, Object.assign({ owner: this.owner, status: this.status, faction: this.owner === 'player' ? undefined : this.faction, by: this.by, damageType: this.damageType }, this.aoe));
         return;
       }
       const d = this.def;
@@ -89,7 +91,7 @@
               }
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
-              if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status, proj: this });
+              if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status, proj: this, damageType: this.damageType, ignoreArmor: this.ignoreArmor });
               game.particles.burst(this.x, this.y, 5, {
                 type: 'dot', color: e.def.blood || '#7a1f1f', speed: 120, life: 0.35, angle: this.angle, spread: 0.6, size: [0.8, 1.8], drag: 6,
               });
@@ -104,7 +106,7 @@
           if (P && !P.dead && P.falling <= 0 && (fac == null || FA.hostile(fac, 'player'))) {
             const rr = P.r + this.r;
             if (U.dist2(this.x, this.y, P.x, P.y) < rr * rr) {
-              if (P.invuln <= 0) C.hurt(game, P, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by });
+              if (P.invuln <= 0) C.hurt(game, P, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by, damageType: this.damageType, ignoreArmor: this.ignoreArmor });
               this.impact(game, false);
               return;
             }
@@ -202,6 +204,8 @@
         falloff: w.falloff,
         color: w.tracer,
         status: w.status,
+        damageType: w.damageType,
+        ignoreArmor: w.ignoreArmor,
       });
     }
     // muzzle flash
@@ -229,10 +233,12 @@
   // ------------------------------------------------------------ damage
   /**
    * Apply damage. Works on the player, enemies and destructible items.
-   * o: { kx, ky, source: 'player'|'enemy'|'hazard'|'status', type, silent, status }
+   * o: { kx, ky, source: 'player'|'enemy'|'hazard'|'status', type, silent, status, damageType, ignoreArmor }
    * o.status (an id or { id, seconds }) puts a status on the target when the hit lands (engine/status.js).
    * An enemy's damage reduction is its own `armor` if it has one (behaviours can change it as it fights),
    * else its def's; statuses can make it take more (`vulnerable`). def.onHurt(e, game, dmg, o) hears every hit.
+   * o.damageType ('electric', 'fire', 'acid'...) is multiplied by the enemy def's `takes` ({ electric: 2 }: double,
+   * 0: immune). o.ignoreArmor: armor doesn't reduce this hit (acid).
    */
   /**
    * Does a point (with radius r) touch an enemy? A circle of its radius, or, for a long body, the def's
@@ -319,9 +325,11 @@
         if (def.onImmune) def.onImmune(target, game, o);
         return 0;
       }
-      const armor = target.armor != null ? target.armor : def.armor || 0;
+      const armor = o.ignoreArmor ? 0 : target.armor != null ? target.armor : def.armor || 0;
       const vul = LM.status ? LM.status.vulnerable(target) : 0;
-      const dmg = Math.max(1, amount * (1 + vul) * (1 - armor));
+      const takes = o.damageType && def.takes && def.takes[o.damageType] != null ? +def.takes[o.damageType] : 1;
+      if (takes <= 0) return 0;
+      const dmg = Math.max(1, amount * takes * (1 + vul) * (1 - armor));
       target.hp -= dmg;
       target.flash = 0.09;
       target.lastHurt = 0;
@@ -384,7 +392,23 @@
       P.shieldDelay = 2.5;
       LM.audio.play('shieldHit');
     }
-    dmg *= 1 - st.armor;
+    // flat armor, plus each plate (an armor piece with `coverage`) the hit happens to strike
+    let armor = st.armor;
+    const struck = [];
+    if (o.ignoreArmor) armor = 0;
+    else for (const pl of st.plates || []) if (Math.random() < pl.coverage) {
+      armor += pl.armor;
+      struck.push(pl);
+    }
+    armor = U.clamp(armor, 0, 0.75);
+    if (o.damageType && st.takes && st.takes[o.damageType] != null) dmg *= Math.max(0, +st.takes[o.damageType]);
+    dmg *= 1 - armor;
+    if (struck.length && dmg < amount) {
+      // the hit glanced off a plate: a spark and a clank so it reads
+      game.particles.burst(P.x, P.y - 4, 5, { type: 'spark', color: '#e8e2d0', speed: 160, life: 0.18, size: 0.9 });
+      if (!soft) LM.audio.play('wall', { vol: 0.5, throttle: 0.08 });
+    }
+    o.plates = struck;
     if (dmg > 0) {
       P.hp -= dmg;
       P.hurtFlash = Math.min(1, P.hurtFlash + (soft ? 0.12 : 0.35) + dmg / 60);
@@ -450,7 +474,7 @@
   };
 
   // ------------------------------------------------------------ explosions
-  /** o: { radius, damage, owner, color, selfDamage, silent, status, faction, by }
+  /** o: { radius, damage, owner, color, selfDamage, silent, status, damageType, faction, by }
    *  An enemy's blast with a faction (o.faction, from its attacker o.by) hurts what that faction attacks;
    *  an enemy blast without one hurts only the player; yours hurt every enemy not on your side; anything
    *  else (a barrel) hurts everyone. */
@@ -481,7 +505,7 @@
     if (P && !P.dead && pd < R + P.r && losOK(P.x, P.y) && !(fac && fac !== 'player' && !FA.hostile(fac, 'player'))) {
       const k = 1 - U.clamp(pd / (R + P.r), 0, 1) * 0.6;
       const mul = o.owner === 'player' ? (o.selfDamage == null ? 0.35 : o.selfDamage) : 1;
-      if (mul > 0) C.hurt(game, P, D * k * mul, { kx: ((P.x - x) / (pd || 1)) * 160, ky: ((P.y - y) / (pd || 1)) * 160, source: o.owner, type: 'blast', status: o.status, by: o.by });
+      if (mul > 0) C.hurt(game, P, D * k * mul, { kx: ((P.x - x) / (pd || 1)) * 160, ky: ((P.y - y) / (pd || 1)) * 160, source: o.owner, type: 'blast', status: o.status, by: o.by, damageType: o.damageType });
     }
     // enemies (your blasts and barrels hurt enemies; an enemy's only if its faction fights them)
     const enemyBlast = o.owner === 'enemy';
@@ -492,7 +516,7 @@
         const d = U.dist(x, y, e.x, e.y);
         if (d < R + e.r && losOK(e.x, e.y)) {
           const k = 1 - U.clamp(d / (R + e.r), 0, 1) * 0.6;
-          C.hurt(game, e, D * k, { kx: ((e.x - x) / (d || 1)) * 260, ky: ((e.y - y) / (d || 1)) * 260, source: enemyBlast ? 'enemy' : 'player', type: 'blast', status: o.status, by: o.by });
+          C.hurt(game, e, D * k, { kx: ((e.x - x) / (d || 1)) * 260, ky: ((e.y - y) / (d || 1)) * 260, source: enemyBlast ? 'enemy' : 'player', type: 'blast', status: o.status, by: o.by, damageType: o.damageType });
         }
       }
     }

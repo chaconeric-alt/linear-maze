@@ -175,7 +175,7 @@
     else if (kind === 'enemies') buildEnemy(def);
     else if (kind === 'lootTables') buildLoot(def);
     else if (kind === 'npcs') {
-      if (def.look && def.look.type === 'sprite') Object.assign(def, ED.looks.sprite(def.look, 'npc'));
+      if (def.look && (def.look.type === 'sprite' || def.look.type === 'sheet')) Object.assign(def, ED.looks[def.look.type](def.look, 'npc'));
     }
     return def;
   };
@@ -705,6 +705,14 @@
   // ================================================================ enemies
   function buildEnemy(def) {
     if (def.look) Object.assign(def, ED.lookFor(def.look, 'enemy'));
+    if (def.sheetDeath && !def._sheetHooked) {
+      def._sheetHooked = true;
+      const prev = def.onDeath;
+      def.onDeath = function (e, game) {
+        if (prev) prev.call(this, e, game);
+        if (def.sheetDeath) def.sheetDeath(e, game);
+      };
+    }
     if (def.deathEffects && !def._deathHooked) {
       def._deathHooked = true;
       const prev = def.onDeath;
@@ -940,6 +948,7 @@
       // tiles bake once; repaint any chunk that baked before the picture decoded
       const g = LM.game;
       if (g && g.renderer && g.renderer.chunks) g.renderer.chunks.clear();
+      if (g && g.renderer && LM.ng && LM.ng.oblique) LM.ng.oblique.forget(g.renderer);
       if (ED.onImageLoad) ED.onImageLoad(id);
     };
     img.src = src;
@@ -996,6 +1005,9 @@
     }
     return out;
   };
+
+  /** A sprite sheet made from a 3D model (engine/nextgen-sheets.js): direction and animation picked as it moves. */
+  ED.looks.sheet = (look, kind) => (LM.ng && LM.ng.sheetLook ? LM.ng.sheetLook(look, kind, ED.image) : ED.looks.sprite(look, kind));
 
   /** A creature from parameters, in the style of the core enemies (top-down, facing right). */
   ED.looks.creature = function (look) {

@@ -8,6 +8,8 @@
  *      line-of-sight mask)
  *   5. emissive pass ('lighter'): glows, tracers, beams, telegraphs
  *   6. overlays: damage numbers, interaction ring, crosshair, vignette
+ * A next-generation floor (engine/nextgen.js) adds raised walls to 3, takes them into 4, adds its
+ * neon to 5 and its ceiling silhouettes between 5 and 6. Other floors draw exactly as before.
  */
 'use strict';
 (function () {
@@ -173,12 +175,14 @@
       this.lc.height = Math.ceil(this.canvas.height / 2);
       this.chunks.clear();
       this.chunkOrder.length = 0;
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this);
       if (this.below) this.below.chunks.clear();
     }
     setLevel(level) {
       this.level = level;
       this.chunks.clear();
       this.chunkOrder.length = 0;
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this);
       this.decals = [];
       this.lightTiles = new Map();
       this.lightTileScale = 0;
@@ -226,6 +230,11 @@
       const info = { level: L, env, T, x: 0, y: 0, rnd: null, rot: 0, across: undefined, turnFloor: false, variant: 0,
         n: (dx, dy) => {
           if (info.rot > 0) [dx, dy] = LM.Level.turnDir(dx, dy, info.rot);
+          // a curved edge's wall part counts as wall to the square beside it (engine/shapes.js)
+          if (L.curve) {
+            const w = LM.shapes.wallToward(L, info.x + dx, info.y + dy, info.x, info.y);
+            if (w) return w;
+          }
           return L.t(info.x + dx, info.y + dy);
         },
       };
@@ -258,6 +267,7 @@
           }
         }
       }
+      if (L.curve && L === this.level) this.bakeCurves(g, tx0, ty0, info);
       // curved rooms: the curve's face, lip and shadow over the tiles (engine/curves.js)
       if (L.ovals && L.ovals.length && LM.curves) {
         try {
@@ -275,6 +285,69 @@
         this.paintDecal(g, d);
       }
       return c;
+    }
+    /** Curved edges (engine/shapes.js): the wall part of each square, painted with its wall's top, a dark rim
+     *  along the curve and a soft shadow on the floor side. */
+    bakeCurves(g, tx0, ty0, info) {
+      const L = this.level, SH = LM.shapes;
+      for (let ty = ty0; ty < ty0 + CH; ty++) {
+        for (let tx = tx0; tx < tx0 + CH; tx++) {
+          if (!L.inBounds(tx, ty)) continue;
+          const refs = L.curve[ty * L.w + tx];
+          if (!refs) continue;
+          for (const ref of refs) {
+            const wall = ref.wall;
+            // the floor side: a soft contact shadow along the curve
+            g.save();
+            SH.clipOpen(g, ref, tx, ty);
+            g.lineCap = 'round';
+            for (const [w, a] of [[22, 0.1], [13, 0.12], [6, 0.16]]) {
+              g.strokeStyle = 'rgba(0,0,0,' + a + ')';
+              g.lineWidth = w;
+              g.beginPath();
+              for (const pc of ref.pieces) {
+                g.moveTo(pc.ax, pc.ay);
+                g.lineTo(pc.bx, pc.by);
+              }
+              g.stroke();
+            }
+            g.restore();
+            // the wall side, as the wall's own top (every neighbour is wall, so no front face)
+            g.save();
+            SH.clipWall(g, ref, tx, ty);
+            const n0 = info.n;
+            info.x = tx;
+            info.y = ty;
+            info.rot = 0;
+            info.variant = 0;
+            info.rnd = U.mulberry32((L.seed ^ (tx * 7919 + ty * 104729)) >>> 0);
+            info.n = () => wall;
+            try {
+              if (wall.bake) wall.bake(g, tx * T, ty * T, info);
+              else {
+                g.fillStyle = (L.env.wall && L.env.wall.top) || '#2a2a2a';
+                g.fillRect(tx * T, ty * T, T, T);
+              }
+            } finally {
+              info.n = n0;
+            }
+            g.restore();
+            g.save();
+            g.beginPath();
+            g.rect(tx * T, ty * T, T, T);
+            g.clip();
+            g.strokeStyle = 'rgba(0,0,0,0.45)';
+            g.lineWidth = 1.4;
+            g.beginPath();
+            for (const pc of ref.pieces) {
+              g.moveTo(pc.ax, pc.ay);
+              g.lineTo(pc.bx, pc.by);
+            }
+            g.stroke();
+            g.restore();
+          }
+        }
+      }
     }
     /** Soft contact shadow on ground tiles next to tall solids. */
     bakeAO(g, tx, ty, L) {
@@ -351,6 +424,7 @@
       this.chunks.delete(key);
       const i = this.chunkOrder.indexOf(key);
       if (i >= 0) this.chunkOrder.splice(i, 1);
+      if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this, tx, ty);
     }
 
     // ---------------------------------------------------- frame
@@ -405,6 +479,8 @@
       const tx0 = Math.max(0, Math.floor(view.x0 / T)), tx1 = Math.min(L.w - 1, Math.floor(view.x1 / T));
       const ty0 = Math.max(0, Math.floor(view.y0 / T)), ty1 = Math.min(L.h - 1, Math.floor(view.y1 / T));
       this.tileView = { tx0, tx1, ty0, ty1 };
+      // a next-generation floor: this frame's camera tilt (null on every other floor)
+      const ngf = L.ng && LM.ng ? LM.ng.frame(this, game, dt) : (this.ngf = null);
 
       // 1b. the floor below, through glass floors and down atriums (level.below)
       if (this.below) {
@@ -431,6 +507,7 @@
       for (const e of game.enemies) if (!e.dead && inView(e.x, e.y, e.def.drawRadius) && (game.attract || e.visible)) drawables.push(e);
       for (const n of game.npcs) if (inView(n.x, n.y) && n.vis > 0.01) drawables.push(n);
       if (game.player && !game.attract) drawables.push(game.player);
+      if (ngf) LM.ng.oblique.addPieces(this, game, drawables);
       drawables.sort((a, b) => (a.z || 0) - (b.z || 0) || a.y - b.y);
       for (const o of drawables) if (o.drawShadow) o.drawShadow(ctx, game, t);
       game.particles.draw(ctx, 'under', view);
@@ -438,9 +515,11 @@
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.draw(ctx, game, t);
       for (const fx of game.fx) if (fx.draw) fx.draw(ctx, game, t);
       game.particles.draw(ctx, 'normal', view);
+      if (ngf && LM.ng.ceiling) LM.ng.ceiling.draw(ctx, game, t, this, true);
 
       // 4. lighting
       this.renderLight(game, view, ox, oy);
+      if (ngf) LM.ng.oblique.stampLight(this, game);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = 'multiply';
       ctx.drawImage(this.lc, 0, 0, this.lc.width, this.lc.height, 0, 0, this.lc.width * 2, this.lc.height * 2);
@@ -458,10 +537,12 @@
       for (const p of game.projectiles) if (inView(p.x, p.y)) p.drawGlow(ctx, game, t);
       for (const fx of game.fx) if (fx.drawGlow) fx.drawGlow(ctx, game, t);
       for (const tr of game.traps) if (tr.drawGlow) tr.drawGlow(ctx, game, t);
+      if (ngf && LM.ng.neon) LM.ng.neon.drawGlow(ctx, game, t, this);
       if (LM.objectives && !game.attract) LM.objectives.drawGlow(ctx, game, t);
       if (L.ovals && L.ovals.length && LM.curves) LM.curves.drawGlow(ctx, game, t, view);
       game.particles.draw(ctx, 'glow', view);
       ctx.globalCompositeOperation = 'source-over';
+      if (ngf && LM.ng.ceiling) LM.ng.ceiling.draw(ctx, game, t, this);
 
       // 6. overlays
       game.particles.draw(ctx, 'overlay', view);
@@ -858,8 +939,30 @@
           ctx.moveTo(x + k, y + k); ctx.lineTo(x + k / 2, y + k / 2);
           ctx.stroke();
         }
+        // a magazine reload fills a ring; a weapon with heat shows how hot it is (red when it has overheated)
+        if (w && P.reloadT > 0) {
+          const f = 1 - P.reloadT / (P.reloadMax || 1);
+          ctx.strokeStyle = 'rgba(232,190,110,0.35)';
+          ctx.lineWidth = 2 * d;
+          ctx.beginPath();
+          ctx.arc(x, y, 14 * d, 0, U.TAU);
+          ctx.stroke();
+          ctx.strokeStyle = 'rgba(232,190,110,0.95)';
+          ctx.beginPath();
+          ctx.arc(x, y, 14 * d, -Math.PI / 2, -Math.PI / 2 + U.TAU * f);
+          ctx.stroke();
+        } else if (w && w.heat) {
+          const k = P.heatOf(w, game), hot = P.overheated(w, game);
+          if (k > 0.01) {
+            ctx.strokeStyle = hot ? 'rgba(255,60,40,' + (0.6 + 0.4 * Math.sin(this.time * 14)) + ')' : 'rgba(255,' + Math.round(200 - 140 * k) + ',80,0.85)';
+            ctx.lineWidth = 2 * d;
+            ctx.beginPath();
+            ctx.arc(x, y, 14 * d, -Math.PI / 2, -Math.PI / 2 + U.TAU * k);
+            ctx.stroke();
+          }
+        }
         // reload/cooldown ring for slow weapons
-        if (w && w.fireRate < 2 && P.fireCd > 0) {
+        if (w && w.fireRate < 2 && P.fireCd > 0 && !(P.reloadT > 0)) {
           const f = P.fireCd / (1 / w.fireRate);
           ctx.strokeStyle = 'rgba(232,190,110,0.8)';
           ctx.lineWidth = 2 * d;

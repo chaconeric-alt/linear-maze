@@ -89,6 +89,7 @@
     if (E.levelOrder) out.push('floor order: ' + E.levelOrder.join(', '));
     if (E.player) out.push('player: ' + Object.keys(E.player.base || {}).concat(Object.keys(E.player.start || {}).map((k) => 'start ' + k), Object.keys(E.player.ammoMax || {}).map((k) => 'max ' + k)).join(', '));
     for (const k of Object.keys(E.knobs || {})) out.push('setting ' + k);
+    for (const k of Object.keys(E.sheets || {})) out.push('3D model sheet ' + k);
     return out;
   };
 

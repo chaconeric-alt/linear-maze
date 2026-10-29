@@ -23,7 +23,8 @@
  *   new floor the-complex
  *   new monster knife-fighter
  *   new tile type glass-corner (a copy of glass-v)
- *   floor order: ds-f0, ds-f1, ds-f2, ds-f3, ds-f4, ds-f5, ds-f5a, ds-b1, dead-signal-lab, the-complex, sterile-annex
+ *   floor order: ds-f1, ds-f2, dead-signal-lab, the-complex, sterile-annex
+ *   next-generation look (tilted camera, ceiling silhouettes, neon) on every floor
  */
 'use strict';
 (function () {
@@ -410,6 +411,7 @@
       levels: {
         "dead-signal-lab": {
           name: "The Dead Signal Laboratory",
+          nextGen: { enabled: true, oblique: { on: true }, ceiling: { on: true }, neon: { on: true } },
           environment: "foundry",
           intro: "The stair lets out into a decontamination lobby. The shower heads are still dripping. Somewhere inside the walls a relay clicks, over and over, like a tongue against teeth.",
           map: [
@@ -651,6 +653,7 @@
         },
         "sterile-annex": {
           name: "The Sterile Annex",
+          nextGen: { enabled: true, oblique: { on: true }, ceiling: { on: true }, neon: { on: true } },
           environment: "office",
           intro: "The stair ends at a door that opens before you touch it. Everything below is white, cold and spotless, and every screen on the wall shows the same word: HOLD. Whatever is being held, do not take the thing that holds it.",
           map: [
@@ -842,6 +845,7 @@
         },
         "the-complex": {
           name: "The Complex",
+          nextGen: { enabled: true, oblique: { on: true }, ceiling: { on: true }, neon: { on: true } },
           order: 99,
           environment: "glass-annex",
           intro: "",
@@ -1079,7 +1083,13 @@
       },
       terrain: { "glass-corner": { $extends: "glass-v", name: "Glass Corner" } },
     },
-    levelOrder: ["ds-f0", "ds-f1", "ds-f2", "ds-f3", "ds-f4", "ds-f5", "ds-f5a", "ds-b1", "dead-signal-lab", "the-complex", "sterile-annex"],
+    patch: {
+      levels: {
+        "ds-f1": { nextGen: { enabled: true, oblique: { on: true }, ceiling: { on: true }, neon: { on: true } }, },
+        "ds-f2": { nextGen: { enabled: true, oblique: { on: true }, ceiling: { on: true }, neon: { on: true } }, },
+      },
+    },
+    levelOrder: ["ds-f1", "ds-f2", "dead-signal-lab", "the-complex", "sterile-annex"],
     player: null,
   });
 })();

@@ -152,10 +152,15 @@
     v = Math.round(v * 100) / 100;
     return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
   }
-  ui.modList = function (mods) {
+  /** The list of what a piece of gear changes. coverage (0..1): its armor only counts on hits that strike the plate. */
+  ui.modList = function (mods, coverage) {
     const out = h('ul', { class: 'mods' });
     for (const [k, v] of Object.entries(mods || {})) {
       if (!v || !MOD_LABELS[k]) continue;
+      if (k === 'armor' && coverage != null) {
+        out.appendChild(h('li', { class: 'good' }, MOD_LABELS[k](v) + ' on the ' + Math.round(coverage * 100) + '% of hits that strike the plate'));
+        continue;
+      }
       const good = GOOD_WHEN_NEGATIVE.has(k) ? v < 0 : v > 0;
       out.appendChild(h('li', { class: good ? 'good' : 'bad' }, MOD_LABELS[k](v)));
     }
@@ -169,6 +174,8 @@
       ['Output', Math.round(dps + (w.aoe ? w.aoe.damage * w.fireRate : 0)) + ' / s'],
       ['Ammo', w.ammo ? LM.AMMO_NAMES[w.ammo] + (w.ammoPerShot > 1 ? ' ×' + w.ammoPerShot : '') : 'Unlimited'],
     ];
+    if (w.magazine) rows.push(['Magazine', w.magazine + ' · ' + (w.reloadTime || 1.5) + ' s reload']);
+    if (w.heat) rows.push(['Overheats', (w.heat.shots || 6) + ' shots in ' + (w.heat.window || 3) + ' s']);
     if (w.pierce) rows.push(['Pierces', w.pierce + ' foes']);
     return h('dl', { class: 'stats' }, rows.map(([a, b]) => [h('dt', null, a), h('dd', null, b)]));
   };
@@ -249,7 +256,13 @@
     }
     if (w) {
       const ammo = w.ammo ? String(P.ammo[w.ammo] || 0) : '∞';
-      set('ammo', ui.el.wAmmo, w.ammo ? ammo + ' ' + LM.AMMO_NAMES[w.ammo].toLowerCase() : 'unlimited');
+      let line = w.ammo ? ammo + ' ' + LM.AMMO_NAMES[w.ammo].toLowerCase() : 'unlimited';
+      // a magazine weapon shows what's loaded over what's left; reloading and overheating say so
+      if (w.magazine) line = P.magOf(w) + ' / ' + (w.ammo ? ammo + ' ' + LM.AMMO_NAMES[w.ammo].toLowerCase() : '∞');
+      if (P.reloadT > 0) line = 'reloading…';
+      else if (w.heat && P.overheated(w, game)) line = 'overheated';
+      else if (w.magazine && P.magOf(w) <= 0) line += ' · R to reload';
+      set('ammo', ui.el.wAmmo, line);
     } else set('ammo', ui.el.wAmmo, gd ? (typeof gd.hint === 'function' ? gd.hint(game, P) : gd.hint || '') : 'no weapon');
     const gKey = P.gadgets.map((id) => {
       const g = LM.get('gadgets', id);
@@ -662,7 +675,7 @@
   const KEY_LABEL = (code) => String(code || '').replace(/^Key/, '').replace(/^Digit/, '').replace(/^Arrow/, '');
   /** The engine's own controls, plus a row for each gadget (the phone's F) the game has. */
   ui.controlRows = function () {
-    const rows = [['WASD', 'Move'], ['Mouse', 'Aim'], ['Click', 'Fire (hold)'], ['Shift', 'Dash'], ['E', 'Use, open, talk'], ['1–9', 'Switch weapon'], ['Tab', 'Inventory'], ['Esc', 'Pause']];
+    const rows = [['WASD', 'Move'], ['Mouse', 'Aim'], ['Click', 'Fire (hold)'], ['Shift', 'Dash'], ['E', 'Use, open, talk'], ['1–9', 'Switch weapon'], ['R', 'Reload'], ['Tab', 'Inventory'], ['Esc', 'Pause']];
     for (const gd of Object.values(LM.registry.gadgets)) if (gd && gd.key) rows.push([KEY_LABEL(gd.key), gd.name || gd.id]);
     rows.push(['M', 'Sound on or off']);
     return rows;
@@ -742,7 +755,7 @@
           h('dt', null, 'Foes slain'), h('dd', null, game.stats.kills + ''),
           h('dt', null, 'Gold carried'), h('dd', null, game.player.gold + '')
         ),
-        h('p', { class: 'hint' }, 'WASD move · mouse aim · click fire · Shift dash · E interact · 1–9 or wheel to switch weapons · Q last weapon · Tab inventory · M sound'),
+        h('p', { class: 'hint' }, 'WASD move · mouse aim · click fire · Shift dash · E interact · 1–9 or wheel to switch weapons · Q last weapon · R reload · Tab inventory · M sound'),
         LM.objectives && LM.objectives.view(game) ? h('div', null, h('h3', null, 'Objectives'), LM.objectives.view(game)) : null,
         LM.comms && LM.comms.log.length ? h('div', null, h('h3', null, 'Transmissions'), LM.comms.logView(5)) : null
       ),
@@ -784,7 +797,7 @@
           if (!id) return h('div', { class: 'inv-row empty' }, h('span', { class: 'slot-name' }, slotNames[s]), h('span', { class: 'muted' }, 'Nothing'));
           const a = LM.get('armor', id);
           return h('div', { class: 'inv-row' }, ui.icons.armor(a, 34),
-            h('div', { class: 'inv-info' }, h('span', { class: 'slot-name' }, slotNames[s]), h('strong', null, a.name), ui.modList(a.mods), a.desc ? h('span', { class: 'inv-desc' }, a.desc) : null),
+            h('div', { class: 'inv-info' }, h('span', { class: 'slot-name' }, slotNames[s]), h('strong', null, a.name), ui.modList(a.mods, a.coverage), a.desc ? h('span', { class: 'inv-desc' }, a.desc) : null),
             h('button', { class: 'btn small quiet', type: 'button', on: { click: () => { P.unequip(s); LM.audio.play('switch'); rerender(); } } }, 'Take off'));
         })
       );
@@ -792,7 +805,7 @@
         P.bag.length ? P.bag.map((id, i) => {
           const a = LM.get('armor', id);
           return h('div', { class: 'inv-row' }, ui.icons.armor(a, 34),
-            h('div', { class: 'inv-info' }, h('span', { class: 'slot-name' }, slotNames[a.slot]), h('strong', null, a.name), ui.modList(a.mods), a.desc ? h('span', { class: 'inv-desc' }, a.desc) : null),
+            h('div', { class: 'inv-info' }, h('span', { class: 'slot-name' }, slotNames[a.slot]), h('strong', null, a.name), ui.modList(a.mods, a.coverage), a.desc ? h('span', { class: 'inv-desc' }, a.desc) : null),
             h('button', { class: 'btn small', type: 'button', on: { click: () => { P.equipArmor(id); LM.audio.play('switch'); rerender(); } } }, 'Wear'));
         }) : h('p', { class: 'muted' }, 'Spare armor and clothing you pick up goes here.')
       );

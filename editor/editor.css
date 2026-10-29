@@ -467,3 +467,45 @@ kbd { font-family: var(--f-mono); font-size: 11px; border: 1px solid var(--line-
 .lift-matrix td { text-align: center; }
 .lift-matrix td.off input { opacity: 0.7; }
 .lift-matrix td .lift-status { margin-left: 6px; }
+
+/* next generation (js/ng.js, js/ng-tiles.js, js/ng-models.js, js/views/nextgen.js) */
+.ng-slider { display: flex; align-items: center; gap: 8px; width: 100%; }
+.ng-slider input[type=range] { flex: 1; min-width: 80px; accent-color: var(--brass); }
+.ng-val { min-width: 64px; color: var(--muted); font-size: 12px; text-align: right; }
+.ng-level fieldset { margin-top: 10px; }
+.ng-level .chips .check { margin-right: 10px; }
+.ng-color { padding: 2px 4px; }
+.ng-color .color input.hex { width: 78px; }
+.ng-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; box-shadow: 0 0 6px currentColor; }
+.ng-roles .btn { border-left-width: 3px; }
+.ng-source { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; margin: 12px 0; background: var(--ink-2); }
+.ng-source-body { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-top: 8px; }
+.ng-sheet { cursor: crosshair; max-width: 100%; background: repeating-conic-gradient(#1c2029 0% 25%, #252a35 0% 50%) 0 0 / 16px 16px; image-rendering: pixelated; }
+.ng-tile { width: 56px; height: 56px; border: 2px solid; border-radius: 3px; image-rendering: pixelated; }
+.ng-room-wrap { margin: 12px 0; }
+.ng-room { width: 336px; max-width: 100%; border-radius: var(--r); image-rendering: pixelated; }
+.ng-floors { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+.ng-floors th, .ng-floors td, .ng-clips th, .ng-clips td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.ng-floors th, .ng-clips th { font: 600 12px var(--f-ui); color: var(--muted); }
+.ng-clips { border-collapse: collapse; width: 100%; }
+.ng-clips input.num { width: 70px; }
+.modal.ng-wide { width: min(1080px, 100%); }
+.ng-model-grid { display: grid; grid-template-columns: minmax(240px, 300px) 1fr; gap: 18px; align-items: start; }
+.ng-model-left { display: flex; flex-direction: column; gap: 6px; }
+.ng-model-left .subform { grid-template-columns: 1fr; }
+.ng-model-left .ng-val { min-width: 84px; }
+.ng-model-view { max-width: 100%; background: repeating-conic-gradient(#1c2029 0% 25%, #252a35 0% 50%) 0 0 / 16px 16px; border-radius: var(--r); align-self: center; }
+.ng-models h4 { font: 600 13px var(--f-ui); color: var(--muted); margin: 14px 0 6px; }
+.ng-sheet-view { max-height: 320px; overflow: auto; background: repeating-conic-gradient(#1c2029 0% 25%, #252a35 0% 50%) 0 0 / 16px 16px; border-radius: var(--r); }
+.ng-sheet-view img { display: block; image-rendering: pixelated; }
+.ng-demo { border-radius: var(--r); flex: 0 0 auto; }
+.ng-model-row { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 760px) { .ng-model-grid { grid-template-columns: 1fr; } }
+
+/* sprite sheets drawn by hand (js/ng-models.js importDrawn) */
+.ng-sheet-grid { display: block; max-width: 100%; margin-top: 8px; background: repeating-conic-gradient(#2a2a30 0 25%, #34343a 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line, #444); }
+.ng-anim-table { border-collapse: collapse; margin-top: 8px; }
+.ng-anim-table th { text-align: left; font-weight: 600; font-size: 11px; padding: 3px 6px; color: var(--muted, #999); }
+.ng-anim-table td { padding: 3px 6px; }
+.ng-anim-table input { width: 64px; }
+.hint.warn { color: #e8a040; }
