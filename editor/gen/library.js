@@ -19,7 +19,7 @@
   const G = (root.LMGen = root.LMGen || {});
   const LMroot = (root.LM = root.LM || {});
 
-  G.SECTIONS = ['settings', 'budgets', 'types', 'zones', 'rooms', 'looks', 'dressings', 'monsters', 'encounters', 'locks', 'keys', 'traps', 'puzzles', 'treasure', 'interest', 'text'];
+  G.SECTIONS = ['settings', 'budgets', 'types', 'zones', 'rooms', 'looks', 'dressings', 'monsters', 'encounters', 'locks', 'keys', 'traps', 'puzzles', 'treasure', 'interest', 'text', 'content'];
   G.libraries = G.libraries || {};
 
   G.emptyLibrary = (game) => {

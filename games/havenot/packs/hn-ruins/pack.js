@@ -11,6 +11,7 @@ LM.describePack({
   scripts: [
     '../../../../editor/gen/core.js',
     '../../../../editor/gen/library.js',
+    '../../../../editor/gen/content.js',
     '../../../../editor/gen/stages-concept.js',
     '../../../../editor/gen/stages-graph.js',
     '../../../../editor/gen/stages-layout.js',
@@ -24,6 +25,7 @@ LM.describePack({
     '../../gen/library/monsters.js',
     '../../gen/library/rooms.js',
     '../../gen/library/settings.js',
+    '../../gen/library/settings10.js',
     '../../gen/library/text.js',
     '../../gen/library/traps.js',
     '../../gen/library/types.js',
