@@ -1,4 +1,4 @@
-# HaveNot balance job lists: python3 mkjobs.py start|l2|levels TRIALS  ->  jobs-<which>.json
+# HaveNot balance job lists: python3 mkjobs.py start|l2|levels|rooms TRIALS  ->  jobs-<which>.json
 # start: the six starting builds against Threat 1-3 groups; l2: Level 2 characters with Level 3 gear;
 # levels: a Level N character with Level N+1 gear on Threat N+1 (the per-level numbers), and each level-up
 # improvement on its own (is any of them clearly the best pick?).
@@ -18,6 +18,10 @@ G = {
  'T3 grease monkey': (3, ['hn-grease-monkey']),
  'T3 eggbot x6': (3, ['hn-eggbot']*6),
  'T3 princess': (3, ['hn-princess']),
+ 'T1 deadbot x4': (1, ['hn-deadbot']*4),
+ 'T1 snapper x2': (1, ['hn-snapper']*2),
+ 'T2 dancer x3': (2, ['hn-dancer']*3),
+ 'T2 dancer x4': (2, ['hn-dancer']*4),
 }
 B = {
  'human handgun': dict(origin='human', gear='handgun'),
@@ -33,6 +37,20 @@ B = {
  'L2 human gauss': dict(origin='human', gear='gauss', level=2),
 }
 which = sys.argv[1]; trials = int(sys.argv[2])
+if which == 'rooms':
+    # the room-function monsters: the six starting builds, and Level 1 with Level 2 gear
+    NEW = ['T1 deadbot x4', 'T1 snapper x2', 'T2 dancer x3', 'T2 dancer x4']
+    L1G = {'L1 arc carbine+vest': dict(origin='human', gear='handgun', weapons=['hn-arc-carbine'], armor=['hn-vest'], ammo={'cells': 300}, level=1)}
+    jobs = []
+    for bn, b in list(B.items())[:6] + list(L1G.items()):
+        for gn in NEW:
+            th, grp = G[gn]
+            j = dict(name=bn + ' | ' + gn, group=grp, threat=th, level=1, trials=trials, maxT=90)
+            j.update(SK); j.update(b)
+            jobs.append(j)
+    json.dump(jobs, open('jobs-rooms.json', 'w'))
+    print(len(jobs))
+    sys.exit(0)
 if which == 'levels':
     AMMO = {'rounds': 600, 'shells': 200, 'cells': 300, 'grease': 300}
     L1 = {
