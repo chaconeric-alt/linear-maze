@@ -14,6 +14,16 @@
  *   slots     how welcome each job is here, 0–1: key, clue, control (switches), encounter, trap; treasure [min, max] containers
  *   containers  hn-cache kinds for treasure and keys: locker | desk | safe | case | shelf | register | corpse
  *   names, notes  text-pool keys (default roomNames.<id>, zoneNotes.<zone>)
+ *   guards    the room's own monsters, by its function: [{ ids: [...] | kind, roles, placement, cost: [min, max],
+ *             count: [min, max], chance }] (paid from the floor's monster budget)
+ *   loot      what its containers keep: { itemId | 'gear' | 'sell' | 'expend' | 'artifact': weight }
+ *             ('gear' is the floor's Threat Level plus one where the list has it)
+ *   terminals { chatty | eliza | redteam: chance } the generated terminals that belong in it
+ *
+ * Room functions (Marco's list) and where they live: Conference Room = meeting-room / boardroom; Control Center =
+ * command-center; Security Center = security-station; Armory = armory; Med-Bay = medical-bay; Locker Room =
+ * locker-area; Storage Room = storeroom; Server Room = server-room; Mess Hall = mess-hall; and new: training-room,
+ * personal-quarters, exercise-room, av-library, vip-room, auto-bar, arboretum, crypt, chapel.
  */
 LM.genLibrary('havenot', {
   rooms: {
@@ -52,8 +62,8 @@ LM.genLibrary('havenot', {
     'command-center': {
       name: 'Command center', ref: 'Vol 2 p. 60', roles: ['goal', 'path'], goals: ['shut-down', 'kill', 'recover'], zones: ['command', 'security'],
       size: [[9, 7], [12, 9]], shapes: { rect: 3, ellipse: 1 }, variant: 'room',
-      fixtures: [{ item: 'conf-table', place: 'center', count: 1 }, { item: 'tv', place: 'wall', count: [1, 2], say: 'screens.command' }, { item: 'hn-terminal', place: 'wall-row', count: [1, 2], say: 'terminals.decor' }],
-      slots: { key: 0.4, clue: 0.5, control: 0.8, encounter: 0.8, treasure: [1, 2] }, containers: ['desk', 'shelf'],
+      fixtures: [{ item: 'conf-table', place: 'center', count: 1 }, { item: 'tv', place: 'wall', count: [1, 2], say: 'screens.command' }, { item: 'hn-console', props: { kind: 'control' }, place: 'wall-row', count: [2, 3] }, { item: 'hn-terminal', place: 'wall-row', count: [0, 1], say: 'terminals.decor' }],
+      slots: { key: 0.4, clue: 0.5, control: 0.8, encounter: 0.8, treasure: [1, 2] }, containers: ['desk', 'shelf'], terminals: { redteam: 0.5 },
     },
     'warlord-quarters': {
       name: 'Warlord’s quarters', ref: 'Vol 2 p. 157 (Personal effects)', roles: ['goal', 'side'], goals: ['reach-vault', 'recover', 'kill'], zones: ['vault', 'executive', 'command'],
@@ -87,13 +97,13 @@ LM.genLibrary('havenot', {
     },
     'meeting-room': {
       name: 'Meeting room', notTypes: ['tomb'], ref: 'hn-agency-1', zones: ['employee', 'executive'], size: [[6, 5], [8, 6]], variant: 'room',
-      fixtures: [{ item: 'conf-table', place: 'center', count: 1 }, { item: 'whiteboard', place: 'wall', count: [0, 1], say: 'whiteboards' }],
+      fixtures: [{ item: 'conf-table', place: 'center', count: 1 }, { item: 'chair', place: 'middle', count: [2, 4] }, { item: 'tv', place: 'wall', count: 1, say: 'screens.slides' }, { item: 'whiteboard', place: 'wall', count: [0, 1], say: 'whiteboards' }],
       slots: { key: 0.4, clue: 0.8, control: 0.2, encounter: 0.3, treasure: [0, 1] }, containers: ['corpse', 'desk'],
     },
     'locker-area': {
       name: 'Locker area', ref: 'Vol 2 p. 63; hn-agency-1', zones: ['employee', 'security', 'service'], size: [[5, 4], [8, 6]], variant: 'room',
-      fixtures: [{ item: 'hn-cache', props: { kind: 'locker' }, container: true, count: [3, 5], place: 'wall-row' }],
-      slots: { key: 0.8, clue: 0.4, control: 0.1, encounter: 0.3, treasure: [0, 1] }, containers: ['locker'],
+      fixtures: [{ item: 'hn-cache', props: { kind: 'locker' }, container: true, count: [3, 5], place: 'wall-row' }, { item: 'bench', place: 'middle', count: [0, 1] }],
+      slots: { key: 0.8, clue: 0.4, control: 0.1, encounter: 0.3, treasure: [1, 2] }, containers: ['locker'],
     },
     'break-room': {
       name: 'Break room', notTypes: ['tomb'], ref: 'hn-agency-1', zones: ['employee', 'service'], size: [[6, 5], [8, 7]], variant: 'cafe',
@@ -107,14 +117,14 @@ LM.genLibrary('havenot', {
     },
     'medical-bay': {
       name: 'Medical bay', notTypes: ['tomb'], ref: 'Vol 2 p. 64 (Health Station), p. 67 (Medical Couch)', zones: ['employee', 'service', 'labs'], size: [[6, 5], [8, 7]], variant: 'wet', max: 1,
-      fixtures: [{ item: 'hn-health-station', place: 'wall', count: 1, props: { charge: 50 } }, { item: 'counter', place: 'wall-row', count: [1, 2] }, { item: 'hn-cache', props: { kind: 'shelf' }, container: true, count: [1, 1], place: 'wall-row' }],
-      slots: { key: 0.3, clue: 0.4, control: 0.1, encounter: 0.2, treasure: [0, 1] }, containers: ['shelf'],
+      fixtures: [{ item: 'hn-health-station', place: 'wall', count: 1, props: { charge: 50 } }, { item: 'hn-bunk', place: 'wall-row', count: [1, 2] }, { item: 'hn-console', props: { kind: 'diag' }, place: 'wall-row', count: [1, 1] }, { item: 'counter', place: 'wall-row', count: [0, 1] }, { item: 'hn-cache', props: { kind: 'shelf' }, container: true, count: [1, 1], place: 'wall-row' }],
+      slots: { key: 0.3, clue: 0.4, control: 0.1, encounter: 0.2, treasure: [0, 1] }, containers: ['shelf'], loot: { 'hn-health-charge': 3, 'hn-health-pak': 1, 'hn-anti-tox': 1 }, terminals: { eliza: 0.5 },
     },
     // ---------------------------------------------------------------- service
     storeroom: {
       name: 'Storeroom', ref: 'Vol 2 p. 64 (Packing Crates); hn-agency-1', zones: ['service', 'employee', 'security', 'public', 'vault'], size: [[5, 4], [8, 6]], variant: 'room',
-      fixtures: [{ item: 'hn-crate', props: { contents: 'treasure', kind: 'crate' }, container: true, count: [1, 3], place: 'wall-row', say: 'crates.label', prop: 'label' }, { item: 'crate', place: 'wall-row', count: [0, 2] }],
-      slots: { key: 0.4, clue: 0.3, control: 0.2, encounter: 0.4, treasure: [0, 1] }, containers: ['shelf'],
+      fixtures: [{ item: 'hn-crate', props: { contents: 'treasure', kind: 'crate' }, container: true, count: [1, 3], place: 'wall-row', say: 'crates.label', prop: 'label' }, { item: 'crate', place: 'wall-row', count: [1, 3] }],
+      slots: { key: 0.4, clue: 0.3, control: 0.2, encounter: 0.4, treasure: [0, 1] }, containers: ['shelf'], loot: { 'hn-meal-pack': 3, 'hn-drink-mix': 2, 'hn-neggs': 2, sell: 1 },
     },
     'robot-bay': {
       name: 'Robot repair bay', ref: 'Vol 2 p. 64; hn-agency-3', zones: ['service', 'security'], size: [[8, 6], [11, 8]], variant: 'room', max: 1,
@@ -129,7 +139,7 @@ LM.genLibrary('havenot', {
     },
     'mess-hall': {
       name: 'Mess hall', notTypes: ['tomb'], ref: 'Vol 2 p. 63 (Dining Hall)', zones: ['service', 'employee'], size: [[9, 7], [12, 9]], variant: 'cafe', max: 1,
-      fixtures: [{ item: 'table', place: 'middle', count: [2, 4] }, { item: 'bench', place: 'middle', count: [1, 3] }, { item: 'counter', place: 'wall-row', count: [1, 3] }, { item: 'vending', place: 'wall-row', count: [0, 1] }],
+      fixtures: [{ item: 'table', place: 'middle', count: [2, 4] }, { item: 'bench', place: 'middle', count: [1, 3] }, { item: 'counter', place: 'wall-row', count: [1, 2] }, { item: 'hn-autochef', place: 'wall-row', count: 1 }, { item: 'vending', place: 'wall-row', count: [0, 1] }],
       slots: { key: 0.3, clue: 0.5, control: 0.2, encounter: 0.8, treasure: [0, 1] }, containers: ['register', 'shelf'],
     },
     'junk-hall': {
@@ -151,13 +161,15 @@ LM.genLibrary('havenot', {
     },
     'security-station': {
       name: 'Security station', ref: 'Vol 2 p. 64; hn-agency-3', zones: ['security', 'command'], size: [[7, 6], [10, 8]], variant: 'room', max: 1,
-      fixtures: [{ item: 'tv', place: 'wall', count: [1, 3], say: 'screens.security' }, { item: 'filing', place: 'wall-row', count: [0, 2] }, { item: 'desk', place: 'middle', count: [1, 2], with: [{ item: 'chair', side: 's' }] }],
-      slots: { key: 0.5, clue: 0.6, control: 0.9, encounter: 0.7, treasure: [1, 1] }, containers: ['desk', 'locker'],
+      fixtures: [{ item: 'hn-sign', place: 'wall', count: 1, say: 'signs.airlock' }, { item: 'tv', place: 'wall', count: [1, 3], say: 'screens.security' }, { item: 'hn-console', props: { kind: 'monitor', flag: '$trapsOff', title: 'security console' }, place: 'wall-row', count: 1 }, { item: 'hn-console', props: { kind: 'monitor' }, place: 'wall-row', count: [0, 2] }, { item: 'desk', place: 'middle', count: [0, 1], with: [{ item: 'chair', side: 's' }] }],
+      slots: { key: 0.5, clue: 0.6, control: 0.9, encounter: 0.7, treasure: [1, 1] }, containers: ['desk', 'locker'], terminals: { redteam: 0.5 },
     },
     armory: {
       name: 'Armory', ref: 'Vol 2 p. 64 (Security Station may have an armory)', zones: ['security', 'command', 'vault'], size: [[6, 5], [9, 7]], variant: 'room', max: 1,
-      fixtures: [{ item: 'hn-cache', props: { kind: 'case' }, container: true, count: [1, 2], place: 'wall-row' }, { item: 'hn-cache', props: { kind: 'shelf' }, container: true, count: [1, 2], place: 'wall-row' }],
+      fixtures: [{ item: 'hn-cache', props: { kind: 'case' }, container: true, count: [1, 2], place: 'wall-row' }, { item: 'hn-cache', props: { kind: 'shelf' }, container: true, count: [1, 2], place: 'wall-row' }, { item: 'hn-safety-sign', place: 'wall', count: [0, 1], say: 'signs.safety' }],
       slots: { key: 0.4, clue: 0.2, control: 0.2, encounter: 0.7, treasure: [1, 2] }, containers: ['case', 'shelf'],
+      loot: { gear: 3, 'hn-grenade': 2, 'hn-slime-grenade': 1, 'hn-egg-grenade': 0.5 },
+      guards: [{ kind: 'robot', roles: ['guardian', 'hunter-killer', 'enemy-group'], cost: [4, 14], count: [1, 1], chance: 0.8 }],
     },
     kennels: {
       name: 'Kennels', ref: 'Vol 3 (Cyberspine kennels)', zones: ['security'], size: [[7, 6], [10, 8]], variant: 'room', types: ['war-bunker', 'war-lab'],
@@ -187,7 +199,7 @@ LM.genLibrary('havenot', {
     },
     'server-room': {
       name: 'Server room', ref: 'Vol 2 p. 63 (Cold Machines, Green Terminals)', zones: ['labs', 'command', 'security'], size: [[7, 5], [10, 7]], variant: 'room',
-      fixtures: [{ item: 'filing', place: 'grid', count: [2, 4] }, { item: 'hn-terminal', place: 'wall-row', count: [1, 2], say: 'terminals.decor' }],
+      fixtures: [{ item: 'hn-console', props: { kind: 'server' }, place: 'grid', count: [3, 6] }, { item: 'hn-console', props: { kind: 'server' }, place: 'wall-row', count: [1, 3] }, { item: 'hn-terminal', place: 'wall-row', count: [0, 1], say: 'terminals.decor' }],
       slots: { key: 0.3, clue: 0.5, control: 0.9, encounter: 0.5, treasure: [0, 1] }, containers: ['shelf'],
     },
     // ---------------------------------------------------------------- executive
@@ -198,8 +210,61 @@ LM.genLibrary('havenot', {
     },
     boardroom: {
       name: 'Boardroom', ref: 'Vol 2 p. 60 (Command Center for running the company)', zones: ['executive', 'command'], size: [[8, 6], [11, 8]], variant: 'room', max: 1,
-      fixtures: [{ item: 'conf-table', place: 'center', count: 1 }, { item: 'tv', place: 'wall', count: [1, 1], say: 'screens.board' }, { item: 'art', place: 'wall', count: [0, 2] }],
+      fixtures: [{ item: 'conf-table', place: 'center', count: 1 }, { item: 'chair', place: 'middle', count: [2, 4] }, { item: 'tv', place: 'wall', count: [1, 1], say: 'screens.slides' }, { item: 'art', place: 'wall', count: [0, 2] }],
       slots: { key: 0.5, clue: 0.7, control: 0.4, encounter: 0.5, treasure: [0, 1] }, containers: ['desk', 'case'],
+    },
+    // ---------------------------------------------------------------- room functions (new)
+    'training-room': {
+      name: 'Training room', notTypes: ['tomb'], ref: 'original', zones: ['employee', 'security'], size: [[8, 7], [11, 9]], variant: 'room',
+      fixtures: [{ item: 'desk', place: 'grid', count: [3, 6], with: [{ item: 'chair', side: 's' }] }, { item: 'exec-desk', place: 'wall-row', count: 1 }, { item: 'tv', place: 'wall', count: 1, say: 'screens.training' }, { item: 'whiteboard', place: 'wall', count: [0, 1], say: 'whiteboards' }],
+      slots: { key: 0.4, clue: 0.8, control: 0.2, encounter: 0.5, treasure: [0, 1] }, containers: ['desk'], terminals: { chatty: 0.5 },
+    },
+    'personal-quarters': {
+      name: 'Personal quarters', notTypes: ['tomb'], ref: 'original', zones: ['employee', 'service', 'security', 'executive'], size: [[5, 5], [8, 6]], variant: 'room',
+      fixtures: [{ item: 'hn-bunk', place: 'wall-row', count: [1, 3] }, { item: 'hn-cache', props: { kind: 'locker' }, container: true, count: [1, 2], place: 'wall-row' }, { item: 'rug', place: 'middle', chance: 0.4 }, { item: 'bin', place: 'corner', chance: 0.5 }, { item: 'mirror', place: 'wall', chance: 0.5 }],
+      slots: { key: 0.6, clue: 0.6, control: 0, encounter: 0.3, treasure: [1, 1] }, containers: ['locker', 'desk'], loot: { sell: 2, expend: 1 },
+    },
+    'exercise-room': {
+      name: 'Exercise room', notTypes: ['tomb'], ref: 'original', zones: ['employee', 'service', 'security'], size: [[7, 6], [10, 8]], variant: 'room', max: 1,
+      fixtures: [{ item: 'hn-exerciser', place: 'middle', count: [2, 4] }, { item: 'mirror', place: 'wall', count: [1, 2] }, { item: 'bench', place: 'wall-row', count: [0, 1] }, { item: 'hn-poster', place: 'wall', count: [0, 1], say: 'posters.fitness' }],
+      slots: { key: 0.3, clue: 0.4, control: 0.2, encounter: 0.4, treasure: [0, 1] }, containers: ['locker'],
+    },
+    'av-library': {
+      name: 'Library', ref: 'original', zones: ['employee', 'public', 'executive', 'gallery'], size: [[8, 6], [11, 9]], variant: 'room', max: 1,
+      fixtures: [{ item: 'hn-tapes', place: 'wall-row', count: [2, 4] }, { item: 'hn-tapes', place: 'grid', count: [1, 3] }, { item: 'hn-tape-player', place: 'wall-row', count: [1, 2] }, { item: 'table', place: 'middle', count: [0, 1] }, { item: 'chair', place: 'middle', count: [1, 2] }],
+      slots: { key: 0.5, clue: 0.8, control: 0.2, encounter: 0.4, treasure: [0, 1] }, containers: ['shelf'], terminals: { chatty: 0.4 },
+    },
+    'vip-room': {
+      name: 'VIP room', ref: 'original', zones: ['executive', 'public'], size: [[8, 7], [11, 9]], shapes: { rect: 2, rounded: 1, octagon: 1 }, variant: 'lobby', max: 1,
+      types: ['wonder-office', 'civil-mall', 'war-bunker', 'war-lab'],
+      fixtures: [{ item: 'rug', place: 'middle', count: 1 }, { item: 'couch', place: 'wall-row', count: [1, 2] }, { item: 'art', place: 'wall', count: [1, 2] }, { item: 'slot-machine', place: 'wall-row', count: [0, 1] }],
+      slots: { key: 0.4, clue: 0.3, control: 0.1, encounter: 0.6, treasure: [1, 2] }, containers: ['safe', 'case'],
+      loot: { artifact: 2, sell: 2, gear: 1 },
+      guards: [{ ids: ['hn-dancer'], count: [2, 4], chance: 0.85 }],
+    },
+    'auto-bar': {
+      name: 'Auto-bar', notTypes: ['tomb'], ref: 'original', zones: ['public', 'employee', 'executive'], size: [[8, 6], [11, 8]], variant: 'cafe', max: 1,
+      fixtures: [{ item: 'counter', place: 'wall-row', count: [2, 3] }, { item: 'hn-mixologist', place: 'wall-row', count: 1 }, { item: 'cafe-table', place: 'middle', count: [1, 3] }, { item: 'chair', place: 'middle', count: [2, 4] }, { item: 'hn-sign', place: 'wall', count: [0, 1], say: 'signs.bar' }],
+      slots: { key: 0.4, clue: 0.6, control: 0.1, encounter: 0.5, treasure: [0, 1] }, containers: ['register', 'shelf'],
+    },
+    arboretum: {
+      name: 'Arboretum', ref: 'original', zones: ['public', 'labs', 'executive'], size: [[9, 8], [12, 10]], shapes: { rect: 1, ellipse: 2, rounded: 2 }, variant: 'room', max: 1,
+      types: ['wonder-office', 'civil-mall', 'war-lab', 'toxin-plant'],
+      fixtures: [{ item: 'hn-tree', place: 'middle', count: [2, 4] }, { item: 'plant', place: 'corner', count: [2, 4] }, { item: 'plant', place: 'any', count: [1, 3] }, { item: 'bench', place: 'wall-row', count: [0, 1] }],
+      slots: { key: 0.3, clue: 0.4, control: 0.1, encounter: 0.5, treasure: [0, 1] }, containers: ['corpse'],
+      guards: [{ ids: ['hn-snapper'], count: [1, 3], chance: 0.8 }],
+    },
+    crypt: {
+      name: 'Crypt', ref: 'Vol 2 p. 62 (Crypt)', zones: ['gallery', 'vault', 'security'], size: [[7, 6], [10, 8]], variant: 'room', types: ['tomb', 'war-bunker', 'bolt-hole'],
+      fixtures: [{ item: 'hn-coffin', place: 'grid', count: [3, 6] }, { item: 'candles', place: 'corner', count: [1, 3] }, { item: 'banner', place: 'wall', count: [0, 1] }],
+      dressing: ['dress-tomb'], slots: { key: 0.4, clue: 0.3, control: 0.2, encounter: 0.6, treasure: [1, 1] }, containers: ['corpse', 'case'],
+      guards: [{ ids: ['hn-deadbot'], count: [2, 4], chance: 0.9 }],
+    },
+    chapel: {
+      name: 'Chapel', ref: 'Vol 2 p. 55 (warlords worshipped as gods)', zones: ['gallery', 'public', 'executive'], size: [[8, 8], [10, 11]], shapes: { rect: 3, octagon: 1 }, variant: 'room', max: 1,
+      types: ['tomb', 'war-bunker', 'bolt-hole', 'civil-mall'],
+      fixtures: [{ item: 'hn-statue', place: 'center', count: 1, say: 'plaques', prop: 'text' }, { item: 'bench', place: 'grid', count: [3, 6] }, { item: 'candles', place: 'corner', count: [1, 2] }, { item: 'banner', place: 'wall', count: [1, 2] }],
+      dressing: ['dress-tomb'], slots: { key: 0.4, clue: 0.5, control: 0.3, encounter: 0.4, treasure: [0, 1] }, containers: ['case'],
     },
     // ---------------------------------------------------------------- tombs
     gallery: {

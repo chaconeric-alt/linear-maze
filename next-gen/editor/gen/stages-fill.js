@@ -306,7 +306,12 @@
           if (spot) {
             // a panel that is the only way through must be beatable by anyone who keeps trying (d10: 10 or less)
             let diff = hackDiff(plan, lib, rooms[L.to].rank, floor);
-            if (L.kind === 'hack' && L.critical) diff = Math.min(diff, 9);
+            if ((L.kind === 'hack' || def.panelItem) && L.critical) diff = Math.min(diff, 9);
+            if (def.panelItem) {
+              // a lock with its own panel (the Mental Hygiene checkpoint): it sets the lock's flag, or its hack flag
+              P.put(spot[0], spot[1], { item: def.panelItem, props: { face, flag: L.flag, hackFlag: L.hackFlag, difficulty: diff }, keep: true });
+              continue;
+            }
             const p = { face, flag: L.hackFlag, title: def.panelTitle || 'security door', difficulty: diff, fail: rng.chance(0.5) ? 'alarm' : 'shock' };
             if (L.kind !== 'hack' && L.flag && L.keyKind !== 'switch' && L.keyKind !== 'power') {
               p.cardFlag = L.flag;
@@ -314,6 +319,10 @@
             }
             P.put(spot[0], spot[1], { item: 'hn-sec-panel', props: p });
             P.slot('lock' + L.id + '.panel', 'panels.' + L.kind, { obj: K(spot[0], spot[1]), prop: 'text' }, { need: L.needText });
+          } else if (def.panelItem) {
+            // no wall beside the door: the checkpoint stands in the room in front of it
+            const at = P.putFirst(rng.shuffle(P.wallRow(near)).concat(rng.shuffle(P.free(near))), () => ({ item: 'hn-terminal', props: { action: 'hygiene', title: def.panelTitle, flag: L.flag, hackFlag: L.hackFlag, difficulty: Math.min(hackDiff(plan, lib, rooms[L.to].rank, floor), 9) }, room: near.i, keep: true }));
+            if (!at) throw new Error('Floor ' + floor.n + ': no room for the ' + def.panelTitle + ' by ' + L.id + '.');
           } else if (L.kind === 'hack') {
             // no wall for a panel: the door opens for a switch instead, so it can still be passed
             plan.report.problems.push(G.problem('warn', 'Floor ' + floor.n + ': no wall beside the ' + L.id + ' door for a panel.'));
@@ -346,6 +355,10 @@
             P.slot('memo' + L.id + '.text', 'memos.code', { obj: K(mx, my), prop: 'text' }, v);
             P.slot('memo' + L.id + '.clue', 'memos.clue', { obj: K(mx, my), prop: 'clue' }, v);
           }
+        } else if (L.keyKind === 'switch' && (lib.locks[L.kind] || {}).keyItem === 'eliza') {
+          // the Mental Hygiene door's key: an ELIZA terminal to be scored at (the score itself is 'tetrad')
+          const at = P.putFirst(rng.shuffle(P.wallRow(r)).concat(rng.shuffle(P.free(r))), () => ({ item: 'hn-terminal', props: { action: 'eliza', title: 'ELIZA terminal', gives: 'tetrad' }, room: r.i, keep: true }));
+          if (!at) throw new Error('Floor ' + floor.n + ': no room for an ELIZA terminal in ' + r.template);
         } else if (L.keyKind === 'switch' || L.keyKind === 'power') {
           const spots = P.wallRow(r);
           const at = P.putFirst(rng.shuffle(spots).concat(rng.shuffle(P.free(r))), () => ({ item: 'hn-terminal', props: { flag: L.flag, title: L.keyKind === 'power' ? 'breaker panel' : 'door release' }, room: r.i, keep: true }));
@@ -500,7 +513,7 @@
     const kinds = type.encounters || {};
     const tl = tlOf(plan, floor);
     return G.sorted(lib.monsters)
-      .filter(([id, m]) => (m.status || 'built') === 'built' && (!m.tl || (tl >= m.tl[0] && tl <= m.tl[1] + (m.boss ? 0 : 3))))
+      .filter(([id, m]) => (m.status || 'built') === 'built' && !m.roomOnly && (!m.tl || (tl >= m.tl[0] && tl <= m.tl[1] + (m.boss ? 0 : 3))))
       .filter(([id, m]) => kinds[m.kind] && (!filter || filter(id, m)))
       .map(([id, m]) => [id, (m.weight || 1) * kinds[m.kind] * (toughen(m, tl) > 1 ? 0.6 : 1)]);
   }
@@ -518,6 +531,14 @@
       placed++;
     }
     return placed;
+  }
+
+  /** A room's own monsters: gd.ids (any the floor's Threat Level allows), or a kind and roles with a cost range. */
+  function guardCands(plan, lib, floor, gd) {
+    const tl = tlOf(plan, floor);
+    const fits = (m) => (m.status || 'built') === 'built' && !m.boss && (!m.tl || (tl >= m.tl[0] && tl <= m.tl[1] + 3)) && (!gd.cost || (m.cost >= gd.cost[0] && m.cost <= gd.cost[1]));
+    if (gd.ids) return gd.ids.filter((id) => lib.monsters[id] && fits(lib.monsters[id])).map((id) => [id, lib.monsters[id].weight || 1]);
+    return G.sorted(lib.monsters).filter(([id, m]) => fits(m) && (!gd.kind || m.kind === gd.kind) && (!gd.roles || G.overlap(m.roles, gd.roles)) && (!gd.placement || G.overlap(m.placement, gd.placement))).map(([id, m]) => [id, m.weight || 1]);
   }
 
   G.stageEncounters = function (plan, lib) {
@@ -545,6 +566,22 @@
           for (const esc of bm.escort || []) if (lib.monsters[esc]) placeEnemies(P, rng, r, esc, rng.range(lib.monsters[esc].group || [1, 2]), null);
           pieces.push({ kind: 'boss', room: r.i });
           r.bossRoom = true;
+        }
+      }
+      // rooms whose function comes with its own monsters (the armory's guard, the crypt's dead, the VIP room's dancers)
+      for (const r of rooms) {
+        const t = lib.rooms[r.template] || {};
+        if (!t.guards || r.isEntry || r.bossRoom) continue;
+        for (const gd of t.guards) {
+          if (spent >= budget || (gd.chance != null && !rng.chance(gd.chance))) continue;
+          const id = rng.weighted(guardCands(plan, lib, floor, gd));
+          if (!id) continue;
+          const m = lib.monsters[id];
+          const got = placeEnemies(P, rng, r, id, rng.range(gd.count || m.group || [1, 1]), floor.startAt);
+          if (got) {
+            spent += got * costOf(m, tl);
+            pieces.push({ kind: 'guard', room: r.i, cost: got * costOf(m, tl) });
+          }
         }
       }
       // set pieces in the bigger rooms; never the way in
@@ -717,14 +754,29 @@
         const id = rng.weighted(varied.length ? varied : left);
         if (!id) break;
         const t = lib.traps[id];
+        const before = floor.traps.length;
         const ok = buildTrap(P, rng, plan, lib, floor, id, t, dmg, offFlag);
         if (ok) {
           made++;
+          // now and then a riddle terminal beside it, whose answer switches just this trap off
+          const own = floor.traps.slice(before).filter((tr) => tr.gen === 'switch');
+          if (own.length && ok.room != null && rng.chance(lib.settings.riddleChance || 0)) {
+            const rr = floor.rooms[ok.room];
+            const flag = G.flagName(plan.slug, 'f' + floor.n + '_riddle' + before);
+            const at = P.putFirst(rng.shuffle(P.wallRow(rr)).concat(rng.shuffle(P.free(rr))), () => ({ item: 'hn-terminal', props: { action: 'riddle', title: 'riddle terminal', riddle: rng.int(0, 999), flag }, room: rr.i }));
+            if (at) for (const tr of own) tr.off = flag;
+          }
           if (t.build === 'container') inContainers++;
           if (firstTrapRoom == null && ok.room != null) firstTrapRoom = ok.room;
         } else cantBuild.add(id);
       }
       floor.trapCount = made;
+      // a fixture whose flag is '$trapsOff' (the Security Center's console) switches this floor's traps off, if it has any
+      const hasSwitch = floor.traps.some((tr) => tr.gen === 'switch');
+      for (const o of Object.values(floor.objs)) if (o.props && o.props.flag === '$trapsOff') {
+        if (hasSwitch) o.props.flag = offFlag;
+        else delete o.props.flag;
+      }
       // the off-switch: a facilities terminal past the first switchable trap (Vol 2: on the far side)
       if (floor.traps.some((t) => t.gen === 'switch')) {
         const rooms = floor.rooms;
@@ -915,6 +967,32 @@
           add(o, { type: t.kind, id: g }, value(g));
         }
       }
+      // rooms with their own stock (template loot: item ids, or 'gear' / 'sell' / 'expend' / 'artifact' for a pick of that
+      // group): the armory's weapons and grenades, the storeroom's Neggs. Gear is the floor's level plus one where it can be.
+      for (const r of rooms) {
+        const t = lib.rooms[r.template] || {};
+        if (!t.loot) continue;
+        const pick = (key) => {
+          if (key === 'gear') {
+            const gear = items.filter(([id, it]) => it.group === 'gear' && value(id) <= target * 0.8);
+            const want = tl + 1;
+            const best = gear.filter(([id, it]) => (it.level || 1) === want);
+            const near = best.length ? best : gear.filter(([id, it]) => (it.level || 1) <= want).sort((a, b) => (b[1].level || 1) - (a[1].level || 1)).slice(0, 3);
+            return rng.weighted(near.map(([id, it]) => [id, it.weight || 1]));
+          }
+          if (TR.items[key]) return items.some(([id]) => id === key) ? key : null;
+          return rng.weighted(items.filter(([id, it]) => it.group === key).map(([id, it]) => [id, it.weight || 1]));
+        };
+        for (const o of all.filter((x) => x.room === r.i)) {
+          for (let i = 0, n = rng.int(1, 2); i < n; i++) {
+            const id = pick(rng.weighted(t.loot));
+            if (!id || spent + value(id) > target * 1.05) continue;
+            const it = TR.items[id];
+            if (it.kind === 'weapon' || it.kind === 'armor') add(o, { type: it.kind, id }, value(id));
+            else add(o, { hn: id, n: it.stack ? rng.int(1, it.stack) : 1 }, value(id));
+          }
+        }
+      }
       // the rest by shares: things to sell, expendables, artifacts
       const shares = TR.shares || { sell: 0.35, expend: 0.3, artifact: 0.35 };
       const byGroup = {};
@@ -989,6 +1067,7 @@
           for (let i = 0; i < n; i++) placeFixture(P, rng, r, strays[rng.weighted(strays.map((f, j) => [j, f.weight || 1]))]);
         }
       }
+      placeTerminals(P, rng, plan, lib, floor);
       // corridors: now and then a sign or a poster on a corridor wall
       for (const e of floor.edges) {
         if (!e.cells || e.k < 3 || !rng.chance(0.35)) continue;
@@ -1005,6 +1084,45 @@
       unblock(P, floor);
     }
   };
+
+  /** A floor's talkative terminals: a chatty one with a hint, a red-team drill, and sometimes an ELIZA of its own. */
+  function placeTerminals(P, rng, plan, lib, floor) {
+    const S = lib.settings;
+    const last = floor.rooms[floor.path[floor.path.length - 1]];
+    const rooms = floor.rooms.filter((r) => !r.isEntry && r !== last);
+    const put = (props) => {
+      const r = rng.pick(rooms.length ? rooms : floor.rooms);
+      const at = P.putFirst(rng.shuffle(P.wallRow(r)).concat(rng.shuffle(P.free(r))), () => ({ item: 'hn-terminal', props, room: r.i }));
+      return at ? K(at[0], at[1]) : null;
+    };
+    // rooms that come with a terminal (template terminals: { chatty, eliza, redteam: chance }) get theirs first
+    const want = { chatty: 0, eliza: 0, redteam: 0 };
+    for (const r of floor.rooms) for (const [kind, p] of Object.entries((lib.rooms[r.template] || {}).terminals || {})) if (!want[kind] && rng.chance(p)) want[kind] = r;
+    const putIn = (r, props) => {
+      const at = P.putFirst(rng.shuffle(P.wallRow(r)).concat(rng.shuffle(P.free(r))), () => ({ item: 'hn-terminal', props, room: r.i }));
+      return at ? K(at[0], at[1]) : null;
+    };
+    const putAt = (kind, props) => (want[kind] ? putIn(want[kind], props) : put(props));
+    if (want.chatty || rng.chance(S.chattyChance || 0)) {
+      const k = putAt('chatty', { action: 'chatty', title: 'chatty terminal' });
+      const L = plan.locks.find((l) => l.floor === floor.n && l.stairs && l.keyRoom != null && (l.keyKind === 'card' || l.keyKind === 'badge'));
+      if (k && L) P.slot('chat' + floor.n, 'terminals.chattyHint', { obj: k, prop: 'hint' }, { card: L.keyKind === 'card' ? tierInfo(lib, L.tier).name : 'ID badge', room: '{room:' + L.keyRoom + '}' });
+      else if (k && last) P.slot('chat' + floor.n, 'terminals.chattyNoKey', { obj: k, prop: 'hint' }, { room: '{room:' + last.i + '}' });
+    }
+    if (want.redteam || rng.chance(S.redTeamChance || 0)) {
+      const tl = tlOf(plan, floor);
+      const cands = monsterCands(plan, lib, (id, m) => m.kind === 'robot' && !m.boss && m.placement !== 'post' && m.cost <= 8, floor);
+      if (cands.length) {
+        const robots = [];
+        for (let i = 0, n = rng.int(2, 3 + Math.floor(tl / 3)); i < n; i++) {
+          const id = rng.weighted(cands), m = lib.monsters[id];
+          robots.push(Object.assign({ id: m.id || id }, enemyProps(m, tl)));
+        }
+        putAt('redteam', { action: 'redteam', title: 'red-team terminal', robots, reward: Math.round(G.perTl(lib.budgets.treasurePerFloor, tl, 1700) * 0.12), difficulty: hackDiff(plan, lib, 1, floor), flag: G.flagName(plan.slug, 'f' + floor.n + '_redteam') });
+      }
+    }
+    if (want.eliza || rng.chance(S.elizaChance || 0)) putAt('eliza', { action: 'eliza', title: 'ELIZA terminal', gives: 'tetrad' });
+  }
 
   /** Solid furniture must never cut anything off: every open tile reachable, every usable thing beside a reachable tile.
    *  Decor goes first; a container goes only if it holds no key and isn't the goal. */

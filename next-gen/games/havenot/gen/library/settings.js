@@ -29,6 +29,12 @@ LM.genLibrary('havenot', {
     // also gets 1–2 strays from the 'dress-strays' pool
     dressingJitter: [0.6, 1.6],
     strayDressing: 0.55,
+    // terminals (hn-gen-kit/terminals.js): a riddle beside a trap, and per floor a chatty terminal, a red-team drill
+    // and an ELIZA of its own (besides the one before each Mental Hygiene door)
+    riddleChance: 0.5,
+    chattyChance: 0.6,
+    redTeamChance: 0.35,
+    elizaChance: 0.2,
   },
   budgets: {
     // credits per standard floor (TL 2 = the Anomalous Structure's ~1,700 a floor)

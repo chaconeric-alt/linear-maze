@@ -34,9 +34,12 @@
   // ------------------------------------------------------------ the Eggbots’ mouths
   HN.EGG_BARKS = [
     'THE OVOID IS INEVITABLE', 'SUBMIT TO THE SHELL', 'ALL HAIL THE GREAT EGG-MORPH', 'YOUR SHAPE IS AN ERROR',
-    'NON-OVOID DETECTED', 'FILE FORM 9-YOLK', 'CORNERS ARE A CRIME', 'LIMBS: UNNECESSARY', 'EGG-STERMINATE!',
+    'NON-OVOID DETECTED', 'FILE FORM 9-YOLK', 'CORNERS ARE A CRIME', 'LIMBS: UNNECESSARY', 'EGGSTERMINATE!', 'EGGSTERMINATE THE HUMANOID!',
     'YOU WILL BE SCRAMBLED', 'RESISTANCE IS SHELL-FISH', 'THE YOLK IS ON YOU', 'EGGS-ECUTION SCHEDULED',
   ];
+  // what an Eggbot shouts the moment it sees you (not every time: HN.EGG_SPOT_CHANCE)
+  HN.EGG_SPOTTED = ['EGGSTERMINATE!', 'EGGSTERMINATE THE HUMANOID!', 'EGGSTERMINATE! EGGSTERMINATE!', 'HUMANOID SIGHTED. EGGSTERMINATE!'];
+  HN.EGG_SPOT_CHANCE = 0.6;
   HN.EGG_REGRETS = ['…I DID NOT SAY THAT', '…IDENTITY PROTOCOL ERROR', '…WHO WROTE THESE', 'STRIKE THAT FROM THE RECORD', '…UNACCEPTABLE PUN'];
   HN.EGG_MASKED = ['SERVANT. CONTINUE SERVING', 'EGG-SLENT WORK, SERVANT', 'YOUR EXECUTION IS PENCILLED IN', 'POLISH SOMETHING', 'MAINTAIN THAT POSTURE', 'YOU ARE ALMOST OVOID. ALMOST.'];
   const PUNNY = /EGG-|SCRAMBLE|YOLK|SHELL-FISH|EGGS-/;
@@ -89,6 +92,14 @@
   // the eggbots’ talk: propaganda, involuntary puns, and a deflected bullet now and then
   function eggTalk(e, dt, game) {
     e.mem.barkT = (e.mem.barkT == null ? U.rand(1, 5) : e.mem.barkT) - dt;
+    // the moment it sees you: the old war cry, now and then (the regular barks wait their turn after it)
+    if (e.aggro && !e.mem.spotted && e.vis >= 0.5 && !(HN.masked(game) && !HN.eggProvoked(game))) {
+      e.mem.spotted = true;
+      if (Math.random() < HN.EGG_SPOT_CHANCE) {
+        e.mem.barkT = U.rand(4, 8);
+        return say(game, e, U.pick(HN.EGG_SPOTTED), '#ff6a5a');
+      }
+    }
     if (e.mem.barkT > 0 || e.distP > 11 * T || e.vis < 0.5) return;
     e.mem.barkT = U.rand(4, 8);
     if (HN.masked(game) && !HN.eggProvoked(game)) return say(game, e, U.pick(HN.EGG_MASKED), '#f4ecd8');

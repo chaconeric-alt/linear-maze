@@ -178,6 +178,7 @@
       if (t.once === false) o.once = false;
       if (t.cooldown) o.cooldown = t.cooldown;
       if (t.gen) o.gen = t.gen;
+      if (t.off) o.off = t.off;
       o.effects = t.effects;
       return o;
     });

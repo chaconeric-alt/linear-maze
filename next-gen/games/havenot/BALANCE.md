@@ -105,6 +105,27 @@ about 9 points from noise):
   less or only every other mission.
 - Sharp senses and Tinker do nothing in a fight on purpose: they find loot and open doors, which a level needs too.
 
+## The room-function monsters
+
+The generator's room functions bring three monsters of their own (packs/hn-gen-kit/rooms.js). They are `roomOnly`:
+only their rooms place them. 30 fights each; Level 1 is the six starting builds, then a Level 1 human with the Arc
+Carbine and a vest (Level 2 gear).
+
+| Group | Threat | Starting builds: win | HP left | L1 + Level 2 gear: HP left |
+|---|---|---|---|---|
+| Four automated undead (the crypt) | 1 | 100% | 98–100% | 100% |
+| Two carnivorous plants (the arboretum) | 1 | 100% | 93–97% | 99% |
+| Three robot dancers (the VIP room) | 2 | 100% | 78–84% | 97% |
+| Four robot dancers | 2 | 100% | 69–81% | 95% |
+
+- First pass, the dancers (36 health, melee only) were a walkover: 92–99% health left. They now have 55 health, run a
+  little faster and fire a short disco laser, and sit at the easy end of Threat 2 (the other Threat 2 groups leave
+  53–63%), which suits a monster that guards the VIP room's loot.
+- The undead are slow on purpose (115, up from 82, with 40 health): they are an attrition fight in a small crypt,
+  where four of them get up around you at once, which an open arena doesn't show. Like the other Threat 1 groups they
+  barely scratch a kiting player.
+- The plants are rooted and spit sap at 180: a careful player shoots them from further away.
+
 ## Running it again
 
 From this folder, with Playwright's Chromium available (`NODE_PATH` pointing at the global node modules):
@@ -117,6 +138,7 @@ From this folder, with Playwright's Chromium available (`NODE_PATH` pointing at 
 About two thousand fights take a minute and a half.
 
     python3 mkjobs.py levels 30     # per-level numbers, each improvement, and whole floors
+    python3 mkjobs.py rooms 30      # the room-function monsters
 
 Without Playwright: serve the repository, open the game in a few browser tabs, load `browser-run.js` in each
 and call `SIMRUN.start('/games/havenot/tools/balance/jobs-levels.json', part, parts)`; `SIMRUN.summary()` gives the

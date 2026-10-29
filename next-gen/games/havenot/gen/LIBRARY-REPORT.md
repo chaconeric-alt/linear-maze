@@ -5,16 +5,16 @@ What the generator can place today (built) and what is listed from the books for
 | Section | Built | Planned |
 | --- | --- | --- |
 | types | 7 | 0 |
-| rooms | 36 | 0 |
+| rooms | 45 | 0 |
 | looks | 5 | 12 |
-| monsters | 10 | 18 |
+| monsters | 20 | 17 |
 | encounters | 7 | 1 |
-| locks | 6 | 3 |
+| locks | 7 | 3 |
 | traps | 7 | 28 |
-| puzzles | 3 | 7 |
-| interest | 5 | 4 |
-| treasure | 34 | 0 |
-| dressings | 31 | 0 |
+| puzzles | 5 | 7 |
+| interest | 8 | 4 |
+| treasure | 53 | 0 |
+| dressings | 45 | 0 |
 
 ## Problems
 
@@ -24,7 +24,7 @@ None: every built entry names something the game has.
 
 **looks:** Active Walls (Vol 2 p. 62); Bare Concrete (Vol 2 p. 62); Carnival (Vol 2 p. 62); Crypt (Vol 2 p. 62); Observation Decks (Vol 2 p. 62); Postmodern (Vol 2 p. 62); Rave (Vol 2 p. 62); Submarine (Vol 2 p. 62); Toxic Waste (Vol 2 p. 62); Treatment Plant (Vol 2 p. 62); Under Construction (Vol 2 p. 62); Violet Modular (Vol 2 p. 62).
 
-**monsters:** Armorback (Vol 3 p. 79); Towering Blue-Claw (Vol 3 p. 75); Chatterpillar (Vol 3 p. 113; Vol 2 p. 148); Cyber Scorpion (Jaekelopterus) (Vol 3 p. 62); Cyberspine (Vol 3 p. 82); Dust Spiders (Vol 3 p. 64); Fungoids (Soldier, Ripper, Hive) (Vol 3 p. 61); Defense field emitter (hn-agency-3); Sphinx Gun (Vol 2 p. 136); Kill-Kart (Vol 2 p. 149); Leptosome (Vol 3 p. 72); Quockerwodger (Vol 3 p. 80); Rave Raptors (Vol 3 p. 59); Ravener (Vol 3 p. 73); Stalking Worm (Vol 3 p. 76); War-Dogs (Vol 3 p. 83); Wunk (Vol 3 p. 70); Zillixx Mk-1 (Vol 3 p. 81).
+**monsters:** Armorback (Vol 3 p. 79); Towering Blue-Claw (Vol 3 p. 75); Cyber Scorpion (Jaekelopterus) (Vol 3 p. 62); Cyberspine (Vol 3 p. 82); Dust Spiders (Vol 3 p. 64); Fungoids (Soldier, Ripper, Hive) (Vol 3 p. 61); Defense field emitter (hn-agency-3); Sphinx Gun (Vol 2 p. 136); Kill-Kart (Vol 2 p. 149); Leptosome (Vol 3 p. 72); Quockerwodger (Vol 3 p. 80); Rave Raptors (Vol 3 p. 59); Ravener (Vol 3 p. 73); Stalking Worm (Vol 3 p. 76); War-Dogs (Vol 3 p. 83); Wunk (Vol 3 p. 70); Zillixx Mk-1 (Vol 3 p. 81).
 
 **traps:** Ammo Emancipation Field (Vol 2 p. 138); Auto-Guns (Vol 2 p. 132); Barrel Drop (Vol 2 p. 122); Crush Pit (Vol 2 p. 99); Drowning Pool (Vol 2 p. 98); Electrified Floor (Vol 2 p. 126; hn-agency-3 (shock floor)); Fading Tiles (Vol 2 p. 145); Fireball Dispenser (Vol 2 p. 118); Floor Flame Jets (Vol 2 p. 145); Folgerizer (Vol 2 p. 136); Garbage Disposal (Vol 2 p. 100); Gunk Grenade (Vol 2 p. 130); Hostile Door (Vol 2 p. 145); Hypnotic Spiral (Vol 2 p. 131); Imploder (Vol 2 p. 113); Mechanical Pit Trap (Vol 2 p. 96); Micro-Charge (Vol 2 p. 110); Mime Field (Vol 2 p. 128); Pneumatic Blade (Vol 2 p. 103); Pneumatic Spears (Vol 2 p. 145); Portal Drop (Vol 2 p. 100); Razor Beams (Vol 2 p. 109); Seal & Burn (Vol 2 p. 98); Shrink Wrap (Vol 2 p. 130); Slick Floor (Vol 2 p. 138); Teleport Floor (Vol 2 p. 145); Teleport Loop (Vol 2 p. 132); Tesla Ball (Vol 2 p. 126).
 

@@ -80,7 +80,16 @@
           if (p.code && !held.has(p.codeFlag) && !canHack(p.hackDiff)) continue;
           if (p.needFlag && !G.asList(p.needFlag).some((f) => held.has(f))) continue;
           for (const e of p.loot || []) if (e.type === 'keyItem' && e.info && e.info.flag) gain(e.info.flag);
-        } else if (o.item === 'hn-memo' || (o.item === 'hn-terminal' && (!p.difficulty || canHack(p.difficulty)))) gain(p.flag);
+        } else if (o.item === 'hn-hygiene-panel' || (o.item === 'hn-terminal' && p.action === 'hygiene')) {
+          // the Mental Hygiene checkpoint takes the Dark Tetrad score (an ELIZA's), or a hack
+          if (held.has('tetrad')) gain(p.flag);
+          if (canHack(p.difficulty)) gain(p.hackFlag);
+        } else if (o.item === 'hn-terminal' && (p.action === 'redteam' || p.action === 'riddle' || p.action === 'chatty')) {
+          // nothing the way on depends on these
+        } else if (o.item === 'hn-memo' || (o.item === 'hn-terminal' && (!p.difficulty || canHack(p.difficulty)))) {
+          gain(p.flag);
+          gain(p.gives);
+        }
         else if (o.item === 'hn-sec-panel') {
           if (canHack(p.difficulty)) gain(p.flag);
           if (p.cardFlag && held.has(p.cardFlag)) gain(p.flag);

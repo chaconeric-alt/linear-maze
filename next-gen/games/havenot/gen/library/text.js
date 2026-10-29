@@ -128,6 +128,15 @@ LM.genLibrary('havenot', {
     },
     // ---------------------------------------------------------------- rooms
     roomNames: {
+      'training-room': ['Training Room', 'Orientation Suite', 'Learning Pod', 'Compliance Classroom'],
+      'personal-quarters': ['Quarters', 'Staff Quarters', 'Bunk Room', 'Crew Berth'],
+      'exercise-room': ['Exercise Room', 'Wellness Gym', 'Fitness Compliance Center'],
+      'av-library': ['Library', 'Media Archive', 'Tape Library', 'Learning Resource Center'],
+      'vip-room': ['VIP Room', 'Executive Lounge', 'The Velvet Room', 'Hospitality Suite'],
+      'auto-bar': ['Auto-Bar', 'The Lounge', 'Happy Hour Annex', 'Morale Bar'],
+      arboretum: ['Arboretum', 'Atrium Garden', 'Biophilia Court', 'The Greenhouse'],
+      crypt: ['Crypt', 'Honored Dead', 'The Long Rest', 'Reliquary'],
+      chapel: ['Chapel', 'Chapel of the Victor', 'Hall of Gratitude', 'Shrine of the Warlord'],
       vestibule: ['Vestibule', 'Front Entrance', 'Welcome Hall'],
       'blast-lock': ['Blast Lock', 'Entry Lock', 'Airlock'],
       stairwell: ['Stairwell', 'Stair Core', 'Fire Stairs'],
@@ -228,6 +237,12 @@ LM.genLibrary('havenot', {
       switch: ['DOOR CONTROLS: RELEASED FROM SECURITY ONLY. The panel has an override slot, and a scratched note: “try the green wire”.'],
       power: ['NO POWER. The panel is dark. A label: SEE BREAKER PANEL.'],
     },
+    plaques: [
+      'THE GREAT WARLORD {warlord}, CONQUEROR OF THE NEAR-AREA, WHO DIED UNDEFEATED (BY ANYONE HE DIDN’T OWE MONEY TO). KNEEL, OR BE KNELT.',
+      'HERE STANDS {warlord}, THE MAGNANIMOUS. HE GAVE THIS LAND PEACE, AFTER TAKING EVERYTHING ELSE. OFFERINGS IN THE BOX. THE BOX IS WATCHED.',
+      'TO {warlord}, BELOVED OF HIS TROOPS (WHO WERE REQUIRED TO SAY SO). HIS WISDOM ENDURES. HIS NOSE WAS RECAST IN THE FOURTH YEAR AFTER COMPLAINTS.',
+      'IN MEMORY OF {warlord}: SOLDIER, STATESMAN, POET. THE POEMS ARE KEPT IN THE CRYPT, FOR EVERYONE’S SAFETY.',
+    ],
     terminals: {
       switch: ['DOOR RELEASE · {need}: SEALED. Press any key to release. (There is only one key.)'],
       switchDone: ['DOOR RELEASE: OPEN. “Have a productive day.”'],
@@ -235,6 +250,15 @@ LM.genLibrary('havenot', {
       powerDone: ['BREAKER PANEL: DOORS (SECURE WING) ON. The hum changes pitch somewhere down the hall.'],
       traps: ['FACILITIES · COURTESY SYSTEMS (DARTS, BEAMS, FLOOR SAFETY): ARMED. It wants a facilities password, or an argument.'],
       trapsDone: ['COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”'],
+      chattyHint: [
+        'Oh! Someone left a {card} in {room}. I watched them do it. Then I watched them not come back for it.',
+        'The {card}? {room}. Everyone always asks about the {card}. Nobody ever asks about me.',
+        'You want the stairs, don’t you. Everyone wants the stairs. The {card} for them is in {room}. Will you come back and say hi?',
+      ],
+      chattyNoKey: [
+        'The way on is past {room}. I can’t see it from here, but I can hear it humming.',
+        'Go through {room}. Then keep going. That’s what I’d do if I had legs. And a reason.',
+      ],
       trapsOk: ['Courtesy systems on this floor: OFF.'],
       decor: ['Green text scrolls past: inventory of things that no longer exist.', 'A screen of numbers going up. Nobody knows what happens when they stop.', 'PRODUCTIVITY: 0%. TARGET: 110%. STATUS: EXCELLENT.', 'LOG: All quiet. All quiet. All quiet. Visitor detected. All quiet.'],
     },
@@ -242,6 +266,20 @@ LM.genLibrary('havenot', {
       command: ['A map of a front line that moved away centuries ago.', 'ALL UNITS REPORT: NOTHING TO REPORT.'],
       security: ['Camera feeds of empty halls. One of them is of you.', 'A grid of feeds. One is static. One is a single eye, watching.'],
       board: ['QUARTERLY RESULTS: EXCELLENT. QUARTER: 1,822ND.'],
+      slides: [
+        'SLIDE 14 OF 340: SYNERGY. A diagram of two circles. They are not touching. Under them: “THIS IS THE PROBLEM.”',
+        'SLIDE 2 OF 2: Q4 STRATEGY. 1. Win. 2. Keep winning. 3. See slide 1. The projector has been showing this for three hundred years.',
+        'SLIDE 88: “HEADCOUNT REDUCTION: AHEAD OF TARGET.” A pie chart. The pie is entirely missing.',
+        'SLIDE 7 OF 9: ACTION ITEMS. • Find out where everyone went. • Reschedule this meeting. • Do not open the vault (again).',
+        'THE FUTURE OF {company}: a rising arrow, drawn in red, going through the ceiling of the chart and off the slide.',
+        'SLIDE 1 OF 1: “ANY QUESTIONS?” There have been no questions for a very long time.',
+      ],
+      training: [
+        'MODULE 3: YOUR SPINE AND YOU. “Lift with your legs. Your legs are company property. So is your spine.”',
+        'ORIENTATION, SLIDE 41: “In the event of a warlord, remain at your desk. He will be with you shortly.”',
+        'COMPLIANCE TRAINING 9 OF 212: “Reporting a colleague is a gift. Give generously.” A quiz follows. The answer to every question is B.',
+        'MODULE 12: WORKPLACE SAFETY. A cartoon robot hands a cartoon worker a hard hat, then a smaller hard hat, then a coffin.',
+      ],
     },
     whiteboards: ['Q3 GOALS: 1. Want more. 2. Work more. 3. Be more. 4. Find out who keeps feeding the roaches.', 'TEAM BUILDING FRIDAY. MANDATORY FUN. BRING A SAMPLE.', 'Who left the lab door open??? It got out.', 'REMEMBER: the lockers were RESET. Check the memo.'],
     kiosk: {
@@ -265,6 +303,10 @@ LM.genLibrary('havenot', {
     stairsLocked: ['STAIRWELL ACCESS: {need} HOLDERS ONLY. “We value your patience.”', 'Locked. The reader wants the {need}.'],
     // ---------------------------------------------------------------- posters and signs
     posters: {
+      fitness: [
+        { title: 'FEEL THE BURN', text: 'A smiling robot holds a worker’s arm above their head. The worker is not smiling. The robot does not let go.' },
+        { title: 'A FIT WORKER IS A PRODUCTIVE WORKER', text: 'An unfit worker is a fit worker who has not been to the machines yet.' },
+      ],
       egg: [
         { title: 'THE GREAT EGG-MORPH', text: 'An Eggbot sigil: a golden egg in a halo of smaller eggs. Under it, in black-beret stencil: ROUND IS RIGHT.' },
         { title: 'ASK NOT', text: '“Ask not what your egg can do for you. Submit yourself to the just annihilation of the non-eggy shapes!”' },
@@ -313,6 +355,14 @@ LM.genLibrary('havenot', {
       ],
     },
     signs: {
+      airlock: [
+        { short: 'AIRLOCK · SECURITY CENTER', text: 'CYCLE BEFORE ENTERING. THE AIR IN HERE IS FOR SECURITY STAFF ONLY. Under it, scratched: “the outside air was fine, it’s the inside air you want to worry about.”' },
+        { short: 'SEALED ENVIRONMENT', text: 'SECURITY CENTER. POSITIVE PRESSURE. NEGATIVE ATTITUDE. PLEASE WIPE YOUR FEET AND YOUR RECORDS.' },
+      ],
+      bar: [
+        { short: 'HAPPY HOUR: 1600–1700', text: 'HAPPY HOUR: 1600–1700. Mandatory. Happiness will be measured.' },
+        { short: 'ONE DRINK PER MISSION', text: 'THE AUTO-MIXOLOGIST SERVES ONE DRINK PER GUEST PER SHIFT. IT KEEPS A LIST. IT IS ALWAYS KEEPING A LIST.' },
+      ],
       safety: [
         { short: 'LIFT WITH YOUR LEGS', text: 'A pictogram of a stick figure lifting a crate. Maintenance robots stop to read these.' },
         { short: 'WET FLOOR', text: 'A stick figure slipping. A maintenance robot will stand here and think about it for as long as it takes.' },
