@@ -498,6 +498,31 @@
     },
   };
   HN.MATERIAL_FITTINGS = Object.keys(FITTINGS);
-  LM.definePack({ id: 'hn-gen-kit', textures, items });
+  // glass underfoot: the floor below shows through (a level's `below`, engine SPEC 6.23); steel ribs and a sheen
+  const terrain = {
+    'hn-glass-floor': {
+      floorLike: true, seeBelow: true, noDecals: true, mapColor: '#3a5a6a',
+      bake(g, x, y) {
+        g.fillStyle = '#0a1014';
+        g.fillRect(x, y, T, T);
+      },
+      drawDynamic(g, x, y, tx, ty, game) {
+        const L = game.level, see = (dx, dy) => L.t(tx + dx, ty + dy).seeBelow;
+        const P = game.player;
+        const off = P ? (P.x * 0.15 + P.y * 0.1) % 48 : 0;
+        g.fillStyle = 'rgba(200,235,255,0.05)';
+        g.fillRect(x + ((off + tx * 7) % T), y, 5, T);
+        g.fillStyle = 'rgba(140,160,170,0.55)';
+        if (!(tx % 2)) g.fillRect(x - 0.5, y, 1, T);
+        if (!(ty % 2)) g.fillRect(x, y - 0.5, T, 1);
+        g.fillStyle = '#7a8890';
+        if (!see(-1, 0)) g.fillRect(x, y, 2, T);
+        if (!see(1, 0)) g.fillRect(x + T - 2, y, 2, T);
+        if (!see(0, -1)) g.fillRect(x, y, T, 2);
+        if (!see(0, 1)) g.fillRect(x, y + T - 2, T, 2);
+      },
+    },
+  };
+  LM.definePack({ id: 'hn-gen-kit', textures, items, terrain });
 
 })();

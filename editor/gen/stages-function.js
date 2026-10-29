@@ -267,7 +267,35 @@
   };
 
   /** Stage functionsFill (after dressing): materials, light, hazards, history overlays and twists. */
+  /** A glass floor (engine SPEC 6.23): now and then one room in an installation has a glass panel in its floor,
+   *  looking down into the floor below's biggest room. The level gets `below`; the tiles are 'hn-glass-floor'. */
+  function glassRoom(plan, lib) {
+    if (plan.floors.length < 2 || plan.brief.glass === false) return;
+    const rng = G.srng(plan, 'glass');
+    if (!plan.brief.glass && !rng.chance(lib.settings.glassChance != null ? lib.settings.glassChance : 0.5)) return;
+    for (const floor of rng.shuffle(plan.floors.slice(0, -1))) {
+      const P = new G.Painter(plan, lib, floor);
+      const next = plan.floors[floor.n];
+      const rooms = rng.shuffle(floor.rooms.filter((r) => !r.isEntry && !r.shape && r.rect[2] >= 5 && r.rect[3] >= 5));
+      for (const r of rooms) {
+        const [rx, ry, rw, rh] = r.rect;
+        const gw = Math.min(4, rw - 2), gh = Math.min(3, rh - 2);
+        const gx = rx + Math.floor((rw - gw) / 2), gy = ry + Math.floor((rh - gh) / 2);
+        let ok = true;
+        for (let y = gy; y < gy + gh && ok; y++) for (let x = gx; x < gx + gw; x++) if (P.base(x, y) !== '.' || P.floor.objs[K(x, y)] || P.floor.tiles[K(x, y)]) ok = false;
+        if (!ok) continue;
+        for (let y = gy; y < gy + gh; y++) for (let x = gx; x < gx + gw; x++) P.floor.tiles[K(x, y)] = { terrain: 'hn-glass-floor' };
+        const big = next.rooms.slice().sort((a, c) => c.rect[2] * c.rect[3] - a.rect[2] * a.rect[3])[0];
+        const bx = big.rect[0] + Math.floor(big.rect[2] / 2) - Math.floor(gw / 2), by = big.rect[1] + Math.floor(big.rect[3] / 2) - Math.floor(gh / 2);
+        floor.below = { level: next.id, dx: gx - bx, dy: gy - by, depth: 0.3, dim: 0.5, tint: 'rgba(60,110,140,0.14)', rim: 12 };
+        r.note = (r.note ? r.note + ' ' : '') + 'There’s a glass panel in the floor. Something moves underneath.';
+        return;
+      }
+    }
+  }
+
   G.stageFunctionsFill = function (plan, lib) {
+    glassRoom(plan, lib);
     const C = G.contentOf(lib);
     if (!C || !plan.functions) return;
     const B = lib.budgets;
