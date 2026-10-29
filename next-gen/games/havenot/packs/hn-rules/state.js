@@ -36,6 +36,7 @@
     natural: { armor: 0, melee: 0, light: 0 }, // from mutations
     mutations: [], mutSeed: 0, rerolled: false, bite: null,
     rad: 0,
+    level: 1, cleared: {}, // character level and the installations completed (levels.js)
     mission: 0, inMission: false, missions: [],
     kitLeft: { med: 0, hack: 0, grenade: 0 },
     inv: {}, charges: {},
@@ -250,12 +251,16 @@
     const bits = [];
     if (s.rad > 0) bits.push('<span class="rad">Rad <b>' + Math.round(s.rad) + '</b> (−' + HN.radLoss(s) + ' max)</span>');
     if (s.created) {
-      if (s.kit === 'med') bits.push('<span>Med-kit <b>' + s.kitLeft.med + '/3</b></span>');
+      if (s.kit === 'med' || s.kitLeft.med) bits.push('<span>Med-kit <b>' + s.kitLeft.med + '/' + HN.kitFor(s).med + '</b></span>');
       if (s.kit === 'hack') bits.push('<span>Auto-hack <b>' + s.kitLeft.hack + '</b></span>');
       const gr = HN.grenades(game);
       if (gr || s.kit === 'grenade') bits.push('<span>Grenades <b>' + gr + '</b></span>');
       if (HN.count(game, 'hn-mw-scanner')) bits.push('<span>MW scan <b>' + (s.charges['hn-mw-scanner'] || 0) + '</b></span>');
       if (s.inMission) bits.push('<span>Mission <b>' + s.mission + '</b></span>');
+      const thr = HN.threatHere ? HN.threatHere(game) : 0;
+      bits.push('<span>Level <b>' + (s.level || 1) + '</b></span>');
+      if (thr) bits.push('<span' + (thr > (s.level || 1) ? ' style="color:#ff8a7a"' : '') + '>Threat <b>' + thr + (thr > (s.level || 1) ? ' ▲' : '') + '</b></span>');
+      if (HN.hudDungeon && HN.inSite(game)) bits.push(HN.hudDungeon(game));
     }
     const html = bits.join('');
     if (hudEl._html !== html) {
@@ -460,6 +465,7 @@
           h('div', null,
             h('h3', null, s.name + ' · ' + origin.name),
             h('dl', { class: 'hn-stats' },
+              h('dt', null, 'Level'), h('dd', null, (s.level || 1) + (HN.threatHere && HN.threatHere(game) ? '  (this floor: Threat ' + HN.threatHere(game) + ')' : '')),
               h('dt', null, 'Speed'), h('dd', null, s.stats.speed + '  (' + Math.round(st.speed) + ' ground speed)'),
               h('dt', null, 'Sense'), h('dd', null, s.stats.sense + '  (marks things ' + Math.round(HN.senseRange(s, P) / T) + ' tiles away)'),
               h('dt', null, 'Physical'), h('dd', null, s.stats.physical + '  (melee ' + HN.meleeDamage(s) + (s.bite ? ', ' + s.bite : '') + ')'),
@@ -467,7 +473,8 @@
               h('dt', null, 'Health'), h('dd', null, Math.ceil(P.hp) + ' / ' + st.maxHp),
               h('dt', null, 'Radiation'), h('dd', null, s.rad ? Math.round(s.rad) + ' (−' + HN.radLoss(s) + ' max health until treated)' : 'none'),
               h('dt', null, 'Natural armor'), h('dd', null, s.natural.armor ? Math.round(s.natural.armor * 100) + '%' : 'none')),
-            s.mutations.length ? [h('h3', null, 'Mutations'), s.mutations.map((m) => h('span', { class: 'hn-pill', title: (HN.MUTATIONS[m] || {}).desc || '' }, (HN.MUTATIONS[m] || { name: m }).name))] : null),
+            s.mutations.length ? [h('h3', null, 'Mutations'), s.mutations.map((m) => h('span', { class: 'hn-pill', title: (HN.MUTATIONS[m] || {}).desc || '' }, (HN.MUTATIONS[m] || { name: m }).name))] : null,
+            HN.levelPanel ? HN.levelPanel(game) : null),
           h('div', null,
             h('h3', null, 'Mission kit'),
             h('p', { class: 'muted' }, ({ med: 'Med-kit: three minor heals a mission (H).', hack: 'Hacker kit: +4 on hacks and one automatic hack a mission.', grenade: 'Grenades: three a mission (G).' })[s.kit] || ''),

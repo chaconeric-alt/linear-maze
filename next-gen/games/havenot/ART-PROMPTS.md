@@ -20,6 +20,7 @@ For an image generator. Size noted per group. Map pins are shown in the location
 - **The Bunker (Installation B).** A heavy concrete pillbox half-buried in a dune, blast door sealed with a wheel lock, stencilled numbers, sand drifts against it.
 - **The Warren (Installation C).** A field of ventilation shafts and collapsed skylights poking out of the ground, as if something huge is buried and breathing.
 - **The Bolt Hole.** A rusty hatch under a dead billboard west of the Outpost; the billboard shows a faded smiling family with a TV. Footprints in the sand lead to it and stop.
+- **The Greasy Bolt Hole.** A rusted, grease-blackened hatch standing open in a fresh scoop between two dunes, wind still moving sand off its lid. Stencilled in dried grease: "BOLT HOLE 9 · TRESPASSERS WILL BE GREASED". A ladder going down into darkness, an oily rainbow sheen on the sand around it, and something small and segmented glinting on the rim.
 - **The Mushroom (locked).** On the horizon: a grey dome on a stalk, taller than anything for a day's walk, haze around its base.
 - **The Freeway (locked).** A shattered elevated roadway on concrete legs, running off into the distance, sections missing.
 - **The Tall Stacks (locked).** Smokestacks on the horizon still breathing a little smoke on a cold morning, pale sky.
@@ -42,6 +43,14 @@ For an image generator. Size noted per group. Map pins are shown in the location
 - **ENDURANCE: NEVER WITH VISITORS** (red laminated lab warning sign).
 - **PEST CONTROL IS EVERYONE'S RESPONSIBILITY** (a roach in a "visitor" lanyard).
 - Signage set: STAIRWELL ACCESS (Blue / Yellow card), EXECUTIVE SUITE · SECURITY ZONE, PROTOTYPE VAULT, SECURITY STATION · AUTHORIZED STAFF ONLY, ARMORY, HELP DESK, BREAK ROOM, LOCKERS.
+
+### The Greasy Bolt Hole (posters 2:3; Enoch in grimy Age of War propaganda style, the Eggbots in glossy pink-and-black)
+
+- **ENOCH THE GREASY.** A hulk in black battle plate weeping grease from every seam, a hose over one shoulder, a helmet with a grille like a drain, standing over a slimed town wall: "FILTH IS STRENGTH".
+- **EAT LIKE ENOCH.** Enoch with a dripping ladle beside a smiling trooper whose eyes say help: "GREASE IS FUEL".
+- **THE GREAT EGG-MORPH.** Ranks of small white Eggbots in black berets rolling out of factory gates under great floating egg-shaped airships: "THE FUTURE IS OVOID".
+- **HER SERENE OVOIDNESS.** Princess Eggbot, a pink egg in a tiara, airbrushed until she is mostly glow: "SHE IS BEAUTIFUL. (THIS IS NOT A REQUEST.)"
+- **ASK NOT.** A banner: "ASK NOT WHAT YOUR EGG CAN DO FOR YOU, BUT SUBMIT YOURSELF TO THE JUST ANNIHILATION OF THE NON-EGGY SHAPES!"
 
 ### Ancient consumer products and key discoveries (1:1, product shot on a neutral backdrop, slightly dusty)
 

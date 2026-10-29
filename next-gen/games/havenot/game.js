@@ -1,6 +1,7 @@
 /* games/havenot/game.js — HaveNot: The Near-Area
  * A vertical slice of HaveNot (the JAGS setting): a home bunker, a near-area map, three
- * settlements and one installation built in full (the Anomalous Structure, three floors), with
+ * settlements and two installations built in full (the Anomalous Structure and the Greasy Bolt
+ * Hole, three floors each), with
  * stubs for the rest. engine/SPEC.md section 21 explains every field; README.md has the design.
  * Play: engine/index.html?game=havenot
  */
@@ -18,7 +19,10 @@ LM.defineGame({
     'hn-world',
     'hn-sites',
     'hn-anomalous',
-    'hn-stubs',
+    { exclude: ['levels/bunker.js'], pack: 'hn-stubs' },
+    'hn-greasy',
+    'hn-gen-kit',
+    'hn-ruins',
   ],
   start: 'hn-home',
   saveKey: null,

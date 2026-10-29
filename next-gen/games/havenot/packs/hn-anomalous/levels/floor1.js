@@ -21,7 +21,7 @@ LM.definePack({
       floorLabel: 'Anomalous Structure · 1',
       order: 10,
       environment: 'hn-agency-inst',
-      hn: { place: 'The Anomalous Structure', agency: true, floor: 'The Anomalous Structure, floor 1: Reception and Offices' },
+      hn: { place: 'The Anomalous Structure', agency: true, install: 'agency', threat: 1, floor: 'The Anomalous Structure, floor 1: Reception and Offices' },
       stairsUp: false,
       stairs: { up2: { to: 'hn-agency-2', until: 'hnBlue', locked: 'STAIRWELL ACCESS: BLUE CARD HOLDERS ONLY. “We value your patience.”', dir: 'up', go: 'Up to {name}' } },
       intro: 'A square block of stained concrete. The front doors slide open for you and a recorded voice says “Welcome back! You have 4,416,903 unread messages.”',

@@ -23,7 +23,7 @@ LM.definePack({
       floorLabel: 'Anomalous Structure · 2',
       order: 11,
       environment: 'hn-agency-lab',
-      hn: { place: 'The Anomalous Structure', agency: true, floor: 'The Anomalous Structure, floor 2: Prototype Labs' },
+      hn: { place: 'The Anomalous Structure', agency: true, install: 'agency', threat: 1, floor: 'The Anomalous Structure, floor 2: Prototype Labs' },
       stairs: { up3: { to: 'hn-agency-3', until: 'hnYellow', locked: 'STAIRWELL ACCESS: YELLOW CARD HOLDERS ONLY.', dir: 'up', go: 'Up to {name}' } },
       intro: 'White, curved, quiet. Track lights come on ahead of you one by one, like the building is clearing its throat.',
       nextGen: {

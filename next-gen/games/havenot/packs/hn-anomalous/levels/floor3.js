@@ -22,7 +22,7 @@ LM.definePack({
       floorLabel: 'Anomalous Structure · 3',
       order: 12,
       environment: 'hn-agency-sec',
-      hn: { place: 'The Anomalous Structure', agency: true, floor: 'The Anomalous Structure, floor 3: Security Complex' },
+      hn: { place: 'The Anomalous Structure', agency: true, install: 'agency', threat: 1, floor: 'The Anomalous Structure, floor 3: Security Complex' },
       intro: 'Grey steel, stencilled numbers, and a hum in the floor. A sign over the landing: SECURITY ZONE · ALL VISITORS WILL BE ASSISTED.',
       nextGen: {
         enabled: true,

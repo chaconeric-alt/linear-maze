@@ -694,6 +694,21 @@ game.hasKeyItem('override');   game.takeKeyItem('override');
 
 `flag` also sets a story flag (doors, stairs and traps read flags, so a clearance door opens for the card). Giving one the player already has does nothing.
 
+### 6.20 The player's look
+
+The player is drawn as a scavenger in a coat (the body armor's colour), with skin-coloured hands and head. A game can change that by defining `LM.playerLook(player, game)`, called every frame; it returns `null` for the usual look, or:
+
+```js
+LM.playerLook = (P, game) => ({
+  skin: '#9aa88a',                                   // hands and the default head
+  under(ctx, P, game, t, kick) { /* tail, extra limbs: drawn before the torso */ },
+  over(ctx, P, game, t, kick) { /* shoulder plates, quills: after the arms, before the head */ },
+  head(ctx, P, game, t, helmetColor, helmet) { /* replaces the head and hair/helmet */ },
+});
+```
+
+Every part is optional. They draw in the player's own frame: origin at the body centre, +x along the aim, before the scale of a fall. `kick` is how far the gun has recoiled.
+
 ---
 
 ## 7. Recipes

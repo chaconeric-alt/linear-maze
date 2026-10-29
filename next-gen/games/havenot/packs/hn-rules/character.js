@@ -46,7 +46,7 @@
   HN.GEAR = {
     handgun: { name: 'Handgun + light ballistic vest', text: 'The frontier handgun never runs out of ammunition (the one exception out here). The vest takes 15% off every hit.', weapons: ['hn-handgun'], armor: ['hn-vest'], ammo: {} },
     scatter: { name: 'Scattergun + heavy chest plate', text: 'Magazine of 8, two-second reload, heavy damage up close, 80 shells to start. The plate halves the hits that land on it, about six in ten.', weapons: ['hn-scattergun'], armor: ['hn-plate'], ammo: { shells: 80 } },
-    gauss: { name: 'Gauss pistol, no armor', text: 'Long range, heavy damage, no ammunition. Six shots in three seconds overheat it for three. Nothing between you and the world.', weapons: ['hn-gauss'], armor: [], ammo: {} },
+    gauss: { name: 'Gauss pistol, no armor', text: 'Long range, heavy damage, no ammunition. Six shots in three seconds overheat it for two. Nothing between you and the world.', weapons: ['hn-gauss'], armor: [], ammo: {} },
   };
   HN.KITS = {
     med: { name: 'Med-kit', text: 'Three minor heals every mission, on H. Each heals a third of your health.' },
