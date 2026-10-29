@@ -1,7 +1,10 @@
 # HaveNot settings libraries in the generator
 
-How outside content libraries (the first: *JAGS HaveNot — Ten Settings & Two Hundred Functional Rooms*,
-`gen/library/settings10/`) become functional rooms in generated installations, what is done, and what isn't yet.
+How outside content libraries become functional rooms in generated installations, what is done, and what isn't
+yet. There are two: *JAGS HaveNot — Ten Settings & Two Hundred Functional Rooms* (`gen/library/settings10/`,
+library 1) and *Havenot-Settings-Library* (`gen/library/settings10b/`, library 2: another ten settings and two
+hundred rooms, in another schema). By default an installation draws on both (a brief's `library` picks one:
+`'settings10'`, `'settings10b'`, or `'all'`).
 
 ## How it fits together
 
@@ -67,29 +70,108 @@ drawing sweep in the game of every object, material state, light, decal and haza
 | Floor tiles (29) | 29 | 29, ×3 states (18 painters) | — | yes: all baked in 3 states |
 | Wall tiles (29) | 29 | 29, ×3 states (21 painters) | — | yes: all baked in 3 states |
 | Lights (20) | 20 | 20 (11 fitting styles) | light colour and radius; tint and dim by descriptor | yes |
-| Furniture groups (200) / objects (591) | 200 / 591 | 591, 45 drawing families, setting palettes, name-seeded detail, states | placement rules, footprints | yes: all 591 drawn; 544 placed in the sweep |
-| Interactables (200) | 200 | as their objects | 10 device kinds with state machines | 198 placed in the sweep; actions spot-checked |
-| Loot (200) | 200 (375 items) | category icons | recoverable satchel items, budgeted | 162 dropped in the sweep (the budget cap stops the rest) |
-| Hazards (200) | 200 | 10 behaviour visuals | 10 behaviours, clue, countermeasure, control | yes: all 200 placed; behaviours spot-checked |
+| Furniture groups (200) / objects (591) | 200 / 591 | 591, 45 drawing families, setting palettes, name-seeded detail, wear and device states, turned to face | placement roles (focal, seating rows, working space, chairs round tables, aisles, consoles by machines), footprints, centrepieces, stripping for salvage | yes: all 591 drawn in every state; 548 placed in the sweep |
+| Interactables (200) | 200 | as their objects; status lamp and 7 state looks | 10 device kinds with state machines; wired to lights, traps, turrets, doors, other machines, lockers, alarms | 199 placed in the sweep; actions and power cuts tested in the game |
+| Loot (200) | 200 (375 items) | category icons | satchel items in six tiers, budgeted; salvage by function | 170 dropped in the sweep (the budget cap stops the rest) |
+| Hazards (200) | 200 | 12 behaviour visuals | 12 behaviours (with alarm and identity), attached to room, door, floor, wall, device or container; clue, countermeasure, control, re-arming | yes: 194 placed in the sweep; attachments and identity checks tested in the game |
+
+## Coverage (library 2: ten more settings, another schema)
+
+The source (`Havenot-Settings-Library.json`) is kept as supplied. Its rooms name their tiles, furniture, devices,
+treasure, traps, hazards, dressing and key objects by id, and most of those ids aren't defined in the file, or are
+defined as placeholders. Its adapter (`havenot-settings-library-b1` in `editor/gen/content.js`) and validator
+report every gap; `settings10b/companion.json` fills them, extending library 1's companion (its drawing families,
+hazard behaviours, device kinds and loot rules are tried after library 2's own). The full list is in
+`settings10b/IMPORT-REPORT.md`: 0 errors, 746 gaps filled, 21 warnings.
+
+**What the validator found:**
+
+- **Tiles (90 ids, 30 floor, 30 wall, 30 light): none defined.** `shared_libraries` has 20 tile records, but
+  their ids are written with spaces (`FLOOR_BLACK MARBLE VEINED GOLD`) where rooms use underscores, and 4 of
+  them match nothing. Each tile is drawn from its name (companion `materials`).
+- **Room fixtures: placeholders.** Every room's first required feature is "Primary <room> fixture". The rooms are
+  20 templates × 10 settings; each template's real fixtures are in the companion (`room_archetypes`: reception
+  desk, spectacle stage dais, power core turbine...). The second, setting-specific feature (holographic
+  eulogists, CRISPR looms...) is kept.
+- **Shared records are placeholders**: all 20 furniture records say "Bizarre HaveNot furniture piece", all 20
+  treasures "Salvage, curiosity, or artifact", all 20 interactives "Investigate, hack, bribe, or apologize to it",
+  all 10 traps "Humiliating, transformative, or lethal in bureaucratic way". Names come from ids (a few
+  reworded, companion `names`); each device's use and each trap's trigger, clues, effect, countermeasure and
+  severity are written in the companion.
+- **Hazards (10 ids, `HAZ_<setting>_DECAY`): undefined.** Written from each setting's decay patterns.
+- **Dressing (600 ids): undefined.** Written from the setting's signage, smells and decay.
+- **Key objects (10 ids, `KEY_<setting>_HEART`): undefined**, and every room of a setting lists the same one. It
+  becomes one named object per setting, loot only in that setting's Power Core & Heart room.
+- **Furniture belongs to no setting**, and each room's furniture pool mixes settings. Each piece's home setting is
+  in the companion: home pieces are the room's furniture; the others are its deliberate mismatch pool (a quarter
+  of rooms show one, in its own setting's colours).
+- **No generation parameters** (the generator's defaults apply) and no related setting (the strongest
+  `adjacent_setting_weights` entry is used). Two new size classes, tiny and monumental (90+ floor cells: rooms of
+  110+, as first set, almost never occur).
+
+| Records | Imported | Graphics complete | Behaviour implemented | Tested |
+| --- | --- | --- | --- | --- |
+| Settings (10) | 10 | 10 palettes | modes, related (from adjacency weights), type leanings | yes: every setting generated as the only setting (contact sheet `settings10b-contact-sheet.png`) |
+| Room types (200) | 200 | via their tiles and objects | 200 assignable, size-fitted, clustered (by template) | yes: all 200 generated |
+| Floor tiles (30) | 30 (none defined in the source) | 30, ×3 states | — | yes: all baked in 3 states |
+| Wall tiles (30) | 30 (none defined) | 30, ×3 states | — | yes: all baked in 3 states |
+| Lights (30) | 30 (none defined) | 30 (10 fitting styles) | colour and radius | yes |
+| Furniture: 20 shared pieces, 40 template fixtures, 10 setting features, 20 devices / 129 objects | 129 | 129, 32 drawing families, setting palettes, states | as library 1; home vs mismatch pool | yes: all 129 drawn in every state; 104 placed in the sweep (devices besides) |
+| Interactables (20, as 200 room devices) | 200 | as their objects; status lamp and state looks | 8 device kinds, wired as library 1's | 200 placed in the sweep; all opened in the game |
+| Treasure (20) + key objects (10) | 200 loot records, 610 items | category icons | satchel items in six tiers, budgeted | 166 dropped in the sweep (budget cap) |
+| Hazards: 10 decay + 10 traps | 200 room hazards | behaviour visuals | 9 behaviours (with identity), attached as library 1's | 193 placed in the sweep; all opened in the game |
+
+## Done since the first milestone
+
+- **Advanced generation** (character creation, "Advanced generation"): functional rooms (none, few, standard,
+  many, most), which libraries, settings per installation (rolled, one, main and second, per floor, mixed,
+  anything goes), main setting, era emphasis (Age of Wonders or Age of War: that era's settings three times as
+  likely to lead; brief `era`), how rooms group (cluster strength), furniture density, twists/history/hazards/loot
+  (fewer, standard, more), and the classic generator (`preserveOld`). The choices go onto every installation brief
+  of the run and are kept with it.
+- **Centrepieces**: a functional room's first required piece of a centrepiece family (thrones, vats, altars,
+  coffins, turbines, daises, baths, cages, pods) or name (surgical, operating, cannon, reactor, centrifuge, stage,
+  tank) is one size bigger in the middle of a room of 50 floor cells, two from 110, on a plinth with a lit rim.
+  About one functional room in five has one.
+- **Doorway transitions**: where a room's material floor meets a door or another floor, a threshold on its side
+  fades into the next floor, with a sill (`hn-threshold`).
+- **Room inspect panel (L)** and **hazard overlay (O)** (`hn-gen-kit/inspect.js`): one panel with the room's
+  setting, function, cluster, condition, history, materials, furniture, device and state, treasure, hazards and
+  traps; the overlay marks every hazard's room, emitter and control and armed traps' trigger tiles.
+
+- **Placement** (`arrange` in stages-function.js): a throne, altar or dais stands against the wall farthest from
+  the doors and faces them, the room's seating in rows before it; an operating table keeps a ring of working
+  space; chairs surround conference and dining tables; shelving in storage rooms and shops forms aisles; consoles
+  stand by the room's machine; pieces are drawn turned to face what they're for; a hazard's control hangs by the
+  door.
+- **Devices wired to the floor**: a machine's room lights go with it; a power source (generator, core, turbine,
+  reactor, furnace) shut down, wrecked or cut at its breaker kills lights, switch traps, turrets and machines
+  within 12 tiles and unseals sealed doors; data consoles pull locker codes; security consoles stand alarms
+  and identity checks down. Kept with the run.
+- **Hazards attached** to the room, a doorway, a section of floor, a wall, the room's device (using it springs it)
+  or a container (opening it does), re-arming after 45 s; two new behaviours, **alarm** and **identity** (a human
+  waved through, anyone else jolted and reported). The panel gives threat category, suggested level, detection,
+  countermeasure and GM notes (no invented JAGS numbers).
+- **Device looks** for every state: a status lamp on each, damaged, disabled, active (faster), triggered (red flash)
+  and destroyed (charred, split, smoking). Sheet: `device-states.png`.
+- **Walls**: windows in thin walls (sight and light through, not shots) and displays or machine panels set into
+  rooms' walls, for every wall material. Sheet: `wall-variants.png`.
+- **Loot tiers** (ordinary salvage, decorative curiosity, useful equipment, valuable collectible, rare artifact,
+  exceptional discovery) and **salvage by function** (machines give parts, thrones fittings, beds medical
+  supplies, weapons weapon parts); any library furniture can be stripped once.
+- **Names**: atmosphere, historical, corporate, HaveNot and title words beside colours and status, each with its
+  effect, a quarter with a colour as well (Crimson Executive ...); a repeated function name takes its setting.
+- **Advanced generation**: hazards, loot, historical damage and anomalies each have their own control. "One
+  setting" is one setting now (its own rooms, but for one anomaly in ten).
+- **Tests** (`tools/gen-tests.mjs`, section `functional rooms`): every size, functional off and classic, the
+  default rate, each library alone with one setting leading, chaotic mixing, sparse against crowded, low against
+  high hazard, both eras, every functional room complete and drawable, determinism.
 
 ## Not done yet (and what remains)
 
-- **The generator settings UI** (enable, probability, setting choice, cluster strength, density, frequencies,
-  era emphasis, preserve-old). The brief already takes every option (`functional`, `settings`, `clusterStrength`,
-  `density`, `frequencies`, `preserveOld`); there is no panel for them yet. Remaining: an "Advanced generation"
-  panel (character creation or the editor) that writes them into the run's briefs. Era emphasis isn't a brief
-  option yet.
-- **The second library** (`Havenot-Settings-Library.json`, a different schema with many unresolved ids): an adapter,
-  the validator report, and a companion that fills the gaps. Queued after the Dead Signal engine port.
-- **Furniture readability.** Every object has real art, but at the game's normal zoom small pieces read as small
-  shapes; centrepieces (thrones, vats, coffins, turbines) carry the rooms. Remaining: bigger centrepieces for
-  large rooms, and denser 'normal' rooms.
-- **Transitions between areas** (marble giving way to grating at a doorway) aren't drawn yet beyond each room's
-  own walls and floor. Remaining: threshold decals and blended corridor tiles at doors between differently
-  materialled rooms.
-- **Room inspect panel** (13.1: a room's name, setting, function, objects, devices, treasure and traps on one
-  panel). Devices and hazards show their part; a whole-room panel and a hazard overlay toggle are still to do.
-- **Interactive objects' animation states** are drawn for working, malfunctioning (sparks), disabled and destroyed
-  (dark); 'triggered' shares 'active'.
-- **Wall art**: walls get the room's material with trim and damage, but no embedded displays or window openings
-  of their own beyond the wall-mounted pieces.
+- **Library 2's furniture is thinner than library 1's**: 129 objects against 591, because its rooms are 20
+  templates repeated per setting. Each setting's rooms differ by materials, palette, the setting feature, its
+  devices and its own shared pieces. Remaining, if wanted: more setting-specific pieces per template.
+- **Doorway transitions are floor-only**: where two wall materials meet there's no trim piece between them.
+- **Sound**: devices and hazards use the engine's existing sounds (alarm, pickup, trap, shock); there are no
+  per-object sound sets.

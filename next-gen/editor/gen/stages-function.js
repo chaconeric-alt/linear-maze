@@ -24,9 +24,19 @@
 (function (root) {
   const G = (root.LMGen = root.LMGen || {});
 
+  /** The content a generation uses: one library by name (a brief's `library`), or, by default and for 'all', every
+   *  library with rooms as one (G.mergeContent; worked out once per set of libraries). */
+  const merged = new WeakMap();
   G.contentOf = (lib, name) => {
     const all = lib.content || {};
-    return name ? all[name] : Object.values(all).find((c) => c && c.rooms);
+    if (name && name !== 'all') return all[name] || null;
+    const names = Object.keys(all).filter((k) => all[k] && all[k].rooms);
+    if (names.length < 2) return names.length ? all[names[0]] : undefined;
+    const key = names.join('+'), m = merged.get(all);
+    if (m && m.key === key) return m.C;
+    const C = G.mergeContent(names.map((k) => all[k]));
+    merged.set(all, { key, C });
+    return C;
   };
   const ROLES_KEEP = ['entrance', 'stairs', 'goal'];
 
@@ -35,13 +45,33 @@
     colour: [
       { word: 'Crimson', tint: '#ff4a3a' }, { word: 'Ivory', tint: '#fff0d0' }, { word: 'Verdant', tint: '#7aff7a' },
       { word: 'Ultraviolet', tint: '#b07aff' }, { word: 'Golden', tint: '#ffd060' }, { word: 'Grey', tint: '#c8ccd0', dim: true },
+      { word: 'Platinum', tint: '#e8eef4', extra: 1 }, { word: 'Obsidian', tint: '#6a5a8a', dim: true }, { word: 'Chartreuse', tint: '#c8ff3a' },
     ],
     status: [
       { word: 'Abandoned', worn: 2, debris: 3, dim: true }, { word: 'Condemned', worn: 2, debris: 2 }, { word: 'Substandard', worn: 1 },
       { word: 'Imperial', extra: 2 }, { word: 'Deluxe', extra: 1 }, { word: 'Executive', extra: 1 }, { word: 'Provisional', sparse: true },
       { word: 'Emergency', tint: '#ff3a2a' }, { word: 'Restored', worn: 0 }, { word: 'Mandatory' }, { word: 'Employee Happiness' },
     ],
+    atmosphere: [
+      { word: 'Silent', dim: true }, { word: 'Humming' }, { word: 'Weeping', worn: 1, debris: 1 }, { word: 'Frozen', tint: '#a8d8ff' },
+      { word: 'Smouldering', tint: '#ff8a3a', worn: 1, debris: 2 }, { word: 'Whispering', dim: true }, { word: 'Sunlit', tint: '#fff0c0' },
+    ],
+    historical: [
+      { word: 'Ancestral', worn: 1 }, { word: 'Pre-Collapse' }, { word: 'Victory', extra: 1 }, { word: 'Reconstruction', sparse: true }, { word: 'Last' }, { word: 'Wonder-Age', extra: 1 },
+    ],
+    corporate: [
+      { word: 'Synergy™' }, { word: 'OmniCorp' }, { word: 'Premium Plus', extra: 1 }, { word: 'Sponsored', tint: '#ffe04a' }, { word: 'Brand-Loyal' }, { word: 'Value Tier', sparse: true },
+    ],
+    havenot: [
+      { word: 'Wondermade', extra: 1 }, { word: 'Burner-Proof', worn: 1 }, { word: 'Neo-Sovereign', extra: 2 }, { word: 'Gladhand' }, { word: 'Licensed' }, { word: 'Recompensed' },
+    ],
+    title: [
+      { word: 'Grand', extra: 1 }, { word: 'Royal', extra: 2 }, { word: 'Ministerial' }, { word: 'Supreme', extra: 1 }, { word: 'Regulatory' }, { word: 'Behavioral Correction' },
+    ],
   };
+  // how often each kind of descriptor is chosen
+  G.FN_DESCRIPTOR_KINDS = { colour: 28, status: 28, atmosphere: 12, historical: 8, corporate: 10, havenot: 8, title: 6 };
+
   G.FN_OVERLAYS = ['scavenged', 'damaged', 'repurposed', 'blast', 'fire', 'flooding', 'biological growth', 'cult conversion', 'improvised habitation', 'automated restoration', 'collapse', 'robotic modification', 'contamination'];
 
   function cellsOf(r) {
@@ -58,8 +88,12 @@
   function chooseSettings(plan, lib, C, rng) {
     const b = plan.brief, ids = Object.keys(C.settings).sort();
     const want = b.settings || {};
-    const lean = C.typeSettings[b.type] || {};
-    const dominant = want.dominant && C.settings[want.dominant] ? want.dominant : rng.weighted(Object.keys(lean).length ? lean : Object.fromEntries(ids.map((i) => [i, 1])));
+    // the type's leanings among the settings this content has (a single library: only its own)
+    let lean = Object.fromEntries(Object.entries(C.typeSettings[b.type] || {}).filter(([id]) => C.settings[id]));
+    if (!Object.keys(lean).length) lean = Object.fromEntries(ids.map((i) => [i, 1]));
+    // era emphasis (brief `era`): settings of that era three times as likely to lead
+    if (b.era) lean = Object.fromEntries(ids.map((i) => [i, (lean[i] || 0.25) * (String((C.settings[i] || {}).era || '').includes(b.era) ? 3 : 1)]).filter(([, w]) => w > 0));
+    const dominant = want.dominant && C.settings[want.dominant] ? want.dominant : rng.weighted(lean);
     const mode = want.mode || rng.weighted(C.modes);
     const related = (s) => (C.settings[s] || {}).related;
     const secondary = want.secondary && C.settings[want.secondary] ? want.secondary : rng.chance(0.6) && related(dominant) ? related(dominant) : rng.pick(ids.filter((i) => i !== dominant));
@@ -77,7 +111,7 @@
   }
 
   G.stageFunctions = function (plan, lib) {
-    const C = G.contentOf(lib);
+    const C = G.contentOf(lib, plan.brief.library);
     const b = plan.brief;
     plan.functions = null;
     if (!C || b.functional === false || b.preserveOld) return;
@@ -88,7 +122,7 @@
     const adj = Object.assign({ same_cluster: 55, same_setting_different_cluster: 20, related_setting: 15, unrelated_or_anomalous: 10 }, P0.adjacency_weights || {});
     const freq = (k, dflt) => (b.frequencies && b.frequencies[k] != null ? b.frequencies[k] : P0[k] != null ? P0[k] : dflt);
     const sets = chooseSettings(plan, lib, C, rng);
-    plan.functions = { library: Object.keys(lib.content).find((k) => lib.content[k] === C), mode: sets.mode, dominant: sets.dominant, secondary: sets.secondary, floors: sets.floors.map((f) => f.main), rooms: 0 };
+    plan.functions = { library: Object.keys(lib.content).find((k) => lib.content[k] === C) || 'all', mode: sets.mode, dominant: sets.dominant, secondary: sets.secondary, floors: sets.floors.map((f) => f.main), rooms: 0 };
     const all = Object.values(C.rooms).sort((a, c) => (a.id < c.id ? -1 : 1));
     const related = (a, c) => (C.settings[a] || {}).related === c || (C.settings[c] || {}).related === a;
     for (const floor of plan.floors) {
@@ -108,7 +142,12 @@
         // neighbours already given a function steer this one
         const near = [r.parent].concat(r.kids || []).map((i) => floor.rooms[i]).filter((n) => n && n.fn);
         const pool = b.functionPool ? all.filter((c) => b.functionPool.includes(c.id)) : all;
-        const cands = pool.filter((c) => fits(C, c, r) && !used.has(c.id));
+        let cands = pool.filter((c) => fits(C, c, r) && !used.has(c.id));
+        // one setting means one setting: its own rooms, but for the odd anomaly (one in ten)
+        if (sets.mode === 'single' && !rng.chance(0.1)) {
+          const own = cands.filter((c) => c.setting_id === areaSet);
+          if (own.length) cands = own;
+        }
         if (!cands.length) continue;
         const relOf = (c) => {
           const ref = near.length ? near[0].fn : { setting: areaSet, cluster: null };
@@ -130,9 +169,16 @@
         fn.density = rng.weighted(Object.assign({ sparse: 0.2, normal: 0.55, crowded: 0.2, excessive: 0.05 }, b.density ? { [b.density]: 100 } : P0.room_furniture_density || {}));
         // the name: sometimes a descriptor that changes the room, now and then a misleading one
         if (rng.chance(0.18)) {
-          const d = rng.pick(rng.chance(0.4) ? G.FN_DESCRIPTORS.colour : G.FN_DESCRIPTORS.status);
-          fn.descriptor = d;
+          const kind = rng.weighted(G.FN_DESCRIPTOR_KINDS);
+          let d = rng.pick(G.FN_DESCRIPTORS[kind]);
           fn.name = d.word + ' ' + fn.name;
+          // now and then a colour in front as well (Crimson Executive Throne Room): its tint over the other's effects
+          if (kind !== 'colour' && rng.chance(0.25)) {
+            const c = rng.pick(G.FN_DESCRIPTORS.colour);
+            fn.name = c.word + ' ' + fn.name;
+            d = Object.assign({}, d, { word: c.word + ' ' + d.word, tint: c.tint, dim: d.dim || c.dim });
+          }
+          fn.descriptor = d;
           if (d.sparse) fn.density = 'sparse';
           if (d.extra) fn.density = d.extra > 1 ? 'excessive' : 'crowded';
         }
@@ -181,6 +227,12 @@
     const props = objProps(C, name, fn, extra);
     const wall = WALL_FAMS.includes(o.fam);
     const tries = wall ? [{ item: 'hn-s10w', place: 'wall' }] : [
+      // a centrepiece in a big room: bigger, so the room reads as what it is at normal zoom; a throne, altar or
+      // stage against the far wall facing the doors, anything else in the middle
+      ...(extra && extra.grow ? [{ item: 'hn-s10', place: FOCAL_FAMS.includes(o.fam) ? 'focal' : 'center', grow: extra.grow }] : []),
+      ...(FOCAL_FAMS.includes(o.fam) && extra && extra.key ? [{ item: 'hn-s10', place: 'focal' }] : []),
+      // shelving in rows with aisles between
+      ...(extra && extra.aisle ? [{ item: 'hn-s10', place: 'grid' }] : []),
       { item: 'hn-s10', place: o.place === 'wall' ? 'wall-row' : o.place },
       { item: 'hn-s10', place: 'any', swap: true },
       { item: 'hn-s10', place: 'any', small: true },
@@ -189,6 +241,14 @@
       const pr = G.clone(props);
       if (t.swap) [pr.w, pr.h] = [props.h, props.w];
       if (t.small) pr.w = pr.h = 1;
+      if (t.grow) {
+        pr.w = Math.max(props.w + t.grow, 1 + t.grow);
+        pr.h = Math.max(props.h + t.grow, 1 + t.grow);
+        pr.centre = true;
+      }
+      delete pr.grow;
+      delete pr.aisle;
+      if (t.place === 'focal') pr.focal = true;
       if (t.swap && pr.w === props.w && pr.h === props.h) continue;
       const n = G.placeFixtureIn(P, rng, r, { item: t.item, props: pr, place: t.place, count: 1 });
       if (n) {
@@ -199,16 +259,122 @@
     return null;
   }
   const DENSITY_EXTRA = { sparse: 0, normal: 1, crowded: 3, excessive: 6 };
+  // placement roles (engine of a room's layout: arrange)
+  const FOCAL_FAMS = ['throne', 'altar', 'dais'];
+  const famOf = (C, name) => (C.objects[name] || {}).fam;
+  const isSeat = (C, name) => ['chair', 'pews'].includes(famOf(C, name)) || /\b(seat|seats|seating|chairs?|benches|pews?|stools?|kneeling pads?|cushions?|bleachers)\b/.test(name);
+  const isConsole = (C, name) => famOf(C, name) === 'console' && !/scanner|helmet/.test(name);
+  const shelfRoom = (C, name, fn) => ['shelf', 'cabinet'].includes(famOf(C, name)) && ['storage', 'commerce'].includes(fn.cluster);
+  const TABLE_NAMES = /conference|meeting|dining|banquet|negotiat|board|council|card table|tasting/;
+  const WORK_NAMES = /surgical|operating|autopsy|dissection|examination table|procedure/;
+  const FACE = { s: 0, w: 1, n: 2, e: 3 }; // quarter turns that point a piece's front (+y) that way
+  const faceTo = (from, to) => {
+    const dx = to[0] - from[0], dy = to[1] - from[1];
+    return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? FACE.e : FACE.w) : dy < 0 ? FACE.n : FACE.s;
+  };
+  const posOf = (P, e) => Object.keys(P.floor.objs).find((k) => P.floor.objs[k] === e).split(',').map(Number);
+  /** A piece's middle, in tiles, from its top-left tile and footprint. */
+  const mid = (P, e) => {
+    const [x, y] = posOf(P, e);
+    return [x + ((e.props.w || 1) - 1) / 2, y + ((e.props.h || 1) - 1) / 2];
+  };
+  /** Free tiles in a ring round a placed piece (its footprint grown by d), nearest first. */
+  const ringOf = (P, r, e, d) => {
+    const [x, y] = posOf(P, e), w = e.props.w || 1, h = e.props.h || 1, out = [];
+    for (let yy = y - d; yy < y + h + d; yy++) for (let xx = x - d; xx < x + w + d; xx++) {
+      if (xx >= x && xx < x + w && yy >= y && yy < y + h) continue;
+      if (G.inRoom(r, xx, yy) && P.base(xx, yy) === '.' && !P.taken(xx, yy)) out.push([xx, yy]);
+    }
+    return out;
+  };
+  const putAt = (P, r, C, name, fn, at, extra) => P.put(at[0], at[1], { item: 'hn-s10', props: objProps(C, name, fn, Object.assign({ w: 1, h: 1 }, extra)), room: r.i });
+  /** How a functional room's pieces stand to one another: the focal piece faces the doors with seating in rows
+   *  before it, an operating table keeps working space round it, chairs surround a conference table, consoles
+   *  stand by the machine they run, seats and desks face what they're for. */
+  function arrange(P, rng, r, C, fn, pool) {
+    const mine = () => Object.values(P.floor.objs).filter((o) => o.room === r.i && o.item === 'hn-s10' && o.props && o.props.name);
+    const doors = P.doorsOf(r);
+    const [rx, ry, rw, rh] = r.rect, centre = [rx + (rw - 1) / 2, ry + (rh - 1) / 2];
+    const door = doors.length ? doors[0] : centre;
+    const seats = pool.filter((n) => isSeat(C, n)), consoles = pool.filter((n) => isConsole(C, n));
+    const focal = mine().find((o) => o.props.focal || (FOCAL_FAMS.includes(o.props.fam) && o.props.key));
+    // the focal piece faces the doors (or the middle of the room); seating in rows before it, facing it
+    if (focal) {
+      const m = mid(P, focal);
+      focal.props.turn = faceTo(m, doors.length ? door : centre);
+      if (seats.length) {
+        const front = [[0, 1], [-1, 0], [0, -1], [1, 0]][focal.props.turn];
+        const rows = [];
+        for (let k = 2; k <= 4; k++) for (let s = -2; s <= 2; s++) rows.push([Math.round(m[0] + front[0] * k + front[1] * s), Math.round(m[1] + front[1] * k + front[0] * s)]);
+        let n = 0;
+        for (const at of rows) {
+          if (n >= Math.min(6, 2 + Math.floor(G.roomCells(r).length / 25))) break;
+          if (!G.inRoom(r, at[0], at[1]) || P.base(at[0], at[1]) !== '.' || P.taken(at[0], at[1])) continue;
+          const name = seats[n % seats.length];
+          if (putAt(P, r, C, name, fn, at, { turn: (focal.props.turn + 2) % 4, seat: true })) {
+            fn.placed.push(name);
+            n++;
+          }
+        }
+      }
+    }
+    for (const o of mine()) {
+      const name = o.props.name;
+      // working space round an operating table: the ring round it stays clear
+      if (WORK_NAMES.test(name)) for (const c of ringOf(P, r, o, 1)) P.reserved.add(K(c[0], c[1]));
+      // chairs round a conference table, facing it
+      if (TABLE_NAMES.test(name) || (o.props.fam === 'table' && seats.length && rng.chance(0.5))) {
+        const m = mid(P, o), seat = seats[0] || 'chair';
+        let n = 0;
+        for (const c of rng.shuffle(ringOf(P, r, o, 1)).filter(([x, y]) => x === Math.round(x) && (Math.abs(x - m[0]) < 0.6 + (o.props.w || 1) / 2 || Math.abs(y - m[1]) < 0.6 + (o.props.h || 1) / 2))) {
+          if (n >= 6) break;
+          if (putAt(P, r, C, seat, fn, c, { fam: 'chair', turn: faceTo(c, m), seat: true })) n++;
+        }
+        if (n) fn.placed.push(seat + ' ×' + n);
+      }
+    }
+    // consoles beside the room's machine (its centrepiece, or its biggest piece), facing it
+    if (consoles.length) {
+      const big = mine().filter((o) => !o.props.seat).sort((a, b) => (b.props.w || 1) * (b.props.h || 1) - (a.props.w || 1) * (a.props.h || 1))[0];
+      if (big) {
+        const m = mid(P, big);
+        const cells = rng.shuffle(ringOf(P, r, big, 2).filter((c) => !ringOf(P, r, big, 1).some((d) => d[0] === c[0] && d[1] === c[1])));
+        let n = 0;
+        for (const c of cells) {
+          if (n >= Math.min(consoles.length, 2)) break;
+          if (putAt(P, r, C, consoles[n], fn, c, { turn: faceTo(c, m) })) {
+            fn.placed.push(consoles[n]);
+            n++;
+          }
+        }
+      }
+    }
+    // desks face into the room; anything else that has a front faces the room's middle
+    for (const o of mine()) if (o.props.turn == null && ['desk', 'chair', 'console', 'pews'].includes(o.props.fam)) o.props.turn = faceTo(mid(P, o), centre);
+  }
+  // centrepieces: the families and names that carry a room (a throne room's throne, a lab's vat)
+  const CENTRE_FAMS = ['throne', 'vat', 'altar', 'coffin', 'turbine', 'dais', 'fountain', 'statue', 'furnace', 'bath', 'cage', 'pod'];
+  const CENTRE_NAMES = /surgical|operating|autopsy|cannon|howitzer|reactor|core|centrifuge|stage|tank/;
+  /** How much bigger a room's required piece is drawn: +1 a side in a room of 50 floor cells, +2 from 110. */
+  const growOf = (C, name, cells) => {
+    const o = C.objects[name] || {};
+    if (!(CENTRE_FAMS.includes(o.fam) || CENTRE_NAMES.test(name)) || WALL_FAMS.includes(o.fam)) return 0;
+    return cells >= 110 ? 2 : cells >= 50 ? 1 : 0;
+  };
 
   /** A functional room's furniture (stage access, in place of the template's fixtures). */
   G.placeFunctionFurniture = function (P, rng, r, plan, lib) {
-    const C = G.contentOf(lib), fn = r.fn, rec = C.rooms[fn.id];
+    const C = G.contentOf(lib, plan.brief.library), fn = r.fn, rec = C.rooms[fn.id];
     const cells = G.roomCells(r).length;
     fn.placed = [];
     fn.missing = [];
     // the two required fixtures first: the room should read as what it is
+    let grown = false;
     for (const name of (rec.mandatory_features || []).slice(0, 2)) {
-      const e = placeObject(P, rng, r, C, name, fn, { key: true });
+      // the first centrepiece grows with the room (one per room)
+      const grow = grown ? 0 : growOf(C, name, cells);
+      const e = placeObject(P, rng, r, C, name, fn, grow ? { key: true, grow } : { key: true });
+      if (e && e.props && e.props.centre) grown = true;
       if (e) {
         e.keep = true;
         fn.placed.push(name);
@@ -219,8 +385,10 @@
     const want = Math.min(Math.floor(cells / 10), DENSITY_EXTRA[fn.density] + (fn.density === 'sparse' ? 0 : 1));
     for (let i = 0; i < want && pool.length; i++) {
       const name = pool[i % pool.length];
-      if (placeObject(P, rng, r, C, name, fn)) fn.placed.push(name);
+      if (isSeat(C, name) || isConsole(C, name)) continue; // seats and consoles go where they belong (arrange)
+      if (placeObject(P, rng, r, C, name, fn, shelfRoom(C, name, fn) ? { aisle: true } : undefined)) fn.placed.push(name);
     }
+    arrange(P, rng, r, C, fn, pool);
     // the room's device: an object of the interactable's name, the one placed or a new one
     const dev = C.interactables[rec.interactive_record];
     if (dev) {
@@ -241,11 +409,19 @@
       }
       fn.note = (fn.note ? fn.note + ' ' : '') + 'Someone has moved a ' + other.name.toLowerCase() + ' in here.';
     }
+    // a library's own mismatch pool (furniture its room lists from another setting): now and then one such piece,
+    // in its own setting's colours
+    const odd = (C.furniture[rec.furniture_record] || {}).mismatch || [];
+    if (odd.length && rng.chance(MISMATCH_CHANCE)) {
+      const [name, set] = rng.pick(odd);
+      if (placeObject(P, rng, r, C, name, Object.assign({}, fn, { setting: set }), { odd: true })) fn.placed.push(name + ' (out of place)');
+    }
   };
+  const MISMATCH_CHANCE = 0.25;
 
   /** A functional room's loot (stage treasure): its library loot record, in a container, valued for the floor. */
   G.functionLoot = function (P, rng, plan, lib, floor, all, add, target, spentNow) {
-    const C = G.contentOf(lib);
+    const C = G.contentOf(lib, plan.brief.library);
     if (!C) return;
     const tl = G.tlOf(plan, floor);
     for (const r of floor.rooms) {
@@ -296,7 +472,7 @@
 
   G.stageFunctionsFill = function (plan, lib) {
     glassRoom(plan, lib);
-    const C = G.contentOf(lib);
+    const C = G.contentOf(lib, plan.brief.library);
     if (!C || !plan.functions) return;
     const B = lib.budgets;
     for (const floor of plan.floors) {
@@ -326,13 +502,18 @@
         // the hazard: a working trap with a clue and a countermeasure, damage from the floor's Threat Level
         if (fn.hazard) {
           const H = C.hazards[C.rooms[fn.id].hazard_record];
-          const at = H && rng.pick(P.free(r, 1));
+          const place = H && attachHazard(P, rng, r, H);
+          const at = place && place.at;
           if (at) {
             const off = G.flagName(plan.slug, 'f' + floor.n + '_haz' + r.i);
             const dmg = Math.max(3, Math.round(dmgRow[H.severity === 'severe' ? 2 : 1] * (lib.settings.trapDamageScale || 0.75)));
-            P.put(at[0], at[1], { item: 'hn-hazard', props: { haz: H.id, behaviour: H.behaviour, name: H.name, severity: H.severity, clue: H.clues, counter: H.countermeasure, effect: H.effect, trigger: H.trigger, dmg, tl, off, floorOff: floor.trapsOff || null, rect: r.rect.slice(), set: fn.setting }, room: r.i, solid: false });
+            P.put(at[0], at[1], { item: 'hn-hazard', props: { haz: H.id, behaviour: H.behaviour, name: H.name, severity: H.severity, clue: H.clues, counter: H.countermeasure, effect: H.effect, trigger: H.trigger, dmg, tl, off, floorOff: floor.trapsOff || null, rect: place.rect, attach: place.attach, attachTo: place.to || null, threat: H.severity === 'severe' ? 'high' : 'moderate', set: fn.setting }, room: r.i, solid: false });
+            fn.hazardAttach = place.attach;
             // the countermeasure: a control on the room's wall (or the floor's facilities terminal, if it has one)
-            const spot = rng.pick(P.wallSpots(r).filter((s) => !P.floor.objs[K(s.x, s.y)]));
+            // by the door, where you'd reach for it coming in
+            const doors = P.doorsOf(r), spots = P.wallSpots(r).filter((s) => !P.floor.objs[K(s.x, s.y)]);
+            const dd = (s) => (doors.length ? Math.min(...doors.map(([x, y]) => Math.abs(x - s.x) + Math.abs(y - s.y))) : 0);
+            const spot = spots.sort((a, b) => dd(a) - dd(b))[0];
             if (spot) P.put(spot.x, spot.y, { item: 'hn-hazard-ctl', props: { face: spot.face, flag: off, name: H.name, counter: H.countermeasure, difficulty: Math.min(9, (lib.settings.hackBase || 6) + tl - 1) }, room: r.i });
             fn.hazardAt = at;
           }
@@ -351,9 +532,81 @@
         // last, the floor and walls (a tile counts as taken, so nothing could be placed after them)
         laySurfaces(P, rng, r, C, fn, cells);
       }
+      laySeams(P, C, floor);
       G.unblock(P, floor);
     }
   };
+  /** Where a room's hazard sits and what sets it off (hazards.js): the whole room, a doorway (a few tiles inside
+   *  it), a section of floor, a wall, the room's device (using it springs the trap) or a container (opening it
+   *  does). Which, by what the hazard does and what the room has. Returns { attach, at, rect, to } or null. */
+  const ATTACH = {
+    turret: { wall: 5, door: 3, room: 2 }, beam: { wall: 6, room: 4 }, ambush: { door: 4, room: 4, container: 2 }, seal: { door: 5, room: 3, container: 2 },
+    shock: { floor: 4, device: 3, container: 2, room: 1 }, gas: { floor: 4, device: 2, container: 2, room: 2 }, heat: { floor: 4, device: 3, room: 1 },
+    crush: { floor: 5, device: 3, room: 1 }, flood: { floor: 6, room: 2 }, mind: { room: 6, device: 4 }, alarm: { door: 5, container: 3, device: 2 }, identity: { door: 7, room: 3 },
+  };
+  function attachHazard(P, rng, r, H) {
+    const [rx, ry, rw, rh] = r.rect, whole = r.rect.slice();
+    const objs = Object.values(P.floor.objs).filter((o) => o.room === r.i);
+    const dev = objs.find((o) => o.props && o.props.dev && o.props.uid), box = objs.find((o) => o.item === 'hn-cache' && o.props && o.props.uid);
+    const inside = P.doorsOf(r).map(([x, y]) => [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([ox, oy]) => [x + ox, y + oy]).find(([ix, iy]) => G.inRoom(r, ix, iy))).filter(Boolean);
+    const w = Object.assign({}, ATTACH[H.behaviour] || { room: 1 });
+    if (!dev) delete w.device;
+    if (!box) delete w.container;
+    if (!inside.length) delete w.door;
+    if (!Object.keys(w).length) w.room = 1;
+    const attach = rng.weighted(w);
+    const nearTo = (x, y) => P.near(P.free(r), x, y)[0];
+    const posOf = (o) => Object.keys(P.floor.objs).find((k) => P.floor.objs[k] === o).split(',').map(Number);
+    const around = (x, y, d) => {
+      const x0 = Math.max(rx, x - d), y0 = Math.max(ry, y - d);
+      return [x0, y0, Math.min(rx + rw, x + d + 1) - x0, Math.min(ry + rh, y + d + 1) - y0];
+    };
+    if (attach === 'door') {
+      const [ix, iy] = rng.pick(inside), at = nearTo(ix, iy);
+      return at && { attach, at, rect: around(ix, iy, 1) };
+    }
+    if (attach === 'device' || attach === 'container') {
+      const o = attach === 'device' ? dev : box, [ox, oy] = posOf(o), at = nearTo(ox, oy);
+      return at && { attach, at, rect: around(ox, oy, 1), to: o.props.uid };
+    }
+    if (attach === 'wall') {
+      const at = rng.pick(P.wallRow(r));
+      return at && { attach, at, rect: whole };
+    }
+    const at = rng.pick(P.free(r, 1));
+    if (!at) return null;
+    return { attach, at, rect: attach === 'floor' ? around(at[0], at[1], 1) : whole };
+  }
+  /** Doorway transitions: where a room's material floor meets a door or an opening onto another floor, a threshold
+   *  on the room's side fades its material into the next one's, with a sill at the edge ('hn-threshold'). Both rooms
+   *  at a shared door get one. No randomness: it doesn't change anything else the seed decides. */
+  function laySeams(P, C, floor) {
+    const matOf = (x, y) => {
+      const t = P.floor.tiles[K(x, y)];
+      return t && /^mat-/.test(t.terrain || '') ? t.terrain.slice(4) : null;
+    };
+    const colOf = (id) => {
+      const t = id && C.tiles[id];
+      return t && t.colors ? t.colors[0] : null;
+    };
+    for (const r of floor.rooms) {
+      const cells = G.roomCells(r), inRoom = new Set(cells.map(([x, y]) => K(x, y)));
+      for (const [x, y] of cells) {
+        const mine = matOf(x, y);
+        if (!mine || P.floor.objs[K(x, y)]) continue;
+        for (const [ox, oy] of ORTHO) {
+          const nx = x + ox, ny = y + oy;
+          if (inRoom.has(K(nx, ny)) || !P.open(nx, ny)) continue;
+          // past a door, the floor beyond it
+          const [bx, by] = P.base(nx, ny) === '+' ? [nx + ox, ny + oy] : [nx, ny];
+          const other = matOf(bx, by);
+          if (other === mine) continue;
+          P.put(x, y, { item: 'hn-threshold', props: { dir: [ox, oy], from: colOf(mine), to: colOf(other) }, room: r.i, solid: false });
+          break;
+        }
+      }
+    }
+  }
   /** A room's floor and walls in its materials (a themed ordinary room: its setting's first floor only). */
   function laySurfaces(P, rng, r, C, fn, cells) {
     const themeTile = r.theme ? Object.values(C.tiles).find((t) => t.setting_id === r.theme && t.kind === 'floor') : null;
@@ -373,6 +626,27 @@
       if (t && t.tag) continue;
       P.floor.tiles[k] = { terrain: 'mat-' + fn.wall, variant: state === 2 && rng.chance(0.4) ? 2 : state };
     }
+    // windows in thin walls (open floor on both sides, the wall straight, away from doors) and displays or machine
+    // panels set into the room's own walls, more in rooms that would have them
+    const at = (k) => k.split(',').map(Number);
+    const straight = (x, y) => (P.base(x - 1, y) === '#' && P.base(x + 1, y) === '#') || (P.base(x, y - 1) === '#' && P.base(x, y + 1) === '#');
+    const nearDoor = (x, y) => ORTHO.concat([[1, 1], [-1, -1], [1, -1], [-1, 1]]).some(([ox, oy]) => P.base(x + ox, y + oy) === '+');
+    const floorSides = (x, y) => ORTHO.filter(([ox, oy]) => P.base(x + ox, y + oy) === '.').length;
+    const WINDOWY = ['display', 'commerce', 'command', 'medical', 'research', 'reception', 'living'];
+    const SCREENY = ['command', 'office', 'research', 'industry', 'medical', 'detention'];
+    const ok = (k) => {
+      const [x, y] = at(k);
+      return straight(x, y) && !nearDoor(x, y) && !P.floor.objs[k] && P.floor.tiles[k] && P.floor.tiles[k].terrain === 'mat-' + fn.wall;
+    };
+    const cands = [...ring].sort().filter(ok);
+    const winChance = WINDOWY.includes(fn.cluster) ? 0.3 : 0.1;
+    for (const k of cands) {
+      const [x, y] = at(k);
+      if (floorSides(x, y) === 2 && rng.chance(winChance)) P.floor.tiles[k] = { terrain: 'mat-' + fn.wall + '-win', variant: P.floor.tiles[k].variant };
+    }
+    const faces = cands.filter((k) => floorSides(...at(k)) === 1 && P.floor.tiles[k].terrain === 'mat-' + fn.wall);
+    const nDisp = (SCREENY.includes(fn.cluster) ? 2 : 0) + (rng.chance(0.4) ? 1 : 0);
+    for (const k of rng.shuffle(faces).slice(0, nDisp)) P.floor.tiles[k] = { terrain: 'mat-' + fn.wall + '-disp', variant: P.floor.tiles[k].variant };
   }
   const OVERLAY_DECALS = {
     scavenged: ['stain', 'papers', 'rubble'], damaged: ['rubble', 'crack', 'scorch'], repurposed: ['graffiti', 'stain'], blast: ['scorch', 'rubble', 'crack'],

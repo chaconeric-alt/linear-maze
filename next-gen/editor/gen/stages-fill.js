@@ -72,6 +72,22 @@
     free(r, inset) {
       return G.roomCells(r, inset).filter(([x, y]) => this.base(x, y) === '.' && !this.taken(x, y));
     }
+    /** The room's doorway tiles (on its edge, from the floor's edges). */
+    doorsOf(r) {
+      const [rx, ry, rw, rh] = r.rect, out = [];
+      for (const e of this.floor.edges) for (const [dx, dy] of e.doors) if (dx >= rx - 1 && dy >= ry - 1 && dx <= rx + rw && dy <= ry + rh) out.push([dx, dy]);
+      return out;
+    }
+    /** Free wall-row tiles on the side of the room farthest from its doors, middle of that wall first: where a
+     *  throne, an altar or a stage faces the room. */
+    focal(r) {
+      const doors = this.doorsOf(r), row = this.wallRow(r);
+      if (!doors.length || !row.length) return row;
+      const far = ([x, y]) => Math.min(...doors.map(([dx, dy]) => Math.abs(dx - x) + Math.abs(dy - y)));
+      const [rx, ry, rw, rh] = r.rect, cx = rx + (rw - 1) / 2, cy = ry + (rh - 1) / 2;
+      const best = Math.max(...row.map(far));
+      return row.filter((c) => far(c) >= best - 2).sort((a, b) => Math.abs(a[0] - cx) + Math.abs(a[1] - cy) - (Math.abs(b[0] - cx) + Math.abs(b[1] - cy)));
+    }
     /** Free tiles against a wall (not a door), inside the room. */
     wallRow(r) {
       return this.free(r).filter(([x, y]) => ORTHO.some(([ox, oy]) => this.base(x + ox, y + oy) === '#'));
@@ -453,7 +469,8 @@
         else if (f.place === 'center') {
           const [rx, ry, rw, rh] = r.rect;
           cells = P.near(P.free(r, 1.2), rx + Math.floor(rw / 2), ry + Math.floor(rh / 2)).slice(0, 3);
-        } else if (f.place === 'corner') cells = P.wallRow(r).filter(([x, y]) => ORTHO.filter(([ox, oy]) => P.base(x + ox, y + oy) === '#').length >= 2);
+        } else if (f.place === 'focal') cells = P.focal(r).slice(0, 4);
+        else if (f.place === 'corner') cells = P.wallRow(r).filter(([x, y]) => ORTHO.filter(([ox, oy]) => P.base(x + ox, y + oy) === '#').length >= 2);
         else if (f.place === 'middle') cells = P.free(r, 1.2).filter(([x, y]) => !ORTHO.some(([ox, oy]) => P.base(x + ox, y + oy) === '#'));
         else if (f.place === 'grid') {
           // desks in rows with aisles between: every third tile, chairs fit on the tile south

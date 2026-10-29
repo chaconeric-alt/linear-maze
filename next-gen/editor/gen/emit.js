@@ -41,8 +41,13 @@
   }
   G.js = js;
 
-  // characters for legend entries: readable first, then letters from further along
-  const POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!$%&*=?^_~|'.split('').concat(Array.from({ length: 96 }, (_, i) => String.fromCharCode(0xc0 + i)));
+  // characters for legend entries: readable first, then letters from further along (Latin-1, then Latin Extended-A
+  // and Cyrillic: a floor full of functional rooms, each piece and material state its own entry, can use hundreds)
+  const POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!$%&*=?^_~|'.split('').concat(
+    Array.from({ length: 96 }, (_, i) => String.fromCharCode(0xc0 + i)),
+    Array.from({ length: 128 }, (_, i) => String.fromCharCode(0x100 + i)),
+    Array.from({ length: 256 }, (_, i) => String.fromCharCode(0x400 + i)),
+  );
   function allocator(reserved) {
     const used = new Set(reserved);
     const map = new Map();
@@ -197,6 +202,20 @@
       const o = { name: r.name, rect: r.rect.slice() };
       if (r.shape) o.shape = r.shape;
       if (r.note) o.note = r.note;
+      // a functional room: what it is, for the room inspect panel (hn-gen-kit/inspect.js)
+      if (r.fn) {
+        const f = r.fn;
+        o.fn = { id: f.id, setting: f.setting, cluster: f.cluster, relation: f.relation, density: f.density, state: f.state };
+        if (f.descriptor) o.fn.descriptor = f.descriptor.word;
+        if (f.misleading) o.fn.misleading = f.misleading;
+        if (f.overlay) o.fn.overlay = f.overlay;
+        if (f.twist) o.fn.twist = f.twist.kind;
+        if (f.placed && f.placed.length) o.fn.placed = f.placed.slice();
+        if (f.missing && f.missing.length) o.fn.missing = f.missing.slice();
+        o.fn.floor = f.floor;
+        o.fn.wall = f.wall;
+        o.fn.light = f.light;
+      }
       return o;
     });
     if (Object.keys(legend).length) def.legend = legend;

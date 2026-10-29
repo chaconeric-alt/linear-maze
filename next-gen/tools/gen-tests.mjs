@@ -6,6 +6,7 @@
 //   corpus       every generated pack in the game regenerates byte for byte from its generation.json
 //   batch        many briefs across types, Threat Levels, sizes and floor counts all pass their checks
 //   graph        keys sit outside what their lock guards; rooms don't overlap; doors are doors
+//   functional   functional rooms: sizes, settings modes, density, hazards, eras, libraries, completeness, seeds
 //   reroll       rerolling treasure changes treasure and nothing it shouldn't
 //
 // Exits 1 if anything fails.
@@ -46,6 +47,7 @@ for (const name of existsSync(libDir) ? readdirSync(libDir, { withFileTypes: tru
   if (!srcName || !existsSync(join(dir, 'companion.json'))) continue;
   const src = JSON.parse(readFileSync(join(dir, srcName), 'utf8'));
   const comp = JSON.parse(readFileSync(join(dir, 'companion.json'), 'utf8'));
+  if (comp.extends) comp.base = JSON.parse(readFileSync(join(libDir, comp.extends, 'companion.json'), 'utf8'));
   const probs = G.validateContent(src, comp);
   check(name + ' validates', !probs.some((p) => p.level === 'bad'), probs.filter((p) => p.level === 'bad').slice(0, 3).map((p) => p.id + ' ' + p.text).join('; '));
   const c = (lib.content || {})[name];
@@ -53,17 +55,20 @@ for (const name of existsSync(libDir) ? readdirSync(libDir, { withFileTypes: tru
   if (c) {
     const fresh = G.CONTENT_ADAPTERS[comp.format](src, comp);
     check(name + ' import is up to date with its source and companion', JSON.stringify(fresh) === JSON.stringify(c));
-    for (const s of ['settings', 'tiles', 'rooms', 'furniture', 'interactables', 'loot', 'hazards']) check(name + ': every ' + s + ' record registered', (src[s] || []).every((r) => c[s][r.id]), s);
-    for (const r of src.rooms || []) for (const n of [].concat(r.mandatory_features || [], r.optional_furnishings || [])) if (!c.objects[n]) check(name + ' ' + r.id + ' object ' + n, false);
+    for (const s of ['settings', 'tiles', 'rooms', 'furniture', 'interactables', 'loot', 'hazards']) check(name + ': every ' + s + ' record registered', (src[s] || []).every((r) => c[s][r.id || r.room_id || r.setting_id]), s);
+    for (const r of Object.values(c.rooms)) for (const n of [].concat(r.mandatory_features || [], r.optional_furnishings || [])) if (!c.objects[n]) check(name + ' ' + r.id + ' object ' + n, false);
+    for (const r of Object.values(c.rooms)) for (const [f, s] of [['furniture_record', 'furniture'], ['interactive_record', 'interactables'], ['loot_record', 'loot'], ['hazard_record', 'hazards']]) if (r[f] && !c[s][r[f]]) check(name + ' ' + r.id + ' ' + f + ' ' + r[f], false);
+    for (const r of Object.values(c.rooms)) for (const t of [].concat(r.floor_tile_pool || [], r.wall_tile_pool || [], r.lighting_pool || [])) if (!(c.tiles[t] && c.tiles[t].style)) check(name + ' ' + r.id + ' tile ' + t + ' drawn', false);
     for (const o of Object.keys(c.objects)) if (c.objects[o].fallback) check(name + ' object “' + o + '” has a drawing family', false);
   }
   // the validator catches what it should: a broken copy
   const broken = JSON.parse(JSON.stringify(src));
   if (broken.rooms && broken.rooms.length > 1) {
     broken.rooms[0].setting_id = 'SET_NOPE';
-    broken.rooms[1].id = broken.rooms[0].id;
+    for (const k of ['id', 'room_id']) if (broken.rooms[0][k]) broken.rooms[1][k] = broken.rooms[0][k];
     broken.rooms[0].frequency_weight = -1;
     if (broken.tiles && broken.tiles[0]) broken.tiles[0].description = 'unpaintable nothing';
+    else if (broken.rooms[2].floor_tiles) broken.rooms[2].floor_tiles = ['FLOOR_UNPAINTABLE_NOTHING'];
     const bp = G.validateContent(broken, comp).filter((p) => p.level === 'bad').map((p) => p.text).join(' | ');
     check(name + ': validator finds a bad foreign key', /no such setting/.test(bp));
     check(name + ': validator finds a duplicate id', /duplicate id/.test(bp));
@@ -157,6 +162,96 @@ function graphProps(plan, b) {
       check(tag + ' f' + f.n + ' ' + L.id + ' key outside its lock', !behind.has(L.keyRoom));
       if (L.clueRoom != null) check(tag + ' f' + f.n + ' ' + L.id + ' clue outside its lock', !behind.has(L.clueRoom));
     }
+  }
+}
+
+// ------------------------------------------------------------ functional rooms from the settings libraries
+// The variations the development prompt asks for (14.3): small and large, one setting and mixed, sparse and
+// crowded, few and many hazards, both eras, each library alone, the classic generator; and what must hold in all.
+section('functional rooms');
+{
+  const C = G.contentOf(lib);
+  const types7 = types;
+  const gen = (extra, i) => {
+    const b = Object.assign({ type: types7[i % types7.length], tl: 1 + (i % 4), floors: 2, size: 'large', seed: 'fn' + i, date: '2000-01-01' }, extra);
+    const res = G.generate(b, lib, reg);
+    return res.ok ? res.plan : null;
+  };
+  const fnRooms = (plan) => plan.floors.flatMap((f) => f.rooms.filter((r) => r.fn).map((r) => ({ f, r })));
+  const objsIn = (f, r) => Object.values(f.objs).filter((o) => o.room === r.i);
+  const count = (plans, pred) => plans.reduce((n, pl) => n + fnRooms(pl).filter(pred).length, 0);
+  const N = quick ? 4 : 10;
+  const batch = (extra) => Array.from({ length: N }, (_, i) => gen(extra, i)).filter(Boolean);
+  // generates, with functional rooms, at every size
+  for (const size of ['small', 'standard', 'large']) {
+    const ps = batch({ size, functional: 0.5 });
+    check('functional: ' + size + ' installations generate', ps.length === N);
+    check('functional: ' + size + ' installations have functional rooms', count(ps, () => true) > 0);
+  }
+  // off, and the classic generator, have none
+  check('functional: off gives none', count(batch({ functional: false }), () => true) === 0);
+  check('functional: classic (preserveOld) gives none', count(batch({ preserveOld: true }), () => true) === 0);
+  // the default rate is about a quarter of the rooms that may be functional
+  {
+    const ps = batch({});
+    const all = ps.reduce((n, pl) => n + pl.floors.reduce((m, f) => m + f.rooms.length, 0), 0), fn = count(ps, () => true);
+    check('functional: default rate near a quarter', fn / all > 0.08 && fn / all < 0.4, Math.round((100 * fn) / all) + '%');
+  }
+  // one setting: the chosen one leads; mixed and chaotic bring others in
+  for (const lib1 of ['settings10', 'settings10b']) {
+    const Cl = G.contentOf(lib, lib1), set = Object.keys(Cl.settings).sort()[3];
+    const ps = batch({ functional: 0.6, library: lib1, settings: { mode: 'single', dominant: set } });
+    const n = count(ps, () => true), main = count(ps, ({ r }) => r.fn.setting === set);
+    check('functional: ' + lib1 + ' alone uses only its rooms', count(ps, ({ r }) => !Cl.rooms[r.fn.id]) === 0);
+    check('functional: ' + lib1 + ' one setting leads (' + set + ')', main / n > 0.45, main + '/' + n);
+  }
+  {
+    const ps = batch({ functional: 0.6, settings: { mode: 'chaotic' } });
+    const sets = new Set(ps.flatMap((pl) => fnRooms(pl).map(({ r }) => r.fn.setting)));
+    check('functional: chaotic installations mix many settings', sets.size >= 8, sets.size + ' settings');
+  }
+  // density: crowded rooms hold more than sparse ones
+  {
+    const avg = (d) => {
+      const ps = batch({ functional: 0.6, density: d });
+      const rs = ps.flatMap(fnRooms);
+      return rs.reduce((n, { f, r }) => n + objsIn(f, r).filter((o) => o.item === 'hn-s10').length / G.roomCells(r).length, 0) / (rs.length || 1);
+    };
+    const sp = avg('sparse'), cr = avg('crowded');
+    check('functional: crowded rooms fuller than sparse', cr > sp * 1.15, 'sparse ' + sp.toFixed(3) + ', crowded ' + cr.toFixed(3) + ' pieces a cell');
+  }
+  // hazards: many more when asked for
+  {
+    const hz = (p) => count(batch({ functional: 0.6, frequencies: { probability_room_hazard: p } }), ({ f, r }) => objsIn(f, r).some((o) => o.item === 'hn-hazard'));
+    const lo = hz(0.05), hi = hz(0.6);
+    check('functional: high-hazard installations have more hazards', hi > lo * 2, lo + ' → ' + hi);
+  }
+  // era emphasis: the leading setting is of that era more often
+  for (const era of ['Age of Wonders', 'Age of War']) {
+    const ps = batch({ functional: 0.4, era });
+    const of = ps.filter((pl) => String((C.settings[pl.functions.dominant] || {}).era || '').includes(era)).length;
+    check('functional: era emphasis ' + era + ' leads', of / ps.length >= 0.5, of + '/' + ps.length);
+  }
+  // in every functional room: its records resolve, its required pieces are there or recorded as not fitting, and
+  // its pieces have drawings
+  {
+    const ps = batch({ functional: 0.7 });
+    let bad = [];
+    for (const pl of ps) for (const { f, r } of fnRooms(pl)) {
+      const rec = C.rooms[r.fn.id];
+      if (!rec) { bad.push(r.fn.id + ' unknown'); continue; }
+      const got = new Set(objsIn(f, r).map((o) => o.props && o.props.name));
+      for (const m of (rec.mandatory_features || []).slice(0, 2)) if (!got.has(m) && !(r.fn.missing || []).includes(m)) bad.push(r.fn.id + ' lost ' + m);
+      for (const o of objsIn(f, r)) if (o.item === 'hn-s10' && !C.objects[o.props.name] && !['chair', 'drone'].includes(o.props.fam)) bad.push(r.fn.id + ' undrawn ' + o.props.name);
+      for (const t of [r.fn.floor, r.fn.wall, r.fn.light]) if (t && !(C.tiles[t] && C.tiles[t].style)) bad.push(r.fn.id + ' tile ' + t);
+    }
+    check('functional: every room complete and drawable', !bad.length, bad.slice(0, 5).join('; '));
+  }
+  // the same brief, twice: the same functional rooms and the same pieces in the same places
+  {
+    const b = { type: types7[2], tl: 3, floors: 2, size: 'large', seed: 'fn-det', date: '2000-01-01', functional: 0.6, settings: { mode: 'mixed' }, density: 'crowded' };
+    const a1 = G.generate(b, lib, reg), a2 = G.generate(b, lib, reg);
+    check('functional: deterministic', a1.ok && a2.ok && JSON.stringify(G.emitFiles(a1.plan, lib)) === JSON.stringify(G.emitFiles(a2.plan, lib)));
   }
 }
 

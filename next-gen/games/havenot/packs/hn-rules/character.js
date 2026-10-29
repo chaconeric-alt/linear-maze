@@ -126,15 +126,16 @@
           h('div', null, h('button', { class: 'btn small', type: 'button', disabled: choice.rerolled, on: { click: () => { choice.rerolled = true; choice.seed = (choice.seed * 7919 + 104729) >>> 0; choice.mutations = HN.rollMutations(choice.seed); rerender(); } } }, choice.rerolled ? 'Rerolled (no more)' : 'Roll again (once)'))) : null,
         h('p', { class: 'muted' }, statLine),
         h('h3', null, '2 · Gear package'), h('div', { class: 'hn-choice' }, Object.entries(HN.GEAR).map(([id, d]) => card('gear', id, d))),
-        h('h3', null, '3 · Mission kit (refills every time you leave home)'), h('div', { class: 'hn-choice' }, Object.entries(HN.KITS).map(([id, d]) => card('kit', id, d))));
+        h('h3', null, '3 · Mission kit (refills every time you leave home)'), h('div', { class: 'hn-choice' }, Object.entries(HN.KITS).map(([id, d]) => card('kit', id, d))),
+        HN.genOptionsPanel ? HN.genOptionsPanel(choice) : null);
     };
     let panel;
-    const rerender = () => {
+    const rerender = (choice.rerender = () => {
       const body = panel.querySelector('.panel-body');
       const y = body.scrollTop;
       body.replaceChildren(render());
       body.scrollTop = y;
-    };
+    });
     panel = LM.ui.open({
       kicker: 'New scavenger', title: 'Who are you?', body: render(), wide: true, dismissable: false,
       actions: [{ label: 'Step outside', primary: true, onClick: () => { HN.createCharacter(game, choice); setTimeout(() => HN.homeWelcome && HN.homeWelcome(game), 50); } }],

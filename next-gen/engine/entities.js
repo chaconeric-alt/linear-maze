@@ -17,6 +17,9 @@
     const P = AI.foe(e, game);
     if (!P) return false;
     const w = weight == null ? 1 : weight;
+    const k = LM.nav.sizeOf(e);
+    if (k > 1) return chaseBig(e, game, P, w, k);
+    e.blocked = false;
     if (e.seeLos && e.distP < 420) {
       const dx = P.x - e.x, dy = P.y - e.y, l = Math.hypot(dx, dy) || 1;
       e.mx += (dx / l) * w;
@@ -32,6 +35,45 @@
     }
     return false;
   };
+  /** A big body (engine SPEC 6.26): straight at its foe only when the way is wide enough, otherwise round by
+   *  floor it fits. When there's no way at all (you're through a door it can't get through), it goes as close as
+   *  it fits and waits there: e.blocked is true, ranged attacks still come, and if it loses sight of you for a few
+   *  seconds it wanders about near there. It never shoves at a gap it can't get through. */
+  function chaseBig(e, game, P, w, k) {
+    const L = game.level, NAV = LM.nav, m = e.mem;
+    const steer = (d) => {
+      e.mx += d.x * w;
+      e.my += d.y * w;
+    };
+    if (e.seeLos && e.distP < 420 && NAV.wideLine(L, e.x, e.y, P.x, P.y, k)) {
+      const dx = P.x - e.x, dy = P.y - e.y, l = Math.hypot(dx, dy) || 1;
+      steer({ x: dx / l, y: dy / l });
+      e.blocked = false;
+      m.heldT = 0;
+      return true;
+    }
+    if (P !== game.player) {
+      e.blocked = !AI.goTo(e, game, P.x, P.y, w);
+      if (!e.blocked) m.heldT = 0;
+      return !e.blocked;
+    }
+    const d = NAV.dir(L, e.x, e.y, k);
+    if (d) {
+      steer(d);
+      e.blocked = false;
+      m.heldT = 0;
+      return true;
+    }
+    // no way through for a body this size
+    e.blocked = true;
+    const b = NAV.toward(L, e.x, e.y, k);
+    if (b) steer(b);
+    else {
+      m.heldT = (m.heldT || 0) + game.dt;
+      if (!e.seeLos && m.heldT > 4) AI.wander(e, game, 0.4);
+    }
+    return false;
+  }
   /** Walk toward a point by the shortest way round (a search out to `lim` tiles, 40 by default, refreshed a few
    *  times a second). Returns false when there's no way there within `lim`. */
   AI.goTo = function (e, game, x, y, weight, lim) {
@@ -40,7 +82,7 @@
     const at = m.rt && Math.abs(e.x - (m.rt.tx * T + T / 2)) < 6 && Math.abs(e.y - (m.rt.ty * T + T / 2)) < 6;
     if (m.rtT <= 0 || !m.rt || at) {
       m.rtT = 0.35 + Math.random() * 0.2;
-      m.rt = LM.nav.step(game.level, e.x, e.y, x, y, lim || 40);
+      m.rt = LM.nav.step(game.level, e.x, e.y, x, y, lim || 40, LM.nav.sizeOf(e));
     }
     if (!m.rt) return false;
     const dx = m.rt.tx * T + T / 2 - e.x, dy = m.rt.ty * T + T / 2 - e.y, l = Math.hypot(dx, dy) || 1;
