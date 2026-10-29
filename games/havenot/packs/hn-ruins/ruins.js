@@ -106,6 +106,21 @@
     return sites;
   };
 
+  // content libraries' floor and wall tiles are terrains (hn-gen-kit/materials.js), registered before any level names them
+  for (const content of Object.values((G.libraries.havenot || {}).content || {})) for (const t of Object.values(content.tiles || {})) if (t.kind !== 'light' && HN.materialTerrain) HN.materialTerrain(t);
+  // and their loot records are satchel items
+  const ICON = { Access: ['K', '#e8c030'], Valuable: ['$', '#ffd060'], Data: ['D', '#7ad8ff'], Component: ['C', '#a8b8c8'], Medical: ['+', '#ff6a6a'], Food: ['F', '#c8a060'], Military: ['M', '#c84a3a'], Salvage: ['S', '#9a9a8a'] };
+  for (const content of Object.values((G.libraries.havenot || {}).content || {})) {
+    const defs = {};
+    for (const L of Object.values(content.loot || {})) for (const it of L.items || []) {
+      const room = content.rooms[L.room_id] || {};
+      const set = content.settings[room.setting_id] || {};
+      const ic = ICON[it.cat] || ICON.Salvage;
+      defs[it.id] = { name: it.name, cat: it.cat, era: set.era || 'Age of Wonders', value: it.value, rarity: it.value >= 100 ? 'rare' : 'common', icon: { glyph: ic[0], color: ic[1] }, desc: it.name + ', from ' + (room.name ? 'a ' + room.name.toLowerCase() : 'a ruin') + (set.name ? ' in ' + set.name : '') + '. ' + (L.discovery ? 'It was ' + L.discovery.split(';')[0] + '.' : '') };
+    }
+    HN.defineItems(defs);
+  }
+
   // ------------------------------------------------------------ a new character rolls a new set
   const createCharacter = HN.createCharacter;
   HN.createCharacter = function (game, choice) {

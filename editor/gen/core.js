@@ -15,10 +15,10 @@
   G.VERSION = '0.1.0';
 
   /** The files of the generator core, in load order (the CLI and the editor read this list). */
-  G.FILES = ['core.js', 'library.js', 'stages-concept.js', 'stages-graph.js', 'stages-layout.js', 'stages-fill.js', 'stages-words.js', 'validate.js', 'emit.js', 'generate.js'];
+  G.FILES = ['core.js', 'library.js', 'content.js', 'stages-concept.js', 'stages-graph.js', 'stages-layout.js', 'stages-function.js', 'stages-fill.js', 'stages-words.js', 'validate.js', 'emit.js', 'generate.js'];
 
   /** The stages, in order. Each adds its part to the plan and can be rerun alone. */
-  G.STAGES = ['concept', 'zones', 'graph', 'layout', 'access', 'encounters', 'traps', 'treasure', 'dressing', 'words'];
+  G.STAGES = ['concept', 'zones', 'graph', 'layout', 'functions', 'access', 'encounters', 'traps', 'treasure', 'dressing', 'functionsFill', 'words'];
 
   // ------------------------------------------------------------ hashing and random streams
   /** FNV-1a, 32 bits. */

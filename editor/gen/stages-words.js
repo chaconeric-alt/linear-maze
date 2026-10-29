@@ -60,7 +60,7 @@
       for (const r of floor.rooms) {
         const t = lib.rooms[r.template] || {};
         const id = 'f' + floor.n + '.' + r.id + '.name';
-        let name = (keep(id) || {}).text || G.say(lib, rng, t.names || 'roomNames.' + r.template, vars()) || G.titleCase(r.template.replace(/-/g, ' '));
+        let name = (keep(id) || {}).text || (r.fn && r.fn.name) || G.say(lib, rng, t.names || 'roomNames.' + r.template, vars()) || G.titleCase(r.template.replace(/-/g, ' '));
         if (names.has(name) && !keep(id)) {
           // another name from the pool before a number
           const left = G.textPool(lib, t.names || 'roomNames.' + r.template).map((v) => G.fill(v, vars())).filter((v) => !names.has(v));
@@ -72,7 +72,7 @@
         names.add(name);
         r.name = set(id, name, keep(id) ? keep(id).src : 'pool');
         const nid = 'f' + floor.n + '.' + r.id + '.note';
-        r.note = set(nid, (keep(nid) || {}).text || G.say(lib, rng, t.notes || 'zoneNotes.' + r.zone, vars()) || (lib.zones[r.zone] || {}).name || '', keep(nid) ? keep(nid).src : 'pool');
+        r.note = set(nid, (keep(nid) || {}).text || (r.fn && r.fn.note) || G.say(lib, rng, t.notes || 'zoneNotes.' + r.zone, vars()) || (lib.zones[r.zone] || {}).name || '', keep(nid) ? keep(nid).src : 'pool');
       }
       floor.name = set('f' + floor.n + '.name', (keep('f' + floor.n + '.name') || {}).text || floorName(floor, rng));
       floor.intro = set('f' + floor.n + '.intro', (keep('f' + floor.n + '.intro') || {}).text || (floor.n === 1 ? plan.concept.intro : G.say(lib, rng, 'floorIntros.' + floor.look, vars()) || G.say(lib, rng, 'floorIntros.any', vars()) || ''));
