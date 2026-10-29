@@ -46,6 +46,7 @@ for (const name of existsSync(libDir) ? readdirSync(libDir, { withFileTypes: tru
   if (!srcName || !existsSync(join(dir, 'companion.json'))) continue;
   const src = JSON.parse(readFileSync(join(dir, srcName), 'utf8'));
   const comp = JSON.parse(readFileSync(join(dir, 'companion.json'), 'utf8'));
+  if (comp.extends) comp.base = JSON.parse(readFileSync(join(libDir, comp.extends, 'companion.json'), 'utf8'));
   const probs = G.validateContent(src, comp);
   check(name + ' validates', !probs.some((p) => p.level === 'bad'), probs.filter((p) => p.level === 'bad').slice(0, 3).map((p) => p.id + ' ' + p.text).join('; '));
   const c = (lib.content || {})[name];
@@ -53,17 +54,20 @@ for (const name of existsSync(libDir) ? readdirSync(libDir, { withFileTypes: tru
   if (c) {
     const fresh = G.CONTENT_ADAPTERS[comp.format](src, comp);
     check(name + ' import is up to date with its source and companion', JSON.stringify(fresh) === JSON.stringify(c));
-    for (const s of ['settings', 'tiles', 'rooms', 'furniture', 'interactables', 'loot', 'hazards']) check(name + ': every ' + s + ' record registered', (src[s] || []).every((r) => c[s][r.id]), s);
-    for (const r of src.rooms || []) for (const n of [].concat(r.mandatory_features || [], r.optional_furnishings || [])) if (!c.objects[n]) check(name + ' ' + r.id + ' object ' + n, false);
+    for (const s of ['settings', 'tiles', 'rooms', 'furniture', 'interactables', 'loot', 'hazards']) check(name + ': every ' + s + ' record registered', (src[s] || []).every((r) => c[s][r.id || r.room_id || r.setting_id]), s);
+    for (const r of Object.values(c.rooms)) for (const n of [].concat(r.mandatory_features || [], r.optional_furnishings || [])) if (!c.objects[n]) check(name + ' ' + r.id + ' object ' + n, false);
+    for (const r of Object.values(c.rooms)) for (const [f, s] of [['furniture_record', 'furniture'], ['interactive_record', 'interactables'], ['loot_record', 'loot'], ['hazard_record', 'hazards']]) if (r[f] && !c[s][r[f]]) check(name + ' ' + r.id + ' ' + f + ' ' + r[f], false);
+    for (const r of Object.values(c.rooms)) for (const t of [].concat(r.floor_tile_pool || [], r.wall_tile_pool || [], r.lighting_pool || [])) if (!(c.tiles[t] && c.tiles[t].style)) check(name + ' ' + r.id + ' tile ' + t + ' drawn', false);
     for (const o of Object.keys(c.objects)) if (c.objects[o].fallback) check(name + ' object “' + o + '” has a drawing family', false);
   }
   // the validator catches what it should: a broken copy
   const broken = JSON.parse(JSON.stringify(src));
   if (broken.rooms && broken.rooms.length > 1) {
     broken.rooms[0].setting_id = 'SET_NOPE';
-    broken.rooms[1].id = broken.rooms[0].id;
+    for (const k of ['id', 'room_id']) if (broken.rooms[0][k]) broken.rooms[1][k] = broken.rooms[0][k];
     broken.rooms[0].frequency_weight = -1;
     if (broken.tiles && broken.tiles[0]) broken.tiles[0].description = 'unpaintable nothing';
+    else if (broken.rooms[2].floor_tiles) broken.rooms[2].floor_tiles = ['FLOOR_UNPAINTABLE_NOTHING'];
     const bp = G.validateContent(broken, comp).filter((p) => p.level === 'bad').map((p) => p.text).join(' | ');
     check(name + ': validator finds a bad foreign key', /no such setting/.test(bp));
     check(name + ': validator finds a duplicate id', /duplicate id/.test(bp));

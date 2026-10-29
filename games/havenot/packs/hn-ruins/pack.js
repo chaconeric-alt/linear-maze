@@ -27,6 +27,7 @@ LM.describePack({
     '../../gen/library/rooms.js',
     '../../gen/library/settings.js',
     '../../gen/library/settings10.js',
+    '../../gen/library/settings10b.js',
     '../../gen/library/text.js',
     '../../gen/library/traps.js',
     '../../gen/library/types.js',

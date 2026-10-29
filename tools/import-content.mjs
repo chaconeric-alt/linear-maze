@@ -19,14 +19,18 @@ const dir = join(root, 'games', game, 'gen', 'library', name);
 const srcFile = readdirSync(dir).find((f) => f.endsWith('.json') && f !== 'companion.json');
 const source = JSON.parse(readFileSync(join(dir, srcFile), 'utf8'));
 const companion = JSON.parse(readFileSync(join(dir, 'companion.json'), 'utf8'));
+// a companion can extend another library's (its rules are tried after this one's)
+if (companion.extends) companion.base = JSON.parse(readFileSync(join(root, 'games', game, 'gen', 'library', companion.extends, 'companion.json'), 'utf8'));
 
 const problems = G.validateContent(source, companion);
 const bad = problems.filter((p) => p.level === 'bad');
 const warns = problems.filter((p) => p.level === 'warn');
-const counts = Object.fromEntries(['settings', 'tiles', 'rooms', 'furniture', 'interactables', 'loot', 'hazards'].map((s) => [s, (source[s] || []).length]));
+const gaps = problems.filter((p) => p.level === 'gap');
 
 let content = null;
 if (!bad.length) content = G.CONTENT_ADAPTERS[companion.format](source, companion);
+// records: the source's own sections, or (a schema with other sections) what the import made
+const counts = Object.fromEntries(['settings', 'tiles', 'rooms', 'furniture', 'interactables', 'loot', 'hazards'].map((s) => [s, Array.isArray(source[s]) ? source[s].length : content ? Object.keys(content[s]).length : 0]));
 
 // ------------------------------------------------------------ the report
 const L = [];
@@ -58,14 +62,27 @@ if (content) {
   L.push('**Clusters** (derived: the JSON has none; see companion.json `clusters`): ' + Object.entries(cl).sort((a, b) => b[1] - a[1]).map(([c, n]) => c + ' ' + n).join(', ') + '.', '');
   L.push('**Loot items:** ' + Object.values(content.loot).reduce((n, l) => n + l.items.length, 0) + ' satchel items from ' + counts.loot + ' loot records.', '');
 }
+if (gaps.length) {
+  L.push('## Gaps in the source, filled by the companion', '');
+  L.push('The source refers to these and doesn’t define them, or defines them with a placeholder. `companion.json` fills each one; nothing in the source is changed.', '');
+  const by = {};
+  for (const p of gaps) (by[p.section] = by[p.section] || []).push(p);
+  for (const [sec, ps] of Object.entries(by)) {
+    L.push('### ' + sec + ' (' + ps.length + ')', '');
+    const show = ps.length > 40 ? ps.slice(0, 12) : ps;
+    for (const p of show) L.push('- ' + (p.id ? '`' + p.id + '`: ' : '') + p.text);
+    if (show.length < ps.length) L.push('- … and ' + (ps.length - show.length) + ' more like these.');
+    L.push('');
+  }
+}
 L.push('## Problems', '');
-if (!problems.length) L.push('None.');
+if (!bad.length && !warns.length) L.push('None.');
 for (const p of bad) L.push('- **Error** ' + p.section + (p.id ? ' `' + p.id + '`' : '') + ': ' + p.text);
 for (const p of warns) L.push('- Warning ' + p.section + (p.id ? ' `' + p.id + '`' : '') + ': ' + p.text);
 writeFileSync(join(dir, 'IMPORT-REPORT.md'), L.join('\n') + '\n');
 
 console.log(srcFile + ': ' + Object.entries(counts).map(([s, n]) => s + ' ' + n).join(', '));
-console.log(bad.length + ' errors, ' + warns.length + ' warnings (IMPORT-REPORT.md).');
+console.log(bad.length + ' errors, ' + warns.length + ' warnings' + (gaps.length ? ', ' + gaps.length + ' gaps filled by the companion' : '') + ' (IMPORT-REPORT.md).');
 for (const p of bad.slice(0, 20)) console.log('  ERROR ' + p.section + ' ' + p.id + ': ' + p.text);
 if (bad.length) process.exit(1);
 if (!check) {

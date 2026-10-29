@@ -24,9 +24,19 @@
 (function (root) {
   const G = (root.LMGen = root.LMGen || {});
 
+  /** The content a generation uses: one library by name (a brief's `library`), or, by default and for 'all', every
+   *  library with rooms as one (G.mergeContent; worked out once per set of libraries). */
+  const merged = new WeakMap();
   G.contentOf = (lib, name) => {
     const all = lib.content || {};
-    return name ? all[name] : Object.values(all).find((c) => c && c.rooms);
+    if (name && name !== 'all') return all[name] || null;
+    const names = Object.keys(all).filter((k) => all[k] && all[k].rooms);
+    if (names.length < 2) return names.length ? all[names[0]] : undefined;
+    const key = names.join('+'), m = merged.get(all);
+    if (m && m.key === key) return m.C;
+    const C = G.mergeContent(names.map((k) => all[k]));
+    merged.set(all, { key, C });
+    return C;
   };
   const ROLES_KEEP = ['entrance', 'stairs', 'goal'];
 
@@ -77,7 +87,7 @@
   }
 
   G.stageFunctions = function (plan, lib) {
-    const C = G.contentOf(lib);
+    const C = G.contentOf(lib, plan.brief.library);
     const b = plan.brief;
     plan.functions = null;
     if (!C || b.functional === false || b.preserveOld) return;
@@ -88,7 +98,7 @@
     const adj = Object.assign({ same_cluster: 55, same_setting_different_cluster: 20, related_setting: 15, unrelated_or_anomalous: 10 }, P0.adjacency_weights || {});
     const freq = (k, dflt) => (b.frequencies && b.frequencies[k] != null ? b.frequencies[k] : P0[k] != null ? P0[k] : dflt);
     const sets = chooseSettings(plan, lib, C, rng);
-    plan.functions = { library: Object.keys(lib.content).find((k) => lib.content[k] === C), mode: sets.mode, dominant: sets.dominant, secondary: sets.secondary, floors: sets.floors.map((f) => f.main), rooms: 0 };
+    plan.functions = { library: Object.keys(lib.content).find((k) => lib.content[k] === C) || 'all', mode: sets.mode, dominant: sets.dominant, secondary: sets.secondary, floors: sets.floors.map((f) => f.main), rooms: 0 };
     const all = Object.values(C.rooms).sort((a, c) => (a.id < c.id ? -1 : 1));
     const related = (a, c) => (C.settings[a] || {}).related === c || (C.settings[c] || {}).related === a;
     for (const floor of plan.floors) {
@@ -202,7 +212,7 @@
 
   /** A functional room's furniture (stage access, in place of the template's fixtures). */
   G.placeFunctionFurniture = function (P, rng, r, plan, lib) {
-    const C = G.contentOf(lib), fn = r.fn, rec = C.rooms[fn.id];
+    const C = G.contentOf(lib, plan.brief.library), fn = r.fn, rec = C.rooms[fn.id];
     const cells = G.roomCells(r).length;
     fn.placed = [];
     fn.missing = [];
@@ -241,11 +251,19 @@
       }
       fn.note = (fn.note ? fn.note + ' ' : '') + 'Someone has moved a ' + other.name.toLowerCase() + ' in here.';
     }
+    // a library's own mismatch pool (furniture its room lists from another setting): now and then one such piece,
+    // in its own setting's colours
+    const odd = (C.furniture[rec.furniture_record] || {}).mismatch || [];
+    if (odd.length && rng.chance(MISMATCH_CHANCE)) {
+      const [name, set] = rng.pick(odd);
+      if (placeObject(P, rng, r, C, name, Object.assign({}, fn, { setting: set }), { odd: true })) fn.placed.push(name + ' (out of place)');
+    }
   };
+  const MISMATCH_CHANCE = 0.25;
 
   /** A functional room's loot (stage treasure): its library loot record, in a container, valued for the floor. */
   G.functionLoot = function (P, rng, plan, lib, floor, all, add, target, spentNow) {
-    const C = G.contentOf(lib);
+    const C = G.contentOf(lib, plan.brief.library);
     if (!C) return;
     const tl = G.tlOf(plan, floor);
     for (const r of floor.rooms) {
@@ -296,7 +314,7 @@
 
   G.stageFunctionsFill = function (plan, lib) {
     glassRoom(plan, lib);
-    const C = G.contentOf(lib);
+    const C = G.contentOf(lib, plan.brief.library);
     if (!C || !plan.functions) return;
     const B = lib.budgets;
     for (const floor of plan.floors) {

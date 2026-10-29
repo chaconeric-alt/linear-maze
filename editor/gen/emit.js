@@ -41,8 +41,13 @@
   }
   G.js = js;
 
-  // characters for legend entries: readable first, then letters from further along
-  const POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!$%&*=?^_~|'.split('').concat(Array.from({ length: 96 }, (_, i) => String.fromCharCode(0xc0 + i)));
+  // characters for legend entries: readable first, then letters from further along (Latin-1, then Latin Extended-A
+  // and Cyrillic: a floor full of functional rooms, each piece and material state its own entry, can use hundreds)
+  const POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!$%&*=?^_~|'.split('').concat(
+    Array.from({ length: 96 }, (_, i) => String.fromCharCode(0xc0 + i)),
+    Array.from({ length: 128 }, (_, i) => String.fromCharCode(0x100 + i)),
+    Array.from({ length: 256 }, (_, i) => String.fromCharCode(0x400 + i)),
+  );
   function allocator(reserved) {
     const used = new Set(reserved);
     const map = new Map();

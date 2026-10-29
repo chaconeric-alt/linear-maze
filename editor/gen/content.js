@@ -85,6 +85,212 @@
     return out;
   };
 
+  // ------------------------------------------------------------ HaveNot settings library B (Havenot-Settings-Library.json)
+  // Another schema: rooms carry pools of ids (floor_tiles, furniture_pool, loot_pool...), most of which the file
+  // doesn't define, and twenty room templates repeated across ten settings. The companion fills the gaps (see its
+  // $comments); `comp.base` is the companion it extends (library 1's), whose rules are tried after its own.
+  const words = (id, prefix) => String(id).replace(prefix, '').replace(/_/g, ' ').trim().toLowerCase();
+  const rulesOf = (comp, key) => [].concat(((comp[key] || {}).rules) || [], (((comp.base || {})[key] || {}).rules) || []);
+  const fallbackOf = (comp, key, d) => (comp[key] || {}).fallback || ((comp.base || {})[key] || {}).fallback || d;
+  const archOf = (r) => String(r.name || '').split(' - ')[0].trim();
+  const treasureName = (id, comp) => {
+    if ((comp.names || {})[id]) return comp.names[id];
+    const s = words(id, /^TREAS_/);
+    return / sp$/.test(s) ? s.replace(/ sp$/, ' (Success Points)') : s;
+  };
+  // the setting's prose, cut into short phrases (dressing)
+  const phrases = (s) => [s.signage_style, s.ambient_details, s.decay_patterns, s.furnishing_style].join(', ').split(/\s*[,;:]\s*/).map((p) => p.replace(/^and\s+/, '').trim()).filter((p) => p.length > 6);
+  B1.tileIds = function (src) {
+    const ids = new Map();
+    for (const s of src.settings || []) for (const [k, kind] of [['floor_palette_ids', 'floor'], ['wall_palette_ids', 'wall'], ['lighting_palette_ids', 'light']]) for (const id of s[k] || []) if (!ids.has(id)) ids.set(id, { kind, setting_id: s.setting_id });
+    for (const r of src.rooms || []) for (const [k, kind] of [['floor_tiles', 'floor'], ['wall_tiles', 'wall'], ['lighting', 'light']]) for (const id of r[k] || []) if (!ids.has(id)) ids.set(id, { kind, setting_id: r.setting_id });
+    return ids;
+  };
+  function B1(src, comp) {
+    const ov = comp.overrides || {};
+    const SL = src.shared_libraries || {};
+    const out = {
+      format: comp.format, meta: src.meta || {}, params: src.generation_parameters || comp.generation_parameters || {},
+      typeSettings: comp.type_settings || {}, modes: comp.setting_modes || { single: 1 }, sizes: comp.sizes || {},
+      settings: {}, tiles: {}, rooms: {}, objects: {}, furniture: {}, interactables: {}, loot: {}, hazards: {},
+    };
+    for (const s of src.settings || []) {
+      const adj = Object.entries(s.adjacent_setting_weights || {}).sort((a, c) => c[1] - a[1]);
+      out.settings[s.setting_id] = Object.assign({}, s, {
+        id: s.setting_id, era: [].concat(s.historical_era || []).join(' / '), function_and_satire: s.original_function + '. ' + (s.haveNot_twist || ''),
+        signage: s.signage_style, atmosphere: s.ambient_details, palette: (comp.palettes || {})[s.setting_id] || null, related: adj.length ? adj[0][0] : null,
+      }, ov[s.setting_id] || {});
+    }
+    for (const [id, t] of B1.tileIds(src)) {
+      const description = words(id, /^(FLOOR|WALL|LIGHT)_/);
+      const m = firstMatch((comp.materials || {})[t.kind], description);
+      const extra = t.kind === 'light' ? (m ? { style: m[1], color: m[2], radius: m[3] } : {}) : m ? { style: m[1], colors: m[2] } : {};
+      out.tiles[id] = Object.assign({ id, setting_id: t.setting_id, kind: t.kind, description: description.charAt(0).toUpperCase() + description.slice(1) }, extra, ov[id] || {});
+    }
+    const archRules = rulesOf(comp, 'archetypes');
+    const object = (name) => {
+      if (out.objects[name]) return;
+      const m = firstMatch(archRules, name);
+      out.objects[name] = Object.assign(m ? { fam: m[1], w: m[2][0], h: m[2][1], place: m[3] } : { fam: fallbackOf(comp, 'archetypes', 'machine'), w: 1, h: 1, place: 'wall-row', fallback: true }, ov[name] || {});
+    };
+    const home = comp.shared_furniture || {};
+    const shared = (list, id) => (SL[list] || []).find((x) => x.id === id) || {};
+    const intRules = rulesOf(comp, 'interactables'), lootRules = rulesOf(comp, 'loot'), hazRules = rulesOf(comp, 'hazards');
+    const lootItem = (rid, name, k) => {
+      const m = firstMatch(lootRules, name);
+      const [cat, value] = m ? [m[1], m[2]] : fallbackOf(comp, 'loot', ['Salvage', 40]);
+      return { id: 'hn-s10-' + slug(rid) + '-' + k, name: name.charAt(0).toUpperCase() + name.slice(1), cat, value };
+    };
+    const hazard = (hid, rid, h) => {
+      const m = firstMatch(hazRules, h.name);
+      return Object.assign({ id: hid, room_id: rid, category: 'decay or installed trap' }, h, { behaviour: m ? m[1] : fallbackOf(comp, 'hazards', 'mind'), fallback: !m || undefined }, ov[hid] || {});
+    };
+    for (const r of src.rooms || []) {
+      const id = r.room_id, arch = archOf(r), A = (comp.room_archetypes || {})[arch] || { fixtures: [], optional: [] };
+      const S = (src.settings || []).find((s) => s.setting_id === r.setting_id) || {};
+      // fixtures: the archetype's first, the source's setting-specific piece (not its 'Primary ... fixture' placeholder)
+      const own = (r.mandatory_features || []).filter((n) => !/^primary .* fixture$/i.test(n)).map((n) => n.toLowerCase());
+      const mandatory = [A.fixtures[0]].concat(own).filter(Boolean).slice(0, 2);
+      if (mandatory.length < 2 && A.fixtures[1]) mandatory.push(A.fixtures[1]);
+      const optional = A.fixtures.filter((n) => !mandatory.includes(n)).concat(A.optional || []);
+      // furniture: the pool's own-setting pieces; the others are the deliberate mismatch pool
+      const names = [], mismatch = [];
+      for (const f of r.furniture_pool || []) {
+        const h = home[f];
+        if (!h) continue;
+        if (h[1] === r.setting_id) names.push(h[0]);
+        else mismatch.push([h[0], h[1]]);
+      }
+      out.furniture['FURN_' + id] = { id: 'FURN_' + id, room_id: id, names, mismatch };
+      for (const n of mandatory.concat(optional, names, mismatch.map((m) => m[0]))) object(n);
+      // the device: the first in its pool, the others as alternatives
+      const devs = (r.interactive_pool || []).map((i) => ({ id: i, device: (comp.names || {})[i] || words(i, /^INT_/), use: (comp.device_uses || {})[i] || shared('interactive', i).interaction || '' }));
+      if (devs.length) {
+        const d = devs[0], m = firstMatch(intRules, d.device + ' ' + d.use);
+        out.interactables['INT_' + id] = Object.assign({ id: 'INT_' + id, room_id: id, source: d.id, device: d.device, possible_use: d.use, current_behavior: shared('interactive', d.id).current_behavior, alternatives: devs.slice(1).map((x) => x.device), kind: m ? m[1] : fallbackOf(comp, 'interactables', 'show') }, ov['INT_' + id] || {});
+      }
+      // loot: the treasures in its pool, and in the setting's heart room its key object
+      const loot = (r.loot_pool || []).map((t) => treasureName(t, comp));
+      if (arch === comp.key_room) for (const k of r.key_object_pool || []) if ((comp.key_objects || {})[r.setting_id] && /_HEART$/.test(k)) loot.push((comp.key_objects || {})[r.setting_id]);
+      if (loot.length) out.loot['LOOT_' + id] = Object.assign({ id: 'LOOT_' + id, room_id: id, name: loot.join(', '), source: r.loot_pool, items: loot.map((n, k) => lootItem('LOOT_' + id, n, k)) }, ov['LOOT_' + id] || {});
+      // the hazard: a trap room's trap, otherwise the setting's decay
+      const trap = (comp.trap_rooms || []).includes(arch) && (r.trap_pool || []).find((t) => (comp.traps || {})[t]);
+      const hz = trap ? comp.traps[trap] : (comp.decay_hazards || {})[r.setting_id];
+      if (hz) out.hazards['HAZ_' + id] = hazard('HAZ_' + id, id, Object.assign({ source: trap || (r.hazard_pool || [])[0] }, hz));
+      // dressing: its three DRESS ids, written from the setting's signage, smells and decay
+      const ph = phrases(S);
+      const dressing = (r.dressing_pool || []).map((d) => {
+        const [n, k] = String(d).split('_').slice(-2).map(Number);
+        return ph.length ? ph[((n || 0) * 3 + (k || 0)) % ph.length] : '';
+      }).filter(Boolean);
+      const cond = (comp.conditions || {})[r.current_condition];
+      const keep = Object.fromEntries(Object.entries(r).filter(([k]) => !B1.RENAMED.includes(k)));
+      out.rooms[id] = Object.assign(keep, {
+        id, setting_id: r.setting_id, name: arch, full_name: r.name, function: String(r.purpose || '').split(' for ')[0].toLowerCase(),
+        size_class: r.size_class, frequency_weight: r.frequency_weight,
+        floor_tile_pool: r.floor_tiles, wall_tile_pool: r.wall_tiles, lighting_pool: r.lighting,
+        mandatory_features: mandatory, optional_furnishings: optional, dressing,
+        furniture_record: 'FURN_' + id, interactive_record: devs.length ? 'INT_' + id : null, loot_record: loot.length ? 'LOOT_' + id : null, hazard_record: hz ? 'HAZ_' + id : null,
+        doors: r.door_preferences, occupant_tags: r.encounter_tags, rare_twist: r.strange_variations, alternate_purpose: r.alternate_purpose,
+        history_overlays: cond ? [cond[0]].concat(r.alternate_purpose ? ['repurposed'] : []) : [], condition_state: cond ? cond[1] : null,
+        cluster: A.cluster || fallbackOf(comp, 'clusters', 'general'),
+      }, ov[id] || {});
+    }
+    return out;
+  }
+  // source room fields that come out under library 1's names (or as records), so aren't carried twice
+  B1.RENAMED = ['room_id', 'floor_tiles', 'wall_tiles', 'lighting', 'furniture_pool', 'dressing_pool', 'interactive_pool', 'loot_pool', 'key_object_pool', 'trap_pool', 'hazard_pool', 'encounter_tags', 'door_preferences', 'strange_variations', 'mandatory_features'];
+  G.CONTENT_ADAPTERS['havenot-settings-library-b1'] = B1;
+
+  /** Every gap in a library B source, and whether the companion fills it. 'gap': the source leaves it undefined
+   *  and the companion fills it; 'bad': nothing fills it; 'warn': it works, from a fallback. */
+  function validateB1(src, comp) {
+    const out = [];
+    const say = (level, section, id, text) => out.push({ level, section, id, text });
+    const SL = src.shared_libraries || {};
+    for (const k of ['settings', 'rooms']) if (!Array.isArray(src[k]) || !src[k].length) say('bad', k, '', 'section missing or empty');
+    const setIds = new Set((src.settings || []).map((s) => s.setting_id));
+    const roomIds = new Set();
+    for (const s of src.settings || []) {
+      for (const f of ['setting_id', 'name', 'floor_palette_ids', 'wall_palette_ids', 'lighting_palette_ids', 'decay_patterns']) if (s[f] == null || s[f] === '' || (Array.isArray(s[f]) && !s[f].length)) say('bad', 'settings', s.setting_id, 'required field ' + f + ' is missing or empty');
+      if (!(comp.palettes || {})[s.setting_id]) say('bad', 'settings', s.setting_id, 'no palette in the companion (missing graphics)');
+      for (const [t, w] of Object.entries(s.adjacent_setting_weights || {})) {
+        if (!setIds.has(t)) say('bad', 'settings', s.setting_id, 'adjacent_setting_weights → ' + t + ': no such setting');
+        if (!(w >= 0 && w <= 1)) say('bad', 'settings', s.setting_id, 'adjacent weight ' + w + ' for ' + t + ' is not in 0..1');
+      }
+      if (!Object.keys(s.adjacent_setting_weights || {}).length) say('warn', 'settings', s.setting_id, 'no adjacent settings: it has no related setting');
+      if (!Object.values(comp.type_settings || {}).some((m) => m[s.setting_id])) say('warn', 'settings', s.setting_id, 'no installation type leans to it (companion type_settings); it comes up only by chance');
+      if (!(comp.decay_hazards || {})[s.setting_id]) say('bad', 'hazards', 'HAZ_' + s.setting_id + '_DECAY', 'undefined in the source and not written in the companion');
+    }
+    // tiles: the shared tile lists don't match the ids rooms use
+    const sharedTiles = new Set([].concat(SL.floor_tiles || [], SL.wall_tiles || [], SL.lighting || []).map((t) => t.id));
+    const near = (id) => [...sharedTiles].find((s) => s.replace(/ /g, '_') === id);
+    for (const [id, t] of B1.tileIds(src)) {
+      if (sharedTiles.has(id)) continue;
+      const desc = words(id, /^(FLOOR|WALL|LIGHT)_/);
+      const m = firstMatch((comp.materials || {})[t.kind], desc);
+      const n = near(id);
+      if (!m) say('bad', 'tiles', id, 'undefined in the source, and no ' + t.kind + ' painter matches “' + desc + '” (missing graphics)');
+      else say('gap', 'tiles', id, 'undefined in the source' + (n ? ' (shared_libraries has “' + n + '”, with spaces)' : '') + '; drawn as ' + t.kind + ' ' + m[1] + ' from its name');
+    }
+    for (const t of [].concat(SL.floor_tiles || [], SL.wall_tiles || [], SL.lighting || [])) if (/ /.test(t.id)) say('warn', 'shared_libraries', t.id, 'an id with spaces; no room uses it' + (B1.tileIds(src).has(t.id.replace(/ /g, '_')) ? ' (rooms use ' + t.id.replace(/ /g, '_') + ')' : ''));
+    const sharedIds = (k) => new Set((SL[k] || []).map((x) => x.id));
+    const FURN = sharedIds('furniture'), INT = sharedIds('interactive'), TRE = sharedIds('treasure'), TRP = sharedIds('traps');
+    const seenRef = new Set();
+    const once = (key, fn) => {
+      if (seenRef.has(key)) return;
+      seenRef.add(key);
+      fn();
+    };
+    for (const r of src.rooms || []) {
+      const id = r.room_id;
+      if (roomIds.has(id)) say('bad', 'rooms', id, 'duplicate id (room_id)');
+      roomIds.add(id);
+      for (const f of ['room_id', 'setting_id', 'name', 'size_class', 'frequency_weight', 'floor_tiles', 'wall_tiles', 'lighting', 'mandatory_features']) if (r[f] == null || r[f] === '' || (Array.isArray(r[f]) && !r[f].length)) say('bad', 'rooms', id, 'required field ' + f + ' is missing or empty');
+      if (!setIds.has(r.setting_id)) say('bad', 'rooms', id, 'setting_id → ' + r.setting_id + ': no such setting');
+      if (!(r.frequency_weight > 0)) say('bad', 'rooms', id, 'frequency_weight ' + r.frequency_weight + ' is not a positive weight');
+      if (!(comp.sizes || {})[r.size_class]) say('bad', 'rooms', id, 'unknown size_class ' + r.size_class);
+      const arch = archOf(r);
+      if (!(comp.room_archetypes || {})[arch]) say('bad', 'rooms', id, 'room template “' + arch + '” has no fixtures in the companion');
+      else if ((r.mandatory_features || []).some((n) => /^primary .* fixture$/i.test(n))) once('primary:' + arch, () => say('gap', 'rooms', arch, '“Primary ' + arch + ' fixture” is a placeholder (in every setting’s ' + arch + '); its fixtures come from the companion: ' + comp.room_archetypes[arch].fixtures.join(', ')));
+      for (const f of r.furniture_pool || []) {
+        if (!FURN.has(f)) say('bad', 'rooms', id, 'furniture_pool → ' + f + ': no such furniture');
+        if (!(comp.shared_furniture || {})[f]) once('home:' + f, () => say('bad', 'furniture', f, 'no object name or home setting in the companion'));
+      }
+      for (const i of r.interactive_pool || []) if (!INT.has(i)) say('bad', 'rooms', id, 'interactive_pool → ' + i + ': no such interactive');
+      for (const t of r.loot_pool || []) if (!TRE.has(t)) say('bad', 'rooms', id, 'loot_pool → ' + t + ': no such treasure');
+      for (const t of r.trap_pool || []) {
+        if (!TRP.has(t)) say('bad', 'rooms', id, 'trap_pool → ' + t + ': no such trap');
+        once('trap:' + t, () => say((comp.traps || {})[t] ? 'gap' : 'bad', 'traps', t, 'the source has only a name: no trigger, clues, effect, countermeasure or severity' + ((comp.traps || {})[t] ? '; written in the companion' : '')));
+      }
+      for (const d of r.dressing_pool || []) once(d, () => say('gap', 'dressing', d, 'undefined in the source; written from the setting’s signage, smells and decay'));
+      for (const k of r.key_object_pool || []) once(k, () => say((comp.key_objects || {})[r.setting_id] ? 'gap' : 'bad', 'key objects', k, 'undefined in the source' + ((comp.key_objects || {})[r.setting_id] ? ' (listed by all ' + (src.rooms || []).filter((x) => (x.key_object_pool || []).includes(k)).length + ' of its setting’s rooms); one object, “' + comp.key_objects[r.setting_id] + '”, loot in its ' + comp.key_room + ' room' : '')));
+      for (const h of r.hazard_pool || []) once(h, () => say((comp.decay_hazards || {})[r.setting_id] ? 'gap' : 'bad', 'hazards', h, 'undefined in the source' + ((comp.decay_hazards || {})[r.setting_id] ? '; written in the companion from the setting’s decay: “' + comp.decay_hazards[r.setting_id].name + '”' : '')));
+      if (r.current_condition && !(comp.conditions || {})[r.current_condition]) once('cond:' + r.current_condition, () => say('warn', 'rooms', r.current_condition, 'a condition the companion doesn’t turn into a history overlay'));
+      if (!(r.interactive_pool || []).length) say('warn', 'rooms', id, 'no interactive device');
+    }
+    // the shared records are placeholders
+    const placeholder = (k, f, label) => {
+      const ph = (SL[k] || []).filter((x) => new Set((SL[k] || []).map((y) => y[f])).size === 1);
+      if (ph.length) say('gap', 'shared_libraries', k, 'all ' + ph.length + ' ' + label + ' records have the same placeholder ' + f + ' (“' + ph[0][f] + '”); ' + (k === 'interactive' && comp.device_uses ? 'each device’s use is written in the companion (device_uses)' : k === 'traps' ? 'their mechanics are written in the companion (traps)' : 'names come from their ids'));
+    };
+    placeholder('furniture', 'description', 'furniture');
+    placeholder('treasure', 'description', 'treasure');
+    placeholder('interactive', 'interaction', 'interactive');
+    placeholder('traps', 'effect', 'trap');
+    // what the fill can't draw or do yet
+    const content = B1(src, comp);
+    for (const [n, o] of Object.entries(content.objects)) if (o.fallback) say('warn', 'objects', n, 'no drawing family; drawn as the fallback (' + o.fam + ')');
+    for (const h of Object.values(content.hazards)) if (h.fallback) say('warn', 'hazards', h.id, '“' + h.name + '” has no behaviour rule; it works as the fallback (' + h.behaviour + ')');
+    for (const i of Object.values(content.interactables)) if (!firstMatch(rulesOf(comp, 'interactables'), i.device + ' ' + i.possible_use)) once('dev:' + i.device, () => say('warn', 'interactables', i.source, '“' + i.device + '” has no device rule; it works as the fallback (' + i.kind + ')'));
+    for (const sid of Object.keys(comp.shared_furniture || {})) if (sid[0] !== '$' && !FURN.has(sid)) say('warn', 'companion', sid, 'shared_furniture names a record the source doesn’t have');
+    if (!src.generation_parameters) say('warn', 'generation_parameters', '', 'the source has none; the generator’s defaults are used (25% functional rooms, adjacency 55/20/15/10, twists 12%, overlays 32%)');
+    for (const s of ['tiny', 'monumental']) if ((src.rooms || []).some((r) => r.size_class === s)) say('gap', 'rooms', s, 'size class not in library 1; companion sizes: ' + JSON.stringify((comp.sizes || {})[s]) + ' floor cells');
+    return out;
+  }
+  G.CONTENT_VALIDATORS = G.CONTENT_VALIDATORS || {};
+  G.CONTENT_VALIDATORS['havenot-settings-library-b1'] = validateB1;
+
   // ------------------------------------------------------------ validation
   G.validateContent = function (src, comp) {
     const out = [];
@@ -94,6 +300,7 @@
       bad('companion', '', 'no adapter for format ' + (comp && comp.format));
       return out;
     }
+    if (G.CONTENT_VALIDATORS[comp.format]) return G.CONTENT_VALIDATORS[comp.format](src, comp);
     const sections = ['settings', 'tiles', 'rooms', 'furniture', 'interactables', 'loot', 'hazards'];
     const REQ = {
       settings: ['id', 'name', 'floor_materials', 'wall_materials', 'lighting'],
@@ -171,6 +378,24 @@
       else if (!(gp[k] >= 0 && gp[k] <= 1)) bad('generation_parameters', k, gp[k] + ' is not a probability');
     }
     for (const [k, w] of Object.entries(gp.adjacency_weights || {})) if (!(w >= 0)) bad('generation_parameters', 'adjacency_weights.' + k, 'invalid weight ' + w);
+    return out;
+  };
+
+  /** Several libraries' content as one: their records side by side (ids don't clash between libraries), each
+   *  installation type leaning to the settings of all of them, the first library's parameters and setting modes. */
+  G.mergeContent = function (list) {
+    const out = { format: 'merged', libraries: list.map((c) => c.format), meta: {}, params: list[0].params || {}, modes: list[0].modes, typeSettings: {}, sizes: {} };
+    for (const k of ['settings', 'tiles', 'rooms', 'objects', 'furniture', 'interactables', 'loot', 'hazards']) {
+      out[k] = {};
+      for (const c of list) for (const [id, v] of Object.entries(c[k] || {})) if (!(id in out[k])) out[k][id] = v;
+    }
+    for (const c of list) {
+      for (const [s, v] of Object.entries(c.sizes || {})) if (Array.isArray(v) && !out.sizes[s]) out.sizes[s] = v;
+      for (const [t, lean] of Object.entries(c.typeSettings || {})) {
+        if (t[0] === '$' || typeof lean !== 'object') continue;
+        out.typeSettings[t] = Object.assign(out.typeSettings[t] || {}, lean);
+      }
+    }
     return out;
   };
 

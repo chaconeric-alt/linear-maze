@@ -22,7 +22,7 @@
   const LM = window.LM, HN = LM.HN, U = LM.util;
   const h = (...a) => LM.ui.h(...a);
   const lore = (t) => h('p', { class: 'lore' }, t);
-  const content = () => Object.values((window.LMGen && window.LMGen.libraries && window.LMGen.libraries.havenot && window.LMGen.libraries.havenot.content) || {})[0] || null;
+  const content = () => (window.LMGen && window.LMGen.libraries && window.LMGen.libraries.havenot && window.LMGen.contentOf ? window.LMGen.contentOf(window.LMGen.libraries.havenot) : null) || null;
   const dstate = (game, it) => {
     const s = HN.st(game);
     s.devices = s.devices || {};

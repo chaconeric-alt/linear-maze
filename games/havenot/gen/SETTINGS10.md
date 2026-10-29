@@ -1,7 +1,10 @@
 # HaveNot settings libraries in the generator
 
-How outside content libraries (the first: *JAGS HaveNot — Ten Settings & Two Hundred Functional Rooms*,
-`gen/library/settings10/`) become functional rooms in generated installations, what is done, and what isn't yet.
+How outside content libraries become functional rooms in generated installations, what is done, and what isn't
+yet. There are two: *JAGS HaveNot — Ten Settings & Two Hundred Functional Rooms* (`gen/library/settings10/`,
+library 1) and *Havenot-Settings-Library* (`gen/library/settings10b/`, library 2: another ten settings and two
+hundred rooms, in another schema). By default an installation draws on both (a brief's `library` picks one:
+`'settings10'`, `'settings10b'`, or `'all'`).
 
 ## How it fits together
 
@@ -72,6 +75,52 @@ drawing sweep in the game of every object, material state, light, decal and haza
 | Loot (200) | 200 (375 items) | category icons | recoverable satchel items, budgeted | 162 dropped in the sweep (the budget cap stops the rest) |
 | Hazards (200) | 200 | 10 behaviour visuals | 10 behaviours, clue, countermeasure, control | yes: all 200 placed; behaviours spot-checked |
 
+## Coverage (library 2: ten more settings, another schema)
+
+The source (`Havenot-Settings-Library.json`) is kept as supplied. Its rooms name their tiles, furniture, devices,
+treasure, traps, hazards, dressing and key objects by id, and most of those ids aren't defined in the file, or are
+defined as placeholders. Its adapter (`havenot-settings-library-b1` in `editor/gen/content.js`) and validator
+report every gap; `settings10b/companion.json` fills them, extending library 1's companion (its drawing families,
+hazard behaviours, device kinds and loot rules are tried after library 2's own). The full list is in
+`settings10b/IMPORT-REPORT.md`: 0 errors, 746 gaps filled, 21 warnings.
+
+**What the validator found:**
+
+- **Tiles (90 ids, 30 floor, 30 wall, 30 light): none defined.** `shared_libraries` has 20 tile records, but
+  their ids are written with spaces (`FLOOR_BLACK MARBLE VEINED GOLD`) where rooms use underscores, and 4 of
+  them match nothing. Each tile is drawn from its name (companion `materials`).
+- **Room fixtures: placeholders.** Every room's first required feature is "Primary <room> fixture". The rooms are
+  20 templates × 10 settings; each template's real fixtures are in the companion (`room_archetypes`: reception
+  desk, spectacle stage dais, power core turbine...). The second, setting-specific feature (holographic
+  eulogists, CRISPR looms...) is kept.
+- **Shared records are placeholders**: all 20 furniture records say "Bizarre HaveNot furniture piece", all 20
+  treasures "Salvage, curiosity, or artifact", all 20 interactives "Investigate, hack, bribe, or apologize to it",
+  all 10 traps "Humiliating, transformative, or lethal in bureaucratic way". Names come from ids (a few
+  reworded, companion `names`); each device's use and each trap's trigger, clues, effect, countermeasure and
+  severity are written in the companion.
+- **Hazards (10 ids, `HAZ_<setting>_DECAY`): undefined.** Written from each setting's decay patterns.
+- **Dressing (600 ids): undefined.** Written from the setting's signage, smells and decay.
+- **Key objects (10 ids, `KEY_<setting>_HEART`): undefined**, and every room of a setting lists the same one. It
+  becomes one named object per setting, loot only in that setting's Power Core & Heart room.
+- **Furniture belongs to no setting**, and each room's furniture pool mixes settings. Each piece's home setting is
+  in the companion: home pieces are the room's furniture; the others are its deliberate mismatch pool (a quarter
+  of rooms show one, in its own setting's colours).
+- **No generation parameters** (the generator's defaults apply) and no related setting (the strongest
+  `adjacent_setting_weights` entry is used). Two new size classes, tiny and monumental (90+ floor cells: rooms of
+  110+, as first set, almost never occur).
+
+| Records | Imported | Graphics complete | Behaviour implemented | Tested |
+| --- | --- | --- | --- | --- |
+| Settings (10) | 10 | 10 palettes | modes, related (from adjacency weights), type leanings | yes: every setting generated as the only setting (contact sheet `settings10b-contact-sheet.png`) |
+| Room types (200) | 200 | via their tiles and objects | 200 assignable, size-fitted, clustered (by template) | yes: all 200 generated |
+| Floor tiles (30) | 30 (none defined in the source) | 30, ×3 states | — | yes: all baked in 3 states |
+| Wall tiles (30) | 30 (none defined) | 30, ×3 states | — | yes: all baked in 3 states |
+| Lights (30) | 30 (none defined) | 30 (10 fitting styles) | colour and radius | yes |
+| Furniture: 20 shared pieces, 40 template fixtures, 10 setting features / 109 objects | 109 | 109, 31 drawing families, setting palettes, states | placement rules; home vs mismatch | yes: all 109 drawn in 3 states; 105 placed in the sweep |
+| Interactables (20, as 200 room devices) | 200 | as their objects | 8 device kinds | 199 placed in the sweep; all opened in the game |
+| Treasure (20) + key objects (10) | 200 loot records, 610 items | category icons | satchel items, budgeted | 157 dropped in the sweep (budget cap) |
+| Hazards: 10 decay + 10 traps | 200 room hazards | behaviour visuals | 8 behaviours | 194 placed in the sweep; all opened in the game |
+
 ## Not done yet (and what remains)
 
 - **The generator settings UI** (enable, probability, setting choice, cluster strength, density, frequencies,
@@ -79,8 +128,9 @@ drawing sweep in the game of every object, material state, light, decal and haza
   `density`, `frequencies`, `preserveOld`); there is no panel for them yet. Remaining: an "Advanced generation"
   panel (character creation or the editor) that writes them into the run's briefs. Era emphasis isn't a brief
   option yet.
-- **The second library** (`Havenot-Settings-Library.json`, a different schema with many unresolved ids): an adapter,
-  the validator report, and a companion that fills the gaps. Queued after the Dead Signal engine port.
+- **Library 2's furniture is thinner than library 1's**: 109 objects against 591, because its rooms are 20
+  templates repeated per setting. Each setting's rooms differ by materials, palette, the setting feature and its
+  own shared pieces. Remaining: more setting-specific pieces per template, if wanted.
 - **Furniture readability.** Every object has real art, but at the game's normal zoom small pieces read as small
   shapes; centrepieces (thrones, vats, coffins, turbines) carry the rooms. Remaining: bigger centrepieces for
   large rooms, and denser 'normal' rooms.
