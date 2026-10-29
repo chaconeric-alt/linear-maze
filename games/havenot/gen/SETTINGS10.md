@@ -151,5 +151,3 @@ hazard behaviours, device kinds and loot rules are tried after library 2's own).
   (dark); 'triggered' shares 'active'.
 - **Wall art**: walls get the room's material with trim and damage, but no embedded displays or window openings
   of their own beyond the wall-mounted pieces.
-- **Room names kept from a run**: an installation rebuilt from a saved run keeps the room names it had, so a room
-  can carry an older name over a new function (the inspect panel shows the function).

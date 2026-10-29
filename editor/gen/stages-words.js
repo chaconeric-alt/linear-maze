@@ -61,7 +61,13 @@
         const t = lib.rooms[r.template] || {};
         const id = 'f' + floor.n + '.' + r.id + '.name';
         let name = (keep(id) || {}).text || (r.fn && r.fn.name) || G.say(lib, rng, t.names || 'roomNames.' + r.template, vars()) || G.titleCase(r.template.replace(/-/g, ' '));
-        if (names.has(name) && !keep(id)) {
+        if (names.has(name) && !keep(id) && r.fn) {
+          // a functional room whose type another setting's room on this floor shares (library 2's rooms are templates
+          // repeated per setting): its setting tells them apart
+          const C = G.contentOf && G.contentOf(lib, plan.brief.library), S = C && C.settings[r.fn.setting];
+          if (S) name = name + ' (' + String(S.name).split(/ - |: | & /)[0] + ')';
+        }
+        if (names.has(name) && !keep(id) && !r.fn) {
           // another name from the pool before a number
           const left = G.textPool(lib, t.names || 'roomNames.' + r.template).map((v) => G.fill(v, vars())).filter((v) => !names.has(v));
           if (left.length) name = rng.pick(left);
