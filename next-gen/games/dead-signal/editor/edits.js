@@ -23,8 +23,8 @@
  *   new floor the-complex
  *   new monster knife-fighter
  *   new tile type glass-corner (a copy of glass-v)
- *   floor order: ds-f1, ds-f2, dead-signal-lab, the-complex, sterile-annex
- *   next-generation look (tilted camera, ceiling silhouettes, neon) on every floor
+ *   floor order: ds-f0, ds-f1, ds-f2, ds-f3, ds-f4, ds-f5, ds-f5a, ds-b1, dead-signal-lab, the-complex, sterile-annex
+ *   next-generation look (tilted camera, ceiling silhouettes, neon) on ds-f1 and ds-f2
  */
 'use strict';
 (function () {
@@ -1089,7 +1089,7 @@
         "ds-f2": { nextGen: { enabled: true, oblique: { on: true }, ceiling: { on: true }, neon: { on: true } }, },
       },
     },
-    levelOrder: ["ds-f1", "ds-f2", "dead-signal-lab", "the-complex", "sterile-annex"],
+    levelOrder: ["ds-f0", "ds-f1", "ds-f2", "ds-f3", "ds-f4", "ds-f5", "ds-f5a", "ds-b1", "dead-signal-lab", "the-complex", "sterile-annex"],
     player: null,
   });
 })();

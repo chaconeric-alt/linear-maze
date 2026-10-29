@@ -98,6 +98,7 @@
           hp: this.hp, shield: this.shield, gold: this.gold, weapons: this.weapons, weaponIdx: this.weaponIdx,
           ammo: this.ammo, mags: this.mags, equip: this.equip, bag: this.bag, blessings: this.blessings,
           gadgets: this.gadgets, flags: [...this.flags], data: this.data, keyItems: this.keyItems,
+          statuses: LM.status ? LM.status.save(this) : [],
         })
       );
     }
@@ -112,6 +113,7 @@
       this.flags = new Set(s.flags || []);
       this.data = JSON.parse(JSON.stringify(s.data || {}));
       this.keyItems = Array.isArray(s.keyItems) ? JSON.parse(JSON.stringify(s.keyItems)) : [];
+      if (LM.status) LM.status.load(this, s.statuses);
       Object.assign(this.ammo, s.ammo || {});
       this.mags = Object.assign({}, s.mags || {});
       for (const k of Object.keys(this.equip)) this.equip[k] = s.equip && s.equip[k] && LM.find('armor', s.equip[k]) ? s.equip[k] : null;
@@ -377,7 +379,9 @@
         this.vx = U.damp(this.vx, ix * speed, rate, dt);
         this.vy = U.damp(this.vy, iy * speed, rate, dt);
       }
-      if (I.anyHit('ShiftLeft', 'ShiftRight', 'Space') && this.dashCd <= 0 && !swim) {
+      // held fast (a status with bound: webbed, turned to stone): no dash, no shooting
+      const bound = LM.status ? LM.status.bound(this) : false;
+      if (I.anyHit('ShiftLeft', 'ShiftRight', 'Space') && this.dashCd <= 0 && !swim && !bound) {
         let dx = ix, dy = iy;
         if (!dx && !dy) {
           dx = Math.cos(this.aim);
@@ -416,7 +420,12 @@
 
       // firing
       const w = this.currentWeapon();
-      if (!this.isArmed(game)) {
+      if (bound) {
+        if (I.mouse.clicked && this.emptyWarn <= 0) {
+          LM.audio.play('empty');
+          this.emptyWarn = 0.6;
+        }
+      } else if (!this.isArmed(game)) {
         const gd = this.heldGadget();
         if (I.mouse.clicked && gd && gd.primary && this.gadgetCd <= 0 && game.state === 'play') gd.primary(game, this);
       } else if (I.mouse.down && this.fireCd <= 0 && game.state === 'play' && this.reloadT <= 0) {
@@ -515,7 +524,7 @@
       const body = this.equip.body ? LM.get('armor', this.equip.body) : null;
       const head = this.equip.head ? LM.get('armor', this.equip.head) : null;
       const coat = body ? body.color : '#4d5a6e';
-      // a game can change how its player looks: LM.playerLook(player, game) → { skin, under, over, head } (SPEC 6.20)
+      // a game can change how its player looks: LM.playerLook(player, game) → { skin, under, over, head } (SPEC 6.25)
       const L = (LM.playerLook && LM.playerLook(this, game)) || {};
       const skin = L.skin || '#d9b48f';
       const k = this.falling > 0 ? Math.max(0.05, this.falling / 0.6) : 1;
@@ -606,6 +615,14 @@
         ctx.fillRect(3, -1.4, 2.2, 2.8);
       }
       ctx.restore();
+      // a status that colours you (def.tint: turning to stone, wrapped in silk)
+      const tint = LM.status ? LM.status.tint(this) : null;
+      if (tint) {
+        ctx.fillStyle = U.rgba(tint.color, tint.a * Math.min(1, 0.4 + (tint.s.n || 1) * 0.2));
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, (this.r + 1.5) * k, 0, U.TAU);
+        ctx.fill();
+      }
 
       // water line
       if (this.swimming) {
@@ -644,8 +661,20 @@
           LM.gfx.glow(ctx, this.x + Math.cos(this.aim) * len * 0.6, this.y + Math.sin(this.aim) * len * 0.6, hot ? 10 : 5, w.heat.color || '#ff3a1e', a * 0.6);
         }
       }
+      // a gadget's aura (a force field): drawn round you all the time, held or not
+      // (shieldRing: false, and it draws the shield instead of the plain ring)
+      let ring = true;
+      for (const id of this.gadgets) {
+        const gd = LM.find('gadgets', id);
+        if (gd && gd.drawAura) {
+          ctx.save();
+          gd.drawAura(ctx, this, game, t);
+          ctx.restore();
+          if (gd.shieldRing === false) ring = false;
+        }
+      }
       const st = this.stats();
-      if (this.shieldFlash > 0 || (st.maxShield > 0 && this.shield > 0)) {
+      if (ring && (this.shieldFlash > 0 || (st.maxShield > 0 && this.shield > 0))) {
         const a = this.shieldFlash > 0 ? this.shieldFlash * 2.5 : 0.12 + 0.05 * Math.sin(t * 3);
         ctx.strokeStyle = 'rgba(92,200,232,' + Math.min(0.9, a) + ')';
         ctx.lineWidth = 1.4;

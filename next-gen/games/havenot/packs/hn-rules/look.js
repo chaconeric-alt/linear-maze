@@ -1,5 +1,5 @@
 /* HaveNot — packs/hn-rules/look.js
- * How the scavenger looks on the map, from the origin and the mutations (engine SPEC 6.20, LM.playerLook).
+ * How the scavenger looks on the map, from the origin and the mutations (engine SPEC 6.25, LM.playerLook).
  *
  * Human: the engine's own scavenger. Mutant Hyena: tan spotted fur, a long dark muzzle, round ears, a mane
  * and a bushy tail. Random Mutant: grey-green skin (pale cyan with Glowing Skin), bald, and one visible change

@@ -6,6 +6,7 @@
 (function () {
   const LM = window.LM, U = LM.util, T = LM.TILE;
   const C = (LM.combat = {});
+  const FA = LM.factions;
 
   // ------------------------------------------------------------ projectiles
   class Projectile {
@@ -34,11 +35,17 @@
       this.status = o.status || this.def.status || null; // a status the hit carries (engine/status.js)
       this.damageType = o.damageType || this.def.damageType || null; // 'electric', 'fire'...: what an enemy's `takes` reads
       this.ignoreArmor = !!(o.ignoreArmor || this.def.ignoreArmor);
+      // engine factions: an enemy's shot (o.faction, or its shooter o.by's) hits whatever that faction
+      // attacks; without one, an enemy shot hits only the player, as it always has
+      this.by = o.by || null;
+      this.faction = o.owner === 'player' ? 'player' : o.faction || (this.by && this.by.faction) || null;
     }
     impact(game, hitWall) {
       this.dead = true;
+      // def.onImpact(p, game, hitWall): where it lands, something happens (silk leaves a web)
+      if (this.def.onImpact) this.def.onImpact(this, game, hitWall);
       if (this.aoe) {
-        C.explode(game, this.x - this.vx * 0.004, this.y - this.vy * 0.004, Object.assign({ owner: this.owner, status: this.status, damageType: this.damageType }, this.aoe));
+        C.explode(game, this.x - this.vx * 0.004, this.y - this.vy * 0.004, Object.assign({ owner: this.owner, status: this.status, faction: this.owner === 'player' ? undefined : this.faction, by: this.by, damageType: this.damageType }, this.aoe));
         return;
       }
       const d = this.def;
@@ -73,12 +80,18 @@
         if (this.owner === 'player') {
           for (const e of game.enemies) {
             if (e.dead || e.spawning > 0 || this.hit.has(e)) continue;
-            const rr = e.r + this.r;
-            if (U.dist2(this.x, this.y, e.x, e.y) < rr * rr) {
+            // your shots pass through anyone on your side (but not something that wakes when hurt)
+            if (!FA.playerHits(e.faction)) continue;
+            if (C.touches(e, this.x, this.y, this.r)) {
               this.hit.add(e);
+              // a shield that sends shots back (def.reflect)
+              if (e.def.reflect && C.reflects(game, e, this)) {
+                C.reflect(game, e, this);
+                return;
+              }
               let dmg = this.damage;
               if (this.falloff) dmg *= U.clamp(1 - (this.traveled / this.range) * this.falloff, 0.35, 1);
-              if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status, damageType: this.damageType, ignoreArmor: this.ignoreArmor });
+              if (!this.aoe) C.hurt(game, e, dmg, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'player', status: this.status, proj: this, damageType: this.damageType, ignoreArmor: this.ignoreArmor });
               game.particles.burst(this.x, this.y, 5, {
                 type: 'dot', color: e.def.blood || '#7a1f1f', speed: 120, life: 0.35, angle: this.angle, spread: 0.6, size: [0.8, 1.8], drag: 6,
               });
@@ -89,13 +102,27 @@
             }
           }
         } else {
-          const P = game.player;
-          if (P && !P.dead && P.falling <= 0) {
+          const P = game.player, fac = this.faction;
+          if (P && !P.dead && P.falling <= 0 && (fac == null || FA.hostile(fac, 'player'))) {
             const rr = P.r + this.r;
             if (U.dist2(this.x, this.y, P.x, P.y) < rr * rr) {
-              if (P.invuln <= 0) C.hurt(game, P, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, damageType: this.damageType, ignoreArmor: this.ignoreArmor });
+              if (P.invuln <= 0) C.hurt(game, P, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by, damageType: this.damageType, ignoreArmor: this.ignoreArmor });
               this.impact(game, false);
               return;
+            }
+          }
+          if (fac != null && FA.hitsEnemies(fac)) {
+            for (const e of game.enemies) {
+              if (e.dead || e.spawning > 0 || e === this.by || this.hit.has(e) || !FA.hostile(fac, e.faction)) continue;
+              if (C.touches(e, this.x, this.y, this.r)) {
+                this.hit.add(e);
+                if (!this.aoe) C.hurt(game, e, this.damage, { kx: (this.vx / sp) * this.knock, ky: (this.vy / sp) * this.knock, source: 'enemy', status: this.status, by: this.by });
+                game.particles.burst(this.x, this.y, 4, { type: 'dot', color: e.def.blood || '#7a1f1f', speed: 110, life: 0.3, angle: this.angle, spread: 0.6, size: [0.8, 1.6], drag: 6 });
+                if (this.pierce-- <= 0 || this.aoe) {
+                  this.impact(game, false);
+                  return;
+                }
+              }
             }
           }
         }
@@ -104,7 +131,7 @@
           const rr = it.r + this.r;
           if (U.dist2(this.x, this.y, it.x, it.y) < rr * rr) {
             this.hit.add(it);
-            C.hurt(game, it, this.damage, { source: this.owner });
+            C.hurt(game, it, this.damage, { source: this.owner, status: this.status });
             this.impact(game, false);
             return;
           }
@@ -213,12 +240,91 @@
    * o.damageType ('electric', 'fire', 'acid'...) is multiplied by the enemy def's `takes` ({ electric: 2 }: double,
    * 0: immune). o.ignoreArmor: armor doesn't reduce this hit (acid).
    */
+  /**
+   * Does a point (with radius r) touch an enemy? A circle of its radius, or, for a long body, the def's
+   * hitbox: { front, back, r } a capsule along the way it faces (front and back: how far the body reaches
+   * ahead of and behind its centre; r: how wide, from the middle; the radius if left out). Shots use it,
+   * so a dog seen side-on can be hit in the head or the haunch, not only the middle.
+   */
+  C.touches = function (e, x, y, r) {
+    const hb = e.def && e.def.hitbox;
+    if (!hb) {
+      const rr = e.r + (r || 0);
+      return U.dist2(x, y, e.x, e.y) < rr * rr;
+    }
+    const k = e.def.radius ? e.r / e.def.radius : 1;
+    const ca = Math.cos(e.facing || 0), sa = Math.sin(e.facing || 0);
+    const along = U.clamp((x - e.x) * ca + (y - e.y) * sa, -(hb.back || 0) * k, (hb.front || 0) * k);
+    const px = e.x + ca * along, py = e.y + sa * along;
+    const rr = (hb.r != null ? hb.r * k : e.r) + (r || 0);
+    return U.dist2(x, y, px, py) < rr * rr;
+  };
+
+  /**
+   * An enemy's shield that sends your shots back: def.reflect { arc (radians either side of where it faces,
+   * default 1.2; Math.PI for all round), aim (true: back at whoever fired, else straight back the way it
+   * came), damage (× the shot's damage, default 1), speed (× its speed, default 1), color, sound, chance
+   * (0..1, default 1), when(e, game) (only while this is true: a shield that's up) }. e.noReflect turns it
+   * off for a while from code.
+   */
+  C.reflects = function (game, e, p) {
+    const r = e.def.reflect;
+    // a projectile that can't be turned (def.reflectable: false) goes through the mirror
+    if (!r || e.noReflect || p.reflected > 2 || p.def.reflectable === false || p.unreflectable) return false;
+    if (r.when && !r.when(e, game)) return false;
+    if (r.chance != null && Math.random() >= r.chance) return false;
+    const from = Math.atan2(p.y - p.vy * 0.02 - e.y, p.x - p.vx * 0.02 - e.x);
+    return Math.abs(U.angDiff(e.facing || 0, from)) <= (r.arc == null ? 1.2 : r.arc);
+  };
+  C.reflect = function (game, e, p) {
+    const r = e.def.reflect, P = game.player;
+    const sp = Math.hypot(p.vx, p.vy) * (r.speed || 1);
+    let ang = Math.atan2(-p.vy, -p.vx);
+    if (r.aim !== false && P && !P.dead) ang = Math.atan2(P.y - p.y, P.x - p.x) + U.rand(-0.06, 0.06);
+    p.vx = Math.cos(ang) * sp;
+    p.vy = Math.sin(ang) * sp;
+    p.angle = ang;
+    p.owner = 'enemy';
+    p.faction = e.faction;
+    p.by = e;
+    p.hit = new Set([e]);
+    p.traveled = 0;
+    p.pierce = 0;
+    p.reflected = (p.reflected || 0) + 1;
+    p.damage *= r.damage == null ? 1 : r.damage;
+    if (r.color) p.color = r.color;
+    p.x += Math.cos(ang) * (e.r * 0.5);
+    p.y += Math.sin(ang) * (e.r * 0.5);
+    e.flash = Math.max(e.flash, 0.05);
+    game.particles.burst(p.x, p.y, 7, { type: 'spark', color: r.color || '#fff2c8', speed: 220, life: 0.25, angle: ang, spread: 0.9, size: 1 });
+    game.lights.push({ x: p.x, y: p.y, r: 60, color: r.color || '#fff2c8', intensity: 0.8, life: 0.08, max: 0.08 });
+    LM.audio.play(r.sound || 'reflect', { vol: game.vol(e.x, e.y), throttle: 0.04 });
+    if (e.def.onReflect) e.def.onReflect(e, game, p);
+  };
+
   C.hurt = function (game, target, amount, o) {
     o = o || {};
     if (target.dead || amount <= 0) return 0;
     if (target.isPlayer) return C.hurtPlayer(game, target, amount, o);
     if (target.isEnemy) {
       const def = target.def;
+      // something that wakes when hurt (LM.factions.wake: a specimen in its cage) turns on whoever hurt it
+      const woke = o.source === 'player' && FA.wake[target.faction];
+      if (woke && game.setFaction) {
+        game.setFaction((x) => x === target, woke);
+        target.aggro = true;
+        target.knowsP = true;
+        target.alertT = 1;
+      }
+      // def.immune: nothing ordinary hurts it (true, or (e, game, opts) => true for the hits it shrugs off;
+      // opts.proj is the projectile that hit, if one did)
+      if (def.immune && (def.immune === true || def.immune(target, game, o))) {
+        target.flash = Math.max(target.flash, 0.04);
+        if (!target.aggro) target.alert(game, true);
+        game.particles.add({ type: 'text', x: target.x + U.rand(-4, 4), y: target.y - target.r - 4, vy: -30, drag: 3, life: 0.5, text: def.immuneText || 'no effect', color: '#9aa4ae', size: 7 });
+        if (def.onImmune) def.onImmune(target, game, o);
+        return 0;
+      }
       const armor = o.ignoreArmor ? 0 : target.armor != null ? target.armor : def.armor || 0;
       const vul = LM.status ? LM.status.vulnerable(target) : 0;
       const takes = o.damageType && def.takes && def.takes[o.damageType] != null ? +def.takes[o.damageType] : 1;
@@ -227,7 +333,19 @@
       target.hp -= dmg;
       target.flash = 0.09;
       target.lastHurt = 0;
-      if (!target.aggro) target.alert(game, true);
+      // o.by: the enemy that did it (engine factions); it turns on whoever hurt it
+      const by = o.by && o.by.isEnemy && !o.by.dead && o.by !== target ? o.by : null;
+      if (by && FA.hostile(target.faction, by.faction)) {
+        target.foe = by;
+        target.foeHold = Math.max(target.foeHold || 0, 2);
+      } else if (o.source === 'player') {
+        target.knowsP = true;
+        if (!FA.onlyPlayer(target.faction) && game.player && FA.hostile(target.faction, 'player') && (target.foeHold || 0) <= 0) {
+          target.foe = game.player;
+          target.foeHold = 1.5;
+        }
+      }
+      if (!target.aggro) target.alert(game, true, by || undefined);
       const mass = def.mass || 1;
       if (o.kx || o.ky) {
         target.kvx += (o.kx || 0) / mass;
@@ -248,6 +366,10 @@
       return dmg;
     }
     if (target.isItem && target.def.destructible) {
+      // def.burns: fire (a hit carrying a status with def.fire, or burning) takes it at once (webs, paper)
+      const st = o.status && (typeof o.status === 'string' ? o.status : o.status.id);
+      const fiery = st && (st === 'burning' || (LM.status && LM.status.def(st) && LM.status.def(st).fire)) || o.type === 'fire';
+      if (target.def.burns && fiery) amount = Math.max(amount, target.hp == null ? target.def.destructible.hp : target.hp);
       target.hp = (target.hp == null ? target.def.destructible.hp : target.hp) - amount;
       target.flash = 0.08;
       if (target.hp <= 0) target.destroy(game, o);
@@ -303,11 +425,28 @@
       game.hitStop = Math.max(game.hitStop, 0.04);
     }
     game.stats.damageTaken += dmg;
-    if (P.hp <= 0) {
+    if (P.hp <= 0 && C.lastStand(game, P, o)) {
+      // something you carry kept you alive (it set your health itself)
+      if (!(P.hp > 0)) P.hp = 1;
+    } else if (P.hp <= 0) {
       P.hp = 0;
       game.playerDied(o);
     } else if (o.status && LM.status) LM.status.apply(game, P, o.status);
     return dmg;
+  };
+
+  /**
+   * A hit is about to kill the player: ask what they carry. Armour worn, gadgets and blessings can
+   * have lastStand(game, P, o); the first to return true keeps them alive (it sets P.hp, and whatever
+   * else it does: a cooldown, a blast). Returns true if one did.
+   */
+  C.lastStand = function (game, P, o) {
+    const gear = [];
+    for (const slot of Object.keys(P.equip || {})) if (P.equip[slot]) gear.push(LM.find('armor', P.equip[slot]));
+    for (const id of P.gadgets || []) gear.push(LM.find('gadgets', id));
+    for (const id of P.blessings || []) gear.push(LM.find('blessings', id));
+    for (const g of gear) if (g && typeof g.lastStand === 'function' && g.lastStand(game, P, o || {})) return true;
+    return false;
   };
 
   /** A boss's phases (def.bossBar.phases: [{ at: 0.5, text, do(e, game) }]): each runs once as its health falls past `at`. */
@@ -335,7 +474,10 @@
   };
 
   // ------------------------------------------------------------ explosions
-  /** o: { radius, damage, owner, color, selfDamage, silent, status, damageType } */
+  /** o: { radius, damage, owner, color, selfDamage, silent, status, damageType, faction, by }
+   *  An enemy's blast with a faction (o.faction, from its attacker o.by) hurts what that faction attacks;
+   *  an enemy blast without one hurts only the player; yours hurt every enemy not on your side; anything
+   *  else (a barrel) hurts everyone. */
   C.explode = function (game, x, y, o) {
     const R = o.radius || 70, D = o.damage || 40;
     const col = o.color || '#ffb060';
@@ -358,20 +500,23 @@
     if (!o.silent) LM.audio.play('explode', { vol: game.vol(x, y), throttle: 0.05 });
     const L = game.level;
     const losOK = (tx, ty) => LM.physics.los(L, x, y, tx, ty, 'shot');
+    const fac = o.faction || null;
     // player
-    if (P && !P.dead && pd < R + P.r && losOK(P.x, P.y)) {
+    if (P && !P.dead && pd < R + P.r && losOK(P.x, P.y) && !(fac && fac !== 'player' && !FA.hostile(fac, 'player'))) {
       const k = 1 - U.clamp(pd / (R + P.r), 0, 1) * 0.6;
       const mul = o.owner === 'player' ? (o.selfDamage == null ? 0.35 : o.selfDamage) : 1;
-      if (mul > 0) C.hurt(game, P, D * k * mul, { kx: ((P.x - x) / (pd || 1)) * 160, ky: ((P.y - y) / (pd || 1)) * 160, source: o.owner, type: 'blast', status: o.status, damageType: o.damageType });
+      if (mul > 0) C.hurt(game, P, D * k * mul, { kx: ((P.x - x) / (pd || 1)) * 160, ky: ((P.y - y) / (pd || 1)) * 160, source: o.owner, type: 'blast', status: o.status, by: o.by, damageType: o.damageType });
     }
-    // enemies (player blasts and barrels hurt enemies; enemy blasts don't)
-    if (o.owner !== 'enemy') {
+    // enemies (your blasts and barrels hurt enemies; an enemy's only if its faction fights them)
+    const enemyBlast = o.owner === 'enemy';
+    if (!enemyBlast || (fac && FA.hitsEnemies(fac))) {
       for (const e of game.enemies) {
         if (e.dead) continue;
+        if (enemyBlast ? e === o.by || !FA.hostile(fac, e.faction) : o.owner === 'player' && !FA.playerHits(e.faction)) continue;
         const d = U.dist(x, y, e.x, e.y);
         if (d < R + e.r && losOK(e.x, e.y)) {
           const k = 1 - U.clamp(d / (R + e.r), 0, 1) * 0.6;
-          C.hurt(game, e, D * k, { kx: ((e.x - x) / (d || 1)) * 260, ky: ((e.y - y) / (d || 1)) * 260, source: 'player', type: 'blast', status: o.status, damageType: o.damageType });
+          C.hurt(game, e, D * k, { kx: ((e.x - x) / (d || 1)) * 260, ky: ((e.y - y) / (d || 1)) * 260, source: enemyBlast ? 'enemy' : 'player', type: 'blast', status: o.status, by: o.by, damageType: o.damageType });
         }
       }
     }
@@ -380,7 +525,7 @@
       if (it.dead || !it.def.destructible) continue;
       const d = U.dist(x, y, it.x, it.y);
       if (d < R + it.r && losOK(it.x, it.y)) {
-        game.schedule(0.08 + Math.random() * 0.1, () => C.hurt(game, it, D, { source: o.owner, type: 'blast' }));
+        game.schedule(0.08 + Math.random() * 0.1, () => C.hurt(game, it, D, { source: o.owner, type: 'blast', status: o.status }));
       }
     }
   };

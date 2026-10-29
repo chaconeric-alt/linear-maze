@@ -254,6 +254,47 @@ New flags: `slept`, `woke`, `dressed`, `aliceCalled`, `townPlaque`, `visited-<pl
 
 No existing floor changes: every door on every floor of both games runs the same way as before (checked), and no floor had a `rot`.
 
+## 0.5.9: immune enemies, unreflectable shots, item lifetimes, arrive and trigger conditions
+
+Built for Dead Signal's Sub-level B and its ending. An enemy def's `immune` (`true` or a function of the hit), `immuneText` and `onImmune` (`LM.combat.hurt` flashes it, alerts it, floats the text, and does nothing). A projectile def's `reflectable: false` (or a shot's `unreflectable`) is never sent back by `reflect` (`LM.combat.reflects`); projectile hits pass `proj` to `hurt`. Items with `life` (or `props.life`) and `onExpire`, timed with `it.age`. `drawRadius` on item and enemy defs (the renderer keeps big drawings on screen). `LM.physics.pull`'s `player: false`. Traps (`engine/traps.js`): the `arrive` trigger (checked once each time the floor loads) and any trigger's `when` / `unless` conditions (`Trap.condOk`; a trap whose conditions fail isn't used up). Enemies get `e._props` before their def's `init`. Fixes: `LM.status.apply` clears what a status `cures` before taking the target's list (a petrifying status was lost); a door held open (`door.held`) stays open while it isn't sealed; the floor below's dim and tint are baked into its chunks (no per-frame fills), and the editor's stand-in renderers bake chunks through the prototype. Engine spec sections 6.4–6.6, 6.8 and 15 (*A new floor*: Check skips things placed with `props.caged`). The editor: the `arrive` trigger in the trigger list; Check skips `caged` things; no "no exit stairs" warning on a floor with elevators or stairs that lead somewhere.
+
+**This game's packs.** Nothing changed. No Linear Maze enemy is immune, no projectile is unreflectable (and nothing reflects), no item has a `life`, and no trap uses `arrive`, `when` or `unless`, so every floor plays as before (checked).
+
+## 0.5.8: curved rooms, the floor below, pulls and snares, reflecting, endings
+
+Built for Dead Signal's Floors 5 and 5a. `engine/curves.js` (a level's `ovals`: curve tiles made from the wall, `level.curveAt` / `curveIn`; collision pushes a body inside the ellipse off the curve, shots and sight and light are cut by the true arc, the bake draws the curve, its face along the northern arc and its lip; recessed lights in a ring with glowing lenses and a cove). The floor below (a level's `below`, terrain `seeBelow`; `render.js` bakes the other level's chunks at a smaller scale and draws them under this floor with parallax, darkened, with a rim shadow). An item's `pull` (`LM.physics.pull`), `snare` and `burns`; an enemy's `reflect` (`LM.combat.reflects`, `reflect`; `def.onReflect`); a projectile's `onImpact`; a status's `bound`, `tint`, `tintAlpha` and `fire` (`LM.status.bound`, `tint`); `game.checkpointHere`, `game.ending` / `endingAction`, `LM.ui.showEnding` and the trap effects `checkpoint` and `ending` (`engine/comms.js`); stairs that are `quick`; held-open doors (`door.held`, remembered); `level.walkable(x, y)`. The editor's floor settings → *Curved rooms* and *The floor below*; the `open` effect's *hold*. Engine spec sections 5, 6.2, 6.4–6.6, 6.8, 6.17 and 6.22–6.24. Fixed: a status with `cures` was lost when it cured something (clearing replaced the list it was about to be added to).
+
+**This game's packs.**
+- `packs/core/enemies.js`: two new attacks, `gaze` (meet its eyes and a status lands, then another) and `blink` (vanish, arrive beside the foe, strike). Nothing in this game uses them.
+- `packs/core/effects.js`: the `open` effect's `hold`.
+- `packs/core/environments.js` (`LM.paintWall`) and `packs/library/environment.js`: a wall next to a curve tile doesn't paint a face toward it (the curve has its own).
+
+No floor of this game has ovals, a floor below, or any of the new fields, so every floor plays and looks as before (checked).
+
+## 0.5.7: objectives, story lines that stop the game, hitboxes, waking sides
+
+Built from Dead Signal's playtests. `engine/objectives.js` (a level's `objectives`: when / any / not / done flags, optional, targets by tag, item, enemy, npc, tile or room; the HUD plate under the health, targets pulsing near you and marked on the minimap, the pause screen's list; render and minimap hooks; the editor's floor settings → Objectives). `engine/comms.js`: a speaker's `pause` (and a line's `pause`) stops the game for a conversation in the middle of the screen, Continue / Skip, game state `'talk'`, not in a fight; the pause screen's *Story lines* choice (localStorage `lm-talk-pauses`); the transmission form's pause field. An enemy def's `hitbox` (`LM.combat.touches`), a pack's `factionWake` (`LM.factions.wake`, `playerHits`), and floor memory keeps `aggro` and a runtime tag. Engine spec sections 5, 6.5, 6.8, 6.16, 6.20, 6.21 and 15.5.
+
+**This game's packs.** Nothing changed: no Linear Maze floor has objectives (the office's phone keeps its own "Right now"), no speaker pauses, no enemy has a `hitbox` and no pack wakes a side, so every floor plays as before (checked). A Linear Maze floor can now be given `objectives` in the editor.
+
+## 0.5.6: parked elevators, last stands, gadget auras
+
+Built for Dead Signal's Floor 4 (the AEGIS field). An elevator's `parked` (keyed by floor: a flag, or `{ flag, cargo }`): with no power, the car waits on that floor lit with its doors held open and its panel dead (the `elevatorParked` words), and if the flag is set while you're there it comes up the shaft, sets its cargo down inside and rings first (`LM.elevators.parkedAt / parked / live`; the editor's elevator inspector has **Parked here**). `LM.combat.lastStand`: armour, gadgets and blessings can have `lastStand(game, P, opts)`, asked when a hit would kill the player. A gadget's `resist` counts like armour's; `drawAura` draws round the player all the time, and `shieldRing: false` hides the plain shield ring. Engine spec sections 4, 6.7, 6.12, 6.15 and 15.5.
+
+**This game's packs.** Nothing changed: no Linear Maze floor parks an elevator, and nothing it carries has a `lastStand` (checked; every floor plays as before).
+
+## 0.5.5: waves, letting things out hunting
+
+Built for Dead Signal's Floor 4. The `spawn` effect's `as` tags what it spawns, and a `clear` trap keeps looking for its group while it's empty, so it can watch a wave spawned later (before, a `clear` trap with nothing tagged at the start never fired, which no floor relied on). The `faction` effect's `aggro`. `LM.ai.goTo`'s search limit (`lim`, default 40 as before). Engine spec sections 6.5, 6.8 and 6.20.
+
+**This game's packs.** `packs/core/effects.js`: `spawn`'s `as` and `faction`'s `aggro`. Nothing else changed; every Linear Maze floor plays as before (checked).
+
+## 0.5.4: factions
+
+Built for Dead Signal's Floor 3. Enemies have a side (`e.faction`, default `'monster'`) and a foe (`e.foe`, `LM.ai.foe`); the game's table (a pack's `factions`, laid over by a level's) says who fights whom; `game.setFaction`; trap effects `faction` and `branch`; a status's `countdown`, `stack`, `keep`, `update` and `onEnd` reason; `LM.nav.step` and `LM.ai.goTo` for enemies chasing something other than the player. Engine spec sections 5, 6.5, 6.8, 6.17 and 6.20.
+
+**This game's packs.** `packs/core/enemies.js`: every core behaviour and attack goes for the foe instead of `game.player` (with this game's default table the foe is always the player), attacks say who struck (`by`), the nova hurts everything its faction fights (the player, here), and a melee swipe or a charge needs a clear way to land (it no longer hits through a glass partition). `packs/core/effects.js`: the `faction` and `branch` effects, and `spawn`'s `faction`. Nothing else changed. Every Linear Maze floor plays as before: with no factions declared, monsters still want only the player and the player's shots still hit everything (checked, every enemy in both games).
+
 ## 0.5.3: statuses, boss bars, more ammunition, key items
 
 Built for Dead Signal's Floor 2. `engine/status.js` (the `statuses` kind; `LM.status.apply / has / clear`; anything that hurts can carry `status`), a def's `bossBar` (a named bar, `phases`), `LM.defineAmmo`, `game.giveKeyItem` (saved with the player; the inventory's Carried list), an enemy's own `e.armor` and `onHurt`, a projectile's `quiet`, `LM.comms.speaking()`. Engine spec sections 5, 6.4, 6.5, 6.7 and 6.16–6.19.
@@ -275,3 +316,15 @@ Built for Dead Signal's Floor 1; nothing in The Linear Maze uses them, and none 
 - `CB.saveProgress` (Chessboard 1's own checkpoint) writes through `LM.saves.write`, which now adds the floors' memory to it.
 
 No level files changed. The Linear Maze has no elevators; its elevators are still decoration.
+
+## 0.5.10: places on the minimap
+
+A level's room can carry `mapLabel` (its name on the minimap, once its middle is explored) and `mapWhen` (flags, any one of them, that put it on the minimap before the player has been there). `LM.ui.revealRooms` and `LM.ui.drawRoomLabels`, called by the minimap. The editor's room list edits both.
+
+**This game's packs.** Nothing changed. No Linear Maze room has `mapLabel` or `mapWhen`, so the minimap draws as before (every floor checked).
+
+## 0.5.11: travel, a floor's skip, the story-lines setting
+
+The trap effect `travel` (to another floor at once, with the quick fade, carrying everything), a level's `skip: { label, effects }` on the pause screen, and `LM.runEffects(game, effects)`. The setting for story lines that stop the game moved to a new key (`lm-story-lines`) and its pause-screen button names the setting.
+
+**This game's packs.** Nothing changed. No Linear Maze floor uses `travel` or `skip`, and none of its speakers stops the game, so its pause screen is as before (every floor checked).

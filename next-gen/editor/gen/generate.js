@@ -25,11 +25,13 @@
     zones: (p, l) => G.stageZones(p, l),
     graph: (p, l) => G.stageGraph(p, l),
     layout: (p, l) => G.stageLayout(p, l),
+    functions: (p, l) => G.stageFunctions(p, l),
     access: (p, l) => G.stageAccess(p, l),
     encounters: (p, l) => G.stageEncounters(p, l),
     traps: (p, l) => G.stageTraps(p, l),
     treasure: (p, l) => G.stageTreasure(p, l),
     dressing: (p, l) => G.stageDressing(p, l),
+    functionsFill: (p, l) => G.stageFunctionsFill(p, l),
     words: (p, l) => G.stageWords(p, l),
   };
 

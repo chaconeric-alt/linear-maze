@@ -82,8 +82,11 @@
         const c = floor.layout.cells[y][x];
         const t = floor.tiles[K(x, y)];
         if (c === ' ' || c === '#') {
-          if (t && t.tag) {
-            const e = { terrain: 'wall', tag: t.tag };
+          if (t && (t.tag || t.terrain)) {
+            // a tagged wall, or a material wall (a functional room's)
+            const e = { terrain: t.terrain || 'wall' };
+            if (t.tag) e.tag = t.tag;
+            if (t.variant) e.variant = t.variant;
             const ch = mapAlloc(e);
             legend[ch] = e;
             row += ch;
@@ -105,6 +108,11 @@
         const e = {};
         e.terrain = t.terrain || (c === '+' ? doorT : 'floor');
         if (v && !(e.terrain || '').startsWith('door') && e.terrain !== 'hn-iris') e.variant = v;
+        // a material floor's variant is its state (intact, worn, ruined)
+        if (t.variant != null && (e.terrain || '').startsWith('mat-')) {
+          if (t.variant) e.variant = t.variant;
+          else delete e.variant;
+        }
         if (t.tag) e.tag = t.tag;
         if (t.props) e.props = t.props;
         let prefer = null;
@@ -160,6 +168,26 @@
       def.stairs = { [floor.stairsTag]: { to: plan.floors[floor.n].id, until: L ? [L.flag] : undefined, locked: floor.stairsLocked, dir, go: (dir === 'up' ? 'Up to' : 'Down to') + ' {name}' } };
     }
     if (floor.intro) def.intro = floor.intro;
+    // what to do next (engine objectives, SPEC 6.21): the stairs card, the way on, and on the last floor the goal
+    const objectives = [];
+    const tileOf = (k) => k.split(',').map(Number);
+    if (floor.n < nF && floor.exitAt) {
+      const L = plan.locks.find((l) => l.floor === floor.n && l.stairs);
+      const dir = G.typeOf(lib, plan.brief.type).vertical || 'down';
+      if (L && L.keyAt && (L.keyKind === 'card' || L.keyKind === 'badge')) {
+        const name = L.keyKind === 'card' ? ((S.tierInfo || {})[L.tier] || {}).name || 'access card' : 'ID badge';
+        objectives.push({ id: 'key', text: 'Find the ' + name + ' for the stairs (or hack their panel)', done: [L.flag, L.hackFlag].filter(Boolean), target: { tile: tileOf(L.keyAt) } });
+      }
+      objectives.push({ id: 'way', text: 'Find the stairs ' + dir + ' to floor ' + (floor.n + 1), target: { tile: floor.exitAt.slice() } });
+    }
+    if (floor.n === nF && plan.doneFlag) {
+      const gk = Object.keys(floor.objs).find((k) => floor.objs[k].goal);
+      const g = plan.concept.goal || {};
+      const text = { recover: 'Recover ' + (g.target || 'what you came for'), 'shut-down': 'Shut the place down', 'reach-vault': 'Reach the vault', kill: 'Put down ' + ((plan.concept.boss || {}).name || 'whatever runs this place') }[g.kind] || 'Finish what you came for';
+      if (gk) objectives.push({ id: 'goal', text, done: plan.doneFlag, target: { tile: tileOf(gk) } });
+    }
+    if (objectives.length) def.objectives = objectives;
+    if (floor.below) def.below = G.clone(floor.below);
     if (look.nextGen) {
       def.nextGen = G.clone(look.nextGen);
       if (def.nextGen.ceiling) def.nextGen.ceiling.seed = (G.hashStr(plan.slug + floor.n) % 90) + 10;

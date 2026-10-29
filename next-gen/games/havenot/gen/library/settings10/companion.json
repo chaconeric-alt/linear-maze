@@ -1,0 +1,1558 @@
+{
+  "$comment": "Implementation details for HaveNot_10_Settings_Library.json (the source stays untouched). tools/import-content.mjs reads both and writes gen/library/settings10.js. Rules are tried in order; the first whose regex matches the (lower-case) name wins. Per-record overrides go in 'overrides', keyed by the source id or, for furniture objects, by the object name.",
+  "format": "havenot-settings-library-1",
+  "type_settings": {
+    "$comment": "Which settings each generator installation type leans to: [dominant candidates], the dominant is picked by weight.",
+    "wonder-office": {
+      "SET_COR": 3,
+      "SET_MAL": 1,
+      "SET_PAL": 1
+    },
+    "war-lab": {
+      "SET_WAR": 2,
+      "SET_BIO": 2,
+      "SET_MED": 1
+    },
+    "war-bunker": {
+      "SET_WAR": 3,
+      "SET_PRI": 1,
+      "SET_COR": 1
+    },
+    "bolt-hole": {
+      "SET_PRI": 2,
+      "SET_WAR": 1,
+      "SET_IND": 1
+    },
+    "tomb": {
+      "SET_FUN": 3,
+      "SET_TEM": 2,
+      "SET_PAL": 1
+    },
+    "toxin-plant": {
+      "SET_IND": 3,
+      "SET_BIO": 2
+    },
+    "civil-mall": {
+      "SET_MAL": 3,
+      "SET_TEM": 1,
+      "SET_FUN": 1
+    }
+  },
+  "setting_modes": {
+    "single": 35,
+    "dominant-secondary": 30,
+    "per-floor": 15,
+    "mixed": 13,
+    "chaotic": 7
+  },
+  "palettes": {
+    "$comment": "Colours a setting's furniture, lights and dressing are drawn in: base (bodies), dark, trim (metal or gilt), accent (glow), cloth.",
+    "SET_PAL": {
+      "base": "#5a3a24",
+      "dark": "#2a1a10",
+      "trim": "#d8b048",
+      "accent": "#ffd87a",
+      "cloth": "#7a1a2a"
+    },
+    "SET_MED": {
+      "base": "#d8dde0",
+      "dark": "#7a8890",
+      "trim": "#a8b8c0",
+      "accent": "#7ad8ff",
+      "cloth": "#e8f0f4"
+    },
+    "SET_COR": {
+      "base": "#4a4e56",
+      "dark": "#22252a",
+      "trim": "#7a5038",
+      "accent": "#ff4a3a",
+      "cloth": "#3a4a6a"
+    },
+    "SET_TEM": {
+      "base": "#c89aa0",
+      "dark": "#5a3a40",
+      "trim": "#c8a050",
+      "accent": "#ffb8ff",
+      "cloth": "#8a2a6a"
+    },
+    "SET_WAR": {
+      "base": "#5a5e52",
+      "dark": "#2a2c26",
+      "trim": "#e8c030",
+      "accent": "#ff5a2a",
+      "cloth": "#4a5030"
+    },
+    "SET_BIO": {
+      "base": "#a8c8a0",
+      "dark": "#3a5a40",
+      "trim": "#c0d0c8",
+      "accent": "#9aff6a",
+      "cloth": "#d8e8d0"
+    },
+    "SET_MAL": {
+      "base": "#c8c8d8",
+      "dark": "#4a4a5a",
+      "trim": "#e0e0f0",
+      "accent": "#ff4ad8",
+      "cloth": "#2ac8e0"
+    },
+    "SET_PRI": {
+      "base": "#7a7a74",
+      "dark": "#3a3a36",
+      "trim": "#9a8a5a",
+      "accent": "#ffe08a",
+      "cloth": "#c86a2a"
+    },
+    "SET_IND": {
+      "base": "#6a5a44",
+      "dark": "#2e2820",
+      "trim": "#c8a030",
+      "accent": "#ffa03a",
+      "cloth": "#5a4a30"
+    },
+    "SET_FUN": {
+      "base": "#3a2a40",
+      "dark": "#141018",
+      "trim": "#a8a0c0",
+      "accent": "#b07aff",
+      "cloth": "#4a1a3a"
+    }
+  },
+  "materials": {
+    "$comment": "Floor and wall painters (packs/hn-gen-kit/materials.js). [regex, style, colours]. Every floor and wall tile needs a match.",
+    "floor": [
+      [
+        "black-veined ivory marble",
+        "marble",
+        [
+          "#e8e0d0",
+          "#d8cebc",
+          "#2a2420"
+        ]
+      ],
+      [
+        "black marble",
+        "marble",
+        [
+          "#1e1c22",
+          "#2a2830",
+          "#a8a0b8"
+        ]
+      ],
+      [
+        "rose marble",
+        "marble",
+        [
+          "#d8a8a8",
+          "#c89898",
+          "#7a4a50"
+        ]
+      ],
+      [
+        "reflective obsidian",
+        "obsidian",
+        [
+          "#14121a",
+          "#24202e",
+          "#6a5a8a"
+        ]
+      ],
+      [
+        "gilt geometric mosaic",
+        "mosaic",
+        [
+          "#c8a040",
+          "#5a3a20",
+          "#e8d080",
+          "#2a1a10"
+        ]
+      ],
+      [
+        "advertising mosaic",
+        "mosaic",
+        [
+          "#ff4ad8",
+          "#2ac8e0",
+          "#e8e040",
+          "#2a2a3a"
+        ]
+      ],
+      [
+        "mosaic logos",
+        "mosaic",
+        [
+          "#c8a0a8",
+          "#8a2a6a",
+          "#e8c870",
+          "#5a3a40"
+        ]
+      ],
+      [
+        "polished brass inlays",
+        "inlay",
+        [
+          "#c89aa0",
+          "#c8a050",
+          "#5a3a40"
+        ]
+      ],
+      [
+        "color-shift terrazzo",
+        "terrazzo",
+        [
+          "#c8c0d8",
+          "#ff7ad8",
+          "#5ae0ff",
+          "#e8e070"
+        ]
+      ],
+      [
+        "armored terrazzo",
+        "terrazzo",
+        [
+          "#7a7a80",
+          "#4a4a52",
+          "#a8a8b0",
+          "#2a2a30"
+        ]
+      ],
+      [
+        "polished executive stone",
+        "stone",
+        [
+          "#5a5450",
+          "#6a645e",
+          "#3a3430"
+        ]
+      ],
+      [
+        "gray carpet tile",
+        "carpet",
+        [
+          "#5a5e66",
+          "#4e525a",
+          "#6a6e76"
+        ]
+      ],
+      [
+        "mirrored ceramic",
+        "ceramic",
+        [
+          "#d8e0e8",
+          "#b8c4d0",
+          "#f0f4f8"
+        ]
+      ],
+      [
+        "violet ceramic",
+        "ceramic",
+        [
+          "#5a3a6a",
+          "#4a2e5a",
+          "#7a5a8a"
+        ]
+      ],
+      [
+        "scorched test ceramic",
+        "ceramic",
+        [
+          "#6a645a",
+          "#3a362e",
+          "#1a1814"
+        ]
+      ],
+      [
+        "chipped institutional tile",
+        "tile",
+        [
+          "#a8a89a",
+          "#8a8a7c",
+          "#5a5a50"
+        ]
+      ],
+      [
+        "seamless porcelain",
+        "porcelain",
+        [
+          "#eef2f4",
+          "#dde4e8",
+          "#c8d4dc"
+        ]
+      ],
+      [
+        "soft white elastomer",
+        "elastomer",
+        [
+          "#e8ecee",
+          "#d4dadc",
+          "#b8c4c8"
+        ]
+      ],
+      [
+        "surgical glass",
+        "glassfloor",
+        [
+          "#a8d8e8",
+          "#7ab8d0",
+          "#e8f8ff"
+        ]
+      ],
+      [
+        "pale green resin",
+        "resin",
+        [
+          "#a8c8a0",
+          "#98b890",
+          "#c8e0c0"
+        ]
+      ],
+      [
+        "bioactive hex panels",
+        "hex",
+        [
+          "#5a8a5a",
+          "#3a6a40",
+          "#9aff6a"
+        ]
+      ],
+      [
+        "diamond-plate steel",
+        "plate",
+        [
+          "#6a6e70",
+          "#585c5e",
+          "#8a8e90"
+        ]
+      ],
+      [
+        "steel tread grates",
+        "grate",
+        [
+          "#5a5e60",
+          "#2a2c2e",
+          "#7a7e80"
+        ]
+      ],
+      [
+        "ribbed steel grating",
+        "grate",
+        [
+          "#6a5e4a",
+          "#2a241a",
+          "#8a7a5a"
+        ]
+      ],
+      [
+        "drain grates",
+        "drain",
+        [
+          "#a8b8a8",
+          "#3a4a3a",
+          "#2a3a2a"
+        ]
+      ],
+      [
+        "drainage channels",
+        "drain",
+        [
+          "#7a7468",
+          "#3a362e",
+          "#2a3a3a"
+        ]
+      ],
+      [
+        "shockproof concrete",
+        "concrete",
+        [
+          "#7a7a74",
+          "#6a6a64",
+          "#e8c030"
+        ]
+      ],
+      [
+        "sludge-proof concrete",
+        "concrete",
+        [
+          "#6a6658",
+          "#5a5648",
+          "#4a5a3a"
+        ]
+      ],
+      [
+        "rough concrete",
+        "concrete",
+        [
+          "#7a7a72",
+          "#6a6a62",
+          "#5a5a52"
+        ]
+      ]
+    ],
+    "wall": [
+      [
+        "lacquered walnut",
+        "panel",
+        [
+          "#4a2a18",
+          "#6a3e22",
+          "#d8b048"
+        ]
+      ],
+      [
+        "gold leaf",
+        "gilt",
+        [
+          "#c8a040",
+          "#a8802a",
+          "#ffe08a"
+        ]
+      ],
+      [
+        "animated ancestral portraits",
+        "portraits",
+        [
+          "#4a2a18",
+          "#d8b048",
+          "#8a6a4a"
+        ]
+      ],
+      [
+        "translucent white partition",
+        "partition",
+        [
+          "#e8eef0",
+          "#c8d4d8",
+          "#ffffff"
+        ]
+      ],
+      [
+        "chromium instrument rail",
+        "rails",
+        [
+          "#c8d0d4",
+          "#8a9498",
+          "#ffffff"
+        ]
+      ],
+      [
+        "bulletproof glass",
+        "glasswall",
+        [
+          "#7a9aa8",
+          "#4a6a78",
+          "#c8e8f0"
+        ]
+      ],
+      [
+        "mahogany veneer",
+        "panel",
+        [
+          "#5a2a1a",
+          "#7a3a24",
+          "#c89a6a"
+        ]
+      ],
+      [
+        "armored bulkhead",
+        "bulkhead",
+        [
+          "#5a5e62",
+          "#3a3e42",
+          "#8a8e92"
+        ]
+      ],
+      [
+        "stained-glass ad panel",
+        "stainedglass",
+        [
+          "#5a3a40",
+          "#ff7ad8",
+          "#7ad8ff",
+          "#ffe07a"
+        ]
+      ],
+      [
+        "carved stone",
+        "carved",
+        [
+          "#b8a898",
+          "#8a7a6a",
+          "#d8c8b8"
+        ]
+      ],
+      [
+        "responsive icon screen",
+        "screens",
+        [
+          "#3a2a30",
+          "#ffb8ff",
+          "#c8a050"
+        ]
+      ],
+      [
+        "layered armor",
+        "bulkhead",
+        [
+          "#4e5248",
+          "#2e322a",
+          "#7a7e6a"
+        ]
+      ],
+      [
+        "blast shutter",
+        "shutter",
+        [
+          "#5a5a52",
+          "#3a3a34",
+          "#e8c030"
+        ]
+      ],
+      [
+        "hazard-stripe composite",
+        "hazard",
+        [
+          "#3a3a36",
+          "#e8c030",
+          "#1a1a18"
+        ]
+      ],
+      [
+        "curved translucent membrane",
+        "membrane",
+        [
+          "#a8d8b0",
+          "#7ab890",
+          "#d8ffe0"
+        ]
+      ],
+      [
+        "stainless medwall",
+        "steel",
+        [
+          "#b8c0c4",
+          "#8a9498",
+          "#dde4e8"
+        ]
+      ],
+      [
+        "living tissue tile",
+        "tissue",
+        [
+          "#c88a8a",
+          "#a85a6a",
+          "#e8b0b0"
+        ]
+      ],
+      [
+        "glass display front",
+        "glasswall",
+        [
+          "#8ab8d0",
+          "#5a7a90",
+          "#e8f8ff"
+        ]
+      ],
+      [
+        "smart billboard",
+        "screens",
+        [
+          "#2a2a3a",
+          "#ff4ad8",
+          "#2ac8e0"
+        ]
+      ],
+      [
+        "chrome shutter",
+        "shutter",
+        [
+          "#c8ccd4",
+          "#8a8e96",
+          "#ffffff"
+        ]
+      ],
+      [
+        "concrete cell wall",
+        "concretewall",
+        [
+          "#7a7a72",
+          "#5a5a52",
+          "#9a9a90"
+        ]
+      ],
+      [
+        "surveillance glass",
+        "glasswall",
+        [
+          "#5a7a7a",
+          "#3a5050",
+          "#a8d0d0"
+        ]
+      ],
+      [
+        "riveted gate",
+        "riveted",
+        [
+          "#5a5a58",
+          "#3a3a38",
+          "#9a8a5a"
+        ]
+      ],
+      [
+        "oil-streaked panel",
+        "streaked",
+        [
+          "#5a5448",
+          "#2a2620",
+          "#3a3020"
+        ]
+      ],
+      [
+        "enormous pipe",
+        "pipes",
+        [
+          "#6a5a44",
+          "#3a3020",
+          "#c8a030"
+        ]
+      ],
+      [
+        "furnace brick",
+        "brick",
+        [
+          "#7a3a24",
+          "#5a2a18",
+          "#ffa03a"
+        ]
+      ],
+      [
+        "velvet drape",
+        "drapes",
+        [
+          "#4a1a3a",
+          "#2a0e20",
+          "#a8a0c0"
+        ]
+      ],
+      [
+        "mausoleum stone",
+        "carved",
+        [
+          "#5a5460",
+          "#3a3440",
+          "#8a84a0"
+        ]
+      ],
+      [
+        "holographic memorial screen",
+        "screens",
+        [
+          "#1a1420",
+          "#b07aff",
+          "#a8a0c0"
+        ]
+      ]
+    ],
+    "light": [
+      [
+        "crystal chandelier",
+        "chandelier",
+        "#ffe8b0",
+        150
+      ],
+      [
+        "candle drone",
+        "candles",
+        "#ffc070",
+        90
+      ],
+      [
+        "shadowless procedure lamp",
+        "procedure",
+        "#f0f8ff",
+        160
+      ],
+      [
+        "therapeutic blue strip",
+        "strip",
+        "#7ab8ff",
+        110
+      ],
+      [
+        "recessed fluorescent",
+        "panel",
+        "#e8f0f0",
+        130
+      ],
+      [
+        "emergency red strip",
+        "strip",
+        "#ff3a2a",
+        100
+      ],
+      [
+        "halo projector",
+        "halo",
+        "#ffd8ff",
+        120
+      ],
+      [
+        "votive drone",
+        "candles",
+        "#ffb8a0",
+        90
+      ],
+      [
+        "cold utility strip",
+        "strip",
+        "#c8e8ff",
+        120
+      ],
+      [
+        "evacuation lamp",
+        "beacon",
+        "#ff6a2a",
+        110
+      ],
+      [
+        "growth lamp",
+        "panel",
+        "#c8ff9a",
+        120
+      ],
+      [
+        "nutrient-light vein",
+        "veins",
+        "#9aff6a",
+        100
+      ],
+      [
+        "sign box",
+        "signbox",
+        "#ff7ad8",
+        110
+      ],
+      [
+        "neon halo strip",
+        "strip",
+        "#2ae0ff",
+        120
+      ],
+      [
+        "hard caged bulb",
+        "bulb",
+        "#ffe8a0",
+        100
+      ],
+      [
+        "interrogation spot",
+        "spot",
+        "#ffffff",
+        120
+      ],
+      [
+        "sodium lamp",
+        "bulb",
+        "#ffb050",
+        130
+      ],
+      [
+        "service strobe",
+        "beacon",
+        "#ffd060",
+        100
+      ],
+      [
+        "ghostlight projector",
+        "halo",
+        "#c8b0ff",
+        110
+      ],
+      [
+        "funereal candle spot",
+        "candles",
+        "#ffc890",
+        90
+      ]
+    ]
+  },
+  "archetypes": {
+    "$comment": "Furniture object families (packs/hn-gen-kit/furniture.js draws each). [regex, family, [w, h] in tiles, place]. place: wall-row | center | middle | any | corner | wall (wall-mounted). Order matters: specific first.",
+    "rules": [
+      [
+        "one-way glass|witness glass|blackout glass|observation glass",
+        "window",
+        [
+          2,
+          1
+        ],
+        "wall"
+      ],
+      [
+        "trapfloor|trench|pits?\\b|crawl|anchor point|drain grate|floor anchor",
+        "hatch",
+        [
+          2,
+          2
+        ],
+        "middle"
+      ],
+      [
+        "neural couch",
+        "bed",
+        [
+          1,
+          2
+        ],
+        "wall-row"
+      ],
+      [
+        "kinetic sculpture|trophies",
+        "statue",
+        [
+          1,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "sealed suite|sealed chamber|hermetic|decon bay|patient bay|sealed concrete cubicle|privacy shell|recharge alcove|escape sled",
+        "pod",
+        [
+          1,
+          2
+        ],
+        "wall-row"
+      ],
+      [
+        "dishes|champagne|cart|trolley|carts",
+        "table",
+        [
+          2,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "dresser|robes|towels|blankets|wardrobe",
+        "locker",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "scented tap|luxury fixture",
+        "washroom",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "painting|icons|backdrop|projection|voice extract|death timer|remote shutter|electronic index|holoarena",
+        "screen",
+        [
+          2,
+          1
+        ],
+        "wall"
+      ],
+      [
+        "memory tag|rank seal|plea slot|prayer clock|temporal clock|printed prayer|redacted manual|weighing log|sample catalog|paper roll",
+        "sign",
+        [
+          1,
+          1
+        ],
+        "wall"
+      ],
+      [
+        "barricade|movable cover|obstacle|queue|central watch point|accused dock|aisles|trial lane|equipment wall|training equipment",
+        "rail",
+        [
+          3,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "restraint|cuffs|chains",
+        "cage",
+        [
+          2,
+          2
+        ],
+        "wall-row"
+      ],
+      [
+        "\\bais\\b|radio|listening|legal ai|hood|separator|feeder|detector|sensor|speaker|microphone|clerk|concierge|reclaim unit|barcode station|instrument|test rig|play pit",
+        "console",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "physician stand",
+        "dais",
+        [
+          3,
+          2
+        ],
+        "center"
+      ],
+      [
+        "gilded organ|speaking pantry|locked files|sample linings|climate seals",
+        "cabinet",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "gantries|gantry|radiator",
+        "pipes",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "washer",
+        "drum",
+        [
+          1,
+          1
+        ],
+        "corner"
+      ],
+      [
+        "rakes|hair matrices",
+        "tools",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "grasping|dark crawlspace",
+        "plant",
+        [
+          1,
+          1
+        ],
+        "any"
+      ],
+      [
+        "throne|porcelain throne",
+        "throne",
+        [
+          2,
+          2
+        ],
+        "center"
+      ],
+      [
+        "dais|stage|podium stage|platform|launch cradle",
+        "dais",
+        [
+          3,
+          2
+        ],
+        "center"
+      ],
+      [
+        "altar",
+        "altar",
+        [
+          2,
+          1
+        ],
+        "center"
+      ],
+      [
+        "sarcophag|coffin|casket",
+        "coffin",
+        [
+          1,
+          2
+        ],
+        "middle"
+      ],
+      [
+        "statue|bust|idol|portrait kiosk|guard statue",
+        "statue",
+        [
+          1,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "mannequin|automaton|kneeling",
+        "mannequin",
+        [
+          1,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "chandelier",
+        "chandelier",
+        [
+          1,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "tree|willow|plant|floral|garden|stream|root",
+        "plant",
+        [
+          1,
+          1
+        ],
+        "any"
+      ],
+      [
+        "fountain",
+        "fountain",
+        [
+          2,
+          2
+        ],
+        "center"
+      ],
+      [
+        "bath|font|pool|immersion|steam room",
+        "bath",
+        [
+          2,
+          2
+        ],
+        "center"
+      ],
+      [
+        "shower|washstand|lavatory|privy|toilet|hygiene cubicle|stall",
+        "washroom",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "bed|bunk|cot|crib|bassinet|recliner bed|couch(?!es)|sleep|mattress",
+        "bed",
+        [
+          1,
+          2
+        ],
+        "wall-row"
+      ],
+      [
+        "pod|capsule|chamber pod|life-support|incubator|revival",
+        "pod",
+        [
+          1,
+          2
+        ],
+        "wall-row"
+      ],
+      [
+        "vat|tank|cryo|growth|digest|fermentation|reservoir|cooler|hopper",
+        "vat",
+        [
+          1,
+          1
+        ],
+        "any"
+      ],
+      [
+        "drum|barrel|bin|tub|canister",
+        "drum",
+        [
+          1,
+          1
+        ],
+        "corner"
+      ],
+      [
+        "crate|carton|box|parcel|pack|cargo|chest",
+        "crate",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "cage|cell|pen|bars|barred|kennel|enclosure",
+        "cage",
+        [
+          2,
+          2
+        ],
+        "wall-row"
+      ],
+      [
+        "conveyor|belt|track|chute|line|tray conveyor|sorter|sorting",
+        "conveyor",
+        [
+          3,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "furnace|incinerator|oven|kiln|boiler|cremation",
+        "furnace",
+        [
+          2,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "turbine|generator|reactor|power core|axle",
+        "turbine",
+        [
+          2,
+          2
+        ],
+        "center"
+      ],
+      [
+        "crane|gantry|claw|manipulator|robotic arm|surgical arm|arm\\b|arms\\b|scalpel rail|med arm",
+        "arm",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "press|compactor|ram|jaws|crusher|grinder|shredder",
+        "press",
+        [
+          2,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "pipe|valve|pump|jet|nozzle|duct|vent|plumbing|sluice|fans",
+        "pipes",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "cannon|turret|gun|weapon rack|weapon peg|rifle|lanes",
+        "weapon",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "drone|robot|bot\\b|waiter|archivist|loader|disassembler|singer",
+        "drone",
+        [
+          1,
+          1
+        ],
+        "any"
+      ],
+      [
+        "arch|gate|barrier|turnstile|scanner arch|airlock|doorway|door",
+        "arch",
+        [
+          2,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "mirror",
+        "mirror",
+        [
+          1,
+          1
+        ],
+        "wall"
+      ],
+      [
+        "screen|monitor|display|board|ticker|wall\\b|projector|hologrid|hologram|holograph|camera|lens array|lens wall|tele|ad panel",
+        "screen",
+        [
+          2,
+          1
+        ],
+        "wall"
+      ],
+      [
+        "sign|banner|poster|logo|slogan|certificate|credential wall|sponsorship",
+        "sign",
+        [
+          1,
+          1
+        ],
+        "wall"
+      ],
+      [
+        "kiosk|terminal|console|switchboard|controls|panel|dashboard|keypad|scanner|synthesizer|dispenser|vending|recorder|printer|computer|decoder|calculator|engine|mixer|sterilizer|ventilator|loom|machine",
+        "console",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "rack|shelf|shelves|shelving|carousel|stacking|pegs|hooks|niches",
+        "shelf",
+        [
+          2,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "locker|wardrobe|closet",
+        "locker",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "cabinet|drawer|safe|vault|filing|archive|ledger|hardcopy|vitrine|showcase|case|reliquary|plinth|pedestal|pillar",
+        "cabinet",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "desk|counter|bar\\b|reception|booth|checkout|register|slab",
+        "desk",
+        [
+          2,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "table|bench(?!es)|workbench|tray",
+        "table",
+        [
+          2,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "pew|benches|kneeler|seating|stools|seats|sofa|sofas|lounge",
+        "pews",
+        [
+          3,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "chair|seat|stool|armchair|recliner",
+        "chair",
+        [
+          1,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "rail|stanchion|railing|rope|fence|mesh|bridge|walk",
+        "rail",
+        [
+          3,
+          1
+        ],
+        "middle"
+      ],
+      [
+        "lamp|light|candle|halo",
+        "lamp",
+        [
+          1,
+          1
+        ],
+        "corner"
+      ],
+      [
+        "tower|antenna|ladder|elevator|lift|ramp|scale",
+        "tower",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ],
+      [
+        "tool|engraver|cutter|stitcher|clamp|printer head|jewel|kit",
+        "tools",
+        [
+          1,
+          1
+        ],
+        "wall-row"
+      ]
+    ],
+    "fallback": "machine"
+  },
+  "clusters": {
+    "$comment": "The JSON has no cluster field. A room's cluster is the first rule whose regex matches its name + function; the same cluster in another setting counts as 'same cluster' too (a hospital ward next to a prison medical ward).",
+    "rules": [
+      [
+        "medical|surgical|operating|anesthesia|recovery|intensive|pharmacy|triage|clinic|ward|morgue|mortuary|embalm|isolation|quarantine|organ|graft|reconstruction|gestation|womb|biohazard|sterili",
+        "medical"
+      ],
+      [
+        "command|war room|control|surveillance|security|checkpoint|signal|communication|briefing|situation|observation|supervisor|monitor",
+        "command"
+      ],
+      [
+        "quarters|bedchamber|dormitory|barracks|bunk|apartment|suite|shelter|refuge|lounge|break|dressing|locker|shower|bath|privy|washroom|restroom",
+        "living"
+      ],
+      [
+        "kitchen|banquet|dining|mess|food|catering|bar\\b|wine|refreshment|coffee|ration",
+        "food"
+      ],
+      [
+        "chapel|nave|altar|shrine|confession|baptism|worship|reliquary|choir|votive|sacred|pilgrim|doctrine|processional|absolution|heaven|mausoleum|crypt|reflection garden|funeral|farewell|memorial|grief|mourner",
+        "ceremony"
+      ],
+      [
+        "throne|audience|reception|foyer|atrium|lobby|arrival|intake|admissions|antechamber|hall\\b",
+        "reception"
+      ],
+      [
+        "shop|store|boutique|emporium|outlet|salon|showroom|gift|merchandis|auction|arcade|retail|market|checkout|anchor",
+        "commerce"
+      ],
+      [
+        "vault|treasury|archive|records|storage|stockroom|warehouse|property|counting|payroll|safe|cold storage",
+        "storage"
+      ],
+      [
+        "lab|laboratory|research|testing|test|editing|design|evolution|calibration|ballistic|weapon|armory|simulation|arena|showcase|demonstration",
+        "research"
+      ],
+      [
+        "workshop|sorting|separation|reclamation|reformer|dismantling|furnace|hydraulic|turbine|compactor|conveyor|loading|digester|processing|recycling|laundry|production|weighbridge|maintenance|elevator|kennel|brewing|nutrient",
+        "industry"
+      ],
+      [
+        "cell|solitary|interrogation|court|tribunal|execution|holding|prisoner|torture|disciplinary|sentence|compliance|confiscation|yard",
+        "detention"
+      ],
+      [
+        "office|boardroom|conference|cubicle|ledger|legal|estate|clerk|computation|server|mailroom|studio|ceremonies|dispatch",
+        "office"
+      ],
+      [
+        "passage|tunnel|exit|drain|crawl|corridor|escape",
+        "passage"
+      ],
+      [
+        "theater|theatre|stage|gallery|auditorium|hall of|awards|garden|arboretum|nursery|play",
+        "display"
+      ]
+    ],
+    "fallback": "general"
+  },
+  "sizes": {
+    "$comment": "size_class against a room's floor cells (walls not counted): a room fits a class when its cells are in [min, max].",
+    "small": [
+      12,
+      60
+    ],
+    "medium": [
+      30,
+      130
+    ],
+    "large": [
+      70,
+      400
+    ]
+  },
+  "hazards": {
+    "$comment": "Hazard behaviours (packs/hn-gen-kit/hazards.js). [regex, behaviour]. Damage comes from the generator's trap damage row for the floor's Threat Level: moderate = medium, severe = high.",
+    "rules": [
+      [
+        "light and sound|runaway",
+        "shock"
+      ],
+      [
+        "self-closing|grasping",
+        "seal"
+      ],
+      [
+        "incubator|dispenser|synthesizer|decontamination|health compliance",
+        "gas"
+      ],
+      [
+        "strategic defense",
+        "turret"
+      ],
+      [
+        "liquidation|mass rejection|rupture",
+        "crush"
+      ],
+      [
+        "turret|sniper|gun\\b|volley|retaliation|sentry|sentinel",
+        "turret"
+      ],
+      [
+        "drone|robot|bot\\b|automaton|mannequin|seller|uprising|predator|rejects|organ|guardian|patrol|watcher|collector|waiter|decoy",
+        "ambush"
+      ],
+      [
+        "laser|beam|ray\\b|cutting|bolts",
+        "beam"
+      ],
+      [
+        "shock|electr|lightning|nerve|stun|resonance|psychic|pulse|scanner|electrochair",
+        "shock"
+      ],
+      [
+        "gas|aerosol|mist|fog|vapor|spores|spray|poison|toxin|toxic|sedative|anesthetic|injector|injection|parasite|disease|supplement|mutation|metamorphosis|growth|graft|adhesion|meal",
+        "gas"
+      ],
+      [
+        "crush|press|compactor|collapse|ram\\b|crash|rack|falling|axle|grinder|load spike|impalement|arm\\b|collision|conveyor|entrapment|acceleration|gravity|lift",
+        "crush"
+      ],
+      [
+        "furnace|steam|scald|boiling|heat|flashback|ignition|fire|incinerat|startup",
+        "heat"
+      ],
+      [
+        "flood|acid|corrosive|slurry|backflow|overflow|leak|spill|radiation|biofoam|slag|cryogenic|polymer",
+        "flood"
+      ],
+      [
+        "seal|lock|stasis|restraint|cage|capture|quarantine|trap\\b|shutters|gate|snaps|purge|denial|oxygen|pressure|exclusion|exit only",
+        "seal"
+      ],
+      [
+        "trance|hypnotic|induction|sorrow|euphoria|loop|overload|guilt|broadcast|alarm|analytics|scan|feedback|copy|overwrite|swap|makeover|projection|confiscation|charge|extraction|field|rewrite|penalty|punishment|challenge|test|drill|verdict|conviction|override|dance|applaud|reenactment|real|operation|probe|edit|sequence|cycle|countdown|gamble|swap|error|detector|detection|recognition|kneeling|queue",
+        "mind"
+      ]
+    ],
+    "fallback": "mind"
+  },
+  "interactables": {
+    "$comment": "What a device does (packs/hn-gen-kit/devices.js). [regex on device + possible use, kind]. Each kind has its own state machine: heal, rest, credits, data, buff, salvage, machine (power on/off: drives the room's hazard), ceremony (sit, speak, pray: a gamble), cage (open, release), show (inspect, wake: animated displays).",
+    "rules": [
+      [
+        "throne|altar|dais|podium|stage|platform(?! lift)|kneel|pew|confess|chapel|worship|reliquary|stand\\b|podiums",
+        "ceremony"
+      ],
+      [
+        "cell|cage|pen\\b|pens\\b|barred|restraint|cuffs|chains|holding|kennel|pits?\\b",
+        "cage"
+      ],
+      [
+        "tank|vat|bin|tub|incinerator|furnace|turbine|crane|ram\\b|washer|press|belt|conveyor|elevator|lift|launch|cradle|fan|frame|loom|pump|mixer|sterilizer|steam|filter|digest|grinder|chute|pipe|door|lanes|reactor|generator",
+        "machine"
+      ],
+      [
+        "bed|bunk|couch|pod|capsule|recliner|cubicle|niche|suite|sofa|lounge|armchair",
+        "rest"
+      ],
+      [
+        "heal|medic|recovery|surg|treat|regenerat|life|revival|resuscitat|sympathy|pharmacy|medicine|triage|diagnos|bed|cot|bath|shower|spa|restor",
+        "heal"
+      ],
+      [
+        "payment|credit|payroll|donation|offering|tithe|wage|cash|purse|coin|auction|sale|sell|vending|dispens|refund",
+        "credits"
+      ],
+      [
+        "record|data|archive|ledger|file|terminal|console|screen|monitor|display|catalog|index|intercept|signal|camera|surveillance|roster|map|plan|projector|hologrid|broadcast|comm|radio",
+        "data"
+      ],
+      [
+        "food|meal|cuisine|kitchen|ration|wine|liquor|coffee|caffeine|drink|beverage|champagne|nutrient|feeding|chef|synthesizer",
+        "buff"
+      ],
+      [
+        "workshop|tool|bench|cutter|engrav|repair|dismantl|parts|recycl|sort|separat|salvage|scrap|press|furnace|weapon|armory|locker|cabinet|rack|crate",
+        "salvage"
+      ],
+      [
+        "table|desk|booth|counter|locker|cabinet|drawer|box|case|shelf|rack|peg|cover|obstacle|equipment",
+        "salvage"
+      ]
+    ],
+    "fallback": "show"
+  },
+  "loot": {
+    "$comment": "Loot names become satchel items (cat and base value in credits; the floor's Threat Level scales the value). [regex, cat, value].",
+    "rules": [
+      [
+        "key|keycard|credential|badge|token|pass|chit|tag|fob|ring|seal\\b|authorization|override|access",
+        "Access",
+        60
+      ],
+      [
+        "gem|jewel|gold|platinum|silver|crown|medal|medallion|tiara|ingot|alloy|brass|valve",
+        "Valuable",
+        120
+      ],
+      [
+        "data|chip|core|archive|record|file|recording|shard|module|crystal|spool|plan|map|schematic|notes|manifest|patent|template|algorithm",
+        "Data",
+        80
+      ],
+      [
+        "cell|battery|power|generator|rotor|motor|actuator|component|parts|lens|sensor|focusing|coupling|cartridge|filter|head",
+        "Component",
+        70
+      ],
+      [
+        "gel|dressing|ampoule|medic|serum|catalyst|concentrate|graft|organ|sample|specimen|genome|embryo|medkit|kit",
+        "Medical",
+        75
+      ],
+      [
+        "food|meal|pearl|ration|wine|liquor|flavor|caffeine|gourmet",
+        "Food",
+        25
+      ],
+      [
+        "weapon|firearm|projectile|ammunition|defense|turret|cartridge|beam|armor",
+        "Military",
+        90
+      ]
+    ],
+    "fallback": [
+      "Salvage",
+      40
+    ]
+  },
+  "overrides": {}
+}

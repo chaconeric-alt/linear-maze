@@ -29,7 +29,7 @@
         g.fillStyle = 'rgba(0,0,0,0.12)';
         for (let i = 0; i < 4; i++) g.fillRect(x, y + 3 + i * (h / 4) + r() * 2, T, 0.6);
         // book tops along every side that faces open floor
-        const open = (dx, dy) => !info.n(dx, dy).tall;
+        const open = (dx, dy) => !info.n(dx, dy).tall && !info.n(dx, dy).curve;
         const books = p.books || BOOKS;
         const strip = (horizontal, sx, sy, len) => {
           let k = 0;

@@ -80,6 +80,9 @@ kbd {
 .status-chip { position: relative; padding: 3px 8px 4px; border: 1px solid var(--sc, var(--line)); background: rgba(255, 255, 255, 0.04);
   font: 600 10px/1.2 var(--font-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--sc, var(--bone)); overflow: hidden; }
 .status-chip i { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--sc, var(--brass)); }
+.status-chip .sc-clock { margin-left: 7px; font: 700 10px/1.2 var(--font-ui); letter-spacing: 0.04em; }
+.status-chip.urgent { animation: chipUrgent 0.9s ease-in-out infinite; }
+@keyframes chipUrgent { 0%, 100% { background: rgba(255, 255, 255, 0.04); } 50% { background: color-mix(in srgb, var(--sc, #ff4a3a) 30%, transparent); } }
 /* named boss bars across the top (an enemy with bossBar, while it fights) */
 #boss-bars { position: absolute; left: 50%; top: calc(var(--gap) + 2px + env(safe-area-inset-top, 0px)); transform: translateX(-50%);
   width: clamp(220px, calc(100vw - 600px), 520px); display: grid; gap: 8px; }
@@ -201,6 +204,16 @@ kbd {
 .hint { color: var(--muted); font-size: 12px; }
 .lore { font: italic 400 17px/1.55 var(--font-lore); color: #d9d0bd; max-width: 60ch; }
 .lore-block { border-left: 1px solid var(--line); padding-left: 16px; }
+/* an ending, or the end of a chapter (game.ending): bad red, good gold, chapter the game's accent */
+.panel.ending { --tone: var(--brass); }
+.panel.ending.bad { --tone: #d9584c; }
+.panel.ending.good { --tone: #f0c45a; }
+.panel.ending::before { border-color: var(--tone); width: 34px; height: 34px; }
+.panel.ending::after { border-color: var(--tone); width: 34px; height: 34px; }
+.panel.ending .kicker { color: var(--tone); }
+.panel.ending h2 { font-size: 40px; }
+.ending-card .lore { margin-bottom: 14px; }
+.ending-card .lore:first-child { margin-top: 6px; }
 
 .btn {
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer;
@@ -447,6 +460,7 @@ kbd {
 <script src="engine/audio.js"></script>
 <script src="engine/level.js"></script>
 <script src="engine/physics.js"></script>
+<script src="engine/curves.js"></script>
 <script src="engine/render.js"></script>
 <script src="engine/nextgen.js"></script>
 <script src="engine/nextgen-ceiling.js"></script>
@@ -463,6 +477,7 @@ kbd {
 <script src="engine/elevators.js"></script>
 <script src="engine/ui.js"></script>
 <script src="engine/comms.js"></script>
+<script src="engine/objectives.js"></script>
 <script src="engine/game.js"></script>
 <script src="engine/manifest.js"></script>
 <!-- the game: loader.js reads games/<id>/game.js (from ?game=<id>, or the first in games/games.js),

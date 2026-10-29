@@ -109,7 +109,7 @@
   };
 
   const princess = {
-    name: 'Princess Eggbot', hnThreat: 3, hp: 620, field: 130, armor: 0.2, speed: 74, radius: 16, mass: 6, ai: 'hn-princess', keep: [140, 260], sight: 520, leash: 99999,
+    name: 'Princess Eggbot', hnThreat: 3, hp: 620, field: 130, armor: 0.2, speed: 74, radius: 22, mass: 9, drawRadius: 70, hitbox: { front: 6, back: 6, r: 24 }, ai: 'hn-princess', keep: [140, 260], sight: 520, leash: 99999,
     accel: 6, turn: 6, boss: true, robot: true, eggbot: true, tkBlock: 0.15, takes: { electric: 1.5, bleed: 0, toxic: 0, acid: 0.6 },
     color: '#ffb8e0', blood: '#ffe68a', gib: '#ffb8e0', deathSound: 'explode', deathGlow: '#ff7ac8',
     attacks: [
@@ -138,7 +138,7 @@
       HN.note(game, 'change', 'You destroyed Princess Eggbot in the Greasy Bolt Hole.');
     },
     draw(g, e, t) {
-      const s = 16, wob = Math.sin(e.t * 5) * 0.08;
+      const s = 22, wob = Math.sin(e.t * 5) * 0.08; // a big body (engine large monsters: radius, hitbox, drawRadius)
       const red = e.mem.mood === 'red';
       g.save();
       g.rotate(wob);
@@ -286,7 +286,8 @@
         const e = boss(game);
         if (!e || e.mem.awake || e.mem.heard) return;
         e.mem.heard = true;
-        AUDIENCE.forEach((t, i) => LM.comms.say({ who: 'hn-princess', text: t, flag: i === AUDIENCE.length - 1 ? 'hnPrincessSpoke' : undefined }));
+        // her audience is read in the middle of the screen, the game held (engine story lines, SPEC 6.16)
+        AUDIENCE.forEach((t, i) => LM.comms.say({ who: 'hn-princess', text: t, pause: true, flag: i === AUDIENCE.length - 1 ? 'hnPrincessSpoke' : undefined }));
       },
     },
   };
@@ -360,7 +361,10 @@
         if (U.dist(P.x, P.y, it.x, it.y) > 9 * T || LM.comms.busy()) { it.next = 2; return; }
         const enoch = it.props.lines === 'enoch';
         const lines = enoch ? ENOCH_LINES : PA;
-        LM.comms.say({ who: enoch ? 'hn-enoch' : 'hn-egg-pa', text: lines[it.line++ % lines.length], glitch: enoch && Math.random() < 0.2 });
+        // the first thing each speaker says is read in the middle of the screen; after that, the corner
+        const first = !it._spoke;
+        it._spoke = true;
+        LM.comms.say({ who: enoch ? 'hn-enoch' : 'hn-egg-pa', text: lines[it.line++ % lines.length], glitch: enoch && Math.random() < 0.2, pause: first ? true : undefined });
         it.next = U.rand(enoch ? 14 : 24, enoch ? 20 : 36);
         // the rest of the works hears it too
         for (const o of game.items) if (o !== it && o.def.id === 'hn-egg-pa') o.next = Math.max(o.next, 8);

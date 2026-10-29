@@ -395,6 +395,26 @@
       if (!l.length) delete d.power;
       else d.power = l.length === 1 ? l[0] : l;
     }), { mono: true, placeholder: 'always on' }), 'A story flag (or several, comma-separated: any of them). Until one is set the car is dark and its doors stay shut. Empty: it always runs.'));
+    // parked on this floor without power (and what it brings): the elevator's `parked`, for this floor
+    const pk = el.parked && el.parked[this.id];
+    const pkObj = pk && typeof pk === 'object' && !Array.isArray(pk) ? pk : null;
+    const pkFlag = pk ? [].concat(pkObj ? pkObj.flag || [] : pk).join(', ') : '';
+    const lvl = this.id;
+    box.appendChild(F().field('Parked here', F().text(pkFlag, typed('Park ' + LF.name(el), (d, v) => {
+      const l = String(v || '').split(',').map((x) => x.trim()).filter(Boolean);
+      const cur = d.parked && d.parked[lvl];
+      if (!l.length) {
+        if (d.parked) {
+          delete d.parked[lvl];
+          if (!Object.keys(d.parked).length) delete d.parked;
+        }
+        return;
+      }
+      const flag = l.length === 1 ? l[0] : l;
+      d.parked = d.parked || {};
+      d.parked[lvl] = cur && typeof cur === 'object' && !Array.isArray(cur) ? Object.assign({}, cur, { flag }) : flag;
+    }), { mono: true, placeholder: 'never' }), 'With no power, the car can still be sent to this floor and left here: once this story flag is set it waits here, lit, doors held open, its panel dead. If the flag is set while you’re on this floor, it comes up the shaft and rings first.' +
+      (pkObj && pkObj.cargo && [].concat(pkObj.cargo).length ? ' It brings: ' + [].concat(pkObj.cargo).map((c) => (c && c.item) || '?').join(', ') + ' (its cargo; see engine/SPEC.md 6.15).' : '')));
     // where it stops
     const order = M().levelOrder();
     const mode = LF.modeOf(el);

@@ -230,7 +230,9 @@
       if (doc.objs[i] && doc.objs[i]._unknown) out.push({ level: 'bad', text: 'Unknown object character “' + doc.objs[i]._unknown + '”', i });
     }
     if (start < 0) out.push({ level: 'bad', text: 'No start: paint the Entry stairs, or tick “Player starts here” on a tile.' });
-    if (!exits.length) out.push({ level: 'warn', text: 'No exit stairs. (Fine if the floor ends some other way, like the Chessboard’s report module.)' });
+    // a floor you leave by stairs of its own that go somewhere (the level's stairs: a `to`), or by an elevator, needs no exit
+    const leaves = lifts.size > 0 || Object.values(def.stairs || {}).some((st) => st && st.to);
+    if (!exits.length && !leaves) out.push({ level: 'warn', text: 'No exit stairs. (Fine if the floor ends some other way, like the Chessboard’s report module.)' });
     if (start >= 0) {
       // reachability, picking up keys on the way
       const keys = new Set();
@@ -311,7 +313,23 @@
       };
       if (dashed) out.push({ level: 'info', text: 'Getting around needs a dash over pits somewhere.' });
       if (exits.length && !exits.some(near)) out.push({ level: 'bad', text: 'The exit can’t be reached from the start' + (keys.size ? ' (even with the ' + [...keys].join(', ') + ' key)' : '') + '.', i: exits[0] });
-      const unreached = thingAt.filter(([i, t]) => !near(i) && !(t.kind === 'items' && ['wall-torch', 'dart-emitter', 'beam-emitter'].includes(t.id)));
+      // what doesn't need reaching: lights and emitters, pure decoration (nothing to use or pick up), things
+      // marked caged, and enemies on a side nobody fights (a specimen in its cell, a robot with no power)
+      const LMx = ED.engine.LM;
+      const skip = (t) => {
+        if (t.kind === 'items' && ['wall-torch', 'dart-emitter', 'beam-emitter'].includes(t.id)) return true;
+        // placed to be looked at, not reached (props.caged: behind glass, in a vault)
+        if (t.props && t.props.caged) return true;
+        const d = LMx.find(t.kind, t.id);
+        if (t.kind === 'items' && d && !d.interact && !d.onTouch && !d.destructible) return true;
+        if (t.kind === 'enemies' && LMx.factions) {
+          const f = (t.props && t.props.faction) || (d && d.faction);
+          const row = f && LMx.factions.base[f];
+          if (row && row.length === 0) return true;
+        }
+        return false;
+      };
+      const unreached = thingAt.filter(([i, t]) => !near(i) && !skip(t));
       const sealedDoors = [];
       for (let i = 0; i < W * H; i++) if (td(i).door && td(i).door.sealed) sealedDoors.push(i);
       if (unreached.length) out.push({ level: 'warn', text: ED.plural(unreached.length, 'thing') + ' can’t be reached on foot' + (sealedDoors.length ? ' (some may be behind doors opened by the story)' : '') + '.', i: unreached[0][0] });
@@ -1718,7 +1736,13 @@
         F().field('x, y, width, height', F().text((r.rect || []).join(', '), (v) => { const a = v.split(/[,\s]+/).map(Number); if (a.length === 4 && a.every((z) => !Number.isNaN(z))) set(Object.assign({}, r, { rect: a })); }, { mono: true })),
         F().field('Shape', F().select(r.shape, [[undefined, 'Square (as drawn)'], ['circle', 'Circle'], ['ellipse', 'Oval'], ['octagon', 'Octagon'], ['hexagon', 'Hexagon'], ['diamond', 'Diamond'], [{ type: 'rounded', radius: 1.5 }, 'Rounded corners']],
           (v) => { const n = Object.assign({}, r); if (v === undefined) delete n.shape; else n.shape = v; set(n); this.scheduleReload && this.scheduleReload(); }),
-          'Trims the room’s floor to this shape and stands curved walls round it. Corridors and doors on the rect’s edge stay open.')), {
+          'Trims the room’s floor to this shape and stands curved walls round it. Corridors and doors on the rect’s edge stay open.'),
+        // the minimap (engine/ui.js): a name on it, and being on it before the player has been there
+        F().field('Name on the minimap', F().text(r.mapLabel === true ? r.name : r.mapLabel, (v) => set(Object.assign({}, r, { mapLabel: v || undefined })), { emptyUndefined: true })),
+        F().field('On the minimap once (story flags, any one; or "always")', F().text(r.mapWhen === true ? 'always' : [].concat(r.mapWhen || []).join(', '), (v) => {
+          const l = String(v || '').split(/[,\s]+/).filter(Boolean);
+          set(Object.assign({}, r, { mapWhen: l.length === 1 && l[0] === 'always' ? true : l.length ? (l.length === 1 ? l[0] : l) : undefined }));
+        }, { mono: true, emptyUndefined: true }))), {
         onChange: (l) => { d.rooms = l; commit(); this.dirty = true; }, title: (r) => r.name + ' · ' + (r.rect || []).join(','), addLabel: 'Add a room (or drag one with the Room tool)', newItem: () => ({ name: 'New room', rect: [1, 1, 5, 5] }),
       }));
       sect('shapes', 'Round pillars and free shapes (' + (d.shapes || []).length + ')', () => h('div', null,
@@ -1726,10 +1750,47 @@
         F().json(d.shapes || [], (v) => { if (Array.isArray(v) && v.length) d.shapes = v; else delete d.shapes; commit(); this.dirty = true; this.scheduleReload && this.scheduleReload(); })));
       sect('traps', 'Traps and scripted events (' + (d.traps || []).length + ')', () => this.trapsEditor(d, commit));
       sect('nextgen', 'Next generation' + (d.nextGen && d.nextGen.enabled ? ' (on)' : ''), () => ED.ng.levelSection(d, () => { commit(); this.scheduleReload(); }, this));
+      sect('objectives', 'Objectives (' + (d.objectives || []).length + ')', () => this.objectivesEditor(d, commit));
       sect('lights', 'Ceiling lights', () => F().list(d.ceilingLights || [], (cl, n, set) => F().params({ variants: 'json', every: 'number', offset: 'json', color: 'color', radius: 'number', intensity: 'number', flicker: 'number', skip: 'number', tag: 'tag' }, cl, (v) => set(v)), {
         onChange: (l) => { if (l.length) d.ceilingLights = l; else delete d.ceilingLights; commit(); this.scheduleReload(); }, title: (cl) => 'every ' + (cl.every || 4) + ' tiles on floor ' + JSON.stringify(cl.variants || 'any'), addLabel: 'Add a grid of lights', newItem: () => ({ variants: [0], every: 4, offset: [2, 2], color: '#f2f5ff', radius: 180, intensity: 0.5 }),
       }));
+      // curved rooms (engine/curves.js): an ellipse fitted into a rectangle of the map, with a ring of recessed lights
+      sect('ovals', 'Curved rooms (' + (d.ovals || []).length + ')', () => F().list(d.ovals || [], (o, n, set) => F().params({ rect: 'json', wall: 'text', variant: 'number', lights: 'json' }, o, (v) => set(v)), {
+        onChange: (l) => { if (l.length) d.ovals = l; else delete d.ovals; commit(); this.scheduleReload(); },
+        title: (o) => 'oval at ' + (o.rect || []).join(', ') + (o.lights ? ' · ' + (o.lights.count || '') + ' lights' : ''),
+        addLabel: 'Add a curved room (x, y, width, height of its rectangle)',
+        newItem: () => ({ rect: [2, 2, 12, 8], lights: { count: 10, inset: 1.25, color: '#ffd9a0', cove: '#ffb060' } }),
+      }));
+      // the floor below, seen through tiles with seeBelow (glass floors, atriums)
+      sect('below', 'The floor below' + (d.below ? ': ' + d.below.level : ''), () => F().params({ level: 'id:levels', dx: 'number', dy: 'number', depth: 'number', dim: 'number', tint: 'text', rim: 'number', decals: 'json' }, d.below || {}, (v) => {
+        if (v && v.level) d.below = v;
+        else delete d.below;
+        commit();
+        this.scheduleReload();
+      }));
       sect('size', 'Map size', () => this.sizePanel());
+    }
+    /** The floor's objectives (engine/objectives.js): what the HUD tells the player to do next. */
+    objectivesEditor(d, commit) {
+      const flags = (v) => (v == null ? [] : [].concat(v));
+      const SPEC = { id: 'text', text: 'longtext', when: 'stringlist', any: 'stringlist', not: 'stringlist', done: 'stringlist', optional: 'bool', target: 'json', map: 'bool' };
+      const norm = (o) => Object.assign({}, o, { when: flags(o.when), any: flags(o.any), not: flags(o.not), done: flags(o.done) });
+      const clean = (o) => {
+        const c = Object.assign({}, o);
+        for (const k of ['when', 'any', 'not']) if (!c[k] || !c[k].length) delete c[k];
+        if (!c.optional) delete c.optional;
+        if (c.map !== false) delete c.map;
+        if (!c.target) delete c.target;
+        return c;
+      };
+      return h('div', null,
+        h('p', { class: 'hint' }, 'What the HUD tells the player to do next: the first one that’s showing and not done, with up to two optional ones under it. Story flags: when (all of them set before it shows), any (at least one), not (hidden while any is set), done (any one finishes it). Target: what to pick out when the player is in the same room or close, and to mark on the minimap: {"tag": "…"}, {"item": "id", "props": {…}}, {"enemy": "id"}, {"tile": [x, y]}, {"room": "Name"}, or a list of them. Map off keeps the targets off the minimap.'),
+        F().list(d.objectives || [], (o, n, set) => F().params(SPEC, norm(o), (v) => set(clean(v))), {
+          onChange: (l) => { if (l.length) d.objectives = l; else delete d.objectives; commit(); },
+          title: (o) => (o.optional ? 'Optional · ' : '') + (o.text || o.id || 'Objective'),
+          addLabel: 'Add an objective',
+          newItem: () => ({ id: 'objective' + ((d.objectives || []).length + 1), text: 'What to do next', done: ['someFlag'] }),
+        }));
     }
     checkPanel() {
       const box = h('div');

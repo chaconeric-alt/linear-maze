@@ -2,7 +2,8 @@
  * A trap = one trigger + a list of effects, declared in a level file:
  *
  *   traps: [{
- *     trigger: { type: 'plate', tag: 'p1' },   // plate | beam | door | pickup | zone | clear
+ *     trigger: { type: 'plate', tag: 'p1' },   // plate | beam | door | pickup | zone | clear | flag | arrive
+ *                                              // (any trigger: when (flags, all), unless (flags, any))
  *     effects: [{ type: 'darts', tag: 'd1', volleys: 3 }, { type: 'message', text: '...' }],
  *     once: true, cooldown: 2,
  *   }]
@@ -30,7 +31,7 @@
       this.fired = 0;
       const L = game.level, tr = this.trigger;
       const tiles = (tr.tag && L.tags[tr.tag]) || [];
-      if (tr.tag && !L.tags[tr.tag] && !['door', 'pickup', 'clear', 'flag'].includes(tr.type)) {
+      if (tr.tag && !L.tags[tr.tag] && !['door', 'pickup', 'clear', 'flag', 'arrive'].includes(tr.type)) {
         console.warn('[LM] Trap trigger tag "' + tr.tag + '" not found in level ' + L.id);
       }
       this.tiles = tiles;
@@ -79,8 +80,16 @@
       }
       if (!this.beams.length) console.warn('[LM] Beam trap in ' + L.id + ' found no aligned emitter pairs for tag ' + this.trigger.tag);
     }
+    /** A trigger's conditions: `when` (a flag or a list: all set) and `unless` (any set: no). A trap whose
+     *  conditions don't hold doesn't fire, and stays armed for later. */
+    condOk(game) {
+      const tr = this.trigger;
+      if (tr.when && ![].concat(tr.when).every((f) => game.hasFlag(f))) return false;
+      if (tr.unless && [].concat(tr.unless).some((f) => game.hasFlag(f))) return false;
+      return true;
+    }
     fire(game) {
-      if (!this.armed) return;
+      if (!this.armed || !this.condOk(game)) return;
       this.fired++;
       LM.audio.play('trap');
       for (const ef of this.def.effects || []) {
@@ -103,6 +112,12 @@
       const P = game.player;
       const L = game.level;
       const tr = this.trigger;
+      // arrive: once, as the floor is entered (any arrival: stairs, an elevator, a new game, a retry), if its
+      // conditions hold then
+      if (tr.type === 'arrive' && !this.arriveChecked) {
+        this.arriveChecked = true;
+        if (this.armed) this.fire(game);
+      }
       if (P && !P.dead && P.falling <= 0) {
         if (tr.type === 'plate' || tr.type === 'zone') {
           const tx = Math.floor(P.x / T), ty = Math.floor(P.y / T);
@@ -122,8 +137,9 @@
         }
       }
       if (tr.type === 'clear' && this.armed) {
-        // the group is captured once, because dead enemies leave game.enemies
-        if (!this.group) this.group = game.enemies.filter((e) => e.tag === tr.tag);
+        // the group is captured once, because dead enemies leave game.enemies (and until it has anyone in
+        // it, it keeps looking: a group a spawn effect makes later, with `as`, is a wave)
+        if (!this.group || !this.group.length) this.group = game.enemies.filter((e) => e.tag === tr.tag && !e.dead);
         if (this.group.length && this.group.every((e) => e.dead)) this.fire(game);
       }
       // a lockdown ends when everything this trap summoned is dead
@@ -160,4 +176,22 @@
     return U.dist2(cx, cy, x0 + dx * k, y0 + dy * k) < r * r;
   }
   LM.Trap = Trap;
+
+  /**
+   * Run a list of trap effects now, as a trap firing would (each effect's own `delay` counts from now), without
+   * a trap: a level's `skip`, a pack's script. trap: the trap they belong to, if any (some effects keep what
+   * they spawned or sealed on it); a scratch one otherwise.
+   */
+  LM.runEffects = function (game, effects, trap) {
+    const owner = trap || { spawned: [], sealed: [], def: { effects: effects || [] } };
+    for (const ef of effects || []) {
+      const fx = ef && LM.find('effects', ef.type);
+      if (!fx) {
+        if (ef) console.warn('[LM] Unknown effect ' + ef.type);
+        continue;
+      }
+      if (ef.delay) game.schedule(ef.delay, () => fx.run(game, ef, owner));
+      else fx.run(game, ef, owner);
+    }
+  };
 })();

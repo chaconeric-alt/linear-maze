@@ -11,7 +11,9 @@
  * the break room and his badge give the locker code 0214 (sidearm, vest); Facilities has the hard hat;
  * the mail room shuts you in with Nursery Grubs; HR has a Hollow Coat; ARIADNE's fragments 1–3 are
  * behind the reception desk, in the lobby screen (stand at it) and under the network room floor.
- * Stair B, down to Sub-level B, stays shut until basementOpen (DESIGN.md 4.6).
+ * Stair B, down to Sub-level B, stays shut until basementOpen (DESIGN.md 4.6); since M5 the way down is the
+ * board's private car from Floor 5a, and nothing sets basementOpen, so the stairwell stays sealed (the master card
+ * opens its shutter, not the stairs).
  *
  * Elevators are the game's (packs/ds-story/story.js) and are stamped over the map at y 1-5, x 31-46.
  * Generated from a layout script, then meant to be tuned in the editor. Two layers: map (terrain,
@@ -30,7 +32,7 @@ LM.definePack({
       loadout: {"weapons": ["ds-bolt-driver"]},
       liveWaterOff: "corridorPowerOff",
       attractPath: [[40, 30], [40, 20], [30, 12], [16, 30], [40, 42]],
-      stairs: {"westUp": {"dir": "up"}, "eastDown": {"to": "ds-b1", "dir": "down", "until": ["basementOpen", "master"], "locked": "Sub-level B is sealed: LOCKDOWN LEVEL 5.", "go": "Go down to {floor}: {name}"}},
+      stairs: {"westUp": {"dir": "up"}, "eastDown": {"to": "ds-b1", "dir": "down", "until": "basementOpen", "locked": "Sub-level B is sealed: LOCKDOWN LEVEL 5.", "go": "Go down to {floor}: {name}"}},
       legend: {
         ".": {"terrain": "floor", "variant": 0},
         ",": {"terrain": "floor", "variant": 1},
@@ -168,7 +170,7 @@ LM.definePack({
         "Ψ": {"enemy": "ds-sweeper"},
         "Ω": {"tag": "pd"},
         "¡": {"enemy": "ds-sentinel", "props": {"route": "pd"}},
-        "¢": {"item": "exec-desk", "props": {"dir": "s"}},
+        "¢": {"item": "exec-desk", "props": {"dir": "n"}},
         "£": {"item": "bookshelf", "props": {"dir": "w", "text": "Binders: COMPLIANCE 2019–2026. Every one of them is empty."}},
         "¤": {"item": "ds-note", "props": {"title": "A memo on the desk", "kicker": "Manager's office", "text": "FROM: Office of the Director\nRE: LABRYS readiness drill\n\nDepartment heads will ensure staff are AT THEIR STATIONS on the night of the drill and will not be told the date.\n\nThe drill is not a drill. — This last line has been added by hand, in pencil, and then rubbed out, but not well enough."}},
         "¥": {"item": "counter", "props": {"kind": "basin", "dir": "s", "room": "First aid"}},
@@ -221,6 +223,12 @@ LM.definePack({
         {"trigger": {"type": "flag", "tag": "cam0"}, "effects": [{"type": "alarm", "radius": 560, "text": "INTRUDER · SECURITY RESPONDING"}, {"type": "spawn", "tag": "dockB", "enemy": "ds-scalpel-drone", "count": 2, "delay": 1.2}]},
         {"trigger": {"type": "flag", "tag": "cam1"}, "effects": [{"type": "alarm", "radius": 560, "text": "INTRUDER · SECURITY RESPONDING"}, {"type": "spawn", "tag": "dockB", "enemy": "ds-scalpel-drone", "count": 2, "delay": 1.2}]},
         {"trigger": {"type": "flag", "tag": "cam2"}, "effects": [{"type": "alarm", "radius": 560, "text": "INTRUDER · SECURITY RESPONDING"}, {"type": "spawn", "tag": "dockA", "enemy": "ds-scalpel-drone", "count": 2, "delay": 1.2}]},
+      ],
+      objectives: [
+        {"id": "breaker", "text": "Throw the breaker in the comms closet", "done": ["breakerOn"], "target": {"item": "ds-breaker", "props": {"flag": "breakerOn"}}},
+        {"id": "terminal", "text": "Get to the terminal in the security office, in the north-west corner, through the lobby", "when": ["breakerOn"], "done": ["atTerminal"], "target": {"item": "ds-console", "props": {"flag": "atTerminal"}}},
+        {"id": "stairs", "text": "Go up Stair A to Floor 2", "when": ["atTerminal"], "target": {"tag": "westUp"}},
+        {"id": "locker", "optional": true, "text": "Open Officer Ruiz’s locker in the security office: the code is on a note somewhere on this floor", "when": ["atTerminal"], "done": ["lockerOpen"], "target": [{"item": "ds-keypad", "props": {"flag": "lockerOpen"}}, {"item": "ds-note", "props": {"title": "Sticky note"}}]},
       ],
       ceilingLights: [{ variants: [0, 1, 3, 5, 7], every: 4, offset: [2, 2], skip: 0.8, color: '#d8e2f0', radius: 200, intensity: 0.34, tag: 'ceiling' }],
       map: [
@@ -291,8 +299,8 @@ LM.definePack({
         "",
         " 2    3          XX               ? ? ? ? ? ?            B                    £",
         "         0          j       -    ^ ^ ^ ^ ^ ^ ^^           Λ U U U U Λ",
-        " 2        U U U         +                          }      V V Ξ V V V      ¢",
-        "   5             1                       α",
+        " 2        U U U         +                          }      V V Ξ V V V",
+        "   5             1                       α                                 ¢",
         " 2                                                              ¡",
         "          V V V                       β                   Ω Φ   γ    Ω   ¤",
         " 2              Z    r      π                      π   θ                     x",

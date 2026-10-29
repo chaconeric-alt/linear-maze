@@ -69,7 +69,7 @@
     'ds-riot-shotgun': {
       name: 'Riot Shotgun', short: 'Riot', slot: 3,
       desc: 'From the armory cage. Eight pellets a shell: it stops a security robot at arm’s length and does nothing across a room.',
-      ammo: 'shells', pickupAmmo: 10, pellets: 8, damage: 7, fireRate: 1.3, spread: 0.22, speed: 820, range: 300, falloff: 0.6,
+      ammo: 'shells', pickupAmmo: 10, pellets: 8, damage: 14, fireRate: 1.3, spread: 0.22, speed: 820, range: 300, falloff: 0.6,
       projectile: 'pellet', knock: 85, recoil: 1.0, kick: 0.22, pushback: 70, sound: 'scatter', casing: '#2a5a8a', smoke: true,
       flash: '#ffc070', flashRadius: 160, flashSize: 26, sparks: 7, muzzle: 23, length: 21, kickBack: 6,
       drawHeld(g, p, k) {
@@ -86,7 +86,7 @@
     'ds-cryo-sprayer': {
       name: 'Cryo Sprayer', short: 'Cryo', slot: 4,
       desc: 'A sample-transport cryo wand from the oncology cold store, made into something worse. A short hiss of freezing mist: it stiffens whatever it touches, slows it, and makes it brittle. Hold the trigger down.',
-      ammo: 'cryo', pickupAmmo: 80, pellets: 2, damage: 2.6, fireRate: 12, spread: 0.13, speed: 430, range: 185, falloff: 0.3, pierce: 1,
+      ammo: 'cryo', pickupAmmo: 80, pellets: 2, damage: 7.8, fireRate: 12, spread: 0.13, speed: 430, range: 185, falloff: 0.3, pierce: 1,
       projectile: 'cryo-mist', status: 'chilled', knock: 8, recoil: 0.05, kick: 0.012, sound: 'cryoHiss', casing: false,
       flash: ICE, flashRadius: 60, flashSize: 8, sparks: 0, muzzle: 15, length: 14,
       drawHeld(g, p, k) {

@@ -1,5 +1,6 @@
 // Tests for the installation generator. No dependencies: node tools/gen-tests.mjs [game] [--quick]
 //
+//   content      outside content libraries validate, are imported and current, and the validator catches errors
 //   library      the library names nothing the game lacks
 //   determinism  the same brief gives the same plan and the same files, twice over
 //   corpus       every generated pack in the game regenerates byte for byte from its generation.json
@@ -35,6 +36,41 @@ const { LM, errors } = await loadGame(game);
 if (errors.length) console.log('(loading the game: ' + errors.join('; ') + ')');
 const reg = G.registryOf(LM);
 const types = Object.keys(lib.types).sort();
+
+// ------------------------------------------------------------ content libraries (gen/library/<name>/: source + companion)
+section('content');
+const libDir = join(root, 'games', game, 'gen', 'library');
+for (const name of existsSync(libDir) ? readdirSync(libDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name) : []) {
+  const dir = join(libDir, name);
+  const srcName = readdirSync(dir).find((f) => f.endsWith('.json') && f !== 'companion.json');
+  if (!srcName || !existsSync(join(dir, 'companion.json'))) continue;
+  const src = JSON.parse(readFileSync(join(dir, srcName), 'utf8'));
+  const comp = JSON.parse(readFileSync(join(dir, 'companion.json'), 'utf8'));
+  const probs = G.validateContent(src, comp);
+  check(name + ' validates', !probs.some((p) => p.level === 'bad'), probs.filter((p) => p.level === 'bad').slice(0, 3).map((p) => p.id + ' ' + p.text).join('; '));
+  const c = (lib.content || {})[name];
+  check(name + ' is imported (run tools/import-content.mjs)', !!c);
+  if (c) {
+    const fresh = G.CONTENT_ADAPTERS[comp.format](src, comp);
+    check(name + ' import is up to date with its source and companion', JSON.stringify(fresh) === JSON.stringify(c));
+    for (const s of ['settings', 'tiles', 'rooms', 'furniture', 'interactables', 'loot', 'hazards']) check(name + ': every ' + s + ' record registered', (src[s] || []).every((r) => c[s][r.id]), s);
+    for (const r of src.rooms || []) for (const n of [].concat(r.mandatory_features || [], r.optional_furnishings || [])) if (!c.objects[n]) check(name + ' ' + r.id + ' object ' + n, false);
+    for (const o of Object.keys(c.objects)) if (c.objects[o].fallback) check(name + ' object “' + o + '” has a drawing family', false);
+  }
+  // the validator catches what it should: a broken copy
+  const broken = JSON.parse(JSON.stringify(src));
+  if (broken.rooms && broken.rooms.length > 1) {
+    broken.rooms[0].setting_id = 'SET_NOPE';
+    broken.rooms[1].id = broken.rooms[0].id;
+    broken.rooms[0].frequency_weight = -1;
+    if (broken.tiles && broken.tiles[0]) broken.tiles[0].description = 'unpaintable nothing';
+    const bp = G.validateContent(broken, comp).filter((p) => p.level === 'bad').map((p) => p.text).join(' | ');
+    check(name + ': validator finds a bad foreign key', /no such setting/.test(bp));
+    check(name + ': validator finds a duplicate id', /duplicate id/.test(bp));
+    check(name + ': validator finds a bad weight', /not a positive weight/.test(bp));
+    check(name + ': validator finds missing graphics', /missing graphics/.test(bp));
+  }
+}
 
 // ------------------------------------------------------------ library
 section('library');
