@@ -303,7 +303,7 @@
     const use = def.interact.use;
     def.interact.use = function (it, game) {
       const hz = HN.hazardOn(game, it);
-      if (hz) HN.springHazard(game, hz, (id === 'hn-cache' ? 'Opening the ' : 'Using the ') + (it.props.name || it.name || 'thing') + ' set it off.');
+      if (hz && HN.springHazard(game, hz, (id === 'hn-cache' ? 'Opening the ' : 'Using the ') + (it.props.name || it.name || 'thing') + ' set it off.')) it._trigT = 3;
       return use.call(this, it, game);
     };
   }

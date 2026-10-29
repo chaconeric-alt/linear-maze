@@ -155,6 +155,17 @@
     const s = HN.st(game), m = (s.powerCut || {})[game.level.def.id];
     if (m) delete m[powerKey(it)];
   }
+  // devices show their kept state from the moment you arrive; a sprung trap's flash wears off
+  LM.on('levelLoaded', (game) => {
+    if (!game.player || game.attract) return;
+    for (const it of game.items) if (it.props && it.props.dev) it.props.devState = dstate(game, it);
+    game.fx.push({
+      update(dt, g) {
+        for (const it of g.items) if (it._trigT > 0) it._trigT -= dt;
+        return false;
+      },
+    });
+  });
   HN.onArrive((game) => {
     const m = (HN.st(game).powerCut || {})[game.level.def.id];
     if (!m) return;

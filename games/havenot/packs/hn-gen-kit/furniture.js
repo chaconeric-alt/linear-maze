@@ -372,10 +372,12 @@
       g.stroke();
     }
     // turned to face what it's for (props.turn: quarter turns from facing south); a long piece swaps its sides
-    const q = it.props.turn || 0;
+    const q = it.props.turn || 0, ds = it.props.devState;
+    if (ds === 'destroyed') g.rotate(0.07);
     if (q) g.rotate((q * Math.PI) / 2);
     const [fw, fh] = q % 2 ? [H, W] : [W, H];
-    fam(g, fw, fh, p, r, it.props.devState === 'disabled' || it.props.devState === 'destroyed' ? 0 : t, it);
+    // a device's moving parts: still when it's off or wrecked, quick when it's running
+    fam(g, fw, fh, p, r, ds === 'disabled' || ds === 'destroyed' ? 0 : ds === 'active' ? t * 2.2 : t, it);
     if (q) g.rotate((-q * Math.PI) / 2);
     // state: grime and damage; a broken device goes dark
     const st = it.props.state || 0;
@@ -392,15 +394,56 @@
       g.lineTo(W / 4, H / 2 - 2);
       g.stroke();
     }
-    if (it.props.devState === 'disabled' || it.props.devState === 'destroyed') {
+    // a device's state, drawn: damaged (partly working) has a panel off and a crack; disabled is dark; destroyed is
+    // charred, split and skewed, with shards round it; a device whose trap just went off flashes red
+    if (ds === 'partly-working') {
+      g.fillStyle = 'rgba(10,10,12,0.55)';
+      g.fillRect(W / 2 - Math.min(10, W / 3), -H / 2 + 2, Math.min(8, W / 3 - 2), Math.min(7, H / 3));
+      g.strokeStyle = 'rgba(0,0,0,0.55)';
+      g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(-W / 2 + 3, H / 4);
+      g.lineTo(-W / 6, 0);
+      g.lineTo(0, H / 3);
+      g.stroke();
+    }
+    if (ds === 'disabled') {
       g.fillStyle = 'rgba(0,0,0,0.35)';
       g.fillRect(-W / 2, -H / 2, W, H);
+    }
+    if (ds === 'destroyed') {
+      g.fillStyle = 'rgba(12,8,6,0.62)';
+      g.fillRect(-W / 2, -H / 2, W, H);
+      g.strokeStyle = 'rgba(255,140,60,0.35)';
+      g.lineWidth = 1.2;
+      g.beginPath();
+      g.moveTo(-W / 2 + 2, -H / 2 + 3);
+      g.lineTo(-W / 8, -H / 10);
+      g.lineTo(W / 10, H / 8);
+      g.lineTo(W / 2 - 2, H / 2 - 3);
+      g.stroke();
+      const rr = U.mulberry32(hash(name + 'x'));
+      g.fillStyle = sh(p.base, -0.3);
+      for (let i = 0; i < 4; i++) g.fillRect(-W / 2 - 4 + rr() * (W + 8), H / 2 - 1 + rr() * 5, 2 + rr() * 3, 2);
+    }
+    if (it.props.dev && it._trigT > 0) {
+      g.strokeStyle = 'rgba(255,40,40,' + (0.5 + 0.5 * Math.sin(t * 18)) + ')';
+      g.lineWidth = 2;
+      g.strokeRect(-W / 2 - 2, -H / 2 - 2, W + 4, H + 4);
+    }
+    // the status lamp every device has
+    if (it.props.dev && ds !== 'destroyed') {
+      const lamp = { working: '#4ad88a', 'partly-working': '#e8c030', malfunctioning: Math.sin(t * 11) > 0 ? '#ffb020' : '#ff3a2a', disabled: '#6a1a1a', active: '#7affff' }[ds || 'working'] || '#4ad88a';
+      G.circle(g, -W / 2 + 3.5, -H / 2 + 3.5, 2.2, '#101012');
+      G.circle(g, -W / 2 + 3.5, -H / 2 + 3.5, 1.5, ds === 'active' ? U.rgba(lamp, 0.6 + 0.4 * Math.sin(t * 6)) : lamp);
     }
     g.restore();
   }
   function glowPiece(g, it, t, W, H) {
     const ds = it.props.devState;
     const p = HN.s10Palette(it.props.set);
+    if (it._trigT > 0) G.glow(g, 0, 0, Math.max(W, H) * 0.7, '#ff2a2a', 0.35 + 0.25 * Math.sin(t * 18));
+    if (ds === 'destroyed' && Math.sin(t * 2 + (it.tx || 0)) > 0.7) G.glow(g, (Math.sin(t * 5) * W) / 4, -H / 3, 6, '#ff7a2a', 0.4);
     if (ds === 'malfunctioning' && Math.sin(t * 9 + it.tx) > 0.6) G.glow(g, (Math.random() - 0.5) * W * 0.6, (Math.random() - 0.5) * H * 0.6, 8, '#ffe07a', 0.7);
     else if (ds && ds !== 'disabled' && ds !== 'destroyed') G.glow(g, 0, 0, Math.max(W, H) * 0.45, p.accent, 0.12 + (ds === 'active' ? 0.2 : 0));
     if (['vat', 'pod', 'furnace', 'screen', 'console', 'arch', 'chandelier', 'fountain'].includes(it.props.fam) && ds !== 'disabled' && ds !== 'destroyed') G.glow(g, 0, 0, Math.max(W, H) * 0.5, it.props.fam === 'furnace' ? '#ff6a1a' : p.accent, 0.18);
