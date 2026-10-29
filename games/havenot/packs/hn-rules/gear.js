@@ -40,10 +40,10 @@
     }),
     'hn-gauss': Object.assign({}, core.pistol, {
       name: 'Gauss Pistol', short: 'Gauss', slot: 2,
-      desc: 'Long reach, heavy slugs, no ammunition. Six shots inside three seconds and it overheats for three. Age of War gauss weapons had a reputation for exploding; this one only threatens to.',
-      damage: 34, fireRate: 3, speed: 1500, range: 1100, pierce: 1, tracer: '#9fe8ff', flash: '#9fe8ff', sound: 'arc',
+      desc: 'Long reach, heavy slugs, no ammunition. Six shots inside three seconds and it overheats for two. Age of War gauss weapons had a reputation for exploding; this one only threatens to.',
+      damage: 38, fireRate: 3, speed: 1500, range: 1100, pierce: 1, tracer: '#9fe8ff', flash: '#9fe8ff', sound: 'arc',
       heat: {
-        shots: 6, window: 3, cooldown: 3, color: '#ff3a1e',
+        shots: 6, window: 3, cooldown: 2.2, color: '#ff3a1e',
         onOverheat: (game) => game.toast(U.pick(['GAUSS COIL TEMPERATURE: CONCERNING. Please stop.', 'The grip is too hot to hold. Something inside is ticking.', 'Coil warning. The pistol hums a note you don’t like.']), 'warn'),
       },
       drawHeld(g, p, k) {

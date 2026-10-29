@@ -48,7 +48,7 @@
       dangers: ['Her size', 'Your nerves'],
     },
     {
-      id: 'anomalous', level: 'hn-agency-1', name: 'The Anomalous Structure', kind: 'Installation A', x: 650, y: 450, state: 'known', art: 'agency',
+      id: 'anomalous', level: 'hn-agency-1', name: 'The Anomalous Structure', kind: 'Installation A', x: 650, y: 450, state: 'known', art: 'agency', threat: 1,
       desc: 'A square three-storey block of distressed concrete with a logo nobody can read and screens that still play ads at night. Its security system is very much awake.',
       more: [
         { flag: 'hnAgencyKnown', text: 'It was an Age of War advertising agency. Reception, offices, prototype labs, and a security complex on the top floor.' },
@@ -74,9 +74,23 @@
       desc: 'The courier’s map marks a hatch under a dead billboard: an Age of War executive’s private shelter, sealed from the inside.',
       services: [], dangers: ['Unknown'], stub: true,
     },
-    { id: 'mushroom', name: 'The Mushroom', kind: 'Mid-range', x: 900, y: 100, state: 'locked', art: 'mushroom', desc: 'A grey dome on a stalk, taller than anything for a day’s walk. Nobody who went to look has said what it is.', services: [], dangers: ['Unknown'] },
+    {
+      id: 'greasy', level: 'hn-greasy-1', name: 'The Greasy Bolt Hole', kind: 'Installation · Age of War', x: 565, y: 585, state: 'known', art: 'greasy', threat: [2, 3],
+      desc: 'The dunes south of the old foundations shifted in the last storm and uncovered a hatch: one of Enoch the Greasy’s bunkers, from the Age of War. It is standing open. Travelers say something inside clicks like typing.',
+      more: [
+        { flag: 'hnGreasyLift', text: 'Under the bunker is Enoch’s robot works, and the Eggbots have it now.' },
+        { flag: 'hnEggJam', text: 'You jammed the works’ infection broadcast.' },
+        { flag: 'hnPrincessDone', text: 'Princess Eggbot is scrap. The works still hums, but nobody is telling it what shape to be.' },
+      ],
+      services: ['An armory of Level 3 weapons', 'A med-bay', 'Grease, a lot of it'],
+      dangers: ['Chatterpillars', 'Turrets and a Slop-Tread', 'Ceiling goop', 'Eggbots (Threat Level 3 below)', 'Conveyor floors'],
+    },
+    {
+      id: 'mushroom', name: 'The Mushroom', kind: 'Mid-range', x: 900, y: 100, state: 'locked', art: 'mushroom', desc: 'A grey dome on a stalk, taller than anything for a day’s walk. Nobody who went to look has said what it is.', services: [], dangers: ['Unknown'],
+      more: [{ flag: 'hnMushroomRoute', text: 'From the Greasy Bolt Hole’s coms log you know the way: north-east along the dead pipeline to the dry lake, then follow the stalk’s shadow at noon. There is a robot facility the size of a city inside, and the Eggbots want it.' }],
+    },
     { id: 'freeway', name: 'The Freeway', kind: 'Mid-range', x: 100, y: 560, state: 'locked', art: 'freeway', desc: 'A shattered roadway on legs, running off toward places the maps stopped naming.', services: [], dangers: ['Raiders', 'Falling'] },
-    { id: 'stacks', name: 'The Tall Stacks', kind: 'Mid-range', x: 950, y: 330, state: 'locked', art: 'stacks', desc: 'Smokestacks on the horizon that still breathe a little smoke on cold mornings.', services: [], dangers: ['Unknown'] },
+    { id: 'stacks', name: 'The Tall Stacks', kind: 'Mid-range', x: 950, y: 330, state: 'locked', art: 'stacks', desc: 'Smokestacks on the horizon that still breathe a little smoke on cold mornings.', services: [], dangers: ['Unknown'], more: [{ flag: 'hnMushroomRoute', text: 'The Eggbots have been calling it too. It only ever answers with smoke.' }] },
   ];
   HN.START_LOCS = Object.fromEntries(HN.LOCATIONS.map((l) => [l.id, l.state]));
   HN.loc = (id) => HN.LOCATIONS.find((l) => l.id === id);
@@ -142,7 +156,7 @@
   const ART = {
     home: ['#4a4a44', '#2a2a26'], outpost: ['#6a5a3a', '#2a3a4a'], boomtown: ['#8a6a3a', '#3a2a1a'], longlegs: ['#2a2420', '#0a0806'],
     agency: ['#5a5650', '#ff4ad8'], bunker: ['#7a5a3a', '#3a2a1a'], warren: ['#4a3a2a', '#1a1208'], bolthole: ['#3a3a3a', '#e8a23a'],
-    mushroom: ['#8a8a90', '#c8a07a'], freeway: ['#6a6058', '#c87a4a'], stacks: ['#5a5048', '#c86a3a'],
+    greasy: ['#3a3418', '#ff7ac8'], mushroom: ['#8a8a90', '#c8a07a'], freeway: ['#6a6058', '#c87a4a'], stacks: ['#5a5048', '#c86a3a'],
   };
   function terrain() {
     const r = U.mulberry32(4471), out = [];
@@ -166,6 +180,7 @@
     [[330, 220], [170, 380]],
     [[720, 200], [900, 100]],
     [[650, 450], [950, 330]],
+    [[380, 470], [470, 560], [565, 585]],
   ];
   let overlay = null;
   function closeMap() {
@@ -227,6 +242,11 @@
   }
   HN.openAreaMap = openMap;
 
+  function threatLine(game, threat) {
+    const [lo, hi] = [].concat(threat, threat).slice(0, 2);
+    const lvl = HN.level ? HN.level(game) : 1;
+    return h('p', { class: 'muted' }, 'Threat Level ' + (lo === hi ? lo : lo + ' (the top) to ' + hi + ' (deeper down)') + ' · you are Level ' + lvl + ': ' + (HN.threatWord ? HN.threatWord(hi, lvl) : '') + '.');
+  }
   function openLocation(game, p) {
     if (LM.ui.modalOpen) return;
     LM.audio.play('ui');
@@ -244,6 +264,7 @@
       body: h('div', { class: 'hn-panel' },
         h('div', { class: 'hn-loc-art', style: `background:linear-gradient(160deg, ${c1}, ${c2})` }, 'Picture to come'),
         h('p', { class: 'lore' }, p.desc), more,
+        p.threat ? threatLine(game, p.threat) : null,
         list('Known services and rewards', p.services), list('Known dangers', p.dangers),
         p.stub ? h('p', { class: 'muted' }, 'Only the entrance of this place is built in this slice.') : null),
       actions,

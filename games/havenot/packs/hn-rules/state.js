@@ -36,6 +36,7 @@
     natural: { armor: 0, melee: 0, light: 0 }, // from mutations
     mutations: [], mutSeed: 0, rerolled: false, bite: null,
     rad: 0,
+    level: 1, cleared: {}, // character level and the installations completed (levels.js)
     mission: 0, inMission: false, missions: [],
     kitLeft: { med: 0, hack: 0, grenade: 0 },
     inv: {}, charges: {},
@@ -256,6 +257,9 @@
       if (gr || s.kit === 'grenade') bits.push('<span>Grenades <b>' + gr + '</b></span>');
       if (HN.count(game, 'hn-mw-scanner')) bits.push('<span>MW scan <b>' + (s.charges['hn-mw-scanner'] || 0) + '</b></span>');
       if (s.inMission) bits.push('<span>Mission <b>' + s.mission + '</b></span>');
+      const thr = HN.threatHere ? HN.threatHere(game) : 0;
+      bits.push('<span>Level <b>' + (s.level || 1) + '</b></span>');
+      if (thr) bits.push('<span' + (thr > (s.level || 1) ? ' style="color:#ff8a7a"' : '') + '>Threat <b>' + thr + (thr > (s.level || 1) ? ' ▲' : '') + '</b></span>');
     }
     const html = bits.join('');
     if (hudEl._html !== html) {
@@ -460,6 +464,7 @@
           h('div', null,
             h('h3', null, s.name + ' · ' + origin.name),
             h('dl', { class: 'hn-stats' },
+              h('dt', null, 'Level'), h('dd', null, (s.level || 1) + (HN.threatHere && HN.threatHere(game) ? '  (this floor: Threat ' + HN.threatHere(game) + ')' : '')),
               h('dt', null, 'Speed'), h('dd', null, s.stats.speed + '  (' + Math.round(st.speed) + ' ground speed)'),
               h('dt', null, 'Sense'), h('dd', null, s.stats.sense + '  (marks things ' + Math.round(HN.senseRange(s, P) / T) + ' tiles away)'),
               h('dt', null, 'Physical'), h('dd', null, s.stats.physical + '  (melee ' + HN.meleeDamage(s) + (s.bite ? ', ' + s.bite : '') + ')'),
