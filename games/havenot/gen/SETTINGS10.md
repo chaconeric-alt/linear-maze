@@ -121,25 +121,35 @@ hazard behaviours, device kinds and loot rules are tried after library 2's own).
 | Treasure (20) + key objects (10) | 200 loot records, 610 items | category icons | satchel items, budgeted | 157 dropped in the sweep (budget cap) |
 | Hazards: 10 decay + 10 traps | 200 room hazards | behaviour visuals | 8 behaviours | 194 placed in the sweep; all opened in the game |
 
+## Done since the first milestone
+
+- **Advanced generation** (character creation, "Advanced generation"): functional rooms (none, few, standard,
+  many, most), which libraries, settings per installation (rolled, one, main and second, per floor, mixed,
+  anything goes), main setting, era emphasis (Age of Wonders or Age of War: that era's settings three times as
+  likely to lead; brief `era`), how rooms group (cluster strength), furniture density, twists/history/hazards/loot
+  (fewer, standard, more), and the classic generator (`preserveOld`). The choices go onto every installation brief
+  of the run and are kept with it.
+- **Centrepieces**: a functional room's first required piece of a centrepiece family (thrones, vats, altars,
+  coffins, turbines, daises, baths, cages, pods) or name (surgical, operating, cannon, reactor, centrifuge, stage,
+  tank) is one size bigger in the middle of a room of 50 floor cells, two from 110, on a plinth with a lit rim.
+  About one functional room in five has one.
+- **Doorway transitions**: where a room's material floor meets a door or another floor, a threshold on its side
+  fades into the next floor, with a sill (`hn-threshold`).
+- **Room inspect panel (L)** and **hazard overlay (O)** (`hn-gen-kit/inspect.js`): one panel with the room's
+  setting, function, cluster, condition, history, materials, furniture, device and state, treasure, hazards and
+  traps; the overlay marks every hazard's room, emitter and control and armed traps' trigger tiles.
+
 ## Not done yet (and what remains)
 
-- **The generator settings UI** (enable, probability, setting choice, cluster strength, density, frequencies,
-  era emphasis, preserve-old). The brief already takes every option (`functional`, `settings`, `clusterStrength`,
-  `density`, `frequencies`, `preserveOld`); there is no panel for them yet. Remaining: an "Advanced generation"
-  panel (character creation or the editor) that writes them into the run's briefs. Era emphasis isn't a brief
-  option yet.
 - **Library 2's furniture is thinner than library 1's**: 109 objects against 591, because its rooms are 20
   templates repeated per setting. Each setting's rooms differ by materials, palette, the setting feature and its
   own shared pieces. Remaining: more setting-specific pieces per template, if wanted.
-- **Furniture readability.** Every object has real art, but at the game's normal zoom small pieces read as small
-  shapes; centrepieces (thrones, vats, coffins, turbines) carry the rooms. Remaining: bigger centrepieces for
-  large rooms, and denser 'normal' rooms.
-- **Transitions between areas** (marble giving way to grating at a doorway) aren't drawn yet beyond each room's
-  own walls and floor. Remaining: threshold decals and blended corridor tiles at doors between differently
-  materialled rooms.
-- **Room inspect panel** (13.1: a room's name, setting, function, objects, devices, treasure and traps on one
-  panel). Devices and hazards show their part; a whole-room panel and a hazard overlay toggle are still to do.
+- **"One setting" isn't only one**: a floor's main setting leads, but rooms still join their neighbours by the
+  adjacency weights (10% unrelated), so other settings appear. Remaining, if wanted: a strict mode.
+- **Doorway transitions are floor-only**: wall materials meet at corners without a trim piece.
 - **Interactive objects' animation states** are drawn for working, malfunctioning (sparks), disabled and destroyed
   (dark); 'triggered' shares 'active'.
 - **Wall art**: walls get the room's material with trim and damage, but no embedded displays or window openings
   of their own beyond the wall-mounted pieces.
+- **Room names kept from a run**: an installation rebuilt from a saved run keeps the room names it had, so a room
+  can carry an older name over a new function (the inspect panel shows the function).

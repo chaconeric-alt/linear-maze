@@ -53,7 +53,65 @@
     return lib;
   }
 
-  HN.rollRuins = function (seed) {
+  // ------------------------------------------------------------ advanced generation (character creation)
+  // What a new run's installations are made of. Each choice goes onto every brief of the run (kept with it).
+  const GEN_FREQ = { probability_place_room_rare_twist: [0.04, 0.12, 0.3], probability_history_overlay: [0.12, 0.32, 0.6], probability_room_hazard: [0.1, 0.2, 0.4], probability_room_loot: [0.15, 0.28, 0.5] };
+  HN.GEN_OPTIONS = {
+    functional: { label: 'Functional rooms', options: [['', 'Standard (a quarter)'], ['0', 'None'], ['0.12', 'Few'], ['0.45', 'Many'], ['0.7', 'Most']] },
+    library: { label: 'Settings libraries', options: [['', 'Both'], ['settings10', 'Ten Settings (library 1)'], ['settings10b', 'Settings Library B']] },
+    mode: { label: 'Settings per installation', options: [['', 'Rolled'], ['single', 'One setting'], ['dominant-secondary', 'A main one and a second'], ['per-floor', 'One per floor'], ['mixed', 'Mixed within floors'], ['chaotic', 'Anything goes']] },
+    dominant: { label: 'Main setting', options: null },
+    era: { label: 'Era emphasis', options: [['', 'None'], ['Age of Wonders', 'Age of Wonders'], ['Age of War', 'Age of War']] },
+    clusterStrength: { label: 'How rooms group', options: [['', 'Normal'], ['0.5', 'Loosely'], ['2', 'Tightly']] },
+    density: { label: 'Furniture', options: [['', 'Rolled per room'], ['sparse', 'Sparse'], ['normal', 'Normal'], ['crowded', 'Crowded'], ['excessive', 'Excessive']] },
+    twists: { label: 'Twists, history, hazards, loot', options: [['', 'Standard'], ['0', 'Fewer'], ['2', 'More']] },
+    preserveOld: { label: 'Generator', options: [['', 'With functional rooms'], ['1', 'Classic (as before them)']] },
+  };
+  /** Turn the panel's choices into brief fields. */
+  HN.genBriefOptions = function (opts) {
+    const o = opts || {}, b = {};
+    if (o.preserveOld) return { preserveOld: true };
+    if (o.functional !== undefined && o.functional !== '') b.functional = Number(o.functional) || false;
+    if (o.library) b.library = o.library;
+    if (o.mode || o.dominant) b.settings = Object.assign(o.mode ? { mode: o.mode } : {}, o.dominant ? { dominant: o.dominant } : {});
+    if (o.era) b.era = o.era;
+    if (o.clusterStrength) b.clusterStrength = Number(o.clusterStrength);
+    if (o.density) b.density = o.density;
+    if (o.twists !== undefined && o.twists !== '') b.frequencies = Object.fromEntries(Object.entries(GEN_FREQ).map(([k, v]) => [k, v[Number(o.twists)]]));
+    return b;
+  };
+  /** The "Advanced generation" section of character creation: choice.gen holds what's picked. */
+  HN.genOptionsPanel = function (choice) {
+    const h = (...a) => LM.ui.h(...a);
+    const gen = (choice.gen = choice.gen || {});
+    const C = G.contentOf(library(), gen.library || undefined);
+    const sets = C ? Object.values(C.settings).sort((a, b) => (a.name < b.name ? -1 : 1)).map((x) => [x.id, x.name.split(/ - |: /)[0]]) : [];
+    const field = (key) => {
+      const d = HN.GEN_OPTIONS[key];
+      const opts = key === 'dominant' ? [['', 'Rolled (by installation type)']].concat(sets) : d.options;
+      const sel = h('select', { 'aria-label': d.label, style: 'width:100%;padding:5px 6px;background:rgba(0,0,0,0.35);color:inherit;border:1px solid rgba(255,255,255,0.2)' }, opts.map(([v, l]) => h('option', { value: v }, l)));
+      sel.value = gen[key] || '';
+      sel.addEventListener('change', () => {
+        gen[key] = sel.value;
+        if (key === 'library') gen.dominant = '';
+        if (choice.rerender) choice.rerender();
+      });
+      sel.addEventListener('keydown', (e) => e.stopPropagation());
+      return h('label', { style: 'display:block' }, h('span', { class: 'muted', style: 'display:block;font-size:12px' }, d.label), sel);
+    };
+    const classic = gen.preserveOld === '1';
+    const keys = classic ? ['preserveOld'] : Object.keys(HN.GEN_OPTIONS);
+    const det = h('details', { style: 'margin-top:14px' },
+      h('summary', { style: 'cursor:pointer;font-weight:600' }, 'Advanced generation (the installations this run makes)'),
+      h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 14px;margin-top:8px' }, keys.map(field)),
+      h('p', { class: 'muted', style: 'font-size:12px' }, 'Functional rooms come from the settings libraries: real furniture, devices, hazards and loot. Leave everything as it is for the usual mix.'));
+    if (choice.genOpen) det.open = true;
+    det.addEventListener('toggle', () => (choice.genOpen = det.open));
+    return det;
+  };
+
+  HN.rollRuins = function (seed, opts) {
+    const extra = HN.genBriefOptions(opts);
     const r = U.mulberry32(seed >>> 0);
     const int = (a, b) => a + Math.floor(r() * (b - a + 1));
     const types = Object.keys(library().types).sort();
@@ -62,15 +120,15 @@
       const j = Math.floor(r() * (i + 1));
       [starts[i], starts[j]] = [starts[j], starts[i]];
     }
-    const briefs = [Object.assign(G.clone(BUNKER), { seed: 'b' + seed })];
+    const briefs = [Object.assign(G.clone(BUNKER), { seed: 'b' + seed }, G.clone(extra))];
     starts.forEach((range, i) => {
       const n = i + 1;
       const tl = int(range[0], range[1]);
-      briefs.push({
+      briefs.push(Object.assign({
         type: types[int(0, types.length - 1)], tl, tlStep: int(STEP[0], STEP[1]), floors: int(FLOORS[0], FLOORS[1]), anyFloors: true,
         size: r() < 0.3 ? 'small' : r() < 0.85 ? 'standard' : 'large',
         seed: 'r' + n + '-' + seed, slug: 'ruin' + n, title: 'Installation-Ruin ' + n,
-      });
+      }, G.clone(extra)));
     });
     return { seed, briefs };
   };
@@ -127,7 +185,7 @@
     const s = HN.st(game);
     // (the balance sim makes a character every trial and has no use for ruins)
     if (!choice.noRuins) {
-      s.ruins = HN.rollRuins((choice.seed ^ Date.now()) >>> 0);
+      s.ruins = HN.rollRuins((choice.seed ^ Date.now()) >>> 0, choice.gen);
       HN.buildRuins(s.ruins);
     }
     return createCharacter.call(this, game, choice);

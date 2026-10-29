@@ -68,8 +68,12 @@
   function chooseSettings(plan, lib, C, rng) {
     const b = plan.brief, ids = Object.keys(C.settings).sort();
     const want = b.settings || {};
-    const lean = C.typeSettings[b.type] || {};
-    const dominant = want.dominant && C.settings[want.dominant] ? want.dominant : rng.weighted(Object.keys(lean).length ? lean : Object.fromEntries(ids.map((i) => [i, 1])));
+    // the type's leanings among the settings this content has (a single library: only its own)
+    let lean = Object.fromEntries(Object.entries(C.typeSettings[b.type] || {}).filter(([id]) => C.settings[id]));
+    if (!Object.keys(lean).length) lean = Object.fromEntries(ids.map((i) => [i, 1]));
+    // era emphasis (brief `era`): settings of that era three times as likely to lead
+    if (b.era) lean = Object.fromEntries(ids.map((i) => [i, (lean[i] || 0.25) * (String((C.settings[i] || {}).era || '').includes(b.era) ? 3 : 1)]).filter(([, w]) => w > 0));
+    const dominant = want.dominant && C.settings[want.dominant] ? want.dominant : rng.weighted(lean);
     const mode = want.mode || rng.weighted(C.modes);
     const related = (s) => (C.settings[s] || {}).related;
     const secondary = want.secondary && C.settings[want.secondary] ? want.secondary : rng.chance(0.6) && related(dominant) ? related(dominant) : rng.pick(ids.filter((i) => i !== dominant));
