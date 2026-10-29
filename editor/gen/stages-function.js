@@ -390,9 +390,40 @@
         // last, the floor and walls (a tile counts as taken, so nothing could be placed after them)
         laySurfaces(P, rng, r, C, fn, cells);
       }
+      laySeams(P, C, floor);
       G.unblock(P, floor);
     }
   };
+  /** Doorway transitions: where a room's material floor meets a door or an opening onto another floor, a threshold
+   *  on the room's side fades its material into the next one's, with a sill at the edge ('hn-threshold'). Both rooms
+   *  at a shared door get one. No randomness: it doesn't change anything else the seed decides. */
+  function laySeams(P, C, floor) {
+    const matOf = (x, y) => {
+      const t = P.floor.tiles[K(x, y)];
+      return t && /^mat-/.test(t.terrain || '') ? t.terrain.slice(4) : null;
+    };
+    const colOf = (id) => {
+      const t = id && C.tiles[id];
+      return t && t.colors ? t.colors[0] : null;
+    };
+    for (const r of floor.rooms) {
+      const cells = G.roomCells(r), inRoom = new Set(cells.map(([x, y]) => K(x, y)));
+      for (const [x, y] of cells) {
+        const mine = matOf(x, y);
+        if (!mine || P.floor.objs[K(x, y)]) continue;
+        for (const [ox, oy] of ORTHO) {
+          const nx = x + ox, ny = y + oy;
+          if (inRoom.has(K(nx, ny)) || !P.open(nx, ny)) continue;
+          // past a door, the floor beyond it
+          const [bx, by] = P.base(nx, ny) === '+' ? [nx + ox, ny + oy] : [nx, ny];
+          const other = matOf(bx, by);
+          if (other === mine) continue;
+          P.put(x, y, { item: 'hn-threshold', props: { dir: [ox, oy], from: colOf(mine), to: colOf(other) }, room: r.i, solid: false });
+          break;
+        }
+      }
+    }
+  }
   /** A room's floor and walls in its materials (a themed ordinary room: its setting's first floor only). */
   function laySurfaces(P, rng, r, C, fn, cells) {
     const themeTile = r.theme ? Object.values(C.tiles).find((t) => t.setting_id === r.theme && t.kind === 'floor') : null;

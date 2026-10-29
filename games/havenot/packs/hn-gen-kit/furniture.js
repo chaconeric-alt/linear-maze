@@ -431,6 +431,33 @@
         glowPiece(g, it, t, 24, 8);
       },
     },
+    // a doorway transition: on the room's side of a door or opening, its floor fades into the next one's, with a sill
+    // at the edge (props: dir, the way out; from, to: the two floors' colours; to null: a plain floor)
+    'hn-threshold': {
+      name: 'Threshold', radius: 8, solid: false, shadow: false, z: -2.5, mapColor: 'none',
+      draw(g, it) {
+        const [dx, dy] = it.props.dir || [1, 0];
+        const from = it.props.from || '#7a7a78', to = it.props.to || '#55575a';
+        g.save();
+        g.rotate(Math.atan2(dy, dx));
+        const grd = g.createLinearGradient(-T / 2, 0, T / 2, 0);
+        grd.addColorStop(0, U.rgba(to, 0));
+        grd.addColorStop(0.5, U.rgba(to, 0.3));
+        grd.addColorStop(1, U.rgba(to, 0.75));
+        g.fillStyle = grd;
+        g.fillRect(-T / 2, -T / 2, T, T);
+        // the next floor's pieces creeping in
+        const r = U.mulberry32(hash((it.tx || 0) + ',' + (it.ty || 0) + to));
+        g.fillStyle = U.rgba(to, 0.55);
+        for (let i = 0; i < 7; i++) g.fillRect(T / 2 - 5 - r() * 14, -T / 2 + 1 + r() * (T - 6), 3 + r() * 3, 3 + r() * 2);
+        // the sill
+        g.fillStyle = U.shade(from, -0.45);
+        g.fillRect(T / 2 - 4, -T / 2, 4, T);
+        g.fillStyle = 'rgba(255,255,255,0.18)';
+        g.fillRect(T / 2 - 4, -T / 2, 1, T);
+        g.restore();
+      },
+    },
     'hn-s10-decal': {
       name: 'Debris', radius: 8, solid: false, shadow: false, z: -2, mapColor: 'none',
       draw(g, it, t) {
