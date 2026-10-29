@@ -23,7 +23,7 @@ Made by `node tools/import-content.mjs havenot settings10b` from the source file
 
 **Light fittings:** spot ×5, signbox ×2, candles ×2, panel ×5, beacon ×3, strip ×4, halo ×3, bulb ×4, veins, chandelier.
 
-**Hazard behaviours:** flood 42, shock 5, seal 17, mind 46, turret 25, ambush 4, gas 47, heat 14.
+**Hazard behaviours:** flood 42, shock 5, seal 17, mind 36, identity 10, turret 25, ambush 4, gas 47, heat 14.
 
 **Device kinds:** machine 66, salvage 25, ceremony 18, buff 19, data 25, show 23, credits 15, rest 9.
 

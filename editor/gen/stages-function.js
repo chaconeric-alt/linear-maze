@@ -497,11 +497,13 @@
         // the hazard: a working trap with a clue and a countermeasure, damage from the floor's Threat Level
         if (fn.hazard) {
           const H = C.hazards[C.rooms[fn.id].hazard_record];
-          const at = H && rng.pick(P.free(r, 1));
+          const place = H && attachHazard(P, rng, r, H);
+          const at = place && place.at;
           if (at) {
             const off = G.flagName(plan.slug, 'f' + floor.n + '_haz' + r.i);
             const dmg = Math.max(3, Math.round(dmgRow[H.severity === 'severe' ? 2 : 1] * (lib.settings.trapDamageScale || 0.75)));
-            P.put(at[0], at[1], { item: 'hn-hazard', props: { haz: H.id, behaviour: H.behaviour, name: H.name, severity: H.severity, clue: H.clues, counter: H.countermeasure, effect: H.effect, trigger: H.trigger, dmg, tl, off, floorOff: floor.trapsOff || null, rect: r.rect.slice(), set: fn.setting }, room: r.i, solid: false });
+            P.put(at[0], at[1], { item: 'hn-hazard', props: { haz: H.id, behaviour: H.behaviour, name: H.name, severity: H.severity, clue: H.clues, counter: H.countermeasure, effect: H.effect, trigger: H.trigger, dmg, tl, off, floorOff: floor.trapsOff || null, rect: place.rect, attach: place.attach, attachTo: place.to || null, threat: H.severity === 'severe' ? 'high' : 'moderate', set: fn.setting }, room: r.i, solid: false });
+            fn.hazardAttach = place.attach;
             // the countermeasure: a control on the room's wall (or the floor's facilities terminal, if it has one)
             // by the door, where you'd reach for it coming in
             const doors = P.doorsOf(r), spots = P.wallSpots(r).filter((s) => !P.floor.objs[K(s.x, s.y)]);
@@ -529,6 +531,47 @@
       G.unblock(P, floor);
     }
   };
+  /** Where a room's hazard sits and what sets it off (hazards.js): the whole room, a doorway (a few tiles inside
+   *  it), a section of floor, a wall, the room's device (using it springs the trap) or a container (opening it
+   *  does). Which, by what the hazard does and what the room has. Returns { attach, at, rect, to } or null. */
+  const ATTACH = {
+    turret: { wall: 5, door: 3, room: 2 }, beam: { wall: 6, room: 4 }, ambush: { door: 4, room: 4, container: 2 }, seal: { door: 5, room: 3, container: 2 },
+    shock: { floor: 4, device: 3, container: 2, room: 1 }, gas: { floor: 4, device: 2, container: 2, room: 2 }, heat: { floor: 4, device: 3, room: 1 },
+    crush: { floor: 5, device: 3, room: 1 }, flood: { floor: 6, room: 2 }, mind: { room: 6, device: 4 }, alarm: { door: 5, container: 3, device: 2 }, identity: { door: 7, room: 3 },
+  };
+  function attachHazard(P, rng, r, H) {
+    const [rx, ry, rw, rh] = r.rect, whole = r.rect.slice();
+    const objs = Object.values(P.floor.objs).filter((o) => o.room === r.i);
+    const dev = objs.find((o) => o.props && o.props.dev && o.props.uid), box = objs.find((o) => o.item === 'hn-cache' && o.props && o.props.uid);
+    const inside = P.doorsOf(r).map(([x, y]) => [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([ox, oy]) => [x + ox, y + oy]).find(([ix, iy]) => G.inRoom(r, ix, iy))).filter(Boolean);
+    const w = Object.assign({}, ATTACH[H.behaviour] || { room: 1 });
+    if (!dev) delete w.device;
+    if (!box) delete w.container;
+    if (!inside.length) delete w.door;
+    if (!Object.keys(w).length) w.room = 1;
+    const attach = rng.weighted(w);
+    const nearTo = (x, y) => P.near(P.free(r), x, y)[0];
+    const posOf = (o) => Object.keys(P.floor.objs).find((k) => P.floor.objs[k] === o).split(',').map(Number);
+    const around = (x, y, d) => {
+      const x0 = Math.max(rx, x - d), y0 = Math.max(ry, y - d);
+      return [x0, y0, Math.min(rx + rw, x + d + 1) - x0, Math.min(ry + rh, y + d + 1) - y0];
+    };
+    if (attach === 'door') {
+      const [ix, iy] = rng.pick(inside), at = nearTo(ix, iy);
+      return at && { attach, at, rect: around(ix, iy, 1) };
+    }
+    if (attach === 'device' || attach === 'container') {
+      const o = attach === 'device' ? dev : box, [ox, oy] = posOf(o), at = nearTo(ox, oy);
+      return at && { attach, at, rect: around(ox, oy, 1), to: o.props.uid };
+    }
+    if (attach === 'wall') {
+      const at = rng.pick(P.wallRow(r));
+      return at && { attach, at, rect: whole };
+    }
+    const at = rng.pick(P.free(r, 1));
+    if (!at) return null;
+    return { attach, at, rect: attach === 'floor' ? around(at[0], at[1], 1) : whole };
+  }
   /** Doorway transitions: where a room's material floor meets a door or an opening onto another floor, a threshold
    *  on the room's side fades its material into the next one's, with a sill at the edge ('hn-threshold'). Both rooms
    *  at a shared door get one. No randomness: it doesn't change anything else the seed decides. */

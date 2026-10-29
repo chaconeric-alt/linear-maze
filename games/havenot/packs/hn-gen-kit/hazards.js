@@ -17,6 +17,12 @@
  *   flood   a pool of something you shouldn't stand in
  *   seal    the room grabs you: held still, and it hurts, then a long cooldown
  *   mind    a compulsion: slows you and tells you how to feel, now and then
+ *   alarm   an alarm: everything on the floor within earshot comes looking; it re-arms after a while
+ *   identity  a check of who you are: a human is waved through, anyone else is rejected (a jolt, and the alarm)
+ *
+ * Where it sits (props.attach, from the generator): the whole room; a doorway (it watches the few tiles inside);
+ * a section of floor; a wall; the room's device or a container (props.attachTo: their uid), when using or opening
+ * that sets it off, once, re-arming after 45 seconds.
  */
 'use strict';
 (function () {
@@ -24,8 +30,42 @@
   const h = (...a) => LM.ui.h(...a);
   const off = (game, it) => game.anyFlag([it.props.off, it.props.floorOff].filter(Boolean));
   const inRect = (P, rc) => P.x >= rc[0] * T && P.y >= rc[1] * T && P.x < (rc[0] + rc[2]) * T && P.y < (rc[1] + rc[3]) * T;
-  const ZONE = { shock: 2.5, gas: 3, crush: 1.6, heat: 2.2, flood: 2.4, mind: 99, seal: 99, beam: 99, turret: 99, ambush: 99 };
-  const CYCLE = { shock: 1.5, beam: 3.2, gas: 1, crush: 3, heat: 4, flood: 1, mind: 6, seal: 12 };
+  const ZONE = { shock: 2.5, gas: 3, crush: 1.6, heat: 2.2, flood: 2.4, mind: 99, seal: 99, beam: 99, turret: 99, ambush: 99, alarm: 99, identity: 2 };
+  const CYCLE = { shock: 1.5, beam: 3.2, gas: 1, crush: 3, heat: 4, flood: 1, mind: 6, seal: 12, alarm: 25, identity: 6 };
+  const REARM = 45;
+  /** Everything within earshot comes looking. */
+  const raiseAlarm = (game, it) => {
+    for (const e of game.enemies) if (!e.dead && Math.hypot(e.x - it.x, e.y - it.y) < 26 * T) e.alert(game, true);
+    LM.audio.play('alarm');
+  };
+  /** Spring a hazard at once (an attached trap: a device used, a container opened). */
+  HN.springHazard = function (game, it, why) {
+    const p = it.props, name = p.name.charAt(0).toUpperCase() + p.name.slice(1);
+    if (off(game, it) || (it._armT || 0) > 0) return false;
+    it._armT = REARM;
+    switch (p.behaviour) {
+      case 'turret':
+      case 'ambush':
+        it._sprung = false;
+        it._force = true;
+        break;
+      case 'alarm':
+      case 'identity':
+        raiseAlarm(game, it);
+        break;
+      case 'mind':
+      case 'seal':
+        LM.status.apply(game, game.player, 'hn-shaken', { seconds: 2.5 });
+        break;
+      default:
+        // one burst, as hard as a hit from it in the room would be
+        hurt(game, it, p.dmg * ({ shock: 0.6, gas: 0.4, flood: 0.4 }[p.behaviour] || 1), name + '!');
+    }
+    game.toast(name + '! ' + (why || 'It was rigged.'), 'warn');
+    return true;
+  };
+  /** The hazard rigged to this device or container, if any. */
+  HN.hazardOn = (game, obj) => obj.props && obj.props.uid && game.items.find((x) => x.def.id === 'hn-hazard' && x.props.attachTo === obj.props.uid && !x.dead);
   const hurt = (game, it, n, why) => {
     const P = game.player;
     if (!P || P.dead || P.invuln > 0) return;
@@ -44,7 +84,10 @@
       return;
     }
     it._live = true;
-    const here = inRect(P, p.rect);
+    if (it._armT > 0) it._armT -= dt;
+    // a device's or container's trap only goes off when that's used (HN.springHazard)
+    if ((p.attach === 'device' || p.attach === 'container') && !it._force) return;
+    const here = inRect(P, p.rect) || !!it._force;
     const d = Math.hypot(P.x - it.x, P.y - it.y) / T;
     it._t = (it._t || 0) + dt;
     const cyc = CYCLE[p.behaviour] || 2;
@@ -95,10 +138,33 @@
           hurt(game, it, p.dmg * 0.5, name + ': the room holds you still.');
         }
         break;
+      case 'alarm':
+        if (here && !it._sprung) {
+          it._sprung = true;
+          it._rearm = CYCLE.alarm;
+          raiseAlarm(game, it);
+          game.toast(name + '! Everything nearby heard that.', 'warn');
+        }
+        if (it._sprung && (it._rearm -= dt) <= 0) it._sprung = false;
+        break;
+      case 'identity':
+        if (d < ZONE.identity && (it._cd = (it._cd || 0) - dt) <= 0) {
+          it._cd = CYCLE.identity;
+          const who = HN.st(game).origin || 'human';
+          if (who === 'human') {
+            if (!it._told) game.toast(name + ': identity accepted. Have a compliant day.', 'good');
+            it._told = true;
+          } else {
+            hurt(game, it, p.dmg * 0.6, name + ': IDENTITY REJECTED (' + who + ').');
+            raiseAlarm(game, it);
+          }
+        }
+        break;
       case 'turret':
       case 'ambush':
         if (here && !it._sprung) {
           it._sprung = true;
+          it._force = false;
           HN.st(game).found['haz:' + game.levelId + ':' + it.tx + ',' + it.ty] = true;
           const tl = p.tl || HN.threatHere(game) || 1;
           if (p.behaviour === 'turret') game.spawnEnemy(tl >= 2 ? 'hn-grime-turret' : 'hn-turret', it.x, it.y, { aggro: true, summoned: true });
@@ -112,8 +178,9 @@
         break;
     }
   }
-  const GLYPH = { shock: '⚡', beam: '╳', gas: '☁', turret: '◎', ambush: '!', crush: '▼', heat: '♨', flood: '≈', seal: '⊠', mind: '◉' };
-  const COLOR = { shock: '#7ad8ff', beam: '#ff3a3a', gas: '#9adf6a', turret: '#ff7a3a', ambush: '#ff4a4a', crush: '#e8c030', heat: '#ff7a2a', flood: '#5ae0a0', seal: '#c87aff', mind: '#ff7ad8' };
+  const GLYPH = { shock: '⚡', beam: '╳', gas: '☁', turret: '◎', ambush: '!', crush: '▼', heat: '♨', flood: '≈', seal: '⊠', mind: '◉', alarm: '◬', identity: '☺' };
+  const COLOR = { shock: '#7ad8ff', beam: '#ff3a3a', gas: '#9adf6a', turret: '#ff7a3a', ambush: '#ff4a4a', crush: '#e8c030', heat: '#ff7a2a', flood: '#5ae0a0', seal: '#c87aff', mind: '#ff7ad8', alarm: '#ffd040', identity: '#7affd8' };
+  const WHERE = { room: 'the whole room', door: 'the doorway', floor: 'a section of floor', wall: 'the wall', device: 'the room’s device: using it sets it off', container: 'a container: opening it sets it off' };
   const items = {
     'hn-hazard': {
       name: 'Hazard', radius: 8, solid: false, shadow: false, z: -1, mapColor: '#ff4a3a', hnThreatMark: true,
@@ -129,7 +196,8 @@
               h('p', { class: 'lore' }, 'The tell: ' + p.clue + '.'),
               h('p', null, h('strong', null, 'What it does: '), p.effect.split(';')[0] + '.'),
               h('p', null, h('strong', null, 'To stop it: '), p.counter + '. (A control panel on this room’s wall, the room’s machinery, or the floor’s facilities terminal.)'),
-              h('p', { class: 'muted' }, 'GM: ' + p.behaviour + ', triggered by ' + p.trigger + '; damage for Threat Level ' + p.tl + ' is ' + p.dmg + ' (the generator’s trap scale). Record ' + p.haz + '.')),
+              h('p', null, h('strong', null, 'Where: '), WHERE[p.attach || 'room'] + '.'),
+              h('p', { class: 'muted' }, 'GM: ' + p.behaviour + ' (threat ' + (p.threat || p.severity) + ', suggested for Threat Level ' + p.tl + '), triggered by ' + p.trigger + '; detected by its tell (Sense) or by looking it over; damage for Threat Level ' + p.tl + ' is ' + p.dmg + ' (the generator’s trap scale, not a JAGS formula). Re-arms: ' + (p.attach === 'device' || p.attach === 'container' ? REARM + ' s after it goes off' : p.behaviour === 'alarm' ? CYCLE.alarm + ' s' : p.behaviour === 'turret' || p.behaviour === 'ambush' ? 'never' : 'on its cycle') + '. Record ' + p.haz + '.')),
             actions: [{ label: 'Step back', primary: true }],
           });
         },
@@ -228,4 +296,15 @@
   };
   HN.HAZARD_BEHAVIOURS = Object.keys(ZONE);
   LM.definePack({ id: 'hn-gen-kit', items });
+  // using a rigged device, or opening a rigged container, springs its trap first
+  for (const id of ['hn-s10', 'hn-s10w', 'hn-cache']) {
+    const def = LM.find('items', id);
+    if (!def || !def.interact) continue;
+    const use = def.interact.use;
+    def.interact.use = function (it, game) {
+      const hz = HN.hazardOn(game, it);
+      if (hz) HN.springHazard(game, hz, (id === 'hn-cache' ? 'Opening the ' : 'Using the ') + (it.props.name || it.name || 'thing') + ' set it off.');
+      return use.call(this, it, game);
+    };
+  }
 })();

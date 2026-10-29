@@ -221,7 +221,7 @@
     "TRAP_CONFETTI_CANNON_LETHAL": { "name": "confetti cannon volley", "trigger": "crossing the celebration line", "clues": "paper streamers with blades in them, a cannon on a gimbal", "effect": "a celebratory volley", "countermeasure": "the party switch, or keep low", "severity": "severe" },
     "TRAP_CRINGE_SPRAY": { "name": "cringe spray", "trigger": "a pressure plate under the welcome mat", "clues": "nozzles in the ceiling tiles, a smell of secondhand embarrassment", "effect": "a spray that won't stop replaying your worst moment", "countermeasure": "close the line's valve, or run through", "severity": "moderate" },
     "TRAP_DREAM_TAX_LIEN": { "name": "dream tax lien seal", "trigger": "taking anything from the room", "clues": "a notice of lien on the door, a stamp hanging over it", "effect": "the room seals until the lien is paid", "countermeasure": "pay at the audit desk, or override the door", "severity": "moderate" },
-    "TRAP_EXCOMMUNICATION_COUPON": { "name": "excommunication coupon broadcast", "trigger": "passing a cherub scanner without brand loyalty", "clues": "coupons for nothing in a drift on the floor, cherubs with lenses for eyes", "effect": "an excommunication broadcast straight into your head", "countermeasure": "show a blessed logo, or cut the broadcast", "severity": "moderate" },
+    "TRAP_EXCOMMUNICATION_COUPON": { "name": "brand-loyalty identity check", "trigger": "passing a cherub scanner without brand loyalty", "clues": "coupons for nothing in a drift on the floor, cherubs with lenses for eyes", "effect": "an excommunication broadcast straight into your head", "countermeasure": "show a blessed logo, or cut the broadcast", "severity": "moderate" },
     "TRAP_FRIENDLY_FIRE_REMINISCENCE": { "name": "friendly fire reminiscence turret", "trigger": "a war story told within earshot", "clues": "medals on a gun mount, a turret that hums old songs", "effect": "it remembers the war and fires at it", "countermeasure": "stand it down at its console, or stay out of its line", "severity": "severe" },
     "TRAP_MANDATORY_FUN_TICKET": { "name": "mandatory fun euphoria", "trigger": "insufficient enthusiasm near a ticket machine", "clues": "a ticket dispenser that grins, enforced smiles on the dead", "effect": "compulsory euphoria; you can't stop to think", "countermeasure": "punch your ticket, or break the machine", "severity": "moderate" },
     "TRAP_OVERBOOKED_AFTERLIFE": { "name": "overbooked afterlife gate", "trigger": "walking in without a reservation", "clues": "a velvet rope, a sign saying FULL, a queue of ghosts", "effect": "the gate shuts you in with the queue", "countermeasure": "an afterlife voucher, or force the gate", "severity": "moderate" },
@@ -249,7 +249,10 @@
   "hazards": {
     "$comment": "Behaviours for this library's hazard names, tried before library 1's (whose ray rule would take 'spray' for a beam).",
     "rules": [
-      ["spray|sprinkler", "gas"]
+      ["spray|sprinkler", "gas"],
+      ["slurry|flood", "flood"],
+      ["credential|loyalty compliance|clearance check|identity check", "identity"],
+      ["alarm|siren|klaxon|alert system|tripwire|watchlist", "alarm"]
     ]
   },
   "names": {

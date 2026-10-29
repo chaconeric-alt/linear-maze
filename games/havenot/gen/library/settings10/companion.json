@@ -1401,6 +1401,8 @@
   "hazards": {
     "$comment": "Hazard behaviours (packs/hn-gen-kit/hazards.js). [regex, behaviour]. Damage comes from the generator's trap damage row for the floor's Threat Level: moderate = medium, severe = high.",
     "rules": [
+      ["identity check|identity verif|unauthorized identity|credential|loyalty compliance|citizenship|clearance check|face match|genetic check|pedigree", "identity"],
+      ["alarm|siren|klaxon|alert system|tripwire|motion sensor|watchlist", "alarm"],
       [
         "light and sound|runaway",
         "shock"
