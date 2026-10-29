@@ -183,6 +183,8 @@
     }
   }
   G.Painter = Painter;
+  G.placeFixtureIn = (P, rng, r, f) => placeFixture(P, rng, r, f);
+  G.putCache = (P, rng, r, props, kinds) => putCache(P, rng, r, props, kinds);
 
   const lookOf = (lib, floor) => lib.looks[floor.look] || {};
   const tierInfo = (lib, tier) => ((lib.settings.tierInfo || {})[tier]) || { name: G.titleCase(tier) + ' card', color: '#e8a23a' };
@@ -396,9 +398,13 @@
           P.slot('goal.text', 'goalFixtures.' + kind + '.text', { obj: k, prop: 'text' });
         }
       }
-      // the rooms' own fixtures
+      // the rooms' own fixtures (a functional room's come from its library room type)
       for (const r of rooms) {
         const t = lib.rooms[r.template] || {};
+        if (r.fn) {
+          G.placeFunctionFurniture(P, rng, r, plan, lib);
+          continue;
+        }
         for (const f of t.fixtures || []) placeFixture(P, rng, r, f);
       }
       // items of interest at pacing points: a help desk early, health where it's needed, a vending machine
@@ -993,6 +999,8 @@
           }
         }
       }
+      // functional rooms that rolled loot: their library loot, in a container of the room's
+      if (G.functionLoot) G.functionLoot(P, rng, plan, lib, floor, all, add, target, () => spent);
       // the rest by shares: things to sell, expendables, artifacts
       const shares = TR.shares || { sell: 0.35, expend: 0.3, artifact: 0.35 };
       const byGroup = {};
@@ -1123,6 +1131,8 @@
     }
     if (want.eliza || rng.chance(S.elizaChance || 0)) putAt('eliza', { action: 'eliza', title: 'ELIZA terminal', gives: 'tetrad' });
   }
+
+  G.unblock = (P, floor) => unblock(P, floor);
 
   /** Solid furniture must never cut anything off: every open tile reachable, every usable thing beside a reachable tile.
    *  Decor goes first; a container goes only if it holds no key and isn't the goal. */

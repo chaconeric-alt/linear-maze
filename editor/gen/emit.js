@@ -82,8 +82,11 @@
         const c = floor.layout.cells[y][x];
         const t = floor.tiles[K(x, y)];
         if (c === ' ' || c === '#') {
-          if (t && t.tag) {
-            const e = { terrain: 'wall', tag: t.tag };
+          if (t && (t.tag || t.terrain)) {
+            // a tagged wall, or a material wall (a functional room's)
+            const e = { terrain: t.terrain || 'wall' };
+            if (t.tag) e.tag = t.tag;
+            if (t.variant) e.variant = t.variant;
             const ch = mapAlloc(e);
             legend[ch] = e;
             row += ch;
@@ -105,6 +108,11 @@
         const e = {};
         e.terrain = t.terrain || (c === '+' ? doorT : 'floor');
         if (v && !(e.terrain || '').startsWith('door') && e.terrain !== 'hn-iris') e.variant = v;
+        // a material floor's variant is its state (intact, worn, ruined)
+        if (t.variant != null && (e.terrain || '').startsWith('mat-')) {
+          if (t.variant) e.variant = t.variant;
+          else delete e.variant;
+        }
         if (t.tag) e.tag = t.tag;
         if (t.props) e.props = t.props;
         let prefer = null;
