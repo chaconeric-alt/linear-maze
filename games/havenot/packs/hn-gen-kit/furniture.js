@@ -371,7 +371,12 @@
       G.roundRect(g, -W / 2 - 2.5, -H / 2 - 2.5, W + 5, H + 5, 5);
       g.stroke();
     }
-    fam(g, W, H, p, r, it.props.devState === 'disabled' || it.props.devState === 'destroyed' ? 0 : t, it);
+    // turned to face what it's for (props.turn: quarter turns from facing south); a long piece swaps its sides
+    const q = it.props.turn || 0;
+    if (q) g.rotate((q * Math.PI) / 2);
+    const [fw, fh] = q % 2 ? [H, W] : [W, H];
+    fam(g, fw, fh, p, r, it.props.devState === 'disabled' || it.props.devState === 'destroyed' ? 0 : t, it);
+    if (q) g.rotate((-q * Math.PI) / 2);
     // state: grime and damage; a broken device goes dark
     const st = it.props.state || 0;
     if (st >= 1) {

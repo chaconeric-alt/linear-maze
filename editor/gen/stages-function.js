@@ -222,8 +222,12 @@
     const props = objProps(C, name, fn, extra);
     const wall = WALL_FAMS.includes(o.fam);
     const tries = wall ? [{ item: 'hn-s10w', place: 'wall' }] : [
-      // a centrepiece in a big room: bigger, in the middle, so the room reads as what it is at normal zoom
-      ...(extra && extra.grow ? [{ item: 'hn-s10', place: 'center', grow: extra.grow }] : []),
+      // a centrepiece in a big room: bigger, so the room reads as what it is at normal zoom; a throne, altar or
+      // stage against the far wall facing the doors, anything else in the middle
+      ...(extra && extra.grow ? [{ item: 'hn-s10', place: FOCAL_FAMS.includes(o.fam) ? 'focal' : 'center', grow: extra.grow }] : []),
+      ...(FOCAL_FAMS.includes(o.fam) && extra && extra.key ? [{ item: 'hn-s10', place: 'focal' }] : []),
+      // shelving in rows with aisles between
+      ...(extra && extra.aisle ? [{ item: 'hn-s10', place: 'grid' }] : []),
       { item: 'hn-s10', place: o.place === 'wall' ? 'wall-row' : o.place },
       { item: 'hn-s10', place: 'any', swap: true },
       { item: 'hn-s10', place: 'any', small: true },
@@ -238,6 +242,8 @@
         pr.centre = true;
       }
       delete pr.grow;
+      delete pr.aisle;
+      if (t.place === 'focal') pr.focal = true;
       if (t.swap && pr.w === props.w && pr.h === props.h) continue;
       const n = G.placeFixtureIn(P, rng, r, { item: t.item, props: pr, place: t.place, count: 1 });
       if (n) {
@@ -248,6 +254,99 @@
     return null;
   }
   const DENSITY_EXTRA = { sparse: 0, normal: 1, crowded: 3, excessive: 6 };
+  // placement roles (engine of a room's layout: arrange)
+  const FOCAL_FAMS = ['throne', 'altar', 'dais'];
+  const famOf = (C, name) => (C.objects[name] || {}).fam;
+  const isSeat = (C, name) => ['chair', 'pews'].includes(famOf(C, name)) || /\b(seat|seats|seating|chairs?|benches|pews?|stools?|kneeling pads?|cushions?|bleachers)\b/.test(name);
+  const isConsole = (C, name) => famOf(C, name) === 'console' && !/scanner|helmet/.test(name);
+  const shelfRoom = (C, name, fn) => ['shelf', 'cabinet'].includes(famOf(C, name)) && ['storage', 'commerce'].includes(fn.cluster);
+  const TABLE_NAMES = /conference|meeting|dining|banquet|negotiat|board|council|card table|tasting/;
+  const WORK_NAMES = /surgical|operating|autopsy|dissection|examination table|procedure/;
+  const FACE = { s: 0, w: 1, n: 2, e: 3 }; // quarter turns that point a piece's front (+y) that way
+  const faceTo = (from, to) => {
+    const dx = to[0] - from[0], dy = to[1] - from[1];
+    return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? FACE.e : FACE.w) : dy < 0 ? FACE.n : FACE.s;
+  };
+  const posOf = (P, e) => Object.keys(P.floor.objs).find((k) => P.floor.objs[k] === e).split(',').map(Number);
+  /** A piece's middle, in tiles, from its top-left tile and footprint. */
+  const mid = (P, e) => {
+    const [x, y] = posOf(P, e);
+    return [x + ((e.props.w || 1) - 1) / 2, y + ((e.props.h || 1) - 1) / 2];
+  };
+  /** Free tiles in a ring round a placed piece (its footprint grown by d), nearest first. */
+  const ringOf = (P, r, e, d) => {
+    const [x, y] = posOf(P, e), w = e.props.w || 1, h = e.props.h || 1, out = [];
+    for (let yy = y - d; yy < y + h + d; yy++) for (let xx = x - d; xx < x + w + d; xx++) {
+      if (xx >= x && xx < x + w && yy >= y && yy < y + h) continue;
+      if (G.inRoom(r, xx, yy) && P.base(xx, yy) === '.' && !P.taken(xx, yy)) out.push([xx, yy]);
+    }
+    return out;
+  };
+  const putAt = (P, r, C, name, fn, at, extra) => P.put(at[0], at[1], { item: 'hn-s10', props: objProps(C, name, fn, Object.assign({ w: 1, h: 1 }, extra)), room: r.i });
+  /** How a functional room's pieces stand to one another: the focal piece faces the doors with seating in rows
+   *  before it, an operating table keeps working space round it, chairs surround a conference table, consoles
+   *  stand by the machine they run, seats and desks face what they're for. */
+  function arrange(P, rng, r, C, fn, pool) {
+    const mine = () => Object.values(P.floor.objs).filter((o) => o.room === r.i && o.item === 'hn-s10' && o.props && o.props.name);
+    const doors = P.doorsOf(r);
+    const [rx, ry, rw, rh] = r.rect, centre = [rx + (rw - 1) / 2, ry + (rh - 1) / 2];
+    const door = doors.length ? doors[0] : centre;
+    const seats = pool.filter((n) => isSeat(C, n)), consoles = pool.filter((n) => isConsole(C, n));
+    const focal = mine().find((o) => o.props.focal || (FOCAL_FAMS.includes(o.props.fam) && o.props.key));
+    // the focal piece faces the doors (or the middle of the room); seating in rows before it, facing it
+    if (focal) {
+      const m = mid(P, focal);
+      focal.props.turn = faceTo(m, doors.length ? door : centre);
+      if (seats.length) {
+        const front = [[0, 1], [-1, 0], [0, -1], [1, 0]][focal.props.turn];
+        const rows = [];
+        for (let k = 2; k <= 4; k++) for (let s = -2; s <= 2; s++) rows.push([Math.round(m[0] + front[0] * k + front[1] * s), Math.round(m[1] + front[1] * k + front[0] * s)]);
+        let n = 0;
+        for (const at of rows) {
+          if (n >= Math.min(6, 2 + Math.floor(G.roomCells(r).length / 25))) break;
+          if (!G.inRoom(r, at[0], at[1]) || P.base(at[0], at[1]) !== '.' || P.taken(at[0], at[1])) continue;
+          const name = seats[n % seats.length];
+          if (putAt(P, r, C, name, fn, at, { turn: (focal.props.turn + 2) % 4, seat: true })) {
+            fn.placed.push(name);
+            n++;
+          }
+        }
+      }
+    }
+    for (const o of mine()) {
+      const name = o.props.name;
+      // working space round an operating table: the ring round it stays clear
+      if (WORK_NAMES.test(name)) for (const c of ringOf(P, r, o, 1)) P.reserved.add(K(c[0], c[1]));
+      // chairs round a conference table, facing it
+      if (TABLE_NAMES.test(name) || (o.props.fam === 'table' && seats.length && rng.chance(0.5))) {
+        const m = mid(P, o), seat = seats[0] || 'chair';
+        let n = 0;
+        for (const c of rng.shuffle(ringOf(P, r, o, 1)).filter(([x, y]) => x === Math.round(x) && (Math.abs(x - m[0]) < 0.6 + (o.props.w || 1) / 2 || Math.abs(y - m[1]) < 0.6 + (o.props.h || 1) / 2))) {
+          if (n >= 6) break;
+          if (putAt(P, r, C, seat, fn, c, { fam: 'chair', turn: faceTo(c, m), seat: true })) n++;
+        }
+        if (n) fn.placed.push(seat + ' ×' + n);
+      }
+    }
+    // consoles beside the room's machine (its centrepiece, or its biggest piece), facing it
+    if (consoles.length) {
+      const big = mine().filter((o) => !o.props.seat).sort((a, b) => (b.props.w || 1) * (b.props.h || 1) - (a.props.w || 1) * (a.props.h || 1))[0];
+      if (big) {
+        const m = mid(P, big);
+        const cells = rng.shuffle(ringOf(P, r, big, 2).filter((c) => !ringOf(P, r, big, 1).some((d) => d[0] === c[0] && d[1] === c[1])));
+        let n = 0;
+        for (const c of cells) {
+          if (n >= Math.min(consoles.length, 2)) break;
+          if (putAt(P, r, C, consoles[n], fn, c, { turn: faceTo(c, m) })) {
+            fn.placed.push(consoles[n]);
+            n++;
+          }
+        }
+      }
+    }
+    // desks face into the room; anything else that has a front faces the room's middle
+    for (const o of mine()) if (o.props.turn == null && ['desk', 'chair', 'console', 'pews'].includes(o.props.fam)) o.props.turn = faceTo(mid(P, o), centre);
+  }
   // centrepieces: the families and names that carry a room (a throne room's throne, a lab's vat)
   const CENTRE_FAMS = ['throne', 'vat', 'altar', 'coffin', 'turbine', 'dais', 'fountain', 'statue', 'furnace', 'bath', 'cage', 'pod'];
   const CENTRE_NAMES = /surgical|operating|autopsy|cannon|howitzer|reactor|core|centrifuge|stage|tank/;
@@ -281,8 +380,10 @@
     const want = Math.min(Math.floor(cells / 10), DENSITY_EXTRA[fn.density] + (fn.density === 'sparse' ? 0 : 1));
     for (let i = 0; i < want && pool.length; i++) {
       const name = pool[i % pool.length];
-      if (placeObject(P, rng, r, C, name, fn)) fn.placed.push(name);
+      if (isSeat(C, name) || isConsole(C, name)) continue; // seats and consoles go where they belong (arrange)
+      if (placeObject(P, rng, r, C, name, fn, shelfRoom(C, name, fn) ? { aisle: true } : undefined)) fn.placed.push(name);
     }
+    arrange(P, rng, r, C, fn, pool);
     // the room's device: an object of the interactable's name, the one placed or a new one
     const dev = C.interactables[rec.interactive_record];
     if (dev) {
@@ -402,7 +503,10 @@
             const dmg = Math.max(3, Math.round(dmgRow[H.severity === 'severe' ? 2 : 1] * (lib.settings.trapDamageScale || 0.75)));
             P.put(at[0], at[1], { item: 'hn-hazard', props: { haz: H.id, behaviour: H.behaviour, name: H.name, severity: H.severity, clue: H.clues, counter: H.countermeasure, effect: H.effect, trigger: H.trigger, dmg, tl, off, floorOff: floor.trapsOff || null, rect: r.rect.slice(), set: fn.setting }, room: r.i, solid: false });
             // the countermeasure: a control on the room's wall (or the floor's facilities terminal, if it has one)
-            const spot = rng.pick(P.wallSpots(r).filter((s) => !P.floor.objs[K(s.x, s.y)]));
+            // by the door, where you'd reach for it coming in
+            const doors = P.doorsOf(r), spots = P.wallSpots(r).filter((s) => !P.floor.objs[K(s.x, s.y)]);
+            const dd = (s) => (doors.length ? Math.min(...doors.map(([x, y]) => Math.abs(x - s.x) + Math.abs(y - s.y))) : 0);
+            const spot = spots.sort((a, b) => dd(a) - dd(b))[0];
             if (spot) P.put(spot.x, spot.y, { item: 'hn-hazard-ctl', props: { face: spot.face, flag: off, name: H.name, counter: H.countermeasure, difficulty: Math.min(9, (lib.settings.hackBase || 6) + tl - 1) }, room: r.i });
             fn.hazardAt = at;
           }
