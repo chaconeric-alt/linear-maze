@@ -471,9 +471,93 @@
       def = { floorLike: true, mapColor: U.rgba(colors[0], 0.35), hnMaterial: tile.id, bake: (g, x, y, info) => LM.get('textures', pal.style).paint(g, x, y, info, pal) };
     }
     terrains[id] = def;
-    LM.definePack({ id: 'hn-gen-kit', terrain: { [id]: def } });
+    const more = {};
+    if (tile.kind === 'wall') {
+      // the generator's wall variants (stages-function.js laySurfaces): a window in the wall (you see and light passes
+      // through; shots and people don't), and a display or machine panel set into its face
+      const pal = { style: 'mw-' + tile.style, colors, edge: U.shade(colors[0], 0.25), trim: colors[2] || colors[0] };
+      more[id + '-win'] = Object.assign({}, def, { blocksLight: false, hnWindow: true, mapColor: '#6a8aa0', bake: (g, x, y, info) => { LM.paintWall(g, x, y, info, pal); paintWindow(g, x, y, info, colors); } });
+      more[id + '-disp'] = Object.assign({}, def, {
+        hnDisplay: true,
+        bake: (g, x, y, info) => { LM.paintWall(g, x, y, info, pal); paintDisplay(g, x, y, info, colors); },
+        drawDynamic: (g, x, y, tx, ty, game, t) => displayGlow(g, x, y, tx, ty, game, t || 0, colors),
+      });
+      Object.assign(terrains, more);
+    }
+    LM.definePack({ id: 'hn-gen-kit', terrain: Object.assign({ [id]: def }, more) });
     return id;
   };
+  // which way a wall tile runs, from its neighbours (true: along x), and which side faces open floor
+  const runsAlong = (info) => {
+    const solid = (dx, dy) => { const t = info.n(dx, dy); return !!(t && t.solid); };
+    return solid(-1, 0) || solid(1, 0) ? !(solid(0, -1) && solid(0, 1)) || (solid(-1, 0) && solid(1, 0)) : false;
+  };
+  const openSide = (info) => {
+    for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) { const t = info.n(dx, dy); if (t && !t.solid) return [dx, dy]; }
+    return [0, 1];
+  };
+  function paintWindow(g, x, y, info, colors) {
+    const along = runsAlong(info), m = 9;
+    const [rx, ry, rw, rh] = along ? [x + 2, y + m, T - 4, T - 2 * m] : [x + m, y + 2, T - 2 * m, T - 4];
+    g.fillStyle = U.shade(colors[1] || colors[0], -0.5);
+    g.fillRect(rx - 1.5, ry - 1.5, rw + 3, rh + 3);
+    g.fillStyle = 'rgba(150,200,230,0.42)';
+    g.fillRect(rx, ry, rw, rh);
+    // mullions and a sheen
+    g.fillStyle = U.shade(colors[1] || colors[0], -0.35);
+    if (along) g.fillRect(x + T / 2 - 1, ry, 2, rh);
+    else g.fillRect(rx, y + T / 2 - 1, rw, 2);
+    g.fillStyle = 'rgba(255,255,255,0.35)';
+    if (along) g.fillRect(rx + 3, ry + 1, rw * 0.3, 1.2);
+    else g.fillRect(rx + 1, ry + 3, 1.2, rh * 0.3);
+    if ((info.variant || 0) >= 2) {
+      // cracked
+      g.strokeStyle = 'rgba(255,255,255,0.55)';
+      g.lineWidth = 0.8;
+      g.beginPath();
+      g.moveTo(rx + rw * 0.3, ry);
+      g.lineTo(rx + rw * 0.55, ry + rh * 0.6);
+      g.lineTo(rx + rw * 0.8, ry + rh);
+      g.stroke();
+    }
+  }
+  function paintDisplay(g, x, y, info, colors) {
+    const [dx, dy] = openSide(info);
+    // the panel sits against the face toward the room
+    const w = 22, d = 9;
+    const cx = x + T / 2 + dx * (T / 2 - d / 2 - 1), cy = y + T / 2 + dy * (T / 2 - d / 2 - 1);
+    const [pw, ph] = dx ? [d, w] : [w, d];
+    g.fillStyle = '#121418';
+    g.fillRect(cx - pw / 2 - 1.5, cy - ph / 2 - 1.5, pw + 3, ph + 3);
+    g.fillStyle = U.shade(colors[2] || '#7ad8ff', -0.55);
+    g.fillRect(cx - pw / 2, cy - ph / 2, pw, ph);
+    // read-outs or gauges, by the wall
+    const r = U.mulberry32(((info.x || 0) * 7919 + (info.y || 0) * 104729) >>> 0);
+    g.fillStyle = U.rgba(colors[2] || '#7ad8ff', 0.8);
+    for (let i = 0; i < 4; i++) {
+      if (dx) g.fillRect(cx - pw / 2 + 1.5, cy - ph / 2 + 2 + i * 5, 2 + r() * (pw - 4), 1.4);
+      else g.fillRect(cx - pw / 2 + 2 + i * 5, cy - ph / 2 + 1.5, 1.4, 2 + r() * (ph - 4));
+    }
+    if ((info.variant || 0) >= 2) {
+      g.fillStyle = 'rgba(0,0,0,0.55)';
+      g.fillRect(cx - pw / 2, cy - ph / 2, pw, ph);
+    }
+  }
+  function displayGlow(g, x, y, tx, ty, game, t, colors) {
+    const L = game.level, v = L.variant ? L.variant[ty * L.w + tx] : 0;
+    if (v >= 2) return;
+    const info = { n: (dx, dy) => L.t(tx + dx, ty + dy) };
+    const [dx, dy] = openSide(info);
+    const cx = x + T / 2 + dx * (T / 2 - 5.5), cy = y + T / 2 + dy * (T / 2 - 5.5);
+    const k = 0.25 + 0.15 * Math.sin(t * 2 + tx * 1.7 + ty);
+    g.fillStyle = U.rgba(colors[2] || '#7ad8ff', k);
+    g.fillRect(cx - (dx ? 4 : 10), cy - (dx ? 10 : 4), dx ? 8 : 20, dx ? 20 : 8);
+    // a scan line
+    g.fillStyle = 'rgba(255,255,255,0.5)';
+    const s = (t * 12 + tx * 5) % 20;
+    if (dx) g.fillRect(cx - 4, cy - 10 + s, 8, 1);
+    else g.fillRect(cx - 10 + s, cy - 4, 1, 8);
+  }
 
   // ------------------------------------------------------------ light fittings
   const FITTINGS = {

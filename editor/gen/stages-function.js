@@ -621,6 +621,27 @@
       if (t && t.tag) continue;
       P.floor.tiles[k] = { terrain: 'mat-' + fn.wall, variant: state === 2 && rng.chance(0.4) ? 2 : state };
     }
+    // windows in thin walls (open floor on both sides, the wall straight, away from doors) and displays or machine
+    // panels set into the room's own walls, more in rooms that would have them
+    const at = (k) => k.split(',').map(Number);
+    const straight = (x, y) => (P.base(x - 1, y) === '#' && P.base(x + 1, y) === '#') || (P.base(x, y - 1) === '#' && P.base(x, y + 1) === '#');
+    const nearDoor = (x, y) => ORTHO.concat([[1, 1], [-1, -1], [1, -1], [-1, 1]]).some(([ox, oy]) => P.base(x + ox, y + oy) === '+');
+    const floorSides = (x, y) => ORTHO.filter(([ox, oy]) => P.base(x + ox, y + oy) === '.').length;
+    const WINDOWY = ['display', 'commerce', 'command', 'medical', 'research', 'reception', 'living'];
+    const SCREENY = ['command', 'office', 'research', 'industry', 'medical', 'detention'];
+    const ok = (k) => {
+      const [x, y] = at(k);
+      return straight(x, y) && !nearDoor(x, y) && !P.floor.objs[k] && P.floor.tiles[k] && P.floor.tiles[k].terrain === 'mat-' + fn.wall;
+    };
+    const cands = [...ring].sort().filter(ok);
+    const winChance = WINDOWY.includes(fn.cluster) ? 0.3 : 0.1;
+    for (const k of cands) {
+      const [x, y] = at(k);
+      if (floorSides(x, y) === 2 && rng.chance(winChance)) P.floor.tiles[k] = { terrain: 'mat-' + fn.wall + '-win', variant: P.floor.tiles[k].variant };
+    }
+    const faces = cands.filter((k) => floorSides(...at(k)) === 1 && P.floor.tiles[k].terrain === 'mat-' + fn.wall);
+    const nDisp = (SCREENY.includes(fn.cluster) ? 2 : 0) + (rng.chance(0.4) ? 1 : 0);
+    for (const k of rng.shuffle(faces).slice(0, nDisp)) P.floor.tiles[k] = { terrain: 'mat-' + fn.wall + '-disp', variant: P.floor.tiles[k].variant };
   }
   const OVERLAY_DECALS = {
     scavenged: ['stain', 'papers', 'rubble'], damaged: ['rubble', 'crack', 'scorch'], repurposed: ['graffiti', 'stain'], blast: ['scorch', 'rubble', 'crack'],
