@@ -10,6 +10,7 @@
  *     done                  the installation's goal flag: a toast and a line in the Expedition Ledger
  *     roaches               Gladiator Roaches come back between missions at the floor's roachSpawn vents (up to 5),
  *                           as on the hand-built floors; they never drop anything
+ *   a level trap's `off`    a flag that switches that one trap off (a riddle terminal's, terminals.js)
  */
 'use strict';
 (function () {
@@ -61,10 +62,19 @@
       tr.beams = [];
     }
   }
+  // a trap with its own off flag (a riddle terminal answered) sleeps once it's set
+  function quietOwn(game) {
+    for (const tr of game.traps || []) {
+      if (!tr.def.off || !HN.flag(game, tr.def.off)) continue;
+      tr.armed = false;
+      tr.beams = [];
+    }
+  }
   HN.onArrive((game, def, s, last) => {
     const g = def.hn && def.hn.gen;
     if (!g) return;
     if (g.trapsOff && HN.flag(game, g.trapsOff)) quietTraps(game);
+    quietOwn(game);
     // between missions: the native bio-weapons come back (they never drop anything)
     if (g.roaches && last != null && last < s.mission) {
       const vents = game.level.tags.roachSpawn || [];
@@ -81,6 +91,7 @@
     const g = game && genOf(game);
     if (!g) return;
     if (name === g.trapsOff) quietTraps(game);
+    quietOwn(game);
     if (name === g.done) {
       const site = HN.GEN_SITES[g.slug];
       const title = (site && site.pin && site.pin.name) || game.level.def.hn.place || 'The installation';

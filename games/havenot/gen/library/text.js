@@ -235,6 +235,15 @@ LM.genLibrary('havenot', {
       powerDone: ['BREAKER PANEL: DOORS (SECURE WING) ON. The hum changes pitch somewhere down the hall.'],
       traps: ['FACILITIES · COURTESY SYSTEMS (DARTS, BEAMS, FLOOR SAFETY): ARMED. It wants a facilities password, or an argument.'],
       trapsDone: ['COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”'],
+      chattyHint: [
+        'Oh! Someone left a {card} in {room}. I watched them do it. Then I watched them not come back for it.',
+        'The {card}? {room}. Everyone always asks about the {card}. Nobody ever asks about me.',
+        'You want the stairs, don’t you. Everyone wants the stairs. The {card} for them is in {room}. Will you come back and say hi?',
+      ],
+      chattyNoKey: [
+        'The way on is past {room}. I can’t see it from here, but I can hear it humming.',
+        'Go through {room}. Then keep going. That’s what I’d do if I had legs. And a reason.',
+      ],
       trapsOk: ['Courtesy systems on this floor: OFF.'],
       decor: ['Green text scrolls past: inventory of things that no longer exist.', 'A screen of numbers going up. Nobody knows what happens when they stop.', 'PRODUCTIVITY: 0%. TARGET: 110%. STATUS: EXCELLENT.', 'LOG: All quiet. All quiet. All quiet. Visitor detected. All quiet.'],
     },

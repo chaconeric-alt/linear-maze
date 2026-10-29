@@ -61,6 +61,7 @@
     'Hold still. Corners make the ray bounce.',
     'Do you know how long it took me to be this smooth? Forever. I was always this smooth.',
     'Children! Roll to me!',
+    'EGGSTERMINATE THE HUMANOID! Oh, I do love it when they say it in chorus.',
     'Your skeleton is so… branched. It disgusts me.',
     'You cannot crack what is already perfect.',
     'When the Eggmageddon comes, I will remember your face. As a cautionary shape.',

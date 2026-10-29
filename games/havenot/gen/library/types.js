@@ -90,13 +90,13 @@ LM.genLibrary('havenot', {
   // zones, front to back (Vol 2 p. 59): rank sets the order; lockKinds: how the way into this zone is locked
   zones: {
     public: { name: 'Public Zone', rank: 0, lockKinds: { hack: 1 } },
-    employee: { name: 'Employee Zone', rank: 1, lockKinds: { badge: 3, hack: 1, switch: 1 } },
+    employee: { name: 'Employee Zone', rank: 1, lockKinds: { badge: 3, hack: 1, switch: 1, hygiene: 1 } },
     service: { name: 'Service Area', rank: 1, lockKinds: { power: 2, hack: 1, switch: 1 } },
     security: { name: 'Security Zone', rank: 2, lockKinds: { hack: 2, badge: 1, switch: 1 } },
     gallery: { name: 'The Galleries', rank: 2, lockKinds: { switch: 2, hack: 1, power: 1 } },
-    labs: { name: 'Laboratory Zone', rank: 3, lockKinds: { hack: 2, power: 1, switch: 1 } },
+    labs: { name: 'Laboratory Zone', rank: 3, lockKinds: { hack: 2, power: 1, switch: 1, hygiene: 1 } },
     command: { name: 'Command', rank: 3, lockKinds: { hack: 2, switch: 1 } },
-    executive: { name: 'Executive Zone', rank: 4, lockKinds: { hack: 2, badge: 1 } },
+    executive: { name: 'Executive Zone', rank: 4, lockKinds: { hack: 2, badge: 1, hygiene: 1 } },
     vault: { name: 'The Vault', rank: 4, lockKinds: { hack: 1, switch: 1, power: 1 } },
   },
 
@@ -108,6 +108,9 @@ LM.genLibrary('havenot', {
     switch: { name: 'Door sealed from elsewhere', ref: 'Vol 2 p. 69 (Sealed)', keyKind: 'switch', bypass: 'hack', need: 'the door release', color: '#e8a23a', panelTitle: 'door controls' },
     power: { name: 'Power-locked door', ref: 'Vol 2 p. 69 (Power-locked)', keyKind: 'power', need: 'power: a breaker panel on this floor', color: '#9adf6a' },
     mech: { name: 'Mechanical lock', ref: 'Vol 2 p. 69 (Locked)', keyKind: 'mech', critical: false },
+    // a checkpoint that wants your Dark Tetrad score: the 'switch' is an ELIZA terminal somewhere before it, which
+    // scores you (once a run); the checkpoint beside the door then takes the score, or a hack (hn-gen-kit/terminals.js)
+    hygiene: { name: 'Mental Hygiene checkpoint', ref: 'original', keyKind: 'switch', bypass: 'hack', need: 'a hygienic mind: your Dark Tetrad score at the checkpoint', color: '#c87aff', panelTitle: 'Mental Hygiene checkpoint', panelItem: 'hn-hygiene-panel', keyItem: 'eliza' },
     'secret-door': { name: 'Secret door', ref: 'Vol 2 p. 68', status: 'planned', notes: 'A wall tile that becomes a door when found (Sense stat, Threat Sensor, a terminal). Optional areas only.' },
     'stuck-door': { name: 'Stuck door', ref: 'Vol 2 pp. 69–70', status: 'planned', notes: 'Needs a pry bar or door jack item, placed earlier. Needs the kit.' },
     'puzzle-door': { name: 'Puzzle door', ref: 'Vol 2 pp. 139–144', status: 'planned', notes: 'Opened by a kit puzzle fixture (Hangman terminal, logic gates).' },
