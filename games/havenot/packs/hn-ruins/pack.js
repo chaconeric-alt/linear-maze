@@ -15,6 +15,7 @@ LM.describePack({
     '../../../../editor/gen/stages-concept.js',
     '../../../../editor/gen/stages-graph.js',
     '../../../../editor/gen/stages-layout.js',
+    '../../../../editor/gen/stages-function.js',
     '../../../../editor/gen/stages-fill.js',
     '../../../../editor/gen/stages-words.js',
     '../../../../editor/gen/validate.js',

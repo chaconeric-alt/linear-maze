@@ -3,6 +3,10 @@
  * layout that gives some rooms a library room type (a Throne Chamber, an Operating Theater), which then decides
  * their floor, walls, light, furniture, device, loot and hazard. The rest keep the generator's own rules.
  *
+ * Brief options: functional (a probability, or false), settings { mode, dominant, secondary }, clusterStrength,
+ * density (a class for every room), frequencies { probability_room_hazard... }, functionPool (room ids: only these),
+ * preserveOld (the generator as it was).
+ *
  * Stage 'functions' (after layout):
  *   - the installation's settings: one, a dominant with a secondary, a setting per floor, mixed or chaotic
  *     (brief.settings: { mode, dominant, secondary } or chosen by the installation type's leanings)
@@ -103,7 +107,8 @@
         }
         // neighbours already given a function steer this one
         const near = [r.parent].concat(r.kids || []).map((i) => floor.rooms[i]).filter((n) => n && n.fn);
-        const cands = all.filter((c) => fits(C, c, r) && !used.has(c.id));
+        const pool = b.functionPool ? all.filter((c) => b.functionPool.includes(c.id)) : all;
+        const cands = pool.filter((c) => fits(C, c, r) && !used.has(c.id));
         if (!cands.length) continue;
         const relOf = (c) => {
           const ref = near.length ? near[0].fn : { setting: areaSet, cluster: null };
