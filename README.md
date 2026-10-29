@@ -1,6 +1,8 @@
 # Linear Maze workspace
 
-Version 0.7.0. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+Version 0.7.1. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+
+New in 0.7.1: big monsters find their way by their size: through gaps and doors they fit, round by a wider way, or they wait at the gap and shoot (engine SPEC 6.26).
 
 New in 0.7.0: the next-generation line (0.6.0, below) and Dead Signal's engine (0.5.4–0.5.11, below) are one engine again: factions and allies, objectives and their markers, story lines in the middle of the screen, long bodies, curved rooms and the floor below, endings and scripted travel, places on the minimap, alongside shapes, the tilted camera, reloads and heat, partial armor and damage types.
 

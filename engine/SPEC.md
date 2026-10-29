@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.7.0 · October 2026
+Engine 0.7.1 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -15,6 +15,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.2:** stairs can lead somewhere of their own, stay locked until a story flag, and land you on a tagged tile (section 5, *Stairs*; a level's `stairs`). Elevators can wait for power and keep a stop locked (section 6.15, `power` and `stops`). Doors can open for a story flag instead of a key: clearance doors (section 6.2). Transmissions: someone speaks over an intercom while the game runs, from a trap or from code (section 6.16; `engine/comms.js`), with a new kind of content, `speakers`. Trap effects a pack defines can describe their settings for the editor (`params`, section 6.8).
 
 **New in 0.5.3:** status effects: timed conditions on the player or an enemy (slowed, chilled, burning, stunned...) that any weapon, projectile, attack, explosion or trap can carry, with resistance from armor and a chip on the HUD (section 6.17; `engine/status.js`, a new kind of content, `statuses`). Named boss bars across the top of the screen, with phases (section 6.5, `bossBar`). More kinds of ammunition than the four built in (section 6.18, `LM.defineAmmo`). Key items: things the player carries from floor to floor and sees in the inventory (section 6.19). An enemy can change its own damage reduction as it fights (`e.armor`) and hear every hit (`onHurt`). `LM.comms.speaking()` says who is talking.
+
+**New in 0.7.1:** big bodies find their way by their size. A monster wider than a tile paths only through gaps and doors it fits, goes round by a wider way when there is one, and otherwise waits where it fits closest, shooting if it can, instead of shoving at a door it can't get through. Everything that fits a one-tile door moves exactly as before (section 6.26).
 
 **New in 0.7.0:** the two lines of the engine are one again: the next generation (0.6.0: shapes, the tilted camera, reloads and heat, partial armor, damage types) and Dead Signal's 0.5.4–0.5.11 (factions and allies, objectives and their markers, story lines in the middle of the screen, long bodies' hitboxes, curved rooms, the floor below, endings, scripted travel, places on the minimap). The player's look moved to section 6.25.
 
@@ -162,7 +164,7 @@ Entities are circles. Movement is sub-stepped and resolved axis by axis against 
 
 Each enemy has one **behaviour** (how it moves) and a list of **attacks** (what it does). Every frame the behaviour writes a desired direction; then the attack system either continues the current attack or starts the first one whose `canStart` passes and whose cooldown is ready. Attacks can override movement (a charge, a nova that roots the caster).
 
-Enemies notice the player by line of sight within `sight` range, by being shot, or by an alarm; noticing wakes friends (of the same faction) within 150 units. Navigation: straight at the player when visible, otherwise downhill on a breadth-first flow field rooted at the player's tile (8-way, no corner cutting). Hazard tiles are avoided; knockback can still throw enemies into pits.
+Enemies notice the player by line of sight within `sight` range, by being shot, or by an alarm; noticing wakes friends (of the same faction) within 150 units. Navigation: straight at the player when visible, otherwise downhill on a breadth-first flow field rooted at the player's tile (8-way, no corner cutting). Hazard tiles are avoided; knockback can still throw enemies into pits. A body wider than a tile has its own field over the floor it fits (section 6.26).
 
 **Who an enemy is after** is its *foe* (`e.foe`; `LM.ai.foe(e, game)`). With the default factions that is always the player, and the rest of this paragraph changes nothing. When the faction table gives an enemy other enemies to fight (section 6.20), it looks round a few times a second for the nearest hostile it can see (within `sight` all round, or within its `view` cone ahead, and with a clear shot: nothing picks a fight through glass), keeps its current foe a little longer than a new one, turns on whoever hurts it, and, once nothing is in sight, keeps after the one it was fighting, or the player if it knows about them. `e.distP` and `e.seeLos` are measured to the foe (behaviours and attacks read them, so every core behaviour and attack fights whatever the foe is); `e.pDist` and `e.pSee` are always the player's (whether the player can see the enemy, for drawing). A foe that isn't the player is chased straight when visible and otherwise by a short search (`LM.nav.step(level, x, y, toX, toY, maxTiles)`, wrapped as `LM.ai.goTo(e, game, x, y, weight)`).
 
@@ -400,7 +402,7 @@ Projectile fields: `radius`, `color`, `tracer`, `width`, `glow`, `wallSparks`, `
 | `init`, `update`, `onDeath` | Hooks `(e, game)` / `(e, dt, game)`. In `init`, `e._props` is the placement's props. |
 | `onHurt(e, game, dmg, opts)` | Every hit that lands, after damage (before death). A behaviour can set `e.armor` (a number, even negative) to change the enemy's damage reduction as it fights: shields up, a weak spot showing. |
 
-Core behaviours: `chaser`, `swarmer`, `skirmisher`, `lobber`, `turret`, `warden`, `boss`. A behaviour is `{ update(e, dt, game) }` that adds to `e.mx`, `e.my` and may scale `e.speedMul`. Helpers: `LM.ai.chase`, `away`, `strafe` (all toward or around the foe), `goTo(e, game, x, y, weight, lim)` (a point, the long way round if need be; it searches out to `lim` tiles, 40 by default, and returns false when there's no way), `wander`, `separate`, `avoidHazards`, `foe` (who it's after), `hostilesNear(e, game, x, y, R)` (everything its blast would hurt).
+Core behaviours: `chaser`, `swarmer`, `skirmisher`, `lobber`, `turret`, `warden`, `boss`. A behaviour is `{ update(e, dt, game) }` that adds to `e.mx`, `e.my` and may scale `e.speedMul`. Helpers: `LM.ai.chase`, `away`, `strafe` (all toward or around the foe), `goTo(e, game, x, y, weight, lim)` (a point, the long way round if need be; it searches out to `lim` tiles, 40 by default, and returns false when there's no way), `wander`, `separate`, `avoidHazards`, `foe` (who it's after), `hostilesNear(e, game, x, y, R)` (everything its blast would hurt). `chase` and `goTo` go by the enemy's size (section 6.26): a big body only takes ways it fits, and `chase` returns false and sets `e.blocked` while it's waiting at a gap it can't get through.
 
 Core attacks and their parameters:
 
@@ -955,6 +957,27 @@ LM.playerLook = (P, game) => ({
 
 Every part is optional. They draw in the player's own frame: origin at the body centre, +x along the aim, before the scale of a fall. `kick` is how far the gun has recoiled.
 
+### 6.26 Big bodies
+
+An enemy collides with walls at its full `radius`, so one wider than a tile can't get through a one-tile door. Navigation knows that (0.7.1).
+
+**Size class.** `LM.nav.sizeOf(e)`: 1 for a radius of 16 or less (half a tile: everything that fits a one-tile door), otherwise how many tiles wide a gap it needs (radius 17–32: 2; 33–48: 3; up to 4). Class 1 navigates exactly as before this section existed; nothing below applies to it. The `hitbox` capsule (section 6, *Enemies*) is for shots only and doesn't change the class.
+
+**The clearance map.** `level.navClear`, one byte a tile: the side of the biggest square of open floor the tile is part of (0 for wall, up to 4). Open floor is floor that isn't a hazard; a door counts as open (doors open; locks are the flow field's business), and so does a curve tile whose middle is on the floor side. A solid item (`solid: true` or `'rect'`) takes the tiles whose middles it covers. A class-k body walks only on tiles of clearance k or more. The map is built the first time a big body on the floor asks for it (a 50 by 40 floor takes well under a millisecond, the largest generated floors about 2 ms), again after `game.setTerrain`, and again when the number of solid items changes (checked with the flow field, a few times a second). A floor with no big bodies never builds it.
+
+**Fields.** The player's flow field is still worked out once, from the player's tile. Each size class that's asked gets its own field from the same tile (`LM.nav.fieldFor(level, k)`), rebuilt only when the main one is. `LM.nav.dir(level, x, y, k)` and `LM.nav.step(level, x, y, toX, toY, lim, k)` take the class; leaving it out is class 1.
+
+**What a big body does** (`LM.ai.chase`, which every core behaviour uses):
+
+- In sight, and the straight way to its foe is wide enough all along (`LM.nav.wideLine`): straight at it.
+- Otherwise downhill on its own field: round by the way it fits, if there's one within the field's 70 tiles.
+- No way at all (you're through a door it can't fit, or in a corridor too narrow for it): it follows the player's own field as far as it fits (`LM.nav.toward`), stops at the bottleneck and stays there. `e.blocked` is true and `chase` returns false, so a behaviour can do something of its own; its attacks carry on as usual, so anything with a ranged attack shoots through the gap. Once it hasn't seen its foe for four seconds it wanders about near there, and it comes on again as soon as there's a way.
+- After anything other than the player (factions), `LM.ai.goTo` searches by its size; no way, and it waits.
+
+It never pushes at a gap it doesn't fit, so it doesn't jitter in a doorway. A level designer who wants a big monster to reach somewhere gives it a way two tiles wide (or wider, for bigger ones).
+
+Tests: `node tools/nav-tests.mjs` (hand-made floors: a one-tile door, a wider way round, furniture and walls that close a gap).
+
 ---
 
 ## 7. Recipes
@@ -1004,7 +1027,8 @@ Every part is optional. They draw in the player's own frame: origin at the body 
 - Keyboard and mouse only. No gamepad, no touch controls, no key rebinding.
 - Moving lights (muzzle flashes, explosions, glowing projectiles) do not cast shadows; only static lights do.
 - Enemies don't take cover, flank, or hear gunfire beyond the alarm effect and waking nearby friends (packs add hearing of their own).
-- An enemy after another enemy finds its way with a search out to 40 tiles (a pack's behaviour can ask `goTo` for more); beyond that it waits. The flow field is the player's alone. Body size isn't part of navigation: a big enemy will try a door it can't fit through (and wait there). Nor is furniture: a path can run through a table (the enemy slides along it, or waits); hazard tiles are walls to it.
+- An enemy after another enemy finds its way with a search out to 40 tiles (a pack's behaviour can ask `goTo` for more); beyond that it waits. The flow field is the player's alone. Furniture isn't part of the flow field for ordinary enemies: a path can run through a table (the enemy slides along it, or waits); hazard tiles are walls to it. Big bodies (section 6.26) do count solid furniture.
+- The clearance map (section 6.26) is by whole tiles: two thin partitions with a gap a big body would just fit between count as walls, and a gap two tiles wide but bent round a corner can let a big body try a turn it scrapes along.
 - An enemy opens a door only while it's after something (`aggro`): a pack's runaway that should get through doors keeps itself `aggro`.
 - No dropping or selling weapons, no way to remove gear except swapping or taking it off into the pack.
 - Curved walls (section 23) don't get neon tubes or ceiling pipes along them yet, and the minimap draws their squares as floor.

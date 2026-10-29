@@ -676,6 +676,7 @@
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) this.renderer.invalidateTile(tx + dx, ty + dy);
       for (const li of this.staticLights) if (U.dist(li.x, li.y, tx * T + T / 2, ty * T + T / 2) < li.r + T) li.dirty = true;
       L.navDirty = true;
+      L.navClearDirty = true;
     }
     addStaticLight(spec) {
       const li = Object.assign({ r: spec.radius || 160, color: '#ffb060', intensity: 0.8, flicker: 0, phase: Math.random() * 10, poly: null, dirty: true }, spec);
@@ -902,6 +903,7 @@
       this.navT = (this.navT || 0) - dt;
       if ((pi !== L.navFrom && this.navT <= 0) || L.navDirty) {
         if (L.inBounds(ptx, pty) && L.walkable(ptx, pty)) LM.nav.compute(L, ptx, pty);
+        LM.nav.checkClearance(L, this);
         this.navT = 0.15;
       }
 
