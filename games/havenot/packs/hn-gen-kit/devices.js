@@ -7,10 +7,13 @@
  *   rest      Rest: a little health and a short buff, once a mission; a broken one grabs you.
  *   credits   Use: pays out, once; a malfunctioning one charges you. Hack: more, or the alarm.
  *   data      Read: its records (a line in the Ledger) and the room's hazard, if it knows it. Hack: switches the
- *             room's hazard off.
+ *             room's hazard off; pulls the room's locker codes; a security console stands down the floor's
+ *             alarms and identity checks.
  *   buff      Use: a buff or a regret, once a mission.
  *   salvage   Strip: parts for the satchel; stripping it breaks it.
- *   machine   Power: on (active: the room's hazard runs) or off (disabled: the hazard stops, its lights die).
+ *   machine   Power: on (active: the room's hazard runs) or off (disabled: the hazard stops, its lights die). A
+ *             power source (generator, core, turbine, reactor) shut down or wrecked also kills the lights, switch
+ *             traps, turrets and other machines within 12 tiles and unseals sealed doors there.
  *   ceremony  Use (sit, speak, pray): a blessing, nothing, or the room's displeasure.
  *   cage      Open: something in it comes out, or something was left in it.
  *   show      Inspect, Wake: an animated display; waking it is sometimes a mistake.
@@ -19,7 +22,7 @@
  */
 'use strict';
 (function () {
-  const LM = window.LM, HN = LM.HN, U = LM.util;
+  const LM = window.LM, HN = LM.HN, U = LM.util, T = LM.TILE;
   const h = (...a) => LM.ui.h(...a);
   const lore = (t) => h('p', { class: 'lore' }, t);
   const content = () => (window.LMGen && window.LMGen.libraries && window.LMGen.libraries.havenot && window.LMGen.contentOf ? window.LMGen.contentOf(window.LMGen.libraries.havenot) : null) || null;
@@ -94,6 +97,88 @@
     }
     return false;
   };
+  // ------------------------------------------------------------ what a device is wired to
+  // A machine's room lights go with it. A power source (a generator, core, turbine, reactor) shut down or wrecked
+  // takes the floor round it with it: lights, switch traps, turrets, other machines, and any sealed security door
+  // within 12 tiles. Kept with the run, and put back that way when you come back to the floor.
+  const POWER = /generator|power|core\b|turbine|reactor|dynamo|battery|engine|furnace|boiler/;
+  const isPower = (it) => it.props.fam === 'turbine' || POWER.test(it.props.name || '');
+  const powerKey = (it) => it.props.uid || 'p' + it.tx + ',' + it.ty;
+  const near = (a, b, tiles) => Math.hypot(a.x - b.x, a.y - b.y) < tiles * T;
+  const roomItems = (game, it, pred) => {
+    const rm = roomOf(game, it);
+    return rm ? game.items.filter((x) => !x.dead && x.tx >= rm.rect[0] && x.ty >= rm.rect[1] && x.tx < rm.rect[0] + rm.rect[2] && x.ty < rm.rect[1] + rm.rect[3] && pred(x)) : [];
+  };
+  const lightsOut = (game, list, outv) => {
+    for (const l of list) if (l.light) l.light.off = outv;
+  };
+  function cutPower(game, it, quiet) {
+    // the room's own lights
+    lightsOut(game, roomItems(game, it, (x) => x.def.id === 'hn-mat-light'), true);
+    if (!isPower(it)) return;
+    const R = 12;
+    let traps = 0, turrets = 0, doors = 0, machines = 0;
+    lightsOut(game, game.items.filter((x) => x.def.id === 'hn-mat-light' && near(x, it, R)), true);
+    for (const tr of game.traps || []) {
+      if (!tr.armed || tr.def.gen !== 'switch') continue;
+      const tiles = (tr.trigger && tr.trigger.tag && game.level.tags[tr.trigger.tag]) || [];
+      if (tiles.some((p) => near({ x: p.x * T + T / 2, y: p.y * T + T / 2 }, it, R))) {
+        tr.armed = false;
+        tr.beams = [];
+        traps++;
+      }
+    }
+    for (const e of game.enemies) if (!e.dead && /turret/.test(e.def.id) && near(e, it, R)) {
+      e.stunned = 1e6;
+      e.aggro = false;
+      turrets++;
+    }
+    for (const d of game.doors || []) if (d.sealed && near(d, it, R)) {
+      d.sealed = false;
+      doors++;
+    }
+    for (const x of game.items) if (x !== it && x.props && x.props.dev && x.props.kind === 'machine' && near(x, it, R) && dstate(game, x) !== 'destroyed') {
+      setState(game, x, 'disabled');
+      machines++;
+    }
+    if (!quiet) {
+      const what = [traps && traps + ' trap' + (traps > 1 ? 's' : ''), turrets && turrets + ' turret' + (turrets > 1 ? 's' : ''), doors && doors + ' sealed door' + (doors > 1 ? 's' : ''), machines && machines + ' other machine' + (machines > 1 ? 's' : '')].filter(Boolean);
+      game.toast('The lights go out round the ' + it.props.name + (what.length ? '; with them, ' + what.join(', ') + '.' : '.'), 'key');
+      HN.note(game, 'change', 'You cut the power at the ' + it.props.name + '.');
+    }
+    const s = HN.st(game);
+    ((s.powerCut = s.powerCut || {})[game.level.def.id] = s.powerCut[game.level.def.id] || {})[powerKey(it)] = true;
+  }
+  function restorePower(game, it) {
+    lightsOut(game, roomItems(game, it, (x) => x.def.id === 'hn-mat-light'), false);
+    if (isPower(it)) lightsOut(game, game.items.filter((x) => x.def.id === 'hn-mat-light' && near(x, it, 12)), false);
+    const s = HN.st(game), m = (s.powerCut || {})[game.level.def.id];
+    if (m) delete m[powerKey(it)];
+  }
+  HN.onArrive((game) => {
+    const m = (HN.st(game).powerCut || {})[game.level.def.id];
+    if (!m) return;
+    for (const it of game.items) if (/^hn-s10w?$/.test(it.def.id) && m[powerKey(it)]) cutPower(game, it, true);
+  });
+  // a data console opens the room's coded lockers; a security console stands down the floor's alarms and checks
+  function pullCodes(game, it) {
+    const boxes = roomItems(game, it, (x) => x.def.id === 'hn-cache' && x.props.code && !x.unlocked);
+    for (const b of boxes) {
+      if (b.props.codeFlag) HN.setFlag(game, b.props.codeFlag);
+      b.unlocked = true;
+    }
+    game.toast(boxes.length ? 'The ' + it.props.name + ' coughs up the room’s locker codes. ' + boxes.length + ' unlocked.' : 'No codes on file for anything in here.', boxes.length ? 'good' : 'key');
+  }
+  function standDown(game) {
+    let n = 0;
+    for (const x of game.items) if (x.def.id === 'hn-hazard' && /alarm|identity/.test(x.props.behaviour) && x.props.off && !game.hasFlag(x.props.off)) {
+      HN.setFlag(game, x.props.off);
+      n++;
+    }
+    game.toast(n ? 'Security stood down: ' + n + ' alarm' + (n > 1 ? 's' : '') + ' and checkpoint' + (n > 1 ? 's' : '') + ' off on this floor.' : 'Nothing on this floor answers to it.', n ? 'good' : 'key');
+  }
+  const SECURITY = /security|surveillance|camera|alarm|checkpoint|monitor|watch/;
+
   const startHazard = (game, it) => {
     const hz = hazardIn(game, it);
     if (hz) {
@@ -149,6 +234,8 @@
         void C;
       } },
       st !== 'destroyed' && hazardIn(game, it) && { label: 'Hack it: safety off', run: () => hack(game, it, 'Switch the room’s safety features off from here.', () => stopHazard(game, it), 'shock') },
+      st !== 'destroyed' && roomItems(game, it, (x) => x.def.id === 'hn-cache' && x.props.code && !x.unlocked).length && { label: 'Hack it: locker codes', run: () => hack(game, it, 'Pull the room’s locker codes from its records.', () => pullCodes(game, it), 'shock') },
+      st !== 'destroyed' && SECURITY.test(it.props.name || '') && { label: 'Hack it: stand security down', run: () => hack(game, it, 'Stand down this floor’s alarms and identity checks.', () => standDown(game), 'shock') },
     ],
     buff: (game, it, st) => [
       st !== 'disabled' && st !== 'destroyed' && { label: 'Use it', run: () => {
@@ -178,16 +265,19 @@
         }
         setState(game, it, 'active');
         startHazard(game, it);
+        restorePower(game, it);
         game.toast('The ' + it.props.name + ' grinds into life.' + (hazardIn(game, it) ? ' Something else in the room wakes with it.' : ''), hazardIn(game, it) ? 'warn' : 'key');
       } },
       st !== 'destroyed' && st !== 'disabled' && { label: 'Shut it down', run: () => {
         setState(game, it, 'disabled');
         stopHazard(game, it, 'You shut the ' + it.props.name + ' down. The room goes quiet: whatever it powered stops.');
         if (!hazardIn(game, it)) game.toast('The ' + it.props.name + ' spins down.', 'key');
+        cutPower(game, it);
       } },
       (st === 'disabled' || st === 'destroyed') && { label: 'Salvage parts', run: () => {
         salvageItem(game, it);
         setState(game, it, 'destroyed');
+        cutPower(game, it, st === 'disabled');
       } },
     ],
     ceremony: (game, it, st) => [
@@ -271,7 +361,10 @@
         lore('A ' + it.props.name + (it.props.odd ? ' that has no business being in here' : '') + '.' + (done ? ' Everything useful has been had off it.' : '')),
         rm && rm.note ? h('p', { class: 'muted' }, rm.name + ': ' + rm.note) : null,
         set ? h('p', { class: 'muted' }, set.name + ' (' + set.era + ').') : null),
-      actions: (done ? [] : [{ label: 'Strip it for ' + yields.name.toLowerCase(), onClick: () => stripPiece(game, it) }]).concat([{ label: 'Leave it', quiet: true }]),
+      actions: (done ? [] : [{ label: 'Strip it for ' + yields.name.toLowerCase(), onClick: () => stripPiece(game, it) }])
+        // a power source that isn't anyone's device: its breaker
+        .concat(isPower(it) && !((HN.st(game).powerCut || {})[game.level.def.id] || {})[powerKey(it)] ? [{ label: 'Cut its power', onClick: () => setTimeout(() => hack(game, it, 'Find the breaker and pull it.', () => cutPower(game, it), 'shock'), 0) }] : [])
+        .concat([{ label: 'Leave it', quiet: true }]),
     });
   };
   for (const id of ['hn-s10', 'hn-s10w']) {
