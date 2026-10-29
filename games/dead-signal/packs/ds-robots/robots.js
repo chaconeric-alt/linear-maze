@@ -38,17 +38,20 @@
   const visor = (e) => (e.faction === 'ally' ? GREEN : RED);
 
   // ------------------------------------------------------------ vision and hearing
+  // (with factions on, the engine's own look-round uses `view` too, and finds monsters as well as you)
   DS.robotSenses = function (e, game) {
     const P = game.player, v = e.def.view;
     if (e.aggro || !P || P.dead || !v) return;
+    const F = AI.foe(e, game);
     // a robot on its charging dock only listens
     const docked = e._props && e._props.docked;
-    if (!docked && e.seeLos && e.distP < (v.range || 320)) {
-      const a = Math.atan2(P.y - e.y, P.x - e.x);
-      if (Math.abs(U.angDiff(e.facing, a)) < (v.cone || 1)) return e.alert(game, true);
+    if (!docked && F && e.seeLos && e.distP < (v.range || 320)) {
+      const a = Math.atan2(F.y - e.y, F.x - e.x);
+      if (Math.abs(U.angDiff(e.facing, a)) < (v.cone || 1) && (F === P || e.foeSpotted)) return e.alert(game, true, F === P ? undefined : F);
     }
+    // gunshots: yours (it hears them however far you are from what it's after)
     const shots = game.stats.shots;
-    if (e.mem.shots != null && shots !== e.mem.shots && e.distP < (e.def.hear || 300)) e.alert(game, true);
+    if (e.mem.shots != null && shots !== e.mem.shots && e.pDist < (e.def.hear || 300) && LM.factions.hostile(e.faction, 'player')) e.alert(game, true);
     e.mem.shots = shots;
   };
 
@@ -136,9 +139,9 @@
       e.speedMul = 0.85;
     },
   };
-  /** Turn a robot's lamp toward the player at `rate` radians a second; returns whether the player is in its beam. */
+  /** Turn a robot's lamp toward its foe (you, mostly) at `rate` radians a second; returns whether the foe is in its beam. */
   DS.lampTrack = function (e, game, dt, rate, range, cone) {
-    const P = game.player;
+    const P = AI.foe(e, game);
     if (e.mem.lamp == null) e.mem.lamp = e.facing;
     if (!P || P.dead) return false;
     if (e.aggro) {
@@ -225,8 +228,9 @@
         G.glow(g, vx, vy, 7, c, e.aggro ? 0.95 : 0.55);
         // the aiming laser while it winds up
         const a = e.atk;
-        if (a && a.def.type === 'ranged' && a.t < (a.def.windup || 0.4) && LM.game && LM.game.player) {
-          const P = LM.game.player, m = muzzle(e, 15);
+        const P = LM.game && AI.foe(e, LM.game);
+        if (a && a.def.type === 'ranged' && a.t < (a.def.windup || 0.4) && P) {
+          const m = muzzle(e, 15);
           g.strokeStyle = 'rgba(255,58,42,' + (0.25 + 0.5 * (a.t / (a.def.windup || 0.4))) + ')';
           g.lineWidth = 0.8;
           g.beginPath();
@@ -249,7 +253,7 @@
         if (!e.aggro) e.facing += Math.sin(game.time * 0.9 + e.home.y) * dt * 0.8;
         DS.robotSenses(e, game);
         // caught in the beam: every robot nearby knows
-        if (e.aggro && !was) for (const o of game.enemies) if (!o.dead && o !== e && o.def.robot && U.dist(o.x, o.y, e.x, e.y) < 420) o.alert(game, false);
+        if (e.aggro && !was) for (const o of game.enemies) if (!o.dead && o !== e && o.def.robot && o.faction === e.faction && U.dist(o.x, o.y, e.x, e.y) < 420) o.alert(game, false, e.foe && e.foe.isEnemy ? e.foe : undefined);
       },
       onDeath(e, game) {
         game.particles.burst(e.x, e.y, 12, { type: 'spark', color: '#ffd27a', speed: 200, life: 0.4 });
@@ -508,7 +512,7 @@
           e.mem.beeped = true;
           LM.audio.play('courierBeep', { vol: game.vol(e.x, e.y) });
           // it calls the others
-          for (const o of game.enemies) if (!o.dead && o !== e && o.def.robot && U.dist(o.x, o.y, e.x, e.y) < 380) o.alert(game, false);
+          for (const o of game.enemies) if (!o.dead && o !== e && o.def.robot && o.faction === e.faction && U.dist(o.x, o.y, e.x, e.y) < 380) o.alert(game, false, e.foe && e.foe.isEnemy ? e.foe : undefined);
         }
       },
       onDeath(e, game) {
@@ -613,7 +617,18 @@
         DS.robotSenses(e, game);
         const L = e.def.lamp;
         e.mem.inBeam = DS.lampTrack(e, game, dt, L.rate, L.range, L.cone);
-        if (e.mem.inBeam && LM.status) LM.status.apply(game, game.player, 'uv');
+        const F = AI.foe(e, game);
+        if (e.mem.inBeam && F && LM.status) {
+          if (F.isPlayer) LM.status.apply(game, F, 'uv');
+          else {
+            // the lamp burns monsters too
+            e.mem.uvT = (e.mem.uvT || 0) - dt;
+            if (e.mem.uvT <= 0) {
+              e.mem.uvT = 0.5;
+              LM.combat.hurt(game, F, 6, { source: 'enemy', type: 'status', by: e });
+            }
+          }
+        }
       },
       onDeath(e, game) {
         game.particles.burst(e.x, e.y, 14, { type: 'spark', color: '#e0c8ff', speed: 200, life: 0.5 });
@@ -768,5 +783,18 @@
     });
   }
 
-  LM.definePack({ id: 'ds-robots', name: 'Robots', version: '0.2.0', behaviors, enemies });
+  // every robot is on the robots' side (a placed one can be put on yours with props.faction 'ally')
+  for (const d of Object.values(enemies)) if (d.robot && !d.faction) d.faction = 'robot';
+
+  // Dead Signal's sides (engine factions). The robots in defence mode and the things from the labs both
+  // go for you, and for ARIADNE's units ('ally', which never touch you); on most floors they leave each
+  // other alone. A floor where they're at war says so in its own `factions` (Floor 3).
+  const factions = {
+    player: ['monster', 'robot'],
+    monster: ['player', 'ally'],
+    robot: ['player', 'ally'],
+    ally: ['monster', 'robot'],
+  };
+
+  LM.definePack({ id: 'ds-robots', name: 'Robots', version: '0.3.0', behaviors, enemies, factions });
 })();

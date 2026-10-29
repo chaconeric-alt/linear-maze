@@ -3,7 +3,7 @@
  */
 LM.describePack({
   name: 'Puzzles',
-  version: '0.1.0',
+  version: '0.1.1',
   description: 'Puzzle pieces that set story flags: the breaker panel (throw it, or shoot it) and the keypad (type the code; it can hand over what it guards).',
   requires: ['linear-maze/core', 'ds-lab'],
   scripts: ['puzzles.js'],

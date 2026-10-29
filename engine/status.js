@@ -8,18 +8,26 @@
  *     shocked: { name: 'Shocked', seconds: 4, stun: true, only: 'robot' },
  *   }
  *
- * Fields: name (the HUD chip), seconds (how long, unless the hit says), speedMul (movement ×), dps (damage
+ * Fields: name (the HUD chip), seconds (how long, unless the hit says), speedMul (movement ×), bound (no dashing
+ * and no firing while it lasts: webbed, turned to stone), tint (a colour washed over the target, tintAlpha how
+ * strongly, default 0.45), fire (it counts as fire: burnable things go up, see an item's `burns`), dps (damage
  * a second, in ticks of `interval` seconds, default 0.5), stun (an enemy can't act while it lasts),
  * vulnerable (+ fraction of damage taken: 0.2 = 20% more), color (the chip, and a glow under an enemy),
  * only ('player' | 'robot' | 'monster': who it can land on; robots are enemies with `robot: true`),
- * cures (statuses it ends when it lands), hud: false (no chip), onApply(game, target, s), onEnd(game, target, s),
- * damageType (what its ticks count as, for an enemy's `takes`), ignoreArmor (its ticks go straight through armor: acid).
+ * cures (statuses it ends when it lands), hud: false (no chip), onApply(game, target, s),
+ * onEnd(game, target, s, reason) (reason 'expired' when it ran out, 'cleared' when something ended it),
+ * update(game, target, s, dt) (every frame while it lasts), damageType (what its ticks count as, for an enemy's
+ * `takes`), ignoreArmor (its ticks go straight through armor: acid).
+ * Long ones: countdown: true (the chip shows the seconds left), urgent: seconds (the chip pulses from then
+ * on), stack: n (applying it again adds one, up to n, as s.n, instead of more time, and its dps counts
+ * once per stack; refresh: true also restarts the clock), keep: true (the player carries it up and down the stairs: saved with them).
  *
  * Applying one: anything that hurts can carry `status` — a weapon, a projectile, an enemy attack, an
  * explosion, a trap — as an id or { id, seconds }. LM.combat.hurt applies it when the hit lands.
  * Code can call LM.status.apply(game, target, 'chilled', { seconds: 3 }) directly.
  *
- * Resistance: armor `resist: { spores: 1 }` (1 = immune, 0.5 = half as long); an enemy's def `resist` likewise.
+ * Resistance: armor `resist: { spores: 1 }` (1 = immune, 0.5 = half as long), and a gadget's `resist` the same;
+ * an enemy's def `resist` likewise.
  */
 'use strict';
 (function () {
@@ -40,6 +48,10 @@
         if (a && a.resist && a.resist[id]) r += a.resist[id];
       }
       for (const b of target.buffs || []) if (b.resist && b.resist[id]) r += b.resist[id];
+      for (const gid of target.gadgets || []) {
+        const gd = LM.find('gadgets', gid);
+        if (gd && gd.resist && gd.resist[id]) r += gd.resist[id];
+      }
     } else if (target.def && target.def.resist && target.def.resist[id]) r += target.def.resist[id];
     return U.clamp(r, 0, 1);
   };
@@ -69,14 +81,18 @@
     const r = S.resist(target, id);
     if (r >= 1) return null;
     const secs = ((opts && opts.seconds) || (typeof spec === 'object' && spec.seconds) || d.seconds || 2) * (1 - r);
-    const list = S.list(target);
+    // cure first: clearing replaces the target's list, so take the list after
     for (const c of d.cures || []) S.clear(game, target, c);
+    const list = S.list(target);
     let s = list.find((x) => x.id === id);
-    if (s) {
+    if (s && d.stack) {
+      s.n = Math.min(s.n + 1, d.stack === true ? 99 : d.stack);
+      if (d.refresh) s.t = s.max = secs;
+    } else if (s) {
       s.t = Math.max(s.t, secs);
       s.max = Math.max(s.max, s.t);
     } else {
-      s = { id, def: d, t: secs, max: secs, tick: 0 };
+      s = { id, def: d, t: secs, max: secs, tick: 0, n: 1 };
       list.push(s);
       if (d.onApply) d.onApply(game, target, s);
     }
@@ -90,7 +106,29 @@
     const gone = target.statuses.filter((s) => !id || s.id === id);
     if (!gone.length) return;
     target.statuses = target.statuses.filter((s) => !(!id || s.id === id));
-    for (const s of gone) if (s.def.onEnd) s.def.onEnd(game, target, s);
+    for (const s of gone) if (s.def.onEnd) s.def.onEnd(game, target, s, 'cleared');
+  };
+  /** The player's statuses worth carrying to the next floor (def.keep), as plain data. */
+  S.save = (target) => (target.statuses || []).filter((s) => s.def.keep && s.t > 0).map((s) => ({ id: s.id, t: +s.t.toFixed(2), max: s.max, n: s.n || 1 }));
+  S.load = function (target, list) {
+    target.statuses = [];
+    for (const o of list || []) {
+      const d = def(o.id);
+      if (d && o.t > 0) target.statuses.push({ id: o.id, def: d, t: o.t, max: o.max || o.t, tick: 0, n: o.n || 1 });
+    }
+  };
+  /** Is the target held fast by a status (def.bound: no dashing, no firing, while it lasts)? */
+  S.bound = function (target) {
+    if (!target || !target.statuses || !target.statuses.length) return false;
+    for (const s of target.statuses) if (s.def.bound) return true;
+    return false;
+  };
+  /** The colour a status washes over its target while it lasts (def.tint), strongest last; or null. */
+  S.tint = function (target) {
+    if (!target || !target.statuses || !target.statuses.length) return null;
+    let out = null;
+    for (const s of target.statuses) if (s.def.tint) out = { color: s.def.tint, a: s.def.tintAlpha == null ? 0.45 : s.def.tintAlpha, s };
+    return out;
   };
   /** Movement multiplier from everything the target has (1 when nothing slows it). */
   S.speedMul = function (target) {
@@ -120,7 +158,7 @@
         s.tick += dt;
         while (s.tick >= every && !target.dead) {
           s.tick -= every;
-          const dmg = d.dps * every;
+          const dmg = d.dps * every * (d.stack ? s.n || 1 : 1); // a stacking status hurts once per stack
           if (target.isPlayer) {
             // a status ticks through the short invulnerability a hit gives, and doesn't give any itself
             const saved = target.invuln;
@@ -131,11 +169,12 @@
         }
       }
       if (d.stun && target.isEnemy && s.t > 0) target.stunned = Math.max(target.stunned || 0, Math.min(s.t, 0.2));
+      if (d.update && s.t > 0 && !target.dead) d.update(game, target, s, dt);
       if (s.t <= 0) (ended || (ended = [])).push(s);
     }
     if (ended) {
       target.statuses = list.filter((s) => s.t > 0);
-      for (const s of ended) if (s.def.onEnd) s.def.onEnd(game, target, s);
+      for (const s of ended) if (s.def.onEnd) s.def.onEnd(game, target, s, 'expired');
     }
   };
 

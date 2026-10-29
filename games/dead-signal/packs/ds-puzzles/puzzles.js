@@ -6,7 +6,8 @@
  *                It can be shot, too: a broken breaker counts as thrown (props.shootable: false stops that).
  *   ds-keypad    a keypad on a wall. E opens it: type props.code (digits, or the number keys) and Enter.
  *                Right: it sets props.flag and hands over props.loot (loot entries: weapons, armor, items),
- *                then shows props.text. props.hint is printed under the display.
+ *                then shows props.text. props.hint is printed under the display; props.known (a flag) and
+ *                props.knownText: once that flag is set, the keypad reminds you of the code.
  */
 'use strict';
 (function () {
@@ -25,6 +26,7 @@
     .kp-grid button { height: 44px; font: 600 17px/1 var(--font-ui); color: #e8e4dc; background: #24272b; border: 1px solid #3a3e44; cursor: pointer; }
     .kp-grid button:hover { background: #2e3237; }
     .kp-msg { min-height: 1.4em; font: 400 13px/1.4 var(--font-ui); color: var(--muted, #8a8f98); text-align: center; max-width: 320px; }
+    .kp-known { margin-top: 4px; color: #ffd36a; }
   `);
 
   function throwBreaker(it, game, how) {
@@ -39,7 +41,9 @@
     const code = String(it.props.code || '0000');
     let entry = '';
     const disp = h('div', { class: 'kp-display' });
-    const msg = h('div', { class: 'kp-msg' }, it.props.hint || '');
+    // props.known (a flag): once you know the code, the keypad reminds you (props.knownText)
+    const knows = it.props.known && game.hasFlag(it.props.known);
+    const msg = h('div', { class: 'kp-msg' }, it.props.hint || '', knows ? h('div', { class: 'kp-known' }, it.props.knownText || 'You know the code: ' + code + '.') : null);
     const show = () => (disp.textContent = (entry + '····················').slice(0, code.length));
     const press = (k) => {
       disp.classList.remove('bad');
@@ -63,7 +67,7 @@
       void disp.offsetWidth;
       disp.classList.add('bad');
       LM.audio.play('locked');
-      msg.textContent = entry.length < code.length ? 'The code is ' + code.length + ' digits.' : 'WRONG CODE';
+      msg.replaceChildren(entry.length < code.length ? 'The code is ' + code.length + ' digits.' : 'WRONG CODE', knows ? h('div', { class: 'kp-known' }, it.props.knownText || 'You know the code: ' + code + '.') : '');
       entry = '';
       show();
     };

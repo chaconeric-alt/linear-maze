@@ -6,7 +6,8 @@
  *                badge: his trinket, and the flag ruizBadge that opens the armory cage), ds-panel-light
  *                (a ceiling panel that carries a light: props.off starts it dark, a `lights` trap switches it)
  *   elevators    the building core (DESIGN.md 2.2): the private car A1, passenger cars A2 and A3, the
- *                freight car. None of them has power until elevatorsOnline.
+ *                freight car. None of them has power until elevatorsOnline (but ARIADNE parks the freight car on
+ *                Floor 4 with the AEGIS field in it: its `parked`).
  * LM.DS.FRAGMENTS has the twelve fragments' text; LM.DS.showFragment(game, n) shows one and sets fragment<n>.
  */
 'use strict';
@@ -15,8 +16,9 @@
   const h = (...a) => LM.ui.h(...a);
 
   const speakers = {
-    voss: { name: 'Dr. Aurelian Voss', role: 'Director · intercom', color: '#e0b25a', face: 'intercom', voice: 0.75 },
-    ariadne: { name: 'ARIADNE', role: 'Research integrity · node 01', color: '#7fd4ff', face: 'eye', voice: 1.6 },
+    // Voss and ARIADNE carry the story: what they say stops the game (engine/comms.js), unless you're in a fight
+    voss: { name: 'Dr. Aurelian Voss', role: 'Director · intercom', color: '#e0b25a', face: 'intercom', voice: 0.75, pause: true },
+    ariadne: { name: 'ARIADNE', role: 'Research integrity · node 01', color: '#7fd4ff', face: 'eye', voice: 1.6, pause: true },
     pa: { name: 'Building PA', role: 'Automated', color: '#c9ced4', face: 'radio', voice: 0 },
     theo: { name: 'Theo', role: 'You', color: '#8fb8a8', face: 'radio', voice: 0 },
   };
@@ -114,10 +116,18 @@
   // The building core (DESIGN.md 2.2): the same place on every floor; nothing runs until the power is back.
   const F = (...n) => n.map((k) => (k === 'b' ? 'ds-b1' : 'ds-f' + k));
   const elevators = {
-    'a1-private': { name: 'Private car', x: 31, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F('b', 5), power: 'elevatorsOnline' },
+    // the board's own car: from their private floor and the executive floor straight down to the sub-level
+    // from the sub-level it won't go back up until ARIADNE is back (she moves it: the board locked it)
+    'a1-private': { name: 'Private car', x: 31, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F('b', 5, '5a'), power: 'elevatorsOnline',
+      stops: { 'ds-f5': { until: 'ariadneOnline', text: 'LOCKED FROM ABOVE (BOARD)' }, 'ds-f5a': { until: 'ariadneOnline', text: 'LOCKED FROM ABOVE (BOARD)' } } },
     'a2-passenger': { name: 'Passenger car A2', x: 34, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F(1, 2, 3, 4, 5), power: 'elevatorsOnline' },
     'a3-passenger': { name: 'Passenger car A3', x: 37, y: 1, dir: 's', w: 2, d: 2, door: 2, floors: F(1, 2, 3, 4, 5), power: 'elevatorsOnline' },
-    'f1-freight': { name: 'Freight car', x: 42, y: 1, dir: 's', w: 3, d: 3, door: 2, floors: F('b', 1, 2, 3, 4), power: 'elevatorsOnline' },
+    // On Floor 4, ARIADNE sends it up once on what power it has, with the AEGIS field in it (aegisSent)
+    'f1-freight': {
+      name: 'Freight car', x: 42, y: 1, dir: 's', w: 3, d: 3, door: 2, floors: F('b', 1, 2, 3, 4), power: 'elevatorsOnline',
+      stops: { 'ds-f1': { until: 'ariadneOnline', text: 'LOCKED (BOARD)' }, 'ds-f2': { until: 'ariadneOnline', text: 'LOCKED (BOARD)' }, 'ds-f3': { until: 'ariadneOnline', text: 'LOCKED (BOARD)' }, 'ds-f4': { until: 'ariadneOnline', text: 'LOCKED (BOARD)' } },
+      parked: { 'ds-f4': { flag: 'aegisSent', cargo: [{ item: 'ds-aegis-case', tag: 'aegisCase' }] } },
+    },
   };
 
   LM.definePack({ id: 'ds-story', name: 'Story', version: '0.1.0', speakers, items, elevators });

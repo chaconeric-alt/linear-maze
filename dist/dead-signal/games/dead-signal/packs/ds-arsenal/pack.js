@@ -3,8 +3,8 @@
  */
 LM.describePack({
   name: 'Arsenal',
-  version: '0.2.0',
-  description: 'What Theo fights with and wears, and what can happen to him: the Bolt Driver from his tool bag, the Security Sidearm, the Riot Shotgun, the Cryo Sprayer (and its own ammunition, cryo); the Security Vest, the Hard Hat with Lamp, the Hazmat Hood and Ruiz’s Badge; med-gel, trauma kits, cryo canisters; the statuses robots and monsters put on him (sedated, chilled, staggered, held, spores, UV burn).',
+  version: '0.4.1',
+  description: 'What Theo fights with and wears, and what can happen to him: the Bolt Driver from his tool bag, the Security Sidearm, the Riot Shotgun, the Cryo Sprayer (and its own ammunition, cryo); the Security Vest, the Hard Hat with Lamp, the Hazmat Hood and Ruiz’s Badge; med-gel, trauma kits, cryo canisters; the statuses robots and monsters put on him (sedated, chilled, staggered, held, spores, UV burn). Floor 3 (biohazard.js): implanted (a Midwife’s eggs, a long countdown), infected and burning, the purge injector and purge station that flush them, and the Plasma Cutter (cells). Floor 4 (proving.js): the Incinerator and its fuel, the Riot Helmet, the Exo-Frame, the Nightlight and the Handler’s Boots. The AEGIS field (aegis.js): the containment field ARIADNE sends up the freight shaft on Floor 4, worn over your armour; its strength is set in one place (TUNE). The supply cabinet (supply.js): a security resupply on the wall, with a full load of every ordinary ammunition; it fills what you carry and keeps the rest.',
   requires: ['linear-maze/core'],
-  scripts: ['arsenal.js'],
+  scripts: ['arsenal.js', 'biohazard.js', 'proving.js', 'aegis.js', 'supply.js'],
 });

@@ -177,6 +177,8 @@
         if (opts.via !== 'up' && opts.via !== 'elevator') this.above[id] = prevId;
       }
       this.levelId = id;
+      // who fights whom on this floor: the game's factions, with the level's own rows laid over them
+      if (LM.factions) LM.factions.use(def.factions || null);
       const L = (this.level = new LM.Level(def));
       L.sig = FM.signature(L);
       L.baseTerrain = L.terrain.map((t) => t.id);
@@ -246,6 +248,8 @@
           }
         }
       }
+      // curved rooms' rings of recessed lights (engine/curves.js)
+      if (LM.curves) LM.curves.addLights(this);
       // lights that belong to terrain (molten slag, glowing water...)
       for (let y = 0; y < L.h; y++) {
         for (let x = 0; x < L.w; x++) {
@@ -409,7 +413,8 @@
      * to: where they lead (stairs down: instead of the floor's next; stairs up: instead of the way you came);
      * until: a flag (or a list, any of them) that has to be set before they open; locked: what you're told until then;
      * arrive: a tag on the floor they lead to, to arrive on; dir: 'up' | 'down', the sound; go: the button on the
-     * floor-finished screen ({floor} {name}). null when the tile has no entry.
+     * floor-finished screen ({floor} {name}); quick: true, no floor-finished screen, even the first time (stairs
+     * between two halves of one floor). null when the tile has no entry.
      */
     stairsAt(tx, ty) {
       const st = this.level && this.level.def.stairs;
@@ -424,6 +429,49 @@
     /** Is any of these flags set? (a name, or a list of names) */
     anyFlag(f) {
       return [].concat(f || []).some((n) => this.hasFlag(n));
+    }
+
+    /**
+     * Make here a checkpoint, partway through a floor: dying (or an ending's "Choose again") brings you back to
+     * this moment, the floor as it is now and you as you are. Saved, like arriving on a floor.
+     */
+    checkpointHere(text) {
+      const P = this.player;
+      if (!P || P.dead || this.attract) return;
+      const m = this.rememberFloor();
+      this.checkpoint = P.serialize();
+      this.arrival = { memory: m, at: { x: P.x, y: P.y }, via: (this.arrival && this.arrival.via) || null };
+      writeSave(Object.assign({ levelId: this.levelId, player: this.checkpoint, savedAt: Date.now() }, this.memorySave()));
+      if (text !== false) this.toast(text || 'Checkpoint', 'good');
+    }
+    /**
+     * End the game here, or a chapter of it. spec: { kicker, title, text (paragraphs between blank lines),
+     * tone ('bad' | 'good' | 'chapter': the card's colour), stats (show the floor's numbers), flag (set first),
+     * final (the run is over: the save is cleared), sound, actions: [{ label, do, primary }] } where do is
+     * 'retry' (back to the last checkpoint: the floor's arrival, or checkpointHere), 'continue' (back to
+     * playing), 'title' or 'newRun'. Left out: back to the title.
+     */
+    ending(spec) {
+      if (this.state === 'ending' || !this.player) return;
+      spec = spec || {};
+      if (spec.flag) this.setFlag(spec.flag);
+      this.state = 'ending';
+      if (spec.final) clearSave();
+      LM.audio.play(spec.sound || (spec.tone === 'bad' ? 'lose' : 'win'));
+      const show = () => LM.ui.showEnding(this, spec);
+      if (spec.fade === false) show();
+      else LM.ui.fade(show);
+    }
+    endingAction(what) {
+      LM.ui.closeAll();
+      if (LM.comms) LM.comms.clear();
+      if (what === 'retry') return this.restartLevel();
+      if (what === 'continue') {
+        this.state = 'play';
+        return;
+      }
+      if (what === 'newRun') return this.newRun();
+      return this.toTitle();
     }
 
     restartLevel() {
@@ -449,8 +497,9 @@
       const arrive = st && st.arrive, sound = (st && stairSound(st)) || 'descend';
       if (next && LM.find('levels', next)) {
         this.above[next] = this.levelId;
-        // a floor you've been down to before: straight there, as you left it
-        if (this.floors[next]) return this.travel(next, { via: 'down', leftAt: here, arrive, sound });
+        // a floor you've been down to before: straight there, as you left it (and stairs that say quick: always:
+        // two halves of one floor, say)
+        if (this.floors[next] || (st && st.quick)) return this.travel(next, { via: 'down', leftAt: here, arrive, sound });
         this.state = 'complete';
         LM.audio.play(sound);
         const carry = P.serialize();
@@ -568,6 +617,31 @@
       const n = P.keyItems.length;
       P.keyItems = P.keyItems.filter((k) => k.id !== id);
       return P.keyItems.length < n;
+    }
+    /**
+     * Change the side some enemies are on (engine factions): sel is a tag, an enemy id, or a test
+     * function (e) => bool. They forget who they were fighting and look again; the floor remembers the
+     * change. Returns how many changed.
+     */
+    setFaction(sel, faction) {
+      let n = 0;
+      for (const e of this.enemies) {
+        if (e.dead) continue;
+        const ok = typeof sel === 'function' ? sel(e) : e.tag === sel || e.def.id === sel;
+        if (!ok || e.faction === faction) continue;
+        e.faction = faction;
+        e._props = Object.assign({}, e._props, { faction });
+        e.foe = null;
+        e.foeT = 0;
+        e.foeHold = 0;
+        e.knowsP = false;
+        e.aggro = false;
+        e.atk = null;
+        n++;
+      }
+      // anyone after one of them that's now a friend looks again
+      for (const e of this.enemies) if (e.foe && e.foe.isEnemy && LM.factions && !LM.factions.hostile(e.faction, e.foe.faction)) e.foe = null;
+      return n;
     }
     /** Change a tile at runtime (secret doors, collapsing floors, doors that weren't there before). */
     setTerrain(tx, ty, id, tag) {
@@ -813,7 +887,7 @@
       const pi = pty * L.w + ptx;
       this.navT = (this.navT || 0) - dt;
       if ((pi !== L.navFrom && this.navT <= 0) || L.navDirty) {
-        if (L.inBounds(ptx, pty) && !L.t(ptx, pty).solid) LM.nav.compute(L, ptx, pty);
+        if (L.inBounds(ptx, pty) && L.walkable(ptx, pty)) LM.nav.compute(L, ptx, pty);
         this.navT = 0.15;
       }
 

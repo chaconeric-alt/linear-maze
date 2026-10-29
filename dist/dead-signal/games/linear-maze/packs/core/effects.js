@@ -4,15 +4,19 @@
  * spawned and sealed, so lockdowns can end when the room is cleared).
  *
  *   darts    { tag, volleys, interval, damage, speed }   fire from dart-emitter items with this tag
- *   spawn    { tag, enemy | enemies[], count }           summon enemies at tagged floor tiles
+ *   spawn    { tag, enemy | enemies[], count, faction }  summon enemies at tagged floor tiles (faction: whose side they're on)
  *   seal     { tag, text }                               slam and lock doors with this tag until the spawned foes die
  *   unseal   { tag, text }                               release doors
- *   open     { tag }                                     unlock and open doors
+ *   open     { tag, hold }                               unlock doors (hold: swing them open and keep them open)
  *   alarm    { radius, text }                            wake every enemy within radius of the player
  *   lights   { tag, on }                                 switch tagged light sources off or on
  *   explode  { tag, radius, damage, stagger }            blasts at tagged tiles
  *   message  { text, kind }                              a toast
  *   quake    { strength }                                screen shake and falling dust
+ *   faction  { tag | enemy, faction }                    put the enemies with this tag (or of this id) on another side
+ *   branch   { any, min, all, not, then, else }          run `then` (a list of effects) if the story flags agree, else `else`:
+ *            any: at least `min` (default 1) of these flags; all: every one; not: none of these. Each effect
+ *            in the lists takes its own delay (counted from when the branch runs).
  */
 'use strict';
 (function () {
@@ -50,8 +54,12 @@
           const p = pts[i % pts.length];
           if (!p) break;
           const c = center(p);
-          const e = game.spawnEnemy(list[i % list.length], c.x + U.rand(-4, 4), c.y + U.rand(-4, 4), { summoned: true, aggro: true });
-          if (e) trap.spawned.push(e);
+          const e = game.spawnEnemy(list[i % list.length], c.x + U.rand(-4, 4), c.y + U.rand(-4, 4), ef.faction ? { summoned: true, aggro: true, faction: ef.faction } : { summoned: true, aggro: true });
+          if (e) {
+            trap.spawned.push(e);
+            // `as`: a tag for what this spawn makes, so a `clear` trap can wait for the wave to die
+            if (ef.as) e.tag = ef.as;
+          }
         }
         LM.audio.play('warn');
       },
@@ -83,6 +91,7 @@
           d.sealed = false;
           d.unlocked = true;
           d.lock = null;
+          if (ef.hold) d.held = true;
         }
         LM.audio.play('door');
         if (ef.text) game.toast(ef.text, 'good');
@@ -172,6 +181,39 @@
           for (const li of hit) li.flicker = li.baseFlicker;
         });
         LM.audio.play('warn', { vol: 0.5 });
+      },
+    },
+    branch: {
+      params: { any: 'json', min: 'number', all: 'json', not: 'json', then: 'json', else: 'json' },
+      run(game, ef, trap) {
+        const has = (f) => game.hasFlag(f);
+        const any = [].concat(ef.any || []), all = [].concat(ef.all || []), not = [].concat(ef.not || []);
+        const ok = (!any.length || any.filter(has).length >= (ef.min || 1)) && all.every(has) && !not.some(has);
+        for (const sub of [].concat((ok ? ef.then : ef.else) || [])) {
+          const fx = sub && LM.find('effects', sub.type);
+          if (!fx) {
+            if (sub) console.warn('[LM] Unknown trap effect ' + sub.type);
+            continue;
+          }
+          if (sub.delay) game.schedule(sub.delay, () => fx.run(game, sub, trap));
+          else fx.run(game, sub, trap);
+        }
+      },
+    },
+    faction: {
+      // { tag | enemy, faction, aggro }: the enemies with this tag (or this enemy id) change sides (engine
+      // factions). aggro: true, and they come looking for you straight away (let out to hunt).
+      run(game, ef) {
+        if (!ef.faction) return;
+        game.setFaction(ef.tag || ef.enemy, ef.faction);
+        if (!ef.aggro) return;
+        const sel = ef.tag || ef.enemy;
+        for (const e of game.enemies) {
+          if (e.dead || (e.tag !== sel && e.def.id !== sel)) continue;
+          e.aggro = true;
+          e.knowsP = true;
+          e.alertT = 1;
+        }
       },
     },
     quake: {

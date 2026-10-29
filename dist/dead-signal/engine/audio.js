@@ -203,6 +203,26 @@
     tone(t, o, { type: 'square', f0: 140, f1: 70, dur: 0.05, gain: 0.08 });
   });
   S('wall', (t, o) => noise(t, o, { type: 'bandpass', freq: 2400, dur: 0.04, gain: 0.12, q: 2 }));
+  // a gaze opening, and what it does when it lands; a step out of the air and back into it
+  S('gazeOpen', (t, o) => {
+    tone(t, o, { type: 'sine', f0: 220, f1: 660, dur: 0.8, gain: 0.08, attack: 0.3 });
+    tone(t, o, { type: 'triangle', f0: 330, f1: 990, dur: 0.8, gain: 0.04, attack: 0.3 });
+  });
+  S('petrify', (t, o) => {
+    noise(t, o, { freq: 700, freqEnd: 120, dur: 0.5, gain: 0.5 });
+    tone(t, o, { type: 'square', f0: 90, f1: 40, dur: 0.4, gain: 0.1 });
+  });
+  S('blinkOut', (t, o) => noise(t, o, { type: 'highpass', freq: 3000, freqEnd: 800, dur: 0.18, gain: 0.12 }));
+  S('blinkIn', (t, o) => {
+    noise(t, o, { type: 'bandpass', freq: 600, freqEnd: 2600, dur: 0.14, gain: 0.14, q: 2 });
+    tone(t, o, { type: 'sine', f0: 900, f1: 1400, dur: 0.1, gain: 0.04 });
+  });
+  // a shot turned back off a shield: a bright ring
+  S('reflect', (t, o) => {
+    tone(t, o, { type: 'sine', f0: 2600, f1: 2300, dur: 0.18, gain: 0.07 });
+    tone(t, o, { type: 'triangle', f0: 1300, f1: 1150, dur: 0.12, gain: 0.06 });
+    noise(t, o, { type: 'highpass', freq: 5000, dur: 0.03, gain: 0.08 });
+  });
   S('enemyDie', (t, o) => {
     noise(t, o, { freq: 1200, freqEnd: 120, dur: 0.35, gain: 0.45 });
     tone(t, o, { type: 'sawtooth', f0: 220, f1: 40, dur: 0.3, gain: 0.12 });

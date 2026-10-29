@@ -6,7 +6,7 @@
 'use strict';
 (function () {
   const LM = (window.LM = window.LM || {});
-  LM.VERSION = '0.6.0';
+  LM.VERSION = '0.7.0';
   LM.TILE = 32; // world units per tile
 
   // Games: each games/<id>/game.js calls LM.defineGame({ id, title, packs, titleScreen, ... }).
@@ -61,6 +61,13 @@
         LM.registry[kind][id] = def;
       }
     }
+    // factions: who fights whom (see LM.factions below); later packs add to or replace rows
+    if (pack.factions && typeof pack.factions === 'object') {
+      for (const [f, list] of Object.entries(pack.factions)) LM.factions.base[f] = [].concat(list || []);
+      LM.factions.use(null);
+    }
+    // factionWake: a side that wakes when you hurt it ({ specimen: 'monster' }: your shots hit it, and it turns on you)
+    if (pack.factionWake && typeof pack.factionWake === 'object') Object.assign(LM.factions.wake, pack.factionWake);
     if (!LM.packs.find((p) => p.id === pack.id)) {
       LM.packs.push({ id: pack.id, name: pack.name || pack.id, version: pack.version || '0.0.0' });
     }
@@ -72,6 +79,53 @@
     return d;
   };
   LM.find = (kind, id) => (LM.registry[kind] ? LM.registry[kind][id] : undefined);
+
+  // ---------------------------------------------------------------- factions
+  // Who fights whom. Every enemy has a faction (props.faction, else its def's, else 'monster'); the
+  // player's is 'player'. A row lists the factions that one attacks ('*' is every other faction). With
+  // the default table monsters attack only the player and the player's shots hit every enemy, which is
+  // how a game without factions plays. A pack's `factions` adds rows; a level's `factions` lays rows
+  // over the game's for that floor (engine/game.js calls use() as a floor starts).
+  const FA = (LM.factions = {
+    base: { player: ['*'], monster: ['player'] },
+    table: null,
+    rev: 0,
+    // sides that wake when the player hurts them: { specimen: 'monster' } (a pack's factionWake)
+    wake: {},
+  });
+  /** Use the game's table with a level's rows laid over it (null: the game's own). */
+  FA.use = function (over) {
+    const t = {};
+    for (const [f, l] of Object.entries(FA.base)) t[f] = l.slice();
+    if (over && typeof over === 'object') for (const [f, l] of Object.entries(over)) t[f] = [].concat(l || []);
+    FA.table = t;
+    FA.rev++;
+    FA.cache = {};
+  };
+  FA.row = (a) => FA.table[a] || FA.table.monster || ['player'];
+  /** Does faction a attack faction b? */
+  FA.hostile = function (a, b) {
+    if (a === b || a == null || b == null) return false;
+    const l = FA.row(a);
+    return l.includes(b) || l.includes('*');
+  };
+  /** Do the player's shots and blasts land on faction f? (Its foes, and any side that wakes when hurt.) */
+  FA.playerHits = (f) => FA.hostile('player', f) || !!(f && FA.wake[f]);
+  /** Does faction a attack nobody but the player? (Then an enemy skips looking for other foes.) */
+  FA.onlyPlayer = function (a) {
+    const c = FA.cache[a];
+    if (c != null) return c;
+    const l = FA.row(a);
+    return (FA.cache[a] = l.length === 1 && l[0] === 'player');
+  };
+  /** Does faction a attack any enemy faction (anything but the player)? */
+  FA.hitsEnemies = function (a) {
+    const k = '~' + a, c = FA.cache[k];
+    if (c != null) return c;
+    return (FA.cache[k] = FA.row(a).some((f) => f !== 'player'));
+  };
+  FA.use(null);
+  LM.isHostile = (a, b) => FA.hostile(a, b);
 
   // ---------------------------------------------------------------- math
   const U = (LM.util = {});

@@ -261,7 +261,7 @@
         const g = LM.get('gadgets', id);
         const n = g.badge ? g.badge(game, P) : 0;
         const chip = h('button', { class: 'gadget-chip', type: 'button', title: g.name },
-          h('b', null, (g.key || '').replace('Key', '')), h('span', null, g.short || g.name), n ? h('i', { class: 'badge' }, String(n)) : null);
+          g.key ? h('b', null, g.key.replace('Key', '')) : null, h('span', null, g.short || g.name), n ? h('i', { class: 'badge' }, String(n)) : null);
         chip.addEventListener('click', () => { if (game.state === 'play' && g.use) g.use(game, P); });
         return chip;
       }));
@@ -300,6 +300,7 @@
     }
     ui.statusFrame(game, P);
     ui.bossFrame(game, dt);
+    if (LM.objectives) LM.objectives.frame(game);
     ui.mmT = (ui.mmT || 0) - dt;
     if (ui.mmT <= 0) {
       ui.mmT = 0.1;
@@ -315,19 +316,29 @@
     }
   };
 
-  /** The player's statuses as chips under the vitals: the name, and a bar for the time left. */
+  /** The player's statuses as chips under the vitals: the name, and a bar for the time left (a countdown
+   *  status also shows the seconds, and pulses once it's urgent). */
+  const clock = (t) => (t >= 60 ? Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0') : Math.ceil(t) + 's');
   ui.statusFrame = function (game, P) {
     const row = ui.el.statusRow;
     if (!row) return;
     const list = (P.statuses || []).filter((s) => s.def.hud !== false && s.def.name);
-    const key = list.map((s) => s.id).join(',');
+    const key = list.map((s) => s.id + (s.n > 1 ? 'x' + s.n : '')).join(',');
     if (ui.cache.statuses !== key) {
       ui.cache.statuses = key;
-      row.replaceChildren(...list.map((s) => h('span', { class: 'status-chip', style: s.def.color ? '--sc:' + s.def.color : '', title: s.def.name }, s.def.name, h('i'))));
+      row.replaceChildren(...list.map((s) => h('span', { class: 'status-chip', style: s.def.color ? '--sc:' + s.def.color : '', title: s.def.name },
+        s.def.name + (s.n > 1 ? ' \u00d7' + s.n : ''), s.def.countdown ? h('b', { class: 'sc-clock' }, '') : null, h('i'))));
     }
     list.forEach((s, i) => {
-      const bar = row.children[i] && row.children[i].lastChild;
+      const chip = row.children[i];
+      if (!chip) return;
+      const bar = chip.lastChild;
       if (bar) bar.style.width = (U.clamp(s.t / (s.max || 1), 0, 1) * 100).toFixed(0) + '%';
+      if (s.def.countdown) {
+        const c = chip.querySelector('.sc-clock'), txt = clock(Math.max(0, s.t));
+        if (c && c.textContent !== txt) c.textContent = txt;
+        chip.classList.toggle('urgent', !!s.def.urgent && s.t <= s.def.urgent);
+      }
     });
   };
 
@@ -363,9 +374,57 @@
     });
   };
 
+  /**
+   * Rooms on the map before you've been there. A level's room with `mapWhen` (a story flag, or a list: any one of
+   * them set; true: from the start) is drawn on the minimap, walls and all, once that's so: somewhere the story
+   * has told you about. Marks its tiles explored, so it stays on the map (and in the floor's memory).
+   */
+  ui.revealRooms = function (game) {
+    const L = game.level;
+    if (!L || !L.def.rooms) return;
+    const done = L._roomsShown || (L._roomsShown = new Set());
+    for (const r of L.def.rooms) {
+      if (r.mapWhen == null || r.mapWhen === false || done.has(r) || !Array.isArray(r.rect)) continue;
+      if (r.mapWhen !== true && !game.anyFlag(r.mapWhen)) continue;
+      done.add(r);
+      const [rx, ry, rw, rh] = r.rect;
+      for (let y = ry - 1; y <= ry + rh; y++) for (let x = rx - 1; x <= rx + rw; x++) if (L.inBounds(x, y)) L.explored[y * L.w + x] = 1;
+    }
+  };
+  /** A room's `mapLabel` (its name on the map: text, or true for the room's name), once its middle is on the map. */
+  ui.drawRoomLabels = function (g, game, ox, oy, s, W, H) {
+    const L = game.level;
+    if (!L || !L.def.rooms) return;
+    let set = false;
+    for (const r of L.def.rooms) {
+      if (!r.mapLabel || !Array.isArray(r.rect)) continue;
+      const [rx, ry, rw, rh] = r.rect;
+      const mx0 = rx + rw / 2, my0 = ry + rh / 2;
+      if (!L.explored[Math.floor(my0) * L.w + Math.floor(mx0)]) continue;
+      const mx = ox + mx0 * s, my = oy + my0 * s;
+      if (mx < -60 || mx > W + 60 || my < -8 || my > H + 8) continue;
+      if (!set) {
+        set = true;
+        g.save();
+        g.font = '700 7px "IBM Plex Mono", monospace';
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.lineJoin = 'round';
+        g.lineWidth = 2.6;
+        g.strokeStyle = 'rgba(9,11,15,0.92)';
+      }
+      const text = String(r.mapLabel === true ? r.name : r.mapLabel).toUpperCase();
+      g.strokeText(text, mx, my);
+      g.fillStyle = r.mapLabelColor || '#ebe4d4';
+      g.fillText(text, mx, my);
+    }
+    if (set) g.restore();
+  };
+
   ui.drawMinimap = function (game) {
     const g = ui.mm, L = game.level, P = game.player, d = ui.mmScale;
     const W = 176, H = 124, s = 3.2;
+    ui.revealRooms(game);
     g.setTransform(d, 0, 0, d, 0, 0);
     g.clearRect(0, 0, W, H);
     g.fillStyle = 'rgba(9,11,15,0.82)';
@@ -379,7 +438,8 @@
         const i = y * L.w + x;
         if (!L.explored[i]) continue;
         const td = L.terrain[i];
-        const col = td.mapColor || (td.solid ? '#6b6556' : 'rgba(205,190,160,0.16)');
+        // a curve tile is floor on the map if its middle is (engine/curves.js)
+        const col = td.curve ? (L.curveIn[i] ? 'rgba(205,190,160,0.16)' : '#6b6556') : td.mapColor || (td.solid ? '#6b6556' : 'rgba(205,190,160,0.16)');
         if (col === 'none') continue;
         g.fillStyle = col;
         g.fillRect(ox + x * s, oy + y * s, s + 0.4, s + 0.4);
@@ -405,11 +465,16 @@
       if (!n.visible || n.def.spectral) continue;
       g.fillRect(ox + (n.x / T) * s - 1, oy + (n.y / T) * s - 1, 2, 2);
     }
-    g.fillStyle = '#ff5a4a';
     for (const e of game.enemies) {
       if (e.dead || !e.visible) continue;
+      // anyone on your side (engine factions) shows green
+      g.fillStyle = LM.factions && !LM.factions.hostile('player', e.faction) ? '#5fe08a' : '#ff5a4a';
       g.fillRect(ox + (e.x / T) * s - 1, oy + (e.y / T) * s - 1, 2, 2);
     }
+    // named places
+    ui.drawRoomLabels(g, game, ox, oy, s, W, H);
+    // the objective's targets (engine/objectives.js)
+    if (LM.objectives) LM.objectives.drawMap(g, game, ox, oy, s, W, H);
     // player arrow
     g.save();
     g.translate(W / 2, H / 2);
@@ -678,15 +743,31 @@
           h('dt', null, 'Gold carried'), h('dd', null, game.player.gold + '')
         ),
         h('p', { class: 'hint' }, 'WASD move · mouse aim · click fire · Shift dash · E interact · 1–9 or wheel to switch weapons · Q last weapon · Tab inventory · M sound'),
+        LM.objectives && LM.objectives.view(game) ? h('div', null, h('h3', null, 'Objectives'), LM.objectives.view(game)) : null,
         LM.comms && LM.comms.log.length ? h('div', null, h('h3', null, 'Transmissions'), LM.comms.logView(5)) : null
       ),
       actions: [
         { label: 'Resume', primary: true },
         { label: 'Inventory', onClick: () => { setTimeout(() => ui.showInventory(game), 0); } },
         { label: LM.audio.muted ? 'Sound on' : 'Sound off', onClick: () => LM.audio.setMuted(!LM.audio.muted) },
+        // story lines that stop the game (LM.comms): the player can have them in the corner instead.
+        // (The label says what it is now, as a setting, not what clicking it does.)
+        LM.comms && LM.comms.anyPause && LM.comms.anyPause()
+          ? { label: 'Story lines in the middle: ' + (LM.comms.pauses() ? 'on' : 'off'), onClick: () => {
+            LM.comms.setPauses(!LM.comms.pauses());
+            setTimeout(() => {
+              ui.showPause(game);
+              game.toast(LM.comms.pauses() ? 'Story lines will stop the game, in the middle of the screen.' : 'Story lines will play in the corner, without stopping the game.');
+            }, 0);
+          } }
+          : null,
+        // a floor can offer a way past itself (a level's skip: { label, effects }): a prologue, say
+        game.level && game.level.def.skip && game.state !== 'ending'
+          ? { label: game.level.def.skip.label || 'Skip this part', quiet: true, onClick: () => { setTimeout(() => { game.state = 'play'; if (LM.comms) LM.comms.clear(); LM.runEffects(game, game.level.def.skip.effects || []); }, 0); } }
+          : null,
         { label: 'Restart floor', quiet: true, onClick: () => { setTimeout(() => game.restartLevel(), 0); } },
         { label: 'Quit to title', quiet: true, onClick: () => { setTimeout(() => game.toTitle(), 0); } },
-      ],
+      ].filter(Boolean),
     });
   };
 
@@ -791,6 +872,24 @@
       dismissable: false,
     });
     ui.prevState = 'victory';
+  };
+  /** An ending, or the end of a chapter (game.ending): a card with the story's last words and what to do next. */
+  ui.showEnding = function (game, spec) {
+    const acts = (spec.actions && spec.actions.length ? spec.actions : [{ label: LM.text('backToTitle'), do: 'title', primary: true }]).map((a) => ({
+      label: a.label || 'Continue', primary: !!a.primary, quiet: !!a.quiet, onClick: () => setTimeout(() => game.endingAction(a.do || a.action), 0),
+    }));
+    ui.open({
+      kicker: spec.kicker || '',
+      title: spec.title || LM.text('victoryTitle'),
+      body: h('div', { class: 'ending-card' + (spec.tone ? ' ' + spec.tone : '') },
+        spec.text ? String(spec.text).split('\n\n').map((t) => h('p', { class: 'lore' }, t)) : null,
+        spec.stats ? statsTable(game) : null),
+      actions: acts,
+      dismissable: false,
+      wide: !!spec.wide,
+      className: 'ending' + (spec.tone ? ' ' + spec.tone : ''),
+    });
+    ui.prevState = 'ending';
   };
   ui.showDeath = function (game) {
     ui.open({
