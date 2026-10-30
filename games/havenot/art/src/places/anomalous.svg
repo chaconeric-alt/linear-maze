@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a4a"/><stop offset="0.45" stop-color="#c8603a"/><stop offset="0.75" stop-color="#f0a85a"/><stop offset="1" stop-color="#f8d090"/></linearGradient>
+    <linearGradient id="day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7aa0b8"/><stop offset="0.6" stop-color="#d8c8a0"/><stop offset="1" stop-color="#f0dcb0"/></linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0b070"/><stop offset="1" stop-color="#a8703a"/></linearGradient>
+    <linearGradient id="sandDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8844a"/><stop offset="1" stop-color="#6a4222"/></linearGradient>
+    <linearGradient id="concrete" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9a948a"/><stop offset="0.6" stop-color="#7a746a"/><stop offset="1" stop-color="#4a463e"/></linearGradient>
+    <linearGradient id="glassG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ae8b0"/><stop offset="1" stop-color="#1a4a3a"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a8e94"/><stop offset="0.5" stop-color="#4a4e54"/><stop offset="1" stop-color="#1a1c20"/></linearGradient>
+    <radialGradient id="dark" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#000000"/><stop offset="0.7" stop-color="#0a0806"/><stop offset="1" stop-color="#2a1e10"/></radialGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4d0"/><stop offset="0.4" stop-color="#ffd890" stop-opacity="0.8"/><stop offset="1" stop-color="#ffd890" stop-opacity="0"/></radialGradient>
+    <pattern id="haz" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#1a1a1a"/><rect width="4" height="8" fill="#e8c030"/></pattern>
+  </defs>
+  <!-- The Anomalous Structure: an agency office block half sunk in the dunes and leaning a few degrees, as if it
+       had settled into the sand all at once; dusk, its windows glowing a faint wrong green, a dune banked against
+       its side, broken masts on the roof, the company's smiley still on the facade. -->
+  <rect width="320" height="200" fill="url(#dusk)"/>
+  <circle cx="250" cy="70" r="40" fill="url(#sun)"/>
+  <path d="M0 132 Q60 118 120 128 Q200 112 320 124 V200 H0 Z" fill="#c89058" opacity="0.6"/>
+  <g transform="rotate(-7 160 150)">
+    <rect x="96" y="30" width="122" height="140" fill="url(#concrete)" stroke="#2a241e" stroke-width="1.6"/>
+    <rect x="96" y="30" width="122" height="8" fill="#5a544a"/>
+    <g fill="url(#glassG)" stroke="#1a2a24" stroke-width="0.8">
+      <rect x="106" y="46" width="22" height="14"/><rect x="134" y="46" width="22" height="14"/><rect x="162" y="46" width="22" height="14"/><rect x="190" y="46" width="20" height="14" opacity="0.4"/>
+      <rect x="106" y="70" width="22" height="14" opacity="0.5"/><rect x="134" y="70" width="22" height="14"/><rect x="162" y="70" width="22" height="14" opacity="0.35"/><rect x="190" y="70" width="20" height="14"/>
+      <rect x="106" y="94" width="22" height="14"/><rect x="134" y="94" width="22" height="14" opacity="0.4"/><rect x="162" y="94" width="22" height="14"/><rect x="190" y="94" width="20" height="14" opacity="0.5"/>
+    </g>
+    <path d="M140 46 l6 14 M168 94 l-4 10 M112 70 l10 12" stroke="#0a0a0a" stroke-width="0.8"/>
+    <circle cx="200" cy="124" r="9" fill="#ffd84a" stroke="#6a4a06" stroke-width="1"/>
+    <circle cx="197" cy="122" r="1" fill="#2a2010"/><circle cx="203" cy="122" r="1" fill="#2a2010"/><path d="M196 126 Q200 129 204 126" stroke="#2a2010" stroke-width="1" fill="none"/>
+    <path d="M110 30 V8 M110 14 l-6 -4 M110 14 l6 -4 M186 30 V14 L180 6" stroke="#2a241e" stroke-width="2" fill="none"/>
+    <circle cx="110" cy="8" r="2" fill="#ff3a2a"/>
+  </g>
+  <path d="M0 150 Q50 128 100 142 Q150 120 176 150 Q220 136 260 120 Q300 112 320 116 V200 H0 Z" fill="url(#sand)"/>
+  <path d="M60 200 Q90 150 140 156 Q170 160 200 200 Z" fill="url(#sandDark)" opacity="0.55"/>
+  <path d="M10 168 Q40 160 70 166 M210 160 Q240 150 280 156 M120 182 Q150 176 180 182" stroke="#f0c888" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <path d="M230 138 Q250 128 268 130" stroke="#8a5a2a" stroke-width="1" fill="none" opacity="0.6"/>
+  <circle cx="160" cy="100" r="0.01" opacity="0"/>
+</svg>

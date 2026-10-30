@@ -1319,5 +1319,18 @@
     ],
     "size": 40,
     "turns": true
+  },
+  "places": {
+    "file": "places.png",
+    "w": 320,
+    "h": 200,
+    "states": [
+      "anomalous",
+      "greasy",
+      "bunker"
+    ],
+    "names": [],
+    "kind": "places",
+    "size": 320
   }
 }

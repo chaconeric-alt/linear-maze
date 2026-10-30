@@ -127,6 +127,8 @@ Object.assign(PIECES, {
   enforcer: { kind: 'monster', enemies: ['hn-enforcer'], size: 32, turns: true, w: 64, h: 64 },
   'tartarus-warden': { kind: 'monster', enemies: ['hn-tartarus'], size: 50, turns: true, w: 64, h: 64 },
   'plate-cutter': { kind: 'monster', enemies: ['hn-plate-cutter'], size: 40, turns: true, w: 64, h: 64 },
+  // pictures of places (hn-world/placeart.js): the map's icons and the arrival cards
+  places: { kind: 'places', size: 320, w: 320, h: 200, layers: ['anomalous', 'greasy', 'bunker'] },
   // people (packs/hn-sites/person.js): a paper doll for LM.gfx.person, its greys tinted from each one's look
   person: { kind: 'person', size: 25.6, w: 64, h: 64, layers: ['shirt', 'sleeve', 'hand', 'blazer', 'tie', 'lanyard', 'card', 'head', 'hair-short', 'hair-buzz', 'hair-long', 'hair-ponytail', 'hair-bun', 'hair-curly', 'hair-bald', 'glasses', 'headset'] },
   // the guns in hand (hn-rules/weaponart.js), drawn along the aim in the player's own units: x -2..24.67, y -4..4
