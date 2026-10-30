@@ -397,11 +397,20 @@
   // whose name has a sheet is drawn from it, the frame by its state; every other piece, and any whose picture
   // hasn't loaded, is drawn as before
   const ART_FRAME = { working: 0, active: 0, 'partly-working': 1, malfunctioning: 1, disabled: 2, destroyed: 3 };
-  let artByName = null;
+  let artByName = null, artMatch = null;
   function artFor(name) {
     if (!artByName) {
       artByName = {};
-      for (const a of Object.values(HN.ART || {})) for (const n of a.names || []) artByName[n] = a;
+      artMatch = [];
+      for (const a of Object.values(HN.ART || {})) {
+        for (const n of a.names || []) artByName[n] = a;
+        // a sheet can also claim names by pattern ("… pews", "… conveyor"); exact names win
+        if (a.match) artMatch.push([new RegExp(a.match, 'i'), a]);
+      }
+    }
+    if (!(name in artByName)) {
+      const m = artMatch.find(([re]) => re.test(name));
+      artByName[name] = m ? m[1] : null;
     }
     const a = artByName[name];
     if (!a || !a.src) return null;

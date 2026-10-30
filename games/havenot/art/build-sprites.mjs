@@ -45,6 +45,34 @@ const PIECES = {
     shards: [[2, 126], [60, 8], [58, 100]],
   },
 };
+// the batches after the first three: names (exact), match (a pattern for the rest of their kind), size; their
+// damage is laid out from their size and id (damageFor) unless given
+Object.assign(PIECES, {
+  centrifuge: { names: ['scandal centrifuges', 'scandal centrifuge', 'personality centrifuges', 'personality centrifuge turbine'], match: 'centrifuge', w: 128, h: 128 },
+  'power-core-turbine': { names: ['power core turbine'], match: '(core|generator|reactor) turbine$|^turbine', w: 128, h: 128 },
+  altar: { names: ['cult altar', 'sponsor altar'], match: 'altar$', w: 128, h: 64 },
+  pews: { names: ['cult pews', 'waiting benches', 'pews'], match: '(pews|benches)$', w: 192, h: 64 },
+  'surgical-table': { names: ['surgical prep table', 'operating table', 'surgical cart'], match: 'surgical|operating|autopsy|dissection', w: 128, h: 64 },
+});
+// cracks, a split and shards for a piece that doesn't give its own: seeded by its id, inside its middle
+function damageFor(id, w, h) {
+  let seed = 0;
+  for (const c of id) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
+  const r = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const pt = (fx, fy) => [Math.round(w * (0.2 + 0.6 * fx)), Math.round(h * (0.2 + 0.6 * fy))];
+  const zig = (n, x0, y0, x1, y1, jit) => {
+    const ps = [];
+    for (let i = 0; i <= n; i++) ps.push([Math.round(x0 + ((x1 - x0) * i) / n + (i && i < n ? (r() - 0.5) * jit : 0)), Math.round(y0 + ((y1 - y0) * i) / n + (i && i < n ? (r() - 0.5) * jit : 0))]);
+    return 'M' + ps.map((p) => p.join(' ')).join(' L');
+  };
+  const cracks = [0, 1].map(() => {
+    const [x, y] = pt(r(), r());
+    return zig(3, x, y, x + (r() - 0.5) * w * 0.4, y + (r() * 0.5 + 0.2) * h * 0.4, Math.min(w, h) * 0.15);
+  });
+  const split = zig(5, Math.round(w * 0.15), Math.round(h * 0.05), Math.round(w * 0.85), Math.round(h * 0.95), Math.min(w, h) * 0.25);
+  const shards = [[0.04, 0.9], [0.95, 0.85], [0.9, 0.06], [0.08, 0.15]].map(([fx, fy]) => [Math.round(w * fx), Math.round(h * fy)]);
+  return { cracks, split, shards };
+}
 // each state's tone in PhotoCraft (Hue/Saturation on the piece's pixels, then grain)
 const TONE = {
   working: { saturation: 0, lightness: 0, noise: 4 },
@@ -58,7 +86,10 @@ const run = (exe, args) => execFileSync(exe, args, { encoding: 'utf8', stdio: ['
 const P = (...a) => join(...a).replace(/\\/g, '/');
 
 const manifest = existsSync(join(out, 'sprites.json')) ? JSON.parse(readFileSync(join(out, 'sprites.json'), 'utf8')) : {};
-for (const [id, pc] of Object.entries(PIECES)) {
+const only = process.argv.slice(2);
+for (const [id, pc0] of Object.entries(PIECES)) {
+  if (only.length && !only.includes(id)) continue;
+  const pc = Object.assign(damageFor(id, pc0.w, pc0.h), pc0);
   const frames = [];
   for (const st of STATES) {
     // 1. FigCraft: the vector, the state's geometry, texture, shadow
@@ -95,6 +126,7 @@ for (const [id, pc] of Object.entries(PIECES)) {
   run(FIG, ['run', P(build, id + '-sheet.json'), '--out', sheetFig, ...roots]);
   run(FIG, ['export', sheetFig, '-o', P(out, id + '.png'), '--format', 'png', '--scale', '1', '--node', id, ...roots]);
   manifest[id] = { file: id + '.png', w: pc.w, h: pc.h, states: STATES, names: pc.names };
+  if (pc.match) manifest[id].match = pc.match;
   console.log('made ' + id + '.png (' + STATES.length + ' states, ' + pc.w + '×' + pc.h + ')');
 }
 writeFileSync(join(out, 'sprites.json'), JSON.stringify(manifest, null, 2) + '\n');

@@ -43,5 +43,88 @@
       "gilded coffin bed",
       "coffin recliner"
     ]
+  },
+  "centrifuge": {
+    "file": "centrifuge.png",
+    "w": 128,
+    "h": 128,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "scandal centrifuges",
+      "scandal centrifuge",
+      "personality centrifuges",
+      "personality centrifuge turbine"
+    ],
+    "match": "centrifuge"
+  },
+  "power-core-turbine": {
+    "file": "power-core-turbine.png",
+    "w": 128,
+    "h": 128,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "power core turbine"
+    ],
+    "match": "(core|generator|reactor) turbine$|^turbine"
+  },
+  "altar": {
+    "file": "altar.png",
+    "w": 128,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "cult altar",
+      "sponsor altar"
+    ],
+    "match": "altar$"
+  },
+  "pews": {
+    "file": "pews.png",
+    "w": 192,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "cult pews",
+      "waiting benches",
+      "pews"
+    ],
+    "match": "(pews|benches)$"
+  },
+  "surgical-table": {
+    "file": "surgical-table.png",
+    "w": 128,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "surgical prep table",
+      "operating table",
+      "surgical cart"
+    ],
+    "match": "surgical|operating|autopsy|dissection"
   }
 }
