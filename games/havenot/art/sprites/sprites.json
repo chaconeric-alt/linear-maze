@@ -204,5 +204,88 @@
       "meat printer (prints you)"
     ],
     "match": "meat printer|printer"
+  },
+  "bingo-caller": {
+    "file": "bingo-caller.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "bingo nuke caller",
+      "tactical bingo console",
+      "bingo caller dais"
+    ],
+    "match": "bingo"
+  },
+  "holding-cell": {
+    "file": "holding-cell.png",
+    "w": 128,
+    "h": 128,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "barred cells",
+      "holding cage",
+      "bunk cells"
+    ],
+    "match": "(cells?|cage|kennels?|pens)$"
+  },
+  "bleach-vat": {
+    "file": "bleach-vat.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "identity bleach vat",
+      "reputation bleach vat"
+    ],
+    "match": "bleach|wash vat|rinse"
+  },
+  "cannon": {
+    "file": "cannon.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "confetti cannon volley",
+      "cannon"
+    ],
+    "match": "cannon$|howitzer|artillery|mortar"
+  },
+  "lounger-bed": {
+    "file": "lounger-bed.png",
+    "w": 64,
+    "h": 128,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "vip lounger bed",
+      "incorporeal lounger bed",
+      "celebrity lounger bed"
+    ],
+    "match": "lounger|bunk|( |^)bed$"
   }
 }

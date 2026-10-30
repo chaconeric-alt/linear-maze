@@ -59,6 +59,12 @@ Object.assign(PIECES, {
   'karma-slot-machine': { names: ['karma slot machine'], match: 'slot machine|gambl|lottery', w: 64, h: 64 },
   'vending-kiosk': { names: ['number dispenser kiosk', 'payment kiosk'], match: 'vending|kiosk|dispenser', w: 64, h: 64 },
   'meat-printer': { names: ['meat printer (prints you)'], match: 'meat printer|printer', w: 64, h: 64 },
+  // batch 3
+  'bingo-caller': { names: ['bingo nuke caller', 'tactical bingo console', 'bingo caller dais'], match: 'bingo', w: 64, h: 64 },
+  'holding-cell': { names: ['barred cells', 'holding cage', 'bunk cells'], match: '(cells?|cage|kennels?|pens)$', w: 128, h: 128 },
+  'bleach-vat': { names: ['identity bleach vat', 'reputation bleach vat'], match: 'bleach|wash vat|rinse', w: 64, h: 64 },
+  cannon: { names: ['confetti cannon volley', 'cannon'], match: 'cannon$|howitzer|artillery|mortar', w: 64, h: 64 },
+  'lounger-bed': { names: ['vip lounger bed', 'incorporeal lounger bed', 'celebrity lounger bed'], match: 'lounger|bunk|( |^)bed$', w: 64, h: 128 },
 });
 // cracks, a split and shards for a piece that doesn't give its own: seeded by its id, inside its middle
 function damageFor(id, w, h) {

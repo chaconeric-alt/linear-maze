@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Bingo caller, top-down: a wire cage drum of numbered balls on a stand, a called-ball rack and a launch key. -->
+  <defs>
+    <radialGradient id="stand" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#8a9a6a"/><stop offset="1" stop-color="#2a3420"/></radialGradient>
+  </defs>
+  <rect x="3" y="5" width="58" height="56" rx="6" fill="#000" opacity="0.3"/>
+  <rect x="2" y="2" width="58" height="56" rx="6" fill="url(#stand)" stroke="#1a2010" stroke-width="1.5"/>
+  <!-- the drum: a wire cage with balls in it -->
+  <circle cx="26" cy="26" r="20" fill="#1a2010"/>
+  <g><circle cx="20" cy="22" r="4" fill="#f8f4e8"/><circle cx="30" cy="18" r="4" fill="#ffe04a"/><circle cx="31" cy="30" r="4" fill="#ff7a6a"/><circle cx="20" cy="33" r="4" fill="#6ad8ff"/><circle cx="26" cy="26" r="4" fill="#f8f4e8"/></g>
+  <g fill="#1a1a1a" font-family="sans-serif" font-size="4" font-weight="bold" text-anchor="middle"><text x="20" y="23.5">B7</text><text x="30" y="19.5">I9</text><text x="31" y="31.5">N3</text><text x="20" y="34.5">G5</text><text x="26" y="27.5">O1</text></g>
+  <circle cx="26" cy="26" r="20" fill="none" stroke="#c8ccb0" stroke-width="1.5"/>
+  <path d="M6 26 h40 M26 6 v40 M12 12 l28 28 M40 12 l-28 28" stroke="#c8ccb0" stroke-width="0.8" opacity="0.8"/>
+  <circle cx="26" cy="26" r="3" fill="#7a8a5a" stroke="#c8ccb0"/>
+  <!-- the called balls, in a rack -->
+  <rect x="6" y="49" width="36" height="7" rx="3" fill="#1a2010"/>
+  <g><circle cx="11" cy="52.5" r="2.6" fill="#ff7a6a"/><circle cx="18" cy="52.5" r="2.6" fill="#ffe04a"/><circle cx="25" cy="52.5" r="2.6" fill="#6ad8ff"/></g>
+  <!-- the launch key under its cover: it calls more than numbers -->
+  <rect x="47" y="8" width="10" height="16" rx="2" fill="#c83a3a" stroke="#3a0a0a"/>
+  <rect x="49" y="12" width="6" height="6" fill="#1a1a1a"/><rect x="51" y="10" width="2" height="8" fill="#e8c030"/>
+  <path d="M46 30 h12" stroke="#e8c030" stroke-width="3" stroke-dasharray="3 3"/>
+  <circle cx="52" cy="44" r="5" fill="#2a3420" stroke="#c8ccb0"/><circle cx="52" cy="44" r="2" fill="#ff3a3a"/>
+</svg>
