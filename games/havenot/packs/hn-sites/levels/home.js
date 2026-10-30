@@ -15,6 +15,7 @@ LM.definePack({
       hn: { place: 'Home', home: true },
       hnCreation: true,
       armed: false,
+      showGear: true,
       stairsUp: false,
       loadout: { weapons: [], gadgets: [] },
       intro: 'Home: four walls, a door that seals, and everything you own.',

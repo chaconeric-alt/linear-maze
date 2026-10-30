@@ -176,6 +176,8 @@
   };
 
   // ------------------------------------------------------------ medics
+  // the medical station at home: a full heal for about what a pack of Placebo costs at a PHARM machine (15c)
+  HN.HOME_HEAL_PRICE = 15;
   HN.MEDICS = {
     outpost: { name: 'The Outpost medic', kicker: 'Out-rider Outpost', minor: 50, major: 220, rad: null, text: '“Hold still. If you’ve got radiation, I can’t help with that: Boom-Town’s clinic has the machine.”' },
     clinic: { name: 'Boom-Town Clinic', kicker: 'Boom-Town · Wellness & Compliance', minor: 40, major: 160, rad: 25, text: '“Please take a number. Your number is 1. Please wait.” (There is nobody else waiting.)' },
@@ -288,15 +290,14 @@
         prompt: 'Use the medical station',
         use(it, game) {
           const s = HN.st(game), P = game.player;
-          const med = s.homeMed;
-          const hurt = P.hp < P.stats().maxHp;
+          const price = HN.HOME_HEAL_PRICE, max = P.stats().maxHp;
+          const hurt = P.hp < max, broke = P.gold < price;
           LM.ui.open({
             kicker: 'Home', title: 'Medical station',
-            body: h('div', { class: 'hn-panel' }, lore('An old wall unit with two cartridges in it: a big one and a small one, and the small one has two doses. When they’re gone they’re gone; nobody alive can refill one.'),
-              h('p', { class: 'muted' }, 'Major heals left: ' + med.major + ' · minor heals left: ' + med.minor + ' · health ' + Math.ceil(P.hp) + ' / ' + P.stats().maxHp + (s.rad ? ' · it can’t treat radiation' : ''))),
+            body: h('div', { class: 'hn-panel' }, lore('An old wall unit that still knows what a person is supposed to look like. It runs on scavenged gauze, glue and dose cartridges, and it heals you all the way for about what a pack of Placebo costs.'),
+              h('p', { class: 'muted' }, 'Health ' + Math.ceil(P.hp) + ' / ' + max + ' · ' + P.gold + ' credits · a full heal is ' + price + 'c' + (s.rad ? ' · it can’t treat radiation (Boom-Town’s clinic can)' : ''))),
             actions: [
-              { label: 'Minor heal (' + med.minor + ' left)', primary: true, disabled: !med.minor || !hurt, onClick: () => { med.minor--; HN.minorHeal(game); LM.audio.play('heal'); } },
-              { label: 'Major heal (' + med.major + ' left)', disabled: !med.major || !hurt, onClick: () => { med.major--; HN.majorHeal(game); LM.audio.play('heal'); } },
+              { label: !hurt ? 'Full heal (you’re fine)' : broke ? 'Full heal (' + price + 'c: not enough credits)' : 'Full heal (' + price + 'c)', primary: true, disabled: !hurt || broke, onClick: () => { P.gold -= price; HN.majorHeal(game); LM.audio.play('heal'); game.toast('Healed to full: ' + Math.ceil(P.hp) + ' / ' + max + ' (−' + price + 'c)', 'good'); } },
               { label: 'Leave it', quiet: true },
             ],
           });

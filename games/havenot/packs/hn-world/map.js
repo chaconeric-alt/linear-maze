@@ -21,7 +21,7 @@
     {
       id: 'home', level: 'hn-home', name: 'Home', kind: 'Your bunker', x: 500, y: 330, state: 'known', art: 'home',
       desc: 'A Burner-era bunker with a door that still seals, a bed, and a medical station that has seen better centuries.',
-      services: ['Rest', 'One major and two minor heals in the medical station (they never refill)', 'The Expedition Ledger', 'The retirement terminal'],
+      services: ['Rest', 'A full heal at the medical station for 15 credits', 'The Expedition Ledger', 'The retirement terminal'],
       dangers: [],
     },
     {
