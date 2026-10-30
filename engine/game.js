@@ -107,10 +107,28 @@
       // a new run starts on the game's start floor, else at the top of the floor order
       this.startLevelId = info.start && LM.find('levels', info.start) ? info.start : this.levelOrder[0];
       LM.ui.init(this);
+      // the zoom the player last chose for this game
+      try {
+        const z = parseFloat(localStorage.getItem(this.zoomKey()));
+        if (z) this.renderer.setViewZoom(z);
+      } catch (e) {}
       this.toTitle();
       this.last = performance.now();
       this.loop = this.loop.bind(this);
       requestAnimationFrame(this.loop);
+    }
+    /** Zoom the view by a factor (Ctrl + mouse wheel), remembered for this game on this browser. */
+    zoomView(k) {
+      const R = this.renderer;
+      const z = R.setViewZoom((R.userZoom || 1) * k);
+      try {
+        localStorage.setItem(this.zoomKey(), String(z));
+      } catch (e) {}
+      LM.ui.zoomBadge(z);
+      return z;
+    }
+    zoomKey() {
+      return 'lm-view-zoom:' + ((LM.gameInfo && LM.gameInfo.id) || 'game');
     }
     newStats() {
       return { kills: 0, enemies: 0, gold: 0, time: 0, shots: 0, damageTaken: 0, chests: 0, chestsTotal: 0 };
@@ -839,13 +857,16 @@
     update(dt, realDt) {
       const I = LM.input;
       // global keys
-      if (I.hit('KeyM')) {
+      if (I.hit('KeyN')) {
         LM.audio.setMuted(!LM.audio.muted);
         this.toast(LM.audio.muted ? 'Sound off' : 'Sound on');
       }
       if (this.state === 'play') {
         if (I.hit('Escape') || I.hit('KeyP')) return LM.ui.showPause(this);
         if (I.hit('Tab') || I.hit('KeyI')) return LM.ui.showInventory(this);
+        if (I.hit('KeyM')) return LM.ui.showMap(this);
+        // Ctrl + mouse wheel: zoom the view in and out
+        if (I.zoomWheel && !this.attract) this.zoomView(Math.pow(1.15, -I.zoomWheel));
       }
       // timers (real-time ones run even during the death slow-down)
       for (const tm of this.timers) {

@@ -168,15 +168,32 @@
       this.canvas.style.width = w + 'px';
       this.canvas.style.height = h + 'px';
       this.dpr = dpr;
-      // Show roughly 1000x620 world units on a typical screen.
-      this.zoom = U.clamp(Math.min(w / 1000, h / 620), 0.75, 2.6);
-      this.scale = this.zoom * dpr;
       this.lc.width = Math.ceil(this.canvas.width / 2);
       this.lc.height = Math.ceil(this.canvas.height / 2);
+      this.rescale();
+    }
+    /** Work out the zoom from the screen and the player's own zoom, and drop everything baked at the old one. */
+    rescale() {
+      // Show roughly 1000x620 world units on a typical screen, times the player's zoom (Ctrl + mouse wheel).
+      const w = this.cssW, h = this.cssH;
+      this.baseZoom = U.clamp(Math.min(w / 1000, h / 620), 0.75, 2.6);
+      this.zoom = this.baseZoom * (this.userZoom || 1);
+      this.scale = this.zoom * this.dpr;
+      // keep every chunk in view (and a ring round it) baked, however far out the view is
+      this.chunkCap = Math.max(56, (Math.ceil(w / this.zoom / CHW) + 3) * (Math.ceil(h / this.zoom / CHW) + 3));
       this.chunks.clear();
       this.chunkOrder.length = 0;
       if (LM.ng && LM.ng.oblique) LM.ng.oblique.forget(this);
       if (this.below) this.below.chunks.clear();
+    }
+    /** The player's zoom on top of the screen's: 1 is the game's own view, 0.5 shows twice as much, 2.5 is close in.
+     *  Returns the zoom now set. */
+    setViewZoom(k) {
+      const z = Math.round(U.clamp(+k || 1, Renderer.ZOOM_MIN, Renderer.ZOOM_MAX) * 1000) / 1000;
+      if (z === (this.userZoom || 1)) return z;
+      this.userZoom = z;
+      this.rescale();
+      return z;
     }
     setLevel(level) {
       this.level = level;
@@ -203,7 +220,7 @@
       c = this.bakeChunk(cx, cy);
       this.chunks.set(key, c);
       this.chunkOrder.push(key);
-      if (this.chunkOrder.length > 56) {
+      if (this.chunkOrder.length > (this.chunkCap || 56)) {
         const old = this.chunkOrder.shift();
         this.chunks.delete(old);
       }
@@ -973,6 +990,9 @@
       }
     }
   }
+  // how far the player can zoom (Ctrl + mouse wheel): out to half the usual view, in to two and a half times
+  Renderer.ZOOM_MIN = 0.5;
+  Renderer.ZOOM_MAX = 2.5;
   LM.Renderer = Renderer;
   LM.CHUNK = CH;
 })();

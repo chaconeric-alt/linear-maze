@@ -236,17 +236,21 @@
     set('dash', ui.el.dash, (U.clamp(dashK, 0, 1) * 100).toFixed(0) + '%', 'width');
     hud.classList.toggle('low', hpPct < 0.3);
 
-    // floors marked armed: false hide the combat readouts
+    // floors marked armed: false hide the combat readouts, unless they say showGear: your health and your weapons
+    // stay on the HUD (holstered: you still can't fire there)
     const peaceful = game.level.def.armed === false;
-    if (ui.el.vitals.hidden !== peaceful) ui.el.vitals.hidden = peaceful;
+    const showGear = peaceful && !!game.level.def.showGear;
+    const hideVitals = peaceful && !showGear;
+    if (ui.el.vitals.hidden !== hideVitals) ui.el.vitals.hidden = hideVitals;
     // no coins to count on a peaceful floor unless you've somehow come by some
     const purse = ui.el.purse || (ui.el.purse = document.querySelector('.purse'));
-    const hidePurse = peaceful && !P.gold && !P.keys.size;
+    const hidePurse = hideVitals && !P.gold && !P.keys.size;
     if (purse && purse.hidden !== hidePurse) purse.hidden = hidePurse;
     const armed = P.isArmed(game);
-    const w = armed ? P.currentWeapon() : null;
-    const gd = armed ? null : P.heldGadget();
-    const wid = w ? w.id : gd ? 'gadget:' + gd.id : 'none';
+    const holstered = !armed && showGear && P.weapons.length > 0;
+    const w = armed || holstered ? P.currentWeapon() : null;
+    const gd = armed || holstered ? null : P.heldGadget();
+    const wid = w ? w.id + (holstered ? ':holstered' : '') : gd ? 'gadget:' + gd.id : 'none';
     if (ui.cache.wid !== wid) {
       ui.cache.wid = wid;
       if (w) ui.el.wIcon.replaceChildren(ui.icons.weapon(w, 84, 40));
@@ -259,7 +263,8 @@
       let line = w.ammo ? ammo + ' ' + LM.AMMO_NAMES[w.ammo].toLowerCase() : 'unlimited';
       // a magazine weapon shows what's loaded over what's left; reloading and overheating say so
       if (w.magazine) line = P.magOf(w) + ' / ' + (w.ammo ? ammo + ' ' + LM.AMMO_NAMES[w.ammo].toLowerCase() : '∞');
-      if (P.reloadT > 0) line = 'reloading…';
+      if (holstered) line += ' · holstered';
+      else if (P.reloadT > 0) line = 'reloading…';
       else if (w.heat && P.overheated(w, game)) line = 'overheated';
       else if (w.magazine && P.magOf(w) <= 0) line += ' · R to reload';
       set('ammo', ui.el.wAmmo, line);
@@ -279,14 +284,14 @@
         return chip;
       }));
     }
-    const slotsKey = armed + '|' + P.weapons.join(',') + '|' + P.weaponIdx + '|' + P.weapons.map((id) => {
+    const slotsKey = (armed || holstered) + '|' + P.weapons.join(',') + '|' + P.weaponIdx + '|' + P.weapons.map((id) => {
       const d = LM.get('weapons', id);
       return d.ammo ? (P.ammo[d.ammo] > 0 ? 1 : 0) : 1;
     }).join('');
     if (ui.cache.slots !== slotsKey) {
       ui.cache.slots = slotsKey;
       ui.el.wSlots.replaceChildren(
-        ...(armed ? P.weapons : []).map((id, i) => {
+        ...(armed || holstered ? P.weapons : []).map((id, i) => {
           const d = LM.get('weapons', id);
           const empty = d.ammo && !(P.ammo[d.ammo] > 0);
           return h('span', { class: 'slot' + (i === P.weaponIdx ? ' on' : '') + (empty ? ' empty' : ''), title: d.name }, h('b', null, String(i + 1)), d.short || d.name);
@@ -434,18 +439,13 @@
     if (set) g.restore();
   };
 
-  ui.drawMinimap = function (game) {
-    const g = ui.mm, L = game.level, P = game.player, d = ui.mmScale;
-    const W = 176, H = 124, s = 3.2;
-    ui.revealRooms(game);
-    g.setTransform(d, 0, 0, d, 0, 0);
-    g.clearRect(0, 0, W, H);
-    g.fillStyle = 'rgba(9,11,15,0.82)';
-    g.fillRect(0, 0, W, H);
-    const cx = P.x / T, cy = P.y / T;
-    const x0 = Math.floor(cx - W / s / 2), x1 = Math.ceil(cx + W / s / 2);
-    const y0 = Math.floor(cy - H / s / 2), y1 = Math.ceil(cy + H / s / 2);
-    const ox = W / 2 - cx * s, oy = H / 2 - cy * s;
+  /** Draw the floor as the maps show it: what's been explored, doors, things with a map colour, people and
+   *  enemies in sight, named places and the objective's targets. ox, oy: where the corner of tile 0,0 lands; s:
+   *  pixels a tile; W, H: the area drawn. o.big: the full map (M), with every named room and bigger marks. */
+  ui.drawMap = function (g, game, ox, oy, s, W, H, o) {
+    const L = game.level, big = !!(o && o.big);
+    const x0 = Math.floor(-ox / s), x1 = Math.ceil((W - ox) / s);
+    const y0 = Math.floor(-oy / s), y1 = Math.ceil((H - oy) / s);
     for (let y = Math.max(0, y0); y <= Math.min(L.h - 1, y1); y++) {
       for (let x = Math.max(0, x0); x <= Math.min(L.w - 1, x1); x++) {
         const i = y * L.w + x;
@@ -463,6 +463,7 @@
       g.fillStyle = dr.lock && !dr.unlocked ? LM.KEY_COLORS[dr.lock] : dr.sealed ? '#ff3a2a' : '#b08a52';
       g.fillRect(ox + dr.tx * s, oy + dr.ty * s, s, s);
     }
+    const dot = big ? Math.max(1.6, s * 0.2) : 1.6;
     for (const it of game.items) {
       if (it.dead || !it.def.mapColor) continue;
       const tx = Math.floor(it.x / T), ty = Math.floor(it.y / T);
@@ -470,37 +471,256 @@
       if (it.used && !it.def.mapAlways) continue;
       g.fillStyle = it.def.mapColor;
       g.beginPath();
-      g.arc(ox + it.x / T * s, oy + it.y / T * s, 1.6, 0, U.TAU);
+      g.arc(ox + it.x / T * s, oy + it.y / T * s, dot, 0, U.TAU);
       g.fill();
     }
+    const sq = big ? Math.max(2, s * 0.32) : 2;
     g.fillStyle = '#9ad0ff';
     for (const n of game.npcs) {
       if (!n.visible || n.def.spectral) continue;
-      g.fillRect(ox + (n.x / T) * s - 1, oy + (n.y / T) * s - 1, 2, 2);
+      g.fillRect(ox + (n.x / T) * s - sq / 2, oy + (n.y / T) * s - sq / 2, sq, sq);
     }
     for (const e of game.enemies) {
       if (e.dead || !e.visible) continue;
       // anyone on your side (engine factions) shows green
       g.fillStyle = LM.factions && !LM.factions.hostile('player', e.faction) ? '#5fe08a' : '#ff5a4a';
-      g.fillRect(ox + (e.x / T) * s - 1, oy + (e.y / T) * s - 1, 2, 2);
+      g.fillRect(ox + (e.x / T) * s - sq / 2, oy + (e.y / T) * s - sq / 2, sq, sq);
     }
-    // named places
-    ui.drawRoomLabels(g, game, ox, oy, s, W, H);
+    // named places (on the full map, every named room you've seen the middle of)
+    if (big) ui.drawRoomNames(g, game, ox, oy, s, W, H);
+    else ui.drawRoomLabels(g, game, ox, oy, s, W, H);
     // the objective's targets (engine/objectives.js)
     if (LM.objectives) LM.objectives.drawMap(g, game, ox, oy, s, W, H);
-    // player arrow
+  };
+  /** The player's arrow on a map, at x, y, pointing where they aim. */
+  function mapArrow(g, P, x, y, k) {
     g.save();
-    g.translate(W / 2, H / 2);
+    g.translate(x, y);
+    g.scale(k, k);
     g.rotate(P.aim);
     g.fillStyle = '#f2c96b';
+    g.strokeStyle = 'rgba(9,11,15,0.9)';
+    g.lineWidth = 1.2 / k;
     g.beginPath();
     g.moveTo(5, 0);
     g.lineTo(-3, 3.2);
     g.lineTo(-1.5, 0);
     g.lineTo(-3, -3.2);
     g.closePath();
+    if (k > 1) g.stroke();
     g.fill();
     g.restore();
+  }
+  /** Room names on the full map: a room's mapLabel, or its name, once its middle is on the map. */
+  ui.drawRoomNames = function (g, game, ox, oy, s, W, H) {
+    const L = game.level;
+    if (!L || !L.def.rooms || s < 5) return;
+    const px = Math.round(U.clamp(s * 0.8, 9, 14));
+    g.save();
+    g.font = '700 ' + px + 'px "IBM Plex Mono", monospace';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.lineJoin = 'round';
+    g.lineWidth = 3;
+    g.strokeStyle = 'rgba(9,11,15,0.92)';
+    for (const r of L.def.rooms) {
+      const name = r.mapLabel ? (r.mapLabel === true ? r.name : r.mapLabel) : r.name;
+      if (!name || !Array.isArray(r.rect)) continue;
+      const [rx, ry, rw, rh] = r.rect;
+      const mx0 = rx + rw / 2, my0 = ry + rh / 2;
+      if (!L.inBounds(Math.floor(mx0), Math.floor(my0)) || !L.explored[Math.floor(my0) * L.w + Math.floor(mx0)]) continue;
+      const mx = ox + mx0 * s, my = oy + my0 * s;
+      if (mx < -200 || mx > W + 200 || my < -20 || my > H + 20) continue;
+      // fit the room: on one line, or two, or smaller; a name that still won't fit is left off
+      const text = String(name).toUpperCase(), room = rw * s + 6;
+      let lines = [text], size = px;
+      if (g.measureText(text).width > room && text.includes(' ')) {
+        const words = text.split(' ');
+        let best = null;
+        for (let i = 1; i < words.length; i++) {
+          const a = words.slice(0, i).join(' '), b = words.slice(i).join(' ');
+          const w = Math.max(g.measureText(a).width, g.measureText(b).width);
+          if (!best || w < best.w) best = { w, l: [a, b] };
+        }
+        if (best && best.w < g.measureText(text).width) lines = best.l;
+      }
+      const wide = Math.max(...lines.map((l) => g.measureText(l).width));
+      if (wide > room) size = Math.floor((px * room) / wide);
+      if (size < 8 || lines.length * size * 1.15 > rh * s + 4) continue;
+      if (size !== px) g.font = '700 ' + size + 'px "IBM Plex Mono", monospace';
+      g.fillStyle = r.mapLabel ? r.mapLabelColor || '#ebe4d4' : 'rgba(235,228,212,0.82)';
+      lines.forEach((l, i) => {
+        const y = my + (i - (lines.length - 1) / 2) * size * 1.15;
+        g.strokeText(l, mx, y);
+        g.fillText(l, mx, y);
+      });
+      if (size !== px) g.font = '700 ' + px + 'px "IBM Plex Mono", monospace';
+    }
+    g.restore();
+  };
+
+  ui.drawMinimap = function (game) {
+    const g = ui.mm, P = game.player, d = ui.mmScale;
+    const W = 176, H = 124, s = 3.2;
+    ui.revealRooms(game);
+    g.setTransform(d, 0, 0, d, 0, 0);
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = 'rgba(9,11,15,0.82)';
+    g.fillRect(0, 0, W, H);
+    const cx = P.x / T, cy = P.y / T;
+    ui.drawMap(g, game, W / 2 - cx * s, H / 2 - cy * s, s, W, H);
+    // player arrow
+    mapArrow(g, P, W / 2, H / 2, 1);
+  };
+
+  /** The floor's map in the main view (M): the game waits while it's open. The wheel zooms (about the pointer),
+   *  dragging, WASD or the arrow keys move it, Home goes back to you; M, Esc or Close shut it. */
+  ui.showMap = function (game) {
+    LM.input.mouse.down = false;
+    const L = game.level, P = game.player;
+    if (!L || !P) return;
+    ui.revealRooms(game);
+    const cv = h('canvas', { class: 'map-canvas', 'aria-label': 'Map of ' + L.name });
+    const g = cv.getContext('2d');
+    const view = { cx: P.x / T, cy: P.y / T, s: 10 };
+    let W = 0, H = 0, d = 1, minS = 2, maxS = 48, raf = 0, drag = null;
+    // the explored part of the floor (or round the player, if nothing is yet)
+    let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+    for (let i = 0; i < L.w * L.h; i++) if (L.explored[i]) {
+      const x = i % L.w, y = (i - x) / L.w;
+      if (x < bx0) bx0 = x;
+      if (x > bx1) bx1 = x;
+      if (y < by0) by0 = y;
+      if (y > by1) by1 = y;
+    }
+    if (bx0 > bx1) [bx0, by0, bx1, by1] = [view.cx - 8, view.cy - 6, view.cx + 8, view.cy + 6];
+    const size = () => {
+      W = Math.max(200, cv.clientWidth);
+      H = Math.max(140, cv.clientHeight);
+      d = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = Math.round(W * d);
+      cv.height = Math.round(H * d);
+      // zoomed all the way out, the whole floor fits; all the way in, a tile is 48 pixels
+      minS = Math.min(6, Math.max(1, Math.min((W - 24) / L.w, (H - 24) / L.h)));
+    };
+    const clampView = () => {
+      view.s = U.clamp(view.s, minS, maxS);
+      view.cx = U.clamp(view.cx, 0, L.w);
+      view.cy = U.clamp(view.cy, 0, L.h);
+    };
+    const fit = () => {
+      view.cx = (bx0 + bx1 + 1) / 2;
+      view.cy = (by0 + by1 + 1) / 2;
+      view.s = Math.min((W - 48) / (bx1 - bx0 + 3), (H - 48) / (by1 - by0 + 3), 22);
+      clampView();
+    };
+    const toYou = () => {
+      view.cx = P.x / T;
+      view.cy = P.y / T;
+      view.s = Math.max(view.s, 14);
+      clampView();
+    };
+    const draw = () => {
+      raf = 0;
+      if (!cv.isConnected) return;
+      g.setTransform(d, 0, 0, d, 0, 0);
+      g.clearRect(0, 0, W, H);
+      g.fillStyle = 'rgba(9,11,15,0.96)';
+      g.fillRect(0, 0, W, H);
+      const ox = W / 2 - view.cx * view.s, oy = H / 2 - view.cy * view.s;
+      ui.drawMap(g, game, ox, oy, view.s, W, H, { big: true });
+      mapArrow(g, P, ox + (P.x / T) * view.s, oy + (P.y / T) * view.s, U.clamp(view.s / 6, 1.2, 3));
+      // the objective markers pulse: keep drawing while the map is open
+      raf = requestAnimationFrame(draw);
+    };
+    const zoomAt = (px, py, k) => {
+      const tx = view.cx + (px - W / 2) / view.s, ty = view.cy + (py - H / 2) / view.s;
+      view.s = U.clamp(view.s * k, minS, maxS);
+      view.cx = tx - (px - W / 2) / view.s;
+      view.cy = ty - (py - H / 2) / view.s;
+      clampView();
+    };
+    cv.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const r = cv.getBoundingClientRect();
+      zoomAt(e.clientX - r.left, e.clientY - r.top, Math.pow(1.2, -Math.sign(e.deltaY)));
+    }, { passive: false });
+    cv.addEventListener('pointerdown', (e) => {
+      drag = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy };
+      cv.setPointerCapture(e.pointerId);
+      cv.classList.add('dragging');
+    });
+    cv.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      view.cx = drag.cx - (e.clientX - drag.x) / view.s;
+      view.cy = drag.cy - (e.clientY - drag.y) / view.s;
+      clampView();
+    });
+    const endDrag = () => {
+      drag = null;
+      cv.classList.remove('dragging');
+    };
+    cv.addEventListener('pointerup', endDrag);
+    cv.addEventListener('pointercancel', endDrag);
+    const onResize = () => {
+      size();
+      clampView();
+    };
+    window.addEventListener('resize', onResize);
+    const PAN = { KeyW: [0, -1], ArrowUp: [0, -1], KeyS: [0, 1], ArrowDown: [0, 1], KeyA: [-1, 0], ArrowLeft: [-1, 0], KeyD: [1, 0], ArrowRight: [1, 0] };
+    ui.open({
+      kicker: game.floorLabel() + ' · Map',
+      title: L.name,
+      className: 'map-view',
+      wide: true,
+      body: h('div', { class: 'map-wrap' }, cv,
+        h('p', { class: 'hint map-hint' }, 'Wheel: zoom · drag, WASD or arrows: move · Home: back to you · M or Esc: close')),
+      actions: [
+        { label: 'Back to you', quiet: true, close: false, onClick: () => { toYou(); return false; } },
+        { label: 'Whole map', quiet: true, close: false, onClick: () => { fit(); return false; } },
+        { label: 'Close', primary: true, key: 'M' },
+      ],
+      onKey: (e) => {
+        const p = PAN[e.code];
+        if (p) {
+          view.cx += (p[0] * W * 0.12) / view.s;
+          view.cy += (p[1] * H * 0.12) / view.s;
+          clampView();
+          return true;
+        }
+        if (e.code === 'Home') {
+          toYou();
+          return true;
+        }
+        if (e.code === 'Equal' || e.code === 'NumpadAdd' || e.code === 'Minus' || e.code === 'NumpadSubtract') {
+          zoomAt(W / 2, H / 2, e.code === 'Equal' || e.code === 'NumpadAdd' ? 1.2 : 1 / 1.2);
+          return true;
+        }
+        return false;
+      },
+      onClose: () => {
+        window.removeEventListener('resize', onResize);
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+      },
+    });
+    // laid out now: size the canvas to it, fit the explored floor, and draw
+    size();
+    fit();
+    draw();
+  };
+
+  /** A word in the middle of the screen when the view zooms (Ctrl + mouse wheel). */
+  ui.zoomBadge = function (z) {
+    let el = $('zoom-badge');
+    if (!el) {
+      el = h('div', { id: 'zoom-badge' });
+      ui.el.hud.appendChild(el);
+    }
+    el.textContent = 'Zoom ' + Math.round(z * 100) + '%';
+    el.classList.add('show');
+    clearTimeout(ui.zoomT);
+    ui.zoomT = setTimeout(() => el.classList.remove('show'), 900);
   };
 
   ui.prompt = function (text) {
@@ -582,7 +802,7 @@
 
   // ------------------------------------------------------------ modal system
   /**
-   * spec: { kicker, title, body: Node|string, actions: [{ label, primary, onClick, disabled, key, close }],
+   * spec: { kicker, title, body: Node|string, actions: [{ label, primary, onClick, disabled, key, close }], onKey(e),
    *         onClose, wide, className, dismissable }
    * An action closes the pop-up unless its onClick returns false.
    */
@@ -646,6 +866,8 @@
       ui.close();
       return true;
     }
+    // a pop-up's own keys (the map's panning)
+    if (spec.onKey && spec.onKey(e)) return true;
     if (spec.numbered) {
       const m = /^Digit([1-9])$/.exec(e.code);
       const b = m ? spec.numbered[+m[1] - 1] : e.code === 'KeyE' || e.code === 'Enter' ? spec.numbered[0] : null;
@@ -677,7 +899,9 @@
   ui.controlRows = function () {
     const rows = [['WASD', 'Move'], ['Mouse', 'Aim'], ['Click', 'Fire (hold)'], ['Shift', 'Dash'], ['E', 'Use, open, talk'], ['1–9', 'Switch weapon'], ['R', 'Reload'], ['Tab', 'Inventory'], ['Esc', 'Pause']];
     for (const gd of Object.values(LM.registry.gadgets)) if (gd && gd.key) rows.push([KEY_LABEL(gd.key), gd.name || gd.id]);
-    rows.push(['M', 'Sound on or off']);
+    rows.push(['M', 'Map']);
+    rows.push(['Ctrl+wheel', 'Zoom']);
+    rows.push(['N', 'Sound on or off']);
     return rows;
   };
   /** Fill the title screen and the page from LM.gameInfo. Safe to call again after the manifest changes. */
@@ -755,13 +979,14 @@
           h('dt', null, 'Foes slain'), h('dd', null, game.stats.kills + ''),
           h('dt', null, 'Gold carried'), h('dd', null, game.player.gold + '')
         ),
-        h('p', { class: 'hint' }, 'WASD move · mouse aim · click fire · Shift dash · E interact · 1–9 or wheel to switch weapons · Q last weapon · R reload · Tab inventory · M sound'),
+        h('p', { class: 'hint' }, 'WASD move · mouse aim · click fire · Shift dash · E interact · 1–9 or wheel to switch weapons · Q last weapon · R reload · Tab inventory · M map · Ctrl + wheel zoom · N sound'),
         LM.objectives && LM.objectives.view(game) ? h('div', null, h('h3', null, 'Objectives'), LM.objectives.view(game)) : null,
         LM.comms && LM.comms.log.length ? h('div', null, h('h3', null, 'Transmissions'), LM.comms.logView(5)) : null
       ),
       actions: [
         { label: 'Resume', primary: true },
         { label: 'Inventory', onClick: () => { setTimeout(() => ui.showInventory(game), 0); } },
+        { label: 'Map', onClick: () => { setTimeout(() => ui.showMap(game), 0); } },
         { label: LM.audio.muted ? 'Sound on' : 'Sound off', onClick: () => LM.audio.setMuted(!LM.audio.muted) },
         // story lines that stop the game (LM.comms): the player can have them in the corner instead.
         // (The label says what it is now, as a setting, not what clicking it does.)
@@ -847,8 +1072,16 @@
       const body = panel.querySelector('.panel-body');
       body.replaceChildren(render());
     };
-    panel = ui.open({ kicker: game.floorLabel(), title: 'Inventory', body: render(), wide: true, closeOnTab: true, actions: [{ label: 'Close', primary: true, key: null }] });
+    // buttons a game adds (ui.inventoryButtons): each opens its own view in place of this one
+    const extra = ui.inventoryButtons.filter((b) => !b.available || b.available(game)).map((b) => ({
+      label: typeof b.label === 'function' ? b.label(game) : b.label, key: b.key || null, quiet: true,
+      onClick: () => { setTimeout(() => b.open(game), 0); },
+    }));
+    panel = ui.open({ kicker: game.floorLabel(), title: 'Inventory', body: render(), wide: true, closeOnTab: true, actions: extra.concat([{ label: 'Close', primary: true, key: null }]) });
   };
+  /** Buttons along the bottom of the Inventory, added by a game: { label (text, or fn(game)), open(game), available(game), key }.
+   *  Each closes the Inventory and opens its own view (which can offer a way back with ui.showInventory). */
+  ui.inventoryButtons = [];
 
   function statsTable(game) {
     const s = game.stats;

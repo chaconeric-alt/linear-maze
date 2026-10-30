@@ -1,6 +1,8 @@
 # Linear Maze workspace
 
-Version 0.7.1. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+Version 0.7.2. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
+
+New in 0.7.2: the map and the zoom. M opens the floor's map in the middle of the screen, and the game waits while it's open: the wheel zooms it, dragging (or WASD and the arrows) moves it, and M, Esc or Close go back to the game. Ctrl and the mouse wheel zoom the game's own view in and out (remembered for each game). The sound is on N now. A peaceful floor can keep your health and weapons on the HUD (`showGear`), and a game can add buttons to the Inventory (`LM.ui.inventoryButtons`). HaveNot uses both: your health and weapons at home, and the Valuables you've found, counted, from the Inventory (engine/SPEC.md, New in 0.7.2).
 
 New in 0.7.1: big monsters find their way by their size: through gaps and doors they fit, round by a wider way, or they wait at the gap and shoot (engine SPEC 6.26).
 
@@ -49,7 +51,7 @@ The games:
 
 Open `index.html` and click Play, or open `engine/index.html?game=linear-maze` (or `?game=dead-signal`). It works straight from the folder; no server needed.
 
-Controls: WASD move, mouse aim, hold click to fire, Shift dash, E interact or talk, 1–9 or wheel to switch weapons, Tab inventory, Esc pause, M sound. Gadgets add their own keys (The Linear Maze's phone is F).
+Controls: WASD move, mouse aim, hold click to fire, Shift dash, E interact or talk, 1–9 or wheel to switch weapons, Tab inventory, Esc pause, M map, Ctrl + wheel zoom, N sound. Gadgets add their own keys (The Linear Maze's phone is F).
 
 ## Make and change games
 

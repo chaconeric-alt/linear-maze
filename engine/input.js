@@ -10,6 +10,7 @@
     pressed: new Set(),
     mouse: { x: 0, y: 0, down: false, rdown: false, clicked: false, inside: false },
     wheel: 0,
+    zoomWheel: 0, // the wheel turned with Ctrl held: zoom, not weapons
     enabled: true,
   });
 
@@ -56,8 +57,10 @@
     canvas.addEventListener(
       'wheel',
       (e) => {
+        // (preventing it also keeps Ctrl + wheel from zooming the page)
         e.preventDefault();
-        I.wheel += Math.sign(e.deltaY);
+        if (e.ctrlKey) I.zoomWheel += Math.sign(e.deltaY);
+        else I.wheel += Math.sign(e.deltaY);
       },
       { passive: false }
     );
@@ -70,5 +73,6 @@
     I.pressed.clear();
     I.mouse.clicked = false;
     I.wheel = 0;
+    I.zoomWheel = 0;
   };
 })();
