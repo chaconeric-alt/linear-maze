@@ -455,8 +455,8 @@
     tab = tab || 'items';
     const render = () => {
       const st = P.stats();
-      const tabs = h('div', { class: 'hn-choice', style: 'grid-template-columns:repeat(3,1fr);display:grid' },
-        ['items', 'self', 'ledger'].map((k) => h('button', { type: 'button', class: k === tab ? 'on' : '', on: { click: () => { tab = k; rerender(); } } }, h('strong', null, { items: 'Satchel', self: 'Character', ledger: 'Ledger' }[k]))));
+      const tabs = h('div', { class: 'hn-choice', style: 'grid-template-columns:repeat(4,1fr);display:grid' },
+        ['items', 'self', 'ledger', 'dossier'].map((k) => h('button', { type: 'button', class: k === tab ? 'on' : '', on: { click: () => { tab = k; rerender(); } } }, h('strong', null, { items: 'Satchel', self: 'Character', ledger: 'Ledger', dossier: 'Dossier' }[k]))));
       let body;
       if (tab === 'items') {
         const ids = Object.keys(s.inv).filter((id) => HN.ITEMS[id] && s.inv[id] > 0).sort((a, b) => (HN.ITEMS[a].cat + a).localeCompare(HN.ITEMS[b].cat + b));
@@ -495,7 +495,9 @@
               h('dt', null, 'Credits'), h('dd', null, P.gold + 'c'),
               h('dt', null, 'Boom-Town'), h('dd', null, HN.standingWord(s.standing) + ' (' + s.standing + ')')),
             h('h3', null, 'Controls'),
-            h('p', { class: 'muted' }, 'V melee · G grenade · R reload · H med-kit · C this satchel · E use · Tab gear · M map')));
+            h('p', { class: 'muted' }, 'V melee · G grenade · R reload · H med-kit · C this satchel · B dossier · E use · Tab gear · M map')));
+      } else if (tab === 'dossier' && HN.dossierPanel) {
+        body = HN.dossierPanel(game);
       } else {
         const obj = Object.entries(HN.OBJECTIVES).filter(([id]) => s.objectives[id]);
         body = h('div', { class: 'hn-cols' },
@@ -600,6 +602,7 @@
             if (P._hnScreenT <= 0) P._hnScreen = 40;
           }
           hazardTick(game, P, dt);
+          if (HN.dossierTick) HN.dossierTick(game, P, dt);
         },
         drawIcon(g, W, H) {
           g.fillStyle = '#8a5a2a';
