@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Class-1 Eggbot, upright as the game draws it: a white egg with a red battle band, a black eye band and a
+       beret, an antenna mast, on a tracked chassis (the books' Eggbots ride tank treads). -->
+  <defs>
+    <radialGradient id="shell" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#ffffff"/><stop offset="0.6" stop-color="#f0e8d4"/><stop offset="1" stop-color="#a8a090"/></radialGradient>
+    <linearGradient id="tread" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a1816"/><stop offset="0.5" stop-color="#3a3632"/><stop offset="1" stop-color="#1a1816"/></linearGradient>
+  </defs>
+  <ellipse cx="32" cy="58" rx="24" ry="4" fill="#000" opacity="0.3"/>
+  <!-- the chassis and its treads -->
+  <rect x="12" y="40" width="40" height="12" rx="3" fill="#3a3632"/>
+  <rect x="6" y="34" width="12" height="24" rx="5" fill="url(#tread)" stroke="#0a0908"/>
+  <rect x="46" y="34" width="12" height="24" rx="5" fill="url(#tread)" stroke="#0a0908"/>
+  <path d="M7 38 h10 M7 42 h10 M7 46 h10 M7 50 h10 M7 54 h10 M47 38 h10 M47 42 h10 M47 46 h10 M47 50 h10 M47 54 h10" stroke="#6a645a" stroke-width="1.4"/>
+  <circle cx="12" cy="38" r="2.2" fill="#8a8478"/><circle cx="12" cy="54" r="2.2" fill="#8a8478"/><circle cx="52" cy="38" r="2.2" fill="#8a8478"/><circle cx="52" cy="54" r="2.2" fill="#8a8478"/>
+  <!-- the egg -->
+  <ellipse cx="32" cy="27" rx="16" ry="21" fill="url(#shell)" stroke="#1a1612" stroke-width="1.5"/>
+  <path d="M16.5 34 Q32 40 47.5 34 L47 38 Q32 44 17 38 Z" fill="#c8283a"/>
+  <rect x="19" y="21" width="26" height="6" rx="2" fill="#141210"/>
+  <rect x="22" y="22.5" width="6" height="3" fill="#ff4a4a"/><rect x="36" y="22.5" width="6" height="3" fill="#ff4a4a"/>
+  <ellipse cx="25" cy="15" rx="4" ry="6" fill="#ffffff" opacity="0.55" transform="rotate(-25 25 15)"/>
+  <!-- beret and antenna -->
+  <ellipse cx="33" cy="7.5" rx="10" ry="3.6" fill="#141210"/><circle cx="35" cy="4.5" r="1.6" fill="#141210"/>
+  <path d="M42 12 L48 2" stroke="#3a3632" stroke-width="1.4"/><circle cx="48" cy="2" r="1.6" fill="#ff4a4a"/>
+  <!-- the side gun -->
+  <rect x="47" y="28" width="9" height="4" rx="1" fill="#3a3632" stroke="#0a0908" stroke-width="0.6"/>
+</svg>

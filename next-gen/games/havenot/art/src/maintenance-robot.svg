@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <!-- Maintenance robot, top-down and facing north: a red and black body on four jointed legs, two manipulator
+       arms reaching forward, a sensor head, a tool rack on its back. -->
+  <defs>
+    <radialGradient id="body" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#e84a3a"/><stop offset="0.6" stop-color="#8a1a14"/><stop offset="1" stop-color="#2a0806"/></radialGradient>
+    <linearGradient id="limb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5a5a60"/><stop offset="1" stop-color="#1a1a1e"/></linearGradient>
+  </defs>
+  <ellipse cx="48" cy="52" rx="32" ry="30" fill="#000" opacity="0.28"/>
+  <!-- four legs, jointed -->
+  <g stroke="#0a0a0c" stroke-width="1.2" fill="url(#limb)">
+    <path d="M36 44 L18 36 L8 52 L12 54 L20 41 L36 50 Z"/>
+    <path d="M60 44 L78 36 L88 52 L84 54 L76 41 L60 50 Z"/>
+    <path d="M38 60 L22 70 L16 88 L20 89 L26 74 L40 66 Z"/>
+    <path d="M58 60 L74 70 L80 88 L76 89 L70 74 L56 66 Z"/>
+  </g>
+  <g fill="#c8ccd0"><circle cx="18" cy="36" r="3"/><circle cx="78" cy="36" r="3"/><circle cx="22" cy="70" r="3"/><circle cx="74" cy="70" r="3"/></g>
+  <!-- the manipulator arms, forward -->
+  <path d="M40 38 L32 20 L30 8" stroke="#3a3a40" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M56 38 L64 20 L66 8" stroke="#3a3a40" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M26 6 L30 8 L34 4 M62 4 L66 8 L70 6" stroke="#c8ccd0" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- the body and its tool rack -->
+  <ellipse cx="48" cy="52" rx="16" ry="18" fill="url(#body)" stroke="#0a0a0c" stroke-width="1.5"/>
+  <rect x="40" y="56" width="16" height="10" rx="2" fill="#1a1a1e" stroke="#5a5a60"/>
+  <path d="M43 58 v6 M47 58 v6 M51 58 v6" stroke="#c8ccd0" stroke-width="1.4"/>
+  <!-- the sensor head -->
+  <circle cx="48" cy="36" r="8" fill="#1a1a1e" stroke="#5a5a60" stroke-width="1.2"/>
+  <circle cx="48" cy="34" r="3.5" fill="#5ae8ff"/><circle cx="47" cy="33" r="1.2" fill="#ffffff"/>
+</svg>

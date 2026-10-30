@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Glorexx, top-down and facing north: a scorpion-thing fresh out of its specimen tank, a black-green
+       carapace still slick with tank fluid, crab claws forward, the segmented tail curled over its back. -->
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#5a7a48"/><stop offset="0.55" stop-color="#1e3020"/><stop offset="1" stop-color="#080e0a"/></radialGradient>
+    <radialGradient id="slime" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#7aff6a" stop-opacity="0.55"/><stop offset="1" stop-color="#7aff6a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="32" cy="36" rx="22" ry="20" fill="#000" opacity="0.28"/>
+  <!-- eight legs, raked back -->
+  <g stroke="#0a120c" stroke-width="2" stroke-linecap="round" fill="none">
+    <path d="M24 30 L12 26 L6 30 M24 35 L10 34 L4 40 M24 40 L12 44 L8 50 M25 44 L16 52 L14 58"/>
+    <path d="M40 30 L52 26 L58 30 M40 35 L54 34 L60 40 M40 40 L52 44 L56 50 M39 44 L48 52 L50 58"/>
+  </g>
+  <!-- the claws -->
+  <g stroke="#0a120c" stroke-width="1.2" fill="url(#shell)">
+    <path d="M26 24 L18 14 L16 8 L20 8 L22 12 L28 20 Z"/>
+    <path d="M38 24 L46 14 L48 8 L44 8 L42 12 L36 20 Z"/>
+    <path d="M14 10 Q12 2 18 1 Q16 5 19 8 Q22 2 24 6 Q22 10 18 11 Z"/>
+    <path d="M50 10 Q52 2 46 1 Q48 5 45 8 Q42 2 40 6 Q42 10 46 11 Z"/>
+  </g>
+  <!-- the body -->
+  <ellipse cx="32" cy="36" rx="10" ry="13" fill="url(#shell)" stroke="#0a120c" stroke-width="1.4"/>
+  <path d="M23 32 Q32 35 41 32 M23 38 Q32 41 41 38 M24 44 Q32 46 40 44" stroke="#0a120c" stroke-width="1" fill="none"/>
+  <!-- the tail, curled up over the back toward the head, the sting aimed forward -->
+  <g stroke="#0a120c" stroke-width="1.2" fill="url(#shell)">
+    <circle cx="32" cy="52" r="4.5"/><circle cx="36" cy="56" r="4"/><circle cx="41" cy="54" r="3.6"/>
+    <circle cx="43" cy="48" r="3.4"/><circle cx="41" cy="42" r="3.2"/>
+  </g>
+  <path d="M40 39 Q38 33 34 32 L38 36 Z" fill="#c8ff6a" stroke="#0a120c" stroke-width="0.8"/>
+  <!-- the head, its eye cluster -->
+  <ellipse cx="32" cy="24" rx="7" ry="5" fill="url(#shell)" stroke="#0a120c" stroke-width="1.2"/>
+  <g fill="#c8ff6a"><circle cx="29.5" cy="22.5" r="1.2"/><circle cx="34.5" cy="22.5" r="1.2"/><circle cx="32" cy="21" r="1"/></g>
+  <!-- tank fluid, still dripping off it -->
+  <ellipse cx="30" cy="34" rx="7" ry="8" fill="url(#slime)"/>
+  <path d="M28 30 q1 3 0 6 M36 36 q1 2 0 4" stroke="#aaff8a" stroke-width="0.8" opacity="0.7" fill="none"/>
+</svg>

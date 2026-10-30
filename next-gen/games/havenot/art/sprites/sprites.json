@@ -371,5 +371,206 @@
       "memory pool bath"
     ],
     "match": "bath$|hot tub|jacuzzi|spa pool"
+  },
+  "eggbot": {
+    "file": "eggbot.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-eggbot"
+    ],
+    "size": 26,
+    "turns": false
+  },
+  "princess-eggbot": {
+    "file": "princess-eggbot.png",
+    "w": 128,
+    "h": 128,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-princess"
+    ],
+    "size": 64,
+    "turns": false
+  },
+  "knife-fighter": {
+    "file": "knife-fighter.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-knife"
+    ],
+    "size": 24,
+    "turns": true
+  },
+  "chatterpillar": {
+    "file": "chatterpillar.png",
+    "w": 64,
+    "h": 96,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-chatter-a",
+      "hn-chatter-g"
+    ],
+    "size": 22,
+    "turns": true
+  },
+  "maintenance-robot": {
+    "file": "maintenance-robot.png",
+    "w": 96,
+    "h": 96,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-maintbot"
+    ],
+    "size": 40,
+    "turns": true
+  },
+  "glorexx": {
+    "file": "glorexx.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-glorexx"
+    ],
+    "size": 30,
+    "turns": true
+  },
+  "monoid": {
+    "file": "monoid.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-monoid"
+    ],
+    "size": 28,
+    "turns": true
+  },
+  "desktop-defender": {
+    "file": "desktop-defender.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-defender"
+    ],
+    "size": 16,
+    "turns": true
+  },
+  "sparkle-wasp": {
+    "file": "sparkle-wasp.png",
+    "w": 96,
+    "h": 96,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-wasp"
+    ],
+    "size": 34,
+    "turns": true
+  },
+  "bombast-toad": {
+    "file": "bombast-toad.png",
+    "w": 96,
+    "h": 96,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-toad"
+    ],
+    "size": 44,
+    "turns": true
   }
 }

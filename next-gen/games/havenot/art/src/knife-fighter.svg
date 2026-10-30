@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Knife Fighter, top-down and facing north: a ball drone with a glowing eye screen, two hazard-striped
+       blade arms swept forward, a stinger tail behind. -->
+  <defs>
+    <radialGradient id="ball" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa4b0"/><stop offset="0.6" stop-color="#3a424c"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#8a96a0"/></linearGradient>
+    <pattern id="haz" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#1a1a1a"/><rect width="3" height="6" fill="#e8c030"/></pattern>
+  </defs>
+  <ellipse cx="32" cy="36" rx="16" ry="14" fill="#000" opacity="0.3"/>
+  <!-- the stinger tail -->
+  <path d="M32 44 Q30 54 32 62" stroke="#3a424c" stroke-width="3" fill="none"/><path d="M29 60 L32 64 L35 60" fill="#c8ccd0"/>
+  <!-- blade arms -->
+  <path d="M18 32 L8 12 L12 10 L22 28 Z" fill="url(#haz)" stroke="#0a0a0a" stroke-width="0.8"/>
+  <path d="M46 32 L56 12 L52 10 L42 28 Z" fill="url(#haz)" stroke="#0a0a0a" stroke-width="0.8"/>
+  <path d="M8 12 L4 0 L12 10 Z" fill="url(#blade)" stroke="#3a424c" stroke-width="0.6"/>
+  <path d="M56 12 L60 0 L52 10 Z" fill="url(#blade)" stroke="#3a424c" stroke-width="0.6"/>
+  <!-- the ball -->
+  <circle cx="32" cy="32" r="15" fill="url(#ball)" stroke="#0a0c0e" stroke-width="1.5"/>
+  <circle cx="32" cy="32" r="11" fill="none" stroke="#5a646c" stroke-width="0.8" stroke-dasharray="2 2"/>
+  <!-- the eye screen, facing forward -->
+  <rect x="24" y="19" width="16" height="9" rx="2.5" fill="#0a1a10" stroke="#5aff8a" stroke-width="0.8"/>
+  <path d="M26 23.5 h4 M33 23.5 h5" stroke="#7aff9a" stroke-width="1.6"/>
+  <circle cx="32" cy="38" r="3" fill="#ff3a3a"/>
+</svg>

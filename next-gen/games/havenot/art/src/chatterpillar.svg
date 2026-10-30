@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="96" viewBox="0 0 64 96">
+  <!-- Chatterpillar, top-down and facing north: an armoured centipede-thing, plated segments with spines,
+       many legs, clacking mandibles at the head. -->
+  <defs>
+    <radialGradient id="plate" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#c8c0a0"/><stop offset="0.6" stop-color="#7a7458"/><stop offset="1" stop-color="#3a3826"/></radialGradient>
+  </defs>
+  <ellipse cx="32" cy="54" rx="16" ry="40" fill="#000" opacity="0.28"/>
+  <!-- legs, down both sides -->
+  <g stroke="#3a3826" stroke-width="2" stroke-linecap="round" fill="none">
+    <path d="M20 26 l-10 -4 M20 36 l-11 0 M20 46 l-11 2 M20 56 l-10 4 M20 66 l-9 6 M20 76 l-8 6"/>
+    <path d="M44 26 l10 -4 M44 36 l11 0 M44 46 l11 2 M44 56 l10 4 M44 66 l9 6 M44 76 l8 6"/>
+  </g>
+  <!-- the segments, head to tail -->
+  <g stroke="#1e1c12" stroke-width="1.2">
+    <ellipse cx="32" cy="84" rx="9" ry="7" fill="url(#plate)"/>
+    <ellipse cx="32" cy="74" rx="11" ry="7" fill="url(#plate)"/>
+    <ellipse cx="32" cy="64" rx="13" ry="7.5" fill="url(#plate)"/>
+    <ellipse cx="32" cy="53" rx="14" ry="8" fill="url(#plate)"/>
+    <ellipse cx="32" cy="42" rx="14" ry="8" fill="url(#plate)"/>
+    <ellipse cx="32" cy="31" rx="13" ry="7.5" fill="url(#plate)"/>
+  </g>
+  <!-- spines along the back -->
+  <path d="M32 26 l-2 -4 l4 0 Z M32 37 l-2 -4 l4 0 Z M32 48 l-2 -4 l4 0 Z M32 59 l-2 -4 l4 0 Z M32 70 l-2 -4 l4 0 Z" fill="#e8dcb0"/>
+  <!-- the head and mandibles -->
+  <ellipse cx="32" cy="18" rx="11" ry="9" fill="url(#plate)" stroke="#1e1c12" stroke-width="1.4"/>
+  <circle cx="26" cy="15" r="2.2" fill="#ff4a2a"/><circle cx="38" cy="15" r="2.2" fill="#ff4a2a"/>
+  <path d="M26 9 Q22 2 28 0 M38 9 Q42 2 36 0" stroke="#e8dcb0" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M28 6 l-6 -4 M36 6 l6 -4" stroke="#3a3826" stroke-width="1.2"/>
+</svg>

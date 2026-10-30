@@ -155,10 +155,39 @@
     g.closePath();
     g.fill();
   }
+  /** An Eggbot's tracked base (the books: an egg on tank treads): a chassis and a tread each side, the links
+   *  running as it moves (by how far it has come, so they stand still when it does). trim: the chassis edge. */
+  HN.drawTreads = function (g, e, s, trim) {
+    const run = ((e.x + e.y) * 0.35) % 4;
+    const y0 = s * 0.2, th = s * 0.95, tw = s * 0.4, gap = s * 0.98;
+    g.fillStyle = '#2a2622';
+    g.fillRect(-gap, y0 + th * 0.18, gap * 2, th * 0.6);
+    if (trim) {
+      g.fillStyle = trim;
+      g.fillRect(-gap, y0 + th * 0.18, gap * 2, Math.max(1, s * 0.07));
+    }
+    for (const side of [-1, 1]) {
+      const x = side * gap - tw / 2;
+      g.fillStyle = '#141210';
+      G.roundRect(g, x, y0, tw, th, tw * 0.45);
+      g.fill();
+      // the links
+      g.save();
+      G.roundRect(g, x, y0, tw, th, tw * 0.45);
+      g.clip();
+      g.fillStyle = '#5a544c';
+      for (let k = -1; k < th / 4 + 1; k++) g.fillRect(x, y0 + k * 4 + run, tw, 1.4);
+      g.restore();
+      // the drive wheels
+      G.circle(g, side * gap, y0 + tw * 0.5, tw * 0.28, '#7a746a');
+      G.circle(g, side * gap, y0 + th - tw * 0.5, tw * 0.28, '#7a746a');
+    }
+  };
   function drawEgg(g, e, s, shell, beret) {
-    // eggbots roll and wobble; they always face upright, which is the point of being an egg
-    const wob = Math.sin(e.t * 7) * 0.12;
+    // eggbots roll on treads and wobble a little; they always face upright, which is the point of being an egg
+    const wob = Math.sin(e.t * 7) * 0.06;
     g.save();
+    HN.drawTreads(g, e, s);
     g.rotate(wob);
     ell(g, 0, 0, s * 0.82, s, '#1a1612');
     ell(g, 0, 0, s * 0.74, s * 0.92, shell);
