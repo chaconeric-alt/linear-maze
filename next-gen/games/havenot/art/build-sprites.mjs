@@ -65,6 +65,12 @@ Object.assign(PIECES, {
   'bleach-vat': { names: ['identity bleach vat', 'reputation bleach vat'], match: 'bleach|wash vat|rinse', w: 64, h: 64 },
   cannon: { names: ['confetti cannon volley', 'cannon'], match: 'cannon$|howitzer|artillery|mortar', w: 64, h: 64 },
   'lounger-bed': { names: ['vip lounger bed', 'incorporeal lounger bed', 'celebrity lounger bed'], match: 'lounger|bunk|( |^)bed$', w: 64, h: 128 },
+  // batch 4
+  conveyor: { names: ['waste chute conveyor', 'compost belts', 'face conveyor'], match: 'conveyor|belts?$', w: 192, h: 64 },
+  dais: { names: ['presentation dais', 'auction dais', 'elevated platform', 'velvet stage'], match: '(dais|stage|platform|podium)$', w: 192, h: 128 },
+  oven: { names: ['fabrication oven', 'birthday cake oven furnace'], match: 'oven|kiln|incinerator|boiler', w: 128, h: 64 },
+  press: { names: ['reputation press (forgiveness setting)', 'scandal pulper press'], match: 'press$|pulper|compactor|stamper|mangle', w: 128, h: 64 },
+  'luxury-bath': { names: ['luxury bath', 'sunken bath', 'memory pool bath'], match: 'bath$|hot tub|jacuzzi|spa pool', w: 128, h: 128 },
 });
 // cracks, a split and shards for a piece that doesn't give its own: seeded by its id, inside its middle
 function damageFor(id, w, h) {
