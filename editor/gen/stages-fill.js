@@ -149,14 +149,67 @@
       }
       return true;
     }
-    /** Place an object. A solid one that would wall in an interactive neighbour is refused (null). */
-    put(x, y, entry) {
+    /** The open tiles just inside a room's doorways: where a player steps in. */
+    doorApproaches(r) {
+      const out = [];
+      for (const [dx, dy] of this.doorsOf(r)) {
+        if (this.base(dx, dy) !== '+') continue;
+        for (const [ox, oy] of ORTHO) {
+          const x = dx + ox, y = dy + oy, c = this.base(x, y);
+          if ((c === '.' || c === ',') && G.inRoom(r, x, y, 0)) out.push([x, y]);
+        }
+      }
+      return out;
+    }
+    /** How much of a room a player stepping in at a doorway can't walk to without leaving it: its open tiles out of
+     *  reach, and (counting far more) doorways whose first step in is blocked or that the room's furniture cuts off
+     *  from its other doorways. `block`: tiles to treat as solid. */
+    cutOff(r, block) {
+      const seeds = this.doorApproaches(r);
+      if (!seeds.length) return 0;
+      const open = new Set();
+      for (const [x, y] of G.roomCells(r, 0)) {
+        const c = this.base(x, y), k = K(x, y);
+        if ((c === '.' || c === ',') && !this.isSolid(this.floor.objs[k]) && !(block && block.has(k))) open.add(k);
+      }
+      const seen = new Set(), q = [];
+      let n = 0;
+      for (const [x, y] of seeds) {
+        const k = K(x, y);
+        if (!open.has(k)) n += 1000;
+        else if (!q.length) {
+          seen.add(k);
+          q.push([x, y]);
+        }
+      }
+      while (q.length) {
+        const [x, y] = q.pop();
+        for (const [ox, oy] of ORTHO) {
+          const k = K(x + ox, y + oy);
+          if (open.has(k) && !seen.has(k)) {
+            seen.add(k);
+            q.push([x + ox, y + oy]);
+          }
+        }
+      }
+      for (const [x, y] of seeds) if (open.has(K(x, y)) && !seen.has(K(x, y))) n += 1000;
+      return n + open.size - seen.size;
+    }
+    /** Would solid things on these tiles block a doorway of room r, or cut part of the room off from its doors? */
+    splits(r, tiles) {
+      if (!r) return false;
+      const block = new Set(tiles.map(([x, y]) => K(x, y)));
+      return this.cutOff(r, block) > this.cutOff(r, null);
+    }
+    /** Place an object. A solid one is refused (null) if it would stand where a player steps in at a doorway, cut
+     *  part of its room off from the doors, or wall in an interactive neighbour. */
+    put(x, y, entry, force) {
       if (entry.solid == null && !entry.start) entry.solid = this.isSolid(entry);
       // a piece bigger than a tile needs all of its tiles free, in the same room
       const [fw, fh] = entry.item ? G.footprint(this.plan.registry, entry.item, entry.props) : [1, 1];
       const extra = [];
+      const r = this.roomAt(x, y);
       if (fw > 1 || fh > 1) {
-        const r = this.roomAt(x, y);
         for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) {
           if (!i && !j) continue;
           const cx = x + i, cy = y + j;
@@ -164,8 +217,15 @@
           extra.push([cx, cy]);
         }
       }
-      if (entry.solid && !this.canBlock(x, y, entry)) return null;
-      if (entry.solid && extra.some(([cx, cy]) => !this.canBlock(cx, cy, {}))) return null;
+      if (entry.solid && !force) {
+        const all = [[x, y]].concat(extra);
+        // the tiles inside every doorway (and a work space, and the front of a wall fixture) stay clear
+        if (all.some(([cx, cy]) => this.reserved.has(K(cx, cy)))) return null;
+        if (!this.canBlock(x, y, entry)) return null;
+        if (extra.some(([cx, cy]) => !this.canBlock(cx, cy, {}))) return null;
+        // and nothing solid shuts a doorway or splits a room: every open tile stays walkable from every door
+        if (this.open(x, y) && this.splits(r, all)) return null;
+      }
       this.floor.objs[K(x, y)] = entry;
       if (extra.length) {
         // the other tiles hold a marker pointing at the piece (emit leaves them empty)
@@ -184,6 +244,34 @@
     putFirst(cells, make) {
       for (const [x, y] of cells) if (this.put(x, y, make(x, y))) return [x, y];
       return null;
+    }
+    /** Take a placed object (and the tiles it covers) off the map; returns its tile or null. */
+    lift(entry) {
+      const k = Object.keys(this.floor.objs).find((q) => this.floor.objs[q] === entry);
+      if (!k) return null;
+      for (const c of entry.covers || []) delete this.floor.objs[c];
+      delete entry.covers;
+      delete this.floor.objs[k];
+      return k.split(',').map(Number);
+    }
+    /** Turn a placed piece (props.turn). A piece that lies differently turned is put down again, and keeps the way
+     *  it faced if it wouldn't fit turned (it may not cover a doorway or split a room). Returns its turn. */
+    turn(entry, turn) {
+      const reg = this.plan.registry, p = entry.props || (entry.props = {});
+      const before = G.footprint(reg, entry.item, p), old = p.turn;
+      const after = G.footprint(reg, entry.item, Object.assign({}, p, { turn }));
+      if (before[0] === after[0] && before[1] === after[1]) {
+        p.turn = turn;
+        return turn;
+      }
+      const at = this.lift(entry);
+      if (!at) return old;
+      p.turn = turn;
+      if (this.put(at[0], at[1], entry)) return turn;
+      if (old == null) delete p.turn;
+      else p.turn = old;
+      this.put(at[0], at[1], entry, true);
+      return old;
     }
     tile(x, y, entry) {
       this.floor.tiles[K(x, y)] = Object.assign({}, this.floor.tiles[K(x, y)] || {}, entry);

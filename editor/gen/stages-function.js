@@ -274,14 +274,16 @@
     return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? FACE.e : FACE.w) : dy < 0 ? FACE.n : FACE.s;
   };
   const posOf = (P, e) => Object.keys(P.floor.objs).find((k) => P.floor.objs[k] === e).split(',').map(Number);
+  /** The tiles a placed piece covers, [w, h] (turned a quarter, it lies the other way). */
+  const sizeOf = (P, e) => G.footprint(P.plan.registry, e.item, e.props);
   /** A piece's middle, in tiles, from its top-left tile and footprint. */
   const mid = (P, e) => {
-    const [x, y] = posOf(P, e);
-    return [x + ((e.props.w || 1) - 1) / 2, y + ((e.props.h || 1) - 1) / 2];
+    const [x, y] = posOf(P, e), [w, h] = sizeOf(P, e);
+    return [x + (w - 1) / 2, y + (h - 1) / 2];
   };
   /** Free tiles in a ring round a placed piece (its footprint grown by d), nearest first. */
   const ringOf = (P, r, e, d) => {
-    const [x, y] = posOf(P, e), w = e.props.w || 1, h = e.props.h || 1, out = [];
+    const [x, y] = posOf(P, e), [w, h] = sizeOf(P, e), out = [];
     for (let yy = y - d; yy < y + h + d; yy++) for (let xx = x - d; xx < x + w + d; xx++) {
       if (xx >= x && xx < x + w && yy >= y && yy < y + h) continue;
       if (G.inRoom(r, xx, yy) && P.base(xx, yy) === '.' && !P.taken(xx, yy)) out.push([xx, yy]);
@@ -301,10 +303,10 @@
     const focal = mine().find((o) => o.props.focal || (FOCAL_FAMS.includes(o.props.fam) && o.props.key));
     // the focal piece faces the doors (or the middle of the room); seating in rows before it, facing it
     if (focal) {
-      const m = mid(P, focal);
-      focal.props.turn = faceTo(m, doors.length ? door : centre);
+      P.turn(focal, faceTo(mid(P, focal), doors.length ? door : centre));
+      const m = mid(P, focal), ft = Math.max(0, G.quarterTurns(focal.props.turn));
       if (seats.length) {
-        const front = [[0, 1], [-1, 0], [0, -1], [1, 0]][focal.props.turn];
+        const front = [[0, 1], [-1, 0], [0, -1], [1, 0]][ft];
         const rows = [];
         for (let k = 2; k <= 4; k++) for (let s = -2; s <= 2; s++) rows.push([Math.round(m[0] + front[0] * k + front[1] * s), Math.round(m[1] + front[1] * k + front[0] * s)]);
         let n = 0;
@@ -312,7 +314,7 @@
           if (n >= Math.min(6, 2 + Math.floor(G.roomCells(r).length / 25))) break;
           if (!G.inRoom(r, at[0], at[1]) || P.base(at[0], at[1]) !== '.' || P.taken(at[0], at[1])) continue;
           const name = seats[n % seats.length];
-          if (putAt(P, r, C, name, fn, at, { turn: (focal.props.turn + 2) % 4, seat: true })) {
+          if (putAt(P, r, C, name, fn, at, { turn: (ft + 2) % 4, seat: true })) {
             fn.placed.push(name);
             n++;
           }
@@ -327,7 +329,8 @@
       if (TABLE_NAMES.test(name) || (o.props.fam === 'table' && seats.length && rng.chance(0.5))) {
         const m = mid(P, o), seat = seats[0] || 'chair';
         let n = 0;
-        for (const c of rng.shuffle(ringOf(P, r, o, 1)).filter(([x, y]) => x === Math.round(x) && (Math.abs(x - m[0]) < 0.6 + (o.props.w || 1) / 2 || Math.abs(y - m[1]) < 0.6 + (o.props.h || 1) / 2))) {
+        const [ow, oh] = sizeOf(P, o);
+        for (const c of rng.shuffle(ringOf(P, r, o, 1)).filter(([x, y]) => x === Math.round(x) && (Math.abs(x - m[0]) < 0.6 + ow / 2 || Math.abs(y - m[1]) < 0.6 + oh / 2))) {
           if (n >= 6) break;
           if (putAt(P, r, C, seat, fn, c, { fam: 'chair', turn: faceTo(c, m), seat: true })) n++;
         }
@@ -353,7 +356,7 @@
     // the setting's own seats and consoles that found no table, focal piece or machine: placed as usual
     for (const name of later || []) if (!fn.placed.includes(name) && placeObject(P, rng, r, C, name, fn)) fn.placed.push(name);
     // desks face into the room; anything else that has a front faces the room's middle
-    for (const o of mine()) if (o.props.turn == null && ['desk', 'chair', 'console', 'pews'].includes(o.props.fam)) o.props.turn = faceTo(mid(P, o), centre);
+    for (const o of mine()) if (o.props.turn == null && ['desk', 'chair', 'console', 'pews'].includes(o.props.fam)) P.turn(o, faceTo(mid(P, o), centre));
   }
   // centrepieces: the families and names that carry a room (a throne room's throne, a lab's vat)
   const CENTRE_FAMS = ['throne', 'vat', 'altar', 'coffin', 'turbine', 'dais', 'fountain', 'statue', 'furnace', 'bath', 'cage', 'pod'];

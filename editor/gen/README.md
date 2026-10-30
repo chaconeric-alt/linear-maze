@@ -64,9 +64,9 @@ A brief says what to make. On the command line it's the options; in a file it's 
 | encounters | `stages-fill.js` | Set pieces and wandering groups to the floor's monster budget. |
 | traps | `stages-fill.js` | Trap set-ups from the library, with their warnings and a way to switch them off. |
 | treasure | `stages-fill.js` | Credits and items to the floor's treasure budget, in containers. |
-| dressing | `stages-fill.js` | Furniture, clutter, posters, kiosks and health stations. |
+| dressing | `stages-fill.js` | Furniture, clutter, posters, kiosks and health stations. Pieces can stand against walls, but nothing solid goes on the tile just inside a doorway, and no piece (at its full size, turned the way it faces) may cut a doorway off from the rest of its room. |
 | words | `stages-words.js` | Every name and text from the pools (or the brief, or edited words). |
-| checks | `validate.js` | The proof: walking the real tiles from the start with only what's been found so far. |
+| checks | `validate.js` | The proof: walking the real tiles from the start with only what's been found so far; and, room by room, that every doorway opens onto all of the room's floor. |
 | files | `emit.js` | Level files, `pack.js`, `site.js`, `generation.json`, `REPORT.md`. |
 
 The proof must reach the goal and every floor's stairs with keys, clues, switches and the hacks anyone wins by
