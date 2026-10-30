@@ -262,7 +262,8 @@
   // placement roles (engine of a room's layout: arrange)
   const FOCAL_FAMS = ['throne', 'altar', 'dais'];
   const famOf = (C, name) => (C.objects[name] || {}).fam;
-  const isSeat = (C, name) => ['chair', 'pews'].includes(famOf(C, name)) || /\b(seat|seats|seating|chairs?|benches|pews?|stools?|kneeling pads?|cushions?|bleachers)\b/.test(name);
+  // a seat is drawn as one; a name decides it only for pieces with no family of their own (or the generic machine)
+  const isSeat = (C, name) => ['chair', 'pews'].includes(famOf(C, name)) || /\bkneel(ing pads?|ers)\b/.test(name) || ((!famOf(C, name) || famOf(C, name) === 'machine') && /\b(seat|seats|seating|chairs?|benches|pews?|stools?|kneeling pads?|cushions?|bleachers)\b/.test(name));
   const isConsole = (C, name) => famOf(C, name) === 'console' && !/scanner|helmet/.test(name);
   const shelfRoom = (C, name, fn) => ['shelf', 'cabinet'].includes(famOf(C, name)) && ['storage', 'commerce'].includes(fn.cluster);
   const TABLE_NAMES = /conference|meeting|dining|banquet|negotiat|board|council|card table|tasting/;
