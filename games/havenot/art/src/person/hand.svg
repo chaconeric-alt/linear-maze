@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- The right hand (tinted the skin; mirrored for the left). -->
+  <ellipse cx="47" cy="12.6" rx="3.6" ry="4" fill="#f4f4f4" stroke="#6a6a6a" stroke-width="0.8"/>
+  <path d="M45 10.8 h4" stroke="#aaaaaa" stroke-width="0.6"/>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- A jacket open over the shirt (greys on white, tinted the look's blazer): lapels and the front edges. -->
+  <path d="M10 36 Q10 22 24 20 L29 30 L25 44 Q14 46 10 36 Z" fill="#e8e8e8" stroke="#545454" stroke-width="0.8"/>
+  <path d="M54 36 Q54 22 40 20 L35 30 L39 44 Q50 46 54 36 Z" fill="#e8e8e8" stroke="#545454" stroke-width="0.8"/>
+  <path d="M24 20 L29 30 L26 27 Z M40 20 L35 30 L38 27 Z" fill="#a8a8a8"/>
+  <circle cx="26.5" cy="38" r="0.9" fill="#7a7a7a"/><circle cx="37.5" cy="38" r="0.9" fill="#7a7a7a"/>
+</svg>

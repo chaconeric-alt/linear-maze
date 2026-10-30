@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Hair over the back of the head, greys on white (tinted the hair's colour). Shaggy, tied back. -->
+  <path d="M20 31 Q20 44 32 46 Q44 44 44 31 Q42 36 38 35 Q40 39 34 38 Q33 41 30 38 Q26 39 26 35 Q22 36 20 31 Z" fill="#e0e0e0" stroke="#5a5a5a" stroke-width="0.9"/>
+  <path d="M24 37 Q28 42 32 42 M36 37 Q38 40 40 39 M28 40 Q31 44 34 41" stroke="#8a8a8a" stroke-width="0.8" fill="none"/>
+  <path d="M30 45 Q32 51 31 54 Q34 51 34 45 Z" fill="#c8c8c8" stroke="#5a5a5a" stroke-width="0.6"/>
+</svg>

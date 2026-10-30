@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Short hair over the back of the head (greys on white, tinted the hair). -->
+  <path d="M20 32 A12 12 0 0 0 44 32 Q43 27 40 25 Q36 28 32 27 Q28 28 24 25 Q21 27 20 32 Z" fill="#e4e4e4" stroke="#545454" stroke-width="0.9"/>
+  <path d="M24 30 Q28 34 32 33 M34 29 Q37 33 40 31 M26 37 Q30 40 34 38" stroke="#8a8a8a" stroke-width="0.8" fill="none"/>
+</svg>

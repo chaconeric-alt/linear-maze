@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- The scavenger's coat from above, facing north, in greys on white: the game tints it the body armour's
+       colour. Shoulders and back, a turned-up collar, a seam down the back, a patch, creases. -->
+  <defs><radialGradient id="c" cx="0.5" cy="0.3" r="0.75"><stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#c8c8c8"/><stop offset="1" stop-color="#7a7a7a"/></radialGradient></defs>
+  <ellipse cx="32" cy="34.5" rx="26.5" ry="19.5" fill="#4a4a4a"/>
+  <ellipse cx="32" cy="34.5" rx="24.5" ry="17.8" fill="url(#c)"/>
+  <path d="M20 22 Q32 14 44 22 L41 27 Q32 22 23 27 Z" fill="#9a9a9a" stroke="#5a5a5a" stroke-width="0.8"/>
+  <path d="M32 27 V52" stroke="#8a8a8a" stroke-width="1.2"/>
+  <path d="M12 34 Q16 40 15 46 M52 34 Q48 40 49 46 M22 46 Q26 48 28 52 M42 46 Q38 48 36 52" stroke="#9a9a9a" stroke-width="1" fill="none"/>
+  <g transform="rotate(-12 44 41)"><rect x="40" y="38" width="8" height="7" rx="1" fill="#e4e4e4" stroke="#7a7a7a" stroke-width="0.7"/>
+  <path d="M41 39.5 h6 M41 41.5 h6 M41 43.5 h6" stroke="#9a9a9a" stroke-width="0.4" stroke-dasharray="0.8 0.6"/></g>
+</svg>

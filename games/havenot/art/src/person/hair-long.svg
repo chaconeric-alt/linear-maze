@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Long hair, down over the shoulders and back (greys on white, tinted the hair). -->
+  <path d="M19 30 Q16 46 20 54 Q32 58 44 54 Q48 46 45 30 Q42 40 32 40 Q22 40 19 30 Z" fill="#dcdcdc" stroke="#545454" stroke-width="0.9"/>
+  <path d="M20 32 A12 12 0 0 0 44 32 Q43 27 40 25 Q36 28 32 27 Q28 28 24 25 Q21 27 20 32 Z" fill="#e4e4e4" stroke="#545454" stroke-width="0.9"/>
+  <path d="M24 42 Q25 48 23 53 M30 43 Q31 49 30 55 M36 43 Q35 49 37 55 M41 42 Q40 48 42 52" stroke="#8a8a8a" stroke-width="0.8" fill="none"/>
+</svg>

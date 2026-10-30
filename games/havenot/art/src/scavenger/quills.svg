@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Quills, in their own colours: a fan of pale black-tipped spines down the back. -->
+  <g stroke="#2b2620" stroke-width="0.4" fill="#e6dcc2">
+    <path d="M24 42 L14 60 L27 44 Z"/><path d="M28 43 L23 62 L31 44 Z"/><path d="M32 44 L32 63 L34 44 Z"/><path d="M36 43 L41 62 L37 44 Z"/><path d="M40 42 L50 60 L41 44 Z"/>
+  </g>
+  <g fill="#2b2620"><circle cx="14.6" cy="59" r="1.2"/><circle cx="23.2" cy="61" r="1.2"/><circle cx="32.4" cy="62" r="1.2"/><circle cx="41" cy="61" r="1.2"/><circle cx="49.4" cy="59" r="1.2"/></g>
+</svg>

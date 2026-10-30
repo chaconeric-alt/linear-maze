@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- A third arm, greys on white (tinted the skin), hanging off the left shoulder blade, its hand out front. -->
+  <path d="M14 38 Q6 32 5 22 L9 21 Q10 30 17 34 Z" fill="#e4e4e4" stroke="#5a5a5a" stroke-width="0.9"/>
+  <ellipse cx="6.6" cy="19.4" rx="3.4" ry="3.8" fill="#f4f4f4" stroke="#5a5a5a" stroke-width="0.8"/>
+  <path d="M8 30 Q7 26 7 23" stroke="#a8a8a8" stroke-width="0.8" fill="none"/>
+</svg>

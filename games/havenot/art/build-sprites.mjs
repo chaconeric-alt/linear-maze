@@ -103,6 +103,10 @@ Object.assign(PIECES, {
   'grime-turret': { kind: 'monster', enemies: ['hn-grime-turret'], size: 30, turns: true, w: 64, h: 64 },
   'agency-turret': { kind: 'monster', enemies: ['hn-turret'], size: 30, turns: true, w: 64, h: 64 },
   'sphinx-gun': { kind: 'monster', enemies: ['hn-sphinx'], size: 36, turns: true, w: 64, h: 64 },
+  // the player: layers drawn over the engine's scavenger (packs/hn-rules/look.js); greys on white are tinted at play
+  // people (packs/hn-sites/person.js): a paper doll for LM.gfx.person, its greys tinted from each one's look
+  person: { kind: 'person', size: 25.6, w: 64, h: 64, layers: ['shirt', 'sleeve', 'hand', 'blazer', 'tie', 'lanyard', 'card', 'head', 'hair-short', 'hair-buzz', 'hair-long', 'hair-ponytail', 'hair-bun', 'hair-curly', 'hair-bald', 'glasses', 'headset'] },
+  scavenger: { kind: 'player', size: 25.6, w: 64, h: 64, layers: ['torso', 'arms', 'hands', 'gear', 'hair', 'helmet', 'head-human', 'head-hyena', 'tail-hyena', 'head-mutant', 'chitin', 'quills', 'arm3'] },
 });
 // cracks, a split and shards for a piece that doesn't give its own: seeded by its id, inside its middle
 function damageFor(id, w, h) {
@@ -143,13 +147,15 @@ for (const [id, pc0] of Object.entries(PIECES)) {
   const pc = Object.assign(damageFor(id, pc0.w, pc0.h), pc0);
   const frames = [];
   const monster = pc.kind === 'monster';
-  const states = monster ? FRAMES : STATES;
+  const states = monster ? FRAMES : pc.layers || STATES;
   for (const fr of states) {
-    // a monster's frame is a pose of its vector, toned as one of the states
-    const st = monster ? FRAME_TONE[fr] : fr;
+    // a monster's frame is a pose of its vector, toned as one of the states; a set of layers (src/<id>/<layer>.svg)
+    // is one frame per layer, all as they are
+    const st = monster ? FRAME_TONE[fr] : pc.layers ? 'working' : fr;
     // (wrapped in one group, the pose's or none, so the inner shadow lands on the drawing and not its frame)
     const srcPath = P(build, id + '-' + fr + '.svg');
-    writeFileSync(srcPath, posed(readFileSync(P(here, 'src', id + '.svg'), 'utf8'), pc.w, pc.h, monster ? POSE[fr] : {}));
+    const src = pc.layers ? P(here, 'src', id, fr + '.svg') : P(here, 'src', id + '.svg');
+    writeFileSync(srcPath, posed(readFileSync(src, 'utf8'), pc.w, pc.h, monster ? POSE[fr] : {}));
     // 1. FigCraft: the vector, the state's geometry, texture, shadow
     const steps = [{ command: 'file.import', params: { path: srcPath, x: 0, y: 0 } }];
     steps.push({ command: 'effect.add', params: { ids: [3], type: 'innerShadow' } });
@@ -187,6 +193,8 @@ for (const [id, pc0] of Object.entries(PIECES)) {
   if (pc.match) manifest[id].match = pc.match;
   // a monster: which enemies it draws, how big (world units across), and whether it turns to face its way
   if (monster) Object.assign(manifest[id], { kind: 'monster', enemies: pc.enemies, size: pc.size, turns: !!pc.turns });
+  // a set of layers: what it's for, and how many world units its frame is across
+  if (pc.layers) Object.assign(manifest[id], { kind: pc.kind, size: pc.size });
   console.log('made ' + id + '.png (' + states.length + ' frames, ' + pc.w + '×' + pc.h + ')');
 }
 writeFileSync(join(out, 'sprites.json'), JSON.stringify(manifest, null, 2) + '\n');

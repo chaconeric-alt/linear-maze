@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Sleeves reaching forward to the gun, greys on white (tinted with the coat). -->
+  <g stroke="#4a4a4a" stroke-width="1">
+    <path d="M45 30 Q46 20 41 12 L36 13 Q40 21 38 30 Z" fill="#dcdcdc"/>
+    <path d="M19 30 Q20 21 27 15 L31 18 Q25 23 26 31 Z" fill="#cfcfcf"/>
+  </g>
+  <path d="M43 26 Q43 20 40 15 M22 26 Q23 22 27 18" stroke="#9a9a9a" stroke-width="0.9" fill="none"/>
+  <path d="M36 14 L41 12.5 M27 15.5 L31 18" stroke="#6a6a6a" stroke-width="1.6"/>
+</svg>

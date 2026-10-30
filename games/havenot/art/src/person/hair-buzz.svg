@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- A buzz cut: stubble over the back of the head, half see-through (greys on white, tinted the hair). -->
+  <path d="M20.5 31 A11.6 11.6 0 0 0 43.5 31 Q43 26.5 40.5 24.5 L23.5 24.5 Q21 26.5 20.5 31 Z" fill="#c8c8c8" opacity="0.6"/>
+  <g fill="#7a7a7a" opacity="0.6"><circle cx="25" cy="33" r="0.5"/><circle cx="29" cy="36" r="0.5"/><circle cx="34" cy="35" r="0.5"/><circle cx="38" cy="32" r="0.5"/><circle cx="31" cy="39" r="0.5"/><circle cx="27" cy="29" r="0.5"/><circle cx="36" cy="28" r="0.5"/></g>
+</svg>

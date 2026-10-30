@@ -6,6 +6,11 @@
  * for each mutation that shows: chitin plates, a third arm, stalk eyes, a bulging cranium, quills down the back,
  * acid drool, a heavy brow (Thick Skull) and bat ears (Echolocation). The rest only show on the character sheet.
  * Drawn in the player's frame: origin at the body centre, +x along the aim.
+ *
+ * With the drawn art loaded (art/build-sprites.mjs, the 'scavenger' layers), all three wear it over the engine's
+ * scavenger: a coat in the body armour's colour, sleeves and hands on the gun, a pack and a strap, the hair or
+ * helmet in its colour, and a head for the origin. Chitin, quills and the third arm are drawn; the smaller
+ * mutations go on top as above. Until it loads, they look as above.
  */
 'use strict';
 (function () {
@@ -35,6 +40,103 @@
     g.fill();
   };
   const swing = (P) => Math.sin(P.walk * 2.2) * Math.min(1, Math.hypot(P.vx, P.vy) / 120);
+
+  // ---- the drawn layers: greys on white come out in a colour (multiplied), the rest are drawn as they are.
+  // HN.artSheet and HN.artPut are shared with the people (hn-sites/person.js).
+  const tints = new Map();
+  /** A sheet of drawn art (HN.ART[id], art/sprites/sprites.js) once its picture is loaded, else null. */
+  HN.artSheet = (id) => {
+    const a = HN.ART && HN.ART[id];
+    if (!a) return null;
+    if (!a.img) {
+      a.img = new Image();
+      a.img.src = a.src;
+    }
+    return a.img.complete && a.img.naturalWidth ? a : null;
+  };
+  const sheet = () => HN.artSheet('scavenger');
+  function layer(a, name, col) {
+    const key = a.file + name + (col || '');
+    let c = tints.get(key);
+    if (!c) {
+      const i = a.states.indexOf(name);
+      c = document.createElement('canvas');
+      c.width = a.w;
+      c.height = a.h;
+      const x = c.getContext('2d');
+      x.drawImage(a.img, i * a.w, 0, a.w, a.h, 0, 0, a.w, a.h);
+      if (col) {
+        x.globalCompositeOperation = 'multiply';
+        x.fillStyle = col;
+        x.fillRect(0, 0, a.w, a.h);
+        x.globalCompositeOperation = 'destination-in';
+        x.drawImage(a.img, i * a.w, 0, a.w, a.h, 0, 0, a.w, a.h);
+      }
+      tints.set(key, c);
+    }
+    return c;
+  }
+  /** A layer in a body's own frame (+x forward): drawn facing north, so turned a quarter; `flip` mirrors it side to side. */
+  function put(g, a, name, col, dx = 0, k = 1, flip = false) {
+    const s = (a.size / a.w) * k;
+    g.save();
+    g.translate(dx, 0);
+    if (flip) g.scale(1, -1);
+    g.rotate(Math.PI / 2);
+    g.scale(s, s);
+    g.drawImage(layer(a, name, col), -a.w / 2, -a.h / 2);
+    g.restore();
+  }
+  HN.artPut = put;
+  const coatOf = (P) => {
+    const b = P.equip && P.equip.body ? LM.get('armor', P.equip.body) : null;
+    return b ? b.color : '#4d5a6e';
+  };
+  /** The drawn look, over the procedural one for the origin (`base`; null for a human). */
+  function drawn(base, origin, muts) {
+    const has = (m) => muts.includes(m);
+    const skin = (base && base.skin) || '#d9b48f';
+    return {
+      skin,
+      under(g, P) {
+        const a = sheet();
+        if (origin === 'hyena') {
+          // the tail, wagging with the stride from the base of the spine
+          g.save();
+          g.translate(-6.8, 0);
+          g.rotate(swing(P) * 0.45);
+          g.translate(6.8, 0);
+          put(g, a, 'tail-hyena');
+          g.restore();
+        }
+        if (has('arm')) put(g, a, 'arm3', skin, -swing(P) * 1.4);
+      },
+      over(g, P, game, t, kick) {
+        const a = sheet(), coat = coatOf(P);
+        put(g, a, 'torso', coat);
+        put(g, a, 'gear');
+        put(g, a, 'arms', U.shade(coat, -0.15), -kick * 0.5);
+        put(g, a, 'hands', skin, -kick * 0.5);
+        if (has('chitin')) put(g, a, 'chitin');
+        if (has('quills')) put(g, a, 'quills');
+      },
+      head(g, P, game, t, hc, worn) {
+        const a = sheet();
+        if (origin === 'mutant') {
+          // the drawn skull under the procedural mutations (a bulging cranium is a bigger skull)
+          base.head(g, P, game, t, hc, worn, (cx, r) => {
+            put(g, a, 'head-mutant', skin, cx - 0.4, r / 4.5);
+            if (worn) put(g, a, 'helmet', hc, cx - 0.4, r / 4.5);
+          });
+          return;
+        }
+        if (origin === 'hyena') put(g, a, 'head-hyena');
+        else put(g, a, 'head-human', skin);
+        if (worn) put(g, a, 'helmet', hc);
+        else if (origin !== 'hyena') put(g, a, 'hair', hc);
+      },
+    };
+  }
 
   const HYENA = {
     skin: FUR,
@@ -107,7 +209,8 @@
           }
         }
       },
-      head(g, P, game, t, hc, worn) {
+      // skull(cx, r), when given, draws the skull and any helmet instead (the drawn head); the rest goes on top
+      head(g, P, game, t, hc, worn, skull) {
         const r = big ? 5.7 : 4.5, cx = big ? -0.8 : 0.4;
         if (has('echo')) {
           for (const side of [-1, 1]) {
@@ -121,10 +224,13 @@
             g.fill();
           }
         }
-        disc(g, cx, 0, r, skin);
-        // blotches on the bare scalp
-        for (const [x, y, br] of [[-2, 1.6, 1.1], [-0.6, -2.2, 0.8], [-3, -0.9, 0.6]]) disc(g, cx - 0.4 + x, y, br, U.shade(skin, -0.18));
-        if (big) {
+        if (skull) skull(cx, r);
+        else {
+          disc(g, cx, 0, r, skin);
+          // blotches on the bare scalp
+          for (const [x, y, br] of [[-2, 1.6, 1.1], [-0.6, -2.2, 0.8], [-3, -0.9, 0.6]]) disc(g, cx - 0.4 + x, y, br, U.shade(skin, -0.18));
+        }
+        if (big && !(skull && worn)) {
           // veins over the dome
           g.strokeStyle = U.shade(skin, -0.25);
           g.lineWidth = 0.6;
@@ -136,7 +242,7 @@
           g.stroke();
         }
         if (has('skull')) oval(g, cx + r - 1.4, 0, 1.4, r * 0.8, 0, dark);
-        if (worn) helmet(g, cx - 1, r + 0.3, hc);
+        if (worn && !skull) helmet(g, cx - 1, r + 0.3, hc);
         if (has('eyes')) {
           g.strokeStyle = skin;
           g.lineWidth = 1.1;
@@ -161,15 +267,17 @@
   }
 
   // the look only changes when the character does, so it is built once per origin and roll
-  let key = null, look = null;
+  let key = null, look = null, art = null;
   LM.playerLook = function (P) {
     const s = P.data && P.data.hn;
-    if (!s || !s.created || s.origin === 'human') return null;
-    const k = s.origin + ':' + (s.origin === 'mutant' ? s.mutations.join(',') : '');
+    if (!s || !s.created) return null;
+    const muts = s.origin === 'mutant' ? s.mutations : [];
+    const k = s.origin + ':' + muts.join(',');
     if (k !== key) {
       key = k;
-      look = s.origin === 'hyena' ? HYENA : s.origin === 'mutant' ? mutantLook(s.mutations) : null;
+      look = s.origin === 'hyena' ? HYENA : s.origin === 'mutant' ? mutantLook(muts) : null;
+      art = drawn(look, s.origin, muts);
     }
-    return look;
+    return sheet() ? art : look;
   };
 })();

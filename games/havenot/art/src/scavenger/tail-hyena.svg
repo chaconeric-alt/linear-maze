@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- The hyena's bushy tail, in its own colours, hanging back from the base of the spine (its root at 32,49). -->
+  <path d="M30 49 Q26 56 28 62 Q32 64 36 62 Q38 56 34 49 Z" fill="#b8925f" stroke="#5a4028" stroke-width="0.8"/>
+  <path d="M28 58 Q32 64 36 58 Q36 63 32 64 Q28 63 28 58 Z" fill="#3b2d21"/>
+  <path d="M31 51 l-1 4 M33 52 l1 4" stroke="#7a5a34" stroke-width="0.7"/>
+</svg>

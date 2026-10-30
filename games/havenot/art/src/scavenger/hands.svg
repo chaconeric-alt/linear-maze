@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Two hands on the gun (tinted the skin's colour). -->
+  <g fill="#f4f4f4" stroke="#6a6a6a" stroke-width="0.8"><ellipse cx="38.5" cy="10.5" rx="3.8" ry="4.2"/><ellipse cx="29.5" cy="15" rx="3.4" ry="3.8"/></g>
+  <path d="M36 8.5 h4.6 M27.6 13 h3.8" stroke="#aaaaaa" stroke-width="0.6"/>
+</svg>

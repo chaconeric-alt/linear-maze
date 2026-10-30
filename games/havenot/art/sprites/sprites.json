@@ -772,5 +772,55 @@
     ],
     "size": 36,
     "turns": true
+  },
+  "scavenger": {
+    "file": "scavenger.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "torso",
+      "arms",
+      "hands",
+      "gear",
+      "hair",
+      "helmet",
+      "head-human",
+      "head-hyena",
+      "tail-hyena",
+      "head-mutant",
+      "chitin",
+      "quills",
+      "arm3"
+    ],
+    "names": [],
+    "kind": "player",
+    "size": 25.6
+  },
+  "person": {
+    "file": "person.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "shirt",
+      "sleeve",
+      "hand",
+      "blazer",
+      "tie",
+      "lanyard",
+      "card",
+      "head",
+      "hair-short",
+      "hair-buzz",
+      "hair-long",
+      "hair-ponytail",
+      "hair-bun",
+      "hair-curly",
+      "hair-bald",
+      "glasses",
+      "headset"
+    ],
+    "names": [],
+    "kind": "person",
+    "size": 25.6
   }
 }
