@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Adaptive throne, top-down: its back to the north, the seat facing south. Two tiles square at twice game scale. -->
+  <defs>
+    <linearGradient id="plinth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a34"/><stop offset="1" stop-color="#1c1218"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0a8"/><stop offset="0.45" stop-color="#d8a838"/><stop offset="1" stop-color="#7a5418"/></linearGradient>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a1424"/><stop offset="1" stop-color="#2a0812"/></linearGradient>
+    <radialGradient id="cushion" cx="0.5" cy="0.4" r="0.7"><stop offset="0" stop-color="#d83a52"/><stop offset="0.7" stop-color="#8a1a2e"/><stop offset="1" stop-color="#4a0a18"/></radialGradient>
+    <radialGradient id="core" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#e8ffff"/><stop offset="0.4" stop-color="#5ae8ff"/><stop offset="1" stop-color="#0a5a7a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- the dais the throne stands on -->
+  <rect x="4" y="6" width="120" height="118" rx="10" fill="url(#plinth)"/>
+  <rect x="8" y="10" width="112" height="110" rx="8" fill="none" stroke="url(#gold)" stroke-width="2"/>
+  <path d="M14 112 h100 M20 117 h88" stroke="#d8a838" stroke-width="1.5" opacity="0.6"/>
+  <!-- the tall carved back, with its crest -->
+  <path d="M24 14 Q64 -2 104 14 L104 40 L24 40 Z" fill="url(#back)" stroke="url(#gold)" stroke-width="3"/>
+  <path d="M54 10 L64 2 L74 10 L70 18 L58 18 Z" fill="url(#gold)"/>
+  <circle cx="64" cy="26" r="7" fill="url(#core)"/>
+  <circle cx="64" cy="26" r="3" fill="#ffffff"/>
+  <!-- adaptive: servo ribs and cables down the back -->
+  <path d="M34 20 L34 38 M44 18 L44 38 M84 18 L84 38 M94 20 L94 38" stroke="#1a1a22" stroke-width="3"/>
+  <path d="M34 20 L34 38 M44 18 L44 38 M84 18 L84 38 M94 20 L94 38" stroke="#7a8a9a" stroke-width="1.2"/>
+  <!-- the armrests -->
+  <rect x="18" y="40" width="16" height="58" rx="5" fill="url(#back)" stroke="url(#gold)" stroke-width="2.5"/>
+  <rect x="94" y="40" width="16" height="58" rx="5" fill="url(#back)" stroke="url(#gold)" stroke-width="2.5"/>
+  <circle cx="26" cy="92" r="5" fill="url(#gold)"/><circle cx="102" cy="92" r="5" fill="url(#gold)"/>
+  <rect x="21" y="52" width="10" height="16" rx="2" fill="#0a2a3a" stroke="#5ae8ff" stroke-width="1"/>
+  <path d="M23 56 h6 M23 60 h4 M23 64 h6" stroke="#5ae8ff" stroke-width="1"/>
+  <!-- the seat -->
+  <rect x="34" y="40" width="60" height="58" rx="8" fill="url(#cushion)" stroke="#2a0812" stroke-width="2"/>
+  <path d="M44 50 Q64 58 84 50 M44 66 Q64 74 84 66 M44 82 Q64 90 84 82" stroke="#5a0a1a" stroke-width="1.5" fill="none" opacity="0.7"/>
+  <circle cx="54" cy="58" r="1.6" fill="#d8a838"/><circle cx="74" cy="58" r="1.6" fill="#d8a838"/><circle cx="54" cy="74" r="1.6" fill="#d8a838"/><circle cx="74" cy="74" r="1.6" fill="#d8a838"/>
+  <!-- the step down in front -->
+  <rect x="30" y="100" width="68" height="10" rx="3" fill="#2a1a22" stroke="url(#gold)" stroke-width="1.5"/>
+  <!-- light from above -->
+  <path d="M30 44 Q50 40 60 46" stroke="#ffffff" stroke-width="2" opacity="0.25" fill="none"/>
+</svg>

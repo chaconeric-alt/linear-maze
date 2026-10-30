@@ -1,0 +1,47 @@
+{
+  "adaptive-throne": {
+    "file": "adaptive-throne.png",
+    "w": 128,
+    "h": 128,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "adaptive throne"
+    ]
+  },
+  "growth-vat": {
+    "file": "growth-vat.png",
+    "w": 96,
+    "h": 96,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "growth vat",
+      "rows of growth vats",
+      "growth creche vat"
+    ]
+  },
+  "gilded-coffin-bed": {
+    "file": "gilded-coffin-bed.png",
+    "w": 64,
+    "h": 128,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "gilded coffin bed",
+      "coffin recliner"
+    ]
+  }
+}

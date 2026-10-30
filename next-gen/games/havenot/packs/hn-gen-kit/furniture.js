@@ -393,6 +393,25 @@
     const m = MOTIFS[Math.floor(r() * MOTIFS.length)], c = [p.accent, p.trim, p.cloth, '#e8e8e8'][Math.floor(r() * 4)];
     m(g, (r() - 0.5) * (W - 8), (r() - 0.5) * (H - 8), c);
   }
+  // drawn art (games/havenot/art: sprite sheets made with the ArtCraft tools, art/sprites/sprites.js): a piece
+  // whose name has a sheet is drawn from it, the frame by its state; every other piece, and any whose picture
+  // hasn't loaded, is drawn as before
+  const ART_FRAME = { working: 0, active: 0, 'partly-working': 1, malfunctioning: 1, disabled: 2, destroyed: 3 };
+  let artByName = null;
+  function artFor(name) {
+    if (!artByName) {
+      artByName = {};
+      for (const a of Object.values(HN.ART || {})) for (const n of a.names || []) artByName[n] = a;
+    }
+    const a = artByName[name];
+    if (!a || !a.src) return null;
+    if (!a.img) {
+      a.img = new Image();
+      a.img.src = a.src;
+    }
+    return a.img.complete && a.img.naturalWidth ? a : null;
+  }
+  HN.artFor = artFor;
   function drawPiece(g, it, t, W, H) {
     const p = HN.s10Palette(it.props.set), name = it.props.name || '';
     const r = U.mulberry32(hash(name));
@@ -415,10 +434,29 @@
     if (ds === 'destroyed') g.rotate(0.07);
     if (q) g.rotate((q * Math.PI) / 2);
     const [fw, fh] = q % 2 ? [H, W] : [W, H];
-    // a device's moving parts: still when it's off or wrecked, quick when it's running
-    fam(g, fw, fh, p, r, ds === 'disabled' || ds === 'destroyed' ? 0 : ds === 'active' ? t * 2.2 : t, it);
-    nameDetail(g, fw, fh, p, name, ds === 'disabled' || ds === 'destroyed' ? 0 : t);
+    const art = !it.props.noArt && artFor(name);
+    if (art) {
+      // its frame: a device by its state, anything else by its wear (ruined pieces look damaged)
+      const f = ds ? ART_FRAME[ds] || 0 : (it.props.state || 0) >= 2 || it.props.stripped ? 1 : 0;
+      // kept in proportion inside its footprint, turned a quarter when the footprint runs the other way
+      const turn = art.w !== art.h && fw !== fh && art.w > art.h !== fw > fh;
+      const [bw, bh] = turn ? [fh, fw] : [fw, fh];
+      const k = Math.min(bw / art.w, bh / art.h);
+      if (turn) g.rotate(Math.PI / 2);
+      g.drawImage(art.img, f * art.w, 0, art.w, art.h, (-art.w * k) / 2, (-art.h * k) / 2, art.w * k, art.h * k);
+      if (turn) g.rotate(-Math.PI / 2);
+    } else {
+      // a device's moving parts: still when it's off or wrecked, quick when it's running
+      fam(g, fw, fh, p, r, ds === 'disabled' || ds === 'destroyed' ? 0 : ds === 'active' ? t * 2.2 : t, it);
+      nameDetail(g, fw, fh, p, name, ds === 'disabled' || ds === 'destroyed' ? 0 : t);
+    }
     if (q) g.rotate((-q * Math.PI) / 2);
+    if (art) {
+      // the picture carries its own wear and state; the status lamp and a trap's flash still go on top
+      drawMarks(g, it, t, W, H, ds);
+      g.restore();
+      return;
+    }
     // state: grime and damage; a broken device goes dark
     const st = it.props.state || 0;
     if (st >= 1) {
@@ -466,18 +504,21 @@
       g.fillStyle = sh(p.base, -0.3);
       for (let i = 0; i < 4; i++) g.fillRect(-W / 2 - 4 + rr() * (W + 8), H / 2 - 1 + rr() * 5, 2 + rr() * 3, 2);
     }
+    drawMarks(g, it, t, W, H, ds);
+    g.restore();
+  }
+  /** What goes over any device, drawn or procedural: a trap's red flash, and its status lamp. */
+  function drawMarks(g, it, t, W, H, ds) {
     if (it.props.dev && it._trigT > 0) {
       g.strokeStyle = 'rgba(255,40,40,' + (0.5 + 0.5 * Math.sin(t * 18)) + ')';
       g.lineWidth = 2;
       g.strokeRect(-W / 2 - 2, -H / 2 - 2, W + 4, H + 4);
     }
-    // the status lamp every device has
     if (it.props.dev && ds !== 'destroyed') {
       const lamp = { working: '#4ad88a', 'partly-working': '#e8c030', malfunctioning: Math.sin(t * 11) > 0 ? '#ffb020' : '#ff3a2a', disabled: '#6a1a1a', active: '#7affff' }[ds || 'working'] || '#4ad88a';
       G.circle(g, -W / 2 + 3.5, -H / 2 + 3.5, 2.2, '#101012');
       G.circle(g, -W / 2 + 3.5, -H / 2 + 3.5, 1.5, ds === 'active' ? U.rgba(lamp, 0.6 + 0.4 * Math.sin(t * 6)) : lamp);
     }
-    g.restore();
   }
   function glowPiece(g, it, t, W, H) {
     const ds = it.props.devState;
