@@ -126,5 +126,83 @@
       "surgical cart"
     ],
     "match": "surgical|operating|autopsy|dissection"
+  },
+  "flavor-synthesizer": {
+    "file": "flavor-synthesizer.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "flavor synthesizers",
+      "flavor synthesizer"
+    ],
+    "match": "synthesi[sz]er"
+  },
+  "frown-scanner": {
+    "file": "frown-scanner.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "frown scanners",
+      "frown scanner"
+    ],
+    "match": "frown|smile scanner|enthusiasm"
+  },
+  "karma-slot-machine": {
+    "file": "karma-slot-machine.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "karma slot machine"
+    ],
+    "match": "slot machine|gambl|lottery"
+  },
+  "vending-kiosk": {
+    "file": "vending-kiosk.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "number dispenser kiosk",
+      "payment kiosk"
+    ],
+    "match": "vending|kiosk|dispenser"
+  },
+  "meat-printer": {
+    "file": "meat-printer.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "meat printer (prints you)"
+    ],
+    "match": "meat printer|printer"
   }
 }

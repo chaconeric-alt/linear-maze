@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Meat printer, top-down: a gantry over a print bed with a steak half-printed, a bio-ink tank, a sample port. -->
+  <defs>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8dce0"/><stop offset="1" stop-color="#5a646c"/></linearGradient>
+    <radialGradient id="meat" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#ff8a8a"/><stop offset="0.6" stop-color="#c8283a"/><stop offset="1" stop-color="#6a0a14"/></radialGradient>
+    <radialGradient id="ink" cx="0.4" cy="0.35" r="0.6"><stop offset="0" stop-color="#ffb0b0"/><stop offset="1" stop-color="#8a1020"/></radialGradient>
+  </defs>
+  <rect x="3" y="5" width="58" height="56" rx="5" fill="#000" opacity="0.3"/>
+  <rect x="2" y="2" width="58" height="56" rx="5" fill="url(#frame)" stroke="#2a3036" stroke-width="1.5"/>
+  <!-- the print bed, gridded -->
+  <rect x="7" y="12" width="40" height="40" rx="2" fill="#2a3036"/>
+  <path d="M7 22 h40 M7 32 h40 M7 42 h40 M17 12 v40 M27 12 v40 M37 12 v40" stroke="#4a545c" stroke-width="0.6"/>
+  <!-- the steak, the lower half printed, the upper half a mesh -->
+  <path d="M14 34 C12 24 22 18 32 20 C42 22 44 32 40 40 C36 48 20 48 14 34 Z" fill="url(#meat)"/>
+  <path d="M18 30 C24 26 32 26 38 30" stroke="#ffd8d0" stroke-width="2" fill="none"/>
+  <path d="M14 34 C12 24 22 18 32 20 C42 22 44 32 40 40" fill="none" stroke="#ff8a8a" stroke-width="0.8" stroke-dasharray="2 2"/>
+  <!-- the gantry and its head -->
+  <rect x="5" y="25" width="44" height="4" fill="#3a4248"/>
+  <rect x="24" y="22" width="8" height="10" rx="1.5" fill="#c8ccd0" stroke="#2a3036"/>
+  <circle cx="28" cy="27" r="1.5" fill="#ff4a4a"/>
+  <!-- the bio-ink tank and the sample port -->
+  <circle cx="54" cy="14" r="6" fill="url(#ink)" stroke="#2a3036"/>
+  <rect x="50" y="40" width="8" height="12" rx="2" fill="#1a1e22" stroke="#7a848c"/>
+  <circle cx="54" cy="46" r="2" fill="#ffe04a"/>
+</svg>

@@ -53,6 +53,12 @@ Object.assign(PIECES, {
   altar: { names: ['cult altar', 'sponsor altar'], match: 'altar$', w: 128, h: 64 },
   pews: { names: ['cult pews', 'waiting benches', 'pews'], match: '(pews|benches)$', w: 192, h: 64 },
   'surgical-table': { names: ['surgical prep table', 'operating table', 'surgical cart'], match: 'surgical|operating|autopsy|dissection', w: 128, h: 64 },
+  // batch 2: consoles and kiosks
+  'flavor-synthesizer': { names: ['flavor synthesizers', 'flavor synthesizer'], match: 'synthesi[sz]er', w: 64, h: 64 },
+  'frown-scanner': { names: ['frown scanners', 'frown scanner'], match: 'frown|smile scanner|enthusiasm', w: 64, h: 64 },
+  'karma-slot-machine': { names: ['karma slot machine'], match: 'slot machine|gambl|lottery', w: 64, h: 64 },
+  'vending-kiosk': { names: ['number dispenser kiosk', 'payment kiosk'], match: 'vending|kiosk|dispenser', w: 64, h: 64 },
+  'meat-printer': { names: ['meat printer (prints you)'], match: 'meat printer|printer', w: 64, h: 64 },
 });
 // cracks, a split and shards for a piece that doesn't give its own: seeded by its id, inside its middle
 function damageFor(id, w, h) {

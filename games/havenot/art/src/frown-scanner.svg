@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Frown scanner, top-down: a cheerful yellow post with a camera head, a smile display and a citation printer. -->
+  <defs>
+    <radialGradient id="body" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff0a0"/><stop offset="0.6" stop-color="#e8c030"/><stop offset="1" stop-color="#7a5a10"/></radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.35" r="0.6"><stop offset="0" stop-color="#ffffff"/><stop offset="0.3" stop-color="#ff4a4a"/><stop offset="1" stop-color="#2a0000"/></radialGradient>
+  </defs>
+  <ellipse cx="34" cy="36" rx="26" ry="24" fill="#000" opacity="0.3"/>
+  <circle cx="32" cy="32" r="26" fill="url(#body)" stroke="#5a4008" stroke-width="2"/>
+  <!-- the face display -->
+  <circle cx="32" cy="34" r="17" fill="#1a1a14" stroke="#5a4008"/>
+  <circle cx="26" cy="30" r="2.2" fill="#ffe04a"/><circle cx="38" cy="30" r="2.2" fill="#ffe04a"/>
+  <path d="M23 37 Q32 46 41 37" stroke="#ffe04a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- the camera head, aimed out -->
+  <rect x="26" y="2" width="12" height="12" rx="3" fill="#2a2a24" stroke="#5a4008"/>
+  <circle cx="32" cy="8" r="4.5" fill="url(#lens)"/>
+  <!-- the citation slot, a ticket half out -->
+  <rect x="48" y="40" width="10" height="4" fill="#1a1a14"/>
+  <rect x="50" y="42" width="10" height="12" fill="#f8f4e8" stroke="#a8a090" stroke-width="0.6"/>
+  <path d="M52 46 h6 M52 49 h4" stroke="#c83a3a" stroke-width="0.8"/>
+</svg>
