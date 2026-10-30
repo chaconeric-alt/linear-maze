@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <!-- Growth vat, top-down: a steel collar round a glass dome of green medium with something curled inside. -->
+  <defs>
+    <radialGradient id="steel" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#c8d0d8"/><stop offset="0.6" stop-color="#6a7480"/><stop offset="1" stop-color="#2a3038"/></radialGradient>
+    <radialGradient id="medium" cx="0.45" cy="0.4" r="0.6"><stop offset="0" stop-color="#d8ffb0"/><stop offset="0.45" stop-color="#6adf4a"/><stop offset="1" stop-color="#1a5a1a"/></radialGradient>
+    <radialGradient id="glass" cx="0.35" cy="0.3" r="0.6"><stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0.05"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- feed pipes leaving the vat -->
+  <path d="M48 8 L48 0 M88 48 L96 48 M48 88 L48 96" stroke="#3a4048" stroke-width="7"/>
+  <path d="M48 8 L48 0 M88 48 L96 48 M48 88 L48 96" stroke="#8a949e" stroke-width="3"/>
+  <!-- the collar, bolted -->
+  <circle cx="48" cy="48" r="42" fill="url(#steel)" stroke="#1a1e24" stroke-width="2"/>
+  <g fill="#2a3038" stroke="#a8b0b8" stroke-width="0.8">
+    <circle cx="48" cy="9" r="2.4"/><circle cx="87" cy="48" r="2.4"/><circle cx="48" cy="87" r="2.4"/><circle cx="9" cy="48" r="2.4"/>
+    <circle cx="75.6" cy="20.4" r="2.4"/><circle cx="75.6" cy="75.6" r="2.4"/><circle cx="20.4" cy="75.6" r="2.4"/><circle cx="20.4" cy="20.4" r="2.4"/>
+  </g>
+  <!-- the medium, and the specimen in it -->
+  <circle cx="48" cy="48" r="32" fill="url(#medium)"/>
+  <path d="M40 40 C30 48 38 62 50 60 C60 58 62 48 56 44 C52 41 48 44 50 48 C52 52 46 54 44 50" fill="#3a6a2a" opacity="0.75"/>
+  <circle cx="54" cy="40" r="5" fill="#4a7a34" opacity="0.8"/>
+  <g fill="#f0ffe0" opacity="0.8"><circle cx="34" cy="58" r="1.6"/><circle cx="62" cy="62" r="1.2"/><circle cx="58" cy="30" r="1.4"/><circle cx="30" cy="38" r="1"/></g>
+  <!-- the glass over it -->
+  <circle cx="48" cy="48" r="32" fill="url(#glass)" stroke="#d8f0e8" stroke-width="1.5" stroke-opacity="0.6"/>
+  <path d="M28 34 A24 24 0 0 1 44 22" stroke="#ffffff" stroke-width="2.5" opacity="0.7" fill="none"/>
+  <!-- the gauge -->
+  <rect x="70" y="66" width="14" height="9" rx="2" fill="#101418" stroke="#8a949e" stroke-width="1"/>
+  <rect x="72" y="68" width="7" height="5" fill="#6adf4a"/>
+</svg>
