@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Cannon, top-down: a heavy barrel on a turntable mount, pointing north, an ammo box and a breech wheel. -->
+  <defs>
+    <radialGradient id="mount" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#8a9478"/><stop offset="1" stop-color="#2a3020"/></radialGradient>
+    <linearGradient id="barrel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a2e28"/><stop offset="0.45" stop-color="#7a8470"/><stop offset="1" stop-color="#1e221c"/></linearGradient>
+  </defs>
+  <circle cx="33" cy="40" r="22" fill="#000" opacity="0.3"/>
+  <!-- the turntable -->
+  <circle cx="32" cy="38" r="22" fill="url(#mount)" stroke="#14180e" stroke-width="2"/>
+  <g fill="#14180e"><circle cx="32" cy="18" r="1.8"/><circle cx="52" cy="38" r="1.8"/><circle cx="32" cy="58" r="1.8"/><circle cx="12" cy="38" r="1.8"/></g>
+  <!-- the barrel, to the north, with a muzzle brake -->
+  <rect x="27" y="2" width="10" height="38" rx="2" fill="url(#barrel)" stroke="#0e100c"/>
+  <rect x="25" y="2" width="14" height="6" rx="1.5" fill="#3a4034" stroke="#0e100c"/>
+  <path d="M26 5 h12" stroke="#0e100c" stroke-width="1"/>
+  <!-- the breech and its wheel -->
+  <rect x="24" y="34" width="16" height="12" rx="3" fill="#4a5440" stroke="#0e100c"/>
+  <circle cx="46" cy="44" r="5" fill="none" stroke="#c8a040" stroke-width="2"/><path d="M41 44 h10 M46 39 v10" stroke="#c8a040" stroke-width="1"/>
+  <!-- the ammunition box beside it -->
+  <rect x="6" y="46" width="14" height="10" rx="1.5" fill="#5a6a3a" stroke="#14180e"/>
+  <path d="M8 49 h10" stroke="#e8c030" stroke-width="1.5"/>
+  <!-- a stencilled star -->
+  <path d="M32 50 l1.5 3 3.2 0.4 -2.3 2.2 0.6 3.2 -3 -1.6 -3 1.6 0.6 -3.2 -2.3 -2.2 3.2 -0.4 Z" fill="#e8e0c8" opacity="0.8"/>
+</svg>

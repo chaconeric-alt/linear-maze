@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="128" viewBox="0 0 192 128">
+  <!-- Dais, top-down: a stepped stage, a carpet up its middle, a podium with a microphone, spotlight pools, bunting. -->
+  <defs>
+    <linearGradient id="step" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3a2a"/><stop offset="1" stop-color="#2a180e"/></linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a3a"/><stop offset="1" stop-color="#4a2a1a"/></linearGradient>
+    <linearGradient id="carpet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6a0a1a"/><stop offset="0.5" stop-color="#c8283a"/><stop offset="1" stop-color="#6a0a1a"/></linearGradient>
+    <radialGradient id="spot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff8d8" stop-opacity="0.55"/><stop offset="1" stop-color="#fff8d8" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0a8"/><stop offset="0.5" stop-color="#d8a838"/><stop offset="1" stop-color="#7a5418"/></linearGradient>
+  </defs>
+  <rect x="5" y="6" width="186" height="120" rx="6" fill="#000" opacity="0.3"/>
+  <!-- three steps up from the south -->
+  <rect x="2" y="2" width="186" height="122" rx="6" fill="url(#step)" stroke="#1a0e06" stroke-width="2"/>
+  <rect x="10" y="6" width="170" height="100" rx="5" fill="url(#step)" stroke="#1a0e06"/>
+  <rect x="18" y="8" width="154" height="84" rx="4" fill="url(#top)" stroke="url(#gold)" stroke-width="2"/>
+  <path d="M10 106 h170 M2 118 h186" stroke="#c8905a" stroke-width="1" opacity="0.5"/>
+  <!-- the carpet up the middle and down the steps -->
+  <rect x="80" y="8" width="30" height="116" fill="url(#carpet)"/>
+  <path d="M80 8 v116 M110 8 v116" stroke="url(#gold)" stroke-width="1.5"/>
+  <!-- spotlight pools -->
+  <ellipse cx="60" cy="50" rx="30" ry="22" fill="url(#spot)"/><ellipse cx="132" cy="50" rx="30" ry="22" fill="url(#spot)"/>
+  <!-- the podium and microphone -->
+  <rect x="82" y="26" width="26" height="18" rx="3" fill="#2a1a10" stroke="url(#gold)" stroke-width="1.5"/>
+  <circle cx="95" cy="35" r="5" fill="url(#gold)"/>
+  <path d="M95 26 L95 16" stroke="#1a1a1a" stroke-width="2"/><circle cx="95" cy="15" r="3" fill="#3a3a3a"/>
+  <!-- bunting along the back -->
+  <path d="M20 10 l8 8 l8 -8 l8 8 l8 -8 l8 8 l8 -8 l8 8 l8 -8 M110 10 l8 8 l8 -8 l8 8 l8 -8 l8 8 l8 -8 l8 8" stroke="#ffe04a" stroke-width="1.5" fill="none"/>
+  <!-- an auction gavel block -->
+  <rect x="140" y="70" width="18" height="10" rx="2" fill="#4a2a14" stroke="url(#gold)"/><rect x="146" y="64" width="4" height="10" fill="#7a5418"/>
+</svg>

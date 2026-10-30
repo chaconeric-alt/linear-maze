@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="64" viewBox="0 0 192 64">
+  <!-- Pews, top-down: a long bench, its high back to the north, carved ends, a cushion and a hymnal shelf. -->
+  <defs>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a34"/><stop offset="1" stop-color="#4a2a14"/></linearGradient>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3418"/><stop offset="1" stop-color="#2a160a"/></linearGradient>
+    <linearGradient id="cushion" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2a3a"/><stop offset="1" stop-color="#4a1018"/></linearGradient>
+  </defs>
+  <rect x="5" y="8" width="186" height="54" rx="4" fill="#000" opacity="0.3"/>
+  <!-- the back -->
+  <rect x="2" y="4" width="186" height="14" rx="3" fill="url(#back)" stroke="#1e0e04" stroke-width="1.5"/>
+  <path d="M10 8 h170" stroke="#c8905a" stroke-width="1" opacity="0.5"/>
+  <!-- the seat, with its cushion -->
+  <rect x="2" y="18" width="186" height="30" rx="2" fill="url(#wood)" stroke="#1e0e04" stroke-width="1.5"/>
+  <rect x="14" y="21" width="162" height="22" rx="5" fill="url(#cushion)"/>
+  <path d="M40 22 v20 M68 22 v20 M96 22 v20 M124 22 v20 M152 22 v20" stroke="#2a0810" stroke-width="1" opacity="0.6"/>
+  <!-- hymnal shelf on the back, books -->
+  <rect x="22" y="48" width="146" height="8" fill="#3a2010" stroke="#1e0e04"/>
+  <g><rect x="30" y="49" width="10" height="6" fill="#2a3a6a"/><rect x="62" y="49" width="10" height="6" fill="#6a2a2a"/><rect x="104" y="49" width="10" height="6" fill="#2a5a3a"/><rect x="140" y="49" width="10" height="6" fill="#6a5a2a"/></g>
+  <!-- carved ends -->
+  <path d="M0 4 h12 v54 h-12 Z M178 4 h12 v54 h-12 Z" fill="url(#back)" stroke="#1e0e04" stroke-width="1.5"/>
+  <circle cx="6" cy="12" r="3.5" fill="#c8905a"/><circle cx="184" cy="12" r="3.5" fill="#c8905a"/>
+  <path d="M3 30 h6 M3 40 h6 M181 30 h6 M181 40 h6" stroke="#c8905a" stroke-width="1"/>
+</svg>

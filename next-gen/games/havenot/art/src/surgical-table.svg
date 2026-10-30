@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" viewBox="0 0 128 64">
+  <!-- Surgical table, top-down: a padded steel table under a lamp ring, straps, an instrument tray, a drain. -->
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0e6ea"/><stop offset="1" stop-color="#7a848c"/></linearGradient>
+    <linearGradient id="pad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ab8a8"/><stop offset="1" stop-color="#2a6a60"/></linearGradient>
+    <radialGradient id="lamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="5" y="9" width="120" height="52" rx="6" fill="#000" opacity="0.3"/>
+  <rect x="2" y="6" width="120" height="50" rx="6" fill="url(#steel)" stroke="#3a4248" stroke-width="2"/>
+  <!-- the pad, in sections, and the headrest -->
+  <rect x="10" y="12" width="96" height="38" rx="5" fill="url(#pad)"/>
+  <path d="M40 12 v38 M72 12 v38" stroke="#1a4a44" stroke-width="1.2"/>
+  <rect x="106" y="18" width="12" height="26" rx="5" fill="url(#pad)" stroke="#1a4a44"/>
+  <!-- restraint straps -->
+  <g fill="#3a2a1a"><rect x="22" y="8" width="5" height="46"/><rect x="56" y="8" width="5" height="46"/><rect x="88" y="8" width="5" height="46"/></g>
+  <g fill="#c8c8c8"><rect x="21" y="27" width="7" height="6" rx="1"/><rect x="55" y="27" width="7" height="6" rx="1"/><rect x="87" y="27" width="7" height="6" rx="1"/></g>
+  <!-- the drain -->
+  <circle cx="12" cy="31" r="3" fill="#2a3036"/><path d="M10 31 h4" stroke="#7a848c"/>
+  <!-- the lamp's pool of light -->
+  <ellipse cx="62" cy="31" rx="46" ry="24" fill="url(#lamp)"/>
+  <!-- the instrument tray, clipped to the side -->
+  <rect x="30" y="56" width="40" height="8" rx="1" fill="#c8ced4" stroke="#5a646c"/>
+  <path d="M34 60 h8 M46 60 h6 M56 58 l6 4" stroke="#3a4248" stroke-width="1.2"/>
+</svg>

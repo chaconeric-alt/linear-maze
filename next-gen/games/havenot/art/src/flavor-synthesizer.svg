@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Flavor synthesizer, top-down: a chrome counter unit, a dispensing nozzle over a plate, flavour cartridges. -->
+  <defs>
+    <linearGradient id="chrome" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f4f8"/><stop offset="0.5" stop-color="#9aa4ae"/><stop offset="1" stop-color="#4a525a"/></linearGradient>
+    <radialGradient id="plate" cx="0.45" cy="0.4" r="0.6"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c8ccd0"/></radialGradient>
+  </defs>
+  <rect x="3" y="5" width="58" height="56" rx="6" fill="#000" opacity="0.3"/>
+  <rect x="2" y="2" width="58" height="56" rx="6" fill="url(#chrome)" stroke="#2a3036" stroke-width="1.5"/>
+  <!-- cartridges, in flavour colours -->
+  <g stroke="#1a1e22" stroke-width="0.8"><rect x="7" y="6" width="8" height="14" rx="2" fill="#ff7a3a"/><rect x="18" y="6" width="8" height="14" rx="2" fill="#7aff6a"/><rect x="29" y="6" width="8" height="14" rx="2" fill="#ff4ad8"/><rect x="40" y="6" width="8" height="14" rx="2" fill="#ffe04a"/><rect x="51" y="6" width="6" height="14" rx="2" fill="#6ad8ff"/></g>
+  <!-- the plate under the nozzle, a printed dish on it -->
+  <circle cx="30" cy="38" r="14" fill="url(#plate)" stroke="#7a848c"/>
+  <path d="M22 38 q8 -8 16 0 q-8 8 -16 0" fill="#c86a3a"/>
+  <circle cx="30" cy="38" r="3" fill="#7aff6a"/>
+  <!-- the nozzle arm -->
+  <path d="M50 26 L36 34" stroke="#2a3036" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="35" cy="35" r="2.5" fill="#ff4ad8"/>
+  <!-- the menu screen -->
+  <rect x="46" y="44" width="12" height="10" rx="1.5" fill="#0a1014" stroke="#5a646c"/>
+  <path d="M48 47 h8 M48 50 h5" stroke="#6ad8ff" stroke-width="1"/>
+</svg>
