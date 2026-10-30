@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.55" stop-color="#4a5058"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <radialGradient id="white" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#c9ced4"/><stop offset="1" stop-color="#5a6068"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a929a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <radialGradient id="red" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0c0"/><stop offset="0.4" stop-color="#ff3a2a"/><stop offset="1" stop-color="#5a0a06"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c9a046"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="black" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a52"/><stop offset="0.5" stop-color="#141416"/><stop offset="1" stop-color="#050506"/></linearGradient>
+  </defs>
+  <!-- Tartarus Warden, top-down and facing north: a hulking bronze vault guardian, huge shoulders and great
+       riveted fists, a small sunken head with an amber eye, pipes on its back venting heat. -->
+  <ellipse cx="32" cy="36" rx="30" ry="26" fill="#000" opacity="0.3"/>
+  <g fill="url(#gold)" stroke="#2a1a06" stroke-width="1.2"><circle cx="9" cy="20" r="8"/><circle cx="55" cy="20" r="8"/></g>
+  <g fill="#5a3a16"><circle cx="6" cy="18" r="1.2"/><circle cx="11" cy="16" r="1.2"/><circle cx="52" cy="16" r="1.2"/><circle cx="57" cy="18" r="1.2"/></g>
+  <path d="M14 30 L9 22 M50 30 L55 22" stroke="#7a5420" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="32" cy="36" rx="24" ry="18" fill="url(#gold)" stroke="#2a1a06" stroke-width="1.6"/>
+  <g fill="#3a2410"><circle cx="14" cy="34" r="1.2"/><circle cx="50" cy="34" r="1.2"/><circle cx="20" cy="46" r="1.2"/><circle cx="44" cy="46" r="1.2"/></g>
+  <g fill="#2a1a0a" stroke="#000" stroke-width="0.8"><rect x="22" y="42" width="5" height="12" rx="2"/><rect x="37" y="42" width="5" height="12" rx="2"/></g>
+  <path d="M24 54 q0 4 -2 8 M40 54 q0 4 2 8" stroke="#c8c0b0" stroke-width="1.4" opacity="0.5" fill="none"/>
+  <circle cx="32" cy="28" r="7" fill="#3a2410" stroke="#2a1a06" stroke-width="1.2"/>
+  <circle cx="32" cy="26" r="3" fill="#ffb040"/><circle cx="32" cy="26" r="1.2" fill="#fff0c8"/>
+</svg>

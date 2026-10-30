@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.55" stop-color="#4a5058"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <radialGradient id="white" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#c9ced4"/><stop offset="1" stop-color="#5a6068"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a929a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <radialGradient id="red" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0c0"/><stop offset="0.4" stop-color="#ff3a2a"/><stop offset="1" stop-color="#5a0a06"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c9a046"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="black" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a52"/><stop offset="0.5" stop-color="#141416"/><stop offset="1" stop-color="#050506"/></linearGradient>
+  </defs>
+  <!-- Chef, top-down and facing north: the robot kitchen's chef, a steel body under a tall white toque, four arms
+       with four knives fanned forward, a flambé torch with a blue flame, an apron stained dark. -->
+  <ellipse cx="32" cy="36" rx="24" ry="20" fill="#000" opacity="0.26"/>
+  <g stroke="url(#steel)" stroke-width="3.4" stroke-linecap="round"><path d="M20 30 L8 18 M44 30 L56 18 M22 38 L8 40 M42 38 L56 40"/></g>
+  <g fill="#e8eef4" stroke="#3a4048" stroke-width="0.6"><path d="M8 18 L2 4 L10 16 Z"/><path d="M56 18 L60 4 L54 16 Z"/><path d="M8 40 L0 34 L8 38 Z"/></g>
+  <path d="M56 40 L62 36" stroke="#3a3a3a" stroke-width="2"/><path d="M62 36 q2 -4 0 -6 q-2 2 -1 4" fill="#5ab8ff"/>
+  <ellipse cx="32" cy="36" rx="16" ry="13" fill="url(#shell)" stroke="#0a0c0e" stroke-width="1.2"/>
+  <path d="M20 40 Q32 50 44 40 L42 48 Q32 52 22 48 Z" fill="#f4f0e8" stroke="#8a8478" stroke-width="0.8"/>
+  <path d="M28 44 q2 3 6 1 M36 46 q1 2 3 0" stroke="#7a1a14" stroke-width="1.6" opacity="0.7" fill="none"/>
+  <circle cx="32" cy="30" r="10" fill="#ffffff" stroke="#8a8478" stroke-width="1"/>
+  <g fill="none" stroke="#c8c4bc" stroke-width="0.8"><circle cx="28" cy="27" r="3"/><circle cx="36" cy="27" r="3"/><circle cx="32" cy="33" r="3"/><circle cx="27" cy="33" r="2.4"/><circle cx="37" cy="33" r="2.4"/></g>
+  <rect x="27" y="19" width="10" height="3" rx="1.4" fill="url(#red)"/>
+</svg>

@@ -184,6 +184,16 @@
     const col = hi <= lvl ? '#5a8a34' : hi <= lvl + 1 ? '#c8862a' : '#b8342a';
     return { text: 'Threat ' + (lo === hi ? lo : lo + '–' + hi), col };
   }
+  // a drawn place's picture in place of its pin's glyph: a little framed vignette (hn-world/placeart.js)
+  function picIcon(p, colour, ring) {
+    const url = HN.placePicture && HN.placePicture(p);
+    if (!url) return null;
+    const svg = HN.MAPART.svg;
+    return svg('g', { class: 'pin-head' },
+      svg('rect', { x: -33, y: -25, width: 66, height: 44, rx: 3, fill: '#f6e8c8', stroke: ring || '#2a1408', 'stroke-width': ring ? 3 : 2 }),
+      svg('image', { href: url, x: -30, y: -22, width: 60, height: 38, preserveAspectRatio: 'xMidYMid slice' }),
+      svg('rect', { x: -30, y: -22, width: 60, height: 38, fill: 'none', stroke: colour, 'stroke-width': 2, opacity: 0.9 }));
+  }
   function openMap(game) {
     closeMap();
     document.body.classList.add('hn-map-open');
@@ -213,7 +223,7 @@
       const chip = p.threat ? threatChip(game, p.threat) : null;
       const g = svg('g', { class: 'pin' + (st === 'locked' ? ' locked' : ''), tabindex: 0, role: 'button', 'aria-label': p.name + (chip ? ', ' + chip.text : '') + (st === 'locked' ? ' (not reachable yet)' : ''), transform: `translate(${p.x} ${p.y})`, 'data-pin': p.id },
         p.id === here ? svg('circle', { class: 'here-ring', r: 22, fill: 'none', stroke: '#b8342a', 'stroke-width': 3 }) : null,
-        A.icon(kind, col, p.id === here ? '#b8342a' : null),
+        picIcon(p, col, p.id === here ? '#b8342a' : null) || A.icon(kind, col, p.id === here ? '#b8342a' : null),
         st === 'locked' ? svg('path', { d: 'M8 4 h8 v6 h-8 Z M9.5 4 v-3 a2.5 2.5 0 0 1 5 0 v3', fill: '#f6e8c8', stroke: '#2a1408', 'stroke-width': 1.4 }) : null,
         svg('text', { x: 0, y: 30, 'text-anchor': 'middle', fill: '#2a1408', 'font-size': 13, 'font-weight': 700, 'font-family': 'Georgia, serif', stroke: '#f6e8c8', 'stroke-width': 4, 'paint-order': 'stroke' }, p.name),
         chip ? svg('g', { transform: 'translate(0 42)' }, svg('rect', { x: -30, y: -8, width: 60, height: 14, rx: 3, fill: chip.col, stroke: '#2a1408', 'stroke-width': 1 }), svg('text', { y: 3, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: '#fff8e8', 'font-family': 'sans-serif' }, chip.text)) : null,
@@ -338,6 +348,7 @@
     const st = HN.locState(game, p.id);
     const more = (p.more || []).filter((m) => HN.flag(game, m.flag)).map((m) => h('p', { class: 'lore' }, m.text));
     const [c1, c2] = ART[p.art] || ['#5a4a3a', '#2a1a10'];
+    const pic = HN.placePicture ? HN.placePicture(p) : null;
     const list = (title, xs) => (xs && xs.length ? [h('h3', null, title), h('ul', { class: 'hn-loc-list' }, xs.map((x) => h('li', null, x)))] : null);
     const stateWord = { known: 'Known', visited: 'Visited', locked: 'Out of reach (the mid-range maps aren’t built yet)' }[st] || st;
     const actions = st === 'locked'
@@ -347,7 +358,7 @@
       kicker: p.kind + ' · ' + stateWord,
       title: p.name,
       body: h('div', { class: 'hn-panel' },
-        h('div', { class: 'hn-loc-art', style: `background:linear-gradient(160deg, ${c1}, ${c2})` }, 'Picture to come'),
+        pic ? h('div', { class: 'hn-loc-art pic', style: `background:url("${pic}") center/cover no-repeat` }) : h('div', { class: 'hn-loc-art', style: `background:linear-gradient(160deg, ${c1}, ${c2})` }, 'Picture to come'),
         h('p', { class: 'lore' }, p.desc), more,
         p.threat ? threatLine(game, p.threat) : null,
         list('Known services and rewards', p.services), list('Known dangers', p.dangers),

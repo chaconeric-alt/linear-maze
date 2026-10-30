@@ -48,6 +48,8 @@
       Object.assign(l, pin, { id: l.id, kind: l.kind || pin.kind, x: pin.x == null ? l.x : pin.x, y: pin.y == null ? l.y : pin.y, art: l.art, state: l.state });
       return l;
     }
+    // a generated installation: its picture is painted from this (hn-world/placeart.js)
+    pin.gen = spec.slug;
     if (pin.x == null || pin.y == null) [pin.x, pin.y] = freeSpot(spec.slug);
     if (!pin.art) pin.art = 'bunker';
     return HN.addLocation(pin);

@@ -107,6 +107,31 @@ Object.assign(PIECES, {
   'field-emitter': { kind: 'monster', enemies: ['hn-emitter'], size: 30, w: 64, h: 64 },
   'metal-cocoon': { kind: 'monster', enemies: ['hn-cocoon'], size: 26, w: 64, h: 64 },
   'buddy-bot': { kind: 'monster', enemies: ['hn-buddy'], size: 26, turns: true, w: 64, h: 64 },
+  // Asterion's robots, out of Dead Signal (hn-gen-kit/robots.js)
+  sentinel: { kind: 'monster', enemies: ['hn-sentinel'], size: 32, turns: true, w: 64, h: 64 },
+  'warden-drone': { kind: 'monster', enemies: ['hn-warden'], size: 28, turns: true, w: 64, h: 64 },
+  'ceiling-turret': { kind: 'monster', enemies: ['hn-ceiling-turret'], size: 28, turns: true, w: 64, h: 64 },
+  sweeper: { kind: 'monster', enemies: ['hn-sweeper'], size: 30, turns: true, w: 64, h: 64 },
+  'scalpel-drone': { kind: 'monster', enemies: ['hn-scalpel'], size: 22, turns: true, w: 64, h: 64 },
+  labmate: { kind: 'monster', enemies: ['hn-labmate'], size: 28, turns: true, w: 64, h: 64 },
+  courier: { kind: 'monster', enemies: ['hn-courier'], size: 22, turns: true, w: 64, h: 64 },
+  'bench-arm': { kind: 'monster', enemies: ['hn-bench-arm'], size: 28, turns: true, w: 64, h: 64 },
+  sterilizer: { kind: 'monster', enemies: ['hn-sterilizer'], size: 34, turns: true, w: 64, h: 64 },
+  docent: { kind: 'monster', enemies: ['hn-docent'], size: 36, turns: true, w: 64, h: 64 },
+  orderly: { kind: 'monster', enemies: ['hn-orderly'], size: 30, turns: true, w: 64, h: 64 },
+  concierge: { kind: 'monster', enemies: ['hn-concierge'], size: 28, turns: true, w: 64, h: 64 },
+  chef: { kind: 'monster', enemies: ['hn-chef'], size: 32, turns: true, w: 64, h: 64 },
+  'kitchen-arm': { kind: 'monster', enemies: ['hn-kitchen-arm'], size: 28, turns: true, w: 64, h: 64 },
+  praetorian: { kind: 'monster', enemies: ['hn-praetorian'], size: 36, turns: true, w: 64, h: 64 },
+  railgun: { kind: 'monster', enemies: ['hn-railgun'], size: 34, turns: true, w: 64, h: 64 },
+  enforcer: { kind: 'monster', enemies: ['hn-enforcer'], size: 32, turns: true, w: 64, h: 64 },
+  'tartarus-warden': { kind: 'monster', enemies: ['hn-tartarus'], size: 50, turns: true, w: 64, h: 64 },
+  'plate-cutter': { kind: 'monster', enemies: ['hn-plate-cutter'], size: 40, turns: true, w: 64, h: 64 },
+  // pictures of places (hn-world/placeart.js): the map's icons and the arrival cards
+  places: { kind: 'places', size: 320, w: 320, h: 200, layers: ['anomalous', 'greasy', 'bunker'] },
+  // what you see when you read a poster or watch an ad (hn-rules/postart.js)
+  posters: { kind: 'posters', size: 200, w: 200, h: 280, layers: ['synergy', 'watched', 'want-more', 'obedience', 'hustle', 'safety', 'enoch', 'egg', 'slogan'] },
+  ads: { kind: 'ads', size: 320, w: 320, h: 180, layers: ['fizz', 'hypno', 'tired', 'vert', 'noticed'] },
   // people (packs/hn-sites/person.js): a paper doll for LM.gfx.person, its greys tinted from each one's look
   person: { kind: 'person', size: 25.6, w: 64, h: 64, layers: ['shirt', 'sleeve', 'hand', 'blazer', 'tie', 'lanyard', 'card', 'head', 'hair-short', 'hair-buzz', 'hair-long', 'hair-ponytail', 'hair-bun', 'hair-curly', 'hair-bald', 'glasses', 'headset'] },
   // the guns in hand (hn-rules/weaponart.js), drawn along the aim in the player's own units: x -2..24.67, y -4..4

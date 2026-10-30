@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a4a"/><stop offset="0.45" stop-color="#c8603a"/><stop offset="0.75" stop-color="#f0a85a"/><stop offset="1" stop-color="#f8d090"/></linearGradient>
+    <linearGradient id="day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7aa0b8"/><stop offset="0.6" stop-color="#d8c8a0"/><stop offset="1" stop-color="#f0dcb0"/></linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0b070"/><stop offset="1" stop-color="#a8703a"/></linearGradient>
+    <linearGradient id="sandDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8844a"/><stop offset="1" stop-color="#6a4222"/></linearGradient>
+    <linearGradient id="concrete" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9a948a"/><stop offset="0.6" stop-color="#7a746a"/><stop offset="1" stop-color="#4a463e"/></linearGradient>
+    <linearGradient id="glassG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ae8b0"/><stop offset="1" stop-color="#1a4a3a"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a8e94"/><stop offset="0.5" stop-color="#4a4e54"/><stop offset="1" stop-color="#1a1c20"/></linearGradient>
+    <radialGradient id="dark" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#000000"/><stop offset="0.7" stop-color="#0a0806"/><stop offset="1" stop-color="#2a1e10"/></radialGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4d0"/><stop offset="0.4" stop-color="#ffd890" stop-opacity="0.8"/><stop offset="1" stop-color="#ffd890" stop-opacity="0"/></radialGradient>
+    <pattern id="haz" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#1a1a1a"/><rect width="4" height="8" fill="#e8c030"/></pattern>
+  </defs>
+  <!-- The Bunker: a concrete war bunker dug into a rocky rise, a round blast door in its face half open on
+       darkness, hazard stripes round the frame, sandbags, a periscope and a bent antenna on top, wind-blown sand
+       drifted against the door. -->
+  <rect width="320" height="200" fill="url(#day)"/>
+  <path d="M0 100 Q60 70 120 80 Q160 52 220 62 Q280 56 320 78 V200 H0 Z" fill="#9a7a5a"/>
+  <path d="M60 140 Q70 76 160 70 Q250 72 262 140 Z" fill="url(#concrete)" stroke="#2a241e" stroke-width="1.6"/>
+  <path d="M74 116 Q160 92 250 116" stroke="#5a544a" stroke-width="2" fill="none"/>
+  <path d="M90 92 l12 10 M210 84 l-8 14 M150 76 l4 12" stroke="#3a342c" stroke-width="1" fill="none"/>
+  <rect x="120" y="98" width="80" height="62" rx="4" fill="url(#haz)" stroke="#1a1a1a" stroke-width="1.4"/>
+  <rect x="128" y="104" width="64" height="56" rx="3" fill="url(#dark)"/>
+  <path d="M192 104 Q214 112 214 132 Q214 152 192 160 Z" fill="url(#metal)" stroke="#0a0806" stroke-width="1.2"/>
+  <circle cx="204" cy="132" r="7" fill="none" stroke="#2a2e34" stroke-width="2.4"/><path d="M197 132 h14 M204 125 v14" stroke="#2a2e34" stroke-width="1.6"/>
+  <path d="M150 70 V50 h8 v6" stroke="#3a3a3a" stroke-width="3" fill="none"/>
+  <path d="M190 72 V40 L182 30 M190 50 l8 -6" stroke="#2a2a2a" stroke-width="2" fill="none"/><circle cx="182" cy="30" r="2" fill="#ff3a2a"/>
+  <g fill="#a89070" stroke="#5a4a30" stroke-width="0.8">
+    <ellipse cx="72" cy="150" rx="14" ry="6"/><ellipse cx="96" cy="152" rx="14" ry="6"/><ellipse cx="84" cy="144" rx="14" ry="6"/>
+    <ellipse cx="228" cy="152" rx="14" ry="6"/><ellipse cx="252" cy="150" rx="14" ry="6"/><ellipse cx="240" cy="144" rx="14" ry="6"/>
+  </g>
+  <path d="M0 160 Q80 150 140 162 Q180 168 220 158 Q280 150 320 158 V200 H0 Z" fill="url(#sand)"/>
+  <path d="M126 162 Q160 150 196 162" fill="#e0b070" stroke="none"/>
+  <path d="M20 176 Q60 170 100 176 M200 180 Q240 172 290 178" stroke="#f0c888" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <circle cx="160" cy="100" r="0.01" opacity="0"/>
+</svg>

@@ -939,5 +939,432 @@
     ],
     "size": 26,
     "turns": true
+  },
+  "sentinel": {
+    "file": "sentinel.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-sentinel"
+    ],
+    "size": 32,
+    "turns": true
+  },
+  "warden-drone": {
+    "file": "warden-drone.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-warden"
+    ],
+    "size": 28,
+    "turns": true
+  },
+  "ceiling-turret": {
+    "file": "ceiling-turret.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-ceiling-turret"
+    ],
+    "size": 28,
+    "turns": true
+  },
+  "sweeper": {
+    "file": "sweeper.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-sweeper"
+    ],
+    "size": 30,
+    "turns": true
+  },
+  "scalpel-drone": {
+    "file": "scalpel-drone.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-scalpel"
+    ],
+    "size": 22,
+    "turns": true
+  },
+  "labmate": {
+    "file": "labmate.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-labmate"
+    ],
+    "size": 28,
+    "turns": true
+  },
+  "courier": {
+    "file": "courier.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-courier"
+    ],
+    "size": 22,
+    "turns": true
+  },
+  "bench-arm": {
+    "file": "bench-arm.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-bench-arm"
+    ],
+    "size": 28,
+    "turns": true
+  },
+  "sterilizer": {
+    "file": "sterilizer.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-sterilizer"
+    ],
+    "size": 34,
+    "turns": true
+  },
+  "docent": {
+    "file": "docent.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-docent"
+    ],
+    "size": 36,
+    "turns": true
+  },
+  "orderly": {
+    "file": "orderly.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-orderly"
+    ],
+    "size": 30,
+    "turns": true
+  },
+  "concierge": {
+    "file": "concierge.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-concierge"
+    ],
+    "size": 28,
+    "turns": true
+  },
+  "chef": {
+    "file": "chef.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-chef"
+    ],
+    "size": 32,
+    "turns": true
+  },
+  "kitchen-arm": {
+    "file": "kitchen-arm.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-kitchen-arm"
+    ],
+    "size": 28,
+    "turns": true
+  },
+  "praetorian": {
+    "file": "praetorian.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-praetorian"
+    ],
+    "size": 36,
+    "turns": true
+  },
+  "railgun": {
+    "file": "railgun.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-railgun"
+    ],
+    "size": 34,
+    "turns": true
+  },
+  "enforcer": {
+    "file": "enforcer.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-enforcer"
+    ],
+    "size": 32,
+    "turns": true
+  },
+  "tartarus-warden": {
+    "file": "tartarus-warden.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-tartarus"
+    ],
+    "size": 50,
+    "turns": true
+  },
+  "plate-cutter": {
+    "file": "plate-cutter.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-plate-cutter"
+    ],
+    "size": 40,
+    "turns": true
+  },
+  "places": {
+    "file": "places.png",
+    "w": 320,
+    "h": 200,
+    "states": [
+      "anomalous",
+      "greasy",
+      "bunker"
+    ],
+    "names": [],
+    "kind": "places",
+    "size": 320
+  },
+  "posters": {
+    "file": "posters.png",
+    "w": 200,
+    "h": 280,
+    "states": [
+      "synergy",
+      "watched",
+      "want-more",
+      "obedience",
+      "hustle",
+      "safety",
+      "enoch",
+      "egg",
+      "slogan"
+    ],
+    "names": [],
+    "kind": "posters",
+    "size": 200
+  },
+  "ads": {
+    "file": "ads.png",
+    "w": 320,
+    "h": 180,
+    "states": [
+      "fizz",
+      "hypno",
+      "tired",
+      "vert",
+      "noticed"
+    ],
+    "names": [],
+    "kind": "ads",
+    "size": 320
   }
 }

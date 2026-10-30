@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.55" stop-color="#4a5058"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <radialGradient id="white" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#c9ced4"/><stop offset="1" stop-color="#5a6068"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a929a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <radialGradient id="red" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0c0"/><stop offset="0.4" stop-color="#ff3a2a"/><stop offset="1" stop-color="#5a0a06"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+  </defs>
+  <!-- DOCENT-3, top-down and facing north: the Discovery Center's tour-guide robot, a hovering white saucer
+       with a big friendly screen-face gone red, a little guide's flag on a pole, a speaker grille, ring lights
+       round its rim, an emitter under the screen. -->
+  <ellipse cx="32" cy="38" rx="26" ry="20" fill="#000" opacity="0.2"/>
+  <circle cx="32" cy="32" r="26" fill="url(#white)" stroke="#2a2e34" stroke-width="1.4"/>
+  <g fill="#7fd0c8"><circle cx="32" cy="7" r="1.6"/><circle cx="50" cy="14" r="1.6"/><circle cx="57" cy="32" r="1.6"/><circle cx="50" cy="50" r="1.6"/><circle cx="32" cy="57" r="1.6"/><circle cx="14" cy="50" r="1.6"/><circle cx="7" cy="32" r="1.6"/><circle cx="14" cy="14" r="1.6"/></g>
+  <rect x="18" y="14" width="28" height="18" rx="4" fill="#0a1418" stroke="#5a6068" stroke-width="1.2"/>
+  <circle cx="26" cy="22" r="3" fill="#ff3a2a"/><circle cx="38" cy="22" r="3" fill="#ff3a2a"/>
+  <path d="M25 28 Q32 25 39 28" stroke="#ff3a2a" stroke-width="1.6" fill="none"/>
+  <g stroke="#8a929a" stroke-width="1"><path d="M24 40 h16 M24 43 h16 M24 46 h16"/></g>
+  <path d="M48 44 V20" stroke="#3a4048" stroke-width="1.6"/><path d="M48 20 l10 3 l-10 4 Z" fill="#e8c030" stroke="#5a4a06" stroke-width="0.6"/>
+  <text x="32" y="54" font-family="sans-serif" font-weight="700" font-size="5" text-anchor="middle" fill="#3a4048">DOCENT-3</text>
+</svg>
