@@ -129,8 +129,7 @@ Object.assign(PIECES, {
   'plate-cutter': { kind: 'monster', enemies: ['hn-plate-cutter'], size: 40, turns: true, w: 64, h: 64 },
   // pictures of places (hn-world/placeart.js): the map's icons and the arrival cards
   places: { kind: 'places', size: 320, w: 320, h: 200, layers: ['anomalous', 'greasy', 'bunker'] },
-  // what you see when you read a poster or watch an ad (hn-rules/postart.js)
-  posters: { kind: 'posters', size: 200, w: 200, h: 280, layers: ['synergy', 'watched', 'want-more', 'obedience', 'hustle', 'safety', 'enoch', 'egg', 'slogan'] },
+  // what you see when you watch an ad (hn-gen-kit/postart.js; posters are painted there, hn-gen-kit/posterart.js)
   ads: { kind: 'ads', size: 320, w: 320, h: 180, layers: ['fizz', 'hypno', 'tired', 'vert', 'noticed'] },
   // people (packs/hn-sites/person.js): a paper doll for LM.gfx.person, its greys tinted from each one's look
   person: { kind: 'person', size: 25.6, w: 64, h: 64, layers: ['shirt', 'sleeve', 'hand', 'blazer', 'tie', 'lanyard', 'card', 'head', 'hair-short', 'hair-buzz', 'hair-long', 'hair-ponytail', 'hair-bun', 'hair-curly', 'hair-bald', 'glasses', 'headset'] },

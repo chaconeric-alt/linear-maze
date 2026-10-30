@@ -6,5 +6,5 @@ LM.describePack({
   version: '0.1.0',
   description: 'Run-time support for generated installations: their pins on the near-area map (new ones, or taking over a stub), floor trap switches, the goal, roaches that come back between missions, their terminals (riddles, ELIZA, the Mental Hygiene checkpoint, chatty and red-team terminals), and what their rooms are furnished with by function.',
   requires: ['linear-maze/core', 'hn-rules', 'hn-world'],
-  scripts: ['kit.js', 'terminals.js', 'rooms.js', 'robots.js', 'materials.js', '../../art/sprites/sprites.js', 'furniture.js', 'monsterart.js', 'weaponart.js', 'iconart.js', 'postart.js', 'devices.js', 'hazards.js', 'inspect.js'],
+  scripts: ['kit.js', 'terminals.js', 'rooms.js', 'robots.js', 'materials.js', '../../art/sprites/sprites.js', 'furniture.js', 'monsterart.js', 'weaponart.js', 'iconart.js', 'posterart.js', 'postart.js', 'devices.js', 'hazards.js', 'inspect.js'],
 });

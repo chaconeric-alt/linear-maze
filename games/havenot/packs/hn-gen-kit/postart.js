@@ -1,27 +1,12 @@
 /* HaveNot — packs/hn-gen-kit/postart.js
- * What you see when you read a poster or watch an ad: the illustrated poster or the ad on the screen
- * (games/havenot/art, the 'posters' and 'ads' layers) over what it says. A poster's picture is chosen by its title
- * (or, for the Greasy Bolt Hole's, its kind): corporate cheer (SYNERGY, OBEDIENCE IS A SKILL, HUSTLE, safety
- * trophies), the watching eye, WANT MORE, Enoch the Greasy, Her Serene Ovoidness, the grease banner. A notice that
- * matches none of them (STAIRWELL ACCESS, PEST CONTROL) reads as before, words only. An ad screen shows its ad;
- * a dark one shows nothing but your reflection, as before.
+ * What you see when you read a poster or watch an ad, over what it says: the poster painted to match its own text
+ * (hn-gen-kit/posterart.js: its picture, or a notice lettered with its words), or the ad on the screen
+ * (games/havenot/art, the 'ads' layers). A dark ad screen shows nothing but your reflection, as before.
  */
 'use strict';
 (function () {
   const LM = window.LM, HN = LM.HN;
   const h = (...a) => LM.ui.h(...a);
-  // title words → picture, first match wins
-  const BY_TITLE = [
-    [/enoch|filth|grease|greas|warlord|fouling/i, 'enoch'],
-    [/egg|ovoid/i, 'egg'],
-    [/enlist|drip/i, 'slogan'],
-    [/watch|eye|listening|loose lips/i, 'watched'],
-    [/obedien|ask not|report for duty|hugged|manager/i, 'obedience'],
-    [/hustle|burn|fit worker|productive|lift with/i, 'hustle'],
-    [/safety|incident|spill|emergency|wash your|badge/i, 'safety'],
-    [/want more|be more|victory|fleet/i, 'want-more'],
-    [/synergy|coffee|welcome|benefit|valued/i, 'synergy'],
-  ];
   const ADS = ['fizz', 'hypno', 'tired', 'vert', 'noticed'];
   const urls = new Map();
   function frameUrl(sheet, name) {
@@ -39,10 +24,6 @@
     }
     return urls.get(key);
   }
-  HN.posterFor = function (title, kind) {
-    for (const [re, name] of BY_TITLE) if (re.test(title || '')) return name;
-    return { enoch: 'enoch', egg: 'egg', slogan: 'slogan' }[kind] || null;
-  };
   /** The text panel, with a picture over the words when there is one (else just the words, as LM.ui.showText). */
   function showWithPicture(url, wide, title, text, kicker) {
     if (!url) return LM.ui.showText(title, text, kicker);
@@ -60,13 +41,12 @@
     if (wrapped) return;
     wrapped = true;
     // start the pictures loading now, so the first poster you read has its picture
-    for (const id of ['posters', 'ads', 'places']) if (HN.artSheet) HN.artSheet(id);
+    for (const id of ['ads', 'places']) if (HN.artSheet) HN.artSheet(id);
     const poster = LM.find('items', 'hn-poster');
     if (poster && poster.interact) {
       const own = poster.interact.use;
       poster.interact.use = function (it, game) {
-        const name = HN.posterFor(it.props.title || 'SYNERGY');
-        const url = name && frameUrl('posters', name);
+        const url = HN.posterURL && HN.posterURL(it.props.title || 'SYNERGY', it.props.text || 'Two hands shaking. One is a robot’s. Neither is attached to anything.');
         if (!url) return own.call(this, it, game);
         showWithPicture(url, false, it.props.title || 'SYNERGY', it.props.text || 'A smiling worker shakes hands with a robot. Someone has drawn teeth on the robot.', 'Poster');
       };
@@ -76,7 +56,7 @@
       const own = gposter.interact.use;
       gposter.interact.use = function (it, game) {
         const kind = it.props.kind || 'enoch';
-        const url = frameUrl('posters', HN.posterFor(it.props.title, kind) || 'enoch');
+        const url = HN.posterURL && HN.posterURL(it.props.title || 'ENOCH THE GREASY', it.props.text || '', kind);
         if (!url) return own.call(this, it, game);
         showWithPicture(url, false, it.props.title || 'ENOCH THE GREASY', it.props.text || 'Enoch the Greasy in his foul battle armor, dripping. Under him: FILTH IS STRENGTH.', ({ enoch: 'Propaganda', egg: 'Eggbot sigil', slogan: 'Banner' })[kind]);
       };
