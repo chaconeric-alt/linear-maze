@@ -422,6 +422,7 @@
       takes: Object.assign({}, ROBOT, { fire: 1.5 }), color: '#6a6a5a', blood: '#8a7a5a', gib: '#4a4a3a', deathSound: 'explode',
       attacks: [{ type: 'melee', damage: 9, range: 11, windup: 0.35, cooldown: 1.2, recover: 0.3, knock: 80 }],
       drops: { gold: [2, 6], goldChance: 0.4 },
+      artSkip: (e) => !e.mem.risen, // its sprite is for once it's up; lying in state it's drawn here
       draw(g, e, t) {
         const up = e.mem.risen ? 1 : 0;
         if (!up) {

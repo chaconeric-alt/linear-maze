@@ -93,6 +93,16 @@ Object.assign(PIECES, {
   'desktop-defender': { kind: 'monster', enemies: ['hn-defender'], size: 16, turns: true, w: 64, h: 64 },
   'sparkle-wasp': { kind: 'monster', enemies: ['hn-wasp'], size: 34, turns: true, w: 96, h: 96 },
   'bombast-toad': { kind: 'monster', enemies: ['hn-toad'], size: 44, turns: true, w: 96, h: 96 },
+  'security-drone': { kind: 'monster', enemies: ['hn-drone'], size: 50, turns: true, w: 96, h: 96 },
+  'gladiator-roach': { kind: 'monster', enemies: ['hn-roach'], size: 20, turns: true, w: 64, h: 64 },
+  'robot-dancer': { kind: 'monster', enemies: ['hn-dancer'], size: 24, turns: true, w: 64, h: 64 },
+  'carnivorous-plant': { kind: 'monster', enemies: ['hn-snapper'], size: 30, turns: true, w: 64, h: 64 },
+  'automated-undead': { kind: 'monster', enemies: ['hn-deadbot'], size: 24, turns: true, w: 64, h: 64 },
+  'grease-monkey': { kind: 'monster', enemies: ['hn-grease-monkey'], size: 36, turns: true, w: 64, h: 64 },
+  'slop-tread': { kind: 'monster', enemies: ['hn-slop-tread'], size: 38, turns: true, w: 64, h: 64 },
+  'grime-turret': { kind: 'monster', enemies: ['hn-grime-turret'], size: 30, turns: true, w: 64, h: 64 },
+  'agency-turret': { kind: 'monster', enemies: ['hn-turret'], size: 30, turns: true, w: 64, h: 64 },
+  'sphinx-gun': { kind: 'monster', enemies: ['hn-sphinx'], size: 36, turns: true, w: 64, h: 64 },
 });
 // cracks, a split and shards for a piece that doesn't give its own: seeded by its id, inside its middle
 function damageFor(id, w, h) {

@@ -8,6 +8,7 @@
  * otherwise idle. A sheet with `turns` faces the monster's way (drawn facing north); one without stays upright
  * (Eggbots, as the game has always drawn them). `size` is its width in world units for the first monster it draws;
  * the others scale by their radius (a Chatterpillar Gamma is a bigger Alpha).
+ * A monster's def.artSkip(e), when it has one, says when to draw it its own way instead (the dormant undead).
  */
 'use strict';
 (function () {
@@ -55,7 +56,7 @@
         const k = first && first.radius && def.radius ? def.radius / first.radius : 1;
         def.hnArt = a;
         def.draw = function (g, e, t, game) {
-          if (!e.noArt && drawMonster(g, e, a, k)) return;
+          if (!e.noArt && !(def.artSkip && def.artSkip(e)) && drawMonster(g, e, a, k)) return;
           if (own) own.call(this, g, e, t, game);
         };
       }

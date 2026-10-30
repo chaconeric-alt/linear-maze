@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Slop-Tread Sanitation Denial Unit, top-down and facing north: a squat olive sanitation robot on two
+       treads, a glass tank of toxic green goop on its back, a spray nozzle forward, hazard chevrons, slop
+       dripping off it. -->
+  <defs>
+    <linearGradient id="hull" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a2e18"/><stop offset="0.5" stop-color="#7a7e44"/><stop offset="1" stop-color="#2a2e18"/></linearGradient>
+    <radialGradient id="goo" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#e8ff7a"/><stop offset="0.5" stop-color="#7ac81a"/><stop offset="1" stop-color="#2a5a0a"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+  </defs>
+  <ellipse cx="32" cy="36" rx="26" ry="24" fill="#000" opacity="0.28"/>
+  <!-- the treads -->
+  <g fill="#1a1a1c" stroke="#060606" stroke-width="1"><rect x="6" y="12" width="12" height="46" rx="5"/><rect x="46" y="12" width="12" height="46" rx="5"/></g>
+  <g stroke="#4a4a4e" stroke-width="1.6"><path d="M7 16 h10 M7 21 h10 M7 26 h10 M7 31 h10 M7 36 h10 M7 41 h10 M7 46 h10 M7 51 h10 M47 16 h10 M47 21 h10 M47 26 h10 M47 31 h10 M47 36 h10 M47 41 h10 M47 46 h10 M47 51 h10"/></g>
+  <!-- the hull -->
+  <rect x="16" y="14" width="32" height="42" rx="5" fill="url(#hull)" stroke="#12140a" stroke-width="1.4"/>
+  <rect x="18" y="14" width="28" height="5" fill="url(#haz)" opacity="0.9"/>
+  <!-- the goop tank -->
+  <rect x="21" y="32" width="22" height="20" rx="6" fill="url(#goo)" stroke="#1a2a06" stroke-width="1.2"/>
+  <ellipse cx="27" cy="37" rx="3" ry="2" fill="#ffffff" opacity="0.45"/>
+  <g fill="#c8ff5a" opacity="0.8"><circle cx="35" cy="42" r="1.4"/><circle cx="29" cy="46" r="1"/><circle cx="38" cy="47" r="0.9"/></g>
+  <!-- the sprayer turret and nozzle -->
+  <circle cx="32" cy="24" r="6.5" fill="#3a3e22" stroke="#12140a" stroke-width="1.2"/>
+  <rect x="29.5" y="4" width="5" height="18" rx="1.5" fill="#5a5e62" stroke="#1a1a1e" stroke-width="0.8"/>
+  <path d="M28 4 h8 l-1 -3 h-6 Z" fill="#2a2e32"/>
+  <circle cx="32" cy="24" r="2" fill="#a8e83a"/>
+  <!-- slop, dripping -->
+  <path d="M20 56 q0 4 2 6 M44 56 q1 3 -1 6 M31 3 q-1 -2 1 -3" stroke="#7ac81a" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.85"/>
+</svg>

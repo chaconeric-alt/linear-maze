@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <!-- Heavy Security Drone, top-down and facing north: a ten-foot walker seen from above, its domed armoured
+       head with the red sensor ring, a heavy cannon slung on its left side, four hydraulic legs braced out. -->
+  <defs>
+    <radialGradient id="dome" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#7a7e84"/><stop offset="0.55" stop-color="#2a2c30"/><stop offset="1" stop-color="#0a0a0c"/></radialGradient>
+    <linearGradient id="leg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4e54"/><stop offset="1" stop-color="#121416"/></linearGradient>
+    <radialGradient id="eye" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0e0"/><stop offset="0.35" stop-color="#ff2a6a"/><stop offset="1" stop-color="#5a0a1a"/></radialGradient>
+  </defs>
+  <ellipse cx="48" cy="50" rx="40" ry="38" fill="#000" opacity="0.3"/>
+  <!-- four legs, braced out, with feet -->
+  <g fill="url(#leg)" stroke="#060608" stroke-width="1.2">
+    <path d="M34 40 L14 22 L8 26 L28 46 Z"/><path d="M62 40 L82 22 L88 26 L68 46 Z"/>
+    <path d="M34 58 L14 78 L8 74 L28 54 Z"/><path d="M62 58 L82 78 L88 74 L68 54 Z"/>
+  </g>
+  <g fill="#1a1c1e" stroke="#6a6e74" stroke-width="1"><rect x="2" y="16" width="14" height="10" rx="2"/><rect x="80" y="16" width="14" height="10" rx="2"/><rect x="2" y="74" width="14" height="10" rx="2"/><rect x="80" y="74" width="14" height="10" rx="2"/></g>
+  <g fill="#c8a020"><circle cx="21" cy="34" r="2"/><circle cx="75" cy="34" r="2"/><circle cx="21" cy="66" r="2"/><circle cx="75" cy="66" r="2"/></g>
+  <!-- hip ring -->
+  <circle cx="48" cy="50" r="22" fill="#1a1c1e" stroke="#4a4e54" stroke-width="2"/>
+  <!-- the cannon, on the left, pointing forward -->
+  <rect x="16" y="14" width="10" height="34" rx="3" fill="url(#leg)" stroke="#060608" stroke-width="1.2"/>
+  <rect x="18" y="4" width="6" height="14" rx="1.5" fill="#2a2c30" stroke="#060608" stroke-width="1"/>
+  <circle cx="21" cy="5" r="2" fill="#060608"/>
+  <path d="M26 30 L32 36" stroke="#2a2c30" stroke-width="5"/>
+  <!-- the head dome -->
+  <circle cx="48" cy="48" r="18" fill="url(#dome)" stroke="#060608" stroke-width="1.6"/>
+  <path d="M34 44 Q48 36 62 44" stroke="#c8a020" stroke-width="1.6" fill="none"/>
+  <path d="M36 58 Q48 64 60 58" stroke="#4a4e54" stroke-width="1.2" fill="none"/>
+  <!-- the sensor ring, forward -->
+  <circle cx="48" cy="34" r="8" fill="#14080c" stroke="#3a3c40" stroke-width="1.4"/>
+  <circle cx="48" cy="34" r="6" fill="url(#eye)"/>
+  <circle cx="48" cy="34" r="3" fill="none" stroke="#ffd0e0" stroke-width="0.8"/>
+</svg>
