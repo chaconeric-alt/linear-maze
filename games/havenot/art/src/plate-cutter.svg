@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.55" stop-color="#4a5058"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <radialGradient id="white" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#c9ced4"/><stop offset="1" stop-color="#5a6068"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a929a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <radialGradient id="red" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0c0"/><stop offset="0.4" stop-color="#ff3a2a"/><stop offset="1" stop-color="#5a0a06"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c9a046"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="black" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a52"/><stop offset="0.5" stop-color="#141416"/><stop offset="1" stop-color="#050506"/></linearGradient>
+  </defs>
+  <!-- Plate Cutter, top-down and facing north: the board's demolition robot, a squat black crawler on two tracks,
+       a plasma cutting head forward spitting orange sparks, a gold stripe, a heavy power cable trailing behind. -->
+  <ellipse cx="32" cy="36" rx="26" ry="24" fill="#000" opacity="0.3"/>
+  <path d="M32 58 Q30 64 26 64" stroke="#14141a" stroke-width="4" fill="none"/>
+  <g fill="#14141a" stroke="#000" stroke-width="1"><rect x="6" y="16" width="12" height="42" rx="5"/><rect x="46" y="16" width="12" height="42" rx="5"/></g>
+  <g stroke="#4a4a4e" stroke-width="1.6"><path d="M7 20 h10 M7 26 h10 M7 32 h10 M7 38 h10 M7 44 h10 M7 50 h10 M47 20 h10 M47 26 h10 M47 32 h10 M47 38 h10 M47 44 h10 M47 50 h10"/></g>
+  <rect x="16" y="18" width="32" height="38" rx="5" fill="url(#black)" stroke="#000" stroke-width="1.4"/>
+  <rect x="16" y="34" width="32" height="3" fill="url(#gold)"/>
+  <rect x="26" y="6" width="12" height="16" rx="3" fill="url(#steel)" stroke="#0a0c0e" stroke-width="1"/>
+  <path d="M29 6 L32 0 L35 6 Z" fill="#ffb040"/><circle cx="32" cy="1" r="2" fill="#fff4c8"/>
+  <g stroke="#ffb040" stroke-width="1" stroke-linecap="round"><path d="M28 2 l-5 -2 M36 2 l5 -2 M30 0 l-2 -3 M34 0 l2 -3"/></g>
+  <circle cx="32" cy="44" r="4" fill="url(#red)"/>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.55" stop-color="#4a5058"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <radialGradient id="white" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#c9ced4"/><stop offset="1" stop-color="#5a6068"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a929a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <radialGradient id="red" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0c0"/><stop offset="0.4" stop-color="#ff3a2a"/><stop offset="1" stop-color="#5a0a06"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c9a046"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="black" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a52"/><stop offset="0.5" stop-color="#141416"/><stop offset="1" stop-color="#050506"/></linearGradient>
+  </defs>
+  <!-- Praetorian, top-down and facing north: the boardroom's guard, a heavy gold-and-black war robot with a
+       crested helm, a great curved mirror shield held forward that throws shots back, a heavy gun on the other arm. -->
+  <ellipse cx="32" cy="36" rx="26" ry="22" fill="#000" opacity="0.3"/>
+  <rect x="44" y="6" width="7" height="24" rx="2" fill="url(#black)" stroke="#000" stroke-width="1"/><rect x="45" y="2" width="5" height="6" fill="#1a1a1a"/>
+  <ellipse cx="32" cy="36" rx="20" ry="15" fill="url(#black)" stroke="#000" stroke-width="1.4"/>
+  <path d="M14 34 Q32 24 50 34" stroke="url(#gold)" stroke-width="3" fill="none"/>
+  <g fill="url(#gold)" stroke="#3a2406" stroke-width="0.8"><ellipse cx="12" cy="36" rx="6" ry="8"/><ellipse cx="52" cy="36" rx="6" ry="8"/></g>
+  <path d="M8 22 Q24 6 40 16 L38 20 Q24 12 12 26 Z" fill="#f4f8ff" stroke="#c9a046" stroke-width="2"/>
+  <path d="M14 20 Q22 13 32 15" stroke="#ffffff" stroke-width="1.4" fill="none"/>
+  <circle cx="32" cy="32" r="8" fill="url(#gold)" stroke="#3a2406" stroke-width="1.2"/>
+  <path d="M32 22 V44" stroke="#c82a2a" stroke-width="3"/>
+  <rect x="28" y="26" width="8" height="2.6" rx="1" fill="url(#red)"/>
+</svg>

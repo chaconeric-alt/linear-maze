@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.55" stop-color="#4a5058"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <radialGradient id="white" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#c9ced4"/><stop offset="1" stop-color="#5a6068"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a929a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <radialGradient id="red" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0c0"/><stop offset="0.4" stop-color="#ff3a2a"/><stop offset="1" stop-color="#5a0a06"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c9a046"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="black" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a52"/><stop offset="0.5" stop-color="#141416"/><stop offset="1" stop-color="#050506"/></linearGradient>
+  </defs>
+  <!-- Concierge, top-down and facing north: the executive floor's butler robot, a porcelain face mask, a black
+       tailcoat with long tails behind, white gloves, a silver tray held out with knives on it. -->
+  <ellipse cx="32" cy="36" rx="20" ry="20" fill="#000" opacity="0.26"/>
+  <path d="M24 40 L20 60 L30 50 Z M40 40 L44 60 L34 50 Z" fill="url(#black)" stroke="#000" stroke-width="0.8"/>
+  <ellipse cx="32" cy="34" rx="16" ry="12" fill="url(#black)" stroke="#000" stroke-width="1.2"/>
+  <path d="M28 26 L32 36 L36 26" fill="#f4efe6"/><path d="M30 28 l2 2 l2 -2" fill="#c82a2a"/>
+  <circle cx="18" cy="26" r="3.4" fill="#f4efe6" stroke="#8a8478" stroke-width="0.6"/>
+  <path d="M42 30 L46 16" stroke="url(#black)" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="46" cy="11" rx="9" ry="6" fill="url(#steel)" stroke="#3a3e44" stroke-width="1"/>
+  <g stroke="#f4efe6" stroke-width="1.2"><path d="M41 10 l6 -3 M43 13 l7 -3 M42 11.5 l8 -1"/></g>
+  <circle cx="32" cy="27" r="7.6" fill="#f4efe6" stroke="#8a8478" stroke-width="1"/>
+  <path d="M28 25 h2.6 M33.4 25 h2.6" stroke="#ff3a2a" stroke-width="1.2"/><path d="M29.5 29.5 Q32 30.5 34.5 29.5" stroke="#8a8478" stroke-width="0.8" fill="none"/>
+</svg>

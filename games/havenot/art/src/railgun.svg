@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.55" stop-color="#4a5058"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <radialGradient id="white" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#c9ced4"/><stop offset="1" stop-color="#5a6068"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a929a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <radialGradient id="red" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0c0"/><stop offset="0.4" stop-color="#ff3a2a"/><stop offset="1" stop-color="#5a0a06"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c9a046"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="black" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a52"/><stop offset="0.5" stop-color="#141416"/><stop offset="1" stop-color="#050506"/></linearGradient>
+  </defs>
+  <!-- Rail Gun, top-down and aiming north: a heavy emplacement, a long twin-rail barrel with coils, a red
+       targeting line ahead of it, an ammunition drum and hazard plates on the mount. -->
+  <path d="M32 2 V-10" stroke="#ff3a2a" stroke-width="0.8" opacity="0.8"/>
+  <circle cx="32" cy="38" r="24" fill="#000" opacity="0.26"/>
+  <rect x="10" y="20" width="44" height="38" rx="6" fill="url(#haz)" stroke="#0a0c0e" stroke-width="1.4"/>
+  <rect x="14" y="24" width="36" height="30" rx="4" fill="#2a2c30" stroke="#0a0c0e" stroke-width="1"/>
+  <circle cx="46" cy="46" r="8" fill="url(#black)" stroke="#000" stroke-width="1"/><circle cx="46" cy="46" r="3" fill="#5a5a5a"/>
+  <circle cx="30" cy="38" r="12" fill="url(#shell)" stroke="#0a0c0e" stroke-width="1.4"/>
+  <rect x="25" y="2" width="4" height="30" fill="url(#steel)" stroke="#0a0c0e" stroke-width="0.8"/>
+  <rect x="31" y="2" width="4" height="30" fill="url(#steel)" stroke="#0a0c0e" stroke-width="0.8"/>
+  <g fill="#7fd4ff"><rect x="24" y="10" width="12" height="2"/><rect x="24" y="16" width="12" height="2"/><rect x="24" y="22" width="12" height="2"/></g>
+  <circle cx="30" cy="40" r="3" fill="url(#red)"/>
+</svg>

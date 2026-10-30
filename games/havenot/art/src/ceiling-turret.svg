@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="shell" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.55" stop-color="#4a5058"/><stop offset="1" stop-color="#14181c"/></radialGradient>
+    <radialGradient id="white" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#c9ced4"/><stop offset="1" stop-color="#5a6068"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a929a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <radialGradient id="red" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd0c0"/><stop offset="0.4" stop-color="#ff3a2a"/><stop offset="1" stop-color="#5a0a06"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#e8c030"/></pattern>
+  </defs>
+  <!-- Ceiling Turret, from below and aiming north: a dome hung in a ceiling ring, a twin barrel poking out of its
+       slot, a red sensor eye, hazard stripes round the mount. -->
+  <circle cx="32" cy="32" r="26" fill="#000" opacity="0.22"/>
+  <circle cx="32" cy="32" r="24" fill="url(#haz)" stroke="#0a0c0e" stroke-width="1.4"/>
+  <circle cx="32" cy="32" r="20" fill="#1a1e22" stroke="#0a0c0e" stroke-width="1"/>
+  <g fill="#8a929a"><circle cx="32" cy="10" r="1.2"/><circle cx="54" cy="32" r="1.2"/><circle cx="32" cy="54" r="1.2"/><circle cx="10" cy="32" r="1.2"/></g>
+  <circle cx="32" cy="32" r="16" fill="url(#shell)" stroke="#0a0c0e" stroke-width="1.4"/>
+  <path d="M27 22 h10 v-16 h-10 Z" fill="#2a2e34" stroke="#0a0c0e" stroke-width="1"/>
+  <rect x="28" y="2" width="3" height="18" fill="url(#steel)"/><rect x="33" y="2" width="3" height="18" fill="url(#steel)"/>
+  <path d="M20 30 Q32 22 44 30" stroke="#0a0c0e" stroke-width="1.2" fill="none"/>
+  <circle cx="32" cy="34" r="4" fill="url(#red)"/>
+</svg>
