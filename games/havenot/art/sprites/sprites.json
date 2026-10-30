@@ -879,5 +879,65 @@
     "names": [],
     "kind": "icons",
     "size": 12
+  },
+  "field-emitter": {
+    "file": "field-emitter.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-emitter"
+    ],
+    "size": 30,
+    "turns": false
+  },
+  "metal-cocoon": {
+    "file": "metal-cocoon.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-cocoon"
+    ],
+    "size": 26,
+    "turns": false
+  },
+  "buddy-bot": {
+    "file": "buddy-bot.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-buddy"
+    ],
+    "size": 26,
+    "turns": true
   }
 }

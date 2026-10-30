@@ -236,6 +236,8 @@
     'hn-cocoon': {
       name: 'Metallic cocoon', hnThreat: 3, hp: 90, armor: 0.3, speed: 0, radius: 11, mass: 99, stationary: true, ai: 'turret', sight: 120, color: '#7a7a6a',
       blood: '#c8b24a', gib: '#6a6a5a', takes: { slime: 1.2 }, attacks: [], drops: null,
+      artSkip: (e) => !!e.mem.hatchT, // hatching, it shakes and cracks as drawn here
+
       update(e, dt, game) {
         // it hatches when something warm comes close, or when it has been shot at but not killed
         if (!e.mem.hatchT && (e.distP < 70 || (e.hp < e.maxHp && e.distP < 260))) {

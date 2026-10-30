@@ -104,6 +104,9 @@ Object.assign(PIECES, {
   'agency-turret': { kind: 'monster', enemies: ['hn-turret'], size: 30, turns: true, w: 64, h: 64 },
   'sphinx-gun': { kind: 'monster', enemies: ['hn-sphinx'], size: 36, turns: true, w: 64, h: 64 },
   // the player: layers drawn over the engine's scavenger (packs/hn-rules/look.js); greys on white are tinted at play
+  'field-emitter': { kind: 'monster', enemies: ['hn-emitter'], size: 30, w: 64, h: 64 },
+  'metal-cocoon': { kind: 'monster', enemies: ['hn-cocoon'], size: 26, w: 64, h: 64 },
+  'buddy-bot': { kind: 'monster', enemies: ['hn-buddy'], size: 26, turns: true, w: 64, h: 64 },
   // people (packs/hn-sites/person.js): a paper doll for LM.gfx.person, its greys tinted from each one's look
   person: { kind: 'person', size: 25.6, w: 64, h: 64, layers: ['shirt', 'sleeve', 'hand', 'blazer', 'tie', 'lanyard', 'card', 'head', 'hair-short', 'hair-buzz', 'hair-long', 'hair-ponytail', 'hair-bun', 'hair-curly', 'hair-bald', 'glasses', 'headset'] },
   // the guns in hand (hn-rules/weaponart.js), drawn along the aim in the player's own units: x -2..24.67, y -4..4
