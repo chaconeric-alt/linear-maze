@@ -127,11 +127,14 @@
 
   // ------------------------------------------------------------ the drawing
   LM.ui.addStyles(`
-    .hn-map { position: absolute; inset: 0; background: #b07040; overflow: hidden; }
+    .hn-map { position: absolute; inset: 0; background: #2a1a0c; overflow: hidden; }
+    .hn-map svg { touch-action: none; }
+    .hnm-tip { position: absolute; display: none; width: 250px; padding: 8px 10px; background: #f6e8c8; color: #2a1408; border: 1px solid #4a2a14; box-shadow: 0 4px 14px rgba(0,0,0,0.4); font: 12px/1.35 Georgia, serif; pointer-events: none; z-index: 2; }
+    .hnm-tip b { font-size: 14px; } .hnm-tip .muted { color: #6a4a2a; margin-top: 4px; }
     .hn-map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
     .hn-map .pin { cursor: pointer; }
     .hn-map .pin:focus-visible { outline: none; }
-    .hn-map .pin:focus-visible .pin-head, .hn-map .pin:hover .pin-head { stroke: #fff4d8; stroke-width: 3; }
+    .hn-map .pin:focus-visible .pin-head circle:first-child, .hn-map .pin:hover .pin-head circle:first-child { stroke: #b8342a; stroke-width: 3.5; }
     .hn-map .pin.locked { cursor: help; }
     .hn-map .here-ring { animation: hn-here 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
     @keyframes hn-here { from { opacity: 0.9; transform: scale(0.6); } to { opacity: 0; transform: scale(1.8); } }
@@ -158,29 +161,12 @@
     agency: ['#5a5650', '#ff4ad8'], bunker: ['#7a5a3a', '#3a2a1a'], warren: ['#4a3a2a', '#1a1208'], bolthole: ['#3a3a3a', '#e8a23a'],
     greasy: ['#3a3418', '#ff7ac8'], mushroom: ['#8a8a90', '#c8a07a'], freeway: ['#6a6058', '#c87a4a'], stacks: ['#5a5048', '#c86a3a'],
   };
-  function terrain() {
-    const r = U.mulberry32(4471), out = [];
-    // mesas: flat-topped blobs with a shadow side
-    for (let i = 0; i < 26; i++) {
-      const x = r() * W, y = r() * H, w = 30 + r() * 70, hh = 14 + r() * 26;
-      if (HN.LOCATIONS.some((p) => Math.hypot(x - p.x, y - p.y) < 60)) continue;
-      out.push(svg('ellipse', { cx: x + 4, cy: y + 6, rx: w / 2, ry: hh / 2, fill: '#8a4a2a', opacity: 0.55 }));
-      out.push(svg('ellipse', { cx: x, cy: y, rx: w / 2, ry: hh / 2, fill: '#c8784a', stroke: '#8a4a2a', 'stroke-width': 1.5 }));
-      out.push(svg('ellipse', { cx: x - w * 0.08, cy: y - hh * 0.1, rx: w * 0.34, ry: hh * 0.28, fill: '#d8905a' }));
-    }
-    // scrub and rocks
-    for (let i = 0; i < 220; i++) out.push(svg('circle', { cx: r() * W, cy: r() * H, r: 1 + r() * 2, fill: r() < 0.5 ? '#7a8a4a' : '#9a6a4a', opacity: 0.7 }));
-    return out;
-  }
-  // roads: polylines between pins (a broken highway and its offshoots)
+  // the old highway: polylines between the first settlements (trails to every other site are worked out from
+  // where the pins are, mapart.js)
   const ROADS = [
     [[0, 300], [180, 310], [330, 220], [500, 330], [720, 200], [1000, 260]],
     [[500, 330], [380, 470], [100, 560]],
     [[500, 330], [650, 450], [840, 470]],
-    [[330, 220], [170, 380]],
-    [[720, 200], [900, 100]],
-    [[650, 450], [950, 330]],
-    [[380, 470], [470, 560], [565, 585]],
   ];
   let overlay = null;
   function closeMap() {
@@ -189,26 +175,54 @@
     document.body.classList.remove('hn-map-open');
   }
   HN.closeMap = closeMap;
-  function pinColor(st) {
-    return st === 'locked' ? '#7a6a5a' : st === 'visited' ? '#e8a23a' : '#3ac8b8';
+  const STATE_COL = { visited: '#e8a23a', known: '#7ac8b0', locked: '#a89884' };
+  /** A Threat range against the player's level, by its top: green (at or below you), amber (one above), red
+   *  (two or more: the panel says you'll probably die). */
+  function threatChip(game, threat) {
+    const [lo, hi] = [].concat(threat, threat).slice(0, 2);
+    const lvl = HN.level ? HN.level(game) : 1;
+    const col = hi <= lvl ? '#5a8a34' : hi <= lvl + 1 ? '#c8862a' : '#b8342a';
+    return { text: 'Threat ' + (lo === hi ? lo : lo + '–' + hi), col };
   }
   function openMap(game) {
     closeMap();
     document.body.classList.add('hn-map-open');
+    const A = HN.MAPART, svg = A.svg;
     const s = HN.st(game);
     const here = s.at || 'home';
-    const pins = HN.LOCATIONS.filter((p) => HN.locState(game, p.id) !== 'hidden').map((p) => {
-      const st = HN.locState(game, p.id);
-      const col = pinColor(st);
-      const g = svg('g', { class: 'pin' + (st === 'locked' ? ' locked' : ''), tabindex: 0, role: 'button', 'aria-label': p.name + (st === 'locked' ? ' (not reachable yet)' : ''), transform: `translate(${p.x} ${p.y})`, 'data-pin': p.id },
-        p.id === here ? svg('circle', { class: 'here-ring', cx: 0, cy: -22, r: 16, fill: 'none', stroke: '#fff4d8', 'stroke-width': 3 }) : null,
-        p.id === 'home'
-          ? svg('path', { class: 'pin-head', d: 'M-14 -6 L-14 -26 L0 -38 L14 -26 L14 -6 Z', fill: '#e8a23a', stroke: '#6a3a10', 'stroke-width': 1.5 })
-          : svg('path', { class: 'pin-head', d: 'M0 0 C-4 -10 -13 -14 -13 -24 A13 13 0 1 1 13 -24 C13 -14 4 -10 0 0 Z', fill: col, stroke: U.shade(col, -0.4), 'stroke-width': 1.5 }),
-        st === 'locked' ? svg('path', { d: 'M-4 -22 h8 v6 h-8 Z M-2.5 -22 v-3 a2.5 2.5 0 0 1 5 0 v3', fill: 'none', stroke: '#2a2018', 'stroke-width': 1.6 }) : svg('circle', { cx: 0, cy: p.id === 'home' ? -20 : -24, r: 5, fill: st === 'visited' ? '#fff4d8' : '#1a2a28' }),
-        svg('text', { x: 0, y: 16, 'text-anchor': 'middle', fill: '#fff4d8', 'font-size': 14, 'font-weight': 700, 'font-family': 'var(--font-ui)', stroke: '#2a1408', 'stroke-width': 4, 'paint-order': 'stroke' }, p.name));
+    const shown = HN.LOCATIONS.filter((p) => HN.locState(game, p.id) !== 'hidden');
+    // the land, the same every time for this run (the run's seed), drawn round wherever the pins are
+    const seed = (s.ruins && s.ruins.seed) || 4471;
+    const view = svg('g', { class: 'hnm-view' });
+    view.append(...A.land(HN.LOCATIONS, seed));
+    for (const p of shown) if (A.kindOf(p) === 'ruin') view.appendChild(A.ruinPrint(p, (seed ^ (p.x * 31 + p.y)) >>> 0));
+    view.append(...A.routes([HN.loc(here) || shown[0]].concat(shown.filter((p) => p.id !== here)), ROADS));
+    // fog of war: the sheet is dark where nobody has been; it lifts round what you've seen or heard of
+    const fogMask = svg('mask', { id: 'hnm-fog' }, svg('rect', { x: -50, y: -50, width: A.W + 100, height: A.H + 100, fill: '#fff' }),
+      shown.map((p) => {
+        const st = HN.locState(game, p.id), rr = p.id === here ? 190 : st === 'visited' ? 160 : st === 'known' ? 120 : 75;
+        return svg('circle', { cx: p.x, cy: p.y, r: rr, fill: 'url(#hnm-fogfade)' });
+      }));
+    view.appendChild(svg('g', { mask: 'url(#hnm-fog)', 'pointer-events': 'none' },
+      svg('rect', { x: -50, y: -50, width: A.W + 100, height: A.H + 100, fill: '#3a2410', opacity: 0.62 }),
+      svg('rect', { x: -50, y: -50, width: A.W + 100, height: A.H + 100, fill: 'url(#hnm-hatch)', opacity: 0.22 })));
+    // the pins: a glyph for what the place is, its name, and its Threat
+    const tip = h('div', { class: 'hnm-tip' });
+    const pins = shown.map((p) => {
+      const st = HN.locState(game, p.id), kind = A.kindOf(p), col = STATE_COL[st] || STATE_COL.known;
+      const chip = p.threat ? threatChip(game, p.threat) : null;
+      const g = svg('g', { class: 'pin' + (st === 'locked' ? ' locked' : ''), tabindex: 0, role: 'button', 'aria-label': p.name + (chip ? ', ' + chip.text : '') + (st === 'locked' ? ' (not reachable yet)' : ''), transform: `translate(${p.x} ${p.y})`, 'data-pin': p.id },
+        p.id === here ? svg('circle', { class: 'here-ring', r: 22, fill: 'none', stroke: '#b8342a', 'stroke-width': 3 }) : null,
+        A.icon(kind, col, p.id === here ? '#b8342a' : null),
+        st === 'locked' ? svg('path', { d: 'M8 4 h8 v6 h-8 Z M9.5 4 v-3 a2.5 2.5 0 0 1 5 0 v3', fill: '#f6e8c8', stroke: '#2a1408', 'stroke-width': 1.4 }) : null,
+        svg('text', { x: 0, y: 30, 'text-anchor': 'middle', fill: '#2a1408', 'font-size': 13, 'font-weight': 700, 'font-family': 'Georgia, serif', stroke: '#f6e8c8', 'stroke-width': 4, 'paint-order': 'stroke' }, p.name),
+        chip ? svg('g', { transform: 'translate(0 42)' }, svg('rect', { x: -30, y: -8, width: 60, height: 14, rx: 3, fill: chip.col, stroke: '#2a1408', 'stroke-width': 1 }), svg('text', { y: 3, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: '#fff8e8', 'font-family': 'sans-serif' }, chip.text)) : null,
+        p.id === here ? svg('g', { transform: 'translate(0 -26)' }, svg('path', { d: 'M-46 -14 H46 V2 H6 L0 8 L-6 2 H-46 Z', fill: '#b8342a', stroke: '#2a1408', 'stroke-width': 1 }), svg('text', { y: -2, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: '#fff8e8', 'font-family': 'sans-serif', 'letter-spacing': 1 }, 'YOU ARE HERE')) : null);
       const choose = () => openLocation(game, p);
-      g.addEventListener('click', choose);
+      g.addEventListener('click', (e) => {
+        if (!moved) choose();
+        e.stopPropagation();
+      });
       g.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -216,27 +230,98 @@
           choose();
         }
       });
+      // a hover card: what it is, how you stand with it
+      g.addEventListener('pointerenter', () => {
+        const stWord = { known: 'Known', visited: 'Visited', locked: 'Out of reach' }[st] || st;
+        tip.replaceChildren(h('b', null, p.name), h('div', null, (A.KIND_WORD[kind] || p.kind) + ' · ' + stWord + (p.id === here ? ' · you are here' : '')), chip ? h('div', { style: 'color:' + chip.col }, chip.text + (HN.threatWord ? ' — ' + HN.threatWord([].concat(p.threat).slice(-1)[0], HN.level ? HN.level(game) : 1) : '')) : null, h('div', { class: 'muted' }, String(p.desc || '').split('. ')[0] + '.'));
+        tip.style.display = 'block';
+      });
+      g.addEventListener('pointermove', (e) => {
+        const rc = overlay.getBoundingClientRect();
+        tip.style.left = Math.min(rc.width - 270, e.clientX - rc.left + 16) + 'px';
+        tip.style.top = Math.min(rc.height - 120, e.clientY - rc.top + 16) + 'px';
+      });
+      g.addEventListener('pointerleave', () => (tip.style.display = 'none'));
       return g;
     });
-    const map = svg('svg', { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet', role: 'img', 'aria-label': 'Map of the near area' },
-      svg('defs', null, svg('radialGradient', { id: 'hn-sand', cx: '50%', cy: '52%', r: '70%' }, svg('stop', { offset: '0', 'stop-color': '#e8b880' }), svg('stop', { offset: '1', 'stop-color': '#a8683a' }))),
-      svg('rect', { x: 0, y: 0, width: W, height: H, fill: 'url(#hn-sand)' }),
-      // a dry riverbed
-      svg('path', { d: 'M0 120 C150 140 240 90 420 120 S700 80 1000 140', fill: 'none', stroke: '#b88a5a', 'stroke-width': 18, 'stroke-linecap': 'round', opacity: 0.6 }),
-      terrain(),
-      ROADS.map((pts) => svg('polyline', { points: pts.map((p) => p.join(',')).join(' '), fill: 'none', stroke: '#5a4a3a', 'stroke-width': 7, 'stroke-linejoin': 'round', opacity: 0.75 })),
-      ROADS.map((pts) => svg('polyline', { points: pts.map((p) => p.join(',')).join(' '), fill: 'none', stroke: '#e8d0a0', 'stroke-width': 1.2, 'stroke-dasharray': '8 10', opacity: 0.7 })),
-      svg('text', { x: W - 24, y: H - 20, 'text-anchor': 'end', fill: '#5a2a10', 'font-size': 20, 'font-family': 'var(--font-head)', 'letter-spacing': 3 }, 'THE NEAR AREA'),
-      svg('g', { transform: 'translate(950 64)' }, svg('circle', { r: 22, fill: 'none', stroke: '#5a2a10' }), svg('path', { d: 'M0 -20 L5 0 L0 20 L-5 0 Z', fill: '#5a2a10' }), svg('text', { y: -26, 'text-anchor': 'middle', 'font-size': 11, fill: '#5a2a10' }, 'N')),
-      pins);
+    view.append(...pins);
+    const kinds = [...new Set(shown.map((p) => A.kindOf(p)))];
+    // the legend: over the bottom right of the sheet when you want it (the button, or L)
+    const legendG = A.legend(A.W - 214, A.H - 18 - (30 + 3 * 18 + Math.ceil(kinds.length / 2) * 22 + 46), kinds);
+    const showLegend = (on) => {
+      legendG.style.display = on ? '' : 'none';
+      s.mapLegend = !!on;
+    };
+    showLegend(!!s.mapLegend);
+    const map = svg('svg', { viewBox: `0 0 ${A.W} ${A.H}`, preserveAspectRatio: 'xMidYMid meet', role: 'img', 'aria-label': 'Map of the near area' },
+      A.defs(), fogMask, view,
+      A.cartouche('THE NEAR AREA', 'a survey of the wastes · mission ' + Math.max(1, s.mission)),
+      A.compass(A.W - 54, 62),
+      legendG);
+    // pan and zoom: the wheel zooms about the pointer, a drag moves the sheet, the buttons and +/- too
+    let k = 1, tx = 0, ty = 0, moved = false;
+    const apply = () => {
+      k = Math.max(1, Math.min(4, k));
+      tx = Math.min(0, Math.max(A.W - A.W * k, tx));
+      ty = Math.min(0, Math.max(A.H - A.H * k, ty));
+      view.setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${k.toFixed(3)})`);
+    };
+    const toSheet = (e) => {
+      const pt = map.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      return pt.matrixTransform(map.getScreenCTM().inverse());
+    };
+    const zoomAt = (f, x, y) => {
+      const nk = Math.max(1, Math.min(4, k * f));
+      tx = x - ((x - tx) * nk) / k;
+      ty = y - ((y - ty) * nk) / k;
+      k = nk;
+      apply();
+    };
+    map.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const p = toSheet(e);
+      zoomAt(e.deltaY < 0 ? 1.18 : 1 / 1.18, p.x, p.y);
+    }, { passive: false });
+    let drag = null;
+    map.addEventListener('pointerdown', (e) => {
+      drag = { p: toSheet(e), tx, ty };
+      moved = false;
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!drag || !overlay) return;
+      const p = toSheet(e);
+      if (Math.hypot(p.x - drag.p.x, p.y - drag.p.y) > 4) moved = true;
+      if (!moved) return;
+      tx = drag.tx + (p.x - drag.p.x);
+      ty = drag.ty + (p.y - drag.p.y);
+      apply();
+    });
+    window.addEventListener('pointerup', () => {
+      drag = null;
+      setTimeout(() => (moved = false), 0);
+    });
+    const centre = () => zoomAt(1, A.W / 2, A.H / 2);
     const bar = h('div', { class: 'hn-map-bar' },
-      h('span', null, h('i', { style: 'background:#3ac8b8' }), 'Known'),
-      h('span', null, h('i', { style: 'background:#e8a23a' }), 'Visited'),
-      h('span', null, h('i', { style: 'background:#7a6a5a' }), 'Out of reach'),
-      h('span', null, 'Mission ' + Math.max(1, s.mission)),
+      h('button', { type: 'button', title: 'Zoom in (+)', on: { click: () => zoomAt(1.4, A.W / 2, A.H / 2) } }, '+'),
+      h('button', { type: 'button', title: 'Zoom out (−)', on: { click: () => zoomAt(1 / 1.4, A.W / 2, A.H / 2) } }, '−'),
+      h('button', { type: 'button', title: 'Back to you', on: { click: () => { const p = HN.loc(here); k = 2.2; tx = A.W / 2 - p.x * k; ty = A.H / 2 - p.y * k; apply(); } } }, 'Where am I'),
+      h('button', { type: 'button', title: 'Show or hide the legend (L)', on: { click: () => showLegend(legendG.style.display === 'none') } }, 'Legend (L)'),
+      h('span', null, 'Wheel: zoom · drag: move · click a place'),
       h('button', { type: 'button', on: { click: () => HN.openSatchel(game, 'ledger') } }, 'Ledger (C)'));
     overlay = h('div', { class: 'hn-map' });
-    overlay.append(map, bar);
+    const onKey = (e) => {
+      if (!overlay) return window.removeEventListener('keydown', onKey);
+      if (LM.ui.modalOpen) return;
+      if (e.key === '+' || e.key === '=') zoomAt(1.25, A.W / 2, A.H / 2);
+      if (e.key === '-' || e.key === '_') zoomAt(0.8, A.W / 2, A.H / 2);
+      if (e.key === 'l' || e.key === 'L') showLegend(legendG.style.display === 'none');
+    };
+    window.addEventListener('keydown', onKey);
+    overlay.append(map, tip, bar);
+    void centre;
     const app = document.getElementById('app');
     app.insertBefore(overlay, document.getElementById('hud'));
   }

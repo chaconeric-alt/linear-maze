@@ -94,7 +94,7 @@
   HN.toggleHazardOverlay = toggleOverlay;
   class Overlay {
     update(dt, game) {
-      if (game.state === 'play' && !LM.ui.modalOpen) {
+      if (game.state === 'play' && !LM.ui.modalOpen && !document.body.classList.contains('hn-map-open')) {
         if (LM.input.hit('KeyL')) HN.inspectRoom(game);
         if (LM.input.hit('KeyO')) toggleOverlay(game);
       }
