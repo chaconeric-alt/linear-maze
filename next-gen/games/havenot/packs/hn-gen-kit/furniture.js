@@ -354,6 +354,45 @@
   };
   HN.S10_FAMILIES = Object.keys(FAM);
 
+  /** What makes two pieces of one family tell apart: what their names say they are (gilded, velvet, bulbs, a
+   *  lens, a buzzer, a coffin's cross, lint, a halo, frost, a smile, stars, a ticket, water damage), and a small
+   *  motif of the name's own, placed by it. Kept small, so the family still reads. */
+  const NAME_MARKS = [
+    [/gold|gild|star-rating|three-star|michelin/, (g, W, H) => { g.strokeStyle = '#e8c040'; g.lineWidth = 1.2; g.strokeRect(-W / 2 + 1.5, -H / 2 + 1.5, W - 3, H - 3); }],
+    [/velvet|crimson|blood|banquette/, (g, W, H) => { g.fillStyle = 'rgba(150,20,40,0.75)'; g.fillRect(-W / 4, -H / 6, W / 2, H / 3); }],
+    [/bulb|neon|midway|spotlight|light\b|lamp/, (g, W, H, p, t) => { for (let i = 0; i < 4; i++) G.circle(g, -W / 2 + 3 + i * ((W - 6) / 3), -H / 2 + 2.5, 1.3, Math.sin(t * 6 + i) > 0 ? '#fff0a0' : '#c08030'); }],
+    [/camera|lens|scanner|polygraph|cam\b/, (g, W, H) => { G.circle(g, W / 4, -H / 5, Math.min(W, H) * 0.14, '#101418'); G.circle(g, W / 4, -H / 5, Math.min(W, H) * 0.07, '#5ad8ff'); }],
+    [/buzzer|button|switch|dead-man/, (g, W, H) => { G.circle(g, -W / 4, H / 5, 2.2, '#ff2a2a'); G.circle(g, -W / 4 - 0.6, H / 5 - 0.6, 0.8, '#ffb0b0'); }],
+    [/coffin|funeral|mourn|eulogy|obituary|embalm|sarcophag|urn/, (g, W, H) => { g.fillStyle = '#d8c8a0'; g.fillRect(-0.8, -H / 4, 1.6, H / 2.2); g.fillRect(-W / 8, -H / 8, W / 4, 1.6); }],
+    [/lint|dust|fluff|nappy/, (g, W, H) => { g.fillStyle = 'rgba(200,196,188,0.8)'; for (let i = 0; i < 5; i++) G.circle(g, -W / 3 + i * (W / 7), H / 3 - (i % 2) * 2, 1.4, 'rgba(200,196,188,0.8)'); }],
+    [/cloud|halo|angel|pearly|heaven/, (g, W, H) => { g.strokeStyle = 'rgba(255,250,220,0.9)'; g.lineWidth = 1.1; g.beginPath(); g.ellipse(0, -H / 4, W / 6, 2, 0, 0, Math.PI * 2); g.stroke(); }],
+    [/frost|freezer|cold|ice\b|cryo/, (g, W, H) => { g.fillStyle = 'rgba(180,220,255,0.35)'; g.fillRect(-W / 2, -H / 2, W, H / 3); }],
+    [/smile|joy|happy|fun|giggle|party|birthday|balloon|clown/, (g, W, H) => { g.strokeStyle = '#ffd030'; g.lineWidth = 1.3; g.beginPath(); g.arc(0, 0, Math.min(W, H) * 0.16, 0.2, Math.PI - 0.2); g.stroke(); }],
+    [/dream|night|sleep|nap|lucid|nightmare|pajama/, (g, W, H, p, t) => { for (let i = 0; i < 3; i++) G.circle(g, -W / 4 + i * (W / 4), -H / 3 + (i % 2) * 3, 0.9 + 0.4 * Math.sin(t * 2 + i), '#e8e0ff'); }],
+    [/ticket|coupon|price|credit|coin|karma|bingo|number/, (g, W, H) => { g.fillStyle = '#f0e0b0'; g.fillRect(W / 6, H / 8, W / 4, H / 6); g.fillStyle = '#c03030'; g.fillRect(W / 6 + 1, H / 8 + 1, 1.2, H / 6 - 2); }],
+    [/drowned|flooded|sunken|leaking|slurry|sludge|cracked/, (g, W, H) => { g.fillStyle = 'rgba(60,120,140,0.32)'; g.fillRect(-W / 2, H / 6, W, H / 3); }],
+    [/bone|skull|carving|knife|cannibal|meat|steak/, (g, W, H) => { g.fillStyle = '#efe6d2'; g.fillRect(-W / 6, H / 4, W / 3, 1.6); G.circle(g, -W / 6, H / 4 + 0.8, 1.4, '#efe6d2'); G.circle(g, W / 6, H / 4 + 0.8, 1.4, '#efe6d2'); }],
+    [/warhead|missile|ammunition|shell|grenade|weapon|cannon|howitzer|tracer/, (g, W, H) => { g.fillStyle = '#5a6a4a'; g.fillRect(-W / 3, -H / 3, W / 6, H / 2.4); g.fillStyle = '#e8c030'; g.fillRect(-W / 3, -H / 3, W / 6, 1.5); }],
+    [/brand|logo|sponsor|ad\b|billboard|jingle|mascot|slogan|merch/, (g, W, H) => { g.fillStyle = '#ff3a6a'; g.beginPath(); g.moveTo(W / 4, -H / 4); g.lineTo(W / 4 + 4, -H / 4 + 4); g.lineTo(W / 4, -H / 4 + 8); g.lineTo(W / 4 - 4, -H / 4 + 4); g.closePath(); g.fill(); }],
+  ];
+  const MOTIFS = [
+    (g, x, y, c) => { g.fillStyle = c; g.fillRect(x - 3, y - 0.8, 6, 1.6); },
+    (g, x, y, c) => { G.circle(g, x - 2, y, 1, c); G.circle(g, x + 2, y, 1, c); },
+    (g, x, y, c) => { g.fillStyle = '#121214'; g.fillRect(x - 3, y - 2, 6, 4); g.fillStyle = c; g.fillRect(x - 2, y - 1, 4, 0.8); g.fillRect(x - 2, y + 0.6, 3, 0.8); },
+    (g, x, y, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(x - 2.5, y + 2); g.lineTo(x + 2.5, y + 2); g.lineTo(x, y - 2.5); g.closePath(); g.fill(); },
+    (g, x, y, c) => { g.strokeStyle = c; g.lineWidth = 1; g.beginPath(); g.arc(x, y, 2.2, 0, Math.PI * 2); g.stroke(); },
+    (g, x, y, c) => { g.fillStyle = c; for (let i = -1; i <= 1; i++) g.fillRect(x + i * 2.4 - 0.6, y - 2, 1.2, 4); },
+    (g, x, y, c) => { g.fillStyle = c; g.fillRect(x - 2, y - 2, 4, 4); g.fillStyle = '#121214'; g.fillRect(x - 1, y - 1, 2, 2); },
+    (g, x, y, c) => { g.strokeStyle = c; g.lineWidth = 1; g.beginPath(); g.moveTo(x - 3, y - 2); g.lineTo(x + 3, y + 2); g.moveTo(x + 3, y - 2); g.lineTo(x - 3, y + 2); g.stroke(); },
+  ];
+  function nameDetail(g, W, H, p, name, t) {
+    const n = String(name || '').toLowerCase();
+    if (!n) return;
+    for (const [re, fn] of NAME_MARKS) if (re.test(n)) fn(g, W, H, p, t);
+    const r = U.mulberry32(hash(n + '#'));
+    const m = MOTIFS[Math.floor(r() * MOTIFS.length)], c = [p.accent, p.trim, p.cloth, '#e8e8e8'][Math.floor(r() * 4)];
+    m(g, (r() - 0.5) * (W - 8), (r() - 0.5) * (H - 8), c);
+  }
   function drawPiece(g, it, t, W, H) {
     const p = HN.s10Palette(it.props.set), name = it.props.name || '';
     const r = U.mulberry32(hash(name));
@@ -378,6 +417,7 @@
     const [fw, fh] = q % 2 ? [H, W] : [W, H];
     // a device's moving parts: still when it's off or wrecked, quick when it's running
     fam(g, fw, fh, p, r, ds === 'disabled' || ds === 'destroyed' ? 0 : ds === 'active' ? t * 2.2 : t, it);
+    nameDetail(g, fw, fh, p, name, ds === 'disabled' || ds === 'destroyed' ? 0 : t);
     if (q) g.rotate((-q * Math.PI) / 2);
     // state: grime and damage; a broken device goes dark
     const st = it.props.state || 0;

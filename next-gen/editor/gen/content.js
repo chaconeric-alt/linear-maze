@@ -152,7 +152,9 @@
       const own = (r.mandatory_features || []).filter((n) => !/^primary .* fixture$/i.test(n)).map((n) => n.toLowerCase());
       const mandatory = [A.fixtures[0]].concat(own).filter(Boolean).slice(0, 2);
       if (mandatory.length < 2 && A.fixtures[1]) mandatory.push(A.fixtures[1]);
-      const optional = A.fixtures.filter((n) => !mandatory.includes(n)).concat(A.optional || []);
+      // the setting's own pieces for this template first (companion setting_pieces), then the template's own
+      const own3 = (((comp.setting_pieces || {})[r.setting_id] || {})[arch] || []).filter((n) => !mandatory.includes(n));
+      const optional = own3.concat(A.fixtures.filter((n) => !mandatory.includes(n) && !own3.includes(n)), (A.optional || []).filter((n) => !own3.includes(n)));
       // furniture: the pool's own-setting pieces; the others are the deliberate mismatch pool
       const names = [], mismatch = [];
       for (const f of r.furniture_pool || []) {
@@ -163,6 +165,8 @@
       }
       out.furniture['FURN_' + id] = { id: 'FURN_' + id, room_id: id, names, mismatch };
       for (const n of mandatory.concat(optional, names, mismatch.map((m) => m[0]))) object(n);
+      // a setting piece knows its id and its home
+      for (const n of own3) if (!out.objects[n].home) Object.assign(out.objects[n], { id: 'PIECE_' + r.setting_id.replace(/^SET_/, '') + '_' + slug(n).toUpperCase().replace(/-/g, '_'), home: r.setting_id });
       // the device: the first in its pool, the others as alternatives
       const devs = (r.interactive_pool || []).map((i) => ({ id: i, device: (comp.names || {})[i] || words(i, /^INT_/), use: (comp.device_uses || {})[i] || shared('interactive', i).interaction || '' }));
       if (devs.length) {
@@ -190,7 +194,7 @@
         id, setting_id: r.setting_id, name: arch, full_name: r.name, function: String(r.purpose || '').split(' for ')[0].toLowerCase(),
         size_class: r.size_class, frequency_weight: r.frequency_weight,
         floor_tile_pool: r.floor_tiles, wall_tile_pool: r.wall_tiles, lighting_pool: r.lighting,
-        mandatory_features: mandatory, optional_furnishings: optional, dressing,
+        mandatory_features: mandatory, optional_furnishings: optional, setting_pieces: own3, dressing,
         furniture_record: 'FURN_' + id, interactive_record: devs.length ? 'INT_' + id : null, loot_record: loot.length ? 'LOOT_' + id : null, hazard_record: hz ? 'HAZ_' + id : null,
         doors: r.door_preferences, occupant_tags: r.encounter_tags, rare_twist: r.strange_variations, alternate_purpose: r.alternate_purpose,
         history_overlays: cond ? [cond[0]].concat(r.alternate_purpose ? ['repurposed'] : []) : [], condition_state: cond ? cond[1] : null,
@@ -253,6 +257,7 @@
       if (!(comp.sizes || {})[r.size_class]) say('bad', 'rooms', id, 'unknown size_class ' + r.size_class);
       const arch = archOf(r);
       if (!(comp.room_archetypes || {})[arch]) say('bad', 'rooms', id, 'room template “' + arch + '” has no fixtures in the companion');
+      if (comp.setting_pieces && !((comp.setting_pieces[r.setting_id] || {})[arch] || []).length) say('warn', 'rooms', id, 'no setting-specific pieces for its template in the companion (setting_pieces)');
       else if ((r.mandatory_features || []).some((n) => /^primary .* fixture$/i.test(n))) once('primary:' + arch, () => say('gap', 'rooms', arch, '“Primary ' + arch + ' fixture” is a placeholder (in every setting’s ' + arch + '); its fixtures come from the companion: ' + comp.room_archetypes[arch].fixtures.join(', ')));
       for (const f of r.furniture_pool || []) {
         if (!FURN.has(f)) say('bad', 'rooms', id, 'furniture_pool → ' + f + ': no such furniture');

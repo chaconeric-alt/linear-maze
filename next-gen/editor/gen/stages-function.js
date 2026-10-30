@@ -291,7 +291,7 @@
   /** How a functional room's pieces stand to one another: the focal piece faces the doors with seating in rows
    *  before it, an operating table keeps working space round it, chairs surround a conference table, consoles
    *  stand by the machine they run, seats and desks face what they're for. */
-  function arrange(P, rng, r, C, fn, pool) {
+  function arrange(P, rng, r, C, fn, pool, later) {
     const mine = () => Object.values(P.floor.objs).filter((o) => o.room === r.i && o.item === 'hn-s10' && o.props && o.props.name);
     const doors = P.doorsOf(r);
     const [rx, ry, rw, rh] = r.rect, centre = [rx + (rw - 1) / 2, ry + (rh - 1) / 2];
@@ -349,12 +349,14 @@
         }
       }
     }
+    // the setting's own seats and consoles that found no table, focal piece or machine: placed as usual
+    for (const name of later || []) if (!fn.placed.includes(name) && placeObject(P, rng, r, C, name, fn)) fn.placed.push(name);
     // desks face into the room; anything else that has a front faces the room's middle
     for (const o of mine()) if (o.props.turn == null && ['desk', 'chair', 'console', 'pews'].includes(o.props.fam)) o.props.turn = faceTo(mid(P, o), centre);
   }
   // centrepieces: the families and names that carry a room (a throne room's throne, a lab's vat)
   const CENTRE_FAMS = ['throne', 'vat', 'altar', 'coffin', 'turbine', 'dais', 'fountain', 'statue', 'furnace', 'bath', 'cage', 'pod'];
-  const CENTRE_NAMES = /surgical|operating|autopsy|cannon|howitzer|reactor|core|centrifuge|stage|tank/;
+  const CENTRE_NAMES = /surgical|operating|autopsy|cannon|howitzer|reactor|core|centrifuge|stage|tank|pulpit|spire|harvester|carving|creche/;
   /** How much bigger a room's required piece is drawn: +1 a side in a room of 50 floor cells, +2 from 110. */
   const growOf = (C, name, cells) => {
     const o = C.objects[name] || {};
@@ -383,12 +385,21 @@
     // then optional furnishings and the furniture record's other pieces, to the room's density and floor area
     const pool = [].concat(rec.optional_furnishings || [], ((C.furniture[rec.furniture_record] || {}).names || []).filter((n) => !(rec.mandatory_features || []).includes(n)));
     const want = Math.min(Math.floor(cells / 10), DENSITY_EXTRA[fn.density] + (fn.density === 'sparse' ? 0 : 1));
-    for (let i = 0; i < want && pool.length; i++) {
-      const name = pool[i % pool.length];
+    // the setting's own pieces for this kind of room (a library that has them) are always tried: they're what
+    // makes one setting's control booth unlike another's (two of them in a sparse room)
+    const own = (rec.setting_pieces || []).slice(0, fn.density === 'sparse' ? 2 : 3);
+    const later = [];
+    for (const name of own) {
+      if (isSeat(C, name) || isConsole(C, name)) later.push(name);
+      else if (placeObject(P, rng, r, C, name, fn, shelfRoom(C, name, fn) ? { aisle: true } : undefined)) fn.placed.push(name);
+    }
+    const rest = pool.filter((n) => !own.includes(n));
+    for (let i = 0; i < want && rest.length; i++) {
+      const name = rest[i % rest.length];
       if (isSeat(C, name) || isConsole(C, name)) continue; // seats and consoles go where they belong (arrange)
       if (placeObject(P, rng, r, C, name, fn, shelfRoom(C, name, fn) ? { aisle: true } : undefined)) fn.placed.push(name);
     }
-    arrange(P, rng, r, C, fn, pool);
+    arrange(P, rng, r, C, fn, pool, later);
     // the room's device: an object of the interactable's name, the one placed or a new one
     const dev = C.interactables[rec.interactive_record];
     if (dev) {

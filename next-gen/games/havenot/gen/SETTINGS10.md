@@ -116,7 +116,7 @@ hazard behaviours, device kinds and loot rules are tried after library 2's own).
 | Floor tiles (30) | 30 (none defined in the source) | 30, ×3 states | — | yes: all baked in 3 states |
 | Wall tiles (30) | 30 (none defined) | 30, ×3 states | — | yes: all baked in 3 states |
 | Lights (30) | 30 (none defined) | 30 (10 fitting styles) | colour and radius | yes |
-| Furniture: 20 shared pieces, 40 template fixtures, 10 setting features, 20 devices / 129 objects | 129 | 129, 32 drawing families, setting palettes, states | as library 1; home vs mismatch pool | yes: all 129 drawn in every state; 104 placed in the sweep (devices besides) |
+| Furniture: 20 shared pieces, 40 template fixtures, 10 setting features, 20 devices, 600 setting pieces / 723 objects | 723 | 723, 41 drawing families with name-driven detail, setting palettes, states; no two pieces in a setting draw alike | as library 1; each setting's three pieces per room template always tried; home vs mismatch pool | yes: all 723 drawn in every state; all 596 setting pieces placed in the test sweep (`functional rooms`) |
 | Interactables (20, as 200 room devices) | 200 | as their objects; status lamp and state looks | 8 device kinds, wired as library 1's | 200 placed in the sweep; all opened in the game |
 | Treasure (20) + key objects (10) | 200 loot records, 610 items | category icons | satchel items in six tiers, budgeted | 166 dropped in the sweep (budget cap) |
 | Hazards: 10 decay + 10 traps | 200 room hazards | behaviour visuals | 9 behaviours (with identity), attached as library 1's | 193 placed in the sweep; all opened in the game |
@@ -167,11 +167,18 @@ hazard behaviours, device kinds and loot rules are tried after library 2's own).
   default rate, each library alone with one setting leading, chaotic mixing, sparse against crowded, low against
   high hazard, both eras, every functional room complete and drawable, determinism.
 
+- **Library 2's setting pieces** (companion `setting_pieces`): for each of the 20 room templates in each of the
+  10 settings, three pieces written from the setting's prose (600, 596 distinct): the Carnival's control booth has
+  an applause-meter console, a sponsor ticker desk and a camera-drone dock; the Laundromat's wardrobe a
+  face-pressing mangle; the Gourmet Bunker's spectacle chamber a carving altar. Each has an id
+  (`PIECE_<setting>_<name>`), a home setting, a footprint, a drawing family and placement from the rules (by the
+  name's last word first), and salvage by its family. They're tried in every room of their kind (two in a sparse
+  room); seats go in rows or round tables, consoles by machines, the rest by their placement. Every piece also
+  carries name-driven detail (marks for gilding, velvet, bulbs, lenses, buzzers, coffins, frost, smiles, tickets,
+  water damage, and a motif of its own), so no two pieces in a setting draw alike, in either library.
+
 ## Not done yet (and what remains)
 
-- **Library 2's furniture is thinner than library 1's**: 129 objects against 591, because its rooms are 20
-  templates repeated per setting. Each setting's rooms differ by materials, palette, the setting feature, its
-  devices and its own shared pieces. Remaining, if wanted: more setting-specific pieces per template.
 - **Doorway transitions are floor-only**: where two wall materials meet there's no trim piece between them.
 - **Sound**: devices and hazards use the engine's existing sounds (alarm, pickup, trap, shock); there are no
   per-object sound sets.
