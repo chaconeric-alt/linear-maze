@@ -6,5 +6,5 @@ LM.describePack({
   version: '0.1.0',
   description: 'The near-area map: eleven pins as data (position, state, description that grows with what you learn, services, dangers), a location panel for each, travel, and the start and end of a mission.',
   requires: ['linear-maze/core', 'hn-rules'],
-  scripts: ['mapart.js', 'map.js', 'placeart.js'],
+  scripts: ['mapart.js', 'map.js', 'placeart.js', 'plans.js'],
 });

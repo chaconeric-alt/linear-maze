@@ -133,6 +133,9 @@
   const urls = new Map();
   HN.placePicture = function (p) {
     if (!p) return null;
+    // a settled place's floor plan (hn-world/plans.js)
+    const plan = HN.placePlan && HN.placePlan(p);
+    if (plan && HN.planURL(plan)) return HN.planURL(plan);
     if (p.gen) {
       const key = 'gen:' + p.id + ':' + p.gen;
       if (!urls.has(key)) urls.set(key, 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(HN.installationSVG(p.id + '|' + p.gen + '|' + p.level + '|' + p.x + ',' + p.y)));
@@ -164,8 +167,9 @@
       return;
     }
     if (card) card.remove();
-    card = h('div', { class: 'hn-arrive' },
-      h('div', { class: 'pic', style: 'background-image:url("' + url + '")' }),
+    const plan = HN.placePlan && HN.placePlan(p);
+    card = h('div', { class: 'hn-arrive' + (plan ? ' plan' : '') },
+      plan ? HN.planElement(plan) : h('div', { class: 'pic', style: 'background-image:url("' + url + '")' }),
       h('div', { class: 'cap' }, h('span', { class: 'kind' }, p.kind || ''), h('strong', null, p.name)));
     const app = document.getElementById('app') || document.body, modal = document.getElementById('modal');
     if (modal && modal.parentNode === app) app.insertBefore(card, modal);
@@ -190,6 +194,7 @@
   const css = document.createElement('style');
   css.textContent = `
     .hn-arrive { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); width: min(560px, 80%); border: 2px solid #2a1408; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 0 6px #f2e2bc, 0 0 0 7px #2a1408; background: #f2e2bc; transition: opacity 1s; cursor: pointer; }
+    .hn-arrive.plan { width: min(640px, 86%); top: 8%; }
     .hn-arrive .pic { aspect-ratio: 320 / 200; background: #2a1a10 center/cover no-repeat; }
     .hn-arrive .cap { display: flex; flex-direction: column; align-items: center; padding: 6px 10px 8px; color: #2a1408; font-family: Georgia, serif; }
     .hn-arrive .cap .kind { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.75; }

@@ -349,6 +349,7 @@
     const more = (p.more || []).filter((m) => HN.flag(game, m.flag)).map((m) => h('p', { class: 'lore' }, m.text));
     const [c1, c2] = ART[p.art] || ['#5a4a3a', '#2a1a10'];
     const pic = HN.placePicture ? HN.placePicture(p) : null;
+    const plan = HN.placePlan && HN.placePlan(p);
     const list = (title, xs) => (xs && xs.length ? [h('h3', null, title), h('ul', { class: 'hn-loc-list' }, xs.map((x) => h('li', null, x)))] : null);
     const stateWord = { known: 'Known', visited: 'Visited', locked: 'Out of reach (the mid-range maps aren’t built yet)' }[st] || st;
     const actions = st === 'locked'
@@ -358,7 +359,7 @@
       kicker: p.kind + ' · ' + stateWord,
       title: p.name,
       body: h('div', { class: 'hn-panel' },
-        pic ? h('div', { class: 'hn-loc-art pic', style: `background:url("${pic}") center/cover no-repeat` }) : h('div', { class: 'hn-loc-art', style: `background:linear-gradient(160deg, ${c1}, ${c2})` }, 'Picture to come'),
+        plan ? HN.planElement(plan) : pic ? h('div', { class: 'hn-loc-art pic', style: `background:url("${pic}") center/cover no-repeat` }) : h('div', { class: 'hn-loc-art', style: `background:linear-gradient(160deg, ${c1}, ${c2})` }, 'Picture to come'),
         h('p', { class: 'lore' }, p.desc), more,
         p.threat ? threatLine(game, p.threat) : null,
         list('Known services and rewards', p.services), list('Known dangers', p.dangers),
