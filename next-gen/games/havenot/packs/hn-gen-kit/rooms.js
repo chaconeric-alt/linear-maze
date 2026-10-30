@@ -449,4 +449,38 @@
   };
 
   LM.definePack({ id: 'hn-gen-kit', items, behaviors, enemies });
+
+  // ------------------------------------------------------------ the tomb gallery's plinths
+  // The generator's tomb Gallery uses The Linear Maze's stone plinth, which holds that game's service pistol "for the
+  // attendee". Here a plinth holds a relic and a plaque in praise of whoever the tomb was built for.
+  const PLAQUES = [
+    'HE NEVER LOST A BATTLE HE WROTE ABOUT AFTERWARDS.',
+    'BELOVED BY HIS TROOPS, WHO WERE REQUIRED TO SAY SO TWICE A DAY.',
+    'HERE RESTS THE SPOON WITH WHICH THE WARLORD ATE HIS VICTORY SOUP. DO NOT LICK.',
+    'THE CHAIRMAN’S FIRST SMILE, CAST IN BRONZE. HE DID NOT SMILE AGAIN. IT WAS NOT NECESSARY.',
+    'A LOCK OF THE GREAT ONE’S HAIR. (THE GREAT ONE WAS BALD. THIS IS FROM HIS DOG.)',
+    'THE PEN THAT SIGNED THE ARMISTICE. ALSO THE PEN THAT BROKE IT, THE NEXT MORNING.',
+    'HE GAVE HIS LIFE FOR HIS PEOPLE. HIS PEOPLE WERE NOT CONSULTED.',
+    'THE LAST GRAPE OF THE VICTORY FEAST, PRESERVED IN AMBER AND RESENTMENT.',
+  ];
+  const plinth = LM.find('items', 'pedestal');
+  if (plinth) {
+    const baseDraw = plinth.draw;
+    plinth.interact = {
+      available: () => true,
+      prompt: 'Read the plinth’s plaque',
+      use: (it) => LM.ui.showText('A brass plaque', PLAQUES[Math.floor(seeded(it, 31)() * PLAQUES.length)] + '\n\nThe relic on top is fixed in place with three hundred years of polish.', 'Gallery'),
+    };
+    plinth.draw = function (g, it, t, game) {
+      // the stone, without the pistol, and a small gilt urn on top
+      if (baseDraw) baseDraw.call(this, g, Object.assign(Object.create(it), { taken: true }), t, game);
+      G.roundRect(g, -3.5, -6, 7, 8, 2);
+      g.fillStyle = '#c8a040';
+      g.fill();
+      g.fillStyle = '#e8c860';
+      g.fillRect(-2.5, -8, 5, 2);
+      g.fillStyle = 'rgba(255,255,255,0.35)';
+      g.fillRect(-2.2, -5, 1.2, 5);
+    };
+  }
 })();
