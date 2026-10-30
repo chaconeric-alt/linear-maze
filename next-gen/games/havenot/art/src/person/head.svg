@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- A head from above (greys on white, tinted the skin): crown, ears, the brow and nose forward. -->
+  <ellipse cx="20.8" cy="31" rx="2" ry="3.2" fill="#d8d8d8" stroke="#6a6a6a" stroke-width="0.7"/>
+  <ellipse cx="43.2" cy="31" rx="2" ry="3.2" fill="#d8d8d8" stroke="#6a6a6a" stroke-width="0.7"/>
+  <circle cx="32" cy="30.5" r="11" fill="#f4f4f4" stroke="#6a6a6a" stroke-width="0.9"/>
+  <path d="M26.4 22 Q32 19 37.6 22" stroke="#a8a8a8" stroke-width="1" fill="none"/>
+  <path d="M32 18.8 Q33.4 17.8 32 16.8 Q30.6 17.8 32 18.8 Z" fill="#c8c8c8"/>
+</svg>

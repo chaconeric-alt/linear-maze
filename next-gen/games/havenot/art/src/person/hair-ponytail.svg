@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Hair tied back in a ponytail (greys on white, tinted the hair). -->
+  <path d="M20 32 A12 12 0 0 0 44 32 Q43 27 40 25 Q36 28 32 27 Q28 28 24 25 Q21 27 20 32 Z" fill="#e4e4e4" stroke="#545454" stroke-width="0.9"/>
+  <path d="M29.5 42 Q27 50 30 58 Q32 61 34 58 Q37 50 34.5 42 Z" fill="#dcdcdc" stroke="#545454" stroke-width="0.8"/>
+  <rect x="29.6" y="41" width="4.8" height="2.4" rx="1" fill="#8a8a8a"/>
+  <path d="M31 46 Q30 52 32 57 M33 46 Q34 52 33 56" stroke="#8a8a8a" stroke-width="0.6" fill="none"/>
+</svg>

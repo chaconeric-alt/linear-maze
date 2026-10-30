@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8d0d8"/><stop offset="0.5" stop-color="#6a727a"/><stop offset="1" stop-color="#2a2e34"/></linearGradient>
+    <linearGradient id="olive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8a868"/><stop offset="0.55" stop-color="#5a5a2a"/><stop offset="1" stop-color="#2a2a10"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c8962a"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#c8bca0"/></linearGradient>
+    <radialGradient id="glass" cx="0.35" cy="0.3" r="0.7"><stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="0.3" stop-color="#ffffff" stop-opacity="0.15"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- Egg grenade: an Eggbot's egg rigged to blow, a red band, a little antenna fuse. -->
+  <ellipse cx="32" cy="36" rx="15" ry="20" fill="#f4ecd8" stroke="#5a4a3a" stroke-width="1.8"/>
+  <rect x="17" y="36" width="30" height="7" fill="#c82a2a" stroke="#5a0a0a" stroke-width="1"/>
+  <path d="M24 40 h16" stroke="#ffd84a" stroke-width="1.4" stroke-dasharray="2 2"/>
+  <path d="M32 16 V6" stroke="#3a3a3a" stroke-width="2"/><circle cx="32" cy="5" r="3" fill="#ff3a3a"/>
+  <ellipse cx="26" cy="26" rx="5" ry="7" fill="url(#glass)"/>
+  <circle cx="32" cy="32" r="0.01" opacity="0"/>
+</svg>

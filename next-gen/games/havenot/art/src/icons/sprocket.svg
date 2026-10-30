@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8d0d8"/><stop offset="0.5" stop-color="#6a727a"/><stop offset="1" stop-color="#2a2e34"/></linearGradient>
+    <linearGradient id="olive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8a868"/><stop offset="0.55" stop-color="#5a5a2a"/><stop offset="1" stop-color="#2a2a10"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c8962a"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#c8bca0"/></linearGradient>
+    <radialGradient id="glass" cx="0.35" cy="0.3" r="0.7"><stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="0.3" stop-color="#ffffff" stop-opacity="0.15"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- Sprocket: a toothed brass gear, the currency of the wastes. -->
+  <g transform="translate(32 32)">
+    <path d="M-4 -22 h8 l1 6 l5 2 l5 -4 l6 6 l-4 5 l2 5 l6 1 v8 l-6 1 l-2 5 l4 5 l-6 6 l-5 -4 l-5 2 l-1 6 h-8 l-1 -6 l-5 -2 l-5 4 l-6 -6 l4 -5 l-2 -5 l-6 -1 v-8 l6 -1 l2 -5 l-4 -5 l6 -6 l5 4 l5 -2 Z" fill="url(#brass)" stroke="#3a2406" stroke-width="1.6"/>
+    <circle r="8" fill="#2a1a06" stroke="#3a2406" stroke-width="1.4"/><circle r="11.5" fill="none" stroke="#8a6a1a" stroke-width="1.2"/>
+  </g>
+  <circle cx="32" cy="32" r="0.01" opacity="0"/>
+</svg>

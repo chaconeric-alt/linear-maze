@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- A settler's shirt from above, facing north, greys on white (tinted the look's shirt): shoulders, a
+       collar, a back seam, creases, a patch where it wore through. -->
+  <defs><radialGradient id="c" cx="0.5" cy="0.3" r="0.75"><stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#cfcfcf"/><stop offset="1" stop-color="#848484"/></radialGradient></defs>
+  <ellipse cx="32" cy="34.5" rx="24.5" ry="17.5" fill="#545454"/>
+  <ellipse cx="32" cy="34.5" rx="22.6" ry="15.8" fill="url(#c)"/>
+  <path d="M23 22 Q32 17 41 22 L39 25.5 Q32 22.5 25 25.5 Z" fill="#b4b4b4" stroke="#6a6a6a" stroke-width="0.7"/>
+  <path d="M32 26 V49" stroke="#9a9a9a" stroke-width="1"/>
+  <path d="M14 33 Q17 39 16 44 M50 33 Q47 39 48 44 M24 44 Q27 46 29 49" stroke="#a4a4a4" stroke-width="0.9" fill="none"/>
+  <rect x="38" y="38" width="6" height="5" rx="1" fill="#e2e2e2" stroke="#8a8a8a" stroke-width="0.6" transform="rotate(-10 41 40.5)"/>
+</svg>

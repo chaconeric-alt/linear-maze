@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- A Random Mutant's bald head from above, greys on white (tinted the mutant's skin): a lumpy scalp with
+       blotches, small ears, a ridge of brow forward. -->
+  <ellipse cx="21" cy="32" rx="1.8" ry="2.8" fill="#d8d8d8" stroke="#6a6a6a" stroke-width="0.7"/>
+  <ellipse cx="43" cy="30" rx="1.8" ry="2.8" fill="#d8d8d8" stroke="#6a6a6a" stroke-width="0.7"/>
+  <path d="M21 31 Q20 20 32 19.4 Q44 20 43.6 31 Q43 43 32 42.4 Q20.6 42 21 31 Z" fill="#f4f4f4" stroke="#6a6a6a" stroke-width="0.9"/>
+  <g fill="#c4c4c4"><circle cx="27" cy="34" r="2.6"/><circle cx="31" cy="26.6" r="1.8"/><circle cx="25" cy="29.4" r="1.4"/><circle cx="37" cy="36" r="1.6"/></g>
+  <path d="M25 22 Q32 18.4 39 22" stroke="#a8a8a8" stroke-width="1.4" fill="none"/>
+  <path d="M35 27 q2 3 1 6" stroke="#b8b8b8" stroke-width="0.8" fill="none"/>
+</svg>

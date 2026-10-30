@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Chitin, in its own colours: brown armour plates grown over the shoulders and down the back. -->
+  <g fill="#4f3f31" stroke="#241a12" stroke-width="0.9">
+    <ellipse cx="15" cy="34" rx="7" ry="10" transform="rotate(-15 15 34)"/><ellipse cx="49" cy="34" rx="7" ry="10" transform="rotate(15 49 34)"/>
+    <path d="M24 38 Q32 34 40 38 L38 50 Q32 53 26 50 Z"/>
+  </g>
+  <path d="M10 30 Q14 26 19 30 M45 30 Q50 26 54 30 M26 42 Q32 40 38 42 M27 46 Q32 44 37 46" stroke="#8a7258" stroke-width="1" fill="none"/>
+</svg>

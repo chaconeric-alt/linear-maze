@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8d0d8"/><stop offset="0.5" stop-color="#6a727a"/><stop offset="1" stop-color="#2a2e34"/></linearGradient>
+    <linearGradient id="olive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8a868"/><stop offset="0.55" stop-color="#5a5a2a"/><stop offset="1" stop-color="#2a2a10"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c8962a"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#c8bca0"/></linearGradient>
+    <radialGradient id="glass" cx="0.35" cy="0.3" r="0.7"><stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="0.3" stop-color="#ffffff" stop-opacity="0.15"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- Utility: a handheld scanner, its screen lit. -->
+  <rect x="18" y="8" width="28" height="48" rx="5" fill="#3a4048" stroke="#14181c" stroke-width="1.6"/>
+  <rect x="22" y="14" width="20" height="18" rx="2" fill="#0a1a20"/><path d="M24 28 L28 22 L32 26 L36 18 L40 24" stroke="#5ae8ff" stroke-width="1.4" fill="none"/>
+  <circle cx="26" cy="42" r="3" fill="#b8ff4a"/><circle cx="38" cy="42" r="3" fill="#ff4a3a"/><rect x="24" y="48" width="16" height="3" rx="1" fill="#5a626a"/>
+  <circle cx="32" cy="32" r="0.01" opacity="0"/>
+</svg>

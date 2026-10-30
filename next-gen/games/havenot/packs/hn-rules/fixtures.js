@@ -141,6 +141,7 @@
       },
       draw(g, it) {
         const d = HN.ITEMS[it.props.hn] || { icon: {} };
+        if (HN.drawIconArt && HN.drawIconArt(g, d, 13)) return;
         const c = (d.icon && d.icon.color) || '#c8a060';
         g.fillStyle = '#141210';
         G.roundRect(g, -5.5, -5.5, 11, 11, 2);

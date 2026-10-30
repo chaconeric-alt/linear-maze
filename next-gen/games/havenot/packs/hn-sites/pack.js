@@ -6,6 +6,6 @@ LM.describePack({
   version: '0.1.0',
   description: 'The civilized places of the near area: the home bunker (comms, medical station, supply locker, ledger, trophy shelf, retirement), the Out-rider Outpost, Boom-Town behind its 100-credit gate, and Mother Long-Legs’ den. Vendors, medics, rumors, standing.',
   requires: ['linear-maze/core', 'hn-rules', 'hn-world'],
-  scripts: ['services.js', 'people.js', 'places.js'],
+  scripts: ['services.js', 'person.js', 'people.js', 'places.js'],
   levels: ['levels/home.js', 'levels/outpost.js', 'levels/boomtown.js', 'levels/longlegs.js'],
 });

@@ -427,6 +427,9 @@
   HN.itemIcon = itemIcon;
   function itemIcon(d) {
     const ic = d.icon || {};
+    // its picture (hn-gen-kit/iconart.js) on a dark tile edged in its colour, or the letter on the colour
+    const art = HN.iconArt && HN.iconArt(d);
+    if (art) return h('span', { class: 'ico', style: 'background:#1e1a14 url(' + art + ') center/88% no-repeat;box-shadow:inset 0 0 0 2px ' + (ic.color || '#c8a060') });
     return h('span', { class: 'ico', style: 'background:' + (ic.color || '#c8a060') }, ic.glyph || d.name.charAt(0));
   }
   HN.useItem = function (game, id, how) {
