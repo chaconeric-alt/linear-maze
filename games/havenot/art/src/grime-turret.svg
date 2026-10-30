@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Greasy Security Turret, top-down and aiming north: an old security turret caked in grease and slime,
+       a fat mortar tube for lobbing globs, a cracked hazard ring round its base, goo pooling under it. -->
+  <defs>
+    <radialGradient id="dome" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#8a7a4a"/><stop offset="0.55" stop-color="#3e3620"/><stop offset="1" stop-color="#14100a"/></radialGradient>
+    <pattern id="haz" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#1a1a1a"/><rect width="2.5" height="5" fill="#d8b030"/></pattern>
+  </defs>
+  <!-- goo pooled under it -->
+  <ellipse cx="34" cy="38" rx="27" ry="23" fill="#4a7a1a" opacity="0.45"/>
+  <ellipse cx="32" cy="34" rx="24" ry="24" fill="#000" opacity="0.25"/>
+  <!-- the base ring -->
+  <circle cx="32" cy="34" r="22" fill="url(#haz)" stroke="#0a0a06" stroke-width="1.4"/>
+  <circle cx="32" cy="34" r="17" fill="#2a2618" stroke="#0a0a06" stroke-width="1"/>
+  <path d="M14 26 L19 30 L16 34 M48 44 L44 42 L47 38" stroke="#0a0a06" stroke-width="1" fill="none"/>
+  <!-- the head -->
+  <circle cx="32" cy="34" r="13" fill="url(#dome)" stroke="#0a0a06" stroke-width="1.4"/>
+  <!-- the mortar tube, forward -->
+  <rect x="26" y="6" width="12" height="22" rx="3" fill="#3a3a32" stroke="#0a0a06" stroke-width="1.2"/>
+  <ellipse cx="32" cy="7" rx="6" ry="2.6" fill="#0a0e06" stroke="#5a5a4a" stroke-width="1"/>
+  <ellipse cx="32" cy="7" rx="3.6" ry="1.4" fill="#8ad83a" opacity="0.8"/>
+  <!-- grease and slime slathered on -->
+  <path d="M22 30 q6 -4 10 2 q4 6 10 2 M24 42 q4 3 8 0" stroke="#0e0c06" stroke-width="2.4" opacity="0.6" fill="none" stroke-linecap="round"/>
+  <path d="M27 10 q-1 6 0 10 M37 12 q1 4 0 8" stroke="#7ac81a" stroke-width="1.4" opacity="0.8" fill="none" stroke-linecap="round"/>
+  <circle cx="36" cy="38" r="2.4" fill="#ffb02a"/><circle cx="35.4" cy="37.4" r="0.8" fill="#ffffff" opacity="0.7"/>
+</svg>

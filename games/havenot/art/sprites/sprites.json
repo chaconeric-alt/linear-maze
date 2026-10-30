@@ -672,5 +672,105 @@
     ],
     "size": 24,
     "turns": true
+  },
+  "grease-monkey": {
+    "file": "grease-monkey.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-grease-monkey"
+    ],
+    "size": 36,
+    "turns": true
+  },
+  "slop-tread": {
+    "file": "slop-tread.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-slop-tread"
+    ],
+    "size": 38,
+    "turns": true
+  },
+  "grime-turret": {
+    "file": "grime-turret.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-grime-turret"
+    ],
+    "size": 30,
+    "turns": true
+  },
+  "agency-turret": {
+    "file": "agency-turret.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-turret"
+    ],
+    "size": 30,
+    "turns": true
+  },
+  "sphinx-gun": {
+    "file": "sphinx-gun.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-sphinx"
+    ],
+    "size": 36,
+    "turns": true
   }
 }

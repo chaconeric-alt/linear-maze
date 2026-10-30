@@ -98,6 +98,11 @@ Object.assign(PIECES, {
   'robot-dancer': { kind: 'monster', enemies: ['hn-dancer'], size: 24, turns: true, w: 64, h: 64 },
   'carnivorous-plant': { kind: 'monster', enemies: ['hn-snapper'], size: 30, turns: true, w: 64, h: 64 },
   'automated-undead': { kind: 'monster', enemies: ['hn-deadbot'], size: 24, turns: true, w: 64, h: 64 },
+  'grease-monkey': { kind: 'monster', enemies: ['hn-grease-monkey'], size: 36, turns: true, w: 64, h: 64 },
+  'slop-tread': { kind: 'monster', enemies: ['hn-slop-tread'], size: 38, turns: true, w: 64, h: 64 },
+  'grime-turret': { kind: 'monster', enemies: ['hn-grime-turret'], size: 30, turns: true, w: 64, h: 64 },
+  'agency-turret': { kind: 'monster', enemies: ['hn-turret'], size: 30, turns: true, w: 64, h: 64 },
+  'sphinx-gun': { kind: 'monster', enemies: ['hn-sphinx'], size: 36, turns: true, w: 64, h: 64 },
 });
 // cracks, a split and shards for a piece that doesn't give its own: seeded by its id, inside its middle
 function damageFor(id, w, h) {
