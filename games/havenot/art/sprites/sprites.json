@@ -287,5 +287,89 @@
       "celebrity lounger bed"
     ],
     "match": "lounger|bunk|( |^)bed$"
+  },
+  "conveyor": {
+    "file": "conveyor.png",
+    "w": 192,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "waste chute conveyor",
+      "compost belts",
+      "face conveyor"
+    ],
+    "match": "conveyor|belts?$"
+  },
+  "dais": {
+    "file": "dais.png",
+    "w": 192,
+    "h": 128,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "presentation dais",
+      "auction dais",
+      "elevated platform",
+      "velvet stage"
+    ],
+    "match": "(dais|stage|platform|podium)$"
+  },
+  "oven": {
+    "file": "oven.png",
+    "w": 128,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "fabrication oven",
+      "birthday cake oven furnace"
+    ],
+    "match": "oven|kiln|incinerator|boiler"
+  },
+  "press": {
+    "file": "press.png",
+    "w": 128,
+    "h": 64,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "reputation press (forgiveness setting)",
+      "scandal pulper press"
+    ],
+    "match": "press$|pulper|compactor|stamper|mangle"
+  },
+  "luxury-bath": {
+    "file": "luxury-bath.png",
+    "w": 128,
+    "h": 128,
+    "states": [
+      "working",
+      "damaged",
+      "disabled",
+      "destroyed"
+    ],
+    "names": [
+      "luxury bath",
+      "sunken bath",
+      "memory pool bath"
+    ],
+    "match": "bath$|hot tub|jacuzzi|spa pool"
   }
 }
