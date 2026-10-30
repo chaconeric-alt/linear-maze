@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Robot dancer, top-down and facing north: a chrome showgirl robot, a mirror-ball head, a feathered
+       fan of pink and cyan plumes behind it, arms flung out mid-move, sequinned hips. -->
+  <defs>
+    <radialGradient id="ball" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.5" stop-color="#a8b4c0"/><stop offset="1" stop-color="#3a4250"/></radialGradient>
+    <linearGradient id="chrome" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a6270"/><stop offset="0.5" stop-color="#e8eef4"/><stop offset="1" stop-color="#5a6270"/></linearGradient>
+  </defs>
+  <ellipse cx="32" cy="36" rx="20" ry="16" fill="#000" opacity="0.25"/>
+  <!-- the plume fan, behind -->
+  <g stroke-linecap="round" fill="none" stroke-width="4">
+    <path d="M32 40 L14 58" stroke="#ff7ac8"/><path d="M32 40 L22 62" stroke="#5ab8e8"/><path d="M32 40 L32 63" stroke="#e8d84a"/>
+    <path d="M32 40 L42 62" stroke="#5ab8e8"/><path d="M32 40 L50 58" stroke="#ff7ac8"/>
+  </g>
+  <g fill="#ffffff" opacity="0.7"><circle cx="15" cy="57" r="1.2"/><circle cx="23" cy="61" r="1.2"/><circle cx="32" cy="62" r="1.2"/><circle cx="41" cy="61" r="1.2"/><circle cx="49" cy="57" r="1.2"/></g>
+  <!-- arms flung out, one up, one down -->
+  <path d="M24 32 L12 24 L6 16" stroke="url(#chrome)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <path d="M40 32 L52 38 L60 36" stroke="url(#chrome)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <circle cx="6" cy="15" r="2.4" fill="#ff7ac8"/><circle cx="60" cy="36" r="2.4" fill="#5ab8e8"/>
+  <!-- the body: chrome torso, sequinned hip ring -->
+  <ellipse cx="32" cy="38" rx="11" ry="7" fill="#7a2a6a" stroke="#2a0a24" stroke-width="1"/>
+  <g fill="#ffd0f0"><circle cx="24" cy="38" r="0.9"/><circle cx="28" cy="42" r="0.9"/><circle cx="32" cy="43" r="0.9"/><circle cx="36" cy="42" r="0.9"/><circle cx="40" cy="38" r="0.9"/><circle cx="27" cy="35" r="0.7"/><circle cx="37" cy="35" r="0.7"/></g>
+  <ellipse cx="32" cy="32" rx="9" ry="7" fill="url(#chrome)" stroke="#2a3038" stroke-width="1"/>
+  <!-- the mirror-ball head -->
+  <circle cx="32" cy="24" r="8" fill="url(#ball)" stroke="#2a3038" stroke-width="1"/>
+  <g stroke="#3a4250" stroke-width="0.5" fill="none" opacity="0.8">
+    <path d="M24 24 h16 M25 20 h14 M25 28 h14 M32 16 v16 M28 17 Q26 24 28 31 M36 17 Q38 24 36 31"/>
+  </g>
+  <g fill="#ffffff"><rect x="28" y="19" width="2" height="2"/><rect x="34" y="25" width="2" height="2"/></g>
+  <g fill="#ff7ac8" opacity="0.8"><rect x="34" y="20" width="2" height="2"/></g><g fill="#5ab8e8" opacity="0.8"><rect x="27" y="26" width="2" height="2"/></g>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Carnivorous plant, top-down with its mouth to the north: a rosette of broad green leaves rooted in a
+       cracked pot, a big red-lipped trap head turned toward its prey, toothed and drooling. -->
+  <defs>
+    <radialGradient id="leaf" cx="0.3" cy="0.3" r="0.9"><stop offset="0" stop-color="#7ac84a"/><stop offset="0.6" stop-color="#2e6a1e"/><stop offset="1" stop-color="#0e2a0a"/></radialGradient>
+    <radialGradient id="trap" cx="0.5" cy="0.6" r="0.6"><stop offset="0" stop-color="#ff6a5a"/><stop offset="0.6" stop-color="#a8141e"/><stop offset="1" stop-color="#4a060a"/></radialGradient>
+  </defs>
+  <ellipse cx="32" cy="36" rx="26" ry="24" fill="#000" opacity="0.28"/>
+  <!-- the pot -->
+  <circle cx="32" cy="36" r="15" fill="#8a4a2a" stroke="#3a1a0a" stroke-width="1.4"/>
+  <circle cx="32" cy="36" r="12" fill="#2a1a10"/>
+  <path d="M19 30 L23 33 L21 37 M44 44 L41 41 L44 38" stroke="#3a1a0a" stroke-width="0.8" fill="none"/>
+  <!-- the leaf rosette -->
+  <g fill="url(#leaf)" stroke="#0e2a0a" stroke-width="1">
+    <path d="M32 38 Q14 46 6 58 Q22 56 32 38 Z"/><path d="M32 38 Q50 46 58 58 Q42 56 32 38 Z"/>
+    <path d="M32 38 Q10 32 4 22 Q20 22 32 38 Z"/><path d="M32 38 Q54 32 60 22 Q44 22 32 38 Z"/>
+    <path d="M32 38 Q26 52 32 63 Q38 52 32 38 Z"/>
+  </g>
+  <path d="M32 38 L10 54 M32 38 L54 54 M32 38 L8 25 M32 38 L56 25 M32 38 V60" stroke="#9ae86a" stroke-width="0.7" opacity="0.6" fill="none"/>
+  <!-- the stalk and the trap head, open toward the north -->
+  <path d="M32 38 Q30 30 32 24" stroke="#2e6a1e" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M18 18 Q20 4 32 3 Q44 4 46 18 Q40 26 32 26 Q24 26 18 18 Z" fill="url(#trap)" stroke="#3a0408" stroke-width="1.4"/>
+  <path d="M22 16 Q32 6 42 16 Q32 21 22 16 Z" fill="#2a0408"/>
+  <g fill="#f4ecd0" stroke="#8a7a5a" stroke-width="0.4">
+    <path d="M23 15 l1.5 -3 l1.5 3.4 Z"/><path d="M27 12 l1.5 -3 l1.5 3 Z"/><path d="M31 11 l1 -3 l1.5 3 Z"/><path d="M35 12 l1.5 -3 l1.5 3 Z"/><path d="M39 14 l1.5 -3 l1 3.6 Z"/>
+    <path d="M25 17 l1.5 2.4 l1.5 -2 Z"/><path d="M30 18.4 l2 2.4 l2 -2.4 Z"/><path d="M36 17.6 l1.5 2.2 l1.5 -2.8 Z"/>
+  </g>
+  <path d="M32 18 q-1 4 0 7" stroke="#c8ff8a" stroke-width="1" opacity="0.7" fill="none"/>
+  <g fill="#ffd84a"><circle cx="20" cy="10" r="1"/><circle cx="44" cy="10" r="1"/><circle cx="18" cy="15" r="0.8"/><circle cx="46" cy="15" r="0.8"/></g>
+</svg>

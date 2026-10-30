@@ -572,5 +572,105 @@
     ],
     "size": 44,
     "turns": true
+  },
+  "security-drone": {
+    "file": "security-drone.png",
+    "w": 96,
+    "h": 96,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-drone"
+    ],
+    "size": 50,
+    "turns": true
+  },
+  "gladiator-roach": {
+    "file": "gladiator-roach.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-roach"
+    ],
+    "size": 20,
+    "turns": true
+  },
+  "robot-dancer": {
+    "file": "robot-dancer.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-dancer"
+    ],
+    "size": 24,
+    "turns": true
+  },
+  "carnivorous-plant": {
+    "file": "carnivorous-plant.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-snapper"
+    ],
+    "size": 30,
+    "turns": true
+  },
+  "automated-undead": {
+    "file": "automated-undead.png",
+    "w": 64,
+    "h": 64,
+    "states": [
+      "idle",
+      "walk1",
+      "walk2",
+      "attack",
+      "hurt",
+      "death"
+    ],
+    "names": [],
+    "kind": "monster",
+    "enemies": [
+      "hn-deadbot"
+    ],
+    "size": 24,
+    "turns": true
   }
 }
