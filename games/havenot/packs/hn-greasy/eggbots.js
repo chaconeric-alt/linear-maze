@@ -138,9 +138,11 @@
       HN.note(game, 'change', 'You destroyed Princess Eggbot in the Greasy Bolt Hole.');
     },
     draw(g, e, t) {
-      const s = 22, wob = Math.sin(e.t * 5) * 0.08; // a big body (engine large monsters: radius, hitbox, drawRadius)
+      const s = 22, wob = Math.sin(e.t * 5) * 0.04; // a big body (engine large monsters: radius, hitbox, drawRadius)
       const red = e.mem.mood === 'red';
       g.save();
+      // her treads, gold-trimmed: she rolls like the rest of them, only more regally
+      if (HN.drawTreads) HN.drawTreads(g, e, s, '#f2d06b');
       g.rotate(wob);
       g.fillStyle = '#1a1214';
       g.beginPath(); g.ellipse(0, 0, s * 0.84, s, 0, 0, U.TAU); g.fill();
