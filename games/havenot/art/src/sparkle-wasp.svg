@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <!-- Sparkle-Vos Wasp, top-down and facing north: orange-gold wings speckled like a sparkler, a dark furred
+       thorax, a crown of violet spikes round its one eye, a long red-brown ribbed abdomen ending in a sting. -->
+  <defs>
+    <linearGradient id="wingL" x1="1" y1="0.6" x2="0" y2="0"><stop offset="0" stop-color="#ffd84a" stop-opacity="0.95"/><stop offset="0.5" stop-color="#f08a1a" stop-opacity="0.85"/><stop offset="1" stop-color="#2a1a30" stop-opacity="0.9"/></linearGradient>
+    <linearGradient id="wingR" x1="0" y1="0.6" x2="1" y2="0"><stop offset="0" stop-color="#ffd84a" stop-opacity="0.95"/><stop offset="0.5" stop-color="#f08a1a" stop-opacity="0.85"/><stop offset="1" stop-color="#2a1a30" stop-opacity="0.9"/></linearGradient>
+    <radialGradient id="fur" cx="0.45" cy="0.4" r="0.6"><stop offset="0" stop-color="#d89a3a"/><stop offset="0.6" stop-color="#6a4218"/><stop offset="1" stop-color="#1e1208"/></radialGradient>
+    <linearGradient id="abd" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a0e0a"/><stop offset="0.5" stop-color="#a8301e"/><stop offset="1" stop-color="#3a0e0a"/></linearGradient>
+  </defs>
+  <ellipse cx="48" cy="56" rx="18" ry="32" fill="#000" opacity="0.22"/>
+  <!-- the wings, swept up and out -->
+  <path d="M42 34 Q20 30 6 10 Q4 4 12 6 Q30 14 44 30 Z" fill="url(#wingL)" stroke="#1a0e18" stroke-width="1"/>
+  <path d="M54 34 Q76 30 90 10 Q92 4 84 6 Q66 14 52 30 Z" fill="url(#wingR)" stroke="#1a0e18" stroke-width="1"/>
+  <path d="M42 33 Q22 26 12 12 M54 33 Q74 26 84 12" stroke="#5a2a10" stroke-width="0.8" fill="none"/>
+  <g fill="#ffe8a0"><circle cx="16" cy="12" r="0.9"/><circle cx="24" cy="18" r="0.8"/><circle cx="20" cy="22" r="0.7"/><circle cx="32" cy="24" r="0.9"/><circle cx="12" cy="8" r="0.7"/>
+    <circle cx="80" cy="12" r="0.9"/><circle cx="72" cy="18" r="0.8"/><circle cx="76" cy="22" r="0.7"/><circle cx="64" cy="24" r="0.9"/><circle cx="84" cy="8" r="0.7"/></g>
+  <!-- the legs, red, hooked -->
+  <g stroke="#8a1e14" stroke-width="1.6" stroke-linecap="round" fill="none">
+    <path d="M40 42 L26 44 L22 50 M40 46 L30 52 L28 58 M56 42 L70 44 L74 50 M56 46 L66 52 L68 58"/>
+  </g>
+  <!-- the abdomen, ribbed, ending in the sting -->
+  <path d="M38 50 Q36 72 48 88 Q60 72 58 50 Z" fill="url(#abd)" stroke="#1a0606" stroke-width="1.2"/>
+  <path d="M39 56 Q48 60 57 56 M39 62 Q48 66 57 62 M41 68 Q48 72 55 68 M43 74 Q48 77 53 74 M45 80 Q48 82 51 80" stroke="#e8c8b0" stroke-width="1" fill="none" opacity="0.75"/>
+  <path d="M45 86 L48 95 L51 86 Z" fill="#e8dcc8" stroke="#3a1a10" stroke-width="0.6"/>
+  <!-- thorax -->
+  <ellipse cx="48" cy="42" rx="10" ry="10" fill="url(#fur)" stroke="#1e1208" stroke-width="1.2"/>
+  <!-- the head, its crown of spikes and its one eye -->
+  <g fill="#4a2a7a" stroke="#1a0e2a" stroke-width="0.6">
+    <path d="M40 28 L34 18 L43 25 Z"/><path d="M44 25 L42 13 L47 24 Z"/><path d="M49 24 L54 13 L52 25 Z"/><path d="M53 25 L62 18 L56 28 Z"/><path d="M47 24 L48 10 L50 24 Z"/>
+  </g>
+  <ellipse cx="48" cy="30" rx="8" ry="6" fill="#2a1a3a" stroke="#0e0816" stroke-width="1"/>
+  <circle cx="48" cy="29" r="3.2" fill="#ffd84a"/><circle cx="48" cy="29" r="1.4" fill="#1a0e08"/>
+  <path d="M44 35 L42 39 M52 35 L54 39" stroke="#c8b0a0" stroke-width="1.4" stroke-linecap="round"/>
+</svg>
