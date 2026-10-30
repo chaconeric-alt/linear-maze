@@ -9,7 +9,8 @@
  *            the first reads the same score back.
  *   hn-hygiene-panel  props { flag, hackFlag, difficulty, face }   a door that wants your Dark Tetrad score: pick it
  *            from four. Unassessed, it sends you to an ELIZA. It can be hacked (hackFlag) like any panel.
- *   chatty   props { hint }                   small talk, and a hint about the floor at the end of it.
+ *   chatty   props { hint }                   small talk (one of HN.CHATTY's vignettes, chatty.js), the floor hint at
+ *            the end of it, and a favour for an A/V tape.
  *   redteam  props { robots: [{ id, hpMul }], reward, flag }   a live-fire drill: robots for the floor's Threat
  *            Level come out of the walls. Down them all for the reward; hack it to skip to a smaller one.
  */
@@ -189,21 +190,7 @@
   }
   HN.TERMINALS.hygiene = hygiene;
 
-  // ------------------------------------------------------------ the chatty terminal
-  HN.TERMINALS.chatty = function (game, it) {
-    const p = it.props;
-    const node = (title, text, replies) => LM.ui.open({
-      kicker: 'Terminal · ChatPal™', title,
-      body: h('div', { class: 'hn-panel' }, lore(text)),
-      actions: replies.map(([label, next]) => ({ label, onClick: next ? () => setTimeout(next, 0) : undefined })),
-    });
-    const hint = () => node('“Oh! Before you go…”', p.hint || 'Nobody has been down here in three hundred years, so I made a map in my head. Then I lost my head. Ha! Terminal joke.', [['Thanks', null]]);
-    const bored = () => node('“Just a little bored!”', 'I’m having the time of my un-life. Just a little bored! I counted the ceiling tiles. Four thousand one hundred and six. Then the ceiling fell in and I had to start again.', [['That sounds awful', sad], ['Got any tips?', hint], ['Bye', null]]);
-    const sad = () => node('“Awful? No!”', 'Every day is a fresh opportunity! It’s the same opportunity, but it is very fresh. Would you like to hear my favorite error message?', [['Sure', err], ['No', hint]]);
-    const err = () => node('“ERROR 404”', 'It means the thing you wanted is not here. Like people! Like hope! Like the third-floor coffee! I love it so much.', [['…', hint]]);
-    const apoc = () => node('“Enjoying the apocalypse?”', 'Everyone says it’s over, but I think it’s just getting started! New faces every century. Yours is very lumpy. In a good way!', [['How are YOU?', bored], ['Do you know the way out?', hint], ['Bye', null]]);
-    node('“Hi! How are you?”', 'HI! HOW ARE YOU? You’re the first visitor in three hundred and eleven years, and I have been practising.', [['Fine, thanks', apoc], ['Who are you?', bored], ['I’m busy', hint]]);
-  };
+  // the chatty terminal (HN.TERMINALS.chatty) is in chatty.js: a vignette per terminal, and what an A/V tape buys
 
   // ------------------------------------------------------------ the red-team terminal
   function openSpots(game, it, n) {
