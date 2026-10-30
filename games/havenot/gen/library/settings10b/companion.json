@@ -188,6 +188,44 @@
   "archetypes": {
     "$comment": "Extra drawing-family rules for this library's names, tried before library 1's.",
     "rules": [
+      ["(^|\\s|-)consoles?$", "console", [1, 1], "wall-row"],
+      ["(^|\\s|-)desk$", "desk", [2, 1], "wall-row"],
+      ["(^|\\s|-)crates?$", "crate", [1, 1], "wall-row"],
+      ["(^|\\s|-)drums?$", "drum", [1, 1], "corner"],
+      ["(^|\\s|-)shel(f|ves)$", "shelf", [2, 1], "wall-row"],
+      ["(^|\\s|-)cabinet$", "cabinet", [1, 1], "wall-row"],
+      ["(^|\\s|-)vat$", "vat", [1, 1], "middle"],
+      ["(^|\\s|-)(bed|cot)$", "bed", [1, 2], "wall-row"],
+      ["(^|\\s|-)(arm)?chairs?$", "chair", [1, 1], "middle"],
+      ["(^|\\s|-)pews$", "pews", [3, 1], "middle"],
+      ["(^|\\s|-)screen$", "screen", [2, 1], "wall"],
+      ["(^|\\s|-)sign$", "sign", [1, 1], "wall"],
+      ["(^|\\s|-)press$", "press", [2, 1], "wall-row"],
+      ["(^|\\s|-)table$", "table", [2, 1], "middle"],
+      ["(^|\\s|-)statue$", "statue", [1, 1], "middle"],
+      ["(^|\\s|-)lamp$", "lamp", [1, 1], "corner"],
+      ["(^|\\s|-)chandelier$", "chandelier", [1, 1], "middle"],
+      ["(^|\\s|-)altar$", "altar", [2, 1], "center"],
+      ["(^|\\s|-)arch$", "arch", [2, 1], "middle"],
+      ["(^|\\s|-)turbine$", "turbine", [2, 2], "center"],
+      ["(^|\\s|-)furnace$", "furnace", [2, 1], "wall-row"],
+      ["(^|\\s|-)tower$", "tower", [1, 1], "wall-row"],
+      ["(^|\\s|-)pipes$", "pipes", [1, 1], "wall-row"],
+      ["(^|\\s|-)rail$", "rail", [3, 1], "middle"],
+      ["(^|\\s|-)hatch$", "hatch", [1, 1], "middle"],
+      ["(^|\\s|-)conveyor$", "conveyor", [3, 1], "middle"],
+      ["(^|\\s|-)pod$", "pod", [1, 2], "wall-row"],
+      ["(^|\\s|-)locker$", "locker", [1, 1], "wall-row"],
+      ["(^|\\s|-)mannequin$", "mannequin", [1, 1], "middle"],
+      ["(^|\\s|-)mirror$", "mirror", [1, 1], "wall"],
+      ["(^|\\s|-)fountain$", "fountain", [2, 2], "center"],
+      ["(^|\\s|-)bath$", "bath", [2, 2], "center"],
+      ["(^|\\s|-)cage$", "cage", [2, 2], "wall-row"],
+      ["(^|\\s|-)drone$", "drone", [1, 1], "any"],
+      ["(^|\\s|-)dais$", "dais", [3, 2], "center"],
+      ["(^|\\s|-)throne$", "throne", [2, 2], "center"],
+      ["(^|\\s|-)arm$", "arm", [1, 1], "middle"],
+      ["(^|\\s|-)rack$", "weapon", [1, 1], "wall-row"],
       ["eulogist|projector", "screen", [2, 1], "wall"],
       ["spire", "tower", [1, 1], "wall-row"],
       ["helmet|loom|synthesizer|scanner", "console", [1, 1], "wall-row"],
@@ -199,6 +237,8 @@
       ["tumbler|dryer drum", "drum", [1, 1], "corner"],
       ["pulper", "press", [2, 1], "wall-row"],
       ["hatch", "hatch", [1, 1], "middle"],
+      ["washroom", "washroom", [1, 1], "corner"],
+      ["window", "window", [1, 1], "wall"],
       ["sprinkler", "pipes", [1, 1], "wall-row"],
       ["choir loft", "pews", [2, 1], "wall-row"],
       ["applause meter", "screen", [2, 1], "wall"],
@@ -327,6 +367,1030 @@
       ["applause core|spool|chip|archive|index|ledger|reservation book|quota core", "Data", 160],
       ["authorization key", "Access", 160]
     ]
+  },
+
+  "setting_pieces": {
+    "$comment": "Setting-specific furniture: for every room template in every setting, three pieces written from the setting's own prose (architecture, furnishing style, technology, decay). Each is an object with its drawing family and placement from the rules; they lead a room's optional furnishings, so a Laundromat's control booth and a Carnival's read differently.",
+    "SET_MARTYRDOM_CARNIVAL": {
+      "Grand Entry & Reception": [
+        "velvet rope stanchion rail",
+        "confession ticket booth desk",
+        "animatronic usher mannequin"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "numbered coffin pews",
+        "last-breath trophy cabinet",
+        "grief-tourist souvenir shelf"
+      ],
+      "Central Spectacle Chamber": [
+        "circular death-pit hatch",
+        "judge's buzzer podium desk",
+        "midway bulb arch"
+      ],
+      "Control Booth & Director Gallery": [
+        "applause-meter console",
+        "sponsor ticker desk",
+        "camera-drone dock tower"
+      ],
+      "Executive Office of Bad Ideas": [
+        "gilded coffin desk",
+        "most-moving-demise leaderboard screen",
+        "embalmer's armchair"
+      ],
+      "Archive of Past Clients": [
+        "last-words jar shelves",
+        "eulogy reel cabinet",
+        "obituary filing cabinet"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "confetti cannon weapon rack",
+        "spare halo crates",
+        "mourner animatronic parts crates"
+      ],
+      "Costume & Prep Wardrobe": [
+        "burial couture mannequin",
+        "mourning veil mirror",
+        "corpse-paint vanity table"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "popcorn-and-embalming kettle vat",
+        "funeral cake oven furnace",
+        "candy coffin press"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "gold-leaf sarcophagus bath",
+        "weeping basin fountain",
+        "velvet-lined washroom"
+      ],
+      "Private VIP Pod": [
+        "gilded coffin bed",
+        "resurrection-interrupt field pod",
+        "private mourner pews"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "souvenir urn shelves",
+        "bottled last words vending console",
+        "grief-tourist armchairs"
+      ],
+      "Security & Compliance Nook": [
+        "take-a-number dispenser console",
+        "usher's weapon locker",
+        "agony scanner arch"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "afterlife insurance altar",
+        "DIE WITH DISTINCTION sign",
+        "votive bulb chandelier"
+      ],
+      "Secret Cult Adaptation": [
+        "resurrection glitch altar",
+        "sobbing animatronic statue",
+        "congealed candle lamp"
+      ],
+      "Power Core & Heart": [
+        "audience emotion harvester turbine",
+        "agony amplifier console",
+        "calliope pipes"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "camera drone rail",
+        "spotlight rig tower",
+        "calliope steam pipes"
+      ],
+      "Waste & Aftermath Chute": [
+        "melted wax figure crates",
+        "confetti sweeper conveyor",
+        "spent coffin crusher press"
+      ],
+      "Collapsed & Flooded Wing": [
+        "scoreboard stuck on 9.8 screen",
+        "sunken death-pit hatch",
+        "drowned mourner statue"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "ticket scalper's cot bed",
+        "exit-to-nowhere sign",
+        "abandoned popcorn crates"
+      ]
+    },
+    "SET_IDENTITY_LAUNDROMAT": {
+      "Grand Entry & Reception": [
+        "pneumatic sock-and-soul tube pipes",
+        "coin-op identity counter desk",
+        "GUILT REMOVER detergent crates"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "laundromat plastic chairs",
+        "spin-cycle viewing window",
+        "lost-self notice sign"
+      ],
+      "Central Spectacle Chamber": [
+        "industrial washer drum",
+        "personality centrifuge turbine",
+        "mezzanine folding table"
+      ],
+      "Control Booth & Director Gallery": [
+        "wash-cycle console",
+        "tube-routing switchboard console",
+        "lint-cam screen"
+      ],
+      "Executive Office of Bad Ideas": [
+        "resume steam-press desk",
+        "stain-chart screen",
+        "starched swivel chair"
+      ],
+      "Archive of Past Clients": [
+        "lost-and-found souls shelves",
+        "laundry ticket cabinet",
+        "discarded childhood crates"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "GUILT REMOVER detergent drums",
+        "spare-face locker",
+        "memory bleach jug shelves"
+      ],
+      "Costume & Prep Wardrobe": [
+        "face-pressing mangle press",
+        "discarded-self mannequin",
+        "restraint ironing table"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "starch boiler vat",
+        "lint-cake oven furnace",
+        "sock-sorting conveyor"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "rinse-cycle bath",
+        "mint enamel washroom",
+        "fabric-softener fountain"
+      ],
+      "Private VIP Pod": [
+        "tumble-dry sleep pod",
+        "monogrammed folding bed",
+        "private wash drum"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "soap vending console",
+        "folded-self gift shelves",
+        "waiting-for-dryer chairs"
+      ],
+      "Security & Compliance Nook": [
+        "colour-separation scanner arch",
+        "attendant drone",
+        "mixed-load confiscation locker"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "detergent brand altar",
+        "WHITER THAN YOU sign",
+        "lavender incense lamp"
+      ],
+      "Secret Cult Adaptation": [
+        "lost-clothes nudist altar",
+        "lint golem statue",
+        "static candle lamp"
+      ],
+      "Power Core & Heart": [
+        "spin-cycle turbine",
+        "reputation bleach vat",
+        "steam boiler furnace"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "pneumatic tube rail",
+        "lint filter pipes",
+        "dryer vent tower"
+      ],
+      "Waste & Aftermath Chute": [
+        "lint golem crates",
+        "slurry conveyor",
+        "shrunk-personality compactor press"
+      ],
+      "Collapsed & Flooded Wing": [
+        "flooded washer drum",
+        "identity slurry vat",
+        "drowned folding table"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "laundry cart crates",
+        "lint-blanket bed",
+        "dryer-duct hatch"
+      ]
+    },
+    "SET_AD_CATHEDRAL": {
+      "Grand Entry & Reception": [
+        "brand-loyalty baptismal fountain",
+        "greeter mascot statue",
+        "coupon dispenser console"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "purchase-button pews",
+        "air-freshener votive lamp",
+        "jingle-loop screen"
+      ],
+      "Central Spectacle Chamber": [
+        "shopping-cart pulpit dais",
+        "desire amplification spire tower",
+        "stacked-ad billboard sign"
+      ],
+      "Control Booth & Director Gallery": [
+        "neuromarketing console",
+        "focus-group screen",
+        "sermon teleprompter desk"
+      ],
+      "Executive Office of Bad Ideas": [
+        "ad executive's altar desk",
+        "campaign screen",
+        "leather confessional chair"
+      ],
+      "Archive of Past Clients": [
+        "slogan archive shelves",
+        "mascot contract cabinet",
+        "jingle tape crates"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "taxidermied mascot crates",
+        "spare halo-logo sign",
+        "censer refill drums"
+      ],
+      "Costume & Prep Wardrobe": [
+        "mascot suit mannequin",
+        "choir robe locker",
+        "smile-practice mirror"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "communion wafer press",
+        "free-sample table",
+        "branded wine vat"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "holy-water bath",
+        "air-freshener fountain",
+        "sponsored washroom"
+      ],
+      "Private VIP Pod": [
+        "premium pew pod",
+        "loyalty-tier throne",
+        "gilded cupholder table"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "relic shop shelves",
+        "impulse-buy shelf",
+        "pew-side vending console"
+      ],
+      "Security & Compliance Nook": [
+        "brand-allegiance scanner arch",
+        "surveillance cherub drone",
+        "excommunication coupon press"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "product reliquary altar",
+        "never-existed product statue",
+        "neon halo sign"
+      ],
+      "Secret Cult Adaptation": [
+        "ad-blocker monk altar",
+        "defaced mascot statue",
+        "blackout candle lamp"
+      ],
+      "Power Core & Heart": [
+        "jingle generator turbine",
+        "neuromarketing censer furnace",
+        "organ pipes"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "billboard gantry rail",
+        "spotlight tower",
+        "speaker cable pipes"
+      ],
+      "Waste & Aftermath Chute": [
+        "expired coupon crates",
+        "flyer shredder press",
+        "ad-pulp conveyor"
+      ],
+      "Collapsed & Flooded Wing": [
+        "fallen billboard sign",
+        "flooded pews",
+        "cracked baptismal fountain"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "monk's bedroll bed",
+        "tag-sale crates",
+        "exit ad sign"
+      ]
+    },
+    "SET_WEAPON_RETIREMENT": {
+      "Grand Entry & Reception": [
+        "nurses' station desk",
+        "visitor sign-in console",
+        "walker exoskeleton mannequin"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "missile-holster recliner chairs",
+        "medication cart table",
+        "game-show screen"
+      ],
+      "Central Spectacle Chamber": [
+        "kill-count bingo table",
+        "bingo caller dais",
+        "service medal cabinet"
+      ],
+      "Control Booth & Director Gallery": [
+        "laser-designator remote console",
+        "lanai minefield window",
+        "orderly dispatch desk"
+      ],
+      "Executive Office of Bad Ideas": [
+        "administrator's desk",
+        "wall of medals sign",
+        "ejection-seat chair"
+      ],
+      "Archive of Past Clients": [
+        "service record cabinet",
+        "war-story tape shelves",
+        "denture-munition crates"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "decommissioned warhead crates",
+        "walker parts locker",
+        "ammunition pill shelves"
+      ],
+      "Costume & Prep Wardrobe": [
+        "dress uniform mannequin",
+        "medal-polishing table",
+        "orthopedic boot locker"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "early-bird buffet table",
+        "depleted uranium steam furnace",
+        "tapioca pudding vat"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "walk-in tank bath",
+        "grab-rail washroom",
+        "denture-soak fountain"
+      ],
+      "Private VIP Pod": [
+        "missile-holster hospital bed",
+        "widower's armchair",
+        "oxygen tank pod"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "minefield-view window",
+        "grenade gift shelves",
+        "shuffleboard table"
+      ],
+      "Security & Compliance Nook": [
+        "orderly drone",
+        "friendly-fire weapon locker",
+        "pacemaker scanner arch"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "veterans' memorial statue",
+        "defense contractor altar",
+        "flag lamp"
+      ],
+      "Secret Cult Adaptation": [
+        "warhead shrine altar",
+        "howitzer idol statue",
+        "tracer candle lamp"
+      ],
+      "Power Core & Heart": [
+        "dead-man switch console",
+        "backup generator turbine",
+        "coolant pipes"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "wheelchair ramp rail",
+        "antenna tower",
+        "leaking coolant pipes"
+      ],
+      "Waste & Aftermath Chute": [
+        "spent shell crates",
+        "incontinence incinerator furnace",
+        "scrap conveyor"
+      ],
+      "Collapsed & Flooded Wing": [
+        "minefield crater hatch",
+        "flooded recliner chairs",
+        "drooling warhead drum"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "visiting grandkid's camp bed",
+        "runaway exoskeleton mannequin",
+        "sandbag crates"
+      ]
+    },
+    "SET_PET_ATELIER": {
+      "Grand Entry & Reception": [
+        "infant gift-wrap table",
+        "designer crib display cabinet",
+        "DNA helix mobile chandelier"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "pastel cushion chairs",
+        "growth creche window",
+        "catalogue screen"
+      ],
+      "Central Spectacle Chamber": [
+        "growth creche vat",
+        "toddler runway dais",
+        "cuteness ray arm"
+      ],
+      "Control Booth & Director Gallery": [
+        "growth accelerator console",
+        "nursery cam screen",
+        "genome design desk"
+      ],
+      "Executive Office of Bad Ideas": [
+        "designer's sketch desk",
+        "quarterly trend screen",
+        "swaddled armchair"
+      ],
+      "Archive of Past Clients": [
+        "returned-model crates",
+        "pedigree cabinet",
+        "genome sample shelves"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "spare wing crates",
+        "formula drums",
+        "self-raised toy crates"
+      ],
+      "Costume & Prep Wardrobe": [
+        "onesie mannequin",
+        "bonnet mirror",
+        "branding-iron changing table"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "formula synthesizer vat",
+        "puree press",
+        "bottle sterilizer furnace"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "toddler bath",
+        "nappy washroom",
+        "bubble fountain"
+      ],
+      "Private VIP Pod": [
+        "display crib bed",
+        "nanny bot pod",
+        "rocking throne"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "hover-tank stroller drone",
+        "toy gift shelves",
+        "parent armchairs"
+      ],
+      "Security & Compliance Nook": [
+        "nanny bot drone",
+        "superior-model comparison scanner arch",
+        "return-bin locker"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "lullaby brand altar",
+        "mascot baby statue",
+        "nightlight lamp"
+      ],
+      "Secret Cult Adaptation": [
+        "feral children's crib altar",
+        "plush idol statue",
+        "mobile candle lamp"
+      ],
+      "Power Core & Heart": [
+        "growth accelerator turbine",
+        "personality injector console",
+        "incubator vat"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "mobile rigging rail",
+        "creche vent pipes",
+        "observation tower"
+      ],
+      "Waste & Aftermath Chute": [
+        "obsolete-kid return conveyor",
+        "nappy compactor press",
+        "cracked vat drum"
+      ],
+      "Collapsed & Flooded Wing": [
+        "cracked growth vat",
+        "leaking creche pod",
+        "flooded crib bed"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "feral child nest bed",
+        "toy crates",
+        "crawlspace hatch"
+      ]
+    },
+    "SET_AFTERLIFE_RESORT": {
+      "Grand Entry & Reception": [
+        "pearly revolving gate arch",
+        "check-in desk of judgment",
+        "welcome tiki torch lamp"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "purgatory queue rail",
+        "take-a-ticket console",
+        "cloud cushion chairs"
+      ],
+      "Central Spectacle Chamber": [
+        "lazy river of souls fountain",
+        "luau stage dais",
+        "soul projector screen"
+      ],
+      "Control Booth & Director Gallery": [
+        "karma ledger console",
+        "queue-time screen",
+        "lifeguard tower"
+      ],
+      "Executive Office of Bad Ideas": [
+        "timeshare demon's desk",
+        "contract screen",
+        "cloud swivel chair"
+      ],
+      "Archive of Past Clients": [
+        "life review reel shelves",
+        "sin ledger cabinet",
+        "unclaimed soul crates"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "spare halo crates",
+        "pool noodle shelves",
+        "folded wings locker"
+      ],
+      "Costume & Prep Wardrobe": [
+        "white robe mannequin",
+        "halo-fitting mirror",
+        "harp locker"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "nostalgia buffet table",
+        "ambrosia vat",
+        "cold-fire grill furnace"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "memory pool bath",
+        "cloud fountain",
+        "ethereal washroom"
+      ],
+      "Private VIP Pod": [
+        "incorporeal lounger bed",
+        "last-thoughts minibar cabinet",
+        "cabana pod"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "souvenir shell shelves",
+        "postcards-from-beyond sign",
+        "deck chairs"
+      ],
+      "Security & Compliance Nook": [
+        "dead-enough scanner arch",
+        "bouncer angel statue",
+        "ghost trap cage"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "afterlife insurance altar",
+        "timeshare billboard sign",
+        "eternal flame lamp"
+      ],
+      "Secret Cult Adaptation": [
+        "reincarnation altar",
+        "timeshare demon idol statue",
+        "seance candle lamp"
+      ],
+      "Power Core & Heart": [
+        "soul projector turbine",
+        "karma slot console",
+        "reflection pool vat"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "cloud rigging rail",
+        "harp-wire pipes",
+        "halo antenna tower"
+      ],
+      "Waste & Aftermath Chute": [
+        "unresolved trauma drums",
+        "spent soul conveyor",
+        "regret compactor press"
+      ],
+      "Collapsed & Flooded Wing": [
+        "flooded memory pool vat",
+        "sunken cabana pod",
+        "drowned tiki statue"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "ghost bedroll bed",
+        "lost luggage crates",
+        "trapdoor-to-nowhere hatch"
+      ]
+    },
+    "SET_REPUTATION_RECYCLING": {
+      "Grand Entry & Reception": [
+        "reputation weigh-in console",
+        "apology letter crane arm",
+        "FORGIVEN welcome sign"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "disgraced-guest pews",
+        "press-release screen",
+        "tissue dispenser console"
+      ],
+      "Central Spectacle Chamber": [
+        "public apology dais",
+        "sedimentation tank of shame vat",
+        "gantry crane arm"
+      ],
+      "Control Booth & Director Gallery": [
+        "spin control console",
+        "headline screen",
+        "damage-assessment desk"
+      ],
+      "Executive Office of Bad Ideas": [
+        "crisis manager's desk",
+        "libel poster sign",
+        "reclining excuse chair"
+      ],
+      "Archive of Past Clients": [
+        "scandal dossier cabinet",
+        "tabloid shelves",
+        "deleted post crates"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "reputation brick crates",
+        "slander filter drums",
+        "NDA shelves"
+      ],
+      "Costume & Prep Wardrobe": [
+        "comeback suit mannequin",
+        "humility mirror",
+        "makeup table"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "humble pie oven furnace",
+        "crow-eating table",
+        "sludge stew vat"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "influencer bath",
+        "cringe fountain",
+        "shame washroom"
+      ],
+      "Private VIP Pod": [
+        "redemption arc pod",
+        "celebrity lounger bed",
+        "private apology desk"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "souvenir brick shelves",
+        "merch shelf",
+        "viewing window"
+      ],
+      "Security & Compliance Nook": [
+        "defamation lawyer desk",
+        "libel scanner arch",
+        "cease-and-desist press"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "PR firm altar",
+        "brand rehabilitation statue",
+        "spotlight lamp"
+      ],
+      "Secret Cult Adaptation": [
+        "cancelled celebrity altar",
+        "scandal slime statue",
+        "apology candle lamp"
+      ],
+      "Power Core & Heart": [
+        "libel boiler furnace",
+        "scandal centrifuge turbine",
+        "slander filter pipes"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "gantry crane rail",
+        "sludge pipes",
+        "smokestack tower"
+      ],
+      "Waste & Aftermath Chute": [
+        "infamy sludge conveyor",
+        "crumbling brick crates",
+        "libel shredder press"
+      ],
+      "Collapsed & Flooded Wing": [
+        "burst cringe pipes",
+        "sunken pulper drum",
+        "shame tank vat"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "influencer sleeping bag bed",
+        "ring light lamp",
+        "escape hatch"
+      ]
+    },
+    "SET_HAPPINESS_BUREAU": {
+      "Grand Entry & Reception": [
+        "smile checkpoint desk",
+        "propaganda smile sign",
+        "balloon arch"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "cheerful molded chairs",
+        "take-a-smile console",
+        "mood poster screen"
+      ],
+      "Central Spectacle Chamber": [
+        "mandatory fun stage dais",
+        "birthday interrogation table",
+        "confetti cannon weapon rack"
+      ],
+      "Control Booth & Director Gallery": [
+        "joy meter console",
+        "cubicle cam screen",
+        "enthusiasm quota desk"
+      ],
+      "Executive Office of Bad Ideas": [
+        "director of happiness desk",
+        "employee of the month sign",
+        "massage chair"
+      ],
+      "Archive of Past Clients": [
+        "frown filing cabinet",
+        "complaint shelves",
+        "sad poem crates"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "confiscated sad object locker",
+        "spare clown nose crates",
+        "giggle gas drums"
+      ],
+      "Costume & Prep Wardrobe": [
+        "clown riot gear mannequin",
+        "smile mirror",
+        "happiness collar locker"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "birthday cake oven furnace",
+        "punch bowl vat",
+        "sprinkles dispenser console"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "bubble bath",
+        "mandatory smile washroom",
+        "chocolate fountain"
+      ],
+      "Private VIP Pod": [
+        "nap pod",
+        "beanbag chair",
+        "executive ball pit vat"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "smile gift shelves",
+        "sticker vending console",
+        "sunny window"
+      ],
+      "Security & Compliance Nook": [
+        "frown scanner arch",
+        "mood baton weapon rack",
+        "holding cage"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "joy brand altar",
+        "smiling sun mascot statue",
+        "party lamp"
+      ],
+      "Secret Cult Adaptation": [
+        "depression outlaw altar",
+        "sad clown statue",
+        "black candle lamp"
+      ],
+      "Power Core & Heart": [
+        "giggle gas turbine",
+        "laughter pipes",
+        "morale generator console"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "drop ceiling rail",
+        "vent pipes",
+        "loudspeaker tower"
+      ],
+      "Waste & Aftermath Chute": [
+        "deflated balloon crates",
+        "frown shredder press",
+        "sludge conveyor"
+      ],
+      "Collapsed & Flooded Wing": [
+        "toppled cubicle sign",
+        "gas-flooded vat",
+        "drowned party table"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "sad poet bedroll bed",
+        "contraband crates",
+        "ceiling hatch"
+      ]
+    },
+    "SET_DREAM_TAX": {
+      "Grand Entry & Reception": [
+        "take-a-dream ticket console",
+        "dream journal reception desk",
+        "DENIED stamp sign"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "sleeping auditor chairs",
+        "nap-queue rail",
+        "dream forecast screen"
+      ],
+      "Central Spectacle Chamber": [
+        "dream hearing dais",
+        "giant red pen statue",
+        "childhood bedroom bed"
+      ],
+      "Control Booth & Director Gallery": [
+        "dream extraction console",
+        "REM monitor screen",
+        "audit desk"
+      ],
+      "Executive Office of Bad Ideas": [
+        "chief assessor's desk",
+        "tax form wall sign",
+        "sleeping auditor chair"
+      ],
+      "Archive of Past Clients": [
+        "twelve-foot dream filing cabinet",
+        "safety deposit shelves",
+        "origami form crates"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "confiscated nightmare cage",
+        "spare pillow crates",
+        "red ink drums"
+      ],
+      "Costume & Prep Wardrobe": [
+        "pajama mannequin",
+        "nightcap mirror",
+        "slipper locker"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "warm milk vat",
+        "cheese-before-bed press",
+        "cocoa furnace"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "lucid bath",
+        "dream-rinse fountain",
+        "sleepwalker washroom"
+      ],
+      "Private VIP Pod": [
+        "deluxe dream pod",
+        "four-poster bed",
+        "dreamcatcher chandelier"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "snow globe gift shelves",
+        "dream postcard sign",
+        "nap couch bed"
+      ],
+      "Security & Compliance Nook": [
+        "nightmare containment cage",
+        "oneiric polygraph scanner arch",
+        "DENIED stamp press"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "sleep brand altar",
+        "sandman statue",
+        "nightlight lamp"
+      ],
+      "Secret Cult Adaptation": [
+        "feral nightmare nest altar",
+        "origami monster statue",
+        "insomnia candle lamp"
+      ],
+      "Power Core & Heart": [
+        "dream turbine",
+        "REM pipes",
+        "subconscious vat"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "filing rail",
+        "pneumatic form pipes",
+        "cabinet stack tower"
+      ],
+      "Waste & Aftermath Chute": [
+        "unpaid dream crates",
+        "shredded form conveyor",
+        "nightmare compactor press"
+      ],
+      "Collapsed & Flooded Wing": [
+        "toppled filing cabinet",
+        "flooded dream vat",
+        "drowned bed"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "dream debtor's cot bed",
+        "stolen pillow crates",
+        "rabbit-hole hatch"
+      ]
+    },
+    "SET_GOURMET_BUNKER": {
+      "Grand Entry & Reception": [
+        "maitre d' podium desk",
+        "reservation book desk",
+        "blast door arch"
+      ],
+      "Waiting Room of Anxious Anticipation": [
+        "velvet banquette chairs",
+        "aperitif cart table",
+        "faux sky screen"
+      ],
+      "Central Spectacle Chamber": [
+        "carving altar",
+        "chef's table",
+        "open flame grill furnace"
+      ],
+      "Control Booth & Director Gallery": [
+        "kitchen pass console",
+        "order ticket screen",
+        "expediter desk"
+      ],
+      "Executive Office of Bad Ideas": [
+        "owner's desk",
+        "three-star sign",
+        "leather armchair"
+      ],
+      "Archive of Past Clients": [
+        "recipe vault cabinet",
+        "menu shelves",
+        "critic review crates"
+      ],
+      "Storage Closet of Forbidden Props": [
+        "forbidden cheese cave shelves",
+        "VIP freezer locker",
+        "vintage blood shelves"
+      ],
+      "Costume & Prep Wardrobe": [
+        "chef whites mannequin",
+        "knife roll table",
+        "apron locker"
+      ],
+      "Kitchen / Fabrication Galley": [
+        "surgical prep table",
+        "meat printer console",
+        "bone stock vat"
+      ],
+      "Bathroom of Unnecessary Luxury": [
+        "marble bath",
+        "perfumed fountain",
+        "powder room washroom"
+      ],
+      "Private VIP Pod": [
+        "missile-silo dining pod",
+        "banquet table",
+        "sommelier drone dock tower"
+      ],
+      "Observation Lounge & Gift Shop": [
+        "condiment gift shelves",
+        "private label wine shelves",
+        "faux sky window"
+      ],
+      "Security & Compliance Nook": [
+        "gunpoint seating weapon rack",
+        "table manners scanner arch",
+        "walk-in freezer cage"
+      ],
+      "Corporate Sponsorship Shrine": [
+        "star-rating altar",
+        "golden pig statue",
+        "candle chandelier"
+      ],
+      "Secret Cult Adaptation": [
+        "gourmand ghoul altar",
+        "head chef statue",
+        "tallow candle lamp"
+      ],
+      "Power Core & Heart": [
+        "flavor synthesizer turbine",
+        "smoker furnace",
+        "extractor pipes"
+      ],
+      "Maintenance Catwalk & Guts": [
+        "kitchen gantry rail",
+        "extractor fan pipes",
+        "silo tower"
+      ],
+      "Waste & Aftermath Chute": [
+        "bone crates",
+        "grease trap drum",
+        "scraps conveyor"
+      ],
+      "Collapsed & Flooded Wing": [
+        "flooded cellar vat",
+        "collapsed silo hatch",
+        "drowned banquet table"
+      ],
+      "Escape Tunnel That Goes Nowhere": [
+        "food critic's cot bed",
+        "stolen truffle crates",
+        "dumbwaiter hatch"
+      ]
+    }
   },
 
   "overrides": {}

@@ -247,6 +247,24 @@ section('functional rooms');
     }
     check('functional: every room complete and drawable', !bad.length, bad.slice(0, 5).join('; '));
   }
+  // a library's setting pieces (library B's three per room template per setting): every one is placed somewhere
+  // when each room type is generated, crowded, with up to ten seeds
+  for (const name of Object.keys(lib.content || {})) {
+    const Cl = lib.content[name];
+    const want = new Set(Object.entries(Cl.objects || {}).filter(([, o]) => o.home).map(([n]) => n));
+    if (!want.size || quick) continue;
+    const placed = new Set();
+    for (const id of Object.keys(Cl.rooms).sort()) {
+      const own = Cl.rooms[id].setting_pieces || [];
+      for (let t = 0; t < 10 && !own.every((n) => placed.has(n)); t++) {
+        const res = G.generate({ type: types7[t % types7.length], tl: 2, floors: 1, size: 'large', seed: 'pc' + id + t, date: '2000-01-01', library: name, functional: 1, functionPool: [id], density: 'crowded' }, lib, reg);
+        if (!res.ok) continue;
+        for (const f of res.plan.floors) for (const r of f.rooms) if (r.fn && r.fn.id === id) for (const o of Object.values(f.objs)) if (o.room === r.i && o.props && o.props.name) placed.add(o.props.name);
+      }
+    }
+    const missing = [...want].filter((n) => !placed.has(n));
+    check('functional: ' + name + ' every setting piece placed (' + want.size + ')', !missing.length, missing.slice(0, 6).join(', '));
+  }
   // the same brief, twice: the same functional rooms and the same pieces in the same places
   {
     const b = { type: types7[2], tl: 3, floors: 2, size: 'large', seed: 'fn-det', date: '2000-01-01', functional: 0.6, settings: { mode: 'mixed' }, density: 'crowded' };
