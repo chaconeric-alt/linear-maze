@@ -4,6 +4,8 @@ A vertical slice of HaveNot (the JAGS setting) on the next-gen engine. Play it a
 
 You make a scavenger, leave a home bunker, and loot the near-area. A **mission** starts when you step outside and ends when you come back home: that's when kits and charges refill. Death ends the run.
 
+At home your health and weapons stay on the HUD (holstered), and the medical station heals you all the way for 15 credits (about a pack of Placebo). The Inventory (Tab) has a **Valuables** button: everything you've found to sell or keep (executive pens, mugs, crates of ping-pong balls, the ruins' finds), by kind, with how many you have. M opens the floor's map; Ctrl and the mouse wheel zoom the view.
+
 ## Packs
 
 | Pack | What's in it |

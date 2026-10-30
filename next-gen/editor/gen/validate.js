@@ -151,6 +151,14 @@
         if (tg && tr.trigger.type !== 'flag' && !tags.has(tg)) bad('trap trigger tag “' + tg + '” isn’t on the map.', floor);
         for (const ef of tr.effects || []) if (ef.tag && ef.type !== 'flag' && !tags.has(ef.tag) && ef.tag !== 'roachSpawn') bad('trap effect tag “' + ef.tag + '” isn’t on the map.', floor);
       }
+      // furniture never blocks a doorway: from the tile just inside each of a room's doorways, the player can walk to
+      // every other doorway of the room, and to all of its open floor, without leaving it
+      const P = new G.Painter(plan, lib, floor);
+      for (const r of floor.rooms) {
+        const cut = P.cutOff(r, null);
+        if (cut >= 1000) bad('furniture blocks a doorway of ' + (r.name || r.id) + '.', floor);
+        else if (cut > 0) warn('furniture shuts off ' + cut + ' tile' + (cut > 1 ? 's' : '') + ' of ' + (r.name || r.id) + ' from its doorways.', floor);
+      }
       // doorways have floor on two opposite sides
       const cells = floor.layout.cells;
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {

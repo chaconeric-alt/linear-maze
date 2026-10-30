@@ -230,6 +230,15 @@
     .hn-stats { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; font: 400 13px/1.4 var(--font-ui); }
     .hn-stats dt { color: #b8ad98; } .hn-stats dd { margin: 0; }
     .hn-pill { display: inline-block; padding: 2px 7px; margin: 0 4px 4px 0; border: 1px solid rgba(232,162,58,0.45); border-radius: 10px; font: 600 11px/1.3 var(--font-ui); }
+    .hn-vals-sum { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 10px; font: 400 13px/1.4 var(--font-ui); color: #c8bea8; }
+    .hn-vals-sum b { color: var(--brass); font-weight: 700; }
+    .hn-vals { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 8px; margin-bottom: 4px; }
+    .hn-val { position: relative; display: grid; grid-template-columns: 34px 1fr; gap: 9px; align-items: start; padding: 8px 9px; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; background: rgba(255,255,255,0.03); }
+    .hn-val.rare { border-color: rgba(232,162,58,0.55); background: rgba(232,162,58,0.06); }
+    .hn-val .ico { width: 34px; height: 34px; border-radius: 6px; display: grid; place-items: center; font: 700 15px/1 var(--font-ui); color: #111; }
+    .hn-val strong { display: block; font: 600 13px/1.25 var(--font-head); letter-spacing: 0.01em; }
+    .hn-val .muted { display: block; font-size: 11.5px; margin-top: 2px; }
+    .hn-val .n { position: absolute; top: -7px; left: 26px; min-width: 22px; padding: 2px 5px; border-radius: 10px; background: var(--brass); color: #111; font: 700 11px/1.1 var(--font-ui); text-align: center; box-shadow: 0 0 0 2px rgba(9,11,15,0.9); }
     .hn-choice { display: grid; gap: 8px; margin: 8px 0 4px; }
     .hn-choice button { text-align: left; padding: 10px 12px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.12); color: inherit; cursor: pointer; font: inherit; }
     .hn-choice button.on { border-color: var(--brass); background: rgba(232,162,58,0.12); }
@@ -483,7 +492,7 @@
               h('dt', null, 'Credits'), h('dd', null, P.gold + 'c'),
               h('dt', null, 'Boom-Town'), h('dd', null, HN.standingWord(s.standing) + ' (' + s.standing + ')')),
             h('h3', null, 'Controls'),
-            h('p', { class: 'muted' }, 'V melee · G grenade · R reload · H med-kit · C this satchel · E use · Tab gear')));
+            h('p', { class: 'muted' }, 'V melee · G grenade · R reload · H med-kit · C this satchel · E use · Tab gear · M map')));
       } else {
         const obj = Object.entries(HN.OBJECTIVES).filter(([id]) => s.objectives[id]);
         body = h('div', { class: 'hn-cols' },
@@ -498,6 +507,43 @@
     const rerender = () => panel.querySelector('.panel-body').replaceChildren(render());
     panel = LM.ui.open({ kicker: game.floorLabel(), title: 'Satchel', body: render(), wide: true, closeOnTab: false, actions: [{ label: 'Close', primary: true, key: 'C' }] });
   };
+
+  // ------------------------------------------------------------ valuables: the Inventory's view of what you've found
+  /** What you carry to sell, trade or keep: satchel things with no use of their own (pens, mugs, crates of ping-pong
+   *  balls, everything the ruins' rooms give up), not kit, grenades, food or medicine you use. */
+  const NOT_VALUABLE = ['Expendable', 'Utility', 'Add-on'];
+  HN.isValuable = (d) => !!d && !d.use && !d.throw && !d.charges && !NOT_VALUABLE.includes(d.cat);
+  HN.valuables = function (game) {
+    const s = HN.st(game);
+    return Object.keys(s.inv).filter((id) => s.inv[id] > 0 && HN.isValuable(HN.ITEMS[id])).map((id) => ({ id, d: HN.ITEMS[id], n: s.inv[id] }));
+  };
+  HN.openValuables = function (game) {
+    const list = HN.valuables(game);
+    const pieces = list.reduce((a, v) => a + v.n, 0), worth = list.reduce((a, v) => a + v.n * (v.d.value || 0), 0);
+    // by category, the most valuable category first; in each, the most valuable things first
+    const cats = new Map();
+    for (const v of list) (cats.get(v.d.cat) || cats.set(v.d.cat, []).get(v.d.cat)).push(v);
+    const total = (vs) => vs.reduce((a, v) => a + v.n * (v.d.value || 0), 0);
+    const groups = [...cats.entries()].sort((a, b) => total(b[1]) - total(a[1]) || a[0].localeCompare(b[0]));
+    const tile = ({ d, n }) => h('div', { class: 'hn-val' + (d.rarity === 'rare' || d.unique ? ' rare' : ''), title: d.desc || '' },
+      itemIcon(d), n > 1 ? h('span', { class: 'n' }, '×' + n) : null,
+      h('div', null, h('strong', null, d.name),
+        h('span', { class: 'muted' }, (d.value ? d.value + 'c' + (n > 1 ? ' each · ' + n * d.value + 'c' : '') : 'no price') + (d.tier ? ' · ' + d.tier : ''))));
+    const body = h('div', { class: 'hn-panel' },
+      list.length ? h('div', { class: 'hn-vals-sum' }, h('span', null, h('b', null, String(pieces)), pieces === 1 ? ' piece' : ' pieces'), h('span', null, h('b', null, String(list.length)), list.length === 1 ? ' kind' : ' kinds'), h('span', null, 'worth about ', h('b', null, worth + 'c'), ' (vendors pay less)')) : null,
+      list.length ? groups.map(([cat, vs]) => [h('h3', null, cat + ' · ' + vs.reduce((a, v) => a + v.n, 0)), h('div', { class: 'hn-vals' }, vs.sort((a, b) => (b.d.value || 0) - (a.d.value || 0) || a.d.name.localeCompare(b.d.name)).map(tile))])
+        : h('p', { class: 'muted' }, 'Nothing yet. Executive pens, mugs, crates of ping-pong balls: whatever you pick up in the ruins shows here, with how many you have.'));
+    LM.ui.open({ kicker: 'Inventory', title: 'Valuables', body, wide: true, closeOnTab: true, actions: [
+      { label: 'Back to inventory', key: null, onClick: () => { setTimeout(() => LM.ui.showInventory(game), 0); } },
+      { label: 'Satchel', quiet: true, onClick: () => { setTimeout(() => HN.openSatchel(game), 0); } },
+      { label: 'Close', primary: true },
+    ] });
+  };
+  LM.ui.inventoryButtons.push({
+    label: (game) => { const n = HN.valuables(game).reduce((a, v) => a + v.n, 0); return 'Valuables' + (n ? ' (' + n + ')' : ''); },
+    available: (game) => !!HN.st(game).created,
+    open: (game) => HN.openValuables(game),
+  });
 
   // ------------------------------------------------------------ arrival on a floor
   LM.on('levelLoaded', (game) => {

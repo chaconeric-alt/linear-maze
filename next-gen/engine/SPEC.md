@@ -1,6 +1,6 @@
 # The Linear Maze engine — technical spec
 
-Engine 0.7.1 · October 2026
+Engine 0.7.2 · October 2026
 
 The Linear Maze engine runs fast, top-down 2D games in a browser: lit, shadowed floors built from ASCII maps, shooting and dashing, people to talk to, traps, chests and story flags. It knows nothing about any particular game. A game is a folder of **asset packs** (floors, monsters, items, tile sets, furniture, people, stories) plus a **manifest** that names the packs it loads and sets its title screen.
 
@@ -15,6 +15,8 @@ Section numbers match the one-file spec of 0.4 and earlier, so old references st
 **New in 0.5.2:** stairs can lead somewhere of their own, stay locked until a story flag, and land you on a tagged tile (section 5, *Stairs*; a level's `stairs`). Elevators can wait for power and keep a stop locked (section 6.15, `power` and `stops`). Doors can open for a story flag instead of a key: clearance doors (section 6.2). Transmissions: someone speaks over an intercom while the game runs, from a trap or from code (section 6.16; `engine/comms.js`), with a new kind of content, `speakers`. Trap effects a pack defines can describe their settings for the editor (`params`, section 6.8).
 
 **New in 0.5.3:** status effects: timed conditions on the player or an enemy (slowed, chilled, burning, stunned...) that any weapon, projectile, attack, explosion or trap can carry, with resistance from armor and a chip on the HUD (section 6.17; `engine/status.js`, a new kind of content, `statuses`). Named boss bars across the top of the screen, with phases (section 6.5, `bossBar`). More kinds of ammunition than the four built in (section 6.18, `LM.defineAmmo`). Key items: things the player carries from floor to floor and sees in the inventory (section 6.19). An enemy can change its own damage reduction as it fights (`e.armor`) and hear every hit (`onHurt`). `LM.comms.speaking()` says who is talking.
+
+**New in 0.7.2:** the floor's map in the main view (M: `LM.ui.showMap`; the game waits; wheel to zoom about the pointer, drag or WASD and the arrows to move, Home back to you, M, Esc or Close to go back), drawn by the same code as the minimap (`LM.ui.drawMap(g, game, ox, oy, scale, W, H, { big })`, which on the full map names every room you've seen the middle of). The player's own zoom: Ctrl and the mouse wheel (`LM.input.zoomWheel`; the plain wheel still switches weapons) set `renderer.setViewZoom(k)`, 0.5 to 2.5 times the usual view, remembered for each game; the sound moves to N. A peaceful floor can keep health and weapons on the HUD (`showGear: true`, weapons holstered), and a game can add buttons to the Inventory (`LM.ui.inventoryButtons`). Pop-ups can take keys of their own (`onKey(e)`, return true when used).
 
 **New in 0.7.1:** big bodies find their way by their size. A monster wider than a tile paths only through gaps and doors it fits, goes round by a wider way when there is one, and otherwise waits where it fits closest, shooting if it can, instead of shoving at a door it can't get through. Everything that fits a one-tile door moves exactly as before (section 6.26).
 
@@ -447,7 +449,7 @@ An attack type is `{ canStart(e, a, game), start?(e, atk, game), update(e, atk, 
 
 Placement props every item understands: `ox`, `oy` (a nudge in units, for pieces that sit between tiles), `turn` (quarter turns clockwise, `1`–`3`, for any piece that isn't wall-mounted: the engine turns its drawing, its sprite, its glow, its solid box and, for a piece that spans several tiles, its footprint, which keeps its top-left tile where it was placed; `it.box` and `it.boxOff` stay in the piece's own frame and `it.getRect()` gives the turned box) and, on wall-mounted items, `face: 'n' | 's' | 'e' | 'w'` to choose which side of a wall it hangs on (otherwise the first open side, checked south, east, west, north). Office furniture also takes `dir` (the side its front faces; a piece that reads `dir` draws its own front, and the editor uses `dir` for it rather than `turn`) and, for multi-tile pieces, `w` and `h` in tiles anchored at the top-left tile. Drawing code must take randomness from a seeded generator (`U.mulberry32`, `U.hash2`, `info.rnd`), never `Math.random`, or the piece changes every frame.
 
-**Pop-ups.** `LM.ui.open({ kicker, title, body, actions, wide, dismissable, onClose })`. `body` is a DOM node built with `LM.ui.h(tag, attrs, ...children)`. Actions: `{ label, primary, quiet, key: 'E', disabled, close: false, onClick }`; an action closes the pop-up unless `onClick` returns `false`. Helpers: `LM.ui.icons.weapon/armor/item`, `LM.ui.lootIcon`, `LM.ui.weaponStats`, `LM.ui.modList`, `LM.ui.showText(title, text, kicker)`.
+**Pop-ups.** `LM.ui.open({ kicker, title, body, actions, wide, dismissable, onClose, onKey })` (`onKey(e)`: the pop-up's own keys, true when it used one). `body` is a DOM node built with `LM.ui.h(tag, attrs, ...children)`. Actions: `{ label, primary, quiet, key: 'E', disabled, close: false, onClick }`; an action closes the pop-up unless `onClick` returns `false`. Helpers: `LM.ui.icons.weapon/armor/item`, `LM.ui.lootIcon`, `LM.ui.weaponStats`, `LM.ui.modList`, `LM.ui.showText(title, text, kicker)`. A game can add buttons to the bottom of the Inventory (Tab): push `{ label, open(game), available(game), key }` onto `LM.ui.inventoryButtons` (`label` can be a function of the game); the button closes the Inventory and calls `open`, which can offer a way back with `LM.ui.showInventory(game)` (HaveNot's Valuables).
 
 **Loot entries** (chests, `dropLoot`, `grant`): `{ type: 'gold', amount }`, `{ type: 'ammo', ammo, amount }`, `{ type: 'weapon', id }`, `{ type: 'armor', id }`, `{ type: 'key', color }`, `{ type: 'item', id, props }`. A loot table is `{ roll() => [entries] }`; Core has `crate`, `chest-common`, `chest-rich`.
 
@@ -490,6 +492,7 @@ LM.definePack({
       outro: 'Shown instead of the stats when this floor is finished.',
       floorLabel: '14th floor',      // replaces "Floor N" (labelled floors don't take a number)
       armed: false,                  // peaceful floor: no firing, combat HUD hidden, the held gadget is used instead
+      showGear: true,                // with armed: false, health and weapons stay on the HUD (holstered: still no firing)
       loadout: { weapons: [], gadgets: ['phone'], gold: 0 },  // a new run that starts here starts with this
       skip: { label: 'Skip the prologue', effects: [ /* trap effects */ ] },  // optional: offered on the pause screen while on this floor (0.5.11)
       attractPath: [[x, y], ...],    // title-screen camera path, tile coords (the first floor that has one, unless the manifest names one)

@@ -71,10 +71,11 @@
     for (const [id, d] of Object.entries(R.enemies || {})) out.enemies[id] = { name: d.name, hp: d.hp, robot: !!d.robot, boss: !!d.boss, flying: !!d.flying, stationary: !!d.stationary };
     for (const [id, d] of Object.entries(R.items || {})) {
       out.items[id] = { name: d.name, wallMounted: !!d.wallMounted, solid: d.solid === 'rect' ? 'rect' : !!d.solid, interact: !!d.interact };
-      // pieces bigger than a tile (couches, conference tables, the reception desk) anchor at their top-left tile
+      // pieces bigger than a tile (couches, conference tables, the reception desk) anchor at their top-left tile;
+      // so do pieces sized by their props (a functional room's fixtures: props.w × props.h tiles)
       const foot = d.solid === 'rect' && !d.wallMounted ? footprintOf(LM, d, {}) : null;
-      if (foot && (foot[0] > 1 || foot[1] > 1)) {
-        const big = footprintOf(LM, d, { w: 3, h: 3 }) || foot;
+      const big = foot ? footprintOf(LM, d, { w: 3, h: 3 }) || foot : null;
+      if (foot && (foot[0] > 1 || foot[1] > 1 || big[0] > 1 || big[1] > 1)) {
         Object.assign(out.items[id], { foot, footW: big[0] !== foot[0], footH: big[1] !== foot[1] });
       }
     }
@@ -112,12 +113,21 @@
       return null;
     }
   }
-  /** Tiles an item takes, [w, h], anchored at its top-left tile (1 × 1 for almost everything). */
+  /** Tiles an item takes, [w, h], anchored at its top-left tile (1 × 1 for almost everything). A piece turned a
+   *  quarter (props.turn 1 or 3) lies the other way: the engine keeps its top-left tile and swaps its sides. */
   G.footprint = function (reg, item, props) {
     const d = reg && reg.items && reg.items[item];
     if (!d || !d.foot) return [1, 1];
     const p = props || {};
-    return [(d.footW && p.w) || d.foot[0], (d.footH && p.h) || d.foot[1]];
+    const w = (d.footW && p.w) || d.foot[0], h = (d.footH && p.h) || d.foot[1];
+    return G.quarterTurns(p.turn) % 2 === 1 ? [h, w] : [w, h];
+  };
+  /** props.turn as quarter turns clockwise, 0–3 (-1 for none): the engine's Level.quarterTurns. */
+  G.quarterTurns = function (v) {
+    if (v == null || v === '' || !Number.isFinite(+v)) return -1;
+    let n = Math.round(+v);
+    if (Math.abs(n) >= 4) n = Math.round(n / 90);
+    return ((n % 4) + 4) % 4;
   };
 
   // ------------------------------------------------------------ checking a library against a game

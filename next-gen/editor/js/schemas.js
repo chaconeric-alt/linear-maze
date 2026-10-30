@@ -295,6 +295,7 @@
     { key: 'intro', label: 'Shown before this floor', type: 'longtext', world: true },
     { key: 'outro', label: 'Shown when it’s finished', type: 'longtext', world: true },
     { key: 'armed', label: 'Weapons work here', type: 'select', options: [[undefined, 'Yes'], [false, 'No (a peaceful floor; the phone is used instead)']] },
+    { key: 'showGear', label: 'On a peaceful floor, the HUD shows', type: 'select', options: [[undefined, 'No health or weapons'], [true, 'Health and weapons (holstered)']] },
     { key: 'loadout', label: 'A new run that starts here gets', type: 'object', fields: { weapons: 'ids:weapons', gadgets: 'ids:gadgets', gold: 'number' } },
   ];
 
