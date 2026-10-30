@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8d0d8"/><stop offset="0.5" stop-color="#6a727a"/><stop offset="1" stop-color="#2a2e34"/></linearGradient>
+    <linearGradient id="olive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8a868"/><stop offset="0.55" stop-color="#5a5a2a"/><stop offset="1" stop-color="#2a2a10"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe8a0"/><stop offset="0.5" stop-color="#c8962a"/><stop offset="1" stop-color="#5a3a06"/></linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#c8bca0"/></linearGradient>
+    <radialGradient id="glass" cx="0.35" cy="0.3" r="0.7"><stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="0.3" stop-color="#ffffff" stop-opacity="0.15"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- The Prototype Capacitor: an orange cell with wires and a gauge. -->
+  <rect x="10" y="22" width="44" height="22" rx="10" fill="#ff8a2a" stroke="#5a2a06" stroke-width="1.8"/>
+  <path d="M16 33 h32" stroke="#ffe0a0" stroke-width="2.4"/>
+  <circle cx="32" cy="33" r="6" fill="#1a1a1a" stroke="#c8d0d8" stroke-width="1.4"/><path d="M32 33 l3 -4" stroke="#ff3a3a" stroke-width="1.4"/>
+  <path d="M10 30 Q2 26 6 16 M54 30 Q62 26 58 16" stroke="#e8c030" stroke-width="2.4" fill="none"/>
+  <circle cx="32" cy="32" r="0.01" opacity="0"/>
+</svg>

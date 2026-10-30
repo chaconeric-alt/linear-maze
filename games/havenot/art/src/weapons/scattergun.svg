@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="48" viewBox="0 0 160 48">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.45" stop-color="#4a525a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a6068"/><stop offset="0.5" stop-color="#262a30"/><stop offset="1" stop-color="#0e1012"/></linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8703a"/><stop offset="0.5" stop-color="#6a4220"/><stop offset="1" stop-color="#3a220e"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="0.5" stop-color="#c8962a"/><stop offset="1" stop-color="#6a4a0a"/></linearGradient>
+    <linearGradient id="olive" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a9a5a"/><stop offset="0.5" stop-color="#5a5a2a"/><stop offset="1" stop-color="#2a2a10"/></linearGradient>
+  </defs>
+  <g transform="translate(12 24) scale(6)" stroke-linejoin="round">
+    <!-- Pump Scattergun: a scarred wooden stock, a steel receiver, barrel over magazine tube, a wooden pump. -->
+    <path d="M-1.6 -1.8 L6 -1.6 L6 1.6 L-1.6 2.2 Q-2 0 -1.6 -1.8 Z" fill="url(#wood)" stroke="#1a0e06" stroke-width="0.2"/>
+    <path d="M0 -0.8 l4 0.4 M0.4 1 l3 -0.3" stroke="#3a220e" stroke-width="0.15"/>
+    <rect x="6" y="-2" width="5.4" height="4" rx="0.5" fill="url(#dark)" stroke="#0e1012" stroke-width="0.2"/>
+    <rect x="11" y="-1.8" width="11" height="1.6" rx="0.6" fill="url(#steel)" stroke="#0e1012" stroke-width="0.2"/>
+    <rect x="11" y="0.2" width="9" height="1.5" rx="0.6" fill="url(#steel)" stroke="#0e1012" stroke-width="0.2"/>
+    <rect x="13.4" y="-2.2" width="4.4" height="4.4" rx="0.8" fill="url(#wood)" stroke="#1a0e06" stroke-width="0.2"/>
+    <path d="M14 -2.2 v4.4 M15 -2.2 v4.4 M16 -2.2 v4.4 M17 -2.2 v4.4" stroke="#3a220e" stroke-width="0.15"/>
+    <circle cx="21.6" cy="-1" r="0.5" fill="#0a0a0a"/>
+    <rect x="7" y="-0.6" width="2.6" height="1.2" fill="#c8962a" opacity="0.8"/>
+  </g>
+  <circle cx="80" cy="24" r="0.01" opacity="0"/>
+</svg>

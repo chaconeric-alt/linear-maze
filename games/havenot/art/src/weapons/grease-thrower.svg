@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="48" viewBox="0 0 160 48">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.45" stop-color="#4a525a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a6068"/><stop offset="0.5" stop-color="#262a30"/><stop offset="1" stop-color="#0e1012"/></linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8703a"/><stop offset="0.5" stop-color="#6a4220"/><stop offset="1" stop-color="#3a220e"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="0.5" stop-color="#c8962a"/><stop offset="1" stop-color="#6a4a0a"/></linearGradient>
+    <linearGradient id="olive" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a9a5a"/><stop offset="0.5" stop-color="#5a5a2a"/><stop offset="1" stop-color="#2a2a10"/></linearGradient>
+  </defs>
+  <g transform="translate(12 24) scale(6)" stroke-linejoin="round">
+    <!-- Grease Thrower: a long olive nozzle, a pressure tank slung alongside, a hose looping back to the pack,
+         a pilot light burning green at the tip. -->
+    <path d="M8 3 Q2 4.6 -1.6 3.6" stroke="#1a1a10" stroke-width="0.9" fill="none"/>
+    <rect x="1" y="-1.6" width="20" height="3.2" rx="0.6" fill="url(#olive)" stroke="#12120a" stroke-width="0.2"/>
+    <rect x="5" y="1.4" width="9" height="2.6" rx="1.3" fill="url(#olive)" stroke="#12120a" stroke-width="0.2"/>
+    <path d="M6 2.2 h7" stroke="#c8c870" stroke-width="0.25"/>
+    <rect x="10" y="-2.2" width="1.4" height="4.4" fill="url(#steel)"/><rect x="16" y="-2.2" width="1.4" height="4.4" fill="url(#steel)"/>
+    <path d="M21 -1.2 L23.6 -1.6 L23.6 1.6 L21 1.2 Z" fill="url(#steel)" stroke="#0a0a0a" stroke-width="0.15"/>
+    <circle cx="23.2" cy="-1.8" r="0.6" fill="#b8ff4a"/><circle cx="23.2" cy="-1.8" r="0.25" fill="#ffffff"/>
+    <path d="M3 -1.6 q0 -1 1 -1.2" stroke="#7ac81a" stroke-width="0.3" fill="none"/>
+  </g>
+  <circle cx="80" cy="24" r="0.01" opacity="0"/>
+</svg>

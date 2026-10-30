@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="48" viewBox="0 0 160 48">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa2aa"/><stop offset="0.45" stop-color="#4a525a"/><stop offset="1" stop-color="#1a1e22"/></linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a6068"/><stop offset="0.5" stop-color="#262a30"/><stop offset="1" stop-color="#0e1012"/></linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8703a"/><stop offset="0.5" stop-color="#6a4220"/><stop offset="1" stop-color="#3a220e"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="0.5" stop-color="#c8962a"/><stop offset="1" stop-color="#6a4a0a"/></linearGradient>
+    <linearGradient id="olive" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a9a5a"/><stop offset="0.5" stop-color="#5a5a2a"/><stop offset="1" stop-color="#2a2a10"/></linearGradient>
+  </defs>
+  <g transform="translate(12 24) scale(6)" stroke-linejoin="round">
+    <!-- Security Arc Carbine: agency-grey, a yellow battery pack, finned coils, two prongs at the muzzle with a
+         spark between them. -->
+    <rect x="3" y="-2.4" width="15" height="4.8" rx="1" fill="url(#dark)" stroke="#0e1012" stroke-width="0.2"/>
+    <rect x="3.6" y="-1" width="3.6" height="2" rx="0.4" fill="#e0a830" stroke="#5a3a06" stroke-width="0.15"/>
+    <g fill="#5a626a"><rect x="9" y="-3.2" width="0.7" height="6.4"/><rect x="10.4" y="-3.2" width="0.7" height="6.4"/><rect x="11.8" y="-3.2" width="0.7" height="6.4"/><rect x="13.2" y="-3.2" width="0.7" height="6.4"/></g>
+    <rect x="9" y="-3.3" width="6" height="0.6" fill="#9fd8ff"/><rect x="9" y="2.7" width="6" height="0.6" fill="#9fd8ff"/>
+    <path d="M18 -1.8 L21.4 -1.4 L21.4 -0.6 L18 -0.6 Z M18 1.8 L21.4 1.4 L21.4 0.6 L18 0.6 Z" fill="url(#steel)" stroke="#0e1012" stroke-width="0.15"/>
+    <path d="M21 -0.6 L20.4 0 L21.2 0.2 L20.6 0.6" stroke="#dff4ff" stroke-width="0.2" fill="none"/>
+    <rect x="15" y="-0.7" width="2.4" height="1.4" fill="#ff3a3a"/>
+  </g>
+  <circle cx="80" cy="24" r="0.01" opacity="0"/>
+</svg>

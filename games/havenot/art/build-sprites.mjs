@@ -106,6 +106,11 @@ Object.assign(PIECES, {
   // the player: layers drawn over the engine's scavenger (packs/hn-rules/look.js); greys on white are tinted at play
   // people (packs/hn-sites/person.js): a paper doll for LM.gfx.person, its greys tinted from each one's look
   person: { kind: 'person', size: 25.6, w: 64, h: 64, layers: ['shirt', 'sleeve', 'hand', 'blazer', 'tie', 'lanyard', 'card', 'head', 'hair-short', 'hair-buzz', 'hair-long', 'hair-ponytail', 'hair-bun', 'hair-curly', 'hair-bald', 'glasses', 'headset'] },
+  // the guns in hand (hn-rules/weaponart.js), drawn along the aim in the player's own units: x -2..24.67, y -4..4
+  weapons: { kind: 'weapons', size: 26.67, w: 160, h: 48, layers: ['handgun', 'scattergun', 'gauss', 'gauss-cap', 'plasma-musket', 'arc-carbine', 'soot-carbine', 'fouler', 'grease-thrower'] },
+  // icons for the satchel and things on the ground (hn-rules/iconart.js): one per item where it has its own, else
+  // its category's ('cat-' and the category)
+  icons: { kind: 'icons', size: 12, w: 64, h: 64, layers: ['grenade', 'slime-grenade', 'egg-grenade', 'fuel-cell', 'fuel-cell-big', 'sprocket', 'health-charge', 'health-pak', 'anti-tox', 'cookies', 'hypno-tab', 'pickled-eggs', 'capacitor', 'cat-medical', 'cat-food', 'cat-salvage', 'cat-valuable', 'cat-component', 'cat-military', 'cat-access', 'cat-data', 'cat-junk', 'cat-information', 'cat-utility', 'cat-sample', 'cat-oddity', 'cat-collectible', 'cat-wonder'] },
   scavenger: { kind: 'player', size: 25.6, w: 64, h: 64, layers: ['torso', 'arms', 'hands', 'gear', 'hair', 'helmet', 'head-human', 'head-hyena', 'tail-hyena', 'head-mutant', 'chitin', 'quills', 'arm3'] },
 });
 // cracks, a split and shards for a piece that doesn't give its own: seeded by its id, inside its middle
