@@ -1332,5 +1332,39 @@
     "names": [],
     "kind": "places",
     "size": 320
+  },
+  "posters": {
+    "file": "posters.png",
+    "w": 200,
+    "h": 280,
+    "states": [
+      "synergy",
+      "watched",
+      "want-more",
+      "obedience",
+      "hustle",
+      "safety",
+      "enoch",
+      "egg",
+      "slogan"
+    ],
+    "names": [],
+    "kind": "posters",
+    "size": 200
+  },
+  "ads": {
+    "file": "ads.png",
+    "w": 320,
+    "h": 180,
+    "states": [
+      "fizz",
+      "hypno",
+      "tired",
+      "vert",
+      "noticed"
+    ],
+    "names": [],
+    "kind": "ads",
+    "size": 320
   }
 }
