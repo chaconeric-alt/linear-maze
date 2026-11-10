@@ -152,6 +152,43 @@ Projectile: `speed`, `radius`, `color`, `light`, `gravity`, `kind`, `blast: { ra
 
 An actor with `"dormant_clip": "<clip>"` plays that clip instead of idle until something wakes it (the Deadbot stands switched off; give it a short `sight` and `hearing`). Clips beyond the standard five are simply extra NLA tracks in the `.glb`.
 
+#### Behaviors that go with a personality
+
+Three things an actor def can switch on. They are engine features, so any model can use them.
+
+**Off duty** (`lounge`). What it does until something wakes it, in place of standing idle:
+
+```json
+"lounge": [{"clip": "lean", "at": "wall"},
+           {"clip": "smoke", "at": "wall", "smoke": true, "every": 6},
+           {"clip": "sit", "at": "floor", "drop": -0.6}],
+"startle_time": 0.6, "startle_text": "I WAS ON BREAK"
+```
+
+One entry is picked when the level is built; a level entry can name it (`{"actor": "monoid", "lounge": "sit"}`, or `"lounge": "none"`). `"at": "wall"` backs the actor up against a wall of its cell (`gap` = how far off it), facing the room; `face` on the level entry chooses the wall. `drop` moves the part that can be shot to where the body now is. `smoke` puffs every `every` seconds. When it wakes it plays the clip `startle` for `startle_time` before it does anything: that is the player's free shot.
+
+**Pounce** (an attack of `"type": "pounce"`):
+
+```json
+{"type": "pounce", "range": 12, "min_range": 4, "windup": 0.5, "clip_windup": 0.3, "speed": 18,
+ "damage": 20, "knock": 9, "recover": 0.35, "recover_miss": 1.0, "cooldown": 5}
+```
+
+It gathers itself for `windup` (the tell: the first `clip_windup` seconds of the clip `pounce`, stretched to fit), is then thrown at where the player will be, and cannot steer. The end of the clip is held in the air. A hit does `damage`; a miss leaves it sprawled for `recover_miss`. It works from a wall or the ceiling too.
+
+**Walls and ceilings** (`climb`):
+
+```json
+"climb": {"speed": 7.5, "ceiling": true, "perch": 0.55, "chance": 0.6, "min_dist": 6,
+          "drop_at": 1.8, "drop_damage": 5, "off": 0.3}
+```
+
+`perch`: how often one starts a level waiting on a wall (head down) or the ceiling; a level entry can say `"perch": "wall" | "ceiling" | "floor"`. Awake on a wall it runs up to the ceiling or down to the floor; on the ceiling it follows the route it would have walked and lets go above the player (`drop_at`, metres), at a door, or where the ceiling changes height. `chance`: how often, hunting on foot and still `min_dist` away, it takes to the nearest wall instead. Shooting one usually knocks it off. With a pounce attack it will jump at the player straight off the wall. The walk clip is used on every surface; `off` is how far from the surface its feet are.
+
+#### Models from elsewhere (Tripo, Meshy, hand-made)
+
+Any rigged `.glb` in `actors/` works. `python3 tools/inspect_model.py actors/thing.glb` reports size, triangles, textures, skeleton and clips, and lists what needs fixing. Def keys that adapt a foreign model: `"own_materials": true` (keep its textures; do not look its material names up in the kit), `"scale"`, `"model_yaw"` (degrees, if it faces the wrong way), `"model_y"` (if its feet are not at 0), `"clips": {"walk": "TheirClipName", ...}` (the engine's names are idle, walk, attack, hurt, die, and optionally pounce, startle, and whatever `lounge` and `dormant_clip` name). Idle, walk and lounge clips are looped by the engine whether or not the file says so.
+
 ### 3.4 Items (`defs`: `items`)
 
 `name`, `kind` (`treasure` with `value`; `health`, `armor` with `amount`; `ammo` with `ammo`, `amount`; `key` with `color`; `weapon` with `weapon`), `model`, `scale`, `glow`, `sound`, `effects`, `flag`. Item models are centred on their own middle.
@@ -244,7 +281,7 @@ A generator is a script in `generators/` with one function, listed in `game.json
 func generate(seed: int, params: Dictionary) -> Dictionary   # a level dictionary, as in section 4
 ```
 
-`params` is the game's `generator_params`. `game.json` may also hold `generator_themes`: named sets of overrides (`title`, `place`, `kit`, `corridor`, `styles`, `doors`, `props`, `style_props`, `actors`, `boss`, `exit_prop`, `size`, `rooms`). Each theme gets its own title-screen entry and runs as `--level=gen:<name>:<theme>`. `style_props` maps a room style to the furniture that belongs in it, so a mixed level puts bunks in barracks and coffins in chapels. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `rooms.gd` (rooms, L-shaped corridors, doors on thresholds only (placed after all carving, so no door is ever left standing in a widened opening), scanner arches inside some doorways, wall lockers with loot, nothing, roaches or a charge, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
+`params` is the game's `generator_params`. `game.json` may also hold `generator_themes`: named sets of overrides (`title`, `place`, `kit`, `corridor`, `styles`, `doors`, `props`, `style_props`, `actors`, `boss`, `exit_prop`, `size`, `rooms`). Each theme gets its own title-screen entry and runs as `--level=gen:<name>:<theme>`. `style_props` maps a room style to the furniture that belongs in it, so a mixed level puts bunks in barracks and coffins in chapels. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `--calm` stops anything noticing the player (for looking); `--trace` prints every actor's change of state. `rooms.gd` (rooms, L-shaped corridors, doors on thresholds only (placed after all carving, so no door is ever left standing in a widened opening), scanner arches inside some doorways, wall lockers with loot, nothing, roaches or a charge, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
 
 ## 6. Recipes
 

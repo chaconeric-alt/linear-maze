@@ -2,13 +2,13 @@
  "actors": {
   "roach": {
    "name": "Gladiator Roach",
-   "model": "actors/roach.glb",
+   "model": "actors/roach_tripo.glb",
    "hp": 24,
    "speed": 7.5,
-   "accel": 40,
-   "radius": 0.55,
-   "height": 0.8,
-   "eye": 0.5,
+   "accel": 70,
+   "radius": 0.6,
+   "height": 1.1,
+   "eye": 0.8,
    "sight": 22,
    "behavior": "chaser",
    "blood": [
@@ -16,22 +16,61 @@
     0.9,
     0.2
    ],
-   "walk_rate": 1.4,
+   "walk_rate": 1.0,
    "attacks": [
     {
      "type": "melee",
      "damage": 7,
-     "range": 1.7,
-     "windup": 0.22,
-     "recover": 0.28,
+     "range": 2.0,
+     "windup": 0.24,
+     "recover": 0.26,
      "cooldown": 0.8,
      "knock": 2.0,
-     "sound": "bite"
+     "sound": "swing"
+    },
+    {
+     "type": "pounce",
+     "range": 8.5,
+     "min_range": 3.2,
+     "windup": 0.32,
+     "speed": 17,
+     "damage": 9,
+     "knock": 4.0,
+     "recover": 0.25,
+     "recover_miss": 0.7,
+     "cooldown": 4.0,
+     "sound": "chitter",
+     "hit_sound": "bite"
     }
    ],
    "sounds": {
     "alert": "chitter",
     "die": "squish"
+   },
+   "climb": {
+    "speed": 7.5,
+    "ceiling": true,
+    "perch": 0.55,
+    "chance": 0.6,
+    "min_dist": 6,
+    "drop_at": 1.8,
+    "drop_damage": 5
+   },
+   "own_materials": true,
+   "scale": 1.8,
+   "model_yaw": -90,
+   "gait": {
+    "burst": [
+     0.25,
+     0.7
+    ],
+    "pause": [
+     0.05,
+     0.18
+    ],
+    "fast": 1.3,
+    "weave": 0.35,
+    "weave_rate": 9
    }
   },
   "custodian": {
@@ -97,16 +136,14 @@
   },
   "monoid": {
    "name": "Monoid",
-   "model": "actors/monoid.glb",
+   "model": "actors/monoid_tripo.glb",
    "hp": 90,
-   "speed": 4.6,
-   "accel": 14,
-   "radius": 0.6,
-   "height": 1.2,
-   "center": 1.6,
-   "eye": 1.6,
-   "fly": true,
-   "sight": 30,
+   "speed": 3.8,
+   "accel": 12,
+   "radius": 0.45,
+   "height": 2.1,
+   "eye": 1.95,
+   "sight": 22,
    "behavior": "skirmisher",
    "keep": [
     7,
@@ -131,7 +168,7 @@
      "recover": 0.35,
      "cooldown": 2.3,
      "range": 28,
-     "muzzle": 1.6,
+     "muzzle": 1.95,
      "spread": 1.5,
      "lead": 0.5,
      "sound": "bolt"
@@ -158,7 +195,31 @@
    "sounds": {
     "alert": "ping",
     "die": "crash"
-   }
+   },
+   "lounge": [
+    {
+     "clip": "lean",
+     "at": "wall",
+     "gap": 0.0
+    },
+    {
+     "clip": "smoke",
+     "at": "wall",
+     "gap": 0.0,
+     "smoke": true,
+     "every": 6.0
+    },
+    {
+     "clip": "sit",
+     "at": "floor",
+     "drop": -0.5
+    }
+   ],
+   "startle_time": 0.6,
+   "startle_text": "I WAS ON BREAK",
+   "own_materials": true,
+   "scale": 2.15,
+   "walk_rate": 1.0
   },
   "glorexx": {
    "name": "Glorexx",
@@ -178,6 +239,21 @@
     0.15
    ],
    "attacks": [
+    {
+     "type": "pounce",
+     "range": 12,
+     "min_range": 4.0,
+     "windup": 0.5,
+     "clip_windup": 0.3,
+     "speed": 18,
+     "damage": 20,
+     "knock": 9.0,
+     "recover": 0.35,
+     "recover_miss": 1.0,
+     "cooldown": 5.0,
+     "sound": "growl",
+     "hit_sound": "bite"
+    },
     {
      "type": "melee",
      "damage": 17,
@@ -205,6 +281,16 @@
    "sounds": {
     "alert": "growl",
     "die": "squish"
+   },
+   "climb": {
+    "speed": 5.0,
+    "ceiling": true,
+    "perch": 0.45,
+    "chance": 0.35,
+    "min_dist": 9,
+    "drop_at": 2.0,
+    "drop_damage": 10,
+    "off": 0.35
    }
   },
   "turret": {

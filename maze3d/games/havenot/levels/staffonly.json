@@ -1,0 +1,252 @@
+{
+ "id": "staffonly",
+ "name": "Staff Only (behaviors: lounging, climbing, pouncing)",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "A break room. Next door, something on the walls.",
+ "ambient_energy": 0.6,
+ "legend": {
+  "A": {
+   "door": "door_split"
+  }
+ },
+ "map": [
+  "#######################",
+  "#.........#...........#",
+  "#.........#...........#",
+  "#.........#...........#",
+  "#.........A...........#",
+  "#.........#...........#",
+  "#.........#...........#",
+  "#.........#...........#",
+  "#######################"
+ ],
+ "rooms": [
+  {
+   "name": "Break Room",
+   "rect": [
+    1,
+    1,
+    9,
+    7
+   ],
+   "style": "white_hall",
+   "height": 1
+  },
+  {
+   "name": "The Nest",
+   "rect": [
+    11,
+    1,
+    11,
+    7
+   ],
+   "style": "ruin",
+   "height": 2
+  }
+ ],
+ "things": [
+  {
+   "start": true,
+   "face": "e",
+   "at": [
+    1,
+    4
+   ]
+  },
+  {
+   "sign": "STAFF ONLY\nbreaks are 15 minutes",
+   "face": "s",
+   "color": [
+    0.4,
+    0.9,
+    1.0
+   ],
+   "size": 56,
+   "y": 3.0,
+   "at": [
+    5,
+    1
+   ]
+  },
+  {
+   "actor": "monoid",
+   "at": [
+    3,
+    1
+   ],
+   "lounge": "smoke",
+   "face": "s"
+  },
+  {
+   "actor": "monoid",
+   "at": [
+    6,
+    1
+   ],
+   "lounge": "lean",
+   "face": "s"
+  },
+  {
+   "actor": "monoid",
+   "at": [
+    7,
+    6
+   ],
+   "lounge": "sit",
+   "face": "w"
+  },
+  {
+   "prop": "ag_sofa",
+   "at": [
+    4,
+    7
+   ],
+   "blocks": false,
+   "turn": 180
+  },
+  {
+   "prop": "crate",
+   "at": [
+    9,
+    7
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "barrel",
+   "at": [
+    9,
+    1
+   ],
+   "blocks": false
+  },
+  {
+   "item": "scattergun",
+   "at": [
+    2,
+    5
+   ]
+  },
+  {
+   "item": "shells",
+   "at": [
+    2,
+    6
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    8,
+    4
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    13,
+    1
+   ],
+   "perch": "wall"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    16,
+    1
+   ],
+   "perch": "wall"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    15,
+    3
+   ],
+   "perch": "ceiling"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    18,
+    5
+   ],
+   "perch": "ceiling"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    21,
+    3
+   ],
+   "perch": "wall"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    14,
+    6
+   ],
+   "perch": "floor"
+  },
+  {
+   "actor": "glorexx",
+   "at": [
+    19,
+    1
+   ],
+   "perch": "wall"
+  },
+  {
+   "actor": "glorexx",
+   "at": [
+    20,
+    6
+   ],
+   "perch": "floor",
+   "face": "w"
+  },
+  {
+   "prop": "nest",
+   "at": [
+    21,
+    7
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "debris",
+   "at": [
+    12,
+    7
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "holo_table",
+   "at": [
+    21,
+    1
+   ],
+   "blocks": false,
+   "use": {
+    "type": "effects",
+    "prompt": "Clock out",
+    "effects": [
+     {
+      "type": "end",
+      "title": "Clocked out",
+      "text": "Nobody saw you leave."
+     }
+    ]
+   }
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Interrupt the break. Then look up."
+  }
+ ],
+ "triggers": []
+}

@@ -43,6 +43,8 @@ Off the Concourse, south: the **Brand Experience Suite**, the Agency's showroom,
 
 The title screen also offers random installations in each place: mixed, The Works, The Bunker, The Crypt, and "All the way down", which uses every kit and every monster and keeps the Princess in the last room.
 
+**Staff Only** is a third small level for behaviors: a break room where three Monoids lean, smoke and sit until you interrupt them, and next door a nest where Roaches and a Glorexx wait on the walls and ceiling, cross the ceiling to get above you, and pounce.
+
 ## About the art
 
 Every model was written as a script and exported to glTF, so there is real geometry, real skeletons and real animation clips, but it is code-built art: clean, a bit blocky, and consistent. It is meant as a complete starting set to replace piece by piece. Any `.glb` can be opened in Blender, reworked or replaced with a hand-made model, and the game picks it up as long as it keeps the conventions in `SPEC.md` (size, facing, material names, clip names). There are no textures: surfaces get their wear from shaders (`engine/shaders/`), so a new model looks right as soon as it uses the kit's material names.

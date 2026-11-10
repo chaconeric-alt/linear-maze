@@ -2,7 +2,7 @@
  "id": "havenot",
  "title": "HaveNot",
  "tagline": "The old world could make anything. Go and find out what it left lying around.",
- "version": "0.3.0",
+ "version": "0.4.0",
  "theme": {
   "accent": [
    0.91,
@@ -26,7 +26,8 @@
  ],
  "levels": [
   "levels/deepworks.json",
-  "levels/menagerie.json"
+  "levels/menagerie.json",
+  "levels/staffonly.json"
  ],
  "generators": [
   "rooms"
@@ -166,7 +167,8 @@
  "start": "deepworks",
  "menu": [
   "deepworks",
-  "menagerie"
+  "menagerie",
+  "staffonly"
  ],
  "player": {
   "hp": 100,

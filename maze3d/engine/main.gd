@@ -70,6 +70,7 @@ func _load(id: String, _attract: bool) -> void:
 		level.queue_free()
 		remove_child(level)
 	Game.reset()
+	Game.calm = _args.has("calm")
 	var data: Dictionary
 	if id.begins_with("gen:"):
 		var bits := id.substr(4).split(":")        # gen:<generator>[:<theme>]
@@ -118,6 +119,13 @@ func _process(_dt: float) -> void:
 			player._pitch = deg_to_rad(float(_args["pitch"]))
 		if _args.has("nohud"):
 			hud.visible = false
+	if _args.has("trace") and level:                  # --trace: print whenever an actor changes what it is doing
+		for a in level.actors:
+			if is_instance_valid(a):
+				var st := "surf=%d awake=%s atk=%s leap=%s stunned=%s dead=%s" % [a._surf, a.awake, (a._atk.get("type", "melee") if a._atk != null else "-"), a._leap, a._stun > 0.0, a.dead]
+				if a.get_meta("trace", "") != st:
+					a.set_meta("trace", st)
+					print("[%.2fs] %s#%d %s at (%.1f %.1f %.1f) player hp=%d" % [Game.stats["time"], a.d.get("name", "?"), a.get_index(), st, a.position.x, a.position.y, a.position.z, player.hp])
 	if _args.has("shot") and _frame == int(_args.get("frames", "40")):
 		var img := get_viewport().get_texture().get_image()
 		img.save_png(_args["shot"])

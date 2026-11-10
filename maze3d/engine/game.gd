@@ -7,6 +7,7 @@ signal toast(text: String, kind: String)
 signal changed            # something the HUD shows changed
 signal ended(info: Dictionary)
 
+var calm := false            # --calm: nothing notices the player (for looking at things)
 var player: Node3D = null
 var level: Node3D = null
 var hud: Node = null
