@@ -1,0 +1,175 @@
+{
+ "name": "The Works (Greasy Bolt Hole)",
+ "about": "Under the Greasy Bolt Hole: riveted iron, sooty brick, furnace mouths and vats of something that glows. Where the Eggbots are made. Borrows the high-tech kit's items and machines.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 1.0,
+ "styles": {
+  "foundry": {
+   "floor": [
+    [
+     "floor_wk_plate",
+     5
+    ],
+    [
+     "floor_wk_drain",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_wk_brick",
+     4
+    ],
+    [
+     "wall_wk_plate",
+     2
+    ],
+    [
+     "wall_wk_furnace",
+     2
+    ],
+    [
+     "wall_wk_gears",
+     1
+    ],
+    [
+     "wall_wk_chains",
+     1
+    ],
+    [
+     "wall_wk_pipes",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_wk_brick",
+     3
+    ],
+    [
+     "wall_wk_plate",
+     2
+    ],
+    [
+     "wall_wk_pipes",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_wk_beams",
+     4
+    ],
+    [
+     "ceil_wk_hoist",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_wk_lamp",
+    "every": 3,
+    "flicker": 0.15
+   }
+  },
+  "greaseway": {
+   "floor": [
+    [
+     "floor_wk_plate",
+     4
+    ],
+    [
+     "floor_wk_belt",
+     1
+    ],
+    [
+     "floor_wk_drain",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_wk_plate",
+     4
+    ],
+    [
+     "wall_wk_pipes",
+     3
+    ],
+    [
+     "wall_wk_brick",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_wk_beams",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_wk_lamp",
+    "every": 3,
+    "flicker": 0.3
+   }
+  },
+  "assembly": {
+   "floor": [
+    [
+     "floor_wk_belt",
+     3
+    ],
+    [
+     "floor_wk_plate",
+     3
+    ]
+   ],
+   "wall": [
+    [
+     "wall_wk_plate",
+     3
+    ],
+    [
+     "wall_wk_gears",
+     3
+    ],
+    [
+     "wall_wk_chains",
+     2
+    ],
+    [
+     "wall_wk_pipes",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_wk_plate",
+     2
+    ],
+    [
+     "wall_wk_pipes",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_wk_beams",
+     2
+    ],
+    [
+     "ceil_wk_hoist",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_wk_lamp",
+    "every": 2,
+    "flicker": 0.1
+   }
+  }
+ }
+}

@@ -1,0 +1,208 @@
+{
+ "models": {
+  "bk_bunk": {
+   "model": "models/bk_bunk.glb",
+   "solid": [
+    2.1,
+    1.9,
+    1.0
+   ],
+   "type": "prop"
+  },
+  "bk_console": {
+   "light": {
+    "at": [
+     0,
+     1.5,
+     0.8
+    ],
+    "color": [
+     1.0,
+     0.85,
+     0.5
+    ],
+    "energy": 0.6,
+    "range": 4
+   },
+   "model": "models/bk_console.glb",
+   "screen": {
+    "at": [
+     -0.6,
+     1.5,
+     0.26
+    ],
+    "size": [
+     0.74,
+     0.5
+    ],
+    "tilt": 0
+   },
+   "solid": [
+    2.2,
+    1.9,
+    0.9
+   ],
+   "type": "prop"
+  },
+  "bk_crates": {
+   "model": "models/bk_crates.glb",
+   "solid": [
+    2.1,
+    1.0,
+    0.8
+   ],
+   "type": "prop"
+  },
+  "bk_generator": {
+   "model": "models/bk_generator.glb",
+   "solid": [
+    2.4,
+    1.5,
+    1.1
+   ],
+   "spin": {
+    "spin0": 300
+   },
+   "type": "prop"
+  },
+  "bk_shower": {
+   "light": {
+    "at": [
+     0,
+     2.2,
+     0
+    ],
+    "color": [
+     0.3,
+     0.8,
+     1.0
+    ],
+    "energy": 0.6,
+    "range": 4
+   },
+   "model": "models/bk_shower.glb",
+   "solids": [
+    [
+     0,
+     1.4,
+     -0.88,
+     0.5,
+     2.8,
+     0.2
+    ]
+   ],
+   "type": "prop"
+  },
+  "bk_table": {
+   "model": "models/bk_table.glb",
+   "solid": [
+    2.2,
+    0.9,
+    1.8
+   ],
+   "type": "prop"
+  },
+  "door_bk_blast": {
+   "model": "models/door_bk_blast.glb",
+   "parts": {
+    "slab": {
+     "rot_axis": [
+      0,
+      1,
+      0
+     ],
+     "rot_deg": -96
+    }
+   },
+   "sound": "door_vault",
+   "time": 1.0,
+   "type": "door"
+  }
+ },
+ "tiles": {
+  "ceil_bk_bulb": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.6,
+     0
+    ],
+    "color": [
+     1.0,
+     0.85,
+     0.62
+    ],
+    "energy": 3.0,
+    "range": 10
+   },
+   "model": "models/ceil_bk_bulb.glb"
+  },
+  "ceil_bk_slab": {
+   "kind": "ceiling",
+   "model": "models/ceil_bk_slab.glb"
+  },
+  "ceil_bk_vents": {
+   "kind": "ceiling",
+   "model": "models/ceil_bk_vents.glb"
+  },
+  "floor_bk_duck": {
+   "kind": "floor",
+   "model": "models/floor_bk_duck.glb"
+  },
+  "floor_bk_hatch": {
+   "kind": "floor",
+   "model": "models/floor_bk_hatch.glb"
+  },
+  "floor_bk_slab": {
+   "kind": "floor",
+   "model": "models/floor_bk_slab.glb"
+  },
+  "wall_bk_concrete": {
+   "kind": "wall",
+   "model": "models/wall_bk_concrete.glb"
+  },
+  "wall_bk_concrete2": {
+   "kind": "wall",
+   "model": "models/wall_bk_concrete2.glb"
+  },
+  "wall_bk_conduit": {
+   "kind": "wall",
+   "model": "models/wall_bk_conduit.glb"
+  },
+  "wall_bk_cracked": {
+   "kind": "wall",
+   "model": "models/wall_bk_cracked.glb"
+  },
+  "wall_bk_lamp": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     3.0,
+     0.6
+    ],
+    "color": [
+     1.0,
+     0.8,
+     0.5
+    ],
+    "energy": 1.2,
+    "range": 6
+   },
+   "model": "models/wall_bk_lamp.glb"
+  },
+  "wall_bk_lockers": {
+   "kind": "wall",
+   "model": "models/wall_bk_lockers.glb"
+  },
+  "wall_bk_map": {
+   "kind": "wall",
+   "model": "models/wall_bk_map.glb"
+  },
+  "wall_bk_shelves": {
+   "kind": "wall",
+   "model": "models/wall_bk_shelves.glb"
+  }
+ }
+}

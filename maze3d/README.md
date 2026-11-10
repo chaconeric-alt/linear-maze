@@ -22,7 +22,11 @@ The title screen offers the built level and **Random installation**, which is ma
 | `engine/` | The engine: level builder, player, weapons, enemies, doors, props, pickups, traps, HUD, shaders. No game content. |
 | `kits/hightech/` | The high-tech ruin kit: 11 walls, 6 floors, 5 ceilings, a pillar, 6 doors, 4 scanner arches, 2 wall lockers, 14 machines and props, 13 items, trap hardware, 3 weapons. `kit.json` (styles; hand-written), `generated.json` (what the model scripts wrote), `materials.json` (the look of each material name), `models/*.glb`. |
 | `kits/agency/` | The Agency kit (the Anomalous Structure's Sterile White): 9 walls, 4 floors, 4 ceilings, 6 pieces of furniture, in porcelain, onyx, rose gold and pink neon. Borrows the high-tech kit's doors and machines. |
-| `actors/` | Rigged, animated monsters as `.glb`: Gladiator Roach, Custodian, Monoid, Glorexx, ceiling turret. |
+| `kits/works/` | The Works (under the Greasy Bolt Hole): riveted iron, sooty brick, furnace mouths, gear walls, hanging chains, conveyor and grease-drain floors, I-beam ceilings with hoists; forge, grease vat, press, workbench, drums; a chain-hauled iron shutter door. 6 walls, 3 floors, 3 ceilings, 5 props, 1 door. |
+| `kits/bunker/` | The Bunker: board-marked concrete, olive steel, caged bulbs, locker and ration-shelf walls, a map wall with a radio; bunks, mess table, console, generator (the flywheel turns), decon shower, crates; a swinging blast door with a wheel. 8 walls, 3 floors, 3 ceilings, 6 props, 1 door. |
+| `kits/crypt/` | The Crypt, the first kit that is not high-tech: coursed stone, rib vaults, stained-glass arches, bone walls, niches with urns and skulls, sconces; coffins whose lids slide (grave goods, or the occupant), hooded statues, plinths, braziers, candles, bone piles; a stone slab door that sinks into the floor. 8 walls, 3 floors, 3 ceilings, 6 props, 1 door. |
+| `kits/omni/` | No models: borrows every kit so one level can use them all. |
+| `actors/` | 17 rigged, animated monsters as `.glb`: Gladiator Roach, Custodian, Monoid, Glorexx, ceiling turret; and Eggbot, Grease Monkey, Dancer, Snapper, Deadbot, Desktop Defender, Sphinx Gun, Plodder, Drone, Fouler, Mourner and the Princess. |
 | `games/havenot/` | The game: `game.json`, `defs/` (weapons, projectiles, actors, items, sounds), `levels/`. |
 | `generators/` | Level generators. `rooms.gd` is a small working example of the interface. |
 | `tools/blender/` | The scripts that model everything (`mz.py` is the modelling library). Run them in Blender or with `pip install bpy`. |
@@ -34,6 +38,10 @@ The title screen offers the built level and **Random installation**, which is ma
 Service Airlock → Concourse (front desk, WellPoint) → west to the Specimen Garden for the **blue card** → north through the passage grid (beams and a live floor; Fabrication, east, has the switch, and the scattergun) → Server Hall: route power → Reactor Hall, two storeys: the **red card** and the Plasma Musket, and taking them wakes the place up → the Prototype Vault and the freight lift out.
 
 Off the Concourse, south: the **Brand Experience Suite**, the Agency's showroom, still open. A security arch on the way in minds long guns (go early, or talk the front desk into an open day); domes lift off pedestals, at a price; Focus Group B is in session behind a toll arch. Around the level: a MediScan arch, a quartermaster arch, and wall lockers. Most lockers hold something useful. The dented ones that knock don't.
+
+**The Menagerie** is a second, small level: a ticket hall, then three halls (Works, Bunker, Crypt) with the twelve newer monsters in them. It is there to look at things and to shoot them.
+
+The title screen also offers random installations in each place: mixed, The Works, The Bunker, The Crypt, and "All the way down", which uses every kit and every monster and keeps the Princess in the last room.
 
 ## About the art
 

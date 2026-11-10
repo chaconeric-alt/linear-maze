@@ -100,6 +100,11 @@ def main():
     mz.define_materials(agency.MATERIALS)
     build_kit('hightech', tiles.TILES, props.PROPS, TILE_META, palette.MATERIALS)
     build_kit('agency', agency.TILES, agency.PROPS, agency.TILE_META, agency.MATERIALS)
+    import kits3, actors2
+    for kid, k in kits3.KITS.items():
+        mz.define_materials(k['mats'])
+        build_kit(kid, k['tiles'], k['props'], k['meta'], k['mats'])
+    actors.ACTORS.update(actors2.ACTORS2)
     os.makedirs(os.path.join(ROOT, 'actors'), exist_ok=True)
     for name, fn in actors.ACTORS.items():
         if only and name not in only:

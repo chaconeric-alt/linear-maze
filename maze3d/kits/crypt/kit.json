@@ -1,0 +1,165 @@
+{
+ "name": "The Crypt",
+ "about": "Not high-tech at all: coursed stone, rib vaults, bone walls, candles and coloured glass. The first kit for games set somewhere older.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.9,
+ "styles": {
+  "catacomb": {
+   "floor": [
+    [
+     "floor_cr_flag",
+     5
+    ],
+    [
+     "floor_cr_grave",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_cr_blocks",
+     4
+    ],
+    [
+     "wall_cr_blocks2",
+     3
+    ],
+    [
+     "wall_cr_niches",
+     2
+    ],
+    [
+     "wall_cr_bones",
+     1
+    ],
+    [
+     "wall_cr_broken",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_cr_vault",
+     4
+    ],
+    [
+     "ceil_cr_roots",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_cr_chandelier",
+    "every": 3,
+    "flicker": 0.0
+   }
+  },
+  "chapel": {
+   "floor": [
+    [
+     "floor_cr_flag",
+     8
+    ],
+    [
+     "floor_cr_mosaic",
+     1
+    ],
+    [
+     "floor_cr_grave",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_cr_arch",
+     3
+    ],
+    [
+     "wall_cr_blocks",
+     3
+    ],
+    [
+     "wall_cr_plaque",
+     2
+    ],
+    [
+     "wall_cr_sconce",
+     2
+    ],
+    [
+     "wall_cr_niches",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_cr_arch",
+     2
+    ],
+    [
+     "wall_cr_blocks2",
+     3
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_cr_vault",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_cr_chandelier",
+    "every": 3,
+    "flicker": 0.0
+   }
+  },
+  "ossuary": {
+   "floor": [
+    [
+     "floor_cr_flag",
+     3
+    ],
+    [
+     "floor_cr_grave",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_cr_bones",
+     5
+    ],
+    [
+     "wall_cr_niches",
+     3
+    ],
+    [
+     "wall_cr_sconce",
+     1
+    ],
+    [
+     "wall_cr_broken",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_cr_vault",
+     2
+    ],
+    [
+     "ceil_cr_roots",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_cr_chandelier",
+    "every": 3,
+    "flicker": 0.0
+   }
+  }
+ }
+}

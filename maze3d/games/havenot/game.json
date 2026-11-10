@@ -2,7 +2,7 @@
  "id": "havenot",
  "title": "HaveNot",
  "tagline": "The old world could make anything. Go and find out what it left lying around.",
- "version": "0.2.0",
+ "version": "0.3.0",
  "theme": {
   "accent": [
    0.91,
@@ -12,7 +12,11 @@
  },
  "kits": [
   "hightech",
-  "agency"
+  "agency",
+  "works",
+  "bunker",
+  "crypt",
+  "omni"
  ],
  "defs": [
   "defs/arsenal.json",
@@ -21,7 +25,8 @@
   "defs/sounds.json"
  ],
  "levels": [
-  "levels/deepworks.json"
+  "levels/deepworks.json",
+  "levels/menagerie.json"
  ],
  "generators": [
   "rooms"
@@ -62,6 +67,18 @@
    [
     "turret",
     1
+   ],
+   [
+    "dancer",
+    1
+   ],
+   [
+    "drone",
+    1
+   ],
+   [
+    "defender",
+    2
    ]
   ],
   "treasure": [
@@ -121,11 +138,35 @@
    "health",
    "cookies",
    "armor"
-  ]
+  ],
+  "style_props": {
+   "showroom": [
+    "ag_pedestal",
+    "ag_planter",
+    "ag_kiosk",
+    "ag_pod",
+    "ag_sofa"
+   ],
+   "white_hall": [
+    "ag_pedestal",
+    "ag_planter",
+    "ag_kiosk",
+    "ag_pod",
+    "ag_sofa"
+   ],
+   "focus": [
+    "ag_pedestal",
+    "ag_planter",
+    "ag_kiosk",
+    "ag_pod",
+    "ag_sofa"
+   ]
+  }
  },
  "start": "deepworks",
  "menu": [
-  "deepworks"
+  "deepworks",
+  "menagerie"
  ],
  "player": {
   "hp": 100,
@@ -143,5 +184,327 @@
   "death_title": "YOU BECAME SALVAGE",
   "death_text": "Somebody will find your boots useful.",
   "end_title": "The road goes on"
+ },
+ "generator_themes": {
+  "works": {
+   "title": "The Works",
+   "place": "Works",
+   "kit": "works",
+   "corridor": "greaseway",
+   "styles": [
+    "foundry",
+    "assembly",
+    "foundry",
+    "machine"
+   ],
+   "doors": [
+    "door_wk_shutter",
+    "door_wk_shutter",
+    "door_rise"
+   ],
+   "props": [
+    "wk_drums",
+    "wk_bench",
+    "wk_vat",
+    "wk_forge",
+    "wk_press",
+    "barrel",
+    "crate"
+   ],
+   "actors": [
+    [
+     "grease_monkey",
+     3
+    ],
+    [
+     "eggbot",
+     3
+    ],
+    [
+     "defender",
+     3
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "plodder",
+     1
+    ],
+    [
+     "sphinx",
+     1
+    ],
+    [
+     "roach",
+     2
+    ]
+   ],
+   "boss": "plodder"
+  },
+  "bunker": {
+   "title": "The Bunker",
+   "place": "Bunker",
+   "kit": "bunker",
+   "corridor": "bunker_hall",
+   "styles": [
+    "barracks",
+    "bunker_ops",
+    "barracks"
+   ],
+   "doors": [
+    "door_bk_blast",
+    "door_bk_blast",
+    "door_shear"
+   ],
+   "props": [
+    "bk_bunk",
+    "bk_crates",
+    "bk_table",
+    "bk_console",
+    "bk_generator",
+    "bk_shower",
+    "crate"
+   ],
+   "actors": [
+    [
+     "deadbot",
+     4
+    ],
+    [
+     "defender",
+     3
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "plodder",
+     1
+    ],
+    [
+     "sphinx",
+     1
+    ],
+    [
+     "turret",
+     1
+    ],
+    [
+     "custodian",
+     1
+    ]
+   ],
+   "boss": "sphinx"
+  },
+  "crypt": {
+   "title": "The Crypt",
+   "place": "Crypt",
+   "kit": "crypt",
+   "corridor": "catacomb",
+   "styles": [
+    "chapel",
+    "ossuary",
+    "catacomb"
+   ],
+   "doors": [
+    "door_cr_slab"
+   ],
+   "arches": [],
+   "exit_prop": "cr_statue",
+   "props": [
+    "cr_coffin",
+    "cr_statue",
+    "cr_plinth",
+    "cr_brazier",
+    "cr_candles",
+    "cr_bones",
+    "cr_coffin"
+   ],
+   "actors": [
+    [
+     "mourner",
+     2
+    ],
+    [
+     "deadbot",
+     2
+    ],
+    [
+     "snapper",
+     1
+    ],
+    [
+     "fouler",
+     2
+    ],
+    [
+     "dancer",
+     2
+    ],
+    [
+     "roach",
+     3
+    ]
+   ],
+   "boss": "princess"
+  },
+  "deep": {
+   "title": "All the way down",
+   "place": "Deep Installation",
+   "kit": "omni",
+   "size": [
+    34,
+    28
+   ],
+   "rooms": 12,
+   "corridor": "corridor",
+   "styles": [
+    "lab",
+    "machine",
+    "showroom",
+    "focus",
+    "foundry",
+    "assembly",
+    "barracks",
+    "bunker_ops",
+    "chapel",
+    "ossuary",
+    "vault"
+   ],
+   "doors": [
+    "door_split",
+    "door_rise",
+    "door_jaw",
+    "door_iris",
+    "door_wk_shutter",
+    "door_bk_blast",
+    "door_cr_slab"
+   ],
+   "style_props": {
+    "showroom": [
+     "ag_pedestal",
+     "ag_planter",
+     "ag_kiosk",
+     "ag_pod",
+     "ag_sofa"
+    ],
+    "white_hall": [
+     "ag_pedestal",
+     "ag_planter",
+     "ag_kiosk",
+     "ag_pod",
+     "ag_sofa"
+    ],
+    "focus": [
+     "ag_pedestal",
+     "ag_planter",
+     "ag_kiosk",
+     "ag_pod",
+     "ag_sofa"
+    ],
+    "foundry": [
+     "wk_drums",
+     "wk_vat",
+     "wk_forge",
+     "wk_bench"
+    ],
+    "assembly": [
+     "wk_press",
+     "wk_bench",
+     "wk_drums"
+    ],
+    "barracks": [
+     "bk_bunk",
+     "bk_crates",
+     "bk_table"
+    ],
+    "bunker_ops": [
+     "bk_console",
+     "bk_generator",
+     "bk_shower"
+    ],
+    "chapel": [
+     "cr_statue",
+     "cr_brazier",
+     "cr_plinth",
+     "cr_coffin"
+    ],
+    "ossuary": [
+     "cr_coffin",
+     "cr_bones",
+     "cr_candles"
+    ]
+   },
+   "actors": [
+    [
+     "roach",
+     1
+    ],
+    [
+     "glorexx",
+     1
+    ],
+    [
+     "custodian",
+     1
+    ],
+    [
+     "monoid",
+     1
+    ],
+    [
+     "turret",
+     1
+    ],
+    [
+     "eggbot",
+     1
+    ],
+    [
+     "grease_monkey",
+     1
+    ],
+    [
+     "dancer",
+     1
+    ],
+    [
+     "snapper",
+     1
+    ],
+    [
+     "deadbot",
+     1
+    ],
+    [
+     "defender",
+     1
+    ],
+    [
+     "sphinx",
+     1
+    ],
+    [
+     "plodder",
+     1
+    ],
+    [
+     "drone",
+     1
+    ],
+    [
+     "fouler",
+     1
+    ],
+    [
+     "mourner",
+     1
+    ]
+   ],
+   "boss": "princess"
+  }
  }
 }

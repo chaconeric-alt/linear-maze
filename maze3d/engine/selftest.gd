@@ -239,6 +239,8 @@ func run(m: Node) -> void:
 			if is_instance_valid(n) and n is Pickup and not n.is_queued_for_deletion():
 				pl.hp = 50
 				pl.armor = 0
+				for k in pl.ammo:
+					pl.ammo[k] = 0
 				pl.global_position = Vector3(n.global_position.x, 0.05, n.global_position.z)
 				await _frames(8)
 				got += 1

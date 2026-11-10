@@ -35,4 +35,11 @@ MATERIALS = {
     'eye':        dict(color=(1.0, 0.85, 0.1), emit=(1.0, 0.8, 0.1), energy=5.0, shader='glow'),
     'eye_red':    dict(color=(1.0, 0.1, 0.05), emit=(1.0, 0.1, 0.04), energy=6.0, shader='glow'),
     'slime':      dict(color=(0.35, 0.8, 0.2), emit=(0.3, 0.9, 0.15), energy=1.5, rough=0.1, shader='glow'),
+    'grease':     dict(color=(0.06, 0.07, 0.03), metal=0.5, rough=0.12, shader='flesh'),
+    'egg':        dict(color=(0.88, 0.84, 0.72), metal=0.0, rough=0.22, shader='worn', grime=0.5),
+    'brass':      dict(color=(0.72, 0.55, 0.22), metal=1.0, rough=0.35, shader='worn', grime=0.5),
+    'shroud':     dict(color=(0.05, 0.045, 0.06), metal=0.0, rough=0.95),
+    'leaf':       dict(color=(0.10, 0.32, 0.08), metal=0.0, rough=0.4, shader='flesh'),
+    'petal':      dict(color=(0.55, 0.06, 0.30), metal=0.0, rough=0.35, shader='flesh'),
+    'mirror':     dict(color=(0.95, 0.95, 1.0), metal=1.0, rough=0.03),
 }

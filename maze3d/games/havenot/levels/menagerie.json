@@ -1,0 +1,445 @@
+{
+ "id": "menagerie",
+ "name": "The Menagerie (all three new places, all twelve new monsters)",
+ "kit": "omni",
+ "style": "greaseway",
+ "intro": "Three halls. Twelve exhibits. None of them behind glass.",
+ "ambient_energy": 0.6,
+ "legend": {
+  "K": {
+   "door": "door_bk_blast"
+  },
+  "C": {
+   "door": "door_cr_slab"
+  },
+  "A": {
+   "door": "door_wk_shutter"
+  }
+ },
+ "map": [
+  "###############################",
+  "#.........#.........#.........#",
+  "#.........#.........#.........#",
+  "#.........#.........#.........#",
+  "#.........K.........C.........#",
+  "#.........#.........#.........#",
+  "#.........#.........#.........#",
+  "#.........#.........#.........#",
+  "#####A#########################",
+  "####...########################",
+  "####...########################",
+  "###############################"
+ ],
+ "rooms": [
+  {
+   "name": "The Works",
+   "rect": [
+    1,
+    1,
+    9,
+    7
+   ],
+   "style": "foundry",
+   "height": 2
+  },
+  {
+   "name": "The Bunker",
+   "rect": [
+    11,
+    1,
+    9,
+    7
+   ],
+   "style": "barracks",
+   "height": 1
+  },
+  {
+   "name": "The Crypt",
+   "rect": [
+    21,
+    1,
+    9,
+    7
+   ],
+   "style": "chapel",
+   "height": 2
+  },
+  {
+   "name": "Ticket Hall",
+   "rect": [
+    4,
+    9,
+    3,
+    2
+   ],
+   "style": "greaseway",
+   "height": 1
+  }
+ ],
+ "things": [
+  {
+   "start": true,
+   "face": "n",
+   "at": [
+    5,
+    10
+   ]
+  },
+  {
+   "sign": "THE MENAGERIE\nworks \u00b7 bunker \u00b7 crypt",
+   "face": "s",
+   "color": [
+    1.0,
+    0.6,
+    0.2
+   ],
+   "size": 64,
+   "y": 3.0,
+   "at": [
+    5,
+    1
+   ]
+  },
+  {
+   "actor": "eggbot",
+   "at": [
+    2,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "grease_monkey",
+   "at": [
+    4,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "defender",
+   "at": [
+    6,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "drone",
+   "at": [
+    8,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "deadbot",
+   "at": [
+    12,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "plodder",
+   "at": [
+    14,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "sphinx",
+   "at": [
+    16,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "dancer",
+   "at": [
+    18,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "mourner",
+   "at": [
+    22,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "snapper",
+   "at": [
+    24,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "fouler",
+   "at": [
+    26,
+    2
+   ],
+   "face": "s"
+  },
+  {
+   "actor": "princess",
+   "at": [
+    25,
+    5
+   ],
+   "face": "w"
+  },
+  {
+   "prop": "wk_forge",
+   "at": [
+    1,
+    1
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "wk_vat",
+   "at": [
+    9,
+    7
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "wk_drums",
+   "at": [
+    1,
+    7
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "wk_press",
+   "at": [
+    9,
+    1
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "wk_bench",
+   "at": [
+    3,
+    7
+   ],
+   "turn": 180,
+   "blocks": false
+  },
+  {
+   "prop": "bk_bunk",
+   "at": [
+    11,
+    7
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "bk_console",
+   "at": [
+    19,
+    7
+   ],
+   "turn": 180,
+   "blocks": false
+  },
+  {
+   "prop": "bk_generator",
+   "at": [
+    19,
+    1
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "bk_crates",
+   "at": [
+    11,
+    1
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "bk_table",
+   "at": [
+    15,
+    6
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "bk_shower",
+   "at": [
+    17,
+    7
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "cr_coffin",
+   "at": [
+    21,
+    7
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "cr_statue",
+   "at": [
+    29,
+    1
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "cr_brazier",
+   "at": [
+    29,
+    7
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "cr_candles",
+   "at": [
+    21,
+    1
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "cr_bones",
+   "at": [
+    23,
+    7
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "prop": "cr_plinth",
+   "at": [
+    27,
+    7
+   ],
+   "turn": 0,
+   "blocks": false
+  },
+  {
+   "item": "scattergun",
+   "at": [
+    4,
+    9
+   ]
+  },
+  {
+   "item": "plasma",
+   "at": [
+    6,
+    9
+   ]
+  },
+  {
+   "item": "shells",
+   "at": [
+    4,
+    7
+   ]
+  },
+  {
+   "item": "cells",
+   "at": [
+    6,
+    7
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    14,
+    6
+   ]
+  },
+  {
+   "item": "armor",
+   "at": [
+    16,
+    5
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    24,
+    7
+   ]
+  },
+  {
+   "item": "cells",
+   "at": [
+    22,
+    5
+   ]
+  },
+  {
+   "item": "shells",
+   "at": [
+    12,
+    5
+   ]
+  },
+  {
+   "prop": "cr_plinth",
+   "at": [
+    29,
+    4
+   ],
+   "blocks": false,
+   "use": {
+    "type": "effects",
+    "prompt": "Take the crown",
+    "effects": [
+     {
+      "type": "credits",
+      "amount": 500
+     },
+     {
+      "type": "end",
+      "title": "Curator",
+      "text": "Every exhibit accounted for."
+     }
+    ]
+   }
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Walk the three halls. Survive the exhibits."
+  }
+ ],
+ "triggers": []
+}

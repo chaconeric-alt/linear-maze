@@ -157,8 +157,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	var loot: Array = p.get("locker_loot", treasure)
 	for i in range(1, rects.size()):
 		var r: Rect2i = rects[i]
-		var agency: bool = rooms[i]["style"] in AGENCY
-		var props: Array = p.get("agency_props", []) if agency else p.get("props", [])
+		var props: Array = p.get("style_props", {}).get(rooms[i]["style"], p.get("props", []))
 		for k in 1 + r.get_area() / 9:
 			var c: Vector2i = free.call(r)
 			if used.has(c):
@@ -182,7 +181,20 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 				elif pid == "crate":
 					e["hp"] = 20
 					e["loot"] = [{"item": ["shells", "cells", "health"][rng.randi() % 3]}]
-				elif pid == "ag_pedestal" and not treasure.is_empty():
+				elif pid in ["wk_drums"]:
+					e["hp"] = 16
+					e["explode"] = {"radius": 5.0, "damage": 60}
+				elif pid == "bk_crates":
+					e["hp"] = 24
+					e["loot"] = [{"item": ["shells", "cells", "health"][rng.randi() % 3]}, {"item": ["shells", "cells"][rng.randi() % 2]}]
+				elif pid == "cr_coffin":                  # most coffins hold grave goods; some hold whoever was buried
+					e["use"] = {"type": "locker", "prompt": "Push the lid"}
+					if rng.randf() < 0.6 or actors.is_empty():
+						e["use"]["loot"] = [{"item": treasure[rng.randi() % treasure.size()]}] if not treasure.is_empty() else []
+					else:
+						e["use"]["actor"] = p.get("coffin_actor", "deadbot")
+						e["use"]["text"] = "It sits up."
+				elif pid in ["ag_pedestal", "cr_plinth"] and not treasure.is_empty():
 					e["use"] = {"type": "cache", "prompt": "Lift the dome", "loot": [{"item": treasure[rng.randi() % treasure.size()]}]}
 				things.append(e)
 		# lockers on the walls: mostly useful, sometimes not
@@ -224,14 +236,16 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 		if i == max(2, last / 2):
 			things.append({"at": [r.get_center().x, r.get_center().y], "item": "plasma", "offset": [1.0, 0, 0]})
 	var ex: Vector2i = rects[last].get_center()
-	things.append({"at": [ex.x, ex.y], "prop": "holo_table", "blocks": false, "use": {"type": "effects", "prompt": "Signal the surface",
+	if p.has("boss"):                                 # whoever runs the place waits in the last room
+		things.append({"at": [ex.x, ex.y], "actor": p["boss"], "offset": [1.2, 0, 1.2], "face": "s"})
+	things.append({"at": [ex.x, ex.y], "prop": p.get("exit_prop", "holo_table"), "blocks": false, "use": {"type": "effects", "prompt": "Signal the surface",
 		"effects": [{"type": "end", "title": "Out, and richer", "text": "Installation %d is somebody else's problem now." % (seed_value % 1000)}]}})
 	var map: Array = []
 	for row in g:
 		map.append("".join(PackedStringArray(row)))
-	return {"seed": seed_value, "name": "Installation %d" % (seed_value % 1000), "kit": p.get("kit", "hightech"),
-		"style": "corridor", "ambient_energy": 0.6, "legend": legend, "map": map, "rooms": rooms, "things": things,
-		"intro": "Installation %d. Find the red card, reach the last room." % (seed_value % 1000),
+	return {"seed": seed_value, "name": "%s %d" % [p.get("place", "Installation"), seed_value % 1000], "kit": p.get("kit", "hightech"),
+		"style": p.get("corridor", "corridor"), "ambient_energy": 0.6, "legend": legend, "map": map, "rooms": rooms, "things": things,
+		"intro": "%s %d. Find the red card, reach the last room." % [p.get("place", "Installation"), seed_value % 1000],
 		"objectives": [{"text": "Find the RED card.", "done": "key_red"}, {"text": "Get through the vault door and signal the surface."}]}
 
 

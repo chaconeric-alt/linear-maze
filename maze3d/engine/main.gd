@@ -72,8 +72,12 @@ func _load(id: String, _attract: bool) -> void:
 	Game.reset()
 	var data: Dictionary
 	if id.begins_with("gen:"):
-		var g: Object = LM.generators[id.substr(4)]
-		data = g.generate(int(_args.get("seed", randi())), LM.game.get("generator_params", {}))
+		var bits := id.substr(4).split(":")        # gen:<generator>[:<theme>]
+		var g: Object = LM.generators[bits[0]]
+		var params: Dictionary = LM.game.get("generator_params", {}).duplicate(true)
+		if bits.size() > 1:
+			params.merge(LM.game.get("generator_themes", {}).get(bits[1], {}), true)
+		data = g.generate(int(_args.get("seed", randi())), params)
 	else:
 		data = LM.levels[id].duplicate(true)
 	level = Level.new()

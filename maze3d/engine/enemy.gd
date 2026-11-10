@@ -87,6 +87,8 @@ func _collect(n: Node) -> void:
 func _play(clip: String, speed := 1.0) -> void:
 	if anim == null:
 		return
+	if clip == "idle" and not awake and not dead and d.has("dormant_clip"):
+		clip = d["dormant_clip"]                 # things that stand switched off until you are close
 	var nm: String = d.get("clips", {}).get(clip, clip)
 	if anim.has_animation(nm) and (anim.current_animation != nm or not anim.is_playing()):
 		anim.play(nm, 0.15, speed)

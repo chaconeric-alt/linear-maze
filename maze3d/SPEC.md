@@ -111,6 +111,8 @@ The high-tech kit's names: `hull`, `hull_dark`, `trim`, `floor`, `accent` (orang
 
 **A kit for somewhere that isn't high-tech** (a crypt, a cave, a frontier town) is a new folder with its own `materials.json` (stone, wood, moss; add a shader to `engine/shaders/` and to `SHADERS` in `lm.gd` if the material itself is new), its own tiles at the sizes above, and its own styles. Nothing in the engine assumes metal panels; `Level` only asks the kit for tiles by style.
 
+Glow materials take `pulse` (breathing, 0..1) and `flicker` (failing, 0..1): flames and furnace mouths use both.
+
 ## 3. Game data
 
 ### 3.1 `game.json`
@@ -147,6 +149,8 @@ Projectile: `speed`, `radius`, `color`, `light`, `gravity`, `kind`, `blast: { ra
 | `sounds: { alert, hurt, die }`, `blood` (spark colour), `clips`, `walk_rate` | `clips` renames animations: `{ "walk": "scuttle" }`. |
 
 **The model** is any rigged glTF with an AnimationPlayer and clips named `idle`, `walk`, `attack`, `hurt`, `die` (Blender NLA tracks; name the looping ones `idle-loop`, `walk-loop` and Godot imports them as loops called `idle` and `walk`). It **faces Blender's front view (−Y)**, stands on z = 0, origin between its feet (for a ceiling mount: origin on the ceiling, hanging down). `attack` should land its blow at about the attack's `windup` time. `die` ends in the pose the body is left in.
+
+An actor with `"dormant_clip": "<clip>"` plays that clip instead of idle until something wakes it (the Deadbot stands switched off; give it a short `sight` and `hearing`). Clips beyond the standard five are simply extra NLA tracks in the `.glb`.
 
 ### 3.4 Items (`defs`: `items`)
 
@@ -240,7 +244,7 @@ A generator is a script in `generators/` with one function, listed in `game.json
 func generate(seed: int, params: Dictionary) -> Dictionary   # a level dictionary, as in section 4
 ```
 
-`params` is the game's `generator_params`. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `rooms.gd` (rooms, L-shaped corridors, doors on thresholds only (placed after all carving, so no door is ever left standing in a widened opening), scanner arches inside some doorways, wall lockers with loot, nothing, roaches or a charge, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
+`params` is the game's `generator_params`. `game.json` may also hold `generator_themes`: named sets of overrides (`title`, `place`, `kit`, `corridor`, `styles`, `doors`, `props`, `style_props`, `actors`, `boss`, `exit_prop`, `size`, `rooms`). Each theme gets its own title-screen entry and runs as `--level=gen:<name>:<theme>`. `style_props` maps a room style to the furniture that belongs in it, so a mixed level puts bunks in barracks and coffins in chapels. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `rooms.gd` (rooms, L-shaped corridors, doors on thresholds only (placed after all carving, so no door is ever left standing in a widened opening), scanner arches inside some doorways, wall lockers with loot, nothing, roaches or a charge, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
 
 ## 6. Recipes
 

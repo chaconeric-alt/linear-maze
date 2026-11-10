@@ -147,6 +147,8 @@ func material(kit_id: String, name: String, world_space := true) -> Material:
 			"glow":
 				sm.set_shader_parameter("emission", col(p.get("emit", p.get("color"))))
 				sm.set_shader_parameter("energy", p.get("energy", 4.0))
+				sm.set_shader_parameter("pulse", p.get("pulse", 0.08))
+				sm.set_shader_parameter("flicker", p.get("flicker", 0.0))
 			"glass":
 				var c := col(p.get("color"))
 				c.a = p.get("alpha", 0.22)

@@ -1,0 +1,159 @@
+{
+ "name": "The Bunker",
+ "about": "Somebody planned to outlive the Age of War down here: board-marked concrete, olive steel, caged bulbs, bunks squared away for three hundred years.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.9,
+ "styles": {
+  "bunker_hall": {
+   "floor": [
+    [
+     "floor_bk_slab",
+     4
+    ],
+    [
+     "floor_bk_duck",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_bk_concrete",
+     4
+    ],
+    [
+     "wall_bk_concrete2",
+     3
+    ],
+    [
+     "wall_bk_conduit",
+     3
+    ],
+    [
+     "wall_bk_cracked",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_bk_slab",
+     3
+    ],
+    [
+     "ceil_bk_vents",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_bk_bulb",
+    "every": 2,
+    "flicker": 0.25
+   }
+  },
+  "barracks": {
+   "floor": [
+    [
+     "floor_bk_slab",
+     5
+    ],
+    [
+     "floor_bk_hatch",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_bk_concrete",
+     3
+    ],
+    [
+     "wall_bk_lockers",
+     3
+    ],
+    [
+     "wall_bk_shelves",
+     2
+    ],
+    [
+     "wall_bk_lamp",
+     1
+    ],
+    [
+     "wall_bk_concrete2",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_bk_slab",
+     4
+    ],
+    [
+     "ceil_bk_vents",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_bk_bulb",
+    "every": 3,
+    "flicker": 0.1
+   }
+  },
+  "bunker_ops": {
+   "floor": [
+    [
+     "floor_bk_duck",
+     3
+    ],
+    [
+     "floor_bk_slab",
+     3
+    ],
+    [
+     "floor_bk_hatch",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_bk_map",
+     2
+    ],
+    [
+     "wall_bk_conduit",
+     3
+    ],
+    [
+     "wall_bk_concrete",
+     3
+    ],
+    [
+     "wall_bk_shelves",
+     1
+    ],
+    [
+     "wall_bk_lamp",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_bk_vents",
+     2
+    ],
+    [
+     "ceil_bk_slab",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_bk_bulb",
+    "every": 2,
+    "flicker": 0.05
+   }
+  }
+ }
+}

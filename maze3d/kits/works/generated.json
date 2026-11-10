@@ -1,0 +1,194 @@
+{
+ "models": {
+  "door_wk_shutter": {
+   "model": "models/door_wk_shutter.glb",
+   "parts": {
+    "leaf_l": {
+     "move": [
+      -1.22,
+      0,
+      0
+     ]
+    },
+    "leaf_r": {
+     "move": [
+      1.22,
+      0,
+      0
+     ]
+    }
+   },
+   "sound": "door_heavy",
+   "time": 0.8,
+   "type": "door"
+  },
+  "wk_bench": {
+   "model": "models/wk_bench.glb",
+   "solid": [
+    2.4,
+    1.2,
+    0.9
+   ],
+   "type": "prop"
+  },
+  "wk_drums": {
+   "model": "models/wk_drums.glb",
+   "solid": [
+    1.8,
+    1.6,
+    1.2
+   ],
+   "type": "prop"
+  },
+  "wk_forge": {
+   "light": {
+    "at": [
+     0.3,
+     1.7,
+     1.0
+    ],
+    "color": [
+     1.0,
+     0.45,
+     0.1
+    ],
+    "energy": 2.2,
+    "pulse": 0.3,
+    "range": 7
+   },
+   "model": "models/wk_forge.glb",
+   "solid": [
+    2.6,
+    2.8,
+    1.6
+   ],
+   "type": "prop"
+  },
+  "wk_press": {
+   "model": "models/wk_press.glb",
+   "solid": [
+    1.9,
+    3.3,
+    1.4
+   ],
+   "type": "prop"
+  },
+  "wk_vat": {
+   "light": {
+    "at": [
+     0,
+     1.8,
+     0
+    ],
+    "color": [
+     0.55,
+     0.85,
+     0.12
+    ],
+    "energy": 1.4,
+    "pulse": 0.3,
+    "range": 6
+   },
+   "model": "models/wk_vat.glb",
+   "solid": [
+    2.5,
+    1.4,
+    2.5
+   ],
+   "type": "prop"
+  }
+ },
+ "tiles": {
+  "ceil_wk_beams": {
+   "kind": "ceiling",
+   "model": "models/ceil_wk_beams.glb"
+  },
+  "ceil_wk_hoist": {
+   "kind": "ceiling",
+   "model": "models/ceil_wk_hoist.glb"
+  },
+  "ceil_wk_lamp": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -1.3,
+     0
+    ],
+    "color": [
+     1.0,
+     0.86,
+     0.62
+    ],
+    "energy": 2.8,
+    "range": 11
+   },
+   "model": "models/ceil_wk_lamp.glb"
+  },
+  "floor_wk_belt": {
+   "kind": "floor",
+   "model": "models/floor_wk_belt.glb"
+  },
+  "floor_wk_drain": {
+   "kind": "floor",
+   "light": {
+    "at": [
+     0,
+     0.3,
+     0
+    ],
+    "color": [
+     0.55,
+     0.85,
+     0.12
+    ],
+    "energy": 0.5,
+    "range": 3.5
+   },
+   "model": "models/floor_wk_drain.glb"
+  },
+  "floor_wk_plate": {
+   "kind": "floor",
+   "model": "models/floor_wk_plate.glb"
+  },
+  "wall_wk_brick": {
+   "kind": "wall",
+   "model": "models/wall_wk_brick.glb"
+  },
+  "wall_wk_chains": {
+   "kind": "wall",
+   "model": "models/wall_wk_chains.glb"
+  },
+  "wall_wk_furnace": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     1.3,
+     1.0
+    ],
+    "color": [
+     1.0,
+     0.42,
+     0.08
+    ],
+    "energy": 1.8,
+    "pulse": 0.3,
+    "range": 8
+   },
+   "model": "models/wall_wk_furnace.glb"
+  },
+  "wall_wk_gears": {
+   "kind": "wall",
+   "model": "models/wall_wk_gears.glb"
+  },
+  "wall_wk_pipes": {
+   "kind": "wall",
+   "model": "models/wall_wk_pipes.glb"
+  },
+  "wall_wk_plate": {
+   "kind": "wall",
+   "model": "models/wall_wk_plate.glb"
+  }
+ }
+}
