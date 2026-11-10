@@ -223,13 +223,13 @@
   },
   "glorexx": {
    "name": "Glorexx",
-   "model": "actors/glorexx.glb",
+   "model": "actors/glorexx_tripo.glb",
    "hp": 115,
    "speed": 6.2,
    "accel": 26,
    "radius": 0.85,
-   "height": 1.6,
-   "eye": 1.1,
+   "height": 1.2,
+   "eye": 0.8,
    "mass": 2.5,
    "sight": 24,
    "behavior": "chaser",
@@ -243,7 +243,7 @@
      "type": "pounce",
      "range": 12,
      "min_range": 4.0,
-     "windup": 0.5,
+     "windup": 0.55,
      "clip_windup": 0.3,
      "speed": 18,
      "damage": 20,
@@ -273,7 +273,7 @@
      "windup": 0.24,
      "recover": 0.36,
      "cooldown": 3.6,
-     "muzzle": 1.1,
+     "muzzle": 0.8,
      "spread": 3,
      "sound": "spit"
     }
@@ -291,6 +291,14 @@
     "drop_at": 2.0,
     "drop_damage": 10,
     "off": 0.35
+   },
+   "own_materials": true,
+   "scale": 2.6,
+   "walk_rate": 1.0,
+   "swim": {
+    "clip": "swim",
+    "speed": 9.0,
+    "sink": 0.35
    }
   },
   "turret": {

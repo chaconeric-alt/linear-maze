@@ -26,6 +26,7 @@ The title screen offers the built level and **Random installation**, which is ma
 | `kits/bunker/` | The Bunker: board-marked concrete, olive steel, caged bulbs, locker and ration-shelf walls, a map wall with a radio; bunks, mess table, console, generator (the flywheel turns), decon shower, crates; a swinging blast door with a wheel. 8 walls, 3 floors, 3 ceilings, 6 props, 1 door. |
 | `kits/crypt/` | The Crypt, the first kit that is not high-tech: coursed stone, rib vaults, stained-glass arches, bone walls, niches with urns and skulls, sconces; coffins whose lids slide (grave goods, or the occupant), hooded statues, plinths, braziers, candles, bone piles; a stone slab door that sinks into the floor. 8 walls, 3 floors, 3 ceilings, 6 props, 1 door. |
 | `kits/omni/` | No models: borrows every kit so one level can use them all. |
+| `actors/source/` | Models made elsewhere, as they arrived: the Tripo Roach, Monoid and Glorexx. `tools/blender/adopt_*.py` turn them into `actors/*_tripo.glb` with clips. |
 | `actors/` | 17 rigged, animated monsters as `.glb`: Gladiator Roach, Custodian, Monoid, Glorexx, ceiling turret; and Eggbot, Grease Monkey, Dancer, Snapper, Deadbot, Desktop Defender, Sphinx Gun, Plodder, Drone, Fouler, Mourner and the Princess. |
 | `games/havenot/` | The game: `game.json`, `defs/` (weapons, projectiles, actors, items, sounds), `levels/`. |
 | `generators/` | Level generators. `rooms.gd` is a small working example of the interface. |
@@ -43,7 +44,7 @@ Off the Concourse, south: the **Brand Experience Suite**, the Agency's showroom,
 
 The title screen also offers random installations in each place: mixed, The Works, The Bunker, The Crypt, and "All the way down", which uses every kit and every monster and keeps the Princess in the last room.
 
-**Staff Only** is a third small level for behaviors: a break room where three Monoids lean, smoke and sit until you interrupt them, and next door a nest where Roaches and a Glorexx wait on the walls and ceiling, cross the ceiling to get above you, and pounce.
+**Staff Only** is a third small level for behaviors: a break room where three Monoids lean, smoke and sit until you interrupt them, and next door a nest where Roaches and a Glorexx wait on the walls and ceiling, cross the ceiling to get above you, and pounce; a Glorexx swims in the flooded corner.
 
 ## About the art
 

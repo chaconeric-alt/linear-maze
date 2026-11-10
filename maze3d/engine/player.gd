@@ -218,6 +218,8 @@ func _physics_process(dt: float) -> void:
 	dir.y = 0
 	dir = dir.normalized()
 	var speed: float = cfg.get("speed", 8.5)
+	if level and level.fluid_at(global_position):      # wading
+		speed *= 0.62
 	_dash_cool -= dt
 	if not frozen and Input.is_action_just_pressed("dash") and _dash_cool <= 0.0:
 		_dash_dir = dir if dir != Vector3.ZERO else -global_transform.basis.z

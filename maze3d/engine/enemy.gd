@@ -45,6 +45,7 @@ var _climb_t := 2.0
 var _lounge: Dictionary = {}      # what it is doing instead of its job
 var _puff_t := 2.0
 var _stun := 0.0
+var _wet := false                 # in fluid
 var _gait_t := 0.0
 var _gait_go := true
 var _gait_ph := 0.0
@@ -120,6 +121,11 @@ func _play(clip: String, speed := 1.0, loop := false) -> bool:
 		elif d.has("dormant_clip"):
 			clip = d["dormant_clip"]                 # things that stand switched off until you are close
 			loop = true
+	if _wet and d.has("swim") and (clip == "walk" or clip == "idle") and not dead:
+		clip = d["swim"].get("clip", "swim")         # in fluid it swims, moving or not
+		loop = true
+		if speed < 0.6:
+			speed = 0.6
 	var nm: String = d.get("clips", {}).get(clip, clip)
 	if not anim.has_animation(nm):
 		return false
@@ -174,6 +180,9 @@ func _physics_process(dt: float) -> void:
 		if _surf != 0:                               # shot off the wall: what is left comes down
 			_fall_tick(dt, Vector3.ZERO)
 		return
+	_wet = _surf == 0 and level.fluid_at(global_position)
+	if d.has("swim"):                                # a swimmer rides low in it
+		vis.position.y = move_toward(vis.position.y, d.get("model_y", 0.0) - (d["swim"].get("sink", 0.0) if _wet else 0.0), dt * 1.5)
 	var pl := Game.player
 	if pl == null or not is_instance_valid(pl) or pl.dead:
 		_play("idle")
@@ -259,7 +268,7 @@ func _physics_process(dt: float) -> void:
 		if _climb_t <= 0.0:
 			_climb_t = randf_range(3.0, 6.0)
 			var cl: Dictionary = d["climb"]
-			if dist > cl.get("min_dist", 7.0) and randf() < cl.get("chance", 0.5) and is_on_floor():
+			if dist > cl.get("min_dist", 7.0) and randf() < cl.get("chance", 0.5) and is_on_floor() and not _wet:
 				var c := level.cell_of(global_position)
 				var walls := _walls(c)
 				if not walls.is_empty():
@@ -313,6 +322,8 @@ func _physics_process(dt: float) -> void:
 		elif _see:
 			want = flat.normalized()
 	want = want.normalized()
+	if _wet:
+		speed = d["swim"].get("speed", speed) if d.has("swim") else speed * 0.6
 	if d.has("gait"):
 		speed *= _gait(dt)
 		var wv: float = d["gait"].get("weave", 0.0)

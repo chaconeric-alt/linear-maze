@@ -48,6 +48,7 @@ func build(level_data: Dictionary) -> void:
 	_build_collision()
 	_build_nav()
 	_build_things()
+	_build_fluid()
 	_build_environment()
 	for t in data.get("triggers", []):
 		_triggers.append({"t": t, "fired": false})
@@ -73,7 +74,7 @@ func _parse() -> void:
 			var ch := row[x] if x < row.length() else " "
 			var e: Dictionary = legend.get(ch, {})
 			var c := {"solid": e.get("solid", false), "void": e.get("void", false), "door": e.get("door", ""), "entry": e,
-				"style": e.get("style", def_style), "height": def_h, "tag": e.get("tag", ""), "room": ""}
+				"style": e.get("style", def_style), "height": def_h, "fluid": e.get("fluid", false), "tag": e.get("tag", ""), "room": ""}
 			for rm in rooms:
 				var rc: Array = rm["rect"]
 				if x >= rc[0] and y >= rc[1] and x < rc[0] + rc[2] and y < rc[1] + rc[3]:
@@ -105,7 +106,7 @@ func _tag(t: String, p: Vector2i) -> void:
 
 func cell(x: int, y: int) -> Dictionary:
 	if x < 0 or y < 0 or x >= w or y >= h:
-		return {"solid": true, "void": true, "height": 0, "door": "", "style": "", "room": "", "tag": ""}
+		return {"solid": true, "void": true, "height": 0, "door": "", "style": "", "room": "", "tag": "", "fluid": false}
 	return cells[y * w + x]
 
 
@@ -483,6 +484,49 @@ func _sign(e: Dictionary, p: Vector2i) -> Node3D:
 	l.position = center(p) + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - 0.2) + Vector3(0, e.get("y", 2.6), 0)
 	l.rotation.y = DIR_ROT[d]
 	return l
+
+
+# ------------------------------------------------------------------ fluid
+## A legend entry with "fluid": true floods its cells: {"~": {"fluid": true}}. The level's "fluid" gives the look:
+## {"level": 0.7, "color": [0.1, 0.5, 0.4, 0.6], "glow": 0.3}. It is shallow: the player wades (slower), most things
+## are slowed, and an actor with "swim" in its def swims.
+func _build_fluid() -> void:
+	var spec: Dictionary = data.get("fluid", {})
+	var y: float = spec.get("level", 0.7)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var any := false
+	for cy in h:
+		for cx in w:
+			if not cell(cx, cy)["fluid"]:
+				continue
+			any = true
+			var a := Vector3(cx * C, y, cy * C)
+			for v in [Vector3(0, 0, 0), Vector3(C, 0, 0), Vector3(C, 0, C), Vector3(0, 0, 0), Vector3(C, 0, C), Vector3(0, 0, C)]:
+				st.set_normal(Vector3.UP)
+				st.add_vertex(a + v)
+	if not any:
+		return
+	var m := StandardMaterial3D.new()
+	var c := LM.col(spec.get("color"), Color(0.1, 0.5, 0.4, 0.62))
+	m.albedo_color = c
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.roughness = 0.08
+	m.metallic = 0.3
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.emission_enabled = true
+	m.emission = Color(c.r, c.g, c.b)
+	m.emission_energy_multiplier = spec.get("glow", 0.25)
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+
+
+func fluid_at(pos: Vector3) -> bool:
+	var p := cell_of(pos)
+	return cell(p.x, p.y)["fluid"] and pos.y < data.get("fluid", {}).get("level", 0.7)
 
 
 # ------------------------------------------------------------------ mood
