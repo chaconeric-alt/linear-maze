@@ -1,0 +1,1351 @@
+{
+ "id": "deepworks",
+ "name": "Kaveros Deepworks \u00b7 Sublevel 1",
+ "kit": "hightech",
+ "style": "corridor",
+ "intro": "Kaveros Deepworks. Nobody has signed the visitor book in three hundred years.",
+ "ambient": [
+  0.22,
+  0.28,
+  0.36
+ ],
+ "ambient_energy": 0.6,
+ "fog": {
+  "color": [
+   0.08,
+   0.12,
+   0.15
+  ],
+  "density": 0.014
+ },
+ "legend": {
+  "A": {
+   "door": "door_rise"
+  },
+  "S": {
+   "door": "door_split"
+  },
+  "J": {
+   "door": "door_jaw",
+   "jammed": true
+  },
+  "X": {
+   "door": "door_shear"
+  },
+  "B": {
+   "door": "door_jaw",
+   "lock": "blue",
+   "tag": "blue_door"
+  },
+  "I": {
+   "door": "door_iris",
+   "flag": "reactor_open",
+   "need": "power rerouted from the server hall",
+   "tag": "reactor_door"
+  },
+  "R": {
+   "door": "door_vault",
+   "lock": "red",
+   "tag": "vault_door"
+  }
+ },
+ "map": [
+  "###############################",
+  "#######################.......#",
+  "##......###############.......#",
+  "##......###.........###.......#",
+  "##......###.........###.......#",
+  "##........R.........I.........#",
+  "##......###.........###.......#",
+  "##......###.........###.......#",
+  "##......#######B#######.......#",
+  "###############.#######.......#",
+  "###############.###############",
+  "###############.###############",
+  "###############.###############",
+  "###############.###############",
+  "#.....#########S########......#",
+  "#.....#####.........####......#",
+  "#.....#####.........####......#",
+  "#.....#####.........####......#",
+  "#.....J...S.........X..S......#",
+  "#.....#####.........####......#",
+  "#.....#####.........####......#",
+  "#.....#####.........####......#",
+  "#.....#########A########......#",
+  "##############...##############",
+  "##############...##############",
+  "##############...##############",
+  "###############################"
+ ],
+ "rooms": [
+  {
+   "name": "Service Airlock",
+   "rect": [
+    14,
+    23,
+    3,
+    3
+   ],
+   "style": "corridor",
+   "height": 1
+  },
+  {
+   "name": "Concourse",
+   "rect": [
+    11,
+    15,
+    9,
+    7
+   ],
+   "style": "lab",
+   "height": 1
+  },
+  {
+   "name": "Specimen Garden",
+   "rect": [
+    1,
+    14,
+    5,
+    9
+   ],
+   "style": "ruin",
+   "height": 1
+  },
+  {
+   "name": "Fabrication",
+   "rect": [
+    24,
+    14,
+    6,
+    9
+   ],
+   "style": "machine",
+   "height": 1
+  },
+  {
+   "name": "Server Hall",
+   "rect": [
+    11,
+    3,
+    9,
+    5
+   ],
+   "style": "lab",
+   "height": 1,
+   "lights": {
+    "oy": 1
+   }
+  },
+  {
+   "name": "Reactor Hall",
+   "rect": [
+    23,
+    1,
+    7,
+    9
+   ],
+   "style": "machine",
+   "height": 2
+  },
+  {
+   "name": "Prototype Vault",
+   "rect": [
+    2,
+    2,
+    6,
+    7
+   ],
+   "style": "vault",
+   "height": 1
+  }
+ ],
+ "tags": {
+  "concourse_spawn": [
+   [
+    13,
+    15
+   ],
+   [
+    17,
+    15
+   ]
+  ],
+  "reactor_spawn": [
+   [
+    23,
+    3
+   ],
+   [
+    23,
+    7
+   ],
+   [
+    24,
+    5
+   ]
+  ]
+ },
+ "things": [
+  {
+   "start": true,
+   "face": "n",
+   "at": [
+    15,
+    24
+   ]
+  },
+  {
+   "prop": "debris",
+   "at": [
+    14,
+    25
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    16,
+    23
+   ]
+  },
+  {
+   "sign": "KAVEROS DEEPWORKS\nSUBLEVEL 1",
+   "face": "s",
+   "color": [
+    1.0,
+    0.6,
+    0.2
+   ],
+   "size": 72,
+   "y": 3.2,
+   "at": [
+    14,
+    23
+   ]
+  },
+  {
+   "prop": "pillar",
+   "blocks": true,
+   "at": [
+    12,
+    16
+   ]
+  },
+  {
+   "prop": "pillar",
+   "blocks": true,
+   "at": [
+    18,
+    16
+   ]
+  },
+  {
+   "prop": "pillar",
+   "blocks": true,
+   "at": [
+    12,
+    20
+   ]
+  },
+  {
+   "prop": "pillar",
+   "blocks": true,
+   "at": [
+    18,
+    20
+   ]
+  },
+  {
+   "prop": "terminal_desk",
+   "face": "s",
+   "screen": "KAVEROS\nWELCOME, VISITOR\n> _",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the front desk",
+    "kicker": "Kaveros Deepworks \u00b7 Front desk",
+    "title": "Welcome, valued visitor",
+    "text": "Your host has been notified. Your host has been notified. Your host has been notified.\n\nWaiting time: 109,573 days.",
+    "options": [
+     {
+      "label": "Directory",
+      "result": "SPECIMEN GARDEN .... west. Closed for pruning.\nFABRICATION ........ east. Hard hats.\nSERVER HALL ........ north. BLUE card.\nREACTOR HALL ....... via Server Hall. Power must be routed.\nPROTOTYPE VAULT .... RED card. Do not ask about the vault."
+     },
+     {
+      "label": "Where is my host?",
+      "result": "Your host, DR. A. KAVEROS, last badged in at the Specimen Garden.\nShe signed out a BLUE card and did not sign it back in.\nKaveros Applied Wonders reminds you that cards are company property.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "knows_blue"
+       }
+      ]
+     },
+     {
+      "label": "Complain",
+      "result": "Your feedback is important.\nIt has been filed under: SPILLS.",
+      "effects": [
+       {
+        "type": "spawn",
+        "tag": "concourse_spawn",
+        "actor": "roach",
+        "count": 2
+       }
+      ],
+      "once": true
+     }
+    ]
+   },
+   "at": [
+    15,
+    18
+   ]
+  },
+  {
+   "prop": "health_station",
+   "face": "e",
+   "use": {
+    "type": "heal",
+    "prompt": "Use the Kaveros WellPoint",
+    "charges": 3,
+    "amount": 35
+   },
+   "at": [
+    11,
+    17
+   ]
+  },
+  {
+   "prop": "holo_table",
+   "at": [
+    19,
+    16
+   ]
+  },
+  {
+   "prop": "crate",
+   "hp": 20,
+   "loot": [
+    {
+     "item": "chips"
+    }
+   ],
+   "at": [
+    13,
+    21
+   ]
+  },
+  {
+   "prop": "crate",
+   "hp": 20,
+   "loot": [
+    {
+     "item": "cookies"
+    }
+   ],
+   "at": [
+    17,
+    21
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    14,
+    16
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    17,
+    19
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    12,
+    18
+   ]
+  },
+  {
+   "sign": "WANT MORE.\nWORK MORE.\nBE MORE.",
+   "face": "s",
+   "y": 3.0,
+   "at": [
+    14,
+    15
+   ]
+  },
+  {
+   "sign": "SPECIMEN GARDEN  \u25c2\nFABRICATION  \u25b8",
+   "face": "w",
+   "color": [
+    0.3,
+    0.9,
+    1.0
+   ],
+   "size": 56,
+   "at": [
+    19,
+    20
+   ]
+  },
+  {
+   "prop": "debris",
+   "solid": false,
+   "at": [
+    8,
+    18
+   ]
+  },
+  {
+   "prop": "cryo_pod",
+   "blocks": true,
+   "offset": [
+    -0.6,
+    0,
+    0
+   ],
+   "at": [
+    1,
+    14
+   ]
+  },
+  {
+   "prop": "cryo_pod_broken",
+   "blocks": true,
+   "offset": [
+    -0.6,
+    0,
+    0
+   ],
+   "at": [
+    1,
+    16
+   ]
+  },
+  {
+   "prop": "cryo_pod_broken",
+   "blocks": true,
+   "offset": [
+    -0.6,
+    0,
+    0
+   ],
+   "at": [
+    1,
+    18
+   ]
+  },
+  {
+   "prop": "cryo_pod",
+   "blocks": true,
+   "offset": [
+    -0.6,
+    0,
+    0
+   ],
+   "at": [
+    1,
+    20
+   ]
+  },
+  {
+   "prop": "cryo_pod_broken",
+   "blocks": true,
+   "offset": [
+    -0.6,
+    0,
+    0
+   ],
+   "at": [
+    1,
+    22
+   ]
+  },
+  {
+   "prop": "nest",
+   "at": [
+    3,
+    16
+   ]
+  },
+  {
+   "prop": "nest",
+   "at": [
+    4,
+    21
+   ]
+  },
+  {
+   "prop": "terminal_wall",
+   "face": "w",
+   "screen": "SPECIMEN LOG\nG-7 \"GLOREXX\"\nSTATUS: OUT",
+   "use": {
+    "type": "read",
+    "prompt": "Read the specimen log",
+    "kicker": "Specimen Garden",
+    "title": "Line G: Glorexx",
+    "text": "Purpose: executive protection.\nDiet: executives.\n\nNote from Dr. Kaveros: it has learned to open the pods from inside. I am keeping my card on me from now on. If you are reading this, check the cache by pod five."
+   },
+   "at": [
+    5,
+    14
+   ]
+  },
+  {
+   "prop": "cache",
+   "face": "n",
+   "use": {
+    "type": "cache",
+    "prompt": "Open the cache",
+    "loot": [
+     {
+      "item": "keycard",
+      "color": "blue"
+     },
+     {
+      "item": "fuel_cell"
+     },
+     {
+      "item": "shells"
+     }
+    ]
+   },
+   "at": [
+    2,
+    22
+   ]
+  },
+  {
+   "actor": "roach",
+   "still": true,
+   "at": [
+    3,
+    15
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    4,
+    17
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    2,
+    19
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    5,
+    20
+   ]
+  },
+  {
+   "actor": "glorexx",
+   "still": true,
+   "face": "n",
+   "at": [
+    3,
+    20
+   ]
+  },
+  {
+   "trap": "vent",
+   "phase": 0.0,
+   "at": [
+    4,
+    18
+   ]
+  },
+  {
+   "trap": "vent",
+   "phase": 2.0,
+   "at": [
+    2,
+    16
+   ]
+  },
+  {
+   "item": "crystal",
+   "at": [
+    5,
+    22
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    3,
+    14
+   ]
+  },
+  {
+   "prop": "fabricator",
+   "face": "s",
+   "blocks": true,
+   "at": [
+    27,
+    15
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "w",
+   "at": [
+    29,
+    18
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "w",
+   "at": [
+    29,
+    20
+   ]
+  },
+  {
+   "prop": "crate",
+   "hp": 20,
+   "loot": [
+    {
+     "item": "shells"
+    }
+   ],
+   "at": [
+    25,
+    22
+   ]
+  },
+  {
+   "prop": "crate",
+   "hp": 20,
+   "at": [
+    26,
+    22
+   ]
+  },
+  {
+   "prop": "barrel",
+   "hp": 12,
+   "explode": {
+    "radius": 5.5,
+    "damage": 70
+   },
+   "at": [
+    24,
+    14
+   ]
+  },
+  {
+   "prop": "barrel",
+   "hp": 12,
+   "explode": {
+    "radius": 5.5,
+    "damage": 70
+   },
+   "offset": [
+    0.8,
+    0,
+    0
+   ],
+   "at": [
+    28,
+    21
+   ]
+  },
+  {
+   "prop": "barrel",
+   "hp": 12,
+   "explode": {
+    "radius": 5.5,
+    "damage": 70
+   },
+   "offset": [
+    -0.6,
+    0,
+    0.7
+   ],
+   "solid": true,
+   "at": [
+    28,
+    21
+   ]
+  },
+  {
+   "prop": "cache",
+   "face": "w",
+   "use": {
+    "type": "cache",
+    "prompt": "Open the tool locker",
+    "loot": [
+     {
+      "item": "scattergun"
+     },
+     {
+      "item": "shells"
+     },
+     {
+      "item": "circuit"
+     }
+    ]
+   },
+   "at": [
+    29,
+    14
+   ]
+  },
+  {
+   "prop": "terminal_wall",
+   "face": "e",
+   "screen": "SECURITY GRID\nNORTH PASSAGE\nARMED",
+   "tag": "grid_terminal",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the maintenance terminal",
+    "kicker": "Fabrication \u00b7 Maintenance",
+    "title": "North passage security grid",
+    "text": "Beam fence: ARMED.\nFloor conductors: ARMED.\n\nReason: \"interns\".",
+    "options": [
+     {
+      "label": "Stand the grid down (bypass, 3 s)",
+      "hack": 3.0,
+      "working": "Convincing it you are not an intern\u2026",
+      "unless": "grid_off",
+      "screen": "SECURITY GRID\nNORTH PASSAGE\nSTANDING DOWN",
+      "result": "Grid standing down. The system notes that this is exactly what an intern would do.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "grid_off"
+       },
+       {
+        "type": "message",
+        "text": "North passage grid: off.",
+        "kind": "good"
+       }
+      ]
+     }
+    ]
+   },
+   "at": [
+    24,
+    20
+   ]
+  },
+  {
+   "actor": "custodian",
+   "face": "w",
+   "at": [
+    26,
+    18
+   ]
+  },
+  {
+   "actor": "custodian",
+   "still": true,
+   "face": "w",
+   "at": [
+    28,
+    16
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    25,
+    16
+   ]
+  },
+  {
+   "item": "fuel_cell",
+   "at": [
+    27,
+    20
+   ]
+  },
+  {
+   "item": "armor",
+   "at": [
+    24,
+    22
+   ]
+  },
+  {
+   "trap": "laser",
+   "cycle": [
+    1.5,
+    1.3
+   ],
+   "off": "grid_off",
+   "damage": 14,
+   "at": [
+    15,
+    12
+   ]
+  },
+  {
+   "trap": "shock",
+   "period": 2.6,
+   "off": "grid_off",
+   "damage": 18,
+   "at": [
+    15,
+    10
+   ]
+  },
+  {
+   "sign": "AUTHORISED STAFF\nINTERNS: NO",
+   "face": "e",
+   "color": [
+    1.0,
+    0.2,
+    0.1
+   ],
+   "size": 56,
+   "y": 3.3,
+   "at": [
+    15,
+    13
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "s",
+   "blocks": false,
+   "offset": [
+    0,
+    0,
+    -0.9
+   ],
+   "at": [
+    12,
+    4
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "n",
+   "blocks": false,
+   "offset": [
+    0,
+    0,
+    0.9
+   ],
+   "at": [
+    12,
+    6
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "s",
+   "blocks": false,
+   "offset": [
+    0,
+    0,
+    -0.9
+   ],
+   "at": [
+    14,
+    4
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "n",
+   "blocks": false,
+   "offset": [
+    0,
+    0,
+    0.9
+   ],
+   "at": [
+    14,
+    6
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "s",
+   "blocks": false,
+   "offset": [
+    0,
+    0,
+    -0.9
+   ],
+   "at": [
+    16,
+    4
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "n",
+   "blocks": false,
+   "offset": [
+    0,
+    0,
+    0.9
+   ],
+   "at": [
+    16,
+    6
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "s",
+   "blocks": false,
+   "offset": [
+    0,
+    0,
+    -0.9
+   ],
+   "at": [
+    18,
+    4
+   ]
+  },
+  {
+   "prop": "server_rack",
+   "face": "n",
+   "blocks": false,
+   "offset": [
+    0,
+    0,
+    0.9
+   ],
+   "at": [
+    18,
+    6
+   ]
+  },
+  {
+   "prop": "terminal_wall",
+   "face": "s",
+   "screen": "POWER ROUTING\nREACTOR HALL\nISOLATED",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the routing console",
+    "kicker": "Server Hall \u00b7 Power routing",
+    "title": "Reactor hall is isolated",
+    "text": "The reactor hall was isolated on the last day anyone worked here.\nIts door will not open without power.\n\nThe Monoid on duty would like you to know it has logged your face.",
+    "options": [
+     {
+      "label": "Route power to the reactor hall (bypass, 4 s)",
+      "hack": 4.0,
+      "working": "Rerouting\u2026",
+      "unless": "reactor_open",
+      "screen": "POWER ROUTING\nREACTOR HALL\nLIVE",
+      "result": "Power routed. The iris door east of here is live.\n\nA reminder: the RED card for the Prototype Vault is kept with the reactor, \"where nobody will go\".",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "reactor_open"
+       },
+       {
+        "type": "message",
+        "text": "Reactor hall door: powered.",
+        "kind": "good"
+       },
+       {
+        "type": "quake",
+        "strength": 0.4
+       }
+      ]
+     }
+    ]
+   },
+   "at": [
+    15,
+    3
+   ]
+  },
+  {
+   "actor": "monoid",
+   "face": "s",
+   "at": [
+    13,
+    5
+   ]
+  },
+  {
+   "actor": "turret",
+   "at": [
+    17,
+    5
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    19,
+    7
+   ]
+  },
+  {
+   "item": "crystal",
+   "at": [
+    11,
+    3
+   ]
+  },
+  {
+   "item": "cells",
+   "at": [
+    19,
+    3
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    11,
+    7
+   ]
+  },
+  {
+   "prop": "reactor",
+   "blocks": true,
+   "at": [
+    26,
+    5
+   ]
+  },
+  {
+   "actor": "turret",
+   "at": [
+    24,
+    2
+   ]
+  },
+  {
+   "actor": "turret",
+   "at": [
+    28,
+    8
+   ]
+  },
+  {
+   "actor": "custodian",
+   "face": "n",
+   "at": [
+    25,
+    8
+   ]
+  },
+  {
+   "actor": "monoid",
+   "face": "w",
+   "at": [
+    28,
+    3
+   ]
+  },
+  {
+   "prop": "cache",
+   "face": "w",
+   "tag": "red_cache",
+   "use": {
+    "type": "cache",
+    "prompt": "Open the reactor safe",
+    "loot": [
+     {
+      "item": "keycard",
+      "color": "red",
+      "flag": "got_red"
+     },
+     {
+      "item": "plasma"
+     },
+     {
+      "item": "cells"
+     }
+    ]
+   },
+   "at": [
+    29,
+    1
+   ]
+  },
+  {
+   "prop": "barrel",
+   "hp": 12,
+   "explode": {
+    "radius": 5.5,
+    "damage": 70
+   },
+   "at": [
+    23,
+    9
+   ]
+  },
+  {
+   "prop": "crate",
+   "hp": 20,
+   "loot": [
+    {
+     "item": "cells"
+    }
+   ],
+   "at": [
+    29,
+    9
+   ]
+  },
+  {
+   "trap": "vent",
+   "color": [
+    1.0,
+    0.6,
+    0.2
+   ],
+   "damage": 9,
+   "phase": 0.0,
+   "at": [
+    26,
+    2
+   ]
+  },
+  {
+   "trap": "vent",
+   "color": [
+    1.0,
+    0.6,
+    0.2
+   ],
+   "damage": 9,
+   "phase": 2.0,
+   "at": [
+    26,
+    8
+   ]
+  },
+  {
+   "item": "fuel_cell_big",
+   "at": [
+    24,
+    6
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    23,
+    1
+   ]
+  },
+  {
+   "sign": "REACTOR 1 OF 1\nDAYS SINCE INCIDENT: 109,573",
+   "face": "s",
+   "color": [
+    1.0,
+    0.6,
+    0.2
+   ],
+   "size": 56,
+   "y": 5.5,
+   "at": [
+    26,
+    1
+   ]
+  },
+  {
+   "prop": "pillar",
+   "blocks": true,
+   "at": [
+    4,
+    5
+   ]
+  },
+  {
+   "prop": "terminal_wall",
+   "face": "e",
+   "screen": "FREIGHT LIFT\nCALL",
+   "use": {
+    "type": "terminal",
+    "prompt": "Call the freight lift",
+    "kicker": "Prototype Vault",
+    "title": "Freight lift to the surface",
+    "text": "The lift is at this level. It has been at this level for three hundred years. It is delighted to see you.",
+    "options": [
+     {
+      "label": "Ride it up with whatever you can carry",
+      "close": true,
+      "effects": [
+       {
+        "type": "end",
+        "title": "Out, and richer",
+        "text": "The lift doors close on Sublevel 1. Something knocks, politely, from Sublevel 2."
+       }
+      ]
+     }
+    ]
+   },
+   "at": [
+    2,
+    5
+   ]
+  },
+  {
+   "actor": "glorexx",
+   "still": true,
+   "face": "e",
+   "at": [
+    3,
+    3
+   ]
+  },
+  {
+   "actor": "glorexx",
+   "still": true,
+   "face": "n",
+   "at": [
+    6,
+    7
+   ]
+  },
+  {
+   "actor": "turret",
+   "at": [
+    5,
+    2
+   ]
+  },
+  {
+   "item": "statuette",
+   "at": [
+    2,
+    2
+   ]
+  },
+  {
+   "item": "crystal",
+   "at": [
+    7,
+    2
+   ]
+  },
+  {
+   "item": "fuel_cell_big",
+   "at": [
+    2,
+    8
+   ]
+  },
+  {
+   "item": "chips",
+   "at": [
+    7,
+    8
+   ]
+  },
+  {
+   "item": "circuit",
+   "at": [
+    4,
+    8
+   ]
+  },
+  {
+   "prop": "cryo_pod",
+   "blocks": true,
+   "at": [
+    5,
+    4
+   ]
+  },
+  {
+   "sign": "PROTOTYPES\nLOOK. DO NOT WANT.",
+   "face": "s",
+   "y": 3.0,
+   "size": 64,
+   "at": [
+    4,
+    2
+   ]
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Look round. The front desk in the Concourse may know something.",
+   "done": [
+    "knows_blue",
+    "key_blue"
+   ]
+  },
+  {
+   "text": "Find the BLUE card. Dr. Kaveros took it to the Specimen Garden, west.",
+   "done": "key_blue"
+  },
+  {
+   "text": "Go north through the blue door to the Server Hall. (Fabrication, east, controls the passage grid.)",
+   "done": [
+    "reactor_open"
+   ]
+  },
+  {
+   "text": "The reactor hall is powered. The RED card is kept with the reactor.",
+   "done": "key_red"
+  },
+  {
+   "text": "Open the Prototype Vault, west of the Server Hall, and find a way out."
+  }
+ ],
+ "triggers": [
+  {
+   "on": {
+    "type": "flag",
+    "name": "got_red"
+   },
+   "do": [
+    {
+     "type": "message",
+     "text": "REACTOR SAFE OPENED. Housekeeping has been informed.",
+     "kind": "warn",
+     "delay": 0.6
+    },
+    {
+     "type": "alarm",
+     "delay": 0.6
+    },
+    {
+     "type": "spawn",
+     "tag": "reactor_spawn",
+     "actor": "roach",
+     "count": 5,
+     "delay": 1.5
+    },
+    {
+     "type": "spawn",
+     "tag": "reactor_spawn",
+     "actor": "glorexx",
+     "count": 1,
+     "delay": 3.0
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "room",
+    "name": "Prototype Vault"
+   },
+   "do": [
+    {
+     "type": "message",
+     "text": "Something in here has been waiting a long time to protect an executive.",
+     "kind": "warn"
+    }
+   ]
+  }
+ ]
+}

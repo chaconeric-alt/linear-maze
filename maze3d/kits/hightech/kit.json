@@ -1,0 +1,40 @@
+{
+ "name": "High-tech ruin",
+ "about": "Interiors of an Age of War installation: white ceramic panelling, gunmetal, signal orange, three centuries of grime. One cell is 4 m square and 4 m high.",
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 1.0,
+ "styles": {
+  "corridor": {
+   "floor": [["floor_plate_a", 5], ["floor_plate_b", 3], ["floor_broken", 1], ["floor_grate", 1]],
+   "wall": [["wall_plain_a", 4], ["wall_plain_b", 4], ["wall_plain_c", 3], ["wall_ribbed", 2], ["wall_pipes", 2], ["wall_breach", 1], ["wall_vent", 1]],
+   "ceiling": [["ceil_plain", 3], ["ceil_ducts", 3], ["ceil_cables", 2]],
+   "lights": {"tile": "ceil_light", "every": 2, "flicker": 0.4, "dead": 0.2, "dead_tile": "ceil_cables"}
+  },
+  "lab": {
+   "floor": [["floor_glow", 1], ["floor_plate_b", 4], ["floor_plate_a", 3]],
+   "wall": [["wall_hex", 3], ["wall_screen", 2], ["wall_screen_dead", 1], ["wall_plain_c", 3], ["wall_ribbed", 2], ["wall_light", 1]],
+   "ceiling": [["ceil_plain", 4], ["ceil_ducts", 1]],
+   "lights": {"tile": "ceil_light", "every": 3, "flicker": 0.15, "dead": 0.1, "dead_tile": "ceil_plain"}
+  },
+  "machine": {
+   "floor": [["floor_grate", 4], ["floor_hazard", 2], ["floor_plate_a", 2]],
+   "wall": [["wall_pipes", 4], ["wall_vent", 2], ["wall_plain_a", 2], ["wall_breach", 1], ["wall_light", 1]],
+   "wall_upper": [["wall_plain_a", 2], ["wall_pipes", 2], ["wall_vent", 1], ["wall_ribbed", 2]],
+   "ceiling": [["ceil_truss", 3], ["ceil_ducts", 3]],
+   "lights": {"tile": "ceil_truss", "every": 2, "flicker": 0.2, "energy": 1.2}
+  },
+  "ruin": {
+   "floor": [["floor_broken", 4], ["floor_plate_a", 3], ["floor_grate", 1]],
+   "wall": [["wall_breach", 5], ["wall_plain_a", 2], ["wall_screen_dead", 2], ["wall_pipes", 1]],
+   "ceiling": [["ceil_cables", 5], ["ceil_plain", 1], ["ceil_ducts", 1]],
+   "lights": {"tile": "ceil_light", "every": 3, "flicker": 0.9, "dead": 0.35, "dead_tile": "ceil_cables"}
+  },
+  "vault": {
+   "floor": [["floor_glow", 3], ["floor_hazard", 1], ["floor_plate_b", 2]],
+   "wall": [["wall_ribbed", 4], ["wall_hex", 3], ["wall_light", 2], ["wall_plain_c", 1]],
+   "ceiling": [["ceil_plain", 3], ["ceil_ducts", 1]],
+   "lights": {"tile": "ceil_light", "every": 3, "flicker": 0.0}
+  }
+ }
+}

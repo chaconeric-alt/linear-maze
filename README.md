@@ -2,6 +2,8 @@
 
 Version 0.7.2. The Linear Maze engine, the games built on it, and the editor, as three separate folders.
 
+**New on the `havenot-3d` branch: `maze3d/`.** A separate Godot 4 project: a first-person 3D engine built on the same idea as this one (the engine knows no game; games are data and kits), with one HaveNot level, a high-tech ruin kit, five rigged monsters and a level-generator interface. It doesn't touch the 2D engine, editor or games. See `maze3d/README.md` and `maze3d/SPEC.md`.
+
 New in 0.7.2: the map and the zoom. M opens the floor's map in the middle of the screen, and the game waits while it's open: the wheel zooms it, dragging (or WASD and the arrows) moves it, and M, Esc or Close go back to the game. Ctrl and the mouse wheel zoom the game's own view in and out (remembered for each game). The sound is on N now. A peaceful floor can keep your health and weapons on the HUD (`showGear`), and a game can add buttons to the Inventory (`LM.ui.inventoryButtons`). HaveNot uses both: your health and weapons at home, and the Valuables you've found, counted, from the Inventory (engine/SPEC.md, New in 0.7.2).
 
 New in 0.7.1: big monsters find their way by their size: through gaps and doors they fit, round by a wider way, or they wait at the gap and shoot (engine SPEC 6.26).

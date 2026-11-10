@@ -1,0 +1,708 @@
+{
+ "models": {
+  "barrel": {
+   "model": "models/barrel.glb",
+   "solid": [
+    0.8,
+    1.1,
+    0.8
+   ],
+   "type": "prop"
+  },
+  "cache": {
+   "model": "models/cache.glb",
+   "parts": {
+    "lid": {
+     "rot_axis": [
+      1,
+      0,
+      0
+     ],
+     "rot_deg": -105
+    }
+   },
+   "solid": [
+    1.3,
+    0.9,
+    0.8
+   ],
+   "time": 0.5,
+   "type": "prop"
+  },
+  "crate": {
+   "model": "models/crate.glb",
+   "solid": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "type": "prop"
+  },
+  "cryo_pod": {
+   "light": {
+    "at": [
+     0,
+     1.2,
+     0
+    ],
+    "color": [
+     0.25,
+     1.0,
+     0.35
+    ],
+    "energy": 1.0,
+    "range": 4.5
+   },
+   "model": "models/cryo_pod.glb",
+   "solid": [
+    1.5,
+    3.1,
+    1.5
+   ],
+   "type": "prop"
+  },
+  "cryo_pod_broken": {
+   "model": "models/cryo_pod_broken.glb",
+   "solid": [
+    1.5,
+    3.1,
+    1.5
+   ],
+   "type": "prop"
+  },
+  "debris": {
+   "model": "models/debris.glb",
+   "type": "prop"
+  },
+  "door_iris": {
+   "model": "models/door_iris.glb",
+   "parts": {
+    "blade0": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -58
+    },
+    "blade1": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -58
+    },
+    "blade2": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -58
+    },
+    "blade3": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -58
+    },
+    "blade4": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -58
+    },
+    "blade5": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -58
+    }
+   },
+   "sound": "door_iris",
+   "time": 0.5,
+   "type": "door"
+  },
+  "door_jaw": {
+   "model": "models/door_jaw.glb",
+   "parts": {
+    "jaw_bottom": {
+     "move": [
+      0,
+      -1.8,
+      0
+     ]
+    },
+    "jaw_top": {
+     "move": [
+      0,
+      1.75,
+      0
+     ]
+    }
+   },
+   "sound": "door_heavy",
+   "time": 0.5,
+   "type": "door"
+  },
+  "door_rise": {
+   "model": "models/door_rise.glb",
+   "parts": {
+    "slat0": {
+     "delay": 0.15000000000000002,
+     "move": [
+      0,
+      2.72,
+      0
+     ]
+    },
+    "slat1": {
+     "delay": 0.1,
+     "move": [
+      0,
+      2.04,
+      0
+     ]
+    },
+    "slat2": {
+     "delay": 0.05,
+     "move": [
+      0,
+      1.36,
+      0
+     ]
+    },
+    "slat3": {
+     "delay": 0.0,
+     "move": [
+      0,
+      0.68,
+      0
+     ]
+    }
+   },
+   "sound": "door_heavy",
+   "time": 0.6,
+   "type": "door"
+  },
+  "door_shear": {
+   "model": "models/door_shear.glb",
+   "parts": {
+    "shear_a": {
+     "move": [
+      -1.5,
+      1.75,
+      0
+     ]
+    },
+    "shear_b": {
+     "move": [
+      1.5,
+      -1.85,
+      0
+     ]
+    }
+   },
+   "sound": "door_slide",
+   "time": 0.4,
+   "type": "door"
+  },
+  "door_split": {
+   "model": "models/door_split.glb",
+   "parts": {
+    "leaf_l": {
+     "move": [
+      -1.34,
+      0,
+      0
+     ]
+    },
+    "leaf_r": {
+     "move": [
+      1.34,
+      0,
+      0
+     ]
+    }
+   },
+   "sound": "door_slide",
+   "time": 0.45,
+   "type": "door"
+  },
+  "door_vault": {
+   "model": "models/door_vault.glb",
+   "parts": {
+    "plug": {
+     "move": [
+      3.3,
+      0,
+      0
+     ],
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": 215
+    }
+   },
+   "sound": "door_vault",
+   "time": 1.4,
+   "type": "door"
+  },
+  "fabricator": {
+   "light": {
+    "at": [
+     0.3,
+     1.3,
+     0.1
+    ],
+    "color": [
+     0.2,
+     0.9,
+     1.0
+    ],
+    "energy": 1.2,
+    "range": 5
+   },
+   "model": "models/fabricator.glb",
+   "solid": [
+    2.4,
+    2.4,
+    1.4
+   ],
+   "type": "prop"
+  },
+  "health_station": {
+   "light": {
+    "at": [
+     0,
+     1.7,
+     0.6
+    ],
+    "color": [
+     0.25,
+     1.0,
+     0.35
+    ],
+    "energy": 0.8,
+    "range": 4
+   },
+   "model": "models/health_station.glb",
+   "mount": "wall",
+   "solid": [
+    0.9,
+    2.2,
+    0.5
+   ],
+   "type": "prop"
+  },
+  "holo_table": {
+   "light": {
+    "at": [
+     0,
+     1.8,
+     0
+    ],
+    "color": [
+     0.2,
+     0.9,
+     1.0
+    ],
+    "energy": 1.5,
+    "range": 6
+   },
+   "model": "models/holo_table.glb",
+   "solid": [
+    2.2,
+    1.0,
+    2.2
+   ],
+   "spin": {
+    "spin0": 25
+   },
+   "type": "prop"
+  },
+  "item_ammo_bullets": {
+   "model": "models/item_ammo_bullets.glb",
+   "type": "item"
+  },
+  "item_ammo_cells": {
+   "model": "models/item_ammo_cells.glb",
+   "type": "item"
+  },
+  "item_ammo_shells": {
+   "model": "models/item_ammo_shells.glb",
+   "type": "item"
+  },
+  "item_armor": {
+   "model": "models/item_armor.glb",
+   "type": "item"
+  },
+  "item_chips": {
+   "model": "models/item_chips.glb",
+   "type": "item"
+  },
+  "item_circuit": {
+   "model": "models/item_circuit.glb",
+   "type": "item"
+  },
+  "item_cookies": {
+   "model": "models/item_cookies.glb",
+   "type": "item"
+  },
+  "item_crystal": {
+   "model": "models/item_crystal.glb",
+   "type": "item"
+  },
+  "item_fuel_cell": {
+   "model": "models/item_fuel_cell.glb",
+   "type": "item"
+  },
+  "item_fuel_cell_big": {
+   "model": "models/item_fuel_cell_big.glb",
+   "type": "item"
+  },
+  "item_health": {
+   "model": "models/item_health.glb",
+   "type": "item"
+  },
+  "item_keycard": {
+   "model": "models/item_keycard.glb",
+   "type": "item"
+  },
+  "item_statuette": {
+   "model": "models/item_statuette.glb",
+   "type": "item"
+  },
+  "nest": {
+   "light": {
+    "at": [
+     0,
+     0.8,
+     0
+    ],
+    "color": [
+     0.3,
+     0.9,
+     0.15
+    ],
+    "energy": 0.7,
+    "range": 4
+   },
+   "model": "models/nest.glb",
+   "type": "prop"
+  },
+  "pillar": {
+   "light": {
+    "at": [
+     0,
+     2.0,
+     0
+    ],
+    "color": [
+     0.2,
+     0.9,
+     1.0
+    ],
+    "energy": 0.9,
+    "range": 5
+   },
+   "model": "models/pillar.glb",
+   "solid": [
+    1.5,
+    4.0,
+    1.5
+   ],
+   "type": "prop"
+  },
+  "reactor": {
+   "hum": true,
+   "light": {
+    "at": [
+     0,
+     2.0,
+     0
+    ],
+    "color": [
+     0.62,
+     0.32,
+     1.0
+    ],
+    "energy": 3.0,
+    "pulse": 0.35,
+    "range": 9
+   },
+   "model": "models/reactor.glb",
+   "solid": [
+    2.6,
+    4.0,
+    2.6
+   ],
+   "spin": {
+    "spin0": 50,
+    "spin1": -80,
+    "spin2": 35
+   },
+   "type": "prop"
+  },
+  "server_rack": {
+   "model": "models/server_rack.glb",
+   "solid": [
+    1.0,
+    2.4,
+    0.8
+   ],
+   "type": "prop"
+  },
+  "terminal_desk": {
+   "model": "models/terminal_desk.glb",
+   "screen": {
+    "at": [
+     0,
+     1.5,
+     -0.27
+    ],
+    "size": [
+     0.34,
+     0.42
+    ],
+    "tilt": -15
+   },
+   "solid": [
+    1.5,
+    1.6,
+    0.9
+   ],
+   "type": "prop"
+  },
+  "terminal_wall": {
+   "model": "models/terminal_wall.glb",
+   "mount": "wall",
+   "screen": {
+    "at": [
+     0,
+     1.8,
+     0.35
+    ],
+    "size": [
+     0.9,
+     0.6
+    ],
+    "tilt": -12
+   },
+   "solid": [
+    1.3,
+    2.4,
+    0.6
+   ],
+   "type": "prop"
+  },
+  "trap_laser": {
+   "model": "models/trap_laser.glb",
+   "type": "prop"
+  },
+  "trap_shock": {
+   "model": "models/trap_shock.glb",
+   "type": "prop"
+  },
+  "trap_vent": {
+   "model": "models/trap_vent.glb",
+   "type": "prop"
+  },
+  "weapon_handgun": {
+   "model": "models/weapon_handgun.glb",
+   "muzzle": [
+    0,
+    0.035,
+    0.36
+   ],
+   "type": "weapon"
+  },
+  "weapon_plasma": {
+   "model": "models/weapon_plasma.glb",
+   "muzzle": [
+    0,
+    0.04,
+    0.72
+   ],
+   "type": "weapon"
+  },
+  "weapon_scattergun": {
+   "model": "models/weapon_scattergun.glb",
+   "muzzle": [
+    0,
+    0.05,
+    0.75
+   ],
+   "type": "weapon"
+  }
+ },
+ "tiles": {
+  "ceil_cables": {
+   "kind": "ceiling",
+   "model": "models/ceil_cables.glb"
+  },
+  "ceil_ducts": {
+   "kind": "ceiling",
+   "model": "models/ceil_ducts.glb"
+  },
+  "ceil_light": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.5,
+     0
+    ],
+    "color": [
+     1.0,
+     0.95,
+     0.86
+    ],
+    "energy": 2.0,
+    "range": 12
+   },
+   "model": "models/ceil_light.glb"
+  },
+  "ceil_plain": {
+   "kind": "ceiling",
+   "model": "models/ceil_plain.glb"
+  },
+  "ceil_truss": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.4,
+     0
+    ],
+    "color": [
+     1.0,
+     0.66,
+     0.3
+    ],
+    "energy": 2.0,
+    "range": 13
+   },
+   "model": "models/ceil_truss.glb"
+  },
+  "floor_broken": {
+   "kind": "floor",
+   "model": "models/floor_broken.glb"
+  },
+  "floor_glow": {
+   "kind": "floor",
+   "model": "models/floor_glow.glb"
+  },
+  "floor_grate": {
+   "kind": "floor",
+   "light": {
+    "at": [
+     0,
+     0.3,
+     0
+    ],
+    "color": [
+     1.0,
+     0.55,
+     0.12
+    ],
+    "energy": 0.5,
+    "range": 3.5
+   },
+   "model": "models/floor_grate.glb"
+  },
+  "floor_hazard": {
+   "kind": "floor",
+   "model": "models/floor_hazard.glb"
+  },
+  "floor_plate_a": {
+   "kind": "floor",
+   "model": "models/floor_plate_a.glb"
+  },
+  "floor_plate_b": {
+   "kind": "floor",
+   "model": "models/floor_plate_b.glb"
+  },
+  "wall_breach": {
+   "kind": "wall",
+   "model": "models/wall_breach.glb"
+  },
+  "wall_hex": {
+   "kind": "wall",
+   "model": "models/wall_hex.glb"
+  },
+  "wall_light": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.0,
+     0.6
+    ],
+    "color": [
+     0.9,
+     0.95,
+     1.0
+    ],
+    "energy": 1.4,
+    "range": 7
+   },
+   "model": "models/wall_light.glb"
+  },
+  "wall_pipes": {
+   "kind": "wall",
+   "model": "models/wall_pipes.glb"
+  },
+  "wall_plain_a": {
+   "kind": "wall",
+   "model": "models/wall_plain_a.glb"
+  },
+  "wall_plain_b": {
+   "kind": "wall",
+   "model": "models/wall_plain_b.glb"
+  },
+  "wall_plain_c": {
+   "kind": "wall",
+   "model": "models/wall_plain_c.glb"
+  },
+  "wall_ribbed": {
+   "kind": "wall",
+   "model": "models/wall_ribbed.glb"
+  },
+  "wall_screen": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.0,
+     0.7
+    ],
+    "color": [
+     0.2,
+     0.9,
+     0.8
+    ],
+    "energy": 0.6,
+    "range": 4.5
+   },
+   "model": "models/wall_screen.glb"
+  },
+  "wall_screen_dead": {
+   "kind": "wall",
+   "model": "models/wall_screen_dead.glb"
+  },
+  "wall_vent": {
+   "kind": "wall",
+   "model": "models/wall_vent.glb"
+  }
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "items": {
+  "chips": {"name": "Lucky credit chips", "kind": "treasure", "model": "item_chips", "value": 15, "glow": [1.0, 0.3, 0.6]},
+  "circuit": {"name": "Gold-trace circuit board", "kind": "treasure", "model": "item_circuit", "value": 25, "glow": [1.0, 0.8, 0.3]},
+  "fuel_cell": {"name": "Fuel cell", "kind": "treasure", "model": "item_fuel_cell", "value": 20, "glow": [1.0, 0.6, 0.15]},
+  "fuel_cell_big": {"name": "Heavy fuel cell", "kind": "treasure", "model": "item_fuel_cell_big", "value": 60, "glow": [0.6, 0.3, 1.0]},
+  "crystal": {"name": "Data crystal", "kind": "treasure", "model": "item_crystal", "value": 80, "glow": [0.6, 0.3, 1.0]},
+  "statuette": {"name": "Employee of the Century", "kind": "treasure", "model": "item_statuette", "value": 150, "glow": [1.0, 0.8, 0.3], "scale": 2.0},
+  "cookies": {"name": "Good Job Cookies", "kind": "treasure", "model": "item_cookies", "value": 10, "glow": [1.0, 0.3, 0.6]},
+  "health": {"name": "Health Pak", "kind": "health", "model": "item_health", "amount": 30, "glow": [0.3, 1.0, 0.4], "sound": "heal"},
+  "armor": {"name": "Light Ballistic Vest", "kind": "armor", "model": "item_armor", "amount": 50, "glow": [0.2, 0.9, 1.0]},
+  "shells": {"name": "Shells", "kind": "ammo", "ammo": "shells", "amount": 8, "model": "item_ammo_shells", "glow": [1.0, 0.4, 0.2]},
+  "cells": {"name": "Energy cells", "kind": "ammo", "ammo": "cells", "amount": 12, "model": "item_ammo_cells", "glow": [0.2, 0.9, 1.0]},
+  "keycard": {"name": "Key card", "kind": "key", "model": "item_keycard", "color": "red", "scale": 2.0},
+  "scattergun": {"name": "Pump Scattergun", "kind": "weapon", "weapon": "scattergun", "model": "weapon_scattergun", "glow": [1.0, 0.6, 0.3], "scale": 1.3},
+  "plasma": {"name": "Plasma Musket", "kind": "weapon", "weapon": "plasma", "model": "weapon_plasma", "glow": [0.3, 0.9, 1.0], "scale": 1.3}
+ }
+}

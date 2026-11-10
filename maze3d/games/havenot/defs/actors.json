@@ -1,0 +1,31 @@
+{
+ "actors": {
+  "roach": {"name": "Gladiator Roach", "model": "actors/roach.glb", "hp": 24, "speed": 7.5, "accel": 40, "radius": 0.55, "height": 0.8, "eye": 0.5,
+   "sight": 22, "behavior": "chaser", "blood": [0.6, 0.9, 0.2], "walk_rate": 1.4,
+   "attacks": [{"type": "melee", "damage": 7, "range": 1.7, "windup": 0.22, "recover": 0.28, "cooldown": 0.8, "knock": 2.0, "sound": "bite"}],
+   "sounds": {"alert": "chitter", "die": "squish"}},
+  "custodian": {"name": "Custodian", "model": "actors/custodian.glb", "hp": 150, "armor": 0.15, "speed": 2.7, "accel": 12, "radius": 0.8, "height": 2.5, "eye": 2.3, "mass": 4,
+   "sight": 26, "behavior": "chaser", "blood": [1.0, 0.7, 0.3], "takes": {"blast": 1.6, "energy": 1.3},
+   "attacks": [{"type": "melee", "damage": 24, "range": 2.7, "windup": 0.48, "recover": 0.52, "cooldown": 1.7, "knock": 9.0, "sound": "clang"}],
+   "barks": ["PLEASE REMAIN STILL FOR CLEANING", "SPILL DETECTED: YOU", "WET FLOOR. SOON.", "YOUR VISITOR BADGE EXPIRED 300 YEARS AGO", "TIDYING"], "bark_color": [1.0, 0.85, 0.3],
+   "drops": [{"item": "fuel_cell", "chance": 0.7}, {"item": "circuit", "chance": 0.3}],
+   "sounds": {"alert": "servo", "die": "crash"}},
+  "monoid": {"name": "Monoid", "model": "actors/monoid.glb", "hp": 90, "speed": 4.6, "accel": 14, "radius": 0.6, "height": 1.2, "center": 1.6, "eye": 1.6, "fly": true,
+   "sight": 30, "behavior": "skirmisher", "keep": [7, 13], "blood": [0.4, 0.9, 1.0], "takes": {"energy": 1.3},
+   "attacks": [{"type": "ranged", "projectile": "bolt", "damage": 9, "burst": 3, "burst_gap": 0.16, "windup": 0.42, "recover": 0.35, "cooldown": 2.3, "range": 28, "muzzle": 1.6, "spread": 1.5, "lead": 0.5, "sound": "bolt"}],
+   "flee_below": 0.3, "flee_text": "The Monoid's eye flickers. \"This is above my pay grade.\"",
+   "barks": ["I SEE YOU", "PLEASE HOLD", "YOUR CALL IS IMPORTANT"], "bark_color": [0.4, 0.9, 1.0],
+   "drops": [{"item": "fuel_cell_big", "chance": 1.0}],
+   "sounds": {"alert": "ping", "die": "crash"}},
+  "glorexx": {"name": "Glorexx", "model": "actors/glorexx.glb", "hp": 115, "speed": 6.2, "accel": 26, "radius": 0.85, "height": 1.6, "eye": 1.1, "mass": 2.5,
+   "sight": 24, "behavior": "chaser", "blood": [0.8, 0.1, 0.15],
+   "attacks": [{"type": "melee", "damage": 17, "range": 2.5, "windup": 0.24, "recover": 0.34, "cooldown": 1.0, "knock": 5.0, "sound": "bite"},
+    {"type": "ranged", "projectile": "spit", "damage": 11, "range": 18, "min_range": 6, "windup": 0.24, "recover": 0.36, "cooldown": 3.6, "muzzle": 1.1, "spread": 3, "sound": "spit"}],
+   "sounds": {"alert": "growl", "die": "squish"}},
+  "turret": {"name": "Ceiling Turret", "model": "actors/turret.glb", "hp": 60, "armor": 0.2, "radius": 0.42, "height": 0.9, "center": -0.5, "eye": 0.6, "mount": "ceiling",
+   "sight": 24, "behavior": "turret", "turn": 3.5, "blood": [1.0, 0.7, 0.3], "gib": false,
+   "attacks": [{"type": "ranged", "projectile": "bolt", "damage": 6, "burst": 4, "burst_gap": 0.11, "windup": 0.5, "recover": 0.2, "cooldown": 2.1, "range": 24, "muzzle": 0.62, "spread": 2.2, "sound": "bolt"}],
+   "explode": {"radius": 2.5, "damage": 12},
+   "sounds": {"alert": "ping", "die": "crash"}}
+ }
+}
