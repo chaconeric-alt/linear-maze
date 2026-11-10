@@ -148,6 +148,23 @@ func run(m: Node) -> void:
 		_say(not is_instance_valid(a) or a.dead, "%s dies to the %s (%d frames, it dealt %.0f)" % [nm, pl.weapon().get("name", "?"), t, hp0 - pl.hp])
 	_say(took > 0.0, "actors fight back (%.0f damage taken in all)" % took)
 	await _frames(30)
+	# --- the E key really reaches the player (a key event, not a direct call)
+	for n in get_tree().get_nodes_in_group("usable"):
+		if is_instance_valid(n) and n is Prop and n.e.get("use", {}).get("type", "") == "cache" and n.used == 0:
+			pl.global_position = n.global_position + n.global_transform.basis.z * 1.8 + Vector3(0, 0.05, 0)
+			_look_at(n.global_position + Vector3(0, 1.2, 0))
+			await _frames(3)
+			_say(pl.focus == n, "a cache in front of you is offered for use")
+			for k in [KEY_F, KEY_E]:
+				var ev := InputEventKey.new()
+				ev.keycode = k
+				ev.physical_keycode = k
+				ev.pressed = true
+				Input.parse_input_event(ev)
+				await _frames(3)
+			_say(n.used > 0, "pressing E opens it")
+			_say(not pl.lamp.visible, "pressing F switches the lamp")
+			break
 	# --- containers, stations, terminals
 	for n in get_tree().get_nodes_in_group("usable"):
 		if not is_instance_valid(n) or not (n is Prop):

@@ -444,17 +444,22 @@ func _on_end(info: Dictionary) -> void:
 func _unhandled_key_input(ev: InputEvent) -> void:
 	if not (ev is InputEventKey) or not ev.pressed or ev.echo:
 		return
+	var used := false        # only swallow keys the HUD acted on; the rest belong to the player (E, F, 1-9)
 	match _state:
 		"play":
 			if ev.keycode == KEY_ESCAPE:
 				_pause()
+				used = true
 			elif ev.is_action("map"):
 				_big_map = not _big_map
 				_map.custom_minimum_size = Vector2(420, 420) if _big_map else Vector2(212, 212)
+				used = true
 		"pause":
 			if ev.keycode == KEY_ESCAPE:
 				begin_play()
+				used = true
 		"panel":
+			used = true
 			if ev.keycode == KEY_ESCAPE:
 				close_panel()
 			elif ev.keycode >= KEY_1 and ev.keycode <= KEY_9:
@@ -463,4 +468,5 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 					if c is Button and c.text.begins_with("%d " % want):
 						c.pressed.emit()
 						break
-	get_viewport().set_input_as_handled()
+	if used:
+		get_viewport().set_input_as_handled()
