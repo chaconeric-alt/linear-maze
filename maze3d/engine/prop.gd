@@ -16,6 +16,14 @@ var _parts: Array = []
 var _open := 0.0
 var _open_target := 0.0
 var _label: Label3D
+var _lockmat: StandardMaterial3D
+var _walk: Dictionary = {}
+var _walk_left := 0
+var _walk_cool := 0.0
+var _side := 0.0
+var _bar: Node3D
+var _bar_rest := Vector3.ZERO
+var _rattle := 0.0
 
 
 func setup(lv: Level, entry: Dictionary, kit: String) -> void:
@@ -24,8 +32,27 @@ func setup(lv: Level, entry: Dictionary, kit: String) -> void:
 	kit_id = kit
 	tag = e.get("tag", "")
 	meta = LM.model_meta(kit, e["prop"])
-	inst = LM.spawn_model(kit, e["prop"])
+	_lockmat = StandardMaterial3D.new()
+	_lockmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_glow(Door.OPEN_COLOR)
+	inst = LM.spawn_model(kit, e["prop"], {"lock": _lockmat})
 	add_child(inst)
+	for b in meta.get("solids", []):          # several boxes: [x, y, z, width, height, depth]
+		var bs := CollisionShape3D.new()
+		var bb := BoxShape3D.new()
+		bb.size = Vector3(b[3], b[4], b[5])
+		bs.shape = bb
+		bs.position = Vector3(b[0], b[1], b[2])
+		add_child(bs)
+	if meta.has("walk") or e.has("walk"):      # a scanner arch: something happens when you walk through
+		_walk = meta.get("walk", {}).duplicate(true)
+		for k in e.get("walk", {}):
+			_walk[k] = e["walk"][k]
+		_walk_left = int(_walk.get("charges", -1))
+		_glow(LM.col(_walk.get("color"), Door.OPEN_COLOR))
+		_bar = LM.find_node(inst, "scanbar")
+		if _bar:
+			_bar_rest = _bar.position
 	collision_layer = 1
 	collision_mask = 0
 	if meta.has("solid") and e.get("solid", true):
@@ -67,12 +94,31 @@ func setup(lv: Level, entry: Dictionary, kit: String) -> void:
 		_label.position = LM.vec(sc["at"]) + Vector3(0, 0, 0.012)
 		_label.rotation.x = deg_to_rad(sc.get("tilt", 0.0))
 		add_child(_label)
-	set_process(not _spin.is_empty() or not _parts.is_empty())
+	set_process(not _spin.is_empty() or not _parts.is_empty() or not _walk.is_empty())
+
+
+func _glow(c: Color, k := 2.5) -> void:
+	_lockmat.albedo_color = Color(c.r * k, c.g * k, c.b * k)
 
 
 func _process(dt: float) -> void:
 	for s in _spin:
 		s[0].rotate_y(s[1] * dt)
+	if not _walk.is_empty():
+		_walk_tick(dt)
+	if e.get("rattle", false) and used == 0 and Game.player:
+		# something inside wants out: the door shivers now and then, if you are near enough to notice
+		_rattle -= dt
+		if _rattle <= 0.0 and Game.player.global_position.distance_to(global_position) < 9.0:
+			_rattle = randf_range(1.6, 4.5)
+			LM.sound("rattle", global_position, -4.0)
+			for p in _parts:
+				var n: Node3D = p["n"]
+				var rest: Transform3D = p["rest"]
+				var tw := n.create_tween()
+				for i in 4:
+					tw.tween_property(n, "rotation:y", rest.basis.get_euler().y + (0.05 if i % 2 == 0 else -0.02), 0.045)
+				tw.tween_property(n, "rotation:y", rest.basis.get_euler().y, 0.05)
 	if _open != _open_target:
 		_open = move_toward(_open, _open_target, dt / max(0.05, meta.get("time", 0.5)))
 		for p in _parts:
@@ -86,12 +132,74 @@ func _process(dt: float) -> void:
 			p["n"].transform = xf
 
 
+# ------------------------------------------------------------------ walking through it (arches)
+func _walk_tick(dt: float) -> void:
+	_walk_cool -= dt
+	var pl: Node3D = Game.player
+	if pl == null or not is_instance_valid(pl) or pl.dead:
+		return
+	var lp: Vector3 = global_transform.affine_inverse() * pl.global_position
+	var op: Array = meta.get("opening", [1.25, 2.9])
+	var inside: bool = abs(lp.x) < op[0] and lp.y < op[1]
+	var was := _side
+	_side = signf(lp.z) if abs(lp.z) > 0.05 else _side
+	if not inside or was == 0.0 or was == _side or abs(lp.z) > 1.5:
+		return
+	# they have just crossed the plane of the arch
+	if _walk_cool > 0.0 or (_walk.get("once", false) and used > 0):
+		return
+	_walk_cool = _walk.get("cooldown", 2.0)
+	var ctx := {"at": global_position, "prop": self}
+	_sweep()
+	if _walk_left == 0:
+		Game.say(_walk.get("empty_text", "Nothing happens."), "info")
+		return
+	var need: String = _walk.get("need", "")
+	if (need == "hurt" and pl.hp >= pl.max_hp) or (need == "armed" and pl.weapons.size() <= 1) or (_walk.has("when") and not Game.has_flag(_walk["when"])) \
+			or (_walk.has("unless") and Game.has_flag(_walk["unless"])):
+		if _walk.has("idle_text"):
+			Game.say(_walk["idle_text"], "info")
+		LM.sound("click", global_position)
+		return
+	var cost: int = int(_walk.get("cost", 0))
+	if cost > 0:
+		if Game.credits < cost:
+			Game.run_effects(_walk.get("fail"), ctx)
+			Fx.sparks(level, pl.global_position + Vector3(0, 1.0, 0), LM.col(_walk.get("color")), 14, 5.0)
+			return
+		Game.add_credits(-cost)
+	used += 1
+	if _walk_left > 0:
+		_walk_left -= 1
+		if _walk_left == 0:
+			_glow(Color(0.25, 0.25, 0.28), 1.0)
+	LM.sound(_walk.get("sound", "use"), global_position)
+	Fx.flash(level, global_position + Vector3(0, 1.6, 0), LM.col(_walk.get("color")), 4.0, 7.0, 0.4)
+	Game.run_effects(_walk.get("effects"), ctx)
+	if tag != "":
+		level.notify("walk", tag)
+
+
+func _sweep() -> void:
+	if _bar == null:
+		return
+	var tw := _bar.create_tween()
+	tw.tween_property(_bar, "position:y", _bar_rest.y - meta.get("opening", [1.25, 2.9])[1] + 0.25, 0.35)
+	tw.tween_property(_bar, "position:y", _bar_rest.y, 0.35)
+
+
+func set_enabled(on: bool) -> void:
+	if not on and not _walk.is_empty():
+		_walk_left = 0
+		_glow(Color(0.25, 0.25, 0.28), 1.0)
+
+
 # ------------------------------------------------------------------ using it
 func prompt() -> String:
 	var u: Dictionary = e.get("use", {})
 	if u.is_empty():
 		return ""
-	if u.get("once", u.get("type", "") == "cache") and used > 0:
+	if u.get("once", u.get("type", "") in ["cache", "locker"]) and used > 0:
 		return ""
 	if u.has("when") and not Game.has_flag(u["when"]):
 		return u.get("locked_prompt", "")
@@ -126,6 +234,30 @@ func use(_player: Node) -> void:
 				tw.tween_property(p, "global_position", to, 0.25)
 				i += 1
 			Game.run_effects(u.get("effects"))
+		"locker":
+			# what is in it comes out: things to take, things that bite, or things that go off
+			used += 1
+			_open_target = 1.0
+			LM.sound("locker", global_position)
+			var front: Vector3 = global_position + global_transform.basis.z * 1.3
+			var k := 0
+			for it in u.get("loot", []):
+				var p := Pickup.new()
+				level.add_child(p)
+				p.global_position = global_position + global_transform.basis.z * 0.4 + Vector3(0, 1.1, 0)
+				p.setup(level, it, kit_id)
+				var to: Vector3 = front + global_transform.basis.x * (k - (u["loot"].size() - 1) / 2.0) * 0.7 + Vector3(0, 1.0, 0)
+				p.create_tween().tween_property(p, "global_position", to, 0.3)
+				k += 1
+			if u.has("actor"):
+				Game.say(u.get("text", "It was not empty."), "warn")
+				for i in int(u.get("count", 1)):
+					var a := level.spawn_thing({"actor": u["actor"], "alert": true}, level.cell_of(front))
+					if a:
+						a.global_position = Vector3(front.x, a.global_position.y, front.z) + global_transform.basis.x * (i - (u.get("count", 1) - 1) / 2.0) * 0.9
+			elif u.get("loot", []).is_empty() and not u.has("effects"):
+				Game.say(u.get("text", "Empty. Somebody got here first, three hundred years ago."), "info")
+			Game.run_effects(u.get("effects"), {"at": front, "prop": self})
 		"heal":
 			var left: int = int(u.get("charges", 3)) - used
 			if left <= 0:

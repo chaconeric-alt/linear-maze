@@ -1,0 +1,274 @@
+{
+ "models": {
+  "ag_desk": {
+   "light": {
+    "at": [
+     0,
+     0.3,
+     0.9
+    ],
+    "color": [
+     1.0,
+     0.2,
+     0.6
+    ],
+    "energy": 0.6,
+    "range": 4
+   },
+   "model": "models/ag_desk.glb",
+   "screen": {
+    "at": [
+     0,
+     1.32,
+     0.52
+    ],
+    "size": [
+     0.5,
+     0.3
+    ],
+    "tilt": -14
+   },
+   "solid": [
+    3.2,
+    1.1,
+    1.2
+   ],
+   "type": "prop"
+  },
+  "ag_kiosk": {
+   "light": {
+    "at": [
+     0,
+     1.5,
+     0.6
+    ],
+    "color": [
+     1.0,
+     0.2,
+     0.6
+    ],
+    "energy": 0.7,
+    "range": 4
+   },
+   "model": "models/ag_kiosk.glb",
+   "screen": {
+    "at": [
+     0,
+     1.55,
+     0.118
+    ],
+    "size": [
+     0.56,
+     1.1
+    ],
+    "tilt": 0
+   },
+   "solid": [
+    0.85,
+    2.3,
+    0.4
+   ],
+   "type": "prop"
+  },
+  "ag_pedestal": {
+   "light": {
+    "at": [
+     0,
+     1.5,
+     0
+    ],
+    "color": [
+     1.0,
+     0.3,
+     0.65
+    ],
+    "energy": 0.8,
+    "range": 3.5
+   },
+   "model": "models/ag_pedestal.glb",
+   "parts": {
+    "dome": {
+     "move": [
+      0,
+      1.0,
+      0
+     ]
+    }
+   },
+   "solid": [
+    0.95,
+    1.7,
+    0.95
+   ],
+   "time": 0.6,
+   "type": "prop"
+  },
+  "ag_planter": {
+   "model": "models/ag_planter.glb",
+   "solid": [
+    0.9,
+    1.4,
+    0.9
+   ],
+   "type": "prop"
+  },
+  "ag_pod": {
+   "model": "models/ag_pod.glb",
+   "solid": [
+    1.1,
+    1.6,
+    1.1
+   ],
+   "type": "prop"
+  },
+  "ag_sofa": {
+   "model": "models/ag_sofa.glb",
+   "solid": [
+    3.2,
+    0.9,
+    1.1
+   ],
+   "type": "prop"
+  }
+ },
+ "tiles": {
+  "ceil_coffer": {
+   "kind": "ceiling",
+   "model": "models/ceil_coffer.glb"
+  },
+  "ceil_halo": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.8,
+     0
+    ],
+    "color": [
+     1.0,
+     0.3,
+     0.65
+    ],
+    "energy": 1.1,
+    "range": 9
+   },
+   "model": "models/ceil_halo.glb"
+  },
+  "ceil_lightbox": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.5,
+     0
+    ],
+    "color": [
+     1.0,
+     0.95,
+     0.98
+    ],
+    "energy": 1.25,
+    "range": 12
+   },
+   "model": "models/ceil_lightbox.glb"
+  },
+  "ceil_slats": {
+   "kind": "ceiling",
+   "model": "models/ceil_slats.glb"
+  },
+  "floor_check": {
+   "kind": "floor",
+   "model": "models/floor_check.glb"
+  },
+  "floor_glass": {
+   "kind": "floor",
+   "model": "models/floor_glass.glb"
+  },
+  "floor_halo": {
+   "kind": "floor",
+   "model": "models/floor_halo.glb"
+  },
+  "floor_onyx": {
+   "kind": "floor",
+   "model": "models/floor_onyx.glb"
+  },
+  "wall_ad": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.1,
+     0.8
+    ],
+    "color": [
+     1.0,
+     0.25,
+     0.62
+    ],
+    "energy": 0.7,
+    "range": 5
+   },
+   "model": "models/wall_ad.glb"
+  },
+  "wall_column": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.0,
+     0.7
+    ],
+    "color": [
+     1.0,
+     0.95,
+     0.98
+    ],
+    "energy": 1.0,
+    "range": 6
+   },
+   "model": "models/wall_column.glb"
+  },
+  "wall_crack": {
+   "kind": "wall",
+   "model": "models/wall_crack.glb"
+  },
+  "wall_emblem": {
+   "kind": "wall",
+   "model": "models/wall_emblem.glb"
+  },
+  "wall_flute": {
+   "kind": "wall",
+   "model": "models/wall_flute.glb"
+  },
+  "wall_niche": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.0,
+     0.7
+    ],
+    "color": [
+     1.0,
+     0.3,
+     0.65
+    ],
+    "energy": 0.5,
+    "range": 4
+   },
+   "model": "models/wall_niche.glb"
+  },
+  "wall_pad": {
+   "kind": "wall",
+   "model": "models/wall_pad.glb"
+  },
+  "wall_porcelain_a": {
+   "kind": "wall",
+   "model": "models/wall_porcelain_a.glb"
+  },
+  "wall_porcelain_b": {
+   "kind": "wall",
+   "model": "models/wall_porcelain_b.glb"
+  }
+ }
+}

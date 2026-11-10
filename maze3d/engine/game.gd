@@ -95,6 +95,13 @@ func _run(ef: Dictionary, ctx: Dictionary) -> void:
 		"heal":
 			if player:
 				player.heal(ef.get("amount", 25))
+		"ammo":          # amount is a share of a full load (0.5 = half), for every kind carried
+			if player:
+				for k in LM.defs.get("ammo", {}):
+					player.add_ammo(k, int(ceil(LM.defs["ammo"][k].get("max", 20) * ef.get("amount", 0.5))))
+		"explode":
+			var at: Vector3 = ctx.get("at", player.global_position if player else Vector3.ZERO)
+			Fx.explode(level, at + Vector3(0, 0.8, 0), ef.get("radius", 4.0), ef.get("damage", 40.0), LM.col(ef.get("color"), Color(1.0, 0.5, 0.12)))
 		"hurt":
 			if player:
 				player.hurt(ef.get("amount", 10), {"type": ef.get("kind", "trap")})

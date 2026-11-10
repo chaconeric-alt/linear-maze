@@ -85,6 +85,8 @@ All vectors here are in Godot axes (Y up). The build script converts from Blende
 - **`parts`**: moving pieces. Each key is the name of an **object inside the .glb**; `move` slides it, `rot_axis` + `rot_deg` turn it about its own origin, `delay` (0–1) staggers it. A door plays them 0 → 1 over `time` seconds to open; a cache plays them when opened. A new kind of door is a model whose leaves are separate objects, plus these numbers.
 - **`spin`**: object name → degrees per second, turned about its own Y axis for ever.
 - **`solid`**: `[width, height, depth]` of a collision box. Props at least 1.4 wide also block the cell for path-finding (a placement's `blocks` overrides).
+- **`solids`**: several boxes, `[x, y, z, width, height, depth]` each, for things you walk through or under (an arch's two posts).
+- **`walk`** and **`opening`**: makes the model a **scanner arch** (section 4.1).
 - **`mount: "wall"`**: the model is built like a wall tile (face on y = 0, looking at −Y) and the engine hangs it on a wall of its cell.
 - **`screen`**: where a placement's `screen` text is drawn.
 - **`light`**, with `pulse` for a slow throb.
@@ -104,6 +106,8 @@ Models carry material **names** only. `materials.json` gives each name a look:
 `shader` is one of `worn` (hard surfaces; grime, streaks and scuffs from position, so nothing repeats and no UVs are needed), `screen` (a live display), `glow`, `glass`, `flesh`, or absent for a plain material. A name the kit doesn't list keeps whatever material the model file has, textures included, so a fully textured hand-made model works too.
 
 The high-tech kit's names: `hull`, `hull_dark`, `trim`, `floor`, `accent` (orange), `accent2` (teal), `hazard`, `rust`, `rubber`, `cable`, `copper`, `gold`, `chrome`, `glass`, `screen`, `screen_dead`, `glow_cyan/pink/amber/red/green/white/violet`, `lock`, and for creatures `flesh`, `flesh_pale`, `chitin`, `chitin_red`, `bone`, `eye`, `eye_red`, `slime`.
+
+**Borrowing.** `"uses": ["hightech"]` in `kit.json` brings in another kit's tiles, models and styles. Borrowed models keep their own kit's materials, so a level whose kit is `agency` can have high-tech rooms and Agency rooms side by side, each looking as its kit meant. The Agency kit (`kits/agency/`: porcelain, onyx, rose gold, pink neon; styles `showroom`, `white_hall`, `focus`; furniture `ag_desk`, `ag_pedestal`, `ag_kiosk`, `ag_sofa`, `ag_pod`, `ag_planter`; an `ad` shader for its displays) is built this way.
 
 **A kit for somewhere that isn't high-tech** (a crypt, a cave, a frontier town) is a new folder with its own `materials.json` (stone, wood, moss; add a shader to `engine/shaders/` and to `SHADERS` in `lm.gd` if the material itself is new), its own tiles at the sizes above, and its own styles. Nothing in the engine assumes metal panels; `Level` only asks the kit for tiles by style.
 
@@ -171,7 +175,7 @@ A level is a dictionary: a JSON file in `games/<game>/levels/`, or what a genera
 
 **The map.** One character per cell. Built in: `#` solid, space void, `.` floor, `+` a `door_split`. A legend entry is `{ solid, door, lock, flag, need, sealed, jammed, style, tag, start, face }`. A cell takes its style and height from the first room whose `rect` (`[x, y, w, h]`) contains it, else the level's. The builder puts a floor and ceiling on every open cell and a wall on every side that meets a solid cell (and above the opening where a tall room meets a lower one), picks tiles from the style with a seeded generator (the level's `id` and `seed`), and gives every solid cell beside an open one a collision box.
 
-**Doors** run across the corridor they close: across when the cells west and east are solid, otherwise turned. `lock` is a key colour (`red`, `blue`, `yellow`); `flag` (a story flag, or a list: any) keeps it shut until set, with `need` as the words; `sealed` shuts it until an `unlock` or `open` effect; `jammed` makes it grind and spark. Doors open for the player and for anything that is hunting them.
+**Doors** must close an opening from wall to wall. A door cell without solid cells on both flanks is left out with a warning (and counted in `Level.bad_doors`; the self-test fails on it). **Doors** run across the corridor they close: across when the cells west and east are solid, otherwise turned. `lock` is a key colour (`red`, `blue`, `yellow`); `flag` (a story flag, or a list: any) keeps it shut until set, with `need` as the words; `sealed` shuts it until an `unlock` or `open` effect; `jammed` makes it grind and spark. Doors open for the player and for anything that is hunting them.
 
 **Things** (`things`, with `at: [x, y]` or `tag`; or an `objects` grid with an `objectLegend`, as in the 2D engine). Every one takes `offset: [dx, 0, dz]`, `face` (`n e s w`: the way its front looks) and `tag`.
 
@@ -190,7 +194,23 @@ A level is a dictionary: a JSON file in `games/<game>/levels/`, or what a genera
 - `terminal` / `read`: a panel that stops the game. `kicker`, `title`, `text`, `options: [{ label, effects, result, when, unless, once, hack (seconds), working, screen, close }]`. `result` replaces the text; `screen` changes the prop's display.
 - `cache`: opens its lid and throws out `loot: [item entries]`.
 - `heal`: `charges`, `amount`.
+- `locker`: swings its door open, once. `loot: [item entries]` come out to be taken; `actor` + `count` put monsters in front of it, awake (`text` is what the game says); `effects` run with the locker as their place (an `explode` goes off there). None of them: it is empty. A placement's `rattle: true` makes the door shiver and knock while you are near, the tell for something alive inside. The kit has two models: `locker` and `locker_bad` (dented from inside, leaking).
 - `effects` (default): runs `effects`.
+
+### 4.1 Scanner arches
+
+A prop whose model has `walk` (the kit's `arch_medical`, `arch_security`, `arch_supply`, `arch_toll`) does something when the player crosses its opening. The symbol on its header and the colour of its lights say which kind it is; the lights go grey when it is spent. The kit gives each a default `walk`; a placement's `walk` overrides any field.
+
+| Field | Meaning |
+|---|---|
+| `effects` | What happens (any effects). |
+| `need` | `hurt` (only if below full health) or `armed` (only if carrying more than the first weapon). Otherwise `idle_text` is shown. |
+| `when`, `unless` | Story flags. |
+| `cost`, `fail` | Credits taken to pass; `fail` effects run if you can't pay. |
+| `charges`, `empty_text` | How many times it works. |
+| `once`, `cooldown`, `sound`, `color`, `kind` | |
+
+Shipped: **medical** (green cross: heals 30, three times), **security** (red eye: an armed visitor sets off the alarm and a turret drops in, once), **supply** (cyan bolt: half a load of every ammunition, twice), **toll** (amber coin: 15 cr, or a shock). A `disable` effect on an arch's tag switches it off. They stand free; face them along the way people walk (`face: "s"` for a north–south passage).
 
 **Effects** (triggers, terminals, items, `on_death`): each is `{ type, delay, ... }`.
 
@@ -199,14 +219,16 @@ A level is a dictionary: a JSON file in `games/<game>/levels/`, or what a genera
 | `message` | `text`, `kind` (`info`, `warn`, `good`, `loot`, `key`) |
 | `flag` | `name` |
 | `unlock`, `open`, `seal`, `close` | `tag` (doors). `open` also holds it open. |
-| `spawn` | `tag` (cells), `actor`, `count`, `as` (a tag for what it spawns) |
+| `spawn` | `tag` (cells), `actor`, `count`, `as` (a tag for what it spawns); `here: true` spawns where the thing that ran the effect is |
+| `ammo` | `amount`: a share of a full load, for every kind |
+| `explode` | `radius`, `damage`, at the thing that ran the effect |
 | `lights` | `room`, `on`, `color` |
 | `alarm` | `radius` (everything, without it) |
 | `enable`, `disable` | `tag` (traps) |
 | `credits`, `key`, `heal`, `hurt`, `quake`, `sound` | `amount` / `color` / `strength` / `id` |
 | `end` | `title`, `text`: the level is finished |
 
-**Triggers**: `{ on: { type, name }, once, when, unless, do: [effects] }`. Types: `flag` (set), `room` (first entered, by room name), `enter` (a tagged cell), `clear` (every actor with that tag dead), `use` (a tagged prop used), `pickup` (a tagged item taken). Taking a key card sets `key_<colour>`.
+**Triggers**: `{ on: { type, name }, once, when, unless, do: [effects] }`. Types: `walk` (a tagged arch walked through), `flag` (set), `room` (first entered, by room name), `enter` (a tagged cell), `clear` (every actor with that tag dead), `use` (a tagged prop used), `pickup` (a tagged item taken). Taking a key card sets `key_<colour>`.
 
 **Objectives**: the HUD shows the first whose `when` holds and whose `done` (a flag, or any of a list) is not yet set.
 
@@ -218,7 +240,7 @@ A generator is a script in `generators/` with one function, listed in `game.json
 func generate(seed: int, params: Dictionary) -> Dictionary   # a level dictionary, as in section 4
 ```
 
-`params` is the game's `generator_params`. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `rooms.gd` (rooms, L-shaped corridors, doors where a corridor leaves a room, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
+`params` is the game's `generator_params`. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `rooms.gd` (rooms, L-shaped corridors, doors on thresholds only (placed after all carving, so no door is ever left standing in a widened opening), scanner arches inside some doorways, wall lockers with loot, nothing, roaches or a charge, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
 
 ## 6. Recipes
 

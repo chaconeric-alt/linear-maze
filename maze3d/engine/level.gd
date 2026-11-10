@@ -33,6 +33,7 @@ var _triggers: Array = []
 var _last_cell := Vector2i(-99, -99)
 var _last_room := ""
 var _t := 0.0
+var bad_doors := 0
 
 
 func build(level_data: Dictionary) -> void:
@@ -377,9 +378,16 @@ func _build_things() -> void:
 
 
 func _spawn_door(p: Vector2i, c: Dictionary) -> void:
+	var across: bool = cell(p.x - 1, p.y)["solid"] and cell(p.x + 1, p.y)["solid"]
+	var along: bool = cell(p.x, p.y - 1)["solid"] and cell(p.x, p.y + 1)["solid"]
+	if not across and not along:
+		# a door has to close an opening from wall to wall; anywhere else it would stand free in a room
+		push_warning("Level %s: door at %s has no wall on both sides; left out" % [data.get("id"), p])
+		c["door"] = ""
+		bad_doors += 1
+		return
 	var d := Door.new()
 	add_child(d)
-	var across: bool = cell(p.x - 1, p.y)["solid"] and cell(p.x + 1, p.y)["solid"]
 	d.position = center(p)
 	d.rotation.y = 0.0 if across else PI / 2
 	d.setup(self, p, c["entry"], kit_id)
@@ -586,7 +594,7 @@ func actor_died(a: Node) -> void:
 
 
 ## Effects that belong to the place: doors, lights, spawns, alarms.
-func run_effect(ef: Dictionary, _ctx: Dictionary) -> void:
+func run_effect(ef: Dictionary, ctx: Dictionary) -> void:
 	var tag: String = ef.get("tag", "")
 	match ef.get("type", ""):
 		"unlock", "open", "seal", "close":
@@ -602,6 +610,8 @@ func run_effect(ef: Dictionary, _ctx: Dictionary) -> void:
 					l.light_color = LM.col(ef["color"])
 		"spawn":
 			var spots: Array = tags.get(tag, [])
+			if ef.get("here", false) and ctx.has("at"):        # where the thing that ran the effect stands
+				spots = [cell_of(ctx["at"])]
 			for i in int(ef.get("count", 1)):
 				if spots.is_empty():
 					break

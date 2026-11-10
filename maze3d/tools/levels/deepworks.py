@@ -3,7 +3,7 @@ Laying a level out in a script keeps the map and the things on it in step; the o
 ordinary level file and can be edited by hand afterwards.   python3 tools/levels/deepworks.py"""
 import json, os
 
-W, Hh = 31, 27
+W, Hh = 31, 37
 g = [['#'] * W for _ in range(Hh)]
 rooms, things, tags = [], [], {}
 legend = {
@@ -11,6 +11,7 @@ legend = {
     'B': {'door': 'door_jaw', 'lock': 'blue', 'tag': 'blue_door'},
     'I': {'door': 'door_iris', 'flag': 'reactor_open', 'need': 'power rerouted from the server hall', 'tag': 'reactor_door'},
     'R': {'door': 'door_vault', 'lock': 'red', 'tag': 'vault_door'},
+    'O': {'door': 'door_iris'},
 }
 
 
@@ -38,8 +39,11 @@ room('Fabrication', 24, 14, 6, 9, 'machine')
 room('Server Hall', 11, 3, 9, 5, 'lab', lights=dict(oy=1))
 room('Reactor Hall', 23, 1, 7, 9, 'machine', height=2)
 room('Prototype Vault', 2, 2, 6, 7, 'vault')
+room('Experience Walk', 18, 23, 1, 3, 'white_hall', quiet=True)
+room('Brand Experience Suite', 18, 26, 11, 6, 'showroom', height=2)
+room('Focus Group B', 22, 33, 5, 3, 'focus')
 hall([(7, 18), (8, 18), (9, 18), (21, 18), (22, 18), (15, 9), (15, 10), (15, 11), (15, 12), (15, 13), (21, 5), (22, 5), (8, 5), (9, 5)])
-for (x, y, ch) in ((15, 22, 'A'), (10, 18, 'S'), (6, 18, 'J'), (20, 18, 'X'), (23, 18, 'S'), (15, 14, 'S'), (15, 8, 'B'), (20, 5, 'I'), (10, 5, 'R')):
+for (x, y, ch) in ((15, 22, 'A'), (10, 18, 'S'), (6, 18, 'J'), (20, 18, 'X'), (23, 18, 'S'), (15, 14, 'S'), (15, 8, 'B'), (20, 5, 'I'), (10, 5, 'R'), (18, 22, 'O'), (24, 32, 'O')):
     g[y][x] = ch
 
 # ---- Service Airlock
@@ -70,6 +74,48 @@ put(14, 15, sign='WANT MORE.\nWORK MORE.\nBE MORE.', face='s', y=3.0)
 put(19, 20, sign='SPECIMEN GARDEN  ◂\nFABRICATION  ▸', face='w', color=[0.3, 0.9, 1.0], size=56)
 tags['concourse_spawn'] = [[13, 15], [17, 15]]
 
+put(13, 19, prop='arch_medical', face='e')
+put(11, 20, prop='locker', face='e', use=dict(type='locker', prompt='Open the locker', loot=[dict(item='chips'), dict(item='health')]))
+put(19, 21, sign='BRAND EXPERIENCE  ▾', face='n', color=[1.0, 0.3, 0.65], size=56)
+
+# ---- the Agency's suite (south): still open, still selling
+put(18, 24, prop='arch_security', face='s', tag='suite_arch')
+put(18, 23, sign='SIDEARMS ONLY\nBEYOND THIS ARCH', face='e', color=[1.0, 0.2, 0.1], size=44, y=3.2)
+put(23, 27, prop='ag_desk', face='n', blocks=True, screen='HELLO!\nYOU LOOK\nLIKE A\nBUYER', use=dict(
+    type='terminal', prompt='Ring for service', kicker='Anomalous Structure · Brand Experience', title='Welcome, valued demographic!',
+    text='You have been pre-approved to WANT things.\n\nToday\'s experience is brought to you by the same campaign as every day since the war.',
+    options=[
+        dict(label='What are you selling?', result='Everything on a pedestal is a genuine pre-war aspiration. Lift a dome. Hold a dream. Staff will be along to discuss payment.\n\n(Staff: one Custodian, re-tasked. It is very motivated.)'),
+        dict(label='Is the arch outside a problem?', result='Our SafeWelcome arch notes long guns and calls a colleague from the ceiling. Sidearms are a lifestyle choice and are welcome.\n\nThe arch can be put in "open day" mode from this desk.', effects=[dict(type='flag', name='knows_arch')]),
+        dict(label='Put the arch in open-day mode (bypass, 3 s)', hack=3.0, working='Declaring an open day…', when='knows_arch', unless='arch_off',
+             result='It is now an open day. Bring anything. Bring a friend.', effects=[dict(type='flag', name='arch_off'), dict(type='disable', tag='suite_arch'), dict(type='message', text='Security arch: standing down.', kind='good')]),
+    ]))
+for (x, y, it) in ((20, 28, 'statuette'), (26, 28, 'crystal'), (20, 30, 'fuel_cell_big'), (26, 30, 'circuit')):
+    put(x, y, prop='ag_pedestal', blocks=False, use=dict(type='cache', prompt='Lift the dome', loot=[dict(item=it)],
+        effects=[dict(type='message', text='A chime. "Excellent choice. Staff have been notified."', kind='warn'), dict(type='flag', name='shoplifted')]))
+put(18, 31, prop='ag_sofa', face='n', offset=[1.0, 0, 0.6], blocks=False)
+put(28, 26, prop='ag_planter')
+put(28, 31, prop='ag_planter')
+put(18, 28, prop='ag_kiosk', face='e', offset=[-1.0, 0, 0], screen='WANT\nMORE', use=dict(type='read', prompt='Read the kiosk', kicker='Anomalous Structure', title='This season: WANT',
+    text='WANT MORE. WORK MORE. BE MORE.\n\nFocus Group B is in session through the south door. Participants receive a gift. Participation is not optional for participants.'))
+put(24, 31, prop='arch_toll', face='s')
+put(23, 29, actor='custodian', still=True, face='n')
+put(27, 27, actor='monoid', face='w')
+put(28, 29, prop='locker', face='w', use=dict(type='locker', prompt='Open the staff locker', loot=[dict(item='armor'), dict(item='cells')]))
+put(21, 26, sign='YOU DESERVE THIS', face='s', color=[1.0, 0.3, 0.65], size=72, y=5.6)
+tags['suite_spawn'] = [[19, 27], [27, 30]]
+put(22, 34, prop='ag_pod', face='e')
+put(26, 34, prop='ag_pod', face='w')
+put(24, 35, prop='ag_pod', face='n')
+put(24, 34, prop='ag_kiosk', turn=45, screen='HOW DID\nWE DO?', use=dict(type='terminal', prompt='Take the survey', kicker='Focus Group B', title='One question',
+    text='On a scale of DELIGHTED to VERY DELIGHTED, how was your experience today?',
+    options=[dict(label='Delighted', once=True, result='Thank you! Your gift is in the dispenser. Your answer has been averaged with 4,112 identical answers.', effects=[dict(type='credits', amount=40), dict(type='message', text='Participation gift  +40 cr', kind='loot')]),
+             dict(label='Very delighted', once=True, result='Thank you! That is the correct answer. Please accept a larger gift.', effects=[dict(type='credits', amount=60), dict(type='message', text='Participation gift  +60 cr', kind='loot')]),
+             dict(label='It was fine', once=True, result='"Fine" is not on the scale. A moderator will help you find a better feeling.', effects=[dict(type='spawn', tag='focus_spawn', actor='monoid', count=1), dict(type='alarm', radius=30)])]))
+tags['focus_spawn'] = [[23, 33]]
+put(22, 33, prop='locker_bad', face='s', rattle=True, use=dict(type='locker', prompt='Open the locker', actor='roach', count=2, text='Two previous participants. They have gone feral.'))
+put(26, 33, item='health')
+
 # ---- Specimen Garden (west): the blue card
 put(8, 18, prop='debris', solid=False)
 for i, y in enumerate((14, 16, 18, 20, 22)):
@@ -94,6 +140,8 @@ put(3, 14, item='health')
 put(27, 15, prop='fabricator', face='s', blocks=True)
 put(29, 18, prop='server_rack', face='w')
 put(29, 20, prop='server_rack', face='w')
+put(25, 19, prop='arch_supply', face='s')
+put(29, 22, prop='locker_bad', face='w', rattle=True, use=dict(type='locker', prompt='Open the locker', actor='roach', count=2))
 put(25, 22, prop='crate', hp=20, loot=[dict(item='shells')])
 put(26, 22, prop='crate', hp=20)
 put(24, 14, prop='barrel', hp=12, explode=dict(radius=5.5, damage=70))
@@ -129,6 +177,7 @@ put(15, 3, prop='terminal_wall', face='s', screen='POWER ROUTING\nREACTOR HALL\n
 put(13, 5, actor='monoid', face='s')
 put(17, 5, actor='turret')
 put(19, 7, actor='roach')
+put(11, 5, prop='locker_bad', face='e', offset=[0, 0, 1.2], use=dict(type='locker', prompt='Open the locker', text='Somebody wired it.', effects=[dict(type='explode', radius=4.0, damage=35)]))
 put(11, 3, item='crystal')
 put(19, 3, item='cells')
 put(11, 7, item='health')
@@ -167,7 +216,7 @@ put(5, 4, prop='cryo_pod', blocks=True)
 put(4, 2, sign='PROTOTYPES\nLOOK. DO NOT WANT.', face='s', y=3.0, size=64)
 
 level = dict(
-    id='deepworks', name='Kaveros Deepworks · Sublevel 1', kit='hightech', style='corridor',
+    id='deepworks', name='Kaveros Deepworks · Sublevel 1', kit='agency', style='corridor',
     intro='Kaveros Deepworks. Nobody has signed the visitor book in three hundred years.',
     ambient=[0.22, 0.28, 0.36], ambient_energy=0.6, fog=dict(color=[0.08, 0.12, 0.15], density=0.014),
     legend=legend, map=[''.join(r) for r in g], rooms=rooms, tags=tags, things=things,
@@ -184,6 +233,8 @@ level = dict(
             dict(type='alarm', delay=0.6),
             dict(type='spawn', tag='reactor_spawn', actor='roach', count=5, delay=1.5),
             dict(type='spawn', tag='reactor_spawn', actor='glorexx', count=1, delay=3.0)]),
+        dict(on=dict(type='flag', name='shoplifted'), do=[dict(type='spawn', tag='suite_spawn', actor='custodian', count=1, delay=1.2), dict(type='alarm', radius=40, delay=1.2)]),
+        dict(on=dict(type='room', name='Brand Experience Suite'), do=[dict(type='message', text='Everything in here is still switched on. Everything in here is still selling.', kind='info')]),
         dict(on=dict(type='room', name='Prototype Vault'), do=[dict(type='message', text='Something in here has been waiting a long time to protect an executive.', kind='warn')]),
     ],
 )

@@ -1,0 +1,106 @@
+{
+ "adscreen": {
+  "color": [
+   0.03,
+   0.0,
+   0.02
+  ],
+  "emit": [
+   1.0,
+   0.2,
+   0.62
+  ],
+  "energy": 1.5,
+  "shader": "ad"
+ },
+ "frost": {
+  "alpha": 0.3,
+  "color": [
+   1.0,
+   0.82,
+   0.9
+  ],
+  "metal": 0.0,
+  "rough": 0.1,
+  "shader": "glass"
+ },
+ "neon_pink": {
+  "color": [
+   1.0,
+   0.2,
+   0.6
+  ],
+  "emit": [
+   1.0,
+   0.16,
+   0.58
+  ],
+  "energy": 2.6,
+  "shader": "glow"
+ },
+ "neon_white": {
+  "color": [
+   1.0,
+   0.95,
+   0.97
+  ],
+  "emit": [
+   1.0,
+   0.94,
+   0.97
+  ],
+  "energy": 1.5,
+  "shader": "glow"
+ },
+ "onyx": {
+  "color": [
+   0.018,
+   0.018,
+   0.024
+  ],
+  "grime": 0.18,
+  "metal": 0.35,
+  "rough": 0.07,
+  "shader": "worn"
+ },
+ "porcelain": {
+  "color": [
+   0.8,
+   0.8,
+   0.79
+  ],
+  "grime": 0.22,
+  "metal": 0.0,
+  "rough": 0.16,
+  "shader": "worn"
+ },
+ "porcelain_grey": {
+  "color": [
+   0.6,
+   0.61,
+   0.65
+  ],
+  "grime": 0.3,
+  "metal": 0.0,
+  "rough": 0.24,
+  "shader": "worn"
+ },
+ "rose_gold": {
+  "color": [
+   0.95,
+   0.6,
+   0.5
+  ],
+  "metal": 1.0,
+  "rough": 0.2
+ },
+ "velvet": {
+  "color": [
+   0.42,
+   0.04,
+   0.2
+  ],
+  "metal": 0.0,
+  "rough": 0.95
+ }
+}

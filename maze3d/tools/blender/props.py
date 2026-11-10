@@ -637,3 +637,99 @@ PROPS = {
     'trap_laser': trap_laser, 'trap_shock': trap_shock, 'trap_vent': trap_vent,
     'weapon_handgun': w_handgun, 'weapon_scattergun': w_scattergun, 'weapon_plasma': w_plasma,
 }
+
+
+# ---------------------------------------------------------------- scanner arches (free-standing; walk through them)
+def arch(symbol, seed=31):
+    """A free-standing scanner arch. The symbol over the opening says what it does; everything
+    that glows on it uses the `lock` material, which the engine colours by kind and state."""
+    rnd = random.Random(seed)
+    m = Mesh('arch_' + symbol)
+    W2, HT = 1.25, 2.9                      # half the opening's width; its height
+    for s in (-1, 1):
+        m.box((0.42, 0.62, 0.16), at=(s * (W2 + 0.2), 0, 0.08), mat='hull_dark', bevel=0.03)          # foot
+        m.prism([(-0.17, -0.26), (0.17, -0.26), (0.2, 0), (0.17, 0.26), (-0.17, 0.26), (-0.2, 0)], HT, at=(s * (W2 + 0.2), 0, 0.14), mat='hull', bevel=0.02)
+        m.box((0.05, 0.64, HT - 0.5), at=(s * (W2 + 0.02), 0, HT / 2 + 0.14), mat='trim')
+        for k in range(7):                    # emitter studs down the inside of each post
+            m.cyl(0.035, 0.03, at=(s * (W2 - 0.005), 0, 0.5 + k * 0.36), rot=(0, 90, 0), mat='lock', seg=8)
+        m.box((0.06, 0.5, 0.5), at=(s * (W2 + 0.42), 0, 1.3), mat='hull_dark', bevel=0.02)
+        m.box((0.02, 0.3, 0.12), at=(s * (W2 + 0.455), 0, 1.4), mat='lock')
+        cable(m, rnd, (s * (W2 + 0.4), 0.2, 0.2), (s * (W2 + 0.75), 0.25, 0.02), sag=-0.05, r=0.03, n=4)
+    # the header: a shallow arc with a sign board in the middle
+    pts = []
+    n = 12
+    for i in range(n + 1):
+        a = math.pi * i / n
+        pts.append(((W2 + 0.4) * math.cos(a), 0, HT + 0.14 + 0.42 * math.sin(a)))
+    m.tube(pts, 0.14, mat='hull', seg=8)
+    m.tube([(p[0] * 0.93, p[1], p[2] - 0.17) for p in pts], 0.035, mat='lock', seg=6)
+    m.box((1.15, 0.5, 0.74), at=(0, 0, HT + 0.62), mat='hull_dark', bevel=0.05)
+    m.box((1.25, 0.42, 0.06), at=(0, 0, HT + 1.0), mat='accent', bevel=0.02)
+    for f in (-1, 1):                         # the symbol, on both faces
+        m.push(T(0, f * 0.26, HT + 0.62) @ R(90, 0, 0 if f < 0 else 180))
+        if symbol == 'medical':               # a cross
+            m.box((0.16, 0.5, 0.03), at=(0, 0, 0), mat='lock')
+            m.box((0.5, 0.16, 0.03), at=(0, 0, 0), mat='lock')
+        elif symbol == 'security':            # an eye
+            m.prism([(-0.45, 0), (-0.2, -0.2), (0.2, -0.2), (0.45, 0), (0.2, 0.2), (-0.2, 0.2)], 0.02, at=(0, 0, 0), mat='trim')
+            m.cyl(0.15, 0.03, at=(0, 0, 0.015), mat='lock', seg=14)
+            m.cyl(0.06, 0.04, at=(0, 0, 0.02), mat='rubber', seg=10)
+        elif symbol == 'supply':              # a bolt
+            m.prism([(0.1, 0.3), (-0.2, -0.04), (-0.02, -0.04), (-0.12, -0.3), (0.2, 0.06), (0.02, 0.06)], 0.03, at=(0, 0, 0), mat='lock')
+        else:                                 # toll: a coin with a slot
+            m.cyl(0.26, 0.03, at=(0, 0, 0), mat='lock', seg=18)
+            m.box((0.07, 0.3, 0.04), at=(0, 0, 0.005), mat='rubber')
+            m.ring(0.26, 0.025, at=(0, 0, 0.01), mat='gold', seg=18, tseg=5)
+        m.pop()
+    bar = Mesh('scanbar')                     # the sweep: the engine slides this down when someone walks through
+    bar.box((W2 * 2 - 0.04, 0.05, 0.035), at=(0, 0, HT), mat='lock')
+    solids = [[-(W2 + 0.2), 1.6, 0, 0.44, 3.2, 0.62], [(W2 + 0.2), 1.6, 0, 0.44, 3.2, 0.62]]
+    walk = {
+        'medical': dict(kind='medical', color=(0.25, 1.0, 0.4), need='hurt', charges=3, cooldown=3.0, sound='heal', effects=[dict(type='heal', amount=30), dict(type='message', text='MediScan: treated. You may experience being alive.', kind='good')], idle_text='MediScan: no billable injuries found.', empty_text='MediScan: out of gel.'),
+        'security': dict(kind='security', color=(1.0, 0.12, 0.08), need='armed', once=True, sound='alarm', effects=[dict(type='message', text='WEAPON DETECTED. Sidearms only past this point.', kind='warn'), dict(type='alarm', radius=60), dict(type='spawn', actor='turret', count=1, here=True, delay=0.8)], idle_text='Security scan: sidearm noted. Proceed.'),
+        'supply': dict(kind='supply', color=(0.2, 0.85, 1.0), charges=2, cooldown=3.0, sound='pickup', effects=[dict(type='ammo', amount=0.5), dict(type='message', text='Quartermaster arch: issue restocked.', kind='good')], empty_text='Quartermaster arch: stores exhausted.'),
+        'toll': dict(kind='toll', color=(1.0, 0.7, 0.15), cost=15, cooldown=2.0, sound='confirm', effects=[dict(type='message', text='Toll paid: 15 cr. Thank you for choosing this doorway.', kind='info')], fail=[dict(type='message', text='INSUFFICIENT FUNDS. A fine has been applied to your person.', kind='warn'), dict(type='hurt', amount=12, kind='shock'), dict(type='sound', id='zap')]),
+    }[symbol]
+    walk['color'] = list(walk['color'])
+    return dict(objects=[m.to_object(), bar.to_object(origin=(0, 0, HT))], meta=dict(type='prop', arch=True, solids=solids, opening=[W2, HT], walk=walk,
+                light=dict(color=walk['color'], energy=0.7, range=4.5, at=(0, 0, 3.4))))
+
+
+# ---------------------------------------------------------------- lockers set into a wall
+def locker(seed=41, bad=False):
+    rnd = random.Random(seed)
+    m = Mesh('locker')
+    Wd, Ht, Dp = 1.1, 2.2, 0.5
+    for s in (-1, 1):
+        m.box((0.06, Dp, Ht), at=(s * (Wd / 2 - 0.03), -Dp / 2, Ht / 2 + 0.1), mat='hull_dark')
+    m.box((Wd, Dp, 0.06), at=(0, -Dp / 2, Ht + 0.07), mat='hull_dark')
+    m.box((Wd, Dp, 0.12), at=(0, -Dp / 2, 0.08), mat='trim', bevel=0.02)
+    m.box((Wd - 0.1, 0.03, Ht), at=(0, -0.02, Ht / 2 + 0.1), mat='rubber')            # the dark inside
+    m.box((Wd - 0.12, Dp - 0.08, 0.03), at=(0, -Dp / 2, 1.5), mat='trim')
+    m.box((Wd - 0.12, Dp - 0.08, 0.03), at=(0, -Dp / 2, 0.75), mat='trim')
+    m.box((Wd + 0.1, Dp + 0.04, 0.1), at=(0, -Dp / 2, Ht + 0.15), mat='accent2' if not bad else 'rust', bevel=0.02)
+    m.box((0.4, 0.02, 0.07), at=(0, -Dp - 0.03, Ht + 0.15), mat='lock')
+    if bad:
+        m.ball(0.3, at=(0.2, -Dp - 0.25, 0.02), mat='slime', seg=10, scale=(1.4, 1.0, 0.05))
+    d = Mesh('door')
+    hx = -Wd / 2 + 0.04
+    d.box((Wd - 0.08, 0.05, Ht - 0.06), at=(0, -Dp - 0.01, Ht / 2 + 0.12), rot=(0, 0, 0), mat='hull' if not bad else 'rust', bevel=0.015)
+    for i in range(5):                        # louvres
+        d.box((Wd - 0.4, 0.02, 0.035), at=(0, -Dp - 0.04, Ht - 0.3 - i * 0.08), rot=(30, 0, 0), mat='hull_dark')
+    d.box((0.06, 0.06, 0.24), at=(Wd / 2 - 0.16, -Dp - 0.06, 1.2), mat='chrome', bevel=0.015)
+    d.box((0.36, 0.015, 0.1), at=(0, -Dp - 0.04, 1.62), mat='hull_dark')
+    d.box((0.5, 0.012, 0.5), at=(0, -Dp - 0.038, 0.7), mat='hazard' if bad else 'accent2')
+    if bad:
+        for i in range(4):                    # dents pushed out from inside, and something leaking
+            d.ball(0.14, at=(rnd.uniform(-0.3, 0.3), -Dp - 0.03, rnd.uniform(0.5, 1.9)), mat='rust', seg=8, scale=(1, 0.35, 1))
+        d.tube([(0.1, -Dp - 0.05, 0.4), (0.12, -Dp - 0.06, 0.2), (0.1, -Dp - 0.05, 0.12)], lambda t: 0.03 * (1 - t * 0.5), mat='slime', seg=5)
+        for i in range(3):
+            d.box((0.012, 0.012, 0.5), at=(-0.25 + i * 0.07, -Dp - 0.04, 1.25), rot=(0, 12, 0), mat='rubber')
+    return dict(objects=[m.to_object(), d.to_object(origin=(hx, -Dp, 0))], meta=dict(type='prop', mount='wall', solid=(1.1, 2.4, 0.55), time=0.35,
+                parts={'door': dict(rot_axis=(0, 0, 1), rot_deg=-112)}))
+
+
+PROPS.update({
+    'arch_medical': lambda: arch('medical'), 'arch_security': lambda: arch('security'), 'arch_supply': lambda: arch('supply'), 'arch_toll': lambda: arch('toll'),
+    'locker': locker, 'locker_bad': lambda: locker(43, True),
+})

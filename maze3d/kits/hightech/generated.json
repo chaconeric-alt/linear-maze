@@ -1,5 +1,281 @@
 {
  "models": {
+  "arch_medical": {
+   "arch": true,
+   "light": {
+    "at": [
+     0,
+     3.4,
+     0
+    ],
+    "color": [
+     0.25,
+     1.0,
+     0.4
+    ],
+    "energy": 0.7,
+    "range": 4.5
+   },
+   "model": "models/arch_medical.glb",
+   "opening": [
+    1.25,
+    2.9
+   ],
+   "solids": [
+    [
+     -1.45,
+     1.6,
+     0,
+     0.44,
+     3.2,
+     0.62
+    ],
+    [
+     1.45,
+     1.6,
+     0,
+     0.44,
+     3.2,
+     0.62
+    ]
+   ],
+   "type": "prop",
+   "walk": {
+    "charges": 3,
+    "color": [
+     0.25,
+     1.0,
+     0.4
+    ],
+    "cooldown": 3.0,
+    "effects": [
+     {
+      "amount": 30,
+      "type": "heal"
+     },
+     {
+      "kind": "good",
+      "text": "MediScan: treated. You may experience being alive.",
+      "type": "message"
+     }
+    ],
+    "empty_text": "MediScan: out of gel.",
+    "idle_text": "MediScan: no billable injuries found.",
+    "kind": "medical",
+    "need": "hurt",
+    "sound": "heal"
+   }
+  },
+  "arch_security": {
+   "arch": true,
+   "light": {
+    "at": [
+     0,
+     3.4,
+     0
+    ],
+    "color": [
+     1.0,
+     0.12,
+     0.08
+    ],
+    "energy": 0.7,
+    "range": 4.5
+   },
+   "model": "models/arch_security.glb",
+   "opening": [
+    1.25,
+    2.9
+   ],
+   "solids": [
+    [
+     -1.45,
+     1.6,
+     0,
+     0.44,
+     3.2,
+     0.62
+    ],
+    [
+     1.45,
+     1.6,
+     0,
+     0.44,
+     3.2,
+     0.62
+    ]
+   ],
+   "type": "prop",
+   "walk": {
+    "color": [
+     1.0,
+     0.12,
+     0.08
+    ],
+    "effects": [
+     {
+      "kind": "warn",
+      "text": "WEAPON DETECTED. Sidearms only past this point.",
+      "type": "message"
+     },
+     {
+      "radius": 60,
+      "type": "alarm"
+     },
+     {
+      "actor": "turret",
+      "count": 1,
+      "delay": 0.8,
+      "here": true,
+      "type": "spawn"
+     }
+    ],
+    "idle_text": "Security scan: sidearm noted. Proceed.",
+    "kind": "security",
+    "need": "armed",
+    "once": true,
+    "sound": "alarm"
+   }
+  },
+  "arch_supply": {
+   "arch": true,
+   "light": {
+    "at": [
+     0,
+     3.4,
+     0
+    ],
+    "color": [
+     0.2,
+     0.85,
+     1.0
+    ],
+    "energy": 0.7,
+    "range": 4.5
+   },
+   "model": "models/arch_supply.glb",
+   "opening": [
+    1.25,
+    2.9
+   ],
+   "solids": [
+    [
+     -1.45,
+     1.6,
+     0,
+     0.44,
+     3.2,
+     0.62
+    ],
+    [
+     1.45,
+     1.6,
+     0,
+     0.44,
+     3.2,
+     0.62
+    ]
+   ],
+   "type": "prop",
+   "walk": {
+    "charges": 2,
+    "color": [
+     0.2,
+     0.85,
+     1.0
+    ],
+    "cooldown": 3.0,
+    "effects": [
+     {
+      "amount": 0.5,
+      "type": "ammo"
+     },
+     {
+      "kind": "good",
+      "text": "Quartermaster arch: issue restocked.",
+      "type": "message"
+     }
+    ],
+    "empty_text": "Quartermaster arch: stores exhausted.",
+    "kind": "supply",
+    "sound": "pickup"
+   }
+  },
+  "arch_toll": {
+   "arch": true,
+   "light": {
+    "at": [
+     0,
+     3.4,
+     0
+    ],
+    "color": [
+     1.0,
+     0.7,
+     0.15
+    ],
+    "energy": 0.7,
+    "range": 4.5
+   },
+   "model": "models/arch_toll.glb",
+   "opening": [
+    1.25,
+    2.9
+   ],
+   "solids": [
+    [
+     -1.45,
+     1.6,
+     0,
+     0.44,
+     3.2,
+     0.62
+    ],
+    [
+     1.45,
+     1.6,
+     0,
+     0.44,
+     3.2,
+     0.62
+    ]
+   ],
+   "type": "prop",
+   "walk": {
+    "color": [
+     1.0,
+     0.7,
+     0.15
+    ],
+    "cooldown": 2.0,
+    "cost": 15,
+    "effects": [
+     {
+      "kind": "info",
+      "text": "Toll paid: 15 cr. Thank you for choosing this doorway.",
+      "type": "message"
+     }
+    ],
+    "fail": [
+     {
+      "kind": "warn",
+      "text": "INSUFFICIENT FUNDS. A fine has been applied to your person.",
+      "type": "message"
+     },
+     {
+      "amount": 12,
+      "kind": "shock",
+      "type": "hurt"
+     },
+     {
+      "id": "zap",
+      "type": "sound"
+     }
+    ],
+    "kind": "toll",
+    "sound": "confirm"
+   }
+  },
   "barrel": {
    "model": "models/barrel.glb",
    "solid": [
@@ -381,6 +657,48 @@
   "item_statuette": {
    "model": "models/item_statuette.glb",
    "type": "item"
+  },
+  "locker": {
+   "model": "models/locker.glb",
+   "mount": "wall",
+   "parts": {
+    "door": {
+     "rot_axis": [
+      0,
+      1,
+      0
+     ],
+     "rot_deg": -112
+    }
+   },
+   "solid": [
+    1.1,
+    2.4,
+    0.55
+   ],
+   "time": 0.35,
+   "type": "prop"
+  },
+  "locker_bad": {
+   "model": "models/locker_bad.glb",
+   "mount": "wall",
+   "parts": {
+    "door": {
+     "rot_axis": [
+      0,
+      1,
+      0
+     ],
+     "rot_deg": -112
+    }
+   },
+   "solid": [
+    1.1,
+    2.4,
+    0.55
+   ],
+   "time": 0.35,
+   "type": "prop"
   },
   "nest": {
    "light": {

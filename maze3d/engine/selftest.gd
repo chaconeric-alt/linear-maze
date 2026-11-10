@@ -112,6 +112,31 @@ func run(m: Node) -> void:
 	pl.head.position.y = Player.EYE
 	pl.cam.rotation.z = 0.0
 	Game.over = false
+	_say(level.bad_doors == 0, "every door closes an opening wall to wall (%d do not)" % level.bad_doors)
+	# --- scanner arches: walk through each one in a state it should react to
+	for n in level.get_children():
+		if is_instance_valid(n) and n is Prop and not n._walk.is_empty():
+			var kind: String = n._walk.get("kind", "?")
+			pl.hp = pl.max_hp * 0.5
+			Game.credits = 100
+			if pl.weapons.size() < 2:
+				pl.give_weapon("scattergun")
+			pl.ammo["shells"] = 0
+			var hp1 := pl.hp
+			var actors1 := level.actors.size()
+			pl.global_position = n.global_position - n.global_transform.basis.z * 1.0 + Vector3(0, 0.05, 0)
+			pl.velocity = Vector3.ZERO
+			await _frames(4)
+			pl.global_position = n.global_position + n.global_transform.basis.z * 1.0 + Vector3(0, 0.05, 0)
+			await _frames(70)
+			var did := ""
+			match kind:
+				"medical": did = "healed %d" % (pl.hp - hp1) if pl.hp > hp1 else ("used, while something was biting" if n.used > 0 else "")
+				"supply": did = "gave %d shells" % pl.ammo["shells"] if pl.ammo["shells"] > 0 else ""
+				"toll": did = "took %d cr" % (100 - Game.credits) if Game.credits < 100 else ""
+				"security": did = "called %d" % (level.actors.size() - actors1) if level.actors.size() > actors1 else ""
+			_say(n.used > 0 and did != "", "%s arch at %s reacts to being walked through (%s)" % [kind, level.cell_of(n.global_position), did])
+	pl.hp = pl.max_hp
 	# --- every weapon the game has, fired at every actor
 	for wid in LM.defs.get("weapons", {}):
 		pl.give_weapon(wid)
@@ -135,7 +160,7 @@ func run(m: Node) -> void:
 			_look_at(aim)
 			if pl._cool <= 0.0:
 				pl._fire(pl.weapon())
-			if t % 120 == 119 and not level.los(pl.cam.global_position, aim):
+			if t % 60 == 59 and not level.los(pl.cam.global_position, aim):
 				_stand_near(a.eye())
 			if OS.get_cmdline_user_args().has("--verbose") and t % 150 == 149:
 				var q := PhysicsRayQueryParameters3D.create(pl.cam.global_position, pl.cam.global_position - pl.cam.global_transform.basis.z * 60.0, 5)

@@ -9,6 +9,7 @@ const SHADERS := {
 	"glow": preload("res://engine/shaders/glow.gdshader"),
 	"glass": preload("res://engine/shaders/glass.gdshader"),
 	"flesh": preload("res://engine/shaders/flesh.gdshader"),
+	"ad": preload("res://engine/shaders/ad.gdshader"),
 }
 
 var game: Dictionary = {}
@@ -81,12 +82,14 @@ func load_kit(id: String) -> void:
 	kits[id] = kit
 	for other in kit.get("uses", []):          # a kit can borrow another's models and materials
 		load_kit(other)
-		for key in ["tiles", "models", "materials"]:
+		for key in ["tiles", "models", "materials", "styles"]:
 			for k in kits[other][key]:
 				if not kit[key].has(k):
 					var v: Dictionary = kits[other][key][k].duplicate()
 					if v.has("model") and not str(v["model"]).begins_with("res://"):
 						v["model"] = kits[other]["root"] + v["model"]
+					if key == "tiles" or key == "models":
+						v["_kit"] = v.get("_kit", other)      # a borrowed model keeps its own kit's materials
 					kit[key][k] = v
 
 
@@ -137,7 +140,7 @@ func material(kit_id: String, name: String, world_space := true) -> Material:
 				sm.set_shader_parameter("albedo", col(p.get("color")))
 				sm.set_shader_parameter("metallic", p.get("metal", 0.0))
 				sm.set_shader_parameter("roughness", p.get("rough", 0.3))
-			"screen":
+			"screen", "ad":
 				sm.set_shader_parameter("albedo", col(p.get("color")))
 				sm.set_shader_parameter("emission", col(p.get("emit")))
 				sm.set_shader_parameter("energy", p.get("energy", 1.6))
@@ -195,10 +198,17 @@ func dress(node: Node, kit_id: String, world_space := false, overrides := {}) ->
 		dress(c, kit_id, world_space, overrides)
 
 
+## The kit whose materials a model wears: its own, even when another kit borrows it.
+func home_kit(kit_id: String, model_id: String) -> String:
+	var kit: Dictionary = kits.get(kit_id, {})
+	var m: Variant = kit.get("models", {}).get(model_id, kit.get("tiles", {}).get(model_id))
+	return kit_id if m == null else m.get("_kit", kit_id)
+
+
 ## An instance of a kit model (door, machine, pickup ...) wearing the kit's materials.
 func spawn_model(kit_id: String, model_id: String, overrides := {}) -> Node3D:
 	var path := model_path(kit_id, model_id)
-	return spawn_scene(path, kit_id, overrides)
+	return spawn_scene(path, home_kit(kit_id, model_id), overrides)
 
 
 func spawn_scene(path: String, kit_id: String, overrides := {}) -> Node3D:
@@ -224,10 +234,11 @@ func tile_mesh(kit_id: String, tile_id: String) -> Mesh:
 		var mi := _first_mesh(inst)
 		if mi != null:
 			out = mi.mesh.duplicate()
+			var home := home_kit(kit_id, tile_id)
 			for s in out.get_surface_count():
 				var m: Material = out.surface_get_material(s)
 				if m != null:
-					var k := material(kit_id, m.resource_name, true)
+					var k := material(home, m.resource_name, true)
 					if k != null:
 						out.surface_set_material(s, k)
 		inst.free()

@@ -1,24 +1,48 @@
 extends RefCounted
 ## rooms - a small example generator: rooms on a grid joined by corridors, a locked way out,
-## monsters, treasure and dressing picked from lists in game.json (generator_params).
+## monsters, treasure, scanner arches, wall lockers and dressing, picked from lists in game.json
+## (generator_params).
 ##
 ## A generator is any script in generators/ with generate(seed, params) -> level dictionary
 ## (the same shape as a level JSON file). List it in game.json "generators" and it appears on
-## the title screen. Bigger generators (keys and locks in order, zones, set pieces) plug in the
-## same way; this one is here to show the interface end to end.
+## the title screen. Bigger generators plug in the same way; this one shows the interface.
+##
+## Doors: a door only ever goes on a THRESHOLD: a corridor cell with a room on one side, open
+## floor on the other and solid wall to both flanks, so it always closes an opening wall to wall.
+## They are placed after every corridor is carved, because a later corridor can widen an opening.
+
+const DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+const NAMES := ["n", "e", "s", "w"]
+const AGENCY := ["showroom", "white_hall", "focus"]
+
 
 func generate(seed_value: int, p: Dictionary) -> Dictionary:
+	for attempt in 30:
+		var lv := _try(seed_value + attempt * 7919, p)
+		if not lv.is_empty():
+			lv["id"] = "gen-%d" % seed_value
+			return lv
+	push_warning("rooms generator: no solvable layout found; returning the last try without a lock")
+	return _try(seed_value, p, false)
+
+
+func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var size: Array = p.get("size", [28, 24])
 	var W: int = int(size[0])
 	var H: int = int(size[1])
 	var g: Array = []
+	var room_of: Array = []
 	for y in H:
 		var row: Array = []
 		row.resize(W)
 		row.fill("#")
 		g.append(row)
+		var r2: Array = []
+		r2.resize(W)
+		r2.fill(-1)
+		room_of.append(r2)
 	var rooms: Array = []
 	var rects: Array = []
 	var tries := 0
@@ -39,59 +63,108 @@ func generate(seed_value: int, p: Dictionary) -> Dictionary:
 		for y in range(r.position.y, r.end.y):
 			for x in range(r.position.x, r.end.x):
 				g[y][x] = "."
+				room_of[y][x] = rects.size() - 1
 		rooms.append({"name": "Room %d" % rects.size(), "rect": [r.position.x, r.position.y, w, h], "style": styles[rng.randi() % styles.size()],
 			"height": 2 if (w >= 5 and h >= 5 and rng.randf() < 0.4) else 1, "quiet": true})
-	# join each room to the next with an L-shaped corridor, with a door where it leaves the room
-	var doors: Array = p.get("doors", ["door_split"])
-	var legend := {}
-	var letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	for i in doors.size():
-		legend[letters[i]] = {"door": doors[i]}
-	legend["Z"] = {"door": "door_vault", "lock": "red"}
+	if rects.size() < 3:
+		return {}
 	var last := rects.size() - 1
+	# corridors: carve only; doors come afterwards
 	for i in range(1, rects.size()):
 		var a: Vector2i = rects[i - 1].get_center()
 		var b: Vector2i = rects[i].get_center()
-		var pts: Array = []
 		var x := a.x
 		var y := a.y
 		while x != b.x:
 			x += signi(b.x - x)
-			pts.append(Vector2i(x, y))
+			if g[y][x] == "#":
+				g[y][x] = "."
 		while y != b.y:
 			y += signi(b.y - y)
-			pts.append(Vector2i(x, y))
-		var prev_in := true
-		for q in pts:
-			var inside := false
-			for r in rects:
-				if r.has_point(q):
-					inside = true
-					break
-			if g[q.y][q.x] == "#":
-				g[q.y][q.x] = "."
-				# a door on the first corridor cell after leaving a room, if walls close it either side
-				if prev_in and _narrow(g, q, W, H):
-					g[q.y][q.x] = "Z" if i == last else letters[rng.randi() % doors.size()]
-			prev_in = inside
+			if g[y][x] == "#":
+				g[y][x] = "."
+	# thresholds
+	var doors: Array = p.get("doors", ["door_split"])
+	var legend := {}
+	var letters := "ABCDEFGHIJKLMNOPQRSTUVWXY"
+	for i in doors.size():
+		legend[letters[i]] = {"door": doors[i]}
+	legend["Z"] = {"door": "door_vault", "lock": "red"}
+	var door_cells: Array = []        # [cell, direction index pointing INTO the room it serves]
+	for y in range(1, H - 1):
+		for x in range(1, W - 1):
+			if g[y][x] != "." or room_of[y][x] >= 0:
+				continue
+			var q := Vector2i(x, y)
+			for d in 2:               # d = 0: passage runs north-south; 1: east-west
+				var f: Vector2i = DIRS[d]
+				var s: Vector2i = DIRS[d + 1]
+				if g[y + f.y][x + f.x] == "#" or g[y - f.y][x - f.x] == "#" or g[y + s.y][x + s.x] != "#" or g[y - s.y][x - s.x] != "#":
+					continue
+				var ra: int = room_of[y + f.y][x + f.x]
+				var rb: int = room_of[y - f.y][x - f.x]
+				if ra < 0 and rb < 0:
+					continue
+				if _is_door(g, q + f) or _is_door(g, q - f):      # never two doors back to back
+					continue
+				var into := d if ra >= 0 else d + 2
+				var guards_last := ra == last or rb == last
+				if guards_last and lock:
+					g[y][x] = "Z"
+				elif rng.randf() < 0.85:
+					g[y][x] = letters[rng.randi() % doors.size()]
+				else:
+					continue
+				door_cells.append([q, into, guards_last])
+	# the red card has to be findable without going through the vault door
+	var start: Vector2i = rects[0].get_center()
+	var seen := {start: true}
+	var queue: Array = [start]
+	while not queue.is_empty():
+		var c: Vector2i = queue.pop_back()
+		for d in DIRS:
+			var n: Vector2i = c + d
+			if seen.has(n) or g[n.y][n.x] == "#" or g[n.y][n.x] == "Z":
+				continue
+			seen[n] = true
+			queue.append(n)
+	var key_rooms: Array = []
+	for i in range(1, last):
+		if seen.has(rects[i].get_center()):
+			key_rooms.append(i)
+	if lock and (seen.has(rects[last].get_center()) or key_rooms.is_empty()):
+		return {}          # a corridor leaks into the last room, or nowhere to put the card: try another layout
+	var key_room: int = key_rooms[rng.randi() % key_rooms.size()] if not key_rooms.is_empty() else 1
+
 	var things: Array = []
+	var used := {start: true}
 	var free := func(r: Rect2i) -> Vector2i:
 		return Vector2i(rng.randi_range(r.position.x, r.end.x - 1), rng.randi_range(r.position.y, r.end.y - 1))
-	things.append({"at": [rects[0].get_center().x, rects[0].get_center().y], "start": true, "face": "n"})
+	things.append({"at": [start.x, start.y], "start": true, "face": "n"})
+	# scanner arches: some stand just inside a doorway, the way you would fit one
+	var arches: Array = p.get("arches", [])
+	for dc in door_cells:
+		var q: Vector2i = dc[0]
+		var inside: Vector2i = q + DIRS[dc[1]]
+		if arches.is_empty() or dc[2] or used.has(inside) or rng.randf() > 0.3:
+			continue
+		used[inside] = true
+		for d in DIRS:                      # keep the cells round an arch clear, so nothing wide crowds the way through
+			used[inside + d] = true
+		things.append({"at": [inside.x, inside.y], "prop": _weighted(rng, arches), "face": "s" if dc[1] % 2 == 0 else "e", "blocks": false})
 	var actors: Array = p.get("actors", [])
 	var treasure: Array = p.get("treasure", [])
-	var props: Array = p.get("props", [])
-	var used := {rects[0].get_center(): true}
-	var key_room := rng.randi_range(1, max(1, last - 1))
+	var loot: Array = p.get("locker_loot", treasure)
 	for i in range(1, rects.size()):
 		var r: Rect2i = rects[i]
-		var n := 1 + r.get_area() / 9
-		for k in n:
+		var agency: bool = rooms[i]["style"] in AGENCY
+		var props: Array = p.get("agency_props", []) if agency else p.get("props", [])
+		for k in 1 + r.get_area() / 9:
 			var c: Vector2i = free.call(r)
 			if used.has(c):
 				continue
 			used[c] = true
-			things.append({"at": [c.x, c.y], "actor": _weighted(rng, actors), "face": ["n", "e", "s", "w"][rng.randi() % 4]})
+			things.append({"at": [c.x, c.y], "actor": _weighted(rng, actors), "face": NAMES[rng.randi() % 4]})
 		for k in 1 + int(rng.randf() * 2.0):
 			var c2: Vector2i = free.call(r)
 			if not used.has(c2) and not treasure.is_empty():
@@ -102,19 +175,52 @@ func generate(seed_value: int, p: Dictionary) -> Dictionary:
 			if rng.randf() < 0.55 and not used.has(corner) and not props.is_empty():
 				used[corner] = true
 				var pid: String = props[rng.randi() % props.size()]
-				var e := {"at": [corner.x, corner.y], "prop": pid, "blocks": false}
+				var e := {"at": [corner.x, corner.y], "prop": pid, "blocks": false, "turn": rng.randi() % 4 * 90}
 				if pid == "barrel":
 					e["hp"] = 12
 					e["explode"] = {"radius": 5.5, "damage": 70}
 				elif pid == "crate":
 					e["hp"] = 20
 					e["loot"] = [{"item": ["shells", "cells", "health"][rng.randi() % 3]}]
+				elif pid == "ag_pedestal" and not treasure.is_empty():
+					e["use"] = {"type": "cache", "prompt": "Lift the dome", "loot": [{"item": treasure[rng.randi() % treasure.size()]}]}
 				things.append(e)
+		# lockers on the walls: mostly useful, sometimes not
+		for k in rng.randi_range(0, 2):
+			var c4: Vector2i = free.call(r)
+			var wall := -1
+			for d in 4:
+				var n2: Vector2i = c4 + DIRS[d]
+				if g[n2.y][n2.x] == "#":
+					wall = d
+					break
+			if wall < 0 or used.has(c4):
+				continue
+			used[c4] = true
+			var roll := rng.randf()
+			var lk := {"at": [c4.x, c4.y], "prop": "locker", "face": NAMES[(wall + 2) % 4], "use": {"type": "locker", "prompt": "Open the locker"}}
+			if roll < 0.55:
+				var items: Array = []
+				for n3 in rng.randi_range(1, 2):
+					items.append({"item": loot[rng.randi() % loot.size()]})
+				lk["use"]["loot"] = items
+			elif roll < 0.7:
+				pass                                   # empty
+			elif roll < 0.9:
+				lk["prop"] = "locker_bad"              # dented, leaking, and it rattles: something lives in it
+				lk["rattle"] = true
+				lk["use"]["actor"] = "roach"
+				lk["use"]["count"] = rng.randi_range(1, 3)
+			else:
+				lk["prop"] = "locker_bad"              # dented and quiet: wired
+				lk["use"]["text"] = "Somebody wired it."
+				lk["use"]["effects"] = [{"type": "explode", "radius": 4.0, "damage": 30}]
+			things.append(lk)
 		if i == key_room:
 			var c3: Vector2i = r.get_center()
 			things.append({"at": [c3.x, c3.y], "item": "keycard", "color": "red"})
 		if i == 1:
-			things.append({"at": [r.get_center().x, r.get_center().y], "item": "scattergun"})
+			things.append({"at": [r.get_center().x, r.get_center().y], "item": "scattergun", "offset": [-1.0, 0, 0]})
 		if i == max(2, last / 2):
 			things.append({"at": [r.get_center().x, r.get_center().y], "item": "plasma", "offset": [1.0, 0, 0]})
 	var ex: Vector2i = rects[last].get_center()
@@ -123,16 +229,15 @@ func generate(seed_value: int, p: Dictionary) -> Dictionary:
 	var map: Array = []
 	for row in g:
 		map.append("".join(PackedStringArray(row)))
-	return {"id": "gen-%d" % seed_value, "seed": seed_value, "name": "Installation %d" % (seed_value % 1000), "kit": p.get("kit", "hightech"),
+	return {"seed": seed_value, "name": "Installation %d" % (seed_value % 1000), "kit": p.get("kit", "hightech"),
 		"style": "corridor", "ambient_energy": 0.6, "legend": legend, "map": map, "rooms": rooms, "things": things,
 		"intro": "Installation %d. Find the red card, reach the last room." % (seed_value % 1000),
 		"objectives": [{"text": "Find the RED card.", "done": "key_red"}, {"text": "Get through the vault door and signal the surface."}]}
 
 
-func _narrow(g: Array, q: Vector2i, W: int, H: int) -> bool:
-	var we: bool = q.x > 0 and q.x < W - 1 and g[q.y][q.x - 1] == "#" and g[q.y][q.x + 1] == "#"
-	var ns: bool = q.y > 0 and q.y < H - 1 and g[q.y - 1][q.x] == "#" and g[q.y + 1][q.x] == "#"
-	return we or ns
+func _is_door(g: Array, q: Vector2i) -> bool:
+	var ch: String = g[q.y][q.x]
+	return ch != "#" and ch != "."
 
 
 func _weighted(rng: RandomNumberGenerator, list: Array) -> String:

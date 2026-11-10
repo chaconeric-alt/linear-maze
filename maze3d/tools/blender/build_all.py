@@ -56,36 +56,51 @@ def conv_meta(meta):
         out['muzzle'] = g(out['muzzle'])
     if 'solid' in out:
         out['solid'] = list(out['solid'])
+    if 'solids' in out:          # [x, z(up), y, w, h, d] given as Blender x, height-centre, y -> Godot centre + size
+        out['solids'] = [[b[0], b[1], -b[2], b[3], b[4], b[5]] for b in out['solids']]
     return out
 
 
-def main():
-    mz.define_materials(palette.MATERIALS)
-    os.makedirs(os.path.join(KIT, 'models'), exist_ok=True)
-    os.makedirs(os.path.join(ROOT, 'actors'), exist_ok=True)
-    gen_path = os.path.join(KIT, 'generated.json')
+def build_kit(kit_id, tile_fns, prop_fns, tile_meta, materials):
+    kit = os.path.join(ROOT, 'kits', kit_id)
+    os.makedirs(os.path.join(kit, 'models'), exist_ok=True)
+    gen_path = os.path.join(kit, 'generated.json')
     gen = json.load(open(gen_path)) if os.path.exists(gen_path) else {'tiles': {}, 'models': {}}
-    for name, fn in tiles.TILES.items():
+    for name, fn in tile_fns.items():
         kind = 'pillar' if name == 'pillar' else name.split('_')[0]
         kind = {'ceil': 'ceiling'}.get(kind, kind)
         if not only or name in only:
             mz.reset()
             ob = fn().to_object()
             ob.name = name
-            mz.export(os.path.join(KIT, 'models', name + '.glb'))
-            print('tile', name)
+            mz.export(os.path.join(kit, 'models', name + '.glb'))
+            print('tile', kit_id, name)
         if kind == 'pillar':
-            gen['models'][name] = dict(model='models/%s.glb' % name, type='prop', **TILE_META.get(name, {}))
+            gen['models'][name] = dict(model='models/%s.glb' % name, type='prop', **tile_meta.get(name, {}))
         else:
-            gen['tiles'][name] = dict(model='models/%s.glb' % name, kind=kind, **TILE_META.get(name, {}))
-    for name, fn in props.PROPS.items():
+            gen['tiles'][name] = dict(model='models/%s.glb' % name, kind=kind, **tile_meta.get(name, {}))
+    for name, fn in prop_fns.items():
         if only and name not in only and name in gen['models']:
             continue
         mz.reset()
         r = fn()
-        mz.export(os.path.join(KIT, 'models', name + '.glb'))
+        mz.export(os.path.join(kit, 'models', name + '.glb'))
         gen['models'][name] = dict(model='models/%s.glb' % name, **conv_meta(r['meta']))
-        print('model', name)
+        print('model', kit_id, name)
+    json.dump(gen, open(gen_path, 'w'), indent=1, sort_keys=True)
+    mats = {}
+    for k, v in materials.items():
+        mats[k] = {a: (list(b) if isinstance(b, tuple) else b) for a, b in v.items()}
+    json.dump(mats, open(os.path.join(kit, 'materials.json'), 'w'), indent=1, sort_keys=True)
+
+
+def main():
+    import agency
+    mz.define_materials(palette.MATERIALS)
+    mz.define_materials(agency.MATERIALS)
+    build_kit('hightech', tiles.TILES, props.PROPS, TILE_META, palette.MATERIALS)
+    build_kit('agency', agency.TILES, agency.PROPS, agency.TILE_META, agency.MATERIALS)
+    os.makedirs(os.path.join(ROOT, 'actors'), exist_ok=True)
     for name, fn in actors.ACTORS.items():
         if only and name not in only:
             continue
@@ -93,11 +108,6 @@ def main():
         fn()
         mz.export(os.path.join(ROOT, 'actors', name + '.glb'))
         print('actor', name)
-    json.dump(gen, open(gen_path, 'w'), indent=1, sort_keys=True)
-    mats = {}
-    for k, v in palette.MATERIALS.items():
-        mats[k] = {a: (list(b) if isinstance(b, tuple) else b) for a, b in v.items()}
-    json.dump(mats, open(os.path.join(KIT, 'materials.json'), 'w'), indent=1, sort_keys=True)
     print('done')
 
 

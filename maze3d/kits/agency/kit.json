@@ -1,0 +1,29 @@
+{
+ "name": "The Agency (Sterile White)",
+ "about": "The Anomalous Structure's public face: an Age of War advertising agency whose promotion system never switched off. Porcelain, onyx, rose gold and pink neon, nearly spotless. Borrows the high-tech kit's doors, machines and items.",
+ "uses": ["hightech"],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.6,
+ "styles": {
+  "showroom": {
+   "floor": [["floor_onyx", 5], ["floor_halo", 1], ["floor_glass", 1]],
+   "wall": [["wall_porcelain_a", 4], ["wall_porcelain_b", 2], ["wall_niche", 2], ["wall_ad", 2], ["wall_emblem", 1], ["wall_column", 2], ["wall_flute", 2]],
+   "wall_upper": [["wall_porcelain_b", 3], ["wall_flute", 2], ["wall_emblem", 1], ["wall_porcelain_a", 2]],
+   "ceiling": [["ceil_coffer", 5], ["ceil_halo", 1], ["ceil_slats", 1]],
+   "lights": {"tile": "ceil_lightbox", "every": 3, "flicker": 0.05}
+  },
+  "white_hall": {
+   "floor": [["floor_check", 5], ["floor_onyx", 1]],
+   "wall": [["wall_porcelain_a", 5], ["wall_flute", 3], ["wall_column", 2], ["wall_crack", 1], ["wall_ad", 1]],
+   "ceiling": [["ceil_coffer", 3], ["ceil_slats", 2]],
+   "lights": {"tile": "ceil_lightbox", "every": 2, "flicker": 0.12}
+  },
+  "focus": {
+   "floor": [["floor_check", 3], ["floor_halo", 1]],
+   "wall": [["wall_pad", 6], ["wall_ad", 1], ["wall_column", 1]],
+   "ceiling": [["ceil_slats", 3], ["ceil_halo", 1]],
+   "lights": {"tile": "ceil_lightbox", "every": 3, "flicker": 0.3}
+  }
+ }
+}

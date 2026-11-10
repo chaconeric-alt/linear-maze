@@ -1,7 +1,7 @@
 {
  "id": "deepworks",
  "name": "Kaveros Deepworks \u00b7 Sublevel 1",
- "kit": "hightech",
+ "kit": "agency",
  "style": "corridor",
  "intro": "Kaveros Deepworks. Nobody has signed the visitor book in three hundred years.",
  "ambient": [
@@ -47,6 +47,9 @@
    "door": "door_vault",
    "lock": "red",
    "tag": "vault_door"
+  },
+  "O": {
+   "door": "door_iris"
   }
  },
  "map": [
@@ -72,10 +75,20 @@
   "#.....#####.........####......#",
   "#.....#####.........####......#",
   "#.....#####.........####......#",
-  "#.....#########A########......#",
-  "##############...##############",
-  "##############...##############",
-  "##############...##############",
+  "#.....#########A##O#####......#",
+  "##############...#.############",
+  "##############...#.############",
+  "##############...#.############",
+  "##################...........##",
+  "##################...........##",
+  "##################...........##",
+  "##################...........##",
+  "##################...........##",
+  "##################...........##",
+  "########################O######",
+  "######################.....####",
+  "######################.....####",
+  "######################.....####",
   "###############################"
  ],
  "rooms": [
@@ -158,6 +171,40 @@
    ],
    "style": "vault",
    "height": 1
+  },
+  {
+   "name": "Experience Walk",
+   "rect": [
+    18,
+    23,
+    1,
+    3
+   ],
+   "style": "white_hall",
+   "height": 1,
+   "quiet": true
+  },
+  {
+   "name": "Brand Experience Suite",
+   "rect": [
+    18,
+    26,
+    11,
+    6
+   ],
+   "style": "showroom",
+   "height": 2
+  },
+  {
+   "name": "Focus Group B",
+   "rect": [
+    22,
+    33,
+    5,
+    3
+   ],
+   "style": "focus",
+   "height": 1
   }
  ],
  "tags": {
@@ -169,6 +216,22 @@
    [
     17,
     15
+   ]
+  ],
+  "suite_spawn": [
+   [
+    19,
+    27
+   ],
+   [
+    27,
+    30
+   ]
+  ],
+  "focus_spawn": [
+   [
+    23,
+    33
    ]
   ],
   "reactor_spawn": [
@@ -393,6 +456,463 @@
    ]
   },
   {
+   "prop": "arch_medical",
+   "face": "e",
+   "at": [
+    13,
+    19
+   ]
+  },
+  {
+   "prop": "locker",
+   "face": "e",
+   "use": {
+    "type": "locker",
+    "prompt": "Open the locker",
+    "loot": [
+     {
+      "item": "chips"
+     },
+     {
+      "item": "health"
+     }
+    ]
+   },
+   "at": [
+    11,
+    20
+   ]
+  },
+  {
+   "sign": "BRAND EXPERIENCE  \u25be",
+   "face": "n",
+   "color": [
+    1.0,
+    0.3,
+    0.65
+   ],
+   "size": 56,
+   "at": [
+    19,
+    21
+   ]
+  },
+  {
+   "prop": "arch_security",
+   "face": "s",
+   "tag": "suite_arch",
+   "at": [
+    18,
+    24
+   ]
+  },
+  {
+   "sign": "SIDEARMS ONLY\nBEYOND THIS ARCH",
+   "face": "e",
+   "color": [
+    1.0,
+    0.2,
+    0.1
+   ],
+   "size": 44,
+   "y": 3.2,
+   "at": [
+    18,
+    23
+   ]
+  },
+  {
+   "prop": "ag_desk",
+   "face": "n",
+   "blocks": true,
+   "screen": "HELLO!\nYOU LOOK\nLIKE A\nBUYER",
+   "use": {
+    "type": "terminal",
+    "prompt": "Ring for service",
+    "kicker": "Anomalous Structure \u00b7 Brand Experience",
+    "title": "Welcome, valued demographic!",
+    "text": "You have been pre-approved to WANT things.\n\nToday's experience is brought to you by the same campaign as every day since the war.",
+    "options": [
+     {
+      "label": "What are you selling?",
+      "result": "Everything on a pedestal is a genuine pre-war aspiration. Lift a dome. Hold a dream. Staff will be along to discuss payment.\n\n(Staff: one Custodian, re-tasked. It is very motivated.)"
+     },
+     {
+      "label": "Is the arch outside a problem?",
+      "result": "Our SafeWelcome arch notes long guns and calls a colleague from the ceiling. Sidearms are a lifestyle choice and are welcome.\n\nThe arch can be put in \"open day\" mode from this desk.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "knows_arch"
+       }
+      ]
+     },
+     {
+      "label": "Put the arch in open-day mode (bypass, 3 s)",
+      "hack": 3.0,
+      "working": "Declaring an open day\u2026",
+      "when": "knows_arch",
+      "unless": "arch_off",
+      "result": "It is now an open day. Bring anything. Bring a friend.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "arch_off"
+       },
+       {
+        "type": "disable",
+        "tag": "suite_arch"
+       },
+       {
+        "type": "message",
+        "text": "Security arch: standing down.",
+        "kind": "good"
+       }
+      ]
+     }
+    ]
+   },
+   "at": [
+    23,
+    27
+   ]
+  },
+  {
+   "prop": "ag_pedestal",
+   "blocks": false,
+   "use": {
+    "type": "cache",
+    "prompt": "Lift the dome",
+    "loot": [
+     {
+      "item": "statuette"
+     }
+    ],
+    "effects": [
+     {
+      "type": "message",
+      "text": "A chime. \"Excellent choice. Staff have been notified.\"",
+      "kind": "warn"
+     },
+     {
+      "type": "flag",
+      "name": "shoplifted"
+     }
+    ]
+   },
+   "at": [
+    20,
+    28
+   ]
+  },
+  {
+   "prop": "ag_pedestal",
+   "blocks": false,
+   "use": {
+    "type": "cache",
+    "prompt": "Lift the dome",
+    "loot": [
+     {
+      "item": "crystal"
+     }
+    ],
+    "effects": [
+     {
+      "type": "message",
+      "text": "A chime. \"Excellent choice. Staff have been notified.\"",
+      "kind": "warn"
+     },
+     {
+      "type": "flag",
+      "name": "shoplifted"
+     }
+    ]
+   },
+   "at": [
+    26,
+    28
+   ]
+  },
+  {
+   "prop": "ag_pedestal",
+   "blocks": false,
+   "use": {
+    "type": "cache",
+    "prompt": "Lift the dome",
+    "loot": [
+     {
+      "item": "fuel_cell_big"
+     }
+    ],
+    "effects": [
+     {
+      "type": "message",
+      "text": "A chime. \"Excellent choice. Staff have been notified.\"",
+      "kind": "warn"
+     },
+     {
+      "type": "flag",
+      "name": "shoplifted"
+     }
+    ]
+   },
+   "at": [
+    20,
+    30
+   ]
+  },
+  {
+   "prop": "ag_pedestal",
+   "blocks": false,
+   "use": {
+    "type": "cache",
+    "prompt": "Lift the dome",
+    "loot": [
+     {
+      "item": "circuit"
+     }
+    ],
+    "effects": [
+     {
+      "type": "message",
+      "text": "A chime. \"Excellent choice. Staff have been notified.\"",
+      "kind": "warn"
+     },
+     {
+      "type": "flag",
+      "name": "shoplifted"
+     }
+    ]
+   },
+   "at": [
+    26,
+    30
+   ]
+  },
+  {
+   "prop": "ag_sofa",
+   "face": "n",
+   "offset": [
+    1.0,
+    0,
+    0.6
+   ],
+   "blocks": false,
+   "at": [
+    18,
+    31
+   ]
+  },
+  {
+   "prop": "ag_planter",
+   "at": [
+    28,
+    26
+   ]
+  },
+  {
+   "prop": "ag_planter",
+   "at": [
+    28,
+    31
+   ]
+  },
+  {
+   "prop": "ag_kiosk",
+   "face": "e",
+   "offset": [
+    -1.0,
+    0,
+    0
+   ],
+   "screen": "WANT\nMORE",
+   "use": {
+    "type": "read",
+    "prompt": "Read the kiosk",
+    "kicker": "Anomalous Structure",
+    "title": "This season: WANT",
+    "text": "WANT MORE. WORK MORE. BE MORE.\n\nFocus Group B is in session through the south door. Participants receive a gift. Participation is not optional for participants."
+   },
+   "at": [
+    18,
+    28
+   ]
+  },
+  {
+   "prop": "arch_toll",
+   "face": "s",
+   "at": [
+    24,
+    31
+   ]
+  },
+  {
+   "actor": "custodian",
+   "still": true,
+   "face": "n",
+   "at": [
+    23,
+    29
+   ]
+  },
+  {
+   "actor": "monoid",
+   "face": "w",
+   "at": [
+    27,
+    27
+   ]
+  },
+  {
+   "prop": "locker",
+   "face": "w",
+   "use": {
+    "type": "locker",
+    "prompt": "Open the staff locker",
+    "loot": [
+     {
+      "item": "armor"
+     },
+     {
+      "item": "cells"
+     }
+    ]
+   },
+   "at": [
+    28,
+    29
+   ]
+  },
+  {
+   "sign": "YOU DESERVE THIS",
+   "face": "s",
+   "color": [
+    1.0,
+    0.3,
+    0.65
+   ],
+   "size": 72,
+   "y": 5.6,
+   "at": [
+    21,
+    26
+   ]
+  },
+  {
+   "prop": "ag_pod",
+   "face": "e",
+   "at": [
+    22,
+    34
+   ]
+  },
+  {
+   "prop": "ag_pod",
+   "face": "w",
+   "at": [
+    26,
+    34
+   ]
+  },
+  {
+   "prop": "ag_pod",
+   "face": "n",
+   "at": [
+    24,
+    35
+   ]
+  },
+  {
+   "prop": "ag_kiosk",
+   "turn": 45,
+   "screen": "HOW DID\nWE DO?",
+   "use": {
+    "type": "terminal",
+    "prompt": "Take the survey",
+    "kicker": "Focus Group B",
+    "title": "One question",
+    "text": "On a scale of DELIGHTED to VERY DELIGHTED, how was your experience today?",
+    "options": [
+     {
+      "label": "Delighted",
+      "once": true,
+      "result": "Thank you! Your gift is in the dispenser. Your answer has been averaged with 4,112 identical answers.",
+      "effects": [
+       {
+        "type": "credits",
+        "amount": 40
+       },
+       {
+        "type": "message",
+        "text": "Participation gift  +40 cr",
+        "kind": "loot"
+       }
+      ]
+     },
+     {
+      "label": "Very delighted",
+      "once": true,
+      "result": "Thank you! That is the correct answer. Please accept a larger gift.",
+      "effects": [
+       {
+        "type": "credits",
+        "amount": 60
+       },
+       {
+        "type": "message",
+        "text": "Participation gift  +60 cr",
+        "kind": "loot"
+       }
+      ]
+     },
+     {
+      "label": "It was fine",
+      "once": true,
+      "result": "\"Fine\" is not on the scale. A moderator will help you find a better feeling.",
+      "effects": [
+       {
+        "type": "spawn",
+        "tag": "focus_spawn",
+        "actor": "monoid",
+        "count": 1
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       }
+      ]
+     }
+    ]
+   },
+   "at": [
+    24,
+    34
+   ]
+  },
+  {
+   "prop": "locker_bad",
+   "face": "s",
+   "rattle": true,
+   "use": {
+    "type": "locker",
+    "prompt": "Open the locker",
+    "actor": "roach",
+    "count": 2,
+    "text": "Two previous participants. They have gone feral."
+   },
+   "at": [
+    22,
+    33
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    26,
+    33
+   ]
+  },
+  {
    "prop": "debris",
    "solid": false,
    "at": [
@@ -610,6 +1130,29 @@
    "at": [
     29,
     20
+   ]
+  },
+  {
+   "prop": "arch_supply",
+   "face": "s",
+   "at": [
+    25,
+    19
+   ]
+  },
+  {
+   "prop": "locker_bad",
+   "face": "w",
+   "rattle": true,
+   "use": {
+    "type": "locker",
+    "prompt": "Open the locker",
+    "actor": "roach",
+    "count": 2
+   },
+   "at": [
+    29,
+    22
    ]
   },
   {
@@ -993,6 +1536,31 @@
    ]
   },
   {
+   "prop": "locker_bad",
+   "face": "e",
+   "offset": [
+    0,
+    0,
+    1.2
+   ],
+   "use": {
+    "type": "locker",
+    "prompt": "Open the locker",
+    "text": "Somebody wired it.",
+    "effects": [
+     {
+      "type": "explode",
+      "radius": 4.0,
+      "damage": 35
+     }
+    ]
+   },
+   "at": [
+    11,
+    5
+   ]
+  },
+  {
    "item": "crystal",
    "at": [
     11,
@@ -1331,6 +1899,39 @@
      "actor": "glorexx",
      "count": 1,
      "delay": 3.0
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "flag",
+    "name": "shoplifted"
+   },
+   "do": [
+    {
+     "type": "spawn",
+     "tag": "suite_spawn",
+     "actor": "custodian",
+     "count": 1,
+     "delay": 1.2
+    },
+    {
+     "type": "alarm",
+     "radius": 40,
+     "delay": 1.2
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "room",
+    "name": "Brand Experience Suite"
+   },
+   "do": [
+    {
+     "type": "message",
+     "text": "Everything in here is still switched on. Everything in here is still selling.",
+     "kind": "info"
     }
    ]
   },

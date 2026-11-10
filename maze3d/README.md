@@ -20,7 +20,8 @@ The title screen offers the built level and **Random installation**, which is ma
 | Folder | What it is |
 |---|---|
 | `engine/` | The engine: level builder, player, weapons, enemies, doors, props, pickups, traps, HUD, shaders. No game content. |
-| `kits/hightech/` | The high-tech ruin kit: 11 walls, 6 floors, 5 ceilings, a pillar, 6 doors, 14 machines and props, 13 items, trap hardware, 3 weapons. `kit.json` (styles; hand-written), `generated.json` (what the model scripts wrote), `materials.json` (the look of each material name), `models/*.glb`. |
+| `kits/hightech/` | The high-tech ruin kit: 11 walls, 6 floors, 5 ceilings, a pillar, 6 doors, 4 scanner arches, 2 wall lockers, 14 machines and props, 13 items, trap hardware, 3 weapons. `kit.json` (styles; hand-written), `generated.json` (what the model scripts wrote), `materials.json` (the look of each material name), `models/*.glb`. |
+| `kits/agency/` | The Agency kit (the Anomalous Structure's Sterile White): 9 walls, 4 floors, 4 ceilings, 6 pieces of furniture, in porcelain, onyx, rose gold and pink neon. Borrows the high-tech kit's doors and machines. |
 | `actors/` | Rigged, animated monsters as `.glb`: Gladiator Roach, Custodian, Monoid, Glorexx, ceiling turret. |
 | `games/havenot/` | The game: `game.json`, `defs/` (weapons, projectiles, actors, items, sounds), `levels/`. |
 | `generators/` | Level generators. `rooms.gd` is a small working example of the interface. |
@@ -31,6 +32,8 @@ The title screen offers the built level and **Random installation**, which is ma
 ## The level
 
 Service Airlock → Concourse (front desk, WellPoint) → west to the Specimen Garden for the **blue card** → north through the passage grid (beams and a live floor; Fabrication, east, has the switch, and the scattergun) → Server Hall: route power → Reactor Hall, two storeys: the **red card** and the Plasma Musket, and taking them wakes the place up → the Prototype Vault and the freight lift out.
+
+Off the Concourse, south: the **Brand Experience Suite**, the Agency's showroom, still open. A security arch on the way in minds long guns (go early, or talk the front desk into an open day); domes lift off pedestals, at a price; Focus Group B is in session behind a toll arch. Around the level: a MediScan arch, a quartermaster arch, and wall lockers. Most lockers hold something useful. The dented ones that knock don't.
 
 ## About the art
 

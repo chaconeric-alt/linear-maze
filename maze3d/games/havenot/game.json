@@ -2,20 +2,146 @@
  "id": "havenot",
  "title": "HaveNot",
  "tagline": "The old world could make anything. Go and find out what it left lying around.",
- "version": "0.1.0",
- "theme": {"accent": [0.91, 0.64, 0.23]},
- "kits": ["hightech"],
- "defs": ["defs/arsenal.json", "defs/actors.json", "defs/items.json", "defs/sounds.json"],
- "levels": ["levels/deepworks.json"],
- "generators": ["rooms"],
- "generator_params": {"kit": "hightech", "size": [28, 24], "rooms": 9,
-  "styles": ["lab", "machine", "ruin", "vault"],
-  "actors": [["roach", 5], ["glorexx", 2], ["custodian", 2], ["monoid", 1], ["turret", 1]],
-  "treasure": ["chips", "circuit", "fuel_cell", "crystal", "statuette", "cookies"],
-  "props": ["crate", "barrel", "server_rack", "debris", "cryo_pod_broken", "cryo_pod"],
-  "doors": ["door_split", "door_rise", "door_jaw", "door_shear", "door_iris"]},
+ "version": "0.2.0",
+ "theme": {
+  "accent": [
+   0.91,
+   0.64,
+   0.23
+  ]
+ },
+ "kits": [
+  "hightech",
+  "agency"
+ ],
+ "defs": [
+  "defs/arsenal.json",
+  "defs/actors.json",
+  "defs/items.json",
+  "defs/sounds.json"
+ ],
+ "levels": [
+  "levels/deepworks.json"
+ ],
+ "generators": [
+  "rooms"
+ ],
+ "generator_params": {
+  "kit": "agency",
+  "size": [
+   28,
+   24
+  ],
+  "rooms": 9,
+  "styles": [
+   "lab",
+   "machine",
+   "ruin",
+   "vault",
+   "showroom",
+   "white_hall",
+   "focus"
+  ],
+  "actors": [
+   [
+    "roach",
+    5
+   ],
+   [
+    "glorexx",
+    2
+   ],
+   [
+    "custodian",
+    2
+   ],
+   [
+    "monoid",
+    1
+   ],
+   [
+    "turret",
+    1
+   ]
+  ],
+  "treasure": [
+   "chips",
+   "circuit",
+   "fuel_cell",
+   "crystal",
+   "statuette",
+   "cookies"
+  ],
+  "props": [
+   "crate",
+   "barrel",
+   "server_rack",
+   "debris",
+   "cryo_pod_broken",
+   "cryo_pod"
+  ],
+  "doors": [
+   "door_split",
+   "door_rise",
+   "door_jaw",
+   "door_shear",
+   "door_iris"
+  ],
+  "agency_props": [
+   "ag_pedestal",
+   "ag_planter",
+   "ag_kiosk",
+   "ag_pod",
+   "ag_sofa"
+  ],
+  "arches": [
+   [
+    "arch_medical",
+    3
+   ],
+   [
+    "arch_supply",
+    2
+   ],
+   [
+    "arch_toll",
+    2
+   ],
+   [
+    "arch_security",
+    2
+   ]
+  ],
+  "locker_loot": [
+   "chips",
+   "circuit",
+   "fuel_cell",
+   "shells",
+   "cells",
+   "health",
+   "cookies",
+   "armor"
+  ]
+ },
  "start": "deepworks",
- "menu": ["deepworks"],
- "player": {"hp": 100, "speed": 8.5, "weapons": ["handgun"], "ammo": {"shells": 0, "cells": 0}, "lamp": true},
- "words": {"death_title": "YOU BECAME SALVAGE", "death_text": "Somebody will find your boots useful.", "end_title": "The road goes on"}
+ "menu": [
+  "deepworks"
+ ],
+ "player": {
+  "hp": 100,
+  "speed": 8.5,
+  "weapons": [
+   "handgun"
+  ],
+  "ammo": {
+   "shells": 0,
+   "cells": 0
+  },
+  "lamp": true
+ },
+ "words": {
+  "death_title": "YOU BECAME SALVAGE",
+  "death_text": "Somebody will find your boots useful.",
+  "end_title": "The road goes on"
+ }
 }
