@@ -150,6 +150,12 @@ func run(m: Node) -> void:
 		pl._equip(wi % pl.weapons.size())
 		wi += 1
 		var nm: String = a.d.get("name", "?")
+		if a._surf != 0:                             # bring it down off the wall to be fought
+			a._drop()
+			for _i in 50:
+				await get_tree().physics_frame
+		if not is_instance_valid(a) or a.dead:
+			continue
 		if not _stand_near(a.eye()):
 			_say(false, "no place to stand to fight %s at %s" % [nm, level.cell_of(a.global_position)])
 			continue
