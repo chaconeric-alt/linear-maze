@@ -185,6 +185,17 @@
    ],
    "light": 1.6,
    "kind": "energy"
+  },
+  "yolk": {
+   "speed": 24,
+   "radius": 0.16,
+   "color": [
+    1.0,
+    0.85,
+    0.1
+   ],
+   "light": 1.8,
+   "kind": "energy"
   }
  }
 }

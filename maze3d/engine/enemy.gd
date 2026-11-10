@@ -94,7 +94,7 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 	_climb_t = randf_range(1.0, 3.0)
 	if not e.get("alert", false):
 		if d.has("lounge") and e.get("lounge", "") != "none":
-			_start_lounge()
+			_start_lounge.call_deferred()            # after the level's furniture is in
 		elif d.has("climb"):
 			_start_perch()
 	_play("idle")
@@ -257,6 +257,9 @@ func _physics_process(dt: float) -> void:
 			if anim:
 				anim.seek(0.0)
 			LM.sound(a.get("windup_sound", ""), global_position)
+			if a.has("say") and randf() < a.get("say_chance", 0.6):      # what it shouts as it does it
+				var sa: Array = a["say"]
+				Fx.words(level, eye() + Vector3(0, 0.6, 0), sa[randi() % sa.size()], LM.col(d.get("bark_color"), Color(1.0, 0.4, 0.3)))
 			break
 		if _atk != null and _atk.get("type", "") == "pounce":
 			return
@@ -357,6 +360,12 @@ func _fall(dt: float) -> void:
 func _idle(dt: float) -> void:
 	if not _lounge.is_empty():
 		_play("idle")
+		if _lounge.has("says") and Game.player and global_position.distance_to(Game.player.global_position) < 16.0:
+			_bark_t -= dt
+			if _bark_t <= 0.0:
+				_bark_t = randf_range(5.0, 10.0)
+				var sy: Array = _lounge["says"]
+				Fx.words(level, eye() + Vector3(0, 0.6, 0), sy[randi() % sy.size()], LM.col(d.get("bark_color"), Color(1.0, 0.4, 0.3)))
 		if _lounge.get("smoke", false):
 			_puff_t -= dt
 			if _puff_t <= 0.0:
@@ -424,6 +433,7 @@ func _bark(dt: float) -> void:
 		_bark_t = randf_range(4.0, 9.0)
 		var b: Array = d["barks"]
 		Fx.words(level, eye() + Vector3(0, 0.6, 0), b[randi() % b.size()], LM.col(d.get("bark_color"), Color(1.0, 0.4, 0.3)))
+		LM.sound(d.get("sounds", {}).get("bark", ""), global_position)
 
 
 func hurt(amount: float, info: Dictionary = {}) -> void:
@@ -504,6 +514,32 @@ func _start_lounge() -> void:
 	if pool.is_empty():
 		return
 	_lounge = pool[randi() % pool.size()]
+	if _lounge.get("at", "floor") == "screen":       # find something to watch
+		var best: Node3D = null
+		var best_d: float = _lounge.get("reach", 14.0)
+		for n in level.get_children():
+			if not (n is Node3D) or not ("meta" in n) or not ("e" in n):
+				continue
+			var pid: String = n.e.get("prop", "")
+			if not (n.meta.has("screen") or pid in _lounge.get("props", [])):
+				continue
+			var dd: float = n.position.distance_to(position)
+			var spot: Vector3 = n.position + n.global_transform.basis.z * _lounge.get("stand", 2.2)
+			var sc := level.cell_of(spot)
+			if dd < best_d and not level.cell(sc.x, sc.y)["solid"] and level.cell(sc.x, sc.y)["door"] == "":
+				best = n
+				best_d = dd
+		if best == null:                             # nothing on: stare at a wall instead, or give up
+			var others: Array = pool.filter(func(o): return o.get("at", "floor") != "screen")
+			if others.is_empty():
+				_lounge = {}
+				return
+			_lounge = others[randi() % others.size()]
+		else:
+			var f: Vector3 = best.global_transform.basis.z
+			position = best.position + f * _lounge.get("stand", 2.2)
+			position.y = 0.0
+			rotation.y = atan2(-f.x, -f.z)
 	if _lounge.get("at", "floor") == "wall":
 		var dv: Vector3 = walls[randi() % walls.size()]
 		if e.has("face"):                            # the level can say which wall
@@ -512,9 +548,12 @@ func _start_lounge() -> void:
 				dv = -f
 		position = level.center(c) + dv * (level.C / 2 - d.get("radius", 0.5) - _lounge.get("gap", 0.25))
 		rotation.y = atan2(-dv.x, -dv.z)             # back to the wall
+		if _lounge.get("look", "out") == "in":       # or nose to it
+			rotation.y = atan2(dv.x, dv.z)
 	_home = position
 	_cs.position.y += _lounge.get("drop", 0.0)
 	_puff_t = randf_range(1.0, 5.0)
+	_play("idle")
 
 
 func _walls(c: Vector2i) -> Array:

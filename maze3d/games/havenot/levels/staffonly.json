@@ -1,6 +1,6 @@
 {
  "id": "staffonly",
- "name": "Staff Only (behaviors: lounging, climbing, pouncing, swimming)",
+ "name": "Staff Only (behaviors: lounging, screen-watching, climbing, pouncing, swimming)",
  "kit": "omni",
  "style": "corridor",
  "intro": "A break room. Next door, something on the walls, and something in the water.",
@@ -245,6 +245,37 @@
      }
     ]
    }
+  },
+  {
+   "prop": "ag_kiosk",
+   "at": [
+    2,
+    7
+   ],
+   "blocks": false,
+   "turn": 180
+  },
+  {
+   "actor": "eggbot",
+   "at": [
+    3,
+    5
+   ]
+  },
+  {
+   "actor": "eggbot",
+   "at": [
+    8,
+    6
+   ]
+  },
+  {
+   "actor": "custodian",
+   "at": [
+    20,
+    3
+   ],
+   "face": "w"
   }
  ],
  "objectives": [

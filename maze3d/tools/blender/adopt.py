@@ -14,7 +14,8 @@ import mz
 
 
 class Adopted:
-    def __init__(self, path, rename=None):
+    def __init__(self, path, rename=None, world_axes=False):
+        self.world_axes = world_axes
         bpy.ops.wm.read_factory_settings(use_empty=True)
         bpy.ops.import_scene.gltf(filepath=path)
         for o in list(bpy.data.objects):                 # importers leave a bone-shape sphere behind
@@ -34,10 +35,61 @@ class Adopted:
         bpy.context.view_layer.objects.active = self.ob
         self.names = []
 
+    def decimate(self, ratio):
+        """Thin the mesh to ratio of its triangles. Weights and UVs survive; do it before writing clips."""
+        for m in self.meshes:
+            bpy.context.view_layer.objects.active = m
+            mod = m.modifiers.new('thin', 'DECIMATE')
+            mod.ratio = ratio
+            mod.use_collapse_triangulate = True
+            # the armature modifier must stay last
+            while m.modifiers[0].name != 'thin':
+                bpy.ops.object.modifier_move_up(modifier='thin')
+            bpy.ops.object.modifier_apply(modifier='thin')
+        bpy.context.view_layer.objects.active = self.ob
+
     def bones(self):
         return [b.name for b in self.ob.data.bones]
 
+    def split_off(self, name, parent, pick, head, tail):
+        """Give some of the mesh a bone of its own (a saw blade, a wheel): every vertex for which pick(world position)
+        is true follows the new bone and nothing else. head and tail are in world space; the bone spins about that line."""
+        inv = self.ob.matrix_world.inverted()
+        bpy.context.view_layer.objects.active = self.ob
+        bpy.ops.object.mode_set(mode='EDIT')
+        eb = self.ob.data.edit_bones.new(name)
+        eb.head = inv @ Vector(head)
+        eb.tail = inv @ Vector(tail)
+        eb.parent = self.ob.data.edit_bones[parent]
+        bpy.ops.object.mode_set(mode='OBJECT')
+        n = 0
+        for m in self.meshes:
+            ids = [v.index for v in m.data.vertices if pick(m.matrix_world @ v.co)]
+            if not ids:
+                continue
+            for g in m.vertex_groups:
+                g.remove(ids)
+            m.vertex_groups.new(name=name).add(ids, 1.0, 'REPLACE')
+            n += len(ids)
+        self.ob.pose.bones[name].rotation_mode = 'QUATERNION'
+        return n
+
     def clip(self, name, length, keys, fps=30):
+        if self.world_axes:                          # the armature sits crooked in the file: keys are in world axes
+            M = self.ob.matrix_world.to_3x3().normalized()
+            Mi = M.inverted()
+            conv = {}
+            for b, ks in keys.items():
+                out = []
+                for k in ks:
+                    R = Euler([math.radians(x) for x in k[1]], 'XYZ').to_matrix()
+                    e = (Mi @ R @ M).to_euler('XYZ')
+                    kk = (k[0], tuple(math.degrees(x) for x in e))
+                    if len(k) > 2:
+                        kk += (tuple(Mi @ Vector(k[2])),)
+                    out.append(kk)
+                conv[b] = out
+            keys = conv
         mz.Rig.clip(self, name, length, keys, fps)
         self.names.append(name)
 

@@ -360,6 +360,22 @@
    "decay": 7,
    "gain": 0.5,
    "lowpass": 0.45
+  },
+  "squeak": {
+   "freq": 1500,
+   "to": 2300,
+   "dur": 0.22,
+   "noise": 0.05,
+   "decay": 5,
+   "gain": 0.5
+  },
+  "yolk": {
+   "freq": 900,
+   "to": 240,
+   "dur": 0.2,
+   "noise": 0.2,
+   "decay": 8,
+   "gain": 0.7
   }
  }
 }

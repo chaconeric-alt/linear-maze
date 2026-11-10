@@ -167,6 +167,10 @@ Three things an actor def can switch on. They are engine features, so any model 
 
 One entry is picked when the level is built; a level entry can name it (`{"actor": "monoid", "lounge": "sit"}`, or `"lounge": "none"`). `"at": "wall"` backs the actor up against a wall of its cell (`gap` = how far off it), facing the room; `face` on the level entry chooses the wall. `drop` moves the part that can be shot to where the body now is. `smoke` puffs every `every` seconds. When it wakes it plays the clip `startle` for `startle_time` before it does anything: that is the player's free shot.
 
+`"at": "screen"` sends it to the nearest prop with a screen (or one named in `"props": [...]`) within `reach` metres, to stand `stand` metres in front and watch; with none about it falls back to another entry. `"says": [...]` are things it mutters while off duty when the player is near. `"look": "in"` with `"at": "wall"` puts its nose to the wall.
+
+An attack may carry `"say": [...]` and `"say_chance"`: what it shouts as it winds up. `sounds.bark` is played with every bark.
+
 **Pounce** (an attack of `"type": "pounce"`):
 
 ```json
@@ -191,7 +195,7 @@ It gathers itself for `windup` (the tell: the first `clip_windup` seconds of the
 
 #### Models from elsewhere (Tripo, Meshy, hand-made)
 
-Any rigged `.glb` in `actors/` works. To give one clips, `tools/blender/adopt.py` loads it, renames bones and takes clips written as keyed poses; `adopt_roach.py`, `adopt_monoid.py` and `adopt_glorexx.py` are the three worked examples (sources in `actors/source/`). Bone names must not contain `:` (Godot uses it in animation paths), so Tripo's `tripo::` and Mixamo's `mixamorig:` prefixes are renamed away. `python3 tools/inspect_model.py actors/thing.glb` reports size, triangles, textures, skeleton and clips, and lists what needs fixing. Def keys that adapt a foreign model: `"own_materials": true` (keep its textures; do not look its material names up in the kit), `"scale"`, `"model_yaw"` (degrees, if it faces the wrong way), `"model_y"` (if its feet are not at 0), `"clips": {"walk": "TheirClipName", ...}` (the engine's names are idle, walk, attack, hurt, die, and optionally pounce, startle, and whatever `lounge` and `dormant_clip` name). Idle, walk and lounge clips are looped by the engine whether or not the file says so.
+Any rigged `.glb` in `actors/` works. To give one clips, `tools/blender/adopt.py` loads it, renames bones and takes clips written as keyed poses; `adopt_roach.py`, `adopt_monoid.py`, `adopt_glorexx.py`, `adopt_eggbot.py` and `adopt_custodian.py` are worked examples; `Adopted.decimate(ratio)` thins a heavy mesh, `Adopted.split_off(...)` gives part of the mesh a new bone (the Custodian's saw blade), and `world_axes=True` is for files whose armature sits crooked (sources in `actors/source/`). Bone names must not contain `:` (Godot uses it in animation paths), so Tripo's `tripo::` and Mixamo's `mixamorig:` prefixes are renamed away. `python3 tools/inspect_model.py actors/thing.glb` reports size, triangles, textures, skeleton and clips, and lists what needs fixing. Def keys that adapt a foreign model: `"own_materials": true` (keep its textures; do not look its material names up in the kit), `"scale"`, `"model_yaw"` (degrees, if it faces the wrong way), `"model_y"` (if its feet are not at 0), `"clips": {"walk": "TheirClipName", ...}` (the engine's names are idle, walk, attack, hurt, die, and optionally pounce, startle, and whatever `lounge` and `dormant_clip` name). Idle, walk and lounge clips are looped by the engine whether or not the file says so.
 
 ### 3.4 Items (`defs`: `items`)
 
