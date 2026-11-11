@@ -45,6 +45,8 @@ var _climb_t := 2.0
 var _lounge: Dictionary = {}      # what it is doing instead of its job
 var _puff_t := 2.0
 var _stun := 0.0
+var _face: Label3D                # a screen on the model that shows what it is saying
+var _face_t := 0.0
 var _skel: Skeleton3D
 var _aim_i := -1                  # the bone that turns to face the player (a turret)
 var _aim_j := -1                  # the bone that tips up and down (its gun)
@@ -99,6 +101,8 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 		if _skel:
 			_aim_i = _skel.find_bone(d["aim"].get("yaw_bone", ""))
 			_aim_j = _skel.find_bone(d["aim"].get("pitch_bone", ""))
+	if d.has("screen"):
+		_make_face()
 	vis.rotation.y = deg_to_rad(d.get("model_yaw", 0.0))      # models from elsewhere do not always face our way
 	vis.position.y = d.get("model_y", 0.0)
 	_climb_t = randf_range(1.0, 3.0)
@@ -196,6 +200,14 @@ func _physics_process(dt: float) -> void:
 			_fall_tick(dt, Vector3.ZERO)
 		return
 	_wet = _surf == 0 and level.fluid_at(global_position)
+	if _fly and d.has("bob"):                        # a flyer that will not hold its height
+		vis.position.y = d.get("model_y", 0.0) + sin(Time.get_ticks_msec() * 0.001 * d["bob"].get("rate", 5.0) + get_index()) * d["bob"].get("height", 0.2) * (1.0 if awake else 0.35)
+	if _face and not awake:
+		_face_t -= dt
+		if _face_t <= 0.0:
+			_face_t = randf_range(2.5, 5.0)
+			var il: Array = d["screen"].get("idle", ["..."])
+			_show(il[randi() % il.size()])
 	if d.has("swim"):                                # a swimmer rides low in it
 		vis.position.y = move_toward(vis.position.y, d.get("model_y", 0.0) - (d["swim"].get("sink", 0.0) if _wet else 0.0), dt * 1.5)
 	var pl := Game.player
@@ -454,7 +466,9 @@ func _bark(dt: float) -> void:
 	if _bark_t <= 0.0 and _see:
 		_bark_t = randf_range(4.0, 9.0)
 		var b: Array = d["barks"]
-		Fx.words(level, eye() + Vector3(0, 0.6, 0), b[randi() % b.size()], LM.col(d.get("bark_color"), Color(1.0, 0.4, 0.3)))
+		var line: String = b[randi() % b.size()]
+		_show(line)
+		Fx.words(level, eye() + Vector3(0, 0.6, 0), line, LM.col(d.get("bark_color"), Color(1.0, 0.4, 0.3)))
 		LM.sound(d.get("sounds", {}).get("bark", ""), global_position)
 
 
@@ -833,3 +847,59 @@ func _aim_tick(dt: float, pl: Node3D) -> void:
 		_aim_pitch = lerp(_aim_pitch, want, k)
 		var ax2: Vector3 = (_skel.get_bone_global_rest(_aim_j).basis.orthonormalized().inverse() * Vector3.RIGHT).normalized()
 		_skel.set_bone_pose_rotation(_aim_j, _skel.get_bone_rest(_aim_j).basis.get_rotation_quaternion() * Quaternion(ax2, -_aim_pitch))
+
+
+# ------------------------------------------------------------------ a screen for a face (defs: "screen")
+## "screen": {"bone": "body", "at": [0, 0.72, 0.3], "width": 0.2, "height": 0.11, "color": [..], "bg": [..], "idle": ["...", ">:("]}
+## A panel of text fixed to a bone of the model, at `at` in the model's own units (x, up, forward) and that size. It shows
+## each bark as it is shouted (and one of `idle` while the thing has not noticed anybody). Text shrinks to fit.
+func _make_face() -> void:
+	var sc: Dictionary = d["screen"]
+	var sk := LM.find_type(vis, "Skeleton3D") as Skeleton3D
+	if sk == null:
+		return
+	var bi := sk.find_bone(sc.get("bone", ""))
+	var holder: Node3D
+	var at := Vector3(sc["at"][0], sc["at"][1], sc["at"][2])
+	if bi >= 0:
+		var ba := BoneAttachment3D.new()
+		sk.add_child(ba)
+		ba.bone_idx = bi
+		holder = Node3D.new()
+		ba.add_child(holder)
+		holder.transform = sk.get_bone_global_rest(bi).affine_inverse() * Transform3D(Basis(), at)
+	else:
+		holder = Node3D.new()
+		sk.add_child(holder)
+		holder.position = at
+	var w: float = sc.get("width", 0.2)
+	var h: float = sc.get("height", 0.11)
+	var bg := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(w, h)
+	bg.mesh = q
+	var bm := StandardMaterial3D.new()
+	bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bm.albedo_color = LM.col(sc.get("bg"), Color(0.02, 0.03, 0.08))
+	bg.material_override = bm
+	holder.add_child(bg)
+	_face = Label3D.new()
+	_face.pixel_size = w / 300.0                     # the panel is 300 pixels across
+	_face.width = 284.0
+	_face.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_face.modulate = LM.col(sc.get("color"), Color(1.0, 0.25, 0.3))
+	_face.outline_size = 0
+	_face.shaded = false
+	_face.double_sided = false
+	_face.position = Vector3(0, 0, 0.004)
+	_face.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	holder.add_child(_face)
+	_face_t = randf_range(0.0, 2.0)
+
+
+func _show(line: String) -> void:
+	if _face == null:
+		return
+	_face.text = line
+	var n := line.length()
+	_face.font_size = 64 if n <= 8 else (40 if n <= 18 else (27 if n <= 40 else (20 if n <= 70 else 15)))

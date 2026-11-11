@@ -284,6 +284,29 @@
     6
    ],
    "face": "w"
+  },
+  {
+   "actor": "drone",
+   "at": [
+    12,
+    2
+   ]
+  },
+  {
+   "actor": "drone",
+   "at": [
+    13,
+    3
+   ]
+  },
+  {
+   "actor": "drone",
+   "at": [
+    8,
+    3
+   ],
+   "still": true,
+   "face": "s"
   }
  ],
  "objectives": [

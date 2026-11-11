@@ -193,6 +193,10 @@ It gathers itself for `windup` (the tell: the first `clip_windup` seconds of the
 
 **Powered down** (`dormant_clip`, with `wake_sight`, `hearing`, `startle_time`): it plays the dormant clip until the player comes within `wake_sight` metres in view (from any side) or it hears or feels something, then plays `startle` for `startle_time` before it acts. `sight` is how far it sees once awake.
 
+**A screen for a face** (`screen`): `"screen": {"bone": "body", "at": [0, 0.70, 0.3], "width": 0.21, "height": 0.15, "color": [...], "bg": [...], "idle": ["...", ">:("]}`. A panel of text fixed to a bone of the model, at `at` in the model's own units (x, up, forward). It shows each bark as it is shouted, and one of `idle` while the thing has not noticed anybody; text shrinks to fit.
+
+**Flyers that weave** : `gait` with a long `burst`, no `pause` and a `weave` makes a serpentine approach; `"bob": {"height": 0.22, "rate": 5}` makes it rise and fall as it comes.
+
 **Scuttling** (`gait`): `"gait": {"burst": [0.25, 0.7], "pause": [0.05, 0.18], "fast": 1.3, "weave": 0.35, "weave_rate": 9}`. It moves in darts with dead stops between and does not come straight at the player.
 
 **Swimming** (`swim`): `"swim": {"clip": "swim", "speed": 9, "sink": 0.35}`. In fluid it plays that clip instead of walk and idle, moves at `speed`, and rides `sink` metres lower. Fluid is part of a level: a legend entry with `"fluid": true` floods its cells (`"~": {"fluid": true}`), and the level's `"fluid": {"level": 0.7, "color": [r, g, b, a], "glow": 0.3}` sets the surface. It is shallow: the player wades at 0.62 speed and anything without `swim` is slowed.
