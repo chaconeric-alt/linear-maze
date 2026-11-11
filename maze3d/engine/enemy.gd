@@ -45,6 +45,11 @@ var _climb_t := 2.0
 var _lounge: Dictionary = {}      # what it is doing instead of its job
 var _puff_t := 2.0
 var _stun := 0.0
+var _skel: Skeleton3D
+var _aim_i := -1                  # the bone that turns to face the player (a turret)
+var _aim_j := -1                  # the bone that tips up and down (its gun)
+var _aim_yaw := 0.0
+var _aim_pitch := 0.0
 var _wet := false                 # in fluid
 var _gait_t := 0.0
 var _gait_go := true
@@ -89,6 +94,11 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 	_overlay.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	_overlay.albedo_color = Color(0.9, 0.5, 0.4)
 	_home = position
+	if d.has("aim"):
+		_skel = LM.find_type(vis, "Skeleton3D") as Skeleton3D
+		if _skel:
+			_aim_i = _skel.find_bone(d["aim"].get("yaw_bone", ""))
+			_aim_j = _skel.find_bone(d["aim"].get("pitch_bone", ""))
 	vis.rotation.y = deg_to_rad(d.get("model_yaw", 0.0))      # models from elsewhere do not always face our way
 	vis.position.y = d.get("model_y", 0.0)
 	_climb_t = randf_range(1.0, 3.0)
@@ -152,6 +162,11 @@ func alert() -> void:
 			Fx.words(level, eye() + Vector3(0, 0.6, 0), d["startle_text"], LM.col(d.get("bark_color"), Color(1.0, 0.4, 0.3)))
 	if _surf == 1:
 		_goal_up = d.get("climb", {}).get("ceiling", true) and randf() < 0.6
+	if d.has("dormant_clip") and _stun <= 0.0:       # powering up takes a moment
+		awake = true
+		if _play("startle"):
+			_stun = d.get("startle_time", 1.0)
+			anim.seek(0.0)
 	awake = true
 	LM.sound(d.get("sounds", {}).get("alert", ""), global_position)
 	for a in level.actors:       # friends close by wake too
@@ -193,10 +208,10 @@ func _physics_process(dt: float) -> void:
 	_see_t -= dt
 	if _see_t <= 0.0:
 		_see_t = 0.2
-		_see = not Game.calm and dist < d.get("sight", 24.0) * (1.0 if awake else 0.75) and level.los(eye(), pl.global_position + Vector3(0, 1.3, 0))
+		_see = not Game.calm and dist < (d.get("sight", 24.0) if awake else d.get("wake_sight", d.get("sight", 24.0) * 0.75)) and level.los(eye(), pl.global_position + Vector3(0, 1.3, 0))
 		if _see and not awake:
 			var fwd := global_transform.basis.z
-			if dist < 7.0 or _surf != 0 or fwd.dot(flat.normalized()) > 0.2:      # from a wall they see the whole room
+			if dist < 7.0 or _surf != 0 or d.has("dormant_clip") or fwd.dot(flat.normalized()) > 0.2:      # from a wall they see the whole room
 				alert()
 	for k in _cool.keys():
 		_cool[k] -= dt
@@ -211,6 +226,8 @@ func _physics_process(dt: float) -> void:
 		move_and_slide()
 		return
 	_bark(dt)
+	if _aim_i >= 0:
+		_aim_tick(dt, pl)
 	# ---- an attack in progress
 	if _atk != null and _atk.get("type", "") == "pounce":
 		_pounce_tick(dt, pl, to, dist)
@@ -398,6 +415,8 @@ func _idle(dt: float) -> void:
 func _turn_to(dir: Vector3, dt: float, rate: float) -> void:
 	if dir.length() < 0.01:
 		return
+	if _aim_i >= 0:                                  # the head does the looking; the body follows when it gets round to it
+		rate *= d["aim"].get("body_turn", 0.25)
 	rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), clamp(rate * dt, 0.0, 1.0))
 
 
@@ -410,7 +429,10 @@ func _strike(pl: Node3D, dist: float) -> void:
 			if dist <= a.get("range", 2.0) + 0.7 and level.los(eye(), pl.global_position + Vector3(0, 1.0, 0)):
 				pl.hurt(a.get("damage", 10.0), {"type": a.get("kind", "melee"), "from": global_position, "by": self, "knock": a.get("knock", 3.0)})
 		"ranged":
-			var from: Vector3 = global_position + global_transform.basis.z * (d.get("radius", 0.5) + 0.25) + Vector3(0, a.get("muzzle", d.get("eye", 1.2)) * (-1.0 if d.get("mount", "") == "ceiling" else 1.0), 0)
+			var fwd3: Vector3 = global_transform.basis.z
+			if _aim_i >= 0:                              # it fires where the turret points, not where the body does
+				fwd3 = Vector3(pl.global_position.x - global_position.x, 0, pl.global_position.z - global_position.z).normalized()
+			var from: Vector3 = global_position + fwd3 * (d.get("radius", 0.5) + 0.25) + Vector3(0, a.get("muzzle", d.get("eye", 1.2)) * (-1.0 if d.get("mount", "") == "ceiling" else 1.0), 0)
 			var aim: Vector3 = pl.global_position + Vector3(0, 1.1, 0) + pl.velocity * a.get("lead", 0.0) * (from.distance_to(pl.global_position) / 30.0)
 			var dir: Vector3 = (aim - from).normalized()
 			var sp: float = deg_to_rad(a.get("spread", 2.0))
@@ -790,3 +812,24 @@ func _gait(dt: float) -> float:
 		var r: Array = g.get("burst", [0.25, 0.7]) if _gait_go else g.get("pause", [0.04, 0.16])
 		_gait_t = randf_range(r[0], r[1])
 	return g.get("fast", 1.3) if _gait_go else 0.0
+
+
+# ------------------------------------------------------------------ a head that turns on its own (defs: "aim")
+## "aim": {"yaw_bone": "turret", "pitch_bone": "gun", "speed": 5, "pitch": [-30, 35], "body_turn": 0.25}
+## Once awake, yaw_bone is turned about the vertical to face the player whichever way the body is going (all the way
+## round), and pitch_bone tips to their height. The body turns at body_turn of its usual rate. Clips must not key those
+## two bones, except the ones played while it is not aiming (dormant, startle, die).
+func _aim_tick(dt: float, pl: Node3D) -> void:
+	var a: Dictionary = d["aim"]
+	var sb := _skel.global_transform.basis.orthonormalized()
+	var to: Vector3 = sb.inverse() * (pl.global_position + Vector3(0, 1.0, 0) - eye())
+	var k: float = clamp(a.get("speed", 5.0) * dt, 0.0, 1.0)
+	_aim_yaw = lerp_angle(_aim_yaw, atan2(to.x, to.z), k)
+	var axis: Vector3 = (_skel.get_bone_global_rest(_aim_i).basis.orthonormalized().inverse() * Vector3.UP).normalized()
+	_skel.set_bone_pose_rotation(_aim_i, _skel.get_bone_rest(_aim_i).basis.get_rotation_quaternion() * Quaternion(axis, _aim_yaw))
+	if _aim_j >= 0:
+		var lim: Array = a.get("pitch", [-30, 35])
+		var want: float = clamp(atan2(to.y, Vector2(to.x, to.z).length()), deg_to_rad(lim[0]), deg_to_rad(lim[1]))
+		_aim_pitch = lerp(_aim_pitch, want, k)
+		var ax2: Vector3 = (_skel.get_bone_global_rest(_aim_j).basis.orthonormalized().inverse() * Vector3.RIGHT).normalized()
+		_skel.set_bone_pose_rotation(_aim_j, _skel.get_bone_rest(_aim_j).basis.get_rotation_quaternion() * Quaternion(ax2, -_aim_pitch))

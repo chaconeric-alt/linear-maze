@@ -9,7 +9,7 @@ Keys are the same as mz.Rig.clip: {bone: [(seconds, (rx, ry, rz) degrees about t
 The model's axes are whatever the file has: look at it first (tools/inspect_model.py, a.preview()).
 Nothing here changes the mesh, the weights or the textures."""
 import bpy, math
-from mathutils import Vector, Quaternion, Euler
+from mathutils import Vector, Quaternion, Euler, Matrix
 import mz
 
 
@@ -50,6 +50,55 @@ class Adopted:
 
     def bones(self):
         return [b.name for b in self.ob.data.bones]
+
+    def rerig(self, bones, assign):
+        """Throw the skeleton away and build a new one. For machines, where every part is rigid.
+        bones: [(name, parent or None, head, tail)] in world space. assign(world position, set of old bone names the
+        vertex followed) -> the new bone it follows, wholly. The mesh is baked to world space, so afterwards the
+        model's axes are the world's and clips need no world_axes."""
+        import bmesh
+        old = self.ob
+        for m in self.meshes:
+            names = [g.name for g in m.vertex_groups]
+            wm = m.matrix_world.copy()
+            pick = []
+            for v in m.data.vertices:
+                followed = {names[g.group] for g in v.groups if g.weight > 0.25}
+                pick.append(assign(wm @ v.co, followed))
+            for mod in list(m.modifiers):
+                if mod.type == 'ARMATURE':
+                    m.modifiers.remove(mod)
+            m.parent = None
+            m.data.transform(wm)
+            m.matrix_world = Matrix.Identity(4)
+            m.vertex_groups.clear()
+            groups = {}
+            for i, b in enumerate(pick):
+                groups.setdefault(b, []).append(i)
+            for b, ids in groups.items():
+                m.vertex_groups.new(name=b).add(ids, 1.0, 'REPLACE')
+            self.counts = {b: len(ids) for b, ids in groups.items()}
+        for o in list(bpy.data.objects):
+            if o.type in ('ARMATURE', 'EMPTY'):
+                bpy.data.objects.remove(o)
+        arm = bpy.data.armatures.new('rig')
+        ob = bpy.data.objects.new('rig', arm)
+        bpy.context.scene.collection.objects.link(ob)
+        bpy.context.view_layer.objects.active = ob
+        bpy.ops.object.mode_set(mode='EDIT')
+        for (name, parent, head, tail) in bones:
+            eb = arm.edit_bones.new(name)
+            eb.head, eb.tail = Vector(head), Vector(tail)
+            if parent:
+                eb.parent = arm.edit_bones[parent]
+        bpy.ops.object.mode_set(mode='OBJECT')
+        for m in self.meshes:
+            m.parent = ob
+            m.modifiers.new('Armature', 'ARMATURE').object = ob
+        for pb in ob.pose.bones:
+            pb.rotation_mode = 'QUATERNION'
+        self.ob = ob
+        self.world_axes = False
 
     def split_off(self, name, parent, pick, head, tail):
         """Give some of the mesh a bone of its own (a saw blade, a wheel): every vertex for which pick(world position)

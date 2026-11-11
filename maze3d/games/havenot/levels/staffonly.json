@@ -276,6 +276,14 @@
     3
    ],
    "face": "w"
+  },
+  {
+   "actor": "plodder",
+   "at": [
+    21,
+    6
+   ],
+   "face": "w"
   }
  ],
  "objectives": [
