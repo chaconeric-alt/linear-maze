@@ -21,8 +21,12 @@ class Adopted:
         for o in list(bpy.data.objects):                 # importers leave a bone-shape sphere behind
             if o.type == 'MESH' and not o.vertex_groups and o.name.lower().startswith('icosphere'):
                 bpy.data.objects.remove(o)
-        self.ob = [o for o in bpy.data.objects if o.type == 'ARMATURE'][0]
+        arms = [o for o in bpy.data.objects if o.type == 'ARMATURE']
+        self.ob = arms[0] if arms else None              # None: it came with no skeleton at all; call rerig
         self.meshes = [o for o in bpy.data.objects if o.type == 'MESH']
+        if self.ob is None:
+            self.names = []
+            return
         if self.ob.animation_data:                       # whatever came with it is replaced
             self.ob.animation_data_clear()
         for old, new in (rename or {}).items():
@@ -54,7 +58,7 @@ class Adopted:
     def rerig(self, bones, assign):
         """Throw the skeleton away and build a new one. For machines, where every part is rigid.
         bones: [(name, parent or None, head, tail)] in world space. assign(world position, set of old bone names the
-        vertex followed) -> the new bone it follows, wholly. The mesh is baked to world space, so afterwards the
+        vertex followed) -> the new bone it follows wholly, or {bone: weight} to share it between bones (for soft things). The mesh is baked to world space, so afterwards the
         model's axes are the world's and clips need no world_axes."""
         import bmesh
         old = self.ob
@@ -72,12 +76,16 @@ class Adopted:
             m.data.transform(wm)
             m.matrix_world = Matrix.Identity(4)
             m.vertex_groups.clear()
-            groups = {}
+            groups = {}                                  # bone -> ([vertex], [weight])
             for i, b in enumerate(pick):
-                groups.setdefault(b, []).append(i)
-            for b, ids in groups.items():
-                m.vertex_groups.new(name=b).add(ids, 1.0, 'REPLACE')
-            self.counts = {b: len(ids) for b, ids in groups.items()}
+                for bn, wt in (b.items() if isinstance(b, dict) else ((b, 1.0),)):   # one bone, or a blend {bone: weight}
+                    if wt > 0.004:
+                        groups.setdefault(bn, []).append((i, wt))
+            for b, lst in groups.items():
+                vg = m.vertex_groups.new(name=b)
+                for i, wt in lst:
+                    vg.add([i], wt, 'REPLACE')
+            self.counts = {b: len(lst) for b, lst in groups.items()}
         for o in list(bpy.data.objects):
             if o.type in ('ARMATURE', 'EMPTY'):
                 bpy.data.objects.remove(o)
@@ -153,6 +161,7 @@ class Adopted:
         for pb in self.ob.pose.bones:
             pb.rotation_quaternion = Quaternion()
             pb.location = (0, 0, 0)
+            pb.scale = (1, 1, 1)
         ad.action = bpy.data.actions[clip]
         try:
             ad.action_slot = ad.action.slots[0]
@@ -168,6 +177,7 @@ class Adopted:
         for pb in self.ob.pose.bones:
             pb.rotation_quaternion = Quaternion()
             pb.location = (0, 0, 0)
+            pb.scale = (1, 1, 1)
         for tr in ad.nla_tracks:
             tr.mute = False
         bpy.context.scene.frame_set(0)

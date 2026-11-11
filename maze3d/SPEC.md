@@ -358,3 +358,21 @@ python3 tools/blender/build_all.py -- roach wall_pipes
 - Lights are omni lights from tiles and props. Shadows come from ceiling lights and the player's lamp; many shadowed lights in view will cost on a weak GPU (a style's `lights.shadows: false` turns them off).
 - Tiles are batched per 6 × 6 cells; there is no occlusion culling yet, so very large levels draw more than they need to.
 - No save, one level at a time, one faction.
+
+
+## Soft bodies, burning skin and puddles
+
+Three small things, added for the Fouler, usable by anything:
+
+- **`"jelly"`** on an actor (`amp`, `speed`, `freq`, `glow`, `glow_energy`, `pulse`, `wet`): the model's own textures are
+  moved into `engine/shaders/jelly.gdshader`, which wobbles the surface along its normals, makes it wet and lights it
+  from inside with a glow that breathes. Needs `own_materials`. `amp` is in the model's units (before `scale`).
+- **`"touch"`** on an actor (`dps`, `reach`, `kind`): the player is hurt four times a second while within
+  `radius + 0.45 + reach` of it. No animation, no attack: being brushed is enough.
+- **`"puddle"`** on a projectile (`radius`, `dps`, `life`, `color`, `kind`, `max`): where it lands it leaves a glowing
+  pool (`engine/puddle.gd`) that hurts the player while they stand in it, then fades. At most `max` at once; the oldest
+  dries up first.
+
+The Fouler (`tools/blender/adopt_fouler.py`) came with no skeleton at all. It is given a five-bone spine with smoothly
+blended weights, two lips, twelve toes and eight two-bone feelers, and its clips use bone *scale* as well as rotation
+(squash and stretch); scale compounds down a chain, so `whole(wide, tall)` spreads it over the spine as fifth roots.

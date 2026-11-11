@@ -58,6 +58,8 @@ func _physics_process(dt: float) -> void:
 		return
 	var pos: Vector3 = hit["position"]
 	var c := LM.col(d.get("color"), Color(0.3, 0.9, 1.0))
+	if d.has("puddle"):                              # what it was made of stays where it landed
+		Puddle.drop(level, pos, d["puddle"], by)
 	if d.has("blast"):
 		Fx.explode(level, pos - vel.normalized() * 0.2, d["blast"].get("radius", 3.0), d["blast"].get("damage", damage), c, by, not from_player or d["blast"].get("self", false))
 	else:

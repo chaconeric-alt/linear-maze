@@ -307,6 +307,14 @@
    ],
    "still": true,
    "face": "s"
+  },
+  {
+   "actor": "fouler",
+   "at": [
+    17,
+    2
+   ],
+   "face": "w"
   }
  ],
  "objectives": [

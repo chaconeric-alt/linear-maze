@@ -47,6 +47,7 @@ var _climb_t := 2.0
 var _lounge: Dictionary = {}      # what it is doing instead of its job
 var _puff_t := 2.0
 var _stun := 0.0
+var _touch_t := 0.0
 var _face: Label3D                # a screen on the model that shows what it is saying
 var _face_t := 0.0
 var _skel: Skeleton3D
@@ -105,6 +106,8 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 			_aim_j = _skel.find_bone(d["aim"].get("pitch_bone", ""))
 	if d.has("screen"):
 		_make_face()
+	if d.has("jelly"):
+		_make_jelly()
 	vis.rotation.y = deg_to_rad(d.get("model_yaw", 0.0))      # models from elsewhere do not always face our way
 	vis.position.y = d.get("model_y", 0.0)
 	_climb_t = randf_range(1.0, 3.0)
@@ -202,6 +205,15 @@ func _physics_process(dt: float) -> void:
 			_fall_tick(dt, Vector3.ZERO)
 		return
 	_wet = _surf == 0 and level.fluid_at(global_position)
+	if d.has("touch"):                               # its skin burns: being near enough to be brushed is enough
+		_touch_t -= dt
+		if _touch_t <= 0.0:
+			_touch_t = 0.25
+			var tp := Game.player
+			if tp and is_instance_valid(tp) and not tp.dead and absf(tp.global_position.y - global_position.y) < d.get("height", 1.6):
+				var td := Vector2(tp.global_position.x - global_position.x, tp.global_position.z - global_position.z).length()
+				if td < d.get("radius", 0.5) + 0.45 + d["touch"].get("reach", 0.3):
+					tp.hurt(d["touch"].get("dps", 12.0) * 0.25, {"type": d["touch"].get("kind", "acid"), "from": global_position, "by": self})
 	if _fly and d.has("bob"):                        # a flyer that will not hold its height
 		vis.position.y = d.get("model_y", 0.0) + sin(Time.get_ticks_msec() * 0.001 * d["bob"].get("rate", 5.0) + get_index()) * d["bob"].get("height", 0.2) * (1.0 if awake else 0.35)
 	if _face and not awake:
@@ -917,3 +929,37 @@ func _show(line: String) -> void:
 	_face.text = line
 	var n := line.length()
 	_face.font_size = 64 if n <= 8 else (40 if n <= 18 else (27 if n <= 40 else (20 if n <= 70 else 15)))
+
+
+# ------------------------------------------------------------------ soft and glowing (defs: "jelly")
+## "jelly": {"amp": 0.02, "speed": 2.4, "freq": 7, "glow": [0.8, 0.3, 1.0], "glow_energy": 0.6, "pulse": 0.5, "wet": 0.75}
+## For a model that keeps its own textures (own_materials): they are moved into a shader that wobbles the surface,
+## makes it wet, and lights it from inside with a glow that breathes. amp is in the model's own units.
+func _make_jelly() -> void:
+	var j: Dictionary = d["jelly"]
+	var sh: Shader = load("res://engine/shaders/jelly.gdshader")
+	for m in _meshes:
+		var mi := m as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var src := mi.get_active_material(i) as BaseMaterial3D
+			var sm := ShaderMaterial.new()
+			sm.shader = sh
+			if src:
+				sm.set_shader_parameter("albedo_tex", src.albedo_texture)
+				if src.normal_enabled and src.normal_texture:
+					sm.set_shader_parameter("normal_tex", src.normal_texture)
+					sm.set_shader_parameter("has_normal", true)
+				if src.roughness_texture:
+					sm.set_shader_parameter("orm_tex", src.roughness_texture)
+					sm.set_shader_parameter("has_orm", true)
+			sm.set_shader_parameter("amp", j.get("amp", 0.02))
+			sm.set_shader_parameter("speed", j.get("speed", 2.4))
+			sm.set_shader_parameter("freq", j.get("freq", 7.0))
+			var g := LM.col(j.get("glow"), Color(0.8, 0.3, 1.0))
+			sm.set_shader_parameter("glow", Vector3(g.r, g.g, g.b))
+			sm.set_shader_parameter("glow_energy", j.get("glow_energy", 0.6))
+			sm.set_shader_parameter("pulse", j.get("pulse", 0.5))
+			sm.set_shader_parameter("wet", j.get("wet", 0.75))
+			mi.set_surface_override_material(i, sm)

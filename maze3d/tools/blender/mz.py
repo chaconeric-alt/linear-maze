@@ -308,7 +308,8 @@ class Rig:
         return ob
 
     def clip(self, name, length, keys, fps=30):
-        """keys: {bone: [(time_s, (rx,ry,rz) degrees in model space, optional (dx,dy,dz))...]}"""
+        """keys: {bone: [(time_s, (rx,ry,rz) degrees in model space, optional (dx,dy,dz), optional (wide, wide2, long))...]}
+        The fourth item is a scale in the bone's own terms: across it twice, and along its length (for squash and stretch)."""
         ob = self.ob
         bpy.context.scene.render.fps = fps
         if not ob.animation_data:
@@ -318,6 +319,7 @@ class Rig:
         for pb in ob.pose.bones:
             pb.rotation_quaternion = Quaternion()
             pb.location = (0, 0, 0)
+            pb.scale = (1, 1, 1)
         for bone, ks in keys.items():
             pb = ob.pose.bones[bone]
             rest = pb.bone.matrix_local.to_3x3()
@@ -328,9 +330,12 @@ class Rig:
                 pb.rotation_quaternion = (inv @ Rw @ rest).to_quaternion()
                 f = t * fps
                 pb.keyframe_insert('rotation_quaternion', frame=f)
-                if len(k) > 2:
+                if len(k) > 2 and k[2] is not None:
                     pb.location = inv @ Vector(k[2])
                     pb.keyframe_insert('location', frame=f)
+                if len(k) > 3:
+                    pb.scale = (k[3][0], k[3][2], k[3][1])
+                    pb.keyframe_insert('scale', frame=f)
         slot = ob.animation_data.action_slot
         ob.animation_data.action = None
         tr = ob.animation_data.nla_tracks.new()

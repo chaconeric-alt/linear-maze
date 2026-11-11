@@ -196,6 +196,30 @@
    ],
    "light": 1.8,
    "kind": "energy"
+  },
+  "goo": {
+   "speed": 13,
+   "radius": 0.3,
+   "color": [
+    0.75,
+    0.2,
+    1.0
+   ],
+   "light": 1.4,
+   "gravity": 7.0,
+   "kind": "acid",
+   "puddle": {
+    "radius": 1.3,
+    "dps": 10,
+    "life": 10,
+    "color": [
+     0.75,
+     0.2,
+     1.0
+    ],
+    "kind": "acid",
+    "max": 14
+   }
   }
  }
 }
