@@ -445,6 +445,10 @@ func _strike(pl: Node3D, dist: float) -> void:
 			if _aim_i >= 0:                              # it fires where the turret points, not where the body does
 				fwd3 = Vector3(pl.global_position.x - global_position.x, 0, pl.global_position.z - global_position.z).normalized()
 			var from: Vector3 = global_position + fwd3 * (d.get("radius", 0.5) + 0.25) + Vector3(0, a.get("muzzle", d.get("eye", 1.2)) * (-1.0 if d.get("mount", "") == "ceiling" else 1.0), 0)
+			if _aim_i >= 0 and d["aim"].has("muzzle"):        # out of the barrel itself: a point that rides the gun bone
+				var mb: int = _aim_j if _aim_j >= 0 else _aim_i
+				var mp: Array = d["aim"]["muzzle"]
+				from = _skel.global_transform * (_skel.get_bone_global_pose(mb) * (_skel.get_bone_global_rest(mb).affine_inverse() * Vector3(mp[0], mp[1], mp[2])))
 			var aim: Vector3 = pl.global_position + Vector3(0, 1.1, 0) + pl.velocity * a.get("lead", 0.0) * (from.distance_to(pl.global_position) / 30.0)
 			var dir: Vector3 = (aim - from).normalized()
 			var sp: float = deg_to_rad(a.get("spread", 2.0))

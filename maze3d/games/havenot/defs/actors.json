@@ -838,7 +838,12 @@
      -30,
      35
     ],
-    "body_turn": 0.25
+    "body_turn": 0.25,
+    "muzzle": [
+     -0.1,
+     0.665,
+     0.5
+    ]
    },
    "barks": [
     "INTRUDER",
