@@ -43,7 +43,7 @@ func setup(lv: Level, config: Dictionary) -> void:
 	hp = max_hp
 	armor = cfg.get("armor", 0.0)
 	collision_layer = 2
-	collision_mask = 1 | 4
+	collision_mask = 1 | 4 | Level.GLASS
 	var cs := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
 	cap.radius = 0.4
@@ -308,7 +308,7 @@ func _fire(w: Dictionary) -> void:
 		if w.has("projectile"):
 			# point blank, the muzzle can be inside what you're shooting: start the shot at the eye instead
 			var start := mz + fwd * 0.2
-			var nq := PhysicsRayQueryParameters3D.create(cam.global_position, cam.global_position + fwd * 2.6, 1 | 4)
+			var nq := PhysicsRayQueryParameters3D.create(cam.global_position, cam.global_position + fwd * 2.6, 1 | 4 | Level.GLASS)
 			nq.exclude = [get_rid()]
 			if not get_world_3d().direct_space_state.intersect_ray(nq).is_empty():
 				start = cam.global_position + fwd * 0.05
@@ -316,7 +316,7 @@ func _fire(w: Dictionary) -> void:
 			continue
 		var from := cam.global_position
 		var to: Vector3 = from + dir * w.get("range", 80.0)
-		var q := PhysicsRayQueryParameters3D.create(from, to, 1 | 4)
+		var q := PhysicsRayQueryParameters3D.create(from, to, 1 | 4 | Level.GLASS)
 		q.exclude = [get_rid()]
 		var hit := get_world_3d().direct_space_state.intersect_ray(q)
 		var end := to
@@ -341,7 +341,7 @@ func _fire(w: Dictionary) -> void:
 func _aim_from_muzzle(mz: Vector3, dir: Vector3) -> Vector3:
 	# aim the shot at what the crosshair is on, not parallel to it
 	var from := cam.global_position
-	var q := PhysicsRayQueryParameters3D.create(from, from + dir * 80.0, 1 | 4)
+	var q := PhysicsRayQueryParameters3D.create(from, from + dir * 80.0, 1 | 4 | Level.GLASS)
 	q.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	var target: Vector3 = hit["position"] if not hit.is_empty() else from + dir * 80.0

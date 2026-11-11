@@ -626,7 +626,34 @@ def w_plasma():
     return dict(objects=[m.to_object()], meta=dict(type='weapon', muzzle=(0, -0.72, 0.04)))
 
 
-PROPS = {
+
+def window_obs(seed=7):
+    """An observation window: fills a wall cell like a door frame does, with a wide pane at eye height. It does not open."""
+    rnd = random.Random(seed)
+    m = Mesh('window_obs')
+    WW, Z0, Z1 = 3.0, 0.95, 2.85
+    side = (C - WW) / 2
+    for s in (-1, 1):
+        x = s * (WW / 2 + side / 2)
+        m.box((side, DT, H), at=(x, 0, H / 2), mat='hull_dark')
+        m.box((0.12, DT + 0.14, Z1 - Z0 + 0.2), at=(s * (WW / 2 + 0.06), 0, (Z0 + Z1) / 2), mat='trim', bevel=0.03)
+    m.box((WW, DT, Z0), at=(0, 0, Z0 / 2), mat='hull_dark')
+    m.box((WW, DT, H - Z1), at=(0, 0, Z1 + (H - Z1) / 2), mat='hull_dark')
+    for f in (-1, 1):
+        m.push(T(0, f * DT / 2, 0) @ R(90, 0, 0 if f < 0 else 180))
+        plates(m, rnd, -C / 2, 0.05, C / 2, Z0 - 0.08, min_size=0.4, thick=(0.03, 0.07))
+        plates(m, rnd, -C / 2, Z1 + 0.1, C / 2, H - 0.05, min_size=0.4, thick=(0.03, 0.07))
+        m.pop()
+        m.box((WW + 0.3, 0.1, 0.12), at=(0, f * (DT / 2 + 0.03), Z0 - 0.02), mat='trim', bevel=0.03)        # the sill
+        m.box((WW + 0.3, 0.1, 0.12), at=(0, f * (DT / 2 + 0.03), Z1 + 0.02), mat='trim', bevel=0.03)
+        m.box((0.9, 0.02, 0.06), at=(0, f * (DT / 2 + 0.085), Z1 + 0.02), mat='glow_cyan')
+    for x in (-0.5, 0.5):                                # mullions
+        m.box((0.07, 0.16, Z1 - Z0), at=(x, 0, (Z0 + Z1) / 2), mat='trim')
+    m.box((WW, 0.04, Z1 - Z0), at=(0, 0, (Z0 + Z1) / 2), mat='pane')
+    return dict(objects=[m.to_object()], meta=dict(type='prop'))
+
+
+PROPS = {'window_obs': window_obs, 
     'door_split': door_split, 'door_rise': door_rise, 'door_jaw': door_jaw, 'door_shear': door_shear, 'door_iris': door_iris, 'door_vault': door_vault,
     'terminal_wall': terminal_wall, 'terminal_desk': terminal_desk, 'reactor': reactor, 'fabricator': fabricator, 'health_station': health_station,
     'cache': cache, 'crate': crate, 'barrel': barrel, 'server_rack': server_rack, 'cryo_pod': cryo_pod, 'cryo_pod_broken': lambda: cryo_pod(21, True),

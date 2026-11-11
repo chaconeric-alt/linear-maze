@@ -37,9 +37,10 @@ func _stand_near(target: Vector3, want := 5.0) -> bool:
 		for dy in range(-r, r + 1):
 			for dx in range(-r, r + 1):
 				var q := c + Vector2i(dx, dy)
-				if not level.is_open(q.x, q.y) or level.doors.has(q):
+				if not level.is_open(q.x, q.y) or level.doors.has(q) or level.cell(q.x, q.y)["window"] != "":
 					continue
-				var p := level.center(q, 0.05)
+				var p := level.center(q, 0.0)
+				p.y = level.floor_y(Vector3(p.x, target.y - 1.0, p.z)) + 0.05      # on the same storey as the target, if there is a floor there
 				if p.distance_to(target) < 2.0:
 					continue
 				if level.los(p + Vector3(0, 1.6, 0), target) and abs(p.distance_to(target) - want) < abs(best.distance_to(target) - want):
@@ -73,13 +74,13 @@ func run(m: Node) -> void:
 	_say(pl.global_position.y > 0.3, "player jumps")
 	await _frames(40)
 	_say(abs(pl.global_position.y) < 0.2, "player lands on the floor (y=%.2f)" % pl.global_position.y)
-	pl.global_position = level.center(level.start_cell, 0.05)
+	pl.global_position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
 	# --- everything placed can be reached once doors are unlocked
 	var blocked: Array = []
 	for dp in level.doors:
-		if level.nav.is_point_solid(dp):
+		if level.is_blocked(dp):
 			blocked.append(dp)
-			level.nav.set_point_solid(dp, false)
+			level.block(dp, false)
 	var unreachable := 0
 	var start := level.center(level.start_cell)
 	for n in level.get_children():
@@ -94,8 +95,19 @@ func run(m: Node) -> void:
 				unreachable += 1
 				print("INFO  unreachable: ", n.get_class(), " at ", c)
 	_say(unreachable == 0, "every thing on the map can be reached (%d cannot)" % unreachable)
+	var upstairs := 0                                # things on balconies: there has to be a way up that can be walked
+	var stranded := 0
+	for n in level.get_children():
+		if (n is Prop or n is Pickup or n is Enemy) and n.global_position.y > 2.0 and not (n is Enemy and n._surf != 0):
+			upstairs += 1
+			var pth := level.path(start, n.global_position)
+			if pth.size() == 0 or absf(pth[pth.size() - 1].y - level.floor_y(n.global_position)) > 0.5:
+				stranded += 1
+				print("INFO  no way up to ", n.get_class(), " at ", n.global_position)
+	if upstairs > 0:
+		_say(stranded == 0, "everything upstairs can be walked to (%d things, %d stranded)" % [upstairs, stranded])
 	for dp in blocked:
-		level.nav.set_point_solid(dp, true)
+		level.block(dp, true)
 	# --- traps hurt, before we stop caring about damage
 	for n in level.get_children():
 		if is_instance_valid(n) and n is Trap and n.enabled:
@@ -157,7 +169,7 @@ func run(m: Node) -> void:
 		if not is_instance_valid(a) or a.dead:
 			continue
 		if not _stand_near(a.eye()):
-			_say(false, "no place to stand to fight %s at %s" % [nm, level.cell_of(a.global_position)])
+			_say(false, "no place to stand to fight %s at %s (%s)" % [nm, level.cell_of(a.global_position), a.global_position])
 			continue
 		var hp0 := pl.hp
 		var t := 0
@@ -247,7 +259,7 @@ func run(m: Node) -> void:
 				pl.armor = 0
 				for k in pl.ammo:
 					pl.ammo[k] = 0
-				pl.global_position = Vector3(n.global_position.x, 0.05, n.global_position.z)
+				pl.global_position = Vector3(n.global_position.x, level.floor_y(n.global_position) + 0.05, n.global_position.z)
 				await _frames(8)
 				got += 1
 	pl.hp = pl.max_hp

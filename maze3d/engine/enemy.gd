@@ -22,6 +22,8 @@ var _path: PackedVector3Array
 var _path_t := 0.0
 var _see := false
 var _see_t := 0.0
+var seen := false                 # the player has laid eyes on it: it shows on the map
+var _shot := true                 # nothing solid, glass included, between it and the player
 var _strafe := 1.0
 var _strafe_t := 0.0
 var _bark_t := 3.0
@@ -71,7 +73,7 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 	_fly = d.get("fly", false)
 	_fixed = d.get("behavior", "chaser") == "turret"
 	collision_layer = 4
-	collision_mask = 1 | 2 | 4
+	collision_mask = 1 | 2 | 4 | Level.GLASS
 	var r: float = d.get("radius", 0.5)
 	var hgt: float = d.get("height", 1.6)
 	var cs := CollisionShape3D.new()
@@ -220,7 +222,13 @@ func _physics_process(dt: float) -> void:
 	_see_t -= dt
 	if _see_t <= 0.0:
 		_see_t = 0.2
-		_see = not Game.calm and dist < (d.get("sight", 24.0) if awake else d.get("wake_sight", d.get("sight", 24.0) * 0.75)) and level.los(eye(), pl.global_position + Vector3(0, 1.3, 0))
+		var clear: bool = level.los(eye(), pl.global_position + Vector3(0, 1.3, 0))
+		if clear and not seen and dist < 46.0:
+			var pf := Vector3(-sin(pl.rotation.y), 0, -cos(pl.rotation.y))
+			if dist < 3.0 or pf.dot(-flat.normalized()) > 0.45:
+				seen = true
+		_shot = clear and level.los(eye(), pl.global_position + Vector3(0, 1.3, 0), true)
+		_see = not Game.calm and dist < (d.get("sight", 24.0) if awake else d.get("wake_sight", d.get("sight", 24.0) * 0.75)) and clear
 		if _see and not awake:
 			var fwd := global_transform.basis.z
 			if dist < 7.0 or _surf != 0 or d.has("dormant_clip") or fwd.dot(flat.normalized()) > 0.2:      # from a wall they see the whole room
@@ -263,7 +271,7 @@ func _physics_process(dt: float) -> void:
 			i += 1
 			if _cool.get(i, 0.0) > 0.0 or dist > a.get("range", 2.0) or dist < a.get("min_range", 0.0):
 				continue
-			if not _see and a.get("type", "melee") != "melee":
+			if (not _see or not _shot) and a.get("type", "melee") != "melee":
 				continue
 			if a.get("type", "melee") == "pounce":
 				if _surf == 0 and not is_on_floor() or _surf >= 3 or dist < a.get("min_range", 3.0):
@@ -516,7 +524,7 @@ func _die(info: Dictionary) -> void:
 	elif _surf == 4:
 		_surf = 0
 	collision_layer = 0
-	collision_mask = 1
+	collision_mask = 1 | Level.GLASS
 	velocity = Vector3.ZERO if _surf == 0 else _wall_n * 1.5
 	_play("die")
 	LM.sound(d.get("sounds", {}).get("die", "die"), global_position)
@@ -578,7 +586,7 @@ func _start_lounge() -> void:
 		else:
 			var f: Vector3 = best.global_transform.basis.z
 			position = best.position + f * _lounge.get("stand", 2.2)
-			position.y = 0.0
+			position.y = best.position.y
 			rotation.y = atan2(-f.x, -f.z)
 	if _lounge.get("at", "floor") == "wall":
 		var dv: Vector3 = walls[randi() % walls.size()]
@@ -586,7 +594,7 @@ func _start_lounge() -> void:
 			var f: Vector3 = Vector3(Level.DIRS[Level.DIR_NAMES.get(e["face"], 0)].x, 0, Level.DIRS[Level.DIR_NAMES.get(e["face"], 0)].y)
 			if walls.has(-f):
 				dv = -f
-		position = level.center(c) + dv * (level.C / 2 - d.get("radius", 0.5) - _lounge.get("gap", 0.25))
+		position = level.center(c, position.y) + dv * (level.C / 2 - d.get("radius", 0.5) - _lounge.get("gap", 0.25))
 		rotation.y = atan2(-dv.x, -dv.z)             # back to the wall
 		if _lounge.get("look", "out") == "in":       # or nose to it
 			rotation.y = atan2(dv.x, dv.z)
@@ -598,6 +606,8 @@ func _start_lounge() -> void:
 
 func _walls(c: Vector2i) -> Array:
 	var out: Array = []
+	if level.cell(c.x, c.y)["diag"] != "":           # a cut corner has no square wall to stand against
+		return out
 	for i in 4:
 		var n: Vector2i = c + Level.DIRS[i]
 		if level.cell(n.x, n.y)["solid"]:

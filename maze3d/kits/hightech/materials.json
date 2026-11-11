@@ -354,6 +354,17 @@
   "metal": 1.0,
   "rough": 0.03
  },
+ "pane": {
+  "alpha": 0.09,
+  "color": [
+   0.45,
+   0.85,
+   0.9
+  ],
+  "metal": 0.0,
+  "rough": 0.08,
+  "shader": "glass"
+ },
  "petal": {
   "color": [
    0.55,

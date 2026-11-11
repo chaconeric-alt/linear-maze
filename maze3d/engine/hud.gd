@@ -270,10 +270,27 @@ func _draw_map() -> void:
 			if at.x < 0 or at.y < 0 or at.x > size.x - s or at.y > size.y - s:
 				continue
 			var col := Color(0.55, 0.62, 0.66, 0.8)
+			var lc := lv.cell(p.x, p.y)
+			if lc["window"] != "":
+				col = Color(0.4, 0.85, 1.0, 0.9)
+			elif not lc["ramp"].is_empty():
+				col = Color(0.8, 0.7, 0.45, 0.85)
+			elif not lc["decks"].is_empty():
+				col = Color(0.68, 0.74, 0.8, 0.9)
 			if lv.doors.has(p):
 				var d: Door = lv.doors[p]
 				col = accent if not d.is_locked() else Door.LOCK_COLORS.get(d.lock, Color(0.7, 0.3, 1.0))
 			_map.draw_rect(Rect2(at, Vector2(s - 1, s - 1)), col)
+	var beat := fmod(Time.get_ticks_msec() * 0.001, 1.2) / 1.2          # anything hostile the player has seen: a red signal
+	for a in lv.actors:
+		if not is_instance_valid(a) or a.dead or not a.seen:
+			continue
+		var at2 := mid + (Vector2(a.global_position.x, a.global_position.z) / lv.C - pc) * s
+		if at2.x < 4 or at2.y < 4 or at2.x > size.x - 4 or at2.y > size.y - 4:
+			continue
+		var red := Color(1.0, 0.16, 0.12)
+		_map.draw_arc(at2, 2.0 + beat * (7.0 if a.awake else 4.0), 0, TAU, 16, Color(red.r, red.g, red.b, 0.9 * (1.0 - beat)), 2.0)
+		_map.draw_colored_polygon(PackedVector2Array([at2 + Vector2(0, -4.5), at2 + Vector2(4.5, 0), at2 + Vector2(0, 4.5), at2 + Vector2(-4.5, 0)]), red)
 	var fwd := Vector2(-sin(pl.rotation.y), -cos(pl.rotation.y))
 	var side := Vector2(-fwd.y, fwd.x)
 	_map.draw_colored_polygon(PackedVector2Array([mid + fwd * 8, mid - fwd * 5 + side * 5, mid - fwd * 5 - side * 5]), Color.WHITE)

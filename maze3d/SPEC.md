@@ -113,6 +113,30 @@ The high-tech kit's names: `hull`, `hull_dark`, `trim`, `floor`, `accent` (orang
 
 Glow materials take `pulse` (breathing, 0..1) and `flicker` (failing, 0..1): flames and furnace mouths use both.
 
+## 2b. Level shape: cut corners, storeys, balconies, ramps, thin walls, windows
+
+The map is still a grid of 4 m cells, but a cell no longer has to be all floor or all wall. Each of these can be given in the legend (for hand-drawn maps) or in a list at the top of the level (easier for a generator):
+
+| What | Legend entry | Level list | Meaning |
+|---|---|---|---|
+| Cut corner | `{"diag": "ne"}` | `"diags": [{"at": [x, y], "corner": "ne"}]` | That corner of the cell is wall, with a wall face across the diagonal. A run of them makes angled walls and eight-sided rooms. Cut corners touch only at their points, so a walkway that follows one needs the cell inside it too. |
+| Storeys | room `"height": 3` | | Rooms may be 1 to 3 storeys (4 m each). |
+| Balcony | `{"deck": 1}` or `{"deck": [1, 2]}` | `"decks": [{"rect": [x, y, w, h], "level": 1}]` | A floor at that storey over whatever is below, which stays walkable. Railings appear wherever there is a drop. A room grows to fit its decks. |
+| Ramp | `{"ramp": {"dir": "n", "from": 0, "to": 2}}` | `"ramps": [{"at": [x, y], "dir": "n", "from": 0, "to": 2}]` | Rises from `from` to `to` metres toward `dir` across one cell. Two in a row (0→2, 2→4) climb a storey at a slope anything can walk. The ground under a ramp that starts below 4 m is closed. |
+| Thin wall | `{"walls": "e"}` or `{"walls": {"e": "wall", "n": "window"}}` | `"walls": [{"at": [x, y], "side": "e", "kind": "wall"}]` | A wall 0.3 m thick on that edge of an open cell, so two rooms can share a wall with no cell between them. Leave an edge without one for an opening. |
+| Window in a thin wall | kind `"window"` | same | Glass at ground level in that thin wall; storeys above it are wall. |
+| Window cell | `{"window": true}` | `"windows": [[x, y]]` | A wall cell that is an observation window instead: it stands across the cell as a door would, between wall (or doors, or other windows) either side. |
+
+Glass stops bodies, bullets and projectiles but not sight: `Level.los(a, b)` sees through it and `Level.los(a, b, true)` does not. Things that see the player through a window wake, but do not waste shots on the glass.
+
+Anything in `things` takes `"level": 1` (or 2) to stand on the balcony there; so does the start.
+
+Navigation knows all of it: `Level.path(from, to)` returns a walkable route over ramps and along balconies, and `Level.floor_y(pos)` is the height of the floor under a point. Doors are ground-level only.
+
+**The map** shows windows (cyan), ramps (sand) and balconies (lighter). Any enemy the player has had in view shows as a red signal that follows it: a diamond with a ring that pulses, faster and wider once it is hunting.
+
+The generator `rooms` takes `"shapes": {"octagon": 0.4, "balcony": 0.5, "window": 0.35, "max_windows": 10}`: the chance that a large room has its corners cut, that a tall room gets a balcony along its north wall with a ramp up to it (sometimes with a third storey), and that a wall between a room and whatever is next to it becomes a window.
+
 ## 3. Game data
 
 ### 3.1 `game.json`
@@ -297,7 +321,7 @@ A generator is a script in `generators/` with one function, listed in `game.json
 func generate(seed: int, params: Dictionary) -> Dictionary   # a level dictionary, as in section 4
 ```
 
-`params` is the game's `generator_params`. `game.json` may also hold `generator_themes`: named sets of overrides (`title`, `place`, `kit`, `corridor`, `styles`, `doors`, `props`, `style_props`, `actors`, `boss`, `exit_prop`, `size`, `rooms`). Each theme gets its own title-screen entry and runs as `--level=gen:<name>:<theme>`. `style_props` maps a room style to the furniture that belongs in it, so a mixed level puts bunks in barracks and coffins in chapels. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `--calm` stops anything noticing the player (for looking); `--trace` prints every actor's change of state. `rooms.gd` (rooms, L-shaped corridors, doors on thresholds only (placed after all carving, so no door is ever left standing in a widened opening), scanner arches inside some doorways, wall lockers with loot, nothing, roaches or a charge, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
+`params` is the game's `generator_params`. `game.json` may also hold `generator_themes`: named sets of overrides (`title`, `place`, `kit`, `corridor`, `styles`, `doors`, `props`, `style_props`, `actors`, `boss`, `exit_prop`, `size`, `rooms`). Each theme gets its own title-screen entry and runs as `--level=gen:<name>:<theme>`. `style_props` maps a room style to the furniture that belongs in it, so a mixed level puts bunks in barracks and coffins in chapels. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `--up=1` starts on that storey, `--alert` wakes everything, `--trace=Name` prints where that monster is; `--calm` stops anything noticing the player (for looking); `--trace` prints every actor's change of state. `rooms.gd` (rooms, L-shaped corridors, doors on thresholds only (placed after all carving, so no door is ever left standing in a widened opening), scanner arches inside some doorways, wall lockers with loot, nothing, roaches or a charge, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
 
 ## 6. Recipes
 

@@ -17,6 +17,7 @@ MATERIALS = {
     'gold':       dict(color=(1.0, 0.76, 0.28), metal=1.0, rough=0.22),
     'chrome':     dict(color=(0.85, 0.87, 0.9), metal=1.0, rough=0.12),
     'glass':      dict(color=(0.45, 0.85, 0.9), metal=0.0, rough=0.08, alpha=0.22, shader='glass'),
+    'pane':      dict(color=(0.45, 0.85, 0.9), metal=0.0, rough=0.08, alpha=0.09, shader='glass'),
     'screen':     dict(color=(0.02, 0.05, 0.06), emit=(0.15, 0.9, 0.8), energy=1.6, shader='screen'),
     'screen_dead': dict(color=(0.015, 0.02, 0.025), metal=0.2, rough=0.15),
     'glow_cyan':  dict(color=(0.1, 0.8, 0.9), emit=(0.2, 0.9, 1.0), energy=4.0, shader='glow'),

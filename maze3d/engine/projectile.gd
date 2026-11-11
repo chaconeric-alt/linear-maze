@@ -49,7 +49,7 @@ func _physics_process(dt: float) -> void:
 		return
 	vel.y -= d.get("gravity", 0.0) * dt
 	var to := global_position + vel * dt
-	var q := PhysicsRayQueryParameters3D.create(global_position, to, 1 | (4 if from_player else 2))
+	var q := PhysicsRayQueryParameters3D.create(global_position, to, 1 | Level.GLASS | (4 if from_player else 2))
 	if by is CollisionObject3D:
 		q.exclude = [by.get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)

@@ -51,6 +51,10 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 		tries += 1
 		var w := rng.randi_range(3, 7)
 		var h := rng.randi_range(3, 6)
+		var hall: bool = rects.size() == 1 and tries < 120 and p.get("shapes", {}).get("hall", true)      # one big room a level, for the showpieces
+		if hall:
+			w = rng.randi_range(6, 8)
+			h = rng.randi_range(6, 7)
 		var r := Rect2i(rng.randi_range(1, W - w - 1), rng.randi_range(1, H - h - 1), w, h)
 		var ok := true
 		for o in rects:
@@ -65,7 +69,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 				g[y][x] = "."
 				room_of[y][x] = rects.size() - 1
 		rooms.append({"name": "Room %d" % rects.size(), "rect": [r.position.x, r.position.y, w, h], "style": styles[rng.randi() % styles.size()],
-			"height": 2 if (w >= 5 and h >= 5 and rng.randf() < 0.4) else 1, "quiet": true})
+			"height": 2 if (hall or (w >= 5 and h >= 5 and rng.randf() < 0.4)) else 1, "quiet": true})
 	if rects.size() < 3:
 		return {}
 	var last := rects.size() - 1
@@ -240,10 +244,75 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 		things.append({"at": [ex.x, ex.y], "actor": p["boss"], "offset": [1.2, 0, 1.2], "face": "s"})
 	things.append({"at": [ex.x, ex.y], "prop": p.get("exit_prop", "holo_table"), "blocks": false, "use": {"type": "effects", "prompt": "Signal the surface",
 		"effects": [{"type": "end", "title": "Out, and richer", "text": "Installation %d is somebody else's problem now." % (seed_value % 1000)}]}})
+	# ---- shape: cut corners, balconies with a ramp, windows. "shapes": {"octagon": 0.4, "balcony": 0.5, "window": 0.35}
+	var sh: Dictionary = p.get("shapes", {})
+	var diags: Array = []
+	var decks: Array = []
+	var ramps: Array = []
+	var windows: Array = []
+	var taken: Dictionary = {}                        # cells that furniture must leave alone
+	var solid := func(x: int, y: int) -> bool: return x < 0 or y < 0 or x >= W or y >= H or g[y][x] == "#"
+	for i in rects.size():
+		var r: Rect2i = rects[i]
+		if r.size.x >= 5 and r.size.y >= 5 and rng.randf() < sh.get("octagon", 0.4):
+			for cn in [["nw", r.position, Vector2i(-1, 0), Vector2i(0, -1)], ["ne", Vector2i(r.end.x - 1, r.position.y), Vector2i(1, 0), Vector2i(0, -1)],
+					["sw", Vector2i(r.position.x, r.end.y - 1), Vector2i(-1, 0), Vector2i(0, 1)], ["se", Vector2i(r.end.x - 1, r.end.y - 1), Vector2i(1, 0), Vector2i(0, 1)]]:
+				var c: Vector2i = cn[1]
+				var o1: Vector2i = c + cn[2]
+				var o2: Vector2i = c + cn[3]
+				if solid.call(o1.x, o1.y) and solid.call(o2.x, o2.y):      # no door opens on to this corner
+					diags.append({"at": [c.x, c.y], "corner": cn[0]})
+					taken[c] = true
+		if rooms[i].get("height", 1) >= 2 and r.size.x >= 5 and r.size.y >= 5 and (i == 1 or rng.randf() < sh.get("balcony", 0.5)):
+			var tall: bool = r.size.x >= 6 and r.size.y >= 6 and rng.randf() < 0.4
+			if tall:
+				rooms[i]["height"] = 3                    # three storeys, the balcony at the first
+			var mx: int = r.position.x + r.size.x / 2
+			var y0: int = r.position.y
+			decks.append({"rect": [r.position.x, y0, r.size.x, 1], "level": 1})
+			ramps.append({"at": [mx, y0 + 2], "dir": "n", "from": 0, "to": 2})
+			ramps.append({"at": [mx, y0 + 1], "dir": "n", "from": 2, "to": 4})
+			for yy in [y0 + 1, y0 + 2, y0 + 3]:
+				taken[Vector2i(mx, yy)] = true
+			if not treasure.is_empty():
+				things.append({"at": [r.position.x + (1 if mx > r.position.x + 1 else 0), y0], "level": 1, "item": treasure[rng.randi() % treasure.size()]})
+			if not actors.is_empty() and rng.randf() < 0.6:
+				things.append({"at": [r.end.x - 2, y0], "level": 1, "actor": _weighted(rng, actors)})
+	for t in things:                                  # nothing stands on a ramp or in a cut corner: move it to the nearest clear cell of its room
+		if t.has("level") or not t.has("at"):
+			continue
+		var at := Vector2i(int(t["at"][0]), int(t["at"][1]))
+		if not taken.has(at):
+			continue
+		var done := false
+		for rad in range(1, 5):
+			for dy in range(-rad, rad + 1):
+				for dx in range(-rad, rad + 1):
+					var q := at + Vector2i(dx, dy)
+					if done or q.x < 1 or q.y < 1 or q.x >= W - 1 or q.y >= H - 1:
+						continue
+					if g[q.y][q.x] == "." and room_of[q.y][q.x] == room_of[at.y][at.x] and not taken.has(q):
+						t["at"] = [q.x, q.y]
+						done = true
+	for y in range(1, H - 1):                         # a wall one cell thick with floor both sides and wall either end: it could be a window
+		for x in range(1, W - 1):
+			if g[y][x] != "#" or rng.randf() >= sh.get("window", 0.35):
+				continue
+			var ns: bool = g[y - 1][x] == "." and g[y + 1][x] == "." and g[y][x - 1] == "#" and g[y][x + 1] == "#"
+			var ew: bool = g[y][x - 1] == "." and g[y][x + 1] == "." and g[y - 1][x] == "#" and g[y + 1][x] == "#"
+			if (ns or ew) and windows.size() < int(sh.get("max_windows", 10)):
+				var near := false
+				for w2 in windows:
+					if absi(w2[0] - x) + absi(w2[1] - y) < 2:
+						near = true
+				var a1: Vector2i = Vector2i(x, y - 1) if ns else Vector2i(x - 1, y)
+				var a2: Vector2i = Vector2i(x, y + 1) if ns else Vector2i(x + 1, y)
+				if not near and (room_of[a1.y][a1.x] >= 0 or room_of[a2.y][a2.x] >= 0) and not taken.has(a1) and not taken.has(a2):
+					windows.append([x, y])
 	var map: Array = []
 	for row in g:
 		map.append("".join(PackedStringArray(row)))
-	return {"seed": seed_value, "name": "%s %d" % [p.get("place", "Installation"), seed_value % 1000], "kit": p.get("kit", "hightech"),
+	return {"diags": diags, "decks": decks, "ramps": ramps, "windows": windows, "seed": seed_value, "name": "%s %d" % [p.get("place", "Installation"), seed_value % 1000], "kit": p.get("kit", "hightech"),
 		"style": p.get("corridor", "corridor"), "ambient_energy": 0.6, "legend": legend, "map": map, "rooms": rooms, "things": things,
 		"intro": "%s %d. Find the red card, reach the last room." % [p.get("place", "Installation"), seed_value % 1000],
 		"objectives": [{"text": "Find the RED card.", "done": "key_red"}, {"text": "Get through the vault door and signal the surface."}]}

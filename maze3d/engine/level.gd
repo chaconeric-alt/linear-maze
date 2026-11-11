@@ -21,7 +21,13 @@ var tags: Dictionary = {}        # tag -> Array of Vector2i
 var things_by_tag: Dictionary = {}
 var doors: Dictionary = {}       # Vector2i -> Door
 var rooms: Array = []
-var nav := AStarGrid2D.new()
+var nav := AStar3D.new()          # points: ground, deck 1, deck 2 and ramp, per cell
+var start_level := 0
+var _boxes: Array = []           # unit cubes that make decks, ramps and railings
+var _rails: Array = []
+var _solid: StaticBody3D
+var _glass: StaticBody3D
+const GLASS := 32                # collision layer of things that stop bodies and shots but not sight
 var start_cell := Vector2i.ZERO
 var start_yaw := 0.0
 var explored: Dictionary = {}
@@ -44,6 +50,16 @@ func build(level_data: Dictionary) -> void:
 	H = kit.get("height", 4.0)
 	_rng.seed = hash(data.get("id", "level")) + int(data.get("seed", 0))
 	_parse()
+	_solid = StaticBody3D.new()
+	_solid.name = "Solid"
+	_solid.collision_layer = 1
+	_solid.collision_mask = 0
+	add_child(_solid)
+	_glass = StaticBody3D.new()
+	_glass.name = "Glass"
+	_glass.collision_layer = GLASS
+	_glass.collision_mask = 0
+	add_child(_glass)
 	_build_shell()
 	_build_collision()
 	_build_nav()
@@ -74,7 +90,8 @@ func _parse() -> void:
 			var ch := row[x] if x < row.length() else " "
 			var e: Dictionary = legend.get(ch, {})
 			var c := {"solid": e.get("solid", false), "void": e.get("void", false), "door": e.get("door", ""), "entry": e,
-				"style": e.get("style", def_style), "height": def_h, "fluid": e.get("fluid", false), "tag": e.get("tag", ""), "room": ""}
+				"style": e.get("style", def_style), "height": def_h, "fluid": e.get("fluid", false),
+				"diag": e.get("diag", ""), "decks": _decks_of(e.get("deck", 0)), "ramp": e.get("ramp", {}), "window": _win_of(e.get("window", "")), "edges": _edges_of(e.get("walls", {})), "tag": e.get("tag", ""), "room": ""}
 			for rm in rooms:
 				var rc: Array = rm["rect"]
 				if x >= rc[0] and y >= rc[1] and x < rc[0] + rc[2] and y < rc[1] + rc[3]:
@@ -83,7 +100,7 @@ func _parse() -> void:
 						c["style"] = rm.get("style", def_style)
 					c["height"] = int(rm.get("height", def_h))
 					break
-			if c["door"] != "":
+			if c["door"] != "" or c["window"] != "":
 				c["height"] = 1
 			if c["tag"] != "":
 				_tag(c["tag"], Vector2i(x, y))
@@ -91,11 +108,72 @@ func _parse() -> void:
 				start_cell = Vector2i(x, y)
 				start_yaw = _face_yaw(e.get("face", "n"))
 			cells[y * w + x] = c
+	# ---- shape: all of this can also be listed, which is easier for a generator than a legend
+	for e in data.get("diags", []):          # {"at": [x, y], "corner": "ne"}: that corner of the cell is wall, cut across
+		_c(e["at"])["diag"] = e.get("corner", "ne")
+	for e in data.get("decks", []):          # {"rect": [x, y, w, h], "level": 1}: a floor at that storey, over whatever is below
+		var rc: Array = e.get("rect", [e.get("at", [0, 0])[0], e.get("at", [0, 0])[1], 1, 1])
+		for yy in range(rc[1], rc[1] + rc[3]):
+			for xx in range(rc[0], rc[0] + rc[2]):
+				var cc := cell(xx, yy)
+				if not cc["solid"] and not cc["decks"].has(int(e.get("level", 1))):
+					cc["decks"] = cc["decks"] + [int(e.get("level", 1))]
+	for e in data.get("ramps", []):          # {"at": [x, y], "dir": "n", "from": 0, "to": 2}: metres, rising toward dir
+		_c(e["at"])["ramp"] = {"dir": e.get("dir", "n"), "from": float(e.get("from", 0)), "to": float(e.get("to", 2))}
+	for e in data.get("windows", []):        # [x, y] or {"at": [x, y], "model": ...}: a wall cell that is a window instead
+		var wc := _c(e["at"] if e is Dictionary else e)
+		wc["solid"] = false
+		wc["window"] = (e.get("model", "window_obs") if e is Dictionary else "window_obs")
+		wc["height"] = 1
+	for e in data.get("walls", []):          # {"at": [x, y], "side": "e", "kind": "wall" | "window"}: a thin wall on that edge
+		_c(e["at"])["edges"][DIR_NAMES.get(e.get("side", "e"), 1)] = e.get("kind", "wall")
+	for y in h:                              # a thin wall belongs to both cells it stands between
+		for x in w:
+			var c2 := cell(x, y)
+			for d in c2["edges"].keys():
+				var nb := cell(x + DIRS[d].x, y + DIRS[d].y)
+				if not nb.get("void", false) and nb.has("edges") and not nb["edges"].has((d + 2) % 4):
+					nb["edges"][(d + 2) % 4] = c2["edges"][d]
+			for lv in c2["decks"]:
+				c2["height"] = max(c2["height"], lv + 1)
 	for t in data.get("tags", {}):          # tags can also be listed: "tags": { "ambush": [[4, 7], [5, 7]] }
 		for p in data["tags"][t]:
 			_tag(t, Vector2i(int(p[0]), int(p[1])))
 			if cell(int(p[0]), int(p[1]))["tag"] == "":
 				cells[int(p[1]) * w + int(p[0])]["tag"] = t
+
+
+func _c(at: Array) -> Dictionary:
+	return cell(int(at[0]), int(at[1]))
+
+
+func _decks_of(v: Variant) -> Array:
+	if v is Array:
+		return v.map(func(a): return int(a))
+	return [int(v)] if int(v) > 0 else []
+
+
+func _win_of(v: Variant) -> String:
+	if v is bool:
+		return "window_obs" if v else ""
+	return str(v)
+
+
+func _edges_of(v: Variant) -> Dictionary:
+	var out := {}
+	if v is String:
+		for ch in v:
+			if DIR_NAMES.has(ch):
+				out[DIR_NAMES[ch]] = "wall"
+	elif v is Dictionary:
+		for k in v:
+			if DIR_NAMES.has(k):
+				out[DIR_NAMES[k]] = v[k]
+	return out
+
+
+## Corner name -> (the two sides that corner closes, the yaw of a wall across it facing the open half)
+const DIAG := {"ne": [[0, 1], -PI / 4], "nw": [[0, 3], PI / 4], "se": [[2, 1], -3 * PI / 4], "sw": [[2, 3], 3 * PI / 4]}
 
 
 func _tag(t: String, p: Vector2i) -> void:
@@ -106,7 +184,7 @@ func _tag(t: String, p: Vector2i) -> void:
 
 func cell(x: int, y: int) -> Dictionary:
 	if x < 0 or y < 0 or x >= w or y >= h:
-		return {"solid": true, "void": true, "height": 0, "door": "", "style": "", "room": "", "tag": "", "fluid": false}
+		return {"solid": true, "void": true, "height": 0, "door": "", "style": "", "room": "", "tag": "", "fluid": false, "diag": "", "decks": [], "ramp": {}, "window": "", "edges": {}}
 	return cells[y * w + x]
 
 
@@ -174,20 +252,65 @@ func _build_shell() -> void:
 				if (x + int(li.get("ox", 0))) % every == 0 and (y + int(li.get("oy", 0))) % every == 0:
 					ceil_tile = li.get("tile", ceil_tile) if _rng.randf() >= li.get("dead", 0.0) else li.get("dead_tile", ceil_tile)
 			_add(batches, ceil_tile, Transform3D(Basis(Vector3.UP, _rng.randi() % 4 * PI / 2), p + Vector3(0, hh * H, 0)), x, y, room, st, hh)
+			var closed: Array = DIAG[c["diag"]][0] if c["diag"] != "" else []
+			if c["diag"] != "":                          # a wall across the corner, a diagonal long
+				for lv in hh:
+					var dt := _pick(st.get("wall") if lv == 0 else st.get("wall_upper", st.get("wall")))
+					_add(batches, dt, Transform3D(Basis(Vector3.UP, DIAG[c["diag"]][1]).scaled_local(Vector3(1.4142, 1, 1)), p + Vector3(0, lv * H, 0)), x, y, room, st)
 			for d in 4:
+				if d in closed:
+					continue
 				var nb := cell(x + DIRS[d].x, y + DIRS[d].y)
 				var from_level := 0
-				if not nb["solid"]:
+				var inset := 0.0
+				var edge: String = c["edges"].get(d, "")
+				if edge != "":                               # a thin wall on this edge: each side shows its own face
+					inset = 0.15
+					if edge == "window":
+						from_level = 1
+						if d == 1 or d == 2 or nb["solid"]:
+							_thin_window(p + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2), d)
+				elif not nb["solid"]:
 					if nb["height"] >= hh:
 						continue
 					from_level = nb["height"]
-				var wp := p + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2)
+				var wp := p + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - inset)
 				for lv in range(from_level, hh):
 					var tile := _pick(st.get("wall") if lv == 0 else st.get("wall_upper", st.get("wall")))
 					_add(batches, tile, Transform3D(Basis(Vector3.UP, DIR_ROT[d]), wp + Vector3(0, lv * H, 0)), x, y, room, st)
+			for lv in c["decks"]:                        # a balcony: a slab, a floor on it, a rail wherever there is a drop
+				_boxes.append(Transform3D(Basis().scaled(Vector3(C, 0.3, C)), p + Vector3(0, lv * H - 0.16, 0)))
+				_add(batches, _pick(st.get("floor")), Transform3D(Basis(Vector3.UP, quarter), p + Vector3(0, lv * H, 0)), x, y, room)
+				for d in 4:
+					if _needs_rail(x, y, lv, d):
+						_rail(Transform3D(Basis(Vector3.UP, DIR_ROT[d]), p + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - 0.08) + Vector3(0, lv * H, 0)), C)
+			if not c["ramp"].is_empty():
+				_ramp(x, y, c, _pick(st.get("floor")), batches, room)
 	var holder := Node3D.new()
 	holder.name = "Shell"
 	add_child(holder)
+	for pair in [[_boxes, Color(0.11, 0.12, 0.14), 0.0], [_rails, Color(0.75, 0.5, 0.2), 0.5]]:
+		var lst: Array = pair[0]
+		if lst.is_empty():
+			continue
+		var bm := MultiMesh.new()
+		bm.transform_format = MultiMesh.TRANSFORM_3D
+		bm.mesh = BoxMesh.new()
+		bm.instance_count = lst.size()
+		for i in lst.size():
+			bm.set_instance_transform(i, lst[i])
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = pair[1]
+		mat.metallic = 0.7
+		mat.roughness = 0.45
+		if pair[2] > 0.0:
+			mat.emission_enabled = true
+			mat.emission = pair[1]
+			mat.emission_energy_multiplier = pair[2]
+		var bi := MultiMeshInstance3D.new()
+		bi.multimesh = bm
+		bi.material_override = mat
+		holder.add_child(bi)
 	for key in batches:
 		var parts: PackedStringArray = key.split("|")
 		var mesh := LM.tile_mesh(kit_id, parts[0])
@@ -203,6 +326,79 @@ func _build_shell() -> void:
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
 		holder.add_child(mmi)
+
+
+## Is there a drop off this side of a deck?
+func _needs_rail(x: int, y: int, lv: int, d: int) -> bool:
+	var c := cell(x, y)
+	if c["edges"].has(d) or (c["diag"] != "" and d in DIAG[c["diag"]][0]):
+		return false
+	var nb := cell(x + DIRS[d].x, y + DIRS[d].y)
+	if nb["solid"] or nb["door"] != "" or nb["window"] != "" or nb["height"] <= lv or nb["decks"].has(lv):
+		return false
+	var r: Dictionary = nb["ramp"]
+	if not r.is_empty():                             # a ramp that arrives here, or leaves from here
+		var rd: int = DIR_NAMES.get(r.get("dir", "n"), 0)
+		if rd == (d + 2) % 4 and absf(float(r.get("to", 0)) - lv * H) < 0.1:
+			return false
+		if rd == d and absf(float(r.get("from", 0)) - lv * H) < 0.1:
+			return false
+	return true
+
+
+## A railing along local X, centred on xf, standing on xf's origin. Its collision too.
+func _rail(xf: Transform3D, length: float) -> void:
+	for hgt in [0.55, 1.05]:
+		_rails.append(xf * Transform3D(Basis().scaled(Vector3(length, 0.06, 0.06)), Vector3(0, hgt, 0)))
+	var n := int(max(2, round(length / 1.34) + 1))
+	for i in n:
+		_boxes.append(xf * Transform3D(Basis().scaled(Vector3(0.07, 1.08, 0.07)), Vector3(-length / 2 + 0.05 + (length - 0.1) * i / (n - 1), 0.54, 0)))
+	_shape(_solid, xf * Transform3D(Basis(), Vector3(0, 0.56, 0)), Vector3(length, 1.12, 0.12))
+
+
+func _ramp(x: int, y: int, c: Dictionary, tile: String, batches: Dictionary, room: String) -> void:
+	var r: Dictionary = c["ramp"]
+	var d: int = DIR_NAMES.get(r.get("dir", "n"), 0)
+	var y0: float = float(r.get("from", 0))
+	var y1: float = float(r.get("to", 2))
+	var hz := Vector3(DIRS[d].x, 0, DIRS[d].y)
+	var along := (hz * C + Vector3(0, y1 - y0, 0))
+	var length := along.length()
+	var zb := along / length
+	var xb := Vector3.UP.cross(hz).normalized()
+	var yb := zb.cross(xb).normalized()
+	var top := Transform3D(Basis(xb, yb, zb), center(Vector2i(x, y)) + Vector3(0, (y0 + y1) / 2, 0))
+	_boxes.append(top * Transform3D(Basis().scaled(Vector3(C, 0.3, length)), Vector3(0, -0.16, 0)))
+	_shape(_solid, top * Transform3D(Basis(), Vector3(0, -0.15, 0)), Vector3(C, 0.3, length))
+	_add(batches, tile, top * Transform3D(Basis().scaled(Vector3(1, 1, length / C)), Vector3.ZERO), x, y, room)
+	for s in [-1, 1]:                                # a rail down each side, unless a wall is there
+		var sd := (d + (1 if s > 0 else 3)) % 4
+		var side := cell(x + DIRS[sd].x, y + DIRS[sd].y)
+		var sr: Dictionary = side["ramp"]
+		if side["solid"] or (not sr.is_empty() and sr.get("dir", "") == r.get("dir", "") and float(sr.get("from", 0)) == y0):
+			continue
+		var xf := top * Transform3D(Basis(Vector3.UP, PI / 2), Vector3((C / 2 - 0.08) * (1.0 if xb.dot(Vector3(DIRS[sd].x, 0, DIRS[sd].y)) > 0 else -1.0), 0, 0))
+		_rail(xf, length)
+
+
+func _thin_window(at: Vector3, d: int) -> void:
+	var inst := LM.spawn_model(kit_id, "window_obs")
+	if inst == null:
+		return
+	add_child(inst)
+	inst.position = at
+	inst.rotation.y = DIR_ROT[d]
+	inst.scale = Vector3(1, 1, 0.45)
+	_shape(_glass, Transform3D(Basis(Vector3.UP, DIR_ROT[d]), at + Vector3(0, H / 2, 0)), Vector3(C, H, 0.3))
+
+
+func _shape(body: StaticBody3D, xf: Transform3D, size: Vector3) -> void:
+	var cs := CollisionShape3D.new()
+	var b := BoxShape3D.new()
+	b.size = size
+	cs.shape = b
+	cs.transform = xf
+	body.add_child(cs)
 
 
 func _lights_for(st: Dictionary, room: String) -> Dictionary:
@@ -261,11 +457,7 @@ func _make_light(spec: Dictionary, xf: Transform3D, room: String, flicker := 0.0
 
 
 func _build_collision() -> void:
-	var body := StaticBody3D.new()
-	body.name = "Solid"
-	body.collision_layer = 1
-	body.collision_mask = 0
-	add_child(body)
+	var body := _solid
 	var max_h := 1
 	for c in cells:
 		max_h = max(max_h, c["height"])
@@ -289,6 +481,24 @@ func _build_collision() -> void:
 				_box(body, Vector3((x1 + x) * C / 2, hh * H + 0.5, y * C + C / 2), Vector3((x - x1) * C, 1, C))
 				continue
 			x += 1
+	for y in h:                                      # the pieces that are not whole cells
+		for x in w:
+			var c := cell(x, y)
+			if c["solid"]:
+				continue
+			var p := center(Vector2i(x, y))
+			var hh2: float = c["height"] * H
+			if c["diag"] != "":
+				_shape(body, Transform3D(Basis(Vector3.UP, DIAG[c["diag"]][1]), p + Vector3(0, hh2 / 2, 0)) * Transform3D(Basis(), Vector3(0, 0, -0.15)), Vector3(C * 1.4142, hh2, 0.3))
+			for d in c["edges"].keys():
+				if d == 1 or d == 2 or cell(x + DIRS[d].x, y + DIRS[d].y)["solid"]:
+					var kind: String = c["edges"][d]
+					var ep := p + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2)
+					var lo: float = H if kind == "window" else 0.0
+					if hh2 > lo:
+						_shape(body, Transform3D(Basis(Vector3.UP, DIR_ROT[d]), ep + Vector3(0, (lo + hh2) / 2, 0)), Vector3(C, hh2 - lo, 0.3))
+			for lv in c["decks"]:
+				_box(body, p + Vector3(0, lv * H - 0.15, 0), Vector3(C, 0.3, C))
 
 
 func _touches_open(x: int, y: int) -> bool:
@@ -308,41 +518,143 @@ func _box(body: StaticBody3D, at: Vector3, size: Vector3) -> void:
 	body.add_child(cs)
 
 
+func _nid(x: int, y: int, layer: int) -> int:
+	return (layer * h + y) * w + x
+
+
+func _ground_ok(c: Dictionary) -> bool:
+	if c["solid"] or c["window"] != "":
+		return false
+	var r: Dictionary = c["ramp"]
+	return r.is_empty() or min(float(r.get("from", 0)), float(r.get("to", 0))) >= H - 0.1
+
+
+## Can something on the ground step from (x, y) toward side d?
+func _open_side(x: int, y: int, d: int) -> bool:
+	var c := cell(x, y)
+	if c["edges"].has(d) or (c["diag"] != "" and d in DIAG[c["diag"]][0]):
+		return false
+	var nb := cell(x + DIRS[d].x, y + DIRS[d].y)
+	if not _ground_ok(nb) or (nb["diag"] != "" and (d + 2) % 4 in DIAG[nb["diag"]][0]):
+		return false
+	return true
+
+
+func _link(a: int, b: int) -> void:
+	if nav.has_point(a) and nav.has_point(b) and a != b:
+		nav.connect_points(a, b)
+
+
+## The point of cell (x, y) that stands at height yy, or -1.
+func _at_height(x: int, y: int, yy: float) -> int:
+	var c := cell(x, y)
+	var r: Dictionary = c["ramp"]
+	if not r.is_empty() and (absf(float(r.get("from", 0)) - yy) < 0.1 or absf(float(r.get("to", 0)) - yy) < 0.1):
+		return _nid(x, y, 3)
+	if absf(yy) < 0.1 and _ground_ok(c):
+		return _nid(x, y, 0)
+	for lv in c["decks"]:
+		if absf(lv * H - yy) < 0.1:
+			return _nid(x, y, lv)
+	return -1
+
+
 func _build_nav() -> void:
-	nav.region = Rect2i(0, 0, w, h)
-	nav.cell_size = Vector2(1, 1)
-	nav.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
-	nav.update()
+	nav = AStar3D.new()
 	for y in h:
 		for x in w:
-			if cell(x, y)["solid"]:
-				nav.set_point_solid(Vector2i(x, y), true)
+			var c := cell(x, y)
+			if c["solid"]:
+				continue
+			var p := center(Vector2i(x, y))
+			if _ground_ok(c):
+				nav.add_point(_nid(x, y, 0), p)
+			for lv in c["decks"]:
+				nav.add_point(_nid(x, y, lv), p + Vector3(0, lv * H, 0))
+			if not c["ramp"].is_empty():
+				nav.add_point(_nid(x, y, 3), p + Vector3(0, (float(c["ramp"].get("from", 0)) + float(c["ramp"].get("to", 0))) / 2, 0))
+	for y in h:
+		for x in w:
+			var c := cell(x, y)
+			if c["solid"]:
+				continue
+			if nav.has_point(_nid(x, y, 0)):
+				for d in 4:
+					if _open_side(x, y, d):
+						_link(_nid(x, y, 0), _nid(x + DIRS[d].x, y + DIRS[d].y, 0))
+				for d in 4:                                  # corners, only when nothing is in the way either side
+					var d2 := (d + 1) % 4
+					var a: Vector2i = Vector2i(x, y) + DIRS[d]
+					var b: Vector2i = Vector2i(x, y) + DIRS[d2]
+					var t: Vector2i = a + DIRS[d2]
+					if _open_side(x, y, d) and _open_side(x, y, d2) and _open_side(a.x, a.y, d2) and _open_side(b.x, b.y, d):
+						if cell(x, y)["diag"] == "" and cell(a.x, a.y)["diag"] == "" and cell(b.x, b.y)["diag"] == "" and cell(t.x, t.y)["diag"] == "":
+							_link(_nid(x, y, 0), _nid(t.x, t.y, 0))
+			for lv in c["decks"]:
+				for d in 4:
+					var nb := cell(x + DIRS[d].x, y + DIRS[d].y)
+					if not c["edges"].has(d) and nb["decks"].has(lv):
+						_link(_nid(x, y, lv), _nid(x + DIRS[d].x, y + DIRS[d].y, lv))
+			var r: Dictionary = c["ramp"]
+			if not r.is_empty():
+				var rd: int = DIR_NAMES.get(r.get("dir", "n"), 0)
+				_link(_nid(x, y, 3), _at_height(x + DIRS[rd].x, y + DIRS[rd].y, float(r.get("to", 0))))
+				_link(_nid(x, y, 3), _at_height(x - DIRS[rd].x, y - DIRS[rd].y, float(r.get("from", 0))))
 
 
 func block(p: Vector2i, solid := true) -> void:
-	if nav.is_in_boundsv(p) and not cell(p.x, p.y)["solid"]:
-		nav.set_point_solid(p, solid)
+	var id := _nid(p.x, p.y, 0)
+	if nav.has_point(id):
+		nav.set_point_disabled(id, solid)
 
 
-## Cell centres from one place to another, for anything that walks.
+func is_blocked(p: Vector2i) -> bool:
+	var id := _nid(p.x, p.y, 0)
+	return nav.has_point(id) and nav.is_point_disabled(id)
+
+
+## The nav point something standing at pos is on: the one in its cell nearest its height.
+func _point_at(pos: Vector3) -> int:
+	var p := cell_of(pos)
+	var best := -1
+	var bd := 1e9
+	for layer in 4:
+		var id := _nid(p.x, p.y, layer)
+		if p.x >= 0 and p.y >= 0 and p.x < w and p.y < h and nav.has_point(id):
+			var dd: float = absf(nav.get_point_position(id).y - pos.y)
+			if dd < bd:
+				bd = dd
+				best = id
+	return best
+
+
+## Where to walk, one place after another, from here to there: over ramps and along balconies if that is the way.
 func path(from: Vector3, to: Vector3) -> PackedVector3Array:
-	var a := cell_of(from)
-	var b := cell_of(to)
 	var out := PackedVector3Array()
-	if not nav.is_in_boundsv(a) or not nav.is_in_boundsv(b) or nav.is_point_solid(b):
+	var a := _point_at(from)
+	var b := _point_at(to)
+	if a < 0 and nav.get_point_count() > 0:
+		a = nav.get_closest_point(from, true)
+	if a < 0 or b < 0 or nav.is_point_disabled(b):
 		return out
-	var was := nav.is_point_solid(a)
+	var was := nav.is_point_disabled(a)
 	if was:
-		nav.set_point_solid(a, false)
-	for p in nav.get_id_path(a, b):
-		out.append(center(p))
+		nav.set_point_disabled(a, false)
+	out = nav.get_point_path(a, b)
 	if was:
-		nav.set_point_solid(a, true)
+		nav.set_point_disabled(a, true)
 	return out
 
 
-func los(a: Vector3, b: Vector3) -> bool:
-	var q := PhysicsRayQueryParameters3D.create(a, b, 1)
+## Height of the floor under pos: the ground, a deck or a ramp.
+func floor_y(pos: Vector3) -> float:
+	var id := _point_at(pos)
+	return nav.get_point_position(id).y if id >= 0 else 0.0
+
+
+## Can a be seen from b? Glass does not stop sight; pass shot = true to ask whether a bullet would get there.
+func los(a: Vector3, b: Vector3, shot := false) -> bool:
+	var q := PhysicsRayQueryParameters3D.create(a, b, 1 | (GLASS if shot else 0))
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 
@@ -353,6 +665,8 @@ func _build_things() -> void:
 			var c := cell(x, y)
 			if c["door"] != "":
 				_spawn_door(Vector2i(x, y), c)
+			if c["window"] != "":
+				_spawn_window(Vector2i(x, y), c)
 	var ol: Dictionary = data.get("objectLegend", {})
 	var rows: Array = data.get("objects", [])
 	for y in rows.size():
@@ -379,8 +693,8 @@ func _build_things() -> void:
 
 
 func _spawn_door(p: Vector2i, c: Dictionary) -> void:
-	var across: bool = cell(p.x - 1, p.y)["solid"] and cell(p.x + 1, p.y)["solid"]
-	var along: bool = cell(p.x, p.y - 1)["solid"] and cell(p.x, p.y + 1)["solid"]
+	var across: bool = _wallish(p.x - 1, p.y) and _wallish(p.x + 1, p.y)
+	var along: bool = _wallish(p.x, p.y - 1) and _wallish(p.x, p.y + 1)
 	if not across and not along:
 		# a door has to close an opening from wall to wall; anywhere else it would stand free in a room
 		push_warning("Level %s: door at %s has no wall on both sides; left out" % [data.get("id"), p])
@@ -396,6 +710,24 @@ func _spawn_door(p: Vector2i, c: Dictionary) -> void:
 	_register(d, c["entry"].get("tag", ""))
 
 
+## A wall cell that is a window: it stands across the cell like a door, and never opens.
+func _spawn_window(p: Vector2i, c: Dictionary) -> void:
+	var across: bool = _wallish(p.x - 1, p.y) and _wallish(p.x + 1, p.y)
+	var inst := LM.spawn_model(kit_id, c["window"])
+	if inst:
+		add_child(inst)
+		inst.position = center(p)
+		inst.rotation.y = 0.0 if across else PI / 2
+	_shape(_glass, Transform3D(Basis(Vector3.UP, 0.0 if across else PI / 2), center(p, H / 2)), Vector3(C, H, 0.5))
+	block(p, true)
+
+
+## Wall, or something that stands in a wall's place (a window, a door).
+func _wallish(x: int, y: int) -> bool:
+	var c := cell(x, y)
+	return c["solid"] or c["window"] != "" or c["door"] != ""
+
+
 func _register(n: Node, tag: String) -> void:
 	if tag == "":
 		return
@@ -406,12 +738,13 @@ func _register(n: Node, tag: String) -> void:
 
 func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 	if e.has("start"):
+		start_level = int(e.get("level", 0))
 		start_cell = p
 		start_yaw = _face_yaw(e.get("face", "n"))
 		return null
 	var n: Node3D = null
 	var off := LM.vec(e.get("offset"), Vector3.ZERO)
-	var pos := center(p) + off
+	var pos := center(p) + off + Vector3(0, int(e.get("level", 0)) * H, 0)      # "level": 1 puts it on the balcony there
 	if e.has("actor"):
 		var a := Enemy.new()
 		add_child(a)

@@ -861,6 +861,10 @@
     0.75
    ],
    "type": "weapon"
+  },
+  "window_obs": {
+   "model": "models/window_obs.glb",
+   "type": "prop"
   }
  },
  "tiles": {

@@ -46,6 +46,8 @@ The title screen also offers random installations in each place: mixed, The Work
 
 **Staff Only** is a third small level for behaviors: a break room where three Monoids lean, smoke and sit until you interrupt them, and next door a nest where Roaches and a Glorexx wait on the walls and ceiling, cross the ceiling to get above you, and pounce; a Glorexx swims in the flooded corner.
 
+**The Atrium** is a fourth small level for level shapes: an annexe with a thin wall and two windows, opening into an eight-sided hall three storeys high with a balcony at the first storey, another at the second, ramps between, and windows through to a control room. Enemies you have seen show red on the map.
+
 ## About the art
 
 Every model was written as a script and exported to glTF, so there is real geometry, real skeletons and real animation clips, but it is code-built art: clean, a bit blocky, and consistent. It is meant as a complete starting set to replace piece by piece. Any `.glb` can be opened in Blender, reworked or replaced with a hand-made model, and the game picks it up as long as it keeps the conventions in `SPEC.md` (size, facing, material names, clip names). There are no textures: surfaces get their wear from shaders (`engine/shaders/`), so a new model looks right as soon as it uses the kit's material names.

@@ -79,6 +79,10 @@ func _load(id: String, _attract: bool) -> void:
 		if bits.size() > 1:
 			params.merge(LM.game.get("generator_themes", {}).get(bits[1], {}), true)
 		data = g.generate(int(_args.get("seed", randi())), params)
+		if _args.has("dump"):                        # --dump=file.json: keep the level that was generated
+			var f := FileAccess.open(_args["dump"], FileAccess.WRITE)
+			if f:
+				f.store_string(JSON.stringify(data, " "))
 	else:
 		data = LM.levels[id].duplicate(true)
 	level = Level.new()
@@ -89,7 +93,7 @@ func _load(id: String, _attract: bool) -> void:
 	level.build(data)
 	player = Player.new()
 	level.add_child(player)
-	player.position = level.center(level.start_cell, 0.05)
+	player.position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
 	player.rotation.y = level.start_yaw + PI
 	var cfg: Dictionary = LM.game.get("player", {}).duplicate(true)
 	for k in data.get("player", {}):
@@ -113,6 +117,11 @@ func _process(_dt: float) -> void:
 		if _args.has("at"):
 			var p: PackedStringArray = _args["at"].split(",")
 			player.position = level.center(Vector2i(int(p[0]), int(p[1])), 0.05) + Vector3(float(p[2]) if p.size() > 2 else 0.0, 0, float(p[3]) if p.size() > 3 else 0.0)
+		if _args.has("alert"):                       # --alert: everything knows where the player is from the start
+			for a in level.actors:
+				a.alert.call_deferred()
+		if _args.has("up"):                          # --up=1: start on that storey (for looking at balconies)
+			player.position.y += float(_args["up"]) * level.H
 		if _args.has("yaw"):
 			player.rotation.y = deg_to_rad(float(_args["yaw"]))
 		if _args.has("pitch"):
@@ -126,6 +135,8 @@ func _process(_dt: float) -> void:
 				if a.get_meta("trace", "") != st:
 					a.set_meta("trace", st)
 					print("[%.2fs] %s#%d %s at (%.1f %.1f %.1f) player hp=%d" % [Game.stats["time"], a.d.get("name", "?"), a.get_index(), st, a.position.x, a.position.y, a.position.z, player.hp])
+				if _args.get("trace", "") == a.d.get("name", "") and _frame % 300 == 0:      # --trace=Name: where that one is, every so often
+					print("[%.1fs] %s at (%.1f %.1f %.1f)" % [Game.stats["time"], a.d.get("name", "?"), a.position.x, a.position.y, a.position.z])
 	if _args.has("shot") and _frame == int(_args.get("frames", "40")):
 		var img := get_viewport().get_texture().get_image()
 		img.save_png(_args["shot"])
