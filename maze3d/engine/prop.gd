@@ -252,7 +252,7 @@ func use(_player: Node) -> void:
 			if u.has("actor"):
 				Game.say(u.get("text", "It was not empty."), "warn")
 				for i in int(u.get("count", 1)):
-					var a := level.spawn_thing({"actor": u["actor"], "alert": true}, level.cell_of(front))
+					var a := level.spawn_thing({"actor": u["actor"], "alert": true, "level": roundi(level.floor_y(front) / level.H)}, level.cell_of(front))
 					if a:
 						a.global_position = Vector3(front.x, a.global_position.y, front.z) + global_transform.basis.x * (i - (u.get("count", 1) - 1) / 2.0) * 0.9
 			elif u.get("loot", []).is_empty() and not u.has("effects"):

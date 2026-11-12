@@ -20,6 +20,9 @@ extends RefCounted
 ##   traps    lasers across corridors, shock plates and gas vents                                      "traps": {"laser": 2, ...}
 ##   jammed   doors that grind and spark                                                               "jammed"
 ##   ambush   taking the red card sets off the alarm and brings company                                "ambush"
+##   upstairs doors a storey up between the balconies of two halls; rooms upstairs through a door off
+##            a balcony, or reached only by a lift                                                     "upper_doors", "upper_rooms", "lift_rooms"
+##   basement chambers under the place, a lift down to them, and pits in the floor above               "basement", "basement_rooms", "pits"
 ##
 ## Doors: a door only ever goes on a THRESHOLD: a corridor cell with a room on one side, open
 ## floor on the other and solid wall to both flanks, so it always closes an opening wall to wall.
@@ -647,6 +650,279 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 				var c6: Vector2i = wet[rng.randi() % wet.size()]
 				things.append({"at": [c6.x, c6.y], "actor": _weighted(rng, swimmers), "face": NAMES[rng.randi() % 4]})
 
+	# ---- other floors: doors high in the wall between two halls, rooms upstairs, a basement, lifts and pits
+	var storeys: Array = []
+	var h0: Array = []                                # how many storeys of air stand on each cell of the main floor
+	for y in H:
+		var hr: Array = []
+		for x in W:
+			hr.append(0 if g[y][x] == "#" else 1)
+		h0.append(hr)
+	for a in areas:
+		var r: Rect2i = a["rect"]
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				if room_of[y][x] == a["unit"] and g[y][x] != "#":
+					h0[y][x] = a["height"]
+	var is_win := {}
+	for w3 in windows:
+		is_win[Vector2i(w3[0], w3[1])] = true
+	var deck1 := {}
+	for dk in decks:
+		if dk["level"] == 1:
+			deck1[Vector2i(dk["at"][0], dk["at"][1])] = true
+	var up: Array = []                                # storey 1
+	for y in H:
+		var ur2: Array = []
+		ur2.resize(W)
+		ur2.fill("#")
+		up.append(ur2)
+	var up_rooms: Array = []
+	var lift_at := {}
+	var inside := func(c: Vector2i) -> bool: return c.x >= 1 and c.y >= 1 and c.x < W - 1 and c.y < H - 1
+	var plain := func(c: Vector2i) -> bool:           # main-floor cell with nothing on it that would mind
+		return g[c.y][c.x] == "." and not used.has(c) and not taken.has(c) and not busy.has(c) and not trapped.has(c) and not lift_at.has(c)
+	var nook := func(c: Vector2i) -> bool:            # ... in the corner of a one-storey room the player can get to: where a lift can stand
+		if not plain.call(c) or room_of[c.y][c.x] < 1 or h0[c.y][c.x] != 1 or not seen.has(c):
+			return false
+		var r: Rect2i = rects[room_of[c.y][c.x]]
+		if c.x == r.get_center().x or c.y == r.get_center().y:
+			return false
+		var n_solid := 0
+		for d in DIRS:
+			if g[c.y + d.y][c.x + d.x] == "#":
+				n_solid += 1
+			elif g[c.y + d.y][c.x + d.x] != ".":
+				return false                             # beside a door or a pool
+		return n_solid >= 2
+	var wall_cells: Array = []
+	for y in range(2, H - 2):
+		for x in range(2, W - 2):
+			if g[y][x] == "#" and not is_win.has(Vector2i(x, y)):
+				wall_cells.append(Vector2i(x, y))
+	_shuffle(rng, wall_cells)
+	var n_up_doors := 0
+	for c in wall_cells:                              # a door a storey up, from one hall's balcony through to the next hall
+		if n_up_doors >= int(sh.get("upper_doors", 2)):
+			break
+		for k in 4:
+			var f: Vector2i = DIRS[k]
+			var s2: Vector2i = DIRS[(k + 1) % 4]
+			var a: Vector2i = c + f
+			var b: Vector2i = c - f
+			if not deck1.has(a) or g[b.y][b.x] != "." or h0[b.y][b.x] < 2 or room_of[a.y][a.x] == room_of[b.y][b.x] or taken.has(b):
+				continue
+			if h0[c.y + s2.y][c.x + s2.x] > 1 or h0[c.y - s2.y][c.x - s2.x] > 1 or up[c.y][c.x] != "#":
+				continue
+			up[c.y][c.x] = letters[rng.randi() % doors.size()]
+			for land in [b, b + s2, b - s2]:              # somewhere to stand on the far side: a landing that looks down into that hall
+				if g[land.y][land.x] == "." and h0[land.y][land.x] >= 2 and room_of[land.y][land.x] == room_of[b.y][b.x] and not taken.has(land) and not deck1.has(land):
+					decks.append({"at": [land.x, land.y], "level": 1})
+					deck1[land] = true
+			if not treasure.is_empty():
+				things.append({"at": [b.x, b.y], "level": 1, "item": treasure[rng.randi() % treasure.size()]})
+			n_up_doors += 1
+			break
+	var fits_up := func(r: Rect2i, door: Vector2i) -> bool:      # a room upstairs can go over rock or over one-storey rooms, and not against another
+		for y in range(r.position.y - 1, r.end.y + 1):
+			for x in range(r.position.x - 1, r.end.x + 1):
+				var c := Vector2i(x, y)
+				if not inside.call(c):
+					return false
+				if c != door and up[y][x] != "#":
+					return false
+				if r.has_point(c) and (h0[y][x] > 1 or lift_at.has(c)):
+					return false
+		return true
+	var under := {}                                   # basement cells with something in them: no pit over those
+	var furnish := func(r: Rect2i, level: int, name: String) -> Dictionary:
+		var st: String = styles[rng.randi() % styles.size()]
+		var cells2: Array = []
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				cells2.append(Vector2i(x, y))
+		_shuffle(rng, cells2)
+		var n := 0
+		for c in cells2:
+			if lift_at.has(c) or n >= 2 + cells2.size() / 6:
+				continue
+			n += 1
+			if level < 0:
+				under[c] = true
+			if n % 2 == 1 and not treasure.is_empty():
+				things.append({"at": [c.x, c.y], "level": level, "item": treasure[rng.randi() % treasure.size()]})
+			elif not actors.is_empty():
+				things.append({"at": [c.x, c.y], "level": level, "actor": _weighted(rng, actors), "face": NAMES[rng.randi() % 4]})
+		return {"name": name, "rect": [r.position.x, r.position.y, r.size.x, r.size.y], "style": st, "height": 1, "quiet": true}
+	var n_up_rooms := 0
+	for c in wall_cells:                              # a room upstairs, through a door off a balcony
+		if n_up_rooms >= int(sh.get("upper_rooms", 2)):
+			break
+		for k in 4:
+			var f: Vector2i = DIRS[k]
+			var s2: Vector2i = DIRS[(k + 1) % 4]
+			if not deck1.has(c + f) or up[c.y][c.x] != "#" or h0[c.y + s2.y][c.x + s2.x] > 1 or h0[c.y - s2.y][c.x - s2.x] > 1:
+				continue
+			var deep := rng.randi_range(3, 4)
+			var wide := rng.randi_range(3, 5)
+			var off := rng.randi_range(0, wide - 1)
+			var o: Vector2i = c - f - s2 * off                # the corner of the room nearest the door
+			var far: Vector2i = o - f * (deep - 1) + s2 * (wide - 1)
+			var r := Rect2i(mini(o.x, far.x), mini(o.y, far.y), absi(far.x - o.x) + 1, absi(far.y - o.y) + 1)
+			if not fits_up.call(r, c):
+				continue
+			for y in range(r.position.y, r.end.y):
+				for x in range(r.position.x, r.end.x):
+					up[y][x] = "."
+			up[c.y][c.x] = letters[rng.randi() % doors.size()]
+			n_up_rooms += 1
+			up_rooms.append(furnish.call(r, 1, "Upstairs %d" % n_up_rooms))
+			break
+	var nooks2: Array = []
+	for y in range(2, H - 2):
+		for x in range(2, W - 2):
+			if nook.call(Vector2i(x, y)):
+				nooks2.append(Vector2i(x, y))
+	_shuffle(rng, nooks2)
+	for c in nooks2:                                  # a room upstairs that only a lift goes to
+		if n_up_rooms >= int(sh.get("upper_rooms", 2)) + int(sh.get("lift_rooms", 1)):
+			break
+		if not nook.call(c):
+			continue
+		for k in 4:
+			var f: Vector2i = DIRS[(k + rng.randi()) % 4]
+			var s2: Vector2i = DIRS[(DIRS.find(f) + 1) % 4]
+			var deep := rng.randi_range(3, 4)
+			var wide := rng.randi_range(3, 4)
+			var o: Vector2i = c + f - s2 * rng.randi_range(0, wide - 1)
+			var far: Vector2i = o + f * (deep - 1) + s2 * (wide - 1)
+			var r := Rect2i(mini(o.x, far.x), mini(o.y, far.y), absi(far.x - o.x) + 1, absi(far.y - o.y) + 1)
+			if r.has_point(c) or not fits_up.call(r, Vector2i(-9, -9)):
+				continue
+			var shaft_clear := true                       # the shaft itself must stand in rock up there
+			for d in DIRS:
+				var q: Vector2i = c + d
+				if not r.has_point(q) and (h0[q.y][q.x] > 1 or up[q.y][q.x] != "#"):
+					shaft_clear = false
+			if not shaft_clear:
+				continue
+			for y in range(r.position.y, r.end.y):
+				for x in range(r.position.x, r.end.x):
+					up[y][x] = "."
+			lift_at[c] = true
+			used[c] = true
+			things.append({"at": [c.x, c.y], "lift": [0, 1], "home": 0})
+			n_up_rooms += 1
+			up_rooms.append(furnish.call(r, 1, "Upstairs %d" % n_up_rooms))
+			break
+	if n_up_doors + n_up_rooms > 0:
+		var rows1: Array = []
+		for row in up:
+			rows1.append("".join(PackedStringArray(row)))
+		storeys.append({"level": 1, "map": rows1, "rooms": up_rooms})
+	# the basement: a few chambers under the place, a lift down to them, and pits in the floor above
+	var n_pits := 0
+	if rng.randf() < sh.get("basement", 0.85):
+		var shaft := Vector2i(-1, -1)
+		for i in range(nooks2.size() - 1, -1, -1):
+			if nook.call(nooks2[i]):
+				shaft = nooks2[i]
+				break
+		if shaft.x > 0:
+			var bg: Array = []
+			var b_in: Array = []
+			for y in H:
+				var br: Array = []
+				br.resize(W)
+				br.fill("#")
+				bg.append(br)
+				var bi: Array = []
+				bi.resize(W)
+				bi.fill(-1)
+				b_in.append(bi)
+			var brects: Array = []
+			var guard := 0
+			while brects.size() < int(sh.get("basement_rooms", 4)) and guard < 300:
+				guard += 1
+				var bw := rng.randi_range(4, 7)
+				var bh := rng.randi_range(3, 6)
+				var br2 := Rect2i(rng.randi_range(1, W - bw - 1), rng.randi_range(1, H - bh - 1), bw, bh)
+				if brects.is_empty():                         # the first one has the lift in it, off its middle lines
+					br2.position = shaft - Vector2i(rng.randi_range(0, bw - 1), rng.randi_range(0, bh - 1))
+					if br2.position.x < 1 or br2.position.y < 1 or br2.end.x > W - 1 or br2.end.y > H - 1 or shaft.x == br2.get_center().x or shaft.y == br2.get_center().y:
+						continue
+				var clash := false
+				for o2 in brects:
+					if br2.grow(2).intersects(o2):
+						clash = true
+				if clash:
+					continue
+				brects.append(br2)
+				for y in range(br2.position.y, br2.end.y):
+					for x in range(br2.position.x, br2.end.x):
+						bg[y][x] = "."
+						b_in[y][x] = brects.size() - 1
+			if not brects.is_empty():
+				for i in range(1, brects.size()):
+					var x: int = brects[i - 1].get_center().x
+					var y: int = brects[i - 1].get_center().y
+					var to: Vector2i = brects[i].get_center()
+					while x != to.x or y != to.y:
+						if x != to.x:
+							x += signi(to.x - x)
+						else:
+							y += signi(to.y - y)
+						if bg[y][x] == "#":
+							bg[y][x] = "."
+				for y in range(1, H - 1):                    # doors on the thresholds, the same rule as upstairs
+					for x in range(1, W - 1):
+						if bg[y][x] != "." or b_in[y][x] >= 0 or rng.randf() > 0.7:
+							continue
+						for d in 2:
+							var f: Vector2i = DIRS[d]
+							var s2: Vector2i = DIRS[d + 1]
+							if bg[y + f.y][x + f.x] == "." and bg[y - f.y][x - f.x] == "." and bg[y + s2.y][x + s2.x] == "#" and bg[y - s2.y][x - s2.x] == "#" \
+									and (b_in[y + f.y][x + f.x] >= 0) != (b_in[y - f.y][x - f.x] >= 0):
+								bg[y][x] = letters[rng.randi() % doors.size()]
+								break
+				lift_at[shaft] = true
+				used[shaft] = true
+				things.append({"at": [shaft.x, shaft.y], "lift": [-1, 0], "home": 0})
+				var b_rooms: Array = []
+				for i in brects.size():
+					b_rooms.append(furnish.call(brects[i], -1, "%s %d" % [p.get("basement_name", "Undercroft"), i + 1]))
+				var spots: Array = []                         # pits: in a room, off the lines the corridors come in on, over the basement
+				for y in range(2, H - 2):
+					for x in range(2, W - 2):
+						var c := Vector2i(x, y)
+						if bg[y][x] != "." or under.has(c) or not plain.call(c) or room_of[y][x] < 1 or (c - start).length() < 4.0:
+							continue
+						var r: Rect2i = rects[room_of[y][x]]
+						var by_door := false
+						for d in DIRS:
+							if g[y + d.y][x + d.x] != "." and g[y + d.y][x + d.x] != "#":
+								by_door = true
+						if c.x != r.get_center().x and c.y != r.get_center().y and not by_door:
+							spots.append(c)
+				_shuffle(rng, spots)
+				var pits: Array = []
+				for c in spots:
+					if pits.size() >= int(sh.get("pits", 3)):
+						break
+					var crowd := false
+					for o3 in pits:
+						if (o3 - c).length() < 3.0:
+							crowd = true
+					if not crowd:
+						pits.append(c)
+						used[c] = true
+						things.append({"at": [c.x, c.y], "trap": "pit"})
+				n_pits = pits.size()
+				var rowsb: Array = []
+				for row in bg:
+					rowsb.append("".join(PackedStringArray(row)))
+				storeys.append({"level": -1, "map": rowsb, "rooms": b_rooms})
+
 	# ---- taking the card brings company to the big room
 	var triggers: Array = []
 	var tags := {}
@@ -674,9 +950,19 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 		"tags": tags, "triggers": triggers,
 		"intro": "%s %d. Find the red card, reach the last room." % [p.get("place", "Installation"), seed_value % 1000],
 		"objectives": [{"text": "Find the RED card.", "done": "key_red"}, {"text": "Get through the vault door and signal the surface."}]}
+	if not storeys.is_empty():
+		out["floors"] = storeys
 	if flooded:
 		out["fluid"] = p.get("fluid", {"level": 0.7, "color": [0.12, 0.55, 0.35, 0.6], "glow": 0.35})
 	return out
+
+
+func _shuffle(rng: RandomNumberGenerator, a: Array) -> void:
+	for i in range(a.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var t: Variant = a[i]
+		a[i] = a[j]
+		a[j] = t
 
 
 func _is_door(g: Array, q: Vector2i) -> bool:

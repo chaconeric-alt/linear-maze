@@ -153,6 +153,10 @@ The generator `rooms` uses all of it. Its `"shapes"` settings (each a chance fro
 | `traps` | `{"laser": 2, "shock": 2, "vent": 3}` | Lasers and shock plates in corridors, gas vents in rooms. |
 | `jammed` | 0.08 | A door grinds and sparks. |
 | `ambush` | true | Taking the red card sets off the alarm and spawns two or three of `ambush_actors` (default: the theme's `actors`) in a big room. |
+| `upper_doors` | 2 | Doors a storey up, through the wall between two tall rooms, from one's balcony to a landing in the other (a number). |
+| `upper_rooms`, `lift_rooms` | 2, 1 | Rooms on storey 1, over rock or over one-storey rooms: reached through a door off a balcony, or only by a lift. |
+| `basement`, `basement_rooms` | 0.85, 4 | Chambers and corridors on storey -1, with a lift down from a corner of a one-storey room the player can reach without the red card. |
+| `pits` | 3 | Trapdoors in room floors over the basement, never on the lines corridors come in on (a number). |
 
 Themes may also give `gallery_actors` (who is put on balconies) and `ambush_text`. Shapes only ever cut a room's corners, so its middle row and column, where corridors arrive, stay open; the card, the weapons and the exit are placed there before any furniture. `tools/gen_check.gd` runs the generator over 40 seeds a theme and counts what it made.
 
@@ -423,3 +427,60 @@ down" mixes all of them). It can still be played with `--level=gen:rooms:<theme>
 only ever key the two `lift_` bones (up, down, knocks); the engine only ever turns `mid` and `apex`; so neither undoes the
 other. The file as delivered is the machine raised; `dormant` holds both sections down, closing the gaps, and `startle`
 raises them.
+
+
+## 2c. Floors on floors
+
+A level is a stack of floors. `"map"` is storey 0; `"floors"` adds others, each the same size:
+
+```json
+"floors": [ {"level": 1,  "map": ["####", ...], "rooms": [...]},
+            {"level": -1, "map": [...], "rooms": [...]} ]
+```
+
+A floor entry takes what a level takes for its shape: `map`, `rooms`, `legend` (added to the level's), `style`, `height`,
+`diags`, `decks`, `ramps`, `windows`, `walls`. Storeys are `H` (4 m) apart; a room's `height` still counts storeys upward
+from its own floor, and ramp heights are metres above its own floor. Anything in `things` goes on another floor with
+`"level": n` (the same key that puts it on a balcony: it is simply the storey).
+
+What the engine works out from the stack:
+
+- **Air is air, whichever floor it belongs to.** Each wall is decided storey by storey: there is a wall unless the cell
+  next door has air at that height on any floor. So a door on storey 1 can open off one hall's balcony into the next
+  hall, and an upstairs room beside a tall hall looks down into it over a railing.
+- **A door needs a floor each side.** Upstairs that means a room of its own floor, or a balcony (`decks`) of a tall
+  room below. Doors, windows, thin walls, cut corners, pools and props all work on any floor.
+- **A room right on top of another** shares a slab 0.8 m thick: the lower room gets a plain slab ceiling with strip lights
+  where its lights would have been, because ceiling tiles are taller than that.
+- **Every storey is sealed** right across the map except where air goes through (tall rooms, pits, lift shafts), so
+  nothing can drop through rock.
+- **Navigation** joins every floor and balcony to whatever stands at the same height next door. `Level.reach(a, b)` also
+  counts lifts and falls; monsters do not use either, so they stay on the floors they can walk to.
+- **The map** shows the floor you are on, with B1 / L0 / L1 in its corner.
+
+`Level` for code: `cell(x, y, f)`, `cell_s(x, y, storey)` / `air(...)` / `open_s(...)` (whose air is at that storey),
+`floor_of(pos)`, `cell_at(pos)`, `ceiling_y(x, y, storey)`, `block(p, solid, f)`, `doors_up` (doors off storey 0, keyed
+`Vector3i(x, y, storey)`).
+
+### Lifts
+
+`{"lift": [-1, 0, 1], "at": [x, y], "home": 0, "speed": 3.2, "color": [0.4, 1.0, 0.6]}` in `things`. The numbers are the
+storeys it stops at. The shaft is the cell at its lowest stop, which the level makes tall enough; cells of the floors in
+between are taken out of their maps, so those floors need somewhere to step off beside it. Stand on it and it goes to
+its next stop; step off and on again to go further. Stand beside the shaft on another floor and it comes to you. It will
+not come down on the player.
+
+### Pits
+
+`{"trap": "pit", "at": [x, y], "level": 0, "delay": 0.15, "damage": 6}`. The cell has a trapdoor for a floor, drawn with
+the room's own floor tile; it opens under the player, drops them into whatever room is below, and shuts. There has to
+be air below. Monsters walk over it.
+
+### Pools
+
+Flooded cells (`"fluid": true`) are now sunk: the pool's floor is `fluid.level` (0.7 m) below the room's, the surface
+sits just under floor level, the basin has walls, and a kerb (`fluid.lip` gives its colour) runs wherever you could walk
+in. The way in and out is a slope under the surface. A pool over a room on the floor below is not sunk.
+
+**The Stack** (`tools/levels/stack.py`) shows all of it: two halls with a door between their balconies, a loft over a
+store room, a sump and a vault underneath reached by a pit and a lift, and a sunk pool.

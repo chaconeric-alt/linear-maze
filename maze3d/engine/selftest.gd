@@ -29,19 +29,31 @@ func _look_at(target: Vector3) -> void:
 	pl.head.rotation.x = pl._pitch
 
 
-func _stand_near(target: Vector3, want := 5.0) -> bool:
+## The storey something is in: the one its height says, or the nearest one below that has air there (it may be on a ceiling).
+func _storey(pos: Vector3) -> int:
+	var c := level.cell_of(pos)
+	var st := floori((pos.y + 1.0) / level.H)
+	for t in range(st, level.f_min - 1, -1):
+		if level.open_s(c.x, c.y, t):
+			return t
+	return st                                        # it hangs on a wall: its own cell is rock
+
+
+func _stand_near(target: Vector3, want := 5.0, tight := false) -> bool:
 	# an open spot with a clear line to the target
 	var best := Vector3.INF
 	var c := level.cell_of(target)
+	var st := _storey(target)
 	for r in range(0, 4):
 		for dy in range(-r, r + 1):
 			for dx in range(-r, r + 1):
 				var q := c + Vector2i(dx, dy)
-				if not level.is_open(q.x, q.y) or level.doors.has(q) or level.cell(q.x, q.y)["window"] != "":
+				var here: Dictionary = level.cell_s(q.x, q.y, st)
+				if here.is_empty() or (here["door"] != "" and not tight) or here["window"] != "":
 					continue
 				var p := level.center(q, 0.0)
-				p.y = level.floor_y(Vector3(p.x, target.y - 1.0, p.z)) + 0.05      # on the same storey as the target, if there is a floor there
-				if p.distance_to(target) < 2.0:
+				p.y = level.floor_y(Vector3(p.x, st * level.H + 0.5, p.z)) + 0.05      # on the same storey as the target, if there is a floor there
+				if p.distance_to(target) < (1.2 if tight else 2.0):
 					continue
 				if level.los(p + Vector3(0, 1.6, 0), target) and abs(p.distance_to(target) - want) < abs(best.distance_to(target) - want):
 					best = p
@@ -81,14 +93,20 @@ func run(m: Node) -> void:
 		if level.is_blocked(dp):
 			blocked.append(dp)
 			level.block(dp, false)
+	var blocked_up: Array = []
+	for du in level.doors_up:
+		if level.is_blocked(Vector2i(du.x, du.y), du.z):
+			blocked_up.append(du)
+			level.block(Vector2i(du.x, du.y), false, du.z)
 	var unreachable := 0
-	var start := level.center(level.start_cell)
+	var start := level.center(level.start_cell, level.start_level * level.H)
 	for n in level.get_children():
 		if n is Prop or n is Pickup or n is Enemy or n is Trap:
 			var c := level.cell_of(n.global_position)
+			var ns := _storey(n.global_position)
 			var ok := false
-			for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				if level.is_open(c.x + d.x, c.y + d.y) and (c + d == level.start_cell or level.path(start, level.center(c + d)).size() > 0):
+			for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:      # walking, by lift, or down a pit
+				if level.open_s(c.x + d.x, c.y + d.y, ns) and level.reach(start, level.center(c + d, n.global_position.y)):
 					ok = true
 					break
 			if not ok:
@@ -98,16 +116,17 @@ func run(m: Node) -> void:
 	var upstairs := 0                                # things on balconies: there has to be a way up that can be walked
 	var stranded := 0
 	for n in level.get_children():
-		if (n is Prop or n is Pickup or n is Enemy) and n.global_position.y > 2.0 and not (n is Enemy and n._surf != 0):
+		if (n is Prop or n is Pickup or n is Enemy) and absf(n.global_position.y) > 2.0 and not (n is Enemy and (n._surf != 0 or n.d.get("mount", "") == "ceiling" or n._fly)):
 			upstairs += 1
-			var pth := level.path(start, n.global_position)
-			if pth.size() == 0 or absf(pth[pth.size() - 1].y - level.floor_y(n.global_position)) > 0.5:
+			if not level.reach(start, n.global_position) or (not n is Prop and absf(level.floor_y(n.global_position) - n.global_position.y) > 1.6):
 				stranded += 1
 				print("INFO  no way up to ", n.get_class(), " at ", n.global_position)
 	if upstairs > 0:
-		_say(stranded == 0, "everything upstairs can be walked to (%d things, %d stranded)" % [upstairs, stranded])
+		_say(stranded == 0, "everything on other storeys can be got to (%d things, %d stranded)" % [upstairs, stranded])
 	for dp in blocked:
 		level.block(dp, true)
+	for du in blocked_up:
+		level.block(Vector2i(du.x, du.y), true, du.z)
 	# --- traps hurt, before we stop caring about damage
 	for n in level.get_children():
 		if is_instance_valid(n) and n is Trap and n.enabled:
@@ -168,7 +187,7 @@ func run(m: Node) -> void:
 				await get_tree().physics_frame
 		if not is_instance_valid(a) or a.dead:
 			continue
-		if not _stand_near(a.eye()):
+		if not _stand_near(a.eye()) and not _stand_near(a.eye(), 5.0, true):      # in a tight corner: closer, or from a doorway
 			_say(false, "no place to stand to fight %s at %s (%s)" % [nm, level.cell_of(a.global_position), a.global_position])
 			continue
 		var hp0 := pl.hp
@@ -271,6 +290,22 @@ func run(m: Node) -> void:
 	_say(left == 0, "pickups are taken (%d visits, %d left)" % [got, left])
 	_say(Game.stats["treasure"] == Game.stats["treasure_total"], "all treasure counted (%d of %d, %d cr)" % [Game.stats["treasure"], Game.stats["treasure_total"], Game.credits])
 	# --- doors
+	for n in level.get_children():                   # pits drop you; lifts take you
+		if not is_instance_valid(n):
+			continue
+		pl.hp = pl.max_hp
+		pl.dead = false
+		if n is Pit:
+			pl.velocity = Vector3.ZERO
+			pl.global_position = n.global_position + Vector3(0, 0.05, 0)
+			await _frames(150)
+			_say(pl.global_position.y < n.global_position.y - 2.0, "pit at %s drops the player (to y=%.1f)" % [level.cell_of(n.global_position), pl.global_position.y])
+		elif n is Lift:
+			var was: int = n.at
+			pl.velocity = Vector3.ZERO
+			pl.global_position = n.global_position + Vector3(0, 0.1, 0)
+			await _frames(420)
+			_say(n.at != was and absf(pl.global_position.y - n.global_position.y) < 0.6, "lift at %s carries the player (stop %d to %d, player y=%.1f, lift y=%.1f)" % [level.cell_of(n.global_position), was, n.at, pl.global_position.y, n.global_position.y])
 	for dp in level.doors:
 		var d: Door = level.doors[dp]
 		var side := Vector2i.ZERO

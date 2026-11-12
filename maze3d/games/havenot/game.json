@@ -2,7 +2,7 @@
  "id": "havenot",
  "title": "HaveNot",
  "tagline": "The old world could make anything. Go and find out what it left lying around.",
- "version": "0.8.3",
+ "version": "0.9.0",
  "theme": {
   "accent": [
    0.91,
@@ -28,7 +28,8 @@
   "levels/deepworks.json",
   "levels/menagerie.json",
   "levels/staffonly.json",
-  "levels/atrium.json"
+  "levels/atrium.json",
+  "levels/stack.json"
  ],
  "generators": [
   "rooms"

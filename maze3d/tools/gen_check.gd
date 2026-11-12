@@ -31,7 +31,12 @@ func _init() -> void:
 				n["tier2"] += 1 if d["level"] == 2 else 0
 			for r in lv["rooms"]:
 				n["tall3"] += 1 if r["height"] == 3 else 0
+			for fl in lv.get("floors", []):
+				n["floor%d" % int(fl["level"])] = n.get("floor%d" % int(fl["level"]), 0) + 1
+				n["rooms%d" % int(fl["level"])] = n.get("rooms%d" % int(fl["level"]), 0) + fl["rooms"].size()
 			for t in lv["things"]:
+				n["lifts"] = n.get("lifts", 0) + (1 if t.has("lift") else 0)
+				n["pits"] = n.get("pits", 0) + (1 if t.get("trap", "") == "pit" else 0)
 				n["traps"] += 1 if t.has("trap") else 0
 				n["upstairs"] += 1 if t.has("level") else 0
 		print("GEN ", th if th != "" else "(base)", " ", n)

@@ -47,6 +47,7 @@ var _climb_t := 2.0
 var _lounge: Dictionary = {}      # what it is doing instead of its job
 var _puff_t := 2.0
 var _stun := 0.0
+var _base_y := 0.0                # the height of the floor it last stood on
 var _touch_t := 0.0
 var _face: Label3D                # a screen on the model that shows what it is saying
 var _face_t := 0.0
@@ -88,9 +89,10 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 	cs.position.y = d.get("center", hgt / 2)
 	add_child(cs)
 	_cs = cs
+	_base_y = position.y
 	if d.get("mount", "") == "ceiling":
-		var c := lv.cell_of(position)
-		position.y = lv.cell(c.x, c.y)["height"] * lv.H
+		var mcc := lv.cell_of(position)
+		position.y = lv.ceiling_y(mcc.x, mcc.y, floori((position.y + 0.9) / lv.H))
 	var path: String = d.get("model", "")
 	vis = LM.spawn_scene(path if path.begins_with("res://") else "res://" + path, "" if d.get("own_materials", false) else d.get("kit", lv.kit_id))      # own_materials: a textured model keeps what it came with
 	vis.scale = Vector3.ONE * d.get("scale", 1.0)
@@ -555,7 +557,7 @@ func _die(info: Dictionary) -> void:
 		if randf() < dr.get("chance", 1.0):
 			var p := Pickup.new()
 			level.add_child(p)
-			p.global_position = Vector3(pos.x + randf_range(-0.6, 0.6), 1.0, pos.z + randf_range(-0.6, 0.6))
+			p.global_position = Vector3(pos.x + randf_range(-0.4, 0.4), level.floor_y(pos) + 1.0, pos.z + randf_range(-0.4, 0.4))      # on whatever floor it died on
 			p.setup(level, dr, level.kit_id)
 	Game.run_effects(e.get("on_death"))
 	level.actor_died(self)
@@ -593,7 +595,7 @@ func _start_lounge() -> void:
 			var dd: float = n.position.distance_to(position)
 			var spot: Vector3 = n.position + n.global_transform.basis.z * _lounge.get("stand", 2.2)
 			var sc := level.cell_of(spot)
-			if dd < best_d and not level.cell(sc.x, sc.y)["solid"] and level.cell(sc.x, sc.y)["door"] == "":
+			if dd < best_d and not level.air(sc.x, sc.y, _st())["solid"] and level.air(sc.x, sc.y, _st())["door"] == "":
 				best = n
 				best_d = dd
 		if best == null:                             # nothing on: stare at a wall instead, or give up
@@ -625,11 +627,11 @@ func _start_lounge() -> void:
 
 func _walls(c: Vector2i) -> Array:
 	var out: Array = []
-	if level.cell(c.x, c.y)["diag"] != "":           # a cut corner has no square wall to stand against
+	if level.air(c.x, c.y, _st())["diag"] != "":           # a cut corner has no square wall to stand against
 		return out
 	for i in 4:
 		var n: Vector2i = c + Level.DIRS[i]
-		if level.cell(n.x, n.y)["solid"]:
+		if level.air(n.x, n.y, _st())["solid"]:
 			out.append(Vector3(Level.DIRS[i].x, 0, Level.DIRS[i].y))
 	return out
 
@@ -699,7 +701,7 @@ func _start_perch() -> void:
 			return
 		where = "ceiling" if cl.get("ceiling", true) and randf() < 0.5 else "wall"
 	var c := level.cell_of(position)
-	if level.cell(c.x, c.y)["door"] != "":
+	if level.air(c.x, c.y, _st())["door"] != "":
 		return
 	if where == "ceiling":
 		_surf = 2
@@ -712,13 +714,20 @@ func _start_perch() -> void:
 		var dv: Vector3 = walls[randi() % walls.size()]
 		_wall_n = -dv
 		position = level.center(c) + dv * (level.C / 2 - cl.get("off", 0.3))
-		position.y = randf_range(1.3, maxf(1.5, _ceil_y(c) - 1.2))
+		position.y = _base_y + randf_range(1.3, maxf(1.5, _ceil_y(c) - _base_y - 1.2))
 		_surf = 1
 		basis = _facing(_wall_n, Vector3.DOWN)       # head down, the way they wait
 
 
+## The storey it is in. Taken from where it last had its feet on the ground: on a wall or a ceiling its height cannot say.
+func _st() -> int:
+	if _surf == 0 and d.get("mount", "") != "ceiling" and (is_on_floor() or _fly):
+		_base_y = global_position.y
+	return floori((_base_y + 0.9) / level.H)
+
+
 func _ceil_y(c: Vector2i) -> float:
-	return level.cell(c.x, c.y)["height"] * level.H
+	return level.ceiling_y(c.x, c.y, _st())          # (hard against a wall its middle can be over the line: one storey, then)
 
 
 func _facing(up: Vector3, fwd: Vector3) -> Basis:
@@ -757,7 +766,7 @@ func _fall_tick(dt: float, flat: Vector3) -> void:
 	move_and_slide()
 	var f := flat if flat.length() > 0.1 else Vector3(basis.z.x, 0, basis.z.z)
 	_orient(Vector3.UP, f if f.length() > 0.05 else Vector3.BACK, 9 * dt)
-	if is_on_floor() or position.y <= 0.02:
+	if is_on_floor() or position.y <= level.f_min * level.H + 0.02:
 		_surf = 0
 		var z := Vector3(basis.z.x, 0, basis.z.z)
 		basis = Basis(Vector3.UP, atan2(z.x, z.z))
@@ -793,7 +802,7 @@ func _climb_tick(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 			else:
 				position.y -= sp * dt
 				_orient(_wall_n, Vector3.DOWN, 10 * dt)
-				if position.y <= 0.5:
+				if position.y <= _base_y + 0.5:
 					_drop()
 			_play("walk", rate)
 		2:
@@ -804,7 +813,7 @@ func _climb_tick(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 			_path_t -= dt
 			if _path_t <= 0.0:
 				_path_t = 0.4
-				_path = level.path(global_position, pl.global_position)
+				_path = level.path(Vector3(position.x, _base_y, position.z), pl.global_position)      # the way there, as the floor under it knows it
 			if _path.size() > 1:
 				var next := _path[1]
 				var gap := Vector3(next.x - position.x, 0, next.z - position.z)
@@ -813,14 +822,17 @@ func _climb_tick(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 					next = _path[1]
 					gap = Vector3(next.x - position.x, 0, next.z - position.z)
 				var nc := level.cell_of(next)
-				var there := level.cell(nc.x, nc.y)
-				if nc != c and (there["door"] != "" or there["height"] != level.cell(c.x, c.y)["height"]):
+				var there := level.air(nc.x, nc.y, _st())
+				if nc != c and (there["door"] != "" or there["solid"] or _ceil_y(nc) != _ceil_y(c)):
 					if gap.length() < level.C * 0.8:     # a door, or the ceiling steps: down and on foot
 						_drop()
 						return
 				want = gap.normalized()
+			elif absf(pl.global_position.y - _base_y) < level.H * 0.6 and level.los(global_position, pl.global_position + Vector3(0, 1.0, 0)):
+				want = flat.normalized()                 # no route, but there they are
 			else:
-				want = flat.normalized()
+				_drop()                                  # nowhere to go up here (they are on another floor): down, and think again
+				return
 			position += want * sp * (_gait(dt) if d.has("gait") else 1.0) * dt
 			position.y = _ceil_y(c) - off
 			if want.length() > 0.1:
@@ -832,7 +844,7 @@ func _climb_tick(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 			_approach_t -= dt
 			var gap2 := Vector3(_approach.x - position.x, 0, _approach.z - position.z)
 			if gap2.length() < 0.35:
-				position = Vector3(_approach.x, maxf(position.y, 0.3), _approach.z)
+				position = Vector3(_approach.x, maxf(position.y, _base_y + 0.3), _approach.z)
 				velocity = Vector3.ZERO
 				_surf = 1
 				_goal_up = true
@@ -981,3 +993,4 @@ func _make_jelly() -> void:
 			sm.set_shader_parameter("pulse", j.get("pulse", 0.5))
 			sm.set_shader_parameter("wet", j.get("wet", 0.75))
 			mi.set_surface_override_material(i, sm)
+

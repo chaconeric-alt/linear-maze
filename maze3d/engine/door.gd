@@ -29,6 +29,9 @@ var _spark := 0.0
 var _max_delay := 0.0
 
 
+var storey := 0                 # which floor it is on (set before setup)
+
+
 func setup(lv: Level, p: Vector2i, entry: Dictionary, kit_id: String) -> void:
 	level = lv
 	cell_pos = p
@@ -79,7 +82,7 @@ func _refresh() -> void:
 		c = LOCK_COLORS["flag"]
 	_mat.albedo_color = Color(c.r * 2.5, c.g * 2.5, c.b * 2.5)
 	_light.light_color = c
-	level.block(cell_pos, is_locked())
+	level.block(cell_pos, is_locked(), storey)
 
 
 func command(what: String) -> void:
@@ -105,7 +108,7 @@ func _someone_near() -> bool:
 	var pl := Game.player
 	if pl and is_instance_valid(pl):
 		var d := Vector2(pl.global_position.x - global_position.x, pl.global_position.z - global_position.z).length()
-		if d < 4.2:
+		if d < 4.2 and absf(pl.global_position.y - global_position.y) < 2.6:
 			if is_locked():
 				_try_player(d)
 			else:

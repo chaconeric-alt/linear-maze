@@ -261,29 +261,36 @@ func _draw_map() -> void:
 	_map.draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.45))
 	var reach := int(size.x / s / 2) + 1
 	var cc := lv.cell_of(pl.global_position)
+	var pf := lv.floor_of(pl.global_position)          # the map shows the floor you are on
 	for dy in range(-reach, reach + 1):
 		for dx in range(-reach, reach + 1):
 			var p := cc + Vector2i(dx, dy)
-			if not lv.explored.has(p) or not lv.is_open(p.x, p.y):
+			if not lv.explored.has(Vector3i(p.x, p.y, pf)) or not lv.is_open(p.x, p.y, pf):
 				continue
 			var at := mid + (Vector2(p) - pc) * s
 			if at.x < 0 or at.y < 0 or at.x > size.x - s or at.y > size.y - s:
 				continue
 			var col := Color(0.55, 0.62, 0.66, 0.8)
-			var lc := lv.cell(p.x, p.y)
+			var lc := lv.cell(p.x, p.y, pf)
 			if lc["window"] != "":
 				col = Color(0.4, 0.85, 1.0, 0.9)
 			elif not lc["ramp"].is_empty():
 				col = Color(0.8, 0.7, 0.45, 0.85)
 			elif not lc["decks"].is_empty():
 				col = Color(0.68, 0.74, 0.8, 0.9)
-			if lv.doors.has(p):
-				var d: Door = lv.doors[p]
+			elif lc["fluid"]:
+				col = Color(0.35, 0.6, 0.7, 0.8)
+			if lc.has("lift"):
+				col = Color(0.5, 1.0, 0.6, 0.95)
+			var dk: Variant = p if pf == 0 else Vector3i(p.x, p.y, pf)
+			var dd: Dictionary = lv.doors if pf == 0 else lv.doors_up
+			if dd.has(dk):
+				var d: Door = dd[dk]
 				col = accent if not d.is_locked() else Door.LOCK_COLORS.get(d.lock, Color(0.7, 0.3, 1.0))
 			_map.draw_rect(Rect2(at, Vector2(s - 1, s - 1)), col)
 	var beat := fmod(Time.get_ticks_msec() * 0.001, 1.2) / 1.2          # anything hostile the player has seen: a red signal
 	for a in lv.actors:
-		if not is_instance_valid(a) or a.dead or not a.seen:
+		if not is_instance_valid(a) or a.dead or not a.seen or absf(a.global_position.y - pl.global_position.y) > lv.H * 1.6:
 			continue
 		var at2 := mid + (Vector2(a.global_position.x, a.global_position.z) / lv.C - pc) * s
 		if at2.x < 4 or at2.y < 4 or at2.x > size.x - 4 or at2.y > size.y - 4:
@@ -295,6 +302,8 @@ func _draw_map() -> void:
 	var side := Vector2(-fwd.y, fwd.x)
 	_map.draw_colored_polygon(PackedVector2Array([mid + fwd * 8, mid - fwd * 5 + side * 5, mid - fwd * 5 - side * 5]), Color.WHITE)
 	_map.draw_rect(Rect2(Vector2.ZERO, size), Color(accent.r, accent.g, accent.b, 0.6), false, 1.0)
+	if lv.floors.size() > 1:                           # which floor: B1 below, L0 the main one, L1 above
+		_map.draw_string(ThemeDB.fallback_font, Vector2(6, 16), ("B%d" % -pf) if pf < 0 else ("L%d" % pf), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, accent)
 
 
 func _on_toast(text: String, kind: String) -> void:
