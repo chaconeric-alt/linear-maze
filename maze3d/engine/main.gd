@@ -19,6 +19,8 @@ func _ready() -> void:
 		var kv := a.trim_prefix("--").split("=")
 		_args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	LM.boot(_args.get("game", ProjectSettings.get_setting("maze3d/game", "havenot")))
+	if not _args.has("selftest"):                    # the self-test always measures the game as designed
+		Game.load_settings()
 	hud = Hud.new()
 	add_child(hud)
 	Game.hud = hud
@@ -71,6 +73,8 @@ func _load(id: String, _attract: bool) -> void:
 		remove_child(level)
 	Game.reset()
 	Game.calm = _args.has("calm")
+	if _args.has("easy"):                            # --easy / --easy=0: for this run only; the title screen button is the one that is remembered
+		Game.easy = _args["easy"] != "0"
 	var data: Dictionary
 	if id.begins_with("gen:"):
 		var bits := id.substr(4).split(":")        # gen:<generator>[:<theme>]

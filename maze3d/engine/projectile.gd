@@ -61,7 +61,7 @@ func _physics_process(dt: float) -> void:
 	if d.has("puddle"):                              # what it was made of stays where it landed
 		Puddle.drop(level, pos, d["puddle"], by)
 	if d.has("blast"):
-		Fx.explode(level, pos - vel.normalized() * 0.2, d["blast"].get("radius", 3.0), d["blast"].get("damage", damage), c, by, not from_player or d["blast"].get("self", false))
+		Fx.explode(level, pos - vel.normalized() * 0.2, d["blast"].get("radius", 3.0), d["blast"].get("damage", damage) * (Game.deal_scale() if from_player and d["blast"].has("damage") else 1.0), c, by, not from_player or d["blast"].get("self", false))
 	else:
 		Fx.sparks(level, pos, c, 10, 4.0)
 		Fx.flash(level, pos, c, 3.0, 4.0)

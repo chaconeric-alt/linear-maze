@@ -2,7 +2,7 @@
  "id": "havenot",
  "title": "HaveNot",
  "tagline": "The old world could make anything. Go and find out what it left lying around.",
- "version": "0.8.0",
+ "version": "0.8.1",
  "theme": {
   "accent": [
    0.91,
@@ -673,5 +673,9 @@
     ]
    ]
   }
+ },
+ "easy": {
+  "deal": 3,
+  "take": 3
  }
 }

@@ -159,6 +159,7 @@ func shake(s: float) -> void:
 func hurt(amount: float, info: Dictionary = {}) -> void:
 	if dead or _dash_t > 0.0 and info.get("type", "") != "blast":
 		return
+	amount *= Game.take_scale()
 	if armor > 0.0:
 		var soak: float = min(armor, amount * 0.6)
 		armor -= soak
@@ -312,7 +313,7 @@ func _fire(w: Dictionary) -> void:
 			nq.exclude = [get_rid()]
 			if not get_world_3d().direct_space_state.intersect_ray(nq).is_empty():
 				start = cam.global_position + fwd * 0.05
-			Projectile.launch(level, w["projectile"], start, _aim_from_muzzle(start, dir), w.get("damage", 20.0), self, true)
+			Projectile.launch(level, w["projectile"], start, _aim_from_muzzle(start, dir), w.get("damage", 20.0) * Game.deal_scale(), self, true)
 			continue
 		var from := cam.global_position
 		var to: Vector3 = from + dir * w.get("range", 80.0)
@@ -324,7 +325,7 @@ func _fire(w: Dictionary) -> void:
 			end = hit["position"]
 			var col: Object = hit["collider"]
 			if col and col.has_method("hurt"):
-				var dmg: float = w.get("damage", 10.0)
+				var dmg: float = w.get("damage", 10.0) * Game.deal_scale()
 				var fall: float = w.get("falloff", 0.0)
 				if fall > 0.0:
 					dmg *= 1.0 - fall * clamp(from.distance_to(end) / w.get("range", 80.0), 0.0, 1.0)

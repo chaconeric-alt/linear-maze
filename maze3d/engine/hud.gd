@@ -201,7 +201,7 @@ func refresh() -> void:
 	_health.value = pl.hp
 	_armor.max_value = pl.max_armor
 	_armor.value = pl.armor
-	_hp_label.text = "%d" % ceil(pl.hp) + ("   +%d" % pl.armor if pl.armor > 0 else "")
+	_hp_label.text = "%d" % ceil(pl.hp) + ("   +%d" % pl.armor if pl.armor > 0 else "") + ("   EASY" if Game.easy else "")
 	var w: Dictionary = pl.weapon()
 	_weapon.text = str(w.get("name", "")).to_upper()
 	_ammo.text = "∞" if w.get("ammo") == null else str(pl.ammo.get(w["ammo"], 0))
@@ -403,6 +403,15 @@ func show_title() -> void:
 	var tag := _label(g.get("tagline", ""), 20, Color(0.9, 0.9, 0.85))
 	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_overlay_box.add_child(tag)
+	var ez: Dictionary = g.get("easy", {})
+	var eb := _button("", func(): pass)
+	var name_it := func() -> void:
+		eb.text = "Easy mode: %s   (your weapons ×%s, you take ÷%s)" % ["ON" if Game.easy else "off", String.num(ez.get("deal", 3)), String.num(ez.get("take", 3))]
+	name_it.call()
+	eb.pressed.connect(func():
+		Game.set_easy(not Game.easy)
+		name_it.call())
+	_overlay_box.add_child(eb)
 	_overlay_box.add_child(_label("", 8, Color.WHITE))
 	for id in g.get("menu", LM.levels.keys()):
 		var lv: Dictionary = LM.levels.get(id, {})

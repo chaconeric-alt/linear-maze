@@ -395,3 +395,12 @@ Three small things, added for the Fouler, usable by anything:
 The Fouler (`tools/blender/adopt_fouler.py`) came with no skeleton at all. It is given a five-bone spine with smoothly
 blended weights, two lips, twelve toes and eight two-bone feelers, and its clips use bone *scale* as well as rotation
 (squash and stretch); scale compounds down a chain, so `whole(wide, tall)` spreads it over the spine as fifth roots.
+
+
+## Easy mode
+
+For play-testing. `game.json` `"easy": {"deal": 3, "take": 3}`: with easy mode on, everything the player's weapons deal
+(bullets, projectiles, their blasts) is multiplied by `deal`, and everything the player takes is divided by `take`
+before armour. Switched by the button on the title screen, which is remembered between sessions (`user://maze3d.cfg`),
+or for one run with `--easy` (`--easy=0` forces it off). The health readout shows EASY while it is on. Monsters'
+health, pickups and the self-test are untouched.

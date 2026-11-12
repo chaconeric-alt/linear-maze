@@ -7,6 +7,7 @@ signal toast(text: String, kind: String)
 signal changed            # something the HUD shows changed
 signal ended(info: Dictionary)
 
+var easy := false            # easy mode: the player's weapons hit harder and the player takes less (game.json "easy"; title screen, or --easy)
 var calm := false            # --calm: nothing notices the player (for looking at things)
 var player: Node3D = null
 var level: Node3D = null
@@ -17,6 +18,31 @@ var credits := 0
 var stats := {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}
 var playing := false
 var over := false
+
+
+## Easy mode is remembered between sessions (user://maze3d.cfg).
+func load_settings() -> void:
+	var cf := ConfigFile.new()
+	if cf.load("user://maze3d.cfg") == OK:
+		easy = cf.get_value("play", "easy", false)
+
+
+func set_easy(on: bool) -> void:
+	easy = on
+	var cf := ConfigFile.new()
+	cf.load("user://maze3d.cfg")
+	cf.set_value("play", "easy", on)
+	cf.save("user://maze3d.cfg")
+	changed.emit()
+
+
+## What the player's weapons deal, and what the player takes, are multiplied by these.
+func deal_scale() -> float:
+	return float(LM.game.get("easy", {}).get("deal", 3.0)) if easy else 1.0
+
+
+func take_scale() -> float:
+	return 1.0 / maxf(0.01, float(LM.game.get("easy", {}).get("take", 3.0))) if easy else 1.0
 
 
 func reset() -> void:
