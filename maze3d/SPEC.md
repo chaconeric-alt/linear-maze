@@ -404,3 +404,6 @@ For play-testing. `game.json` `"easy": {"deal": 3, "take": 3}`: with easy mode o
 before armour. Switched by the button on the title screen, which is remembered between sessions (`user://maze3d.cfg`),
 or for one run with `--easy` (`--easy=0` forces it off). The health readout shows EASY while it is on. Monsters'
 health, pickups and the self-test are untouched.
+
+A generator theme with `"menu": false` is left off the title screen (the Works, the Bunker and the Crypt are; "All the way
+down" mixes all of them). It can still be played with `--level=gen:rooms:<theme>`.

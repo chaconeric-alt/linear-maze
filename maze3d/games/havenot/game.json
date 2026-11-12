@@ -2,7 +2,7 @@
  "id": "havenot",
  "title": "HaveNot",
  "tagline": "The old world could make anything. Go and find out what it left lying around.",
- "version": "0.8.1",
+ "version": "0.8.2",
  "theme": {
   "accent": [
    0.91,
@@ -321,7 +321,8 @@
     ],
     "glow": 0.9
    },
-   "ambush_text": "RED CARD REMOVED. The shift has been called in."
+   "ambush_text": "RED CARD REMOVED. The shift has been called in.",
+   "menu": false
   },
   "bunker": {
    "title": "The Bunker",
@@ -412,7 +413,8 @@
     ],
     "glow": 0.1
    },
-   "ambush_text": "RED CARD REMOVED. Stand to. Stand to."
+   "ambush_text": "RED CARD REMOVED. Stand to. Stand to.",
+   "menu": false
   },
   "crypt": {
    "title": "The Crypt",
@@ -506,7 +508,8 @@
      "shock": 0,
      "vent": 3
     }
-   }
+   },
+   "menu": false
   },
   "deep": {
    "title": "All the way down",

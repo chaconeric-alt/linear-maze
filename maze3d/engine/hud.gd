@@ -406,7 +406,7 @@ func show_title() -> void:
 	var ez: Dictionary = g.get("easy", {})
 	var eb := _button("", func(): pass)
 	var name_it := func() -> void:
-		eb.text = "Easy mode: %s   (your weapons ×%s, you take ÷%s)" % ["ON" if Game.easy else "off", String.num(ez.get("deal", 3)), String.num(ez.get("take", 3))]
+		eb.text = "Easy mode: %s   (your weapons ×%s, you take ÷%s)" % ["ON" if Game.easy else "off", String.num(ez.get("deal", 3), 0 if is_equal_approx(ez.get("deal", 3), roundf(ez.get("deal", 3))) else 1), String.num(ez.get("take", 3), 0 if is_equal_approx(ez.get("take", 3), roundf(ez.get("take", 3))) else 1)]
 	name_it.call()
 	eb.pressed.connect(func():
 		Game.set_easy(not Game.easy)
@@ -420,6 +420,8 @@ func show_title() -> void:
 		_overlay_box.add_child(_button("▸  Random installation", func(): start_requested.emit("gen:" + gid)))
 		var themes: Dictionary = g.get("generator_themes", {})
 		for th in themes:
+			if not themes[th].get("menu", true):          # kept off the title screen; still playable with --level=gen:<generator>:<theme>
+				continue
 			_overlay_box.add_child(_button("▸  Random: %s" % themes[th].get("title", th), func(): start_requested.emit("gen:%s:%s" % [gid, th])))
 	_overlay_box.add_child(_label("", 8, Color.WHITE))
 	_overlay_box.add_child(_label("WASD move · mouse look · click fire · Shift dash · Space jump\nE use · 1-9 / wheel weapons · F lamp · Tab map · Esc pause", 15, Color(0.7, 0.75, 0.75)))
