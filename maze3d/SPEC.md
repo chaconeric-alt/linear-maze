@@ -135,7 +135,26 @@ Navigation knows all of it: `Level.path(from, to)` returns a walkable route over
 
 **The map** shows windows (cyan), ramps (sand) and balconies (lighter). Any enemy the player has had in view shows as a red signal that follows it: a diamond with a ring that pulses, faster and wider once it is hunting.
 
-The generator `rooms` takes `"shapes": {"octagon": 0.4, "balcony": 0.5, "window": 0.35, "max_windows": 10}`: the chance that a large room has its corners cut, that a tall room gets a balcony along its north wall with a ramp up to it (sometimes with a third storey), and that a wall between a room and whatever is next to it becomes a window.
+The generator `rooms` uses all of it. Its `"shapes"` settings (each a chance from 0 to 1 unless noted; 0 switches the feature off):
+
+| Setting | Default | What it does |
+|---|---|---|
+| `fancy` | 0.8 | A room of 5 x 5 or more is eight-sided, round-cornered, L-shaped, cross-shaped, full of piers, or a suite. |
+| `octagon` | 0.4 | A plain large room has its corners cut anyway. |
+| `suite` | 1.0 | Lets a long room be divided in two by a thin wall with an opening and windows; each half has its own style; they share a height, because nothing closes the gap above the lower of two rooms joined by a thin wall. |
+| `close` | 0.5 | A room may sit one wall from its neighbour instead of two, so the wall between can hold windows. |
+| `hall` | true | One or two rooms of 7 x 7 and up. |
+| `tall` | 0.65 | A 7 x 7 room is three storeys rather than two; smaller large rooms less often. |
+| `balcony` | 0.7 | A tall room gets a gallery: along one wall, round two, three or all four, as the room is big enough to carry. A ramp comes up from the floor, off the room's middle line where it can be. |
+| `tiers` | 0.75 | A three-storey room 7 deep gets a second gallery a storey higher, reached by its own ramp from the first. |
+| `window`, `max_windows` | 0.45, 14 | A wall one cell thick with floor both sides becomes an observation window. |
+| `pool`, `max_pools` | 0.3, 3 | A room gets a flooded patch, or is flooded wall to wall. The theme's `fluid` gives the colour; its `swimmers` list says what may be put in it. |
+| `loops` | 2 | Extra corridors between rooms (a number, not a chance). Never a second way into the last room. |
+| `traps` | `{"laser": 2, "shock": 2, "vent": 3}` | Lasers and shock plates in corridors, gas vents in rooms. |
+| `jammed` | 0.08 | A door grinds and sparks. |
+| `ambush` | true | Taking the red card sets off the alarm and spawns two or three of `ambush_actors` (default: the theme's `actors`) in a big room. |
+
+Themes may also give `gallery_actors` (who is put on balconies) and `ambush_text`. Shapes only ever cut a room's corners, so its middle row and column, where corridors arrive, stay open; the card, the weapons and the exit are placed there before any furniture. `tools/gen_check.gd` runs the generator over 40 seeds a theme and counts what it made.
 
 ## 3. Game data
 

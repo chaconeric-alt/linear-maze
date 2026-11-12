@@ -2,7 +2,7 @@
  "id": "havenot",
  "title": "HaveNot",
  "tagline": "The old world could make anything. Go and find out what it left lying around.",
- "version": "0.7.0",
+ "version": "0.8.0",
  "theme": {
   "accent": [
    0.91,
@@ -35,11 +35,6 @@
  ],
  "generator_params": {
   "kit": "agency",
-  "size": [
-   28,
-   24
-  ],
-  "rooms": 9,
   "styles": [
    "lab",
    "machine",
@@ -163,6 +158,48 @@
     "ag_pod",
     "ag_sofa"
    ]
+  },
+  "swimmers": [
+   [
+    "glorexx",
+    3
+   ],
+   [
+    "fouler",
+    1
+   ]
+  ],
+  "gallery_actors": [
+   [
+    "monoid",
+    3
+   ],
+   [
+    "eggbot",
+    2
+   ],
+   [
+    "turret",
+    2
+   ],
+   [
+    "drone",
+    2
+   ],
+   [
+    "defender",
+    2
+   ]
+  ],
+  "fluid": {
+   "level": 0.7,
+   "color": [
+    0.12,
+    0.55,
+    0.35,
+    0.6
+   ],
+   "glow": 0.35
   }
  },
  "start": "deepworks",
@@ -245,7 +282,46 @@
      2
     ]
    ],
-   "boss": "plodder"
+   "boss": "plodder",
+   "swimmers": [
+    [
+     "glorexx",
+     2
+    ],
+    [
+     "fouler",
+     2
+    ]
+   ],
+   "gallery_actors": [
+    [
+     "eggbot",
+     3
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "sphinx",
+     1
+    ],
+    [
+     "defender",
+     2
+    ]
+   ],
+   "fluid": {
+    "level": 0.7,
+    "color": [
+     0.85,
+     0.38,
+     0.05,
+     0.7
+    ],
+    "glow": 0.9
+   },
+   "ambush_text": "RED CARD REMOVED. The shift has been called in."
   },
   "bunker": {
    "title": "The Bunker",
@@ -301,7 +377,42 @@
      1
     ]
    ],
-   "boss": "sphinx"
+   "boss": "sphinx",
+   "swimmers": [
+    [
+     "glorexx",
+     1
+    ]
+   ],
+   "gallery_actors": [
+    [
+     "turret",
+     3
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "defender",
+     2
+    ],
+    [
+     "sphinx",
+     1
+    ]
+   ],
+   "fluid": {
+    "level": 0.7,
+    "color": [
+     0.08,
+     0.2,
+     0.28,
+     0.75
+    ],
+    "glow": 0.1
+   },
+   "ambush_text": "RED CARD REMOVED. Stand to. Stand to."
   },
   "crypt": {
    "title": "The Crypt",
@@ -353,17 +464,59 @@
      3
     ]
    ],
-   "boss": "princess"
+   "boss": "princess",
+   "swimmers": [
+    [
+     "fouler",
+     2
+    ],
+    [
+     "glorexx",
+     1
+    ]
+   ],
+   "gallery_actors": [
+    [
+     "mourner",
+     3
+    ],
+    [
+     "dancer",
+     2
+    ],
+    [
+     "roach",
+     2
+    ]
+   ],
+   "fluid": {
+    "level": 0.7,
+    "color": [
+     0.45,
+     0.1,
+     0.6,
+     0.7
+    ],
+    "glow": 0.6
+   },
+   "ambush_text": "The card was not yours to take. They have noticed.",
+   "shapes": {
+    "traps": {
+     "laser": 0,
+     "shock": 0,
+     "vent": 3
+    }
+   }
   },
   "deep": {
    "title": "All the way down",
    "place": "Deep Installation",
    "kit": "omni",
    "size": [
-    34,
-    28
+    38,
+    30
    ],
-   "rooms": 12,
+   "rooms": 13,
    "corridor": "corridor",
    "styles": [
     "lab",
@@ -508,7 +661,17 @@
      1
     ]
    ],
-   "boss": "princess"
+   "boss": "princess",
+   "swimmers": [
+    [
+     "glorexx",
+     2
+    ],
+    [
+     "fouler",
+     2
+    ]
+   ]
   }
  }
 }

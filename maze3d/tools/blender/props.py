@@ -195,8 +195,11 @@ def door_iris(seed=5):
         m.cyl(0.1, 0.2, at=(mc[0], 0, cz + mc[1]), rot=(90, 0, 0), mat='accent', seg=6)
         m.cyl(0.09, 0.26, at=(px, 0, pz), rot=(90, 0, 0), mat='hull_dark', seg=10)
         objs.append(m.to_object(origin=(px, 0, pz)))
-        parts['blade%d' % i] = dict(rot_axis=(0, 1, 0), rot_deg=-58)
-    return dict(objects=objs, meta=dict(type='door', time=0.5, sound='door_iris', parts=parts))
+        # each blade is a slice of pie: it draws straight back along its own middle line into the frame, turning a
+        # little and shrinking as it goes, so nothing is left in the opening and nothing pokes out of the wall
+        am = (a + a2) / 2
+        parts['blade%d' % i] = dict(move=(1.55 * math.cos(am), 0, 1.55 * math.sin(am)), rot_axis=(0, 1, 0), rot_deg=-24, scale=0.62, delay=0.04 * i)
+    return dict(objects=objs, meta=dict(type='door', time=0.55, sound='door_iris', parts=parts))
 
 
 def door_vault(seed=6):

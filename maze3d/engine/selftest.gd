@@ -267,7 +267,7 @@ func run(m: Node) -> void:
 	for n in level.get_children():
 		if is_instance_valid(n) and n is Pickup and not n.is_queued_for_deletion():
 			left += 1
-			print("INFO  not taken: ", n.d.get("id"))
+			print("INFO  not taken: ", n.d.get("id"), " at ", level.cell_of(n.global_position), " ", n.global_position)
 	_say(left == 0, "pickups are taken (%d visits, %d left)" % [got, left])
 	_say(Game.stats["treasure"] == Game.stats["treasure_total"], "all treasure counted (%d of %d, %d cr)" % [Game.stats["treasure"], Game.stats["treasure_total"], Game.credits])
 	# --- doors

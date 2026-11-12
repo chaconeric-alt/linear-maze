@@ -354,56 +354,98 @@
    "model": "models/door_iris.glb",
    "parts": {
     "blade0": {
+     "delay": 0.0,
+     "move": [
+      1.3423,
+      0.775,
+      0
+     ],
      "rot_axis": [
       0,
       0,
       -1
      ],
-     "rot_deg": -58
+     "rot_deg": -24,
+     "scale": 0.62
     },
     "blade1": {
+     "delay": 0.04,
+     "move": [
+      0.0,
+      1.55,
+      0
+     ],
      "rot_axis": [
       0,
       0,
       -1
      ],
-     "rot_deg": -58
+     "rot_deg": -24,
+     "scale": 0.62
     },
     "blade2": {
+     "delay": 0.08,
+     "move": [
+      -1.3423,
+      0.775,
+      0
+     ],
      "rot_axis": [
       0,
       0,
       -1
      ],
-     "rot_deg": -58
+     "rot_deg": -24,
+     "scale": 0.62
     },
     "blade3": {
+     "delay": 0.12,
+     "move": [
+      -1.3423,
+      -0.775,
+      0
+     ],
      "rot_axis": [
       0,
       0,
       -1
      ],
-     "rot_deg": -58
+     "rot_deg": -24,
+     "scale": 0.62
     },
     "blade4": {
+     "delay": 0.16,
+     "move": [
+      -0.0,
+      -1.55,
+      0
+     ],
      "rot_axis": [
       0,
       0,
       -1
      ],
-     "rot_deg": -58
+     "rot_deg": -24,
+     "scale": 0.62
     },
     "blade5": {
+     "delay": 0.2,
+     "move": [
+      1.3423,
+      -0.775,
+      0
+     ],
      "rot_axis": [
       0,
       0,
       -1
      ],
-     "rot_deg": -58
+     "rot_deg": -24,
+     "scale": 0.62
     }
    },
    "sound": "door_iris",
-   "time": 0.5,
+   "time": 0.55,
    "type": "door"
   },
   "door_jaw": {

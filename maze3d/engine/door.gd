@@ -1,6 +1,6 @@
 extends Node3D
 ## Door - any kit model of type "door". The model's moving parts and how they move are in the
-## kit (kit.json / generated.json: parts -> move, rot_axis, rot_deg, delay), so a new kind of
+## kit (kit.json / generated.json: parts -> move, rot_axis, rot_deg, scale, delay), so a new kind of
 ## door is a new model plus a few numbers. Opens for whoever comes near unless locked or sealed.
 class_name Door
 
@@ -171,5 +171,7 @@ func _process(dt: float) -> void:
 		var xf := rest
 		if spec.has("rot_axis"):
 			xf.basis = rest.basis * Basis(LM.vec(spec["rot_axis"]).normalized(), deg_to_rad(spec.get("rot_deg", 0.0)) * k)
+		if spec.has("scale"):                        # the part shrinks as it opens (an iris blade drawing into its slot)
+			xf.basis = xf.basis.scaled_local(Vector3.ONE * lerpf(1.0, spec["scale"], k))
 		xf.origin = rest.origin + LM.vec(spec.get("move")) * k
 		p["n"].transform = xf
