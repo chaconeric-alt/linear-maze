@@ -144,6 +144,63 @@ func run(m: Node) -> void:
 	pl.cam.rotation.z = 0.0
 	Game.over = false
 	_say(level.bad_doors == 0, "every door closes an opening wall to wall (%d do not)" % level.bad_doors)
+	# --- easy mode's E: looking at a thing names that thing (Identify)
+	var named := 0
+	var misnamed := 0
+	var unseen := 0
+	for n in level.get_children():
+		if not is_instance_valid(n) or not (n is Prop or n is Pickup or n is Door or n is Trap or (n is Enemy and n._surf == 0 and not n.dead)):
+			continue
+		var want := ""
+		if n is Prop:
+			want = "prop \"%s\"" % n.e["prop"]
+		elif n is Pickup:
+			want = "item \"%s\"" % n.d.get("item", "?")
+		elif n is Door:
+			want = "door \"%s\"" % level.cell(n.cell_pos.x, n.cell_pos.y, n.storey).get("entry", {}).get("door", "?")
+		elif n is Trap:
+			want = "trap \"%s\"" % n.kind
+		else:
+			want = "monster \"%s\"" % str(LM.defs["actors"].find_key(n.d))
+		var mid: Vector3 = Identify._middle(n) if not n is Enemy else n.global_position + Vector3(0, n.d.get("center", n.d.get("height", 1.6) / 2.0), 0)
+		var got_it := false
+		var could := false
+		for dv in [Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 0, -1), Vector3(-1, 0, 0), Vector3(0.7, 0, 0.7), Vector3(-0.7, 0, 0.7), Vector3(0.7, 0, -0.7), Vector3(-0.7, 0, -0.7)]:
+			var spot: Vector3 = mid + dv * 2.6
+			var sc := level.cell_of(spot)
+			var st := _storey(mid)
+			if not level.open_s(sc.x, sc.y, st) or level.cell_s(sc.x, sc.y, st).get("door", "") != "":
+				continue
+			spot.y = level.floor_y(Vector3(spot.x, st * level.H + 0.5, spot.z)) + 0.05
+			if absf(spot.y + Player.EYE - mid.y) > 2.5:
+				continue
+			could = true
+			pl.global_position = spot
+			pl.velocity = Vector3.ZERO
+			pl.force_update_transform()
+			_look_at(mid)
+			pl.head.force_update_transform()
+			var seen: Dictionary = Identify.look(pl)
+			if seen.get("detail", "").contains(want):
+				got_it = true
+				break
+		if got_it:
+			named += 1
+		elif could:
+			misnamed += 1
+			print("INFO  E did not name ", want, " at ", level.cell_of(n.global_position))
+		else:
+			unseen += 1
+	_say(named > 0 and misnamed * 20 <= named, "easy mode's E names what you look at (%d things named, %d not, %d with nowhere to stand)" % [named, misnamed, unseen])
+	pl.global_position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
+	pl.force_update_transform()
+	var tiles_ok := 0
+	for look in [[Vector3(0.3, -1, 0.2), "floor tile"], [Vector3(0.2, 1, 0.3), "ceiling tile"], [Vector3(1, 0.05, 0.3), "tile"], [Vector3(-0.3, 0.05, 1), "tile"]]:
+		_look_at(pl.cam.global_position + (look[0] as Vector3).normalized() * 3.0)
+		pl.head.force_update_transform()
+		if Identify.look(pl).get("detail", "").contains(look[1]):
+			tiles_ok += 1
+	_say(tiles_ok == 4, "  and names floor, ceiling and wall tiles (%d of 4 looks)" % tiles_ok)
 	# --- scanner arches: walk through each one in a state it should react to
 	for n in level.get_children():
 		if is_instance_valid(n) and n is Prop and not n._walk.is_empty():
@@ -217,6 +274,11 @@ func run(m: Node) -> void:
 			_look_at(n.global_position + Vector3(0, 1.2, 0))
 			await _frames(3)
 			_say(pl.focus == n, "a cache in front of you is offered for use")
+			var was_easy := Game.easy
+			Game.easy = true
+			var told: Array = []
+			var hear := func(title: String, _detail: String): told.append(title)
+			Game.identified.connect(hear)
 			for k in [KEY_F, KEY_E]:
 				var ev := InputEventKey.new()
 				ev.keycode = k
@@ -225,6 +287,9 @@ func run(m: Node) -> void:
 				Input.parse_input_event(ev)
 				await _frames(3)
 			_say(n.used > 0, "pressing E opens it")
+			_say(not told.is_empty(), "  and in easy mode says what it is (%s)" % (told[0] if not told.is_empty() else "nothing"))
+			Game.identified.disconnect(hear)
+			Game.easy = was_easy
 			_say(not pl.lamp.visible, "pressing F switches the lamp")
 			break
 	# --- containers, stations, terminals

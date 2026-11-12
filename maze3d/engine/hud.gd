@@ -17,6 +17,10 @@ var _credits: Label
 var _keys: HBoxContainer
 var _objective: Label
 var _prompt: Label
+var _ident: VBoxContainer
+var _ident_title: Label
+var _ident_detail: Label
+var _ident_tw: Tween
 var _toasts: VBoxContainer
 var _vignette: ColorRect
 var _cross: Control
@@ -114,6 +118,22 @@ func _ready() -> void:
 	_prompt.custom_minimum_size = Vector2(600, 0)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_prompt)
+	# easy mode: what E said the player is looking at
+	_ident = VBoxContainer.new()
+	_ident.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_ident.position = Vector2(-460, -190)
+	_ident.custom_minimum_size = Vector2(920, 0)
+	_ident.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ident.visible = false
+	_ident_title = _label("", 24, accent)
+	_ident_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ident.add_child(_ident_title)
+	_ident_detail = _label("", 15, Color(0.92, 0.92, 0.88))
+	_ident_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ident_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_ident.add_child(_ident_detail)
+	root.add_child(_ident)
+	Game.identified.connect(_on_identified)
 	# terminal panel
 	_panel = PanelContainer.new()
 	_panel.set_anchors_preset(Control.PRESET_CENTER)
@@ -304,6 +324,19 @@ func _draw_map() -> void:
 	_map.draw_rect(Rect2(Vector2.ZERO, size), Color(accent.r, accent.g, accent.b, 0.6), false, 1.0)
 	if lv.floors.size() > 1:                           # which floor: B1 below, L0 the main one, L1 above
 		_map.draw_string(ThemeDB.fallback_font, Vector2(6, 16), ("B%d" % -pf) if pf < 0 else ("L%d" % pf), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, accent)
+
+
+func _on_identified(title: String, detail: String) -> void:
+	_ident_title.text = title
+	_ident_detail.text = detail
+	_ident.visible = true
+	_ident.modulate.a = 1.0
+	if _ident_tw:
+		_ident_tw.kill()
+	_ident_tw = create_tween()
+	_ident_tw.tween_interval(9.0)
+	_ident_tw.tween_property(_ident, "modulate:a", 0.0, 0.8)
+	_ident_tw.tween_callback(func(): _ident.visible = false)
 
 
 func _on_toast(text: String, kind: String) -> void:

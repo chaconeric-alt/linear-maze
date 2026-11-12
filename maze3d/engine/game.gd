@@ -4,6 +4,7 @@ extends Node
 
 signal flag_set(name: String)
 signal toast(text: String, kind: String)
+signal identified(title: String, detail: String)      # easy mode: E named what the player is looking at
 signal changed            # something the HUD shows changed
 signal ended(info: Dictionary)
 

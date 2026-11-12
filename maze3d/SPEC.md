@@ -236,7 +236,7 @@ It gathers itself for `windup` (the tell: the first `clip_windup` seconds of the
 
 `perch`: how often one starts a level waiting on a wall (head down) or the ceiling; a level entry can say `"perch": "wall" | "ceiling" | "floor"`. Awake on a wall it runs up to the ceiling or down to the floor; on the ceiling it follows the route it would have walked and lets go above the player (`drop_at`, metres), at a door, or where the ceiling changes height. `chance`: how often, hunting on foot and still `min_dist` away, it takes to the nearest wall instead. Shooting one usually knocks it off. With a pounce attack it will jump at the player straight off the wall. The walk clip is used on every surface; `off` is how far from the surface its feet are.
 
-**A head that turns on its own** (`aim`): `"aim": {"yaw_bone": "turret", "pitch_bone": "gun", "speed": 5, "pitch": [-30, 35], "body_turn": 0.25}`. `"muzzle": [x, up, forward]` in `aim` is the barrel's tip in the model's own units at rest: shots leave from there, wherever the turret has swung it (without it they leave from the middle of the head). Once awake, `yaw_bone` is turned about the vertical to face the player whichever way the body is going (all the way round) and `pitch_bone` tips to their height; shots leave toward the player, not along the body. The body turns at `body_turn` of its usual rate, so it marches one way and looks another. Clips must not key those two bones, except the ones played while it is not aiming (dormant, startle, die).
+**A head that turns on its own** (`aim`): `"aim": {"yaw_bone": "turret", "pitch_bone": "gun", "speed": 5, "pitch": [-30, 35], "body_turn": 0.25}`. `"muzzle": [x, up, forward]` in `aim` is the barrel's tip in the model's own units at rest: shots leave from there, wherever the turret has swung it (without it they leave from the middle of the head). Once awake, `yaw_bone` is turned about the vertical to face the player whichever way the body is going (all the way round) and `pitch_bone` tips to their height; shots leave along the barrel, not along the body. The body turns at `body_turn` of its usual rate, so it marches one way and looks another. The engine owns those bones: when the monster is set up it takes their rotation out of every clip except the ones played while it is not aiming (the dormant clip, startle, die, and any listed in `"keyed": [..]`), because an exporter that bakes every bone into every clip would otherwise drag the turret back to the clip's pose while the clip plays and the gun would be drawn pointing somewhere it is not firing. A gun's slide (recoil) in the attack clip is kept. **It fires where the gun points:** no ranged attack starts until the turret is within `aligned` degrees of the player (6 unless given); if the player moves off the gun during the wind-up the shot is held for up to `hold` seconds (1.5) until the gun is back on them; the shot's direction is kept within `aligned` degrees of the barrel; and a turret whose `muzzle` sits to one side of the pivot turns until the barrel itself, not the pivot, is on the player.
 
 **Powered down** (`dormant_clip`, with `wake_sight`, `hearing`, `startle_time`): it plays the dormant clip until the player comes within `wake_sight` metres in view (from any side) or it hears or feels something, then plays `startle` for `startle_time` before it acts. `sight` is how far it sees once awake.
 
@@ -408,6 +408,15 @@ For play-testing. `game.json` `"easy": {"deal": 3, "take": 3}`: with easy mode o
 before armour. Switched by the button on the title screen, which is remembered between sessions (`user://maze3d.cfg`),
 or for one run with `--easy` (`--easy=0` forces it off). The health readout shows EASY while it is on. Monsters'
 health, pickups and the self-test are untouched.
+
+**What is that? (E).** With easy mode on, E first names whatever is under the crosshair (at any distance), then does
+what E always does. The HUD shows it for a few seconds, bottom centre, and the log gets a line starting `IDENT`: the
+name, then the id it goes by in the files, the kit it comes from, its state, and the cell, room and style it is in.
+For example `Fabricator` / `prop "fabricator" · kit hightech · furniture (does nothing) · cell 12,7 · room "lab" ·
+style lab`, or `Wall: Wall Hex` / `wall tile "wall_hex" · kit hightech · cell 3,4 · style lab`. It knows monsters
+(living or dead), props, doors (open or shut), windows, pickups, traps, pits, lifts, puddles, signs, and every wall,
+floor and ceiling tile (`Level.tiles_at` records which tile was laid where). Plain engine-built surfaces (decks, slabs,
+rails) say so. `engine/identify.gd`; the self-test looks at every thing in the level and checks the name.
 
 A generator theme with `"menu": false` is left off the title screen (the Works, the Bunker and the Crypt are; "All the way
 down" mixes all of them). It can still be played with `--level=gen:rooms:<theme>`.

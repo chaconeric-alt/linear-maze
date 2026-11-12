@@ -197,8 +197,14 @@ func _unhandled_input(ev: InputEvent) -> void:
 	elif ev is InputEventKey and ev.pressed and not ev.echo:
 		if ev.keycode >= KEY_1 and ev.keycode <= KEY_9 and ev.keycode - KEY_1 < weapons.size():
 			_equip(ev.keycode - KEY_1)
-		elif ev.is_action("use") and focus and is_instance_valid(focus):
-			focus.use(self)
+		elif ev.is_action("use"):
+			if Game.easy:                                # easy mode: E first says what you are looking at
+				var seen := Identify.look(self)
+				if not seen.is_empty():
+					print("IDENT  %s  |  %s" % [seen["title"], seen["detail"]])
+					Game.identified.emit(seen["title"], seen["detail"])
+			if focus and is_instance_valid(focus):
+				focus.use(self)
 		elif ev.is_action("flashlight"):
 			lamp.visible = not lamp.visible
 			LM.sound("click")

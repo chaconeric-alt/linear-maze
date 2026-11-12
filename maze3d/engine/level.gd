@@ -30,6 +30,7 @@ var doors: Dictionary = {}       # Vector2i -> Door
 var rooms: Array = []
 var nav := AStar3D.new()          # points: ground, deck 1, deck 2 and ramp, per cell
 var start_level := 0
+var tiles_at: Dictionary = {}    # Vector2i -> [[tile id, where it was laid], ..]: which tile is where (Identify)
 var _boxes: Array = []           # unit cubes that make decks, ramps and railings
 var _rails: Array = []
 var _lamps: Array = []
@@ -543,6 +544,9 @@ func _add(batches: Dictionary, tile: String, xf: Transform3D, x: int, y: int, ro
 	if not batches.has(key):
 		batches[key] = []
 	batches[key].append(xf)
+	if not tiles_at.has(Vector2i(x, y)):
+		tiles_at[Vector2i(x, y)] = []
+	tiles_at[Vector2i(x, y)].append([tile, xf.origin])
 	var meta: Dictionary = kit["tiles"].get(tile, {})
 	if meta.has("light"):
 		var li: Dictionary = _lights_for(st, room)

@@ -68,6 +68,7 @@ var _aim_want := 0.0              # where the turret would point if it had got t
 var _aim_k := -1                  # a second bone that turns on its own, faster (a sensor head)
 var _lead_yaw := 0.0
 var _aim_pitch := 0.0
+var _atk_hold := 0.0              # how long this shot has been held back, waiting for the gun to come round
 var _wet := false                 # in fluid
 var _gait_t := 0.0
 var _gait_go := true
@@ -119,6 +120,7 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 			_aim_i = _skel.find_bone(d["aim"].get("yaw_bone", ""))
 			_aim_j = _skel.find_bone(d["aim"].get("pitch_bone", ""))
 			_aim_k = _skel.find_bone(d["aim"].get("lead_bone", ""))
+			_aim_own()
 	if d.has("screen"):
 		_make_face()
 	if d.has("jelly"):
@@ -300,8 +302,12 @@ func _physics_process(dt: float) -> void:
 		_atk_t += dt
 		_turn_to(flat, dt, 6.0)
 		if not _atk_done and _atk_t >= _atk.get("windup", 0.3):
-			_strike(pl, dist)
-		if _atk_t >= _atk.get("windup", 0.3) + _atk.get("recover", 0.35):
+			if _aim_i >= 0 and _atk.get("type", "melee") == "ranged" and _aim_off() > deg_to_rad(d["aim"].get("aligned", 6.0)) \
+					and _atk_t < _atk.get("windup", 0.3) + d["aim"].get("hold", 1.5):
+				_atk_hold += dt                          # they moved: it holds the shot until the gun is on them again
+			else:
+				_strike(pl, dist)
+		if _atk_t >= _atk.get("windup", 0.3) + _atk.get("recover", 0.35) + _atk_hold:
 			_atk = null
 		if not _atk or not _atk.get("moving", false):
 			velocity.x = move_toward(velocity.x, 0, 30 * dt)
@@ -317,8 +323,7 @@ func _physics_process(dt: float) -> void:
 				continue
 			if (not _see or not _shot) and a.get("type", "melee") != "melee":
 				continue
-			if _aim_i >= 0 and d["aim"].has("aligned") and a.get("type", "melee") != "melee" \
-					and absf(wrapf(_aim_want - _aim_yaw, -PI, PI)) > deg_to_rad(d["aim"]["aligned"]):
+			if _aim_i >= 0 and a.get("type", "melee") != "melee" and _aim_off() > deg_to_rad(d["aim"].get("aligned", 6.0)):
 				continue                                 # the gun has not come round to them yet
 			if a.get("type", "melee") == "pounce":
 				if _surf == 0 and not is_on_floor() or _surf >= 3 or dist < a.get("min_range", 3.0):
@@ -329,6 +334,7 @@ func _physics_process(dt: float) -> void:
 				continue
 			_atk = a
 			_atk_t = 0.0
+			_atk_hold = 0.0
 			_atk_done = false
 			_burst = int(a.get("burst", 1))
 			_cool[i] = a.get("cooldown", 1.5) * randf_range(0.85, 1.2)
@@ -523,6 +529,12 @@ func _strike(pl: Node3D, dist: float) -> void:
 				from = _skel.global_transform * (_skel.get_bone_global_pose(mb) * (_skel.get_bone_global_rest(mb).affine_inverse() * Vector3(mp[0], mp[1], mp[2])))
 			var aim: Vector3 = pl.global_position + Vector3(0, 1.1, 0) + pl.velocity * a.get("lead", 0.0) * (from.distance_to(pl.global_position) / 30.0)
 			var dir: Vector3 = (aim - from).normalized()
+			if _aim_i >= 0:                              # a shot leaves along the barrel: it cannot go where the gun is not pointing
+				var bore := _aim_bore()
+				var lim: float = deg_to_rad(d["aim"].get("aligned", 6.0))
+				var off := bore.angle_to(dir)
+				if off > lim:
+					dir = bore.slerp(dir, lim / off).normalized()
 			var sp: float = deg_to_rad(a.get("spread", 2.0))
 			dir = dir.rotated(Vector3.UP, randf_range(-sp, sp)).rotated(global_transform.basis.x, randf_range(-sp, sp))
 			Projectile.launch(level, a.get("projectile", "bolt"), from, dir, a.get("damage", 8.0), self, false)
@@ -923,13 +935,18 @@ func _gait(dt: float) -> float:
 ## player on its own and faster, like a sensor head; "muzzle": [x, up, forward] on the gun (or turret) bone.
 ## Once awake, yaw_bone is turned about the vertical to face the player whichever way the body is going (all the way
 ## round), and pitch_bone tips to their height. The body turns at body_turn of its usual rate. Clips must not key those
-## two bones, except the ones played while it is not aiming (dormant, startle, die).
+## two bones, except the ones played while it is not aiming (dormant, startle, die): _aim_own takes their turning out of
+## the rest. It will not start a shot until the turret is within "aligned" degrees (6 unless given), holds a shot that
+## is due for up to "hold" seconds (1.5) if they have moved off the gun, and the shot leaves along the barrel.
 func _aim_tick(dt: float, pl: Node3D) -> void:
 	var a: Dictionary = d["aim"]
 	var sb := _skel.global_transform.basis.orthonormalized()
 	var to: Vector3 = sb.inverse() * (pl.global_position + Vector3(0, 1.0, 0) - eye())
 	var k: float = clamp(a.get("speed", 5.0) * dt, 0.0, 1.0)
 	_aim_want = atan2(to.x, to.z)
+	if a.has("muzzle"):                              # the barrel sits to one side of the pivot: turn until the barrel, not the pivot, is on them
+		var side: float = a["muzzle"][0] * vis.scale.x
+		_aim_want -= asin(clampf(side / maxf(0.5, Vector2(to.x, to.z).length()), -0.6, 0.6))
 	if a.has("rate"):                                # heavy: it comes round at a steady rate (degrees a second), however far it has to go
 		_aim_yaw += clampf(wrapf(_aim_want - _aim_yaw, -PI, PI), -deg_to_rad(a["rate"]) * dt, deg_to_rad(a["rate"]) * dt)
 	else:
@@ -946,6 +963,41 @@ func _aim_tick(dt: float, pl: Node3D) -> void:
 		_aim_pitch = lerp(_aim_pitch, want, k)
 		var ax2: Vector3 = (_skel.get_bone_global_rest(_aim_j).basis.orthonormalized().inverse() * Vector3.RIGHT).normalized()
 		_skel.set_bone_pose_rotation(_aim_j, _skel.get_bone_rest(_aim_j).basis.get_rotation_quaternion() * Quaternion(ax2, -_aim_pitch))
+
+
+## How far the turret still has to turn to be on the player (radians).
+func _aim_off() -> float:
+	return absf(wrapf(_aim_want - _aim_yaw, -PI, PI))
+
+
+## The way the barrel points, in the world.
+func _aim_bore() -> Vector3:
+	var mb: int = _aim_j if _aim_j >= 0 else _aim_i
+	return (_skel.global_transform.basis.orthonormalized() * ((_skel.get_bone_global_pose(mb).basis * _skel.get_bone_global_rest(mb).basis.inverse()).orthonormalized() * Vector3(0, 0, 1))).normalized()
+
+
+## The engine turns the aim bones, so no clip may turn them too: a clip that keys them (exporters bake every bone into
+## every clip) would drag the turret back to where the clip has it while the clip plays, and the shot would leave from a
+## gun that is drawn pointing somewhere else. Their turning is taken out of every clip except the ones played while it
+## is not aiming: the dormant clip, startle, die, and any named in "aim": {"keyed": [..]}. Sliding (recoil) is left in.
+func _aim_own() -> void:
+	if anim == null:
+		return
+	var keep: Array = [d.get("dormant_clip", "dormant"), "startle", "die"] + d["aim"].get("keyed", [])
+	for i in keep.size():
+		keep[i] = d.get("clips", {}).get(keep[i], keep[i])
+	var bones: Array = []
+	for b in [_aim_i, _aim_j, _aim_k]:
+		if b >= 0:
+			bones.append(_skel.get_bone_name(b))
+	for nm in anim.get_animation_list():
+		if keep.has(String(nm)):
+			continue
+		var an := anim.get_animation(nm)
+		for t in range(an.get_track_count() - 1, -1, -1):
+			if an.track_get_type(t) == Animation.TYPE_ROTATION_3D and an.track_get_path(t).get_subname_count() > 0 \
+					and bones.has(String(an.track_get_path(t).get_subname(0))):
+				an.remove_track(t)
 
 
 # ------------------------------------------------------------------ a screen for a face (defs: "screen")
