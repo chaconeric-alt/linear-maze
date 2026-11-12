@@ -54,6 +54,9 @@ var _skel: Skeleton3D
 var _aim_i := -1                  # the bone that turns to face the player (a turret)
 var _aim_j := -1                  # the bone that tips up and down (its gun)
 var _aim_yaw := 0.0
+var _aim_want := 0.0              # where the turret would point if it had got there
+var _aim_k := -1                  # a second bone that turns on its own, faster (a sensor head)
+var _lead_yaw := 0.0
 var _aim_pitch := 0.0
 var _wet := false                 # in fluid
 var _gait_t := 0.0
@@ -104,6 +107,7 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 		if _skel:
 			_aim_i = _skel.find_bone(d["aim"].get("yaw_bone", ""))
 			_aim_j = _skel.find_bone(d["aim"].get("pitch_bone", ""))
+			_aim_k = _skel.find_bone(d["aim"].get("lead_bone", ""))
 	if d.has("screen"):
 		_make_face()
 	if d.has("jelly"):
@@ -285,6 +289,9 @@ func _physics_process(dt: float) -> void:
 				continue
 			if (not _see or not _shot) and a.get("type", "melee") != "melee":
 				continue
+			if _aim_i >= 0 and d["aim"].has("aligned") and a.get("type", "melee") != "melee" \
+					and absf(wrapf(_aim_want - _aim_yaw, -PI, PI)) > deg_to_rad(d["aim"]["aligned"]):
+				continue                                 # the gun has not come round to them yet
 			if a.get("type", "melee") == "pounce":
 				if _surf == 0 and not is_on_floor() or _surf >= 3 or dist < a.get("min_range", 3.0):
 					continue
@@ -856,6 +863,9 @@ func _gait(dt: float) -> float:
 
 # ------------------------------------------------------------------ a head that turns on its own (defs: "aim")
 ## "aim": {"yaw_bone": "turret", "pitch_bone": "gun", "speed": 5, "pitch": [-30, 35], "body_turn": 0.25}
+## Also: "rate": 70 (degrees a second, instead of speed: a heavy turret), "aligned": 10 (it will not fire until it points
+## within that many degrees), "lead_bone" + "lead_speed" (+ "lead_offset" degrees): a second part that turns to the
+## player on its own and faster, like a sensor head; "muzzle": [x, up, forward] on the gun (or turret) bone.
 ## Once awake, yaw_bone is turned about the vertical to face the player whichever way the body is going (all the way
 ## round), and pitch_bone tips to their height. The body turns at body_turn of its usual rate. Clips must not key those
 ## two bones, except the ones played while it is not aiming (dormant, startle, die).
@@ -864,7 +874,15 @@ func _aim_tick(dt: float, pl: Node3D) -> void:
 	var sb := _skel.global_transform.basis.orthonormalized()
 	var to: Vector3 = sb.inverse() * (pl.global_position + Vector3(0, 1.0, 0) - eye())
 	var k: float = clamp(a.get("speed", 5.0) * dt, 0.0, 1.0)
-	_aim_yaw = lerp_angle(_aim_yaw, atan2(to.x, to.z), k)
+	_aim_want = atan2(to.x, to.z)
+	if a.has("rate"):                                # heavy: it comes round at a steady rate (degrees a second), however far it has to go
+		_aim_yaw += clampf(wrapf(_aim_want - _aim_yaw, -PI, PI), -deg_to_rad(a["rate"]) * dt, deg_to_rad(a["rate"]) * dt)
+	else:
+		_aim_yaw = lerp_angle(_aim_yaw, _aim_want, k)
+	if _aim_k >= 0:                                  # the light part gets there first
+		_lead_yaw = lerp_angle(_lead_yaw, _aim_want + deg_to_rad(a.get("lead_offset", 0.0)), clamp(a.get("lead_speed", 7.0) * dt, 0.0, 1.0))
+		var axk: Vector3 = (_skel.get_bone_global_rest(_aim_k).basis.orthonormalized().inverse() * Vector3.UP).normalized()
+		_skel.set_bone_pose_rotation(_aim_k, _skel.get_bone_rest(_aim_k).basis.get_rotation_quaternion() * Quaternion(axk, _lead_yaw))
 	var axis: Vector3 = (_skel.get_bone_global_rest(_aim_i).basis.orthonormalized().inverse() * Vector3.UP).normalized()
 	_skel.set_bone_pose_rotation(_aim_i, _skel.get_bone_rest(_aim_i).basis.get_rotation_quaternion() * Quaternion(axis, _aim_yaw))
 	if _aim_j >= 0:

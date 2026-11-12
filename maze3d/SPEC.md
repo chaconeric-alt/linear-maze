@@ -407,3 +407,19 @@ health, pickups and the self-test are untouched.
 
 A generator theme with `"menu": false` is left off the title screen (the Works, the Bunker and the Crypt are; "All the way
 down" mixes all of them). It can still be played with `--level=gen:rooms:<theme>`.
+
+
+## Turrets in sections (the Sphinx Gun)
+
+`aim` takes four more keys, for a machine whose parts come round at different speeds:
+
+- `"rate": 75`: the turret bone turns at a steady number of degrees a second instead of easing in (`speed`). Heavy.
+- `"aligned": 9`: no ranged attack starts until the turret points within that many degrees of the player.
+- `"lead_bone": "apex"`, `"lead_speed": 7` (and `"lead_offset"` in degrees if its face is not its front): a second bone that
+  turns to the player on its own, faster. It must not be a child of the turret bone.
+- `"body_turn": 0`: the body never turns at all.
+
+`tools/blender/adopt_sphinx.py` shows the rig that goes with it: `base > lift_mid > mid` and `base > lift_apex > apex`. Clips
+only ever key the two `lift_` bones (up, down, knocks); the engine only ever turns `mid` and `apex`; so neither undoes the
+other. The file as delivered is the machine raised; `dormant` holds both sections down, closing the gaps, and `startle`
+raises them.

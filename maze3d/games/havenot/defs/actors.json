@@ -703,20 +703,20 @@
   },
   "sphinx": {
    "name": "Sphinx Gun",
-   "model": "actors/sphinx.glb",
+   "model": "actors/sphinx_tripo.glb",
    "hp": 160,
    "armor": 0.3,
    "speed": 0,
-   "radius": 0.9,
+   "radius": 1.05,
    "height": 2.6,
-   "eye": 2.2,
+   "eye": 2.25,
    "mass": 80,
    "sight": 32,
    "behavior": "turret",
    "blood": [
-    1.0,
-    0.8,
-    0.3
+    0.7,
+    0.3,
+    1.0
    ],
    "takes": {
     "blast": 1.5
@@ -724,13 +724,13 @@
    "attacks": [
     {
      "type": "ranged",
-     "projectile": "bolt",
+     "projectile": "dishbolt",
      "damage": 8,
      "windup": 0.6,
      "recover": 0.5,
      "cooldown": 2.2,
      "range": 32,
-     "muzzle": 2.2,
+     "muzzle": 1.5,
      "spread": 1.5,
      "lead": 0.4,
      "sound": "bolt",
@@ -743,9 +743,9 @@
     "INCORRECT"
    ],
    "bark_color": [
-    1.0,
     0.8,
-    0.3
+    0.5,
+    1.0
    ],
    "drops": [
     {
@@ -756,6 +756,25 @@
    "sounds": {
     "alert": "charge",
     "die": "explode"
+   },
+   "own_materials": true,
+   "scale": 2.7,
+   "dormant_clip": "dormant",
+   "startle_time": 1.4,
+   "wake_sight": 14,
+   "hearing": 14,
+   "aim": {
+    "yaw_bone": "mid",
+    "rate": 75,
+    "aligned": 9,
+    "lead_bone": "apex",
+    "lead_speed": 7.0,
+    "body_turn": 0.0,
+    "muzzle": [
+     0.015,
+     0.56,
+     0.33
+    ]
    }
   },
   "plodder": {

@@ -220,6 +220,17 @@
     "kind": "acid",
     "max": 14
    }
+  },
+  "dishbolt": {
+   "speed": 24,
+   "radius": 0.08,
+   "color": [
+    0.7,
+    0.3,
+    1.0
+   ],
+   "light": 1.2,
+   "kind": "energy"
   }
  }
 }
