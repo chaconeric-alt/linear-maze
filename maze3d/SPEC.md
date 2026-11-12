@@ -500,3 +500,7 @@ store room, a sump and a vault underneath reached by a pit and a lift, and a sun
   the floor, for `hold` seconds, hurting them `dps` a second, then throws them. The player cannot move but can look and
   shoot; `break` damage dealt to it during the hold makes it let go and staggers it. `miss_at` is the time in the clip to
   jump to when it grabs nothing, or when it throws.
+- **`"trail"`** on an actor (`prefix`, `lean`, `max`, `stiff`, `damp`, `turn`, `flutter`, `second`): every bone whose name
+  starts with `prefix` hangs from its head and is driven by the engine, not by clips. It streams out behind the thing as
+  it moves, swings wide when it turns, and overshoots and settles when it stops. Bones ending in `_b` are lower lengths
+  and lean further and more loosely (the Mourner's tatters: `tools/blender/adopt_mourner.py`).

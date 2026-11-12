@@ -47,6 +47,8 @@ var _climb_t := 2.0
 var _lounge: Dictionary = {}      # what it is doing instead of its job
 var _puff_t := 2.0
 var _stun := 0.0
+var _trail: Array = []            # hanging things that swing: [bone, rest rotation, to-bone basis, lean, lean speed, factor, seed]
+var _trail_yaw := 0.0
 var _grab_t := 0.0                # how much longer it will hold the player (an attack of "type": "grapple")
 var _grab_tick_t := 0.0
 var _grab_hp := 0.0
@@ -123,6 +125,8 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 		_make_jelly()
 	if d.has("equalizer"):
 		_make_eq()
+	if d.has("trail"):
+		_make_trail()
 	vis.rotation.y = deg_to_rad(d.get("model_yaw", 0.0))      # models from elsewhere do not always face our way
 	vis.position.y = d.get("model_y", 0.0)
 	_climb_t = randf_range(1.0, 3.0)
@@ -215,6 +219,8 @@ func _physics_process(dt: float) -> void:
 		if _flash_t <= 0.0:
 			for m in _meshes:
 				m.material_overlay = null
+	if not _trail.is_empty():
+		_trail_tick(dt)
 	if dead:
 		if _grab_t > 0.0:
 			_let_player_go(false)
@@ -1146,3 +1152,47 @@ func _let_player_go(thrown: bool) -> void:
 	if thrown and anim and a.has("miss_at"):
 		anim.seek(a["miss_at"])
 	_atk = null
+
+
+# ------------------------------------------------------------------ things that hang and swing (defs: "trail")
+## "trail": {"prefix": "tat_", "lean": 9, "max": 58, "stiff": 30, "damp": 5, "turn": 16, "flutter": 4, "second": 1.5}
+## Every bone whose name starts with `prefix` hangs from its head and is left to the engine: it streams out behind the
+## thing as it moves (`lean` degrees for each metre a second), swings wide when it turns (`turn` degrees for each radian
+## a second) and overshoots and settles when it stops (a spring: `stiff`, `damp`). Bones whose names end in "_b" are the
+## lower lengths: they lean `second` times as far again, and more loosely. Clips must not key these bones.
+func _make_trail() -> void:
+	var tr: Dictionary = d["trail"]
+	if _skel == null:
+		return
+	for i in _skel.get_bone_count():
+		var nm := _skel.get_bone_name(i)
+		if nm.begins_with(tr.get("prefix", "tat_")):
+			_trail.append([i, _skel.get_bone_rest(i).basis.get_rotation_quaternion(), _skel.get_bone_global_rest(i).basis.orthonormalized().inverse(),
+				Vector2.ZERO, Vector2.ZERO, tr.get("second", 1.5) if nm.ends_with("_b") else 1.0, randf() * 10.0])
+	_trail_yaw = rotation.y
+
+
+func _trail_tick(dt: float) -> void:
+	var tr: Dictionary = d["trail"]
+	var vl: Vector3 = _skel.global_transform.basis.orthonormalized().inverse() * velocity
+	var spin: float = wrapf(rotation.y - _trail_yaw, -PI, PI) / maxf(dt, 0.001)
+	_trail_yaw = rotation.y
+	var want: Vector2 = Vector2(-vl.x, -vl.z) * float(tr.get("lean", 9.0)) + Vector2(-spin * float(tr.get("turn", 16.0)), 0)
+	var top: float = tr.get("max", 58.0)
+	if want.length() > top:
+		want = want.normalized() * top
+	var t := Time.get_ticks_msec() * 0.001
+	for e2 in _trail:
+		var second: bool = e2[5] > 1.0
+		var k: float = tr.get("stiff", 30.0) * (0.55 if second else 1.0)
+		var goal: Vector2 = want * (e2[5] - 1.0 if second else 1.0)     # a lower length leans that much MORE than the one it hangs from
+		e2[4] += (k * (goal - e2[3]) - tr.get("damp", 5.0) * e2[4]) * dt
+		e2[3] += e2[4] * dt
+		var fl: float = tr.get("flutter", 4.0) * (1.6 if second else 1.0)
+		var show: Vector2 = e2[3] + Vector2(sin(t * 1.7 + e2[6]), sin(t * 1.3 + e2[6] * 2.1)) * fl
+		var h := Vector3(show.x, 0, show.y)
+		var q: Quaternion = e2[1]
+		if h.length() > 0.05:
+			var axis: Vector3 = (e2[2] * h.normalized().cross(Vector3.UP)).normalized()
+			q = q * Quaternion(axis, deg_to_rad(minf(h.length(), top * 1.3)))
+		_skel.set_bone_pose_rotation(e2[0], q)
