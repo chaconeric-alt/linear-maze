@@ -478,7 +478,10 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 			if used.has(c) or actors.is_empty():
 				continue
 			used[c] = true
-			things.append({"at": [c.x, c.y], "actor": _weighted(rng, actors), "face": NAMES[rng.randi() % 4]})
+			var who: String = _weighted(rng, actors)
+			things.append({"at": [c.x, c.y], "actor": who, "face": NAMES[rng.randi() % 4]})
+			if who in p.get("pairs", []):                 # some things come in twos
+				things.append({"at": [c.x, c.y], "actor": who, "offset": [1.5, 0, 1.0], "face": NAMES[rng.randi() % 4]})
 		for k in 1 + int(rng.randf() * 2.0):
 			var c2: Vector2i = free.call()
 			if not used.has(c2) and not treasure.is_empty():

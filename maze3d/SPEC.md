@@ -484,3 +484,19 @@ in. The way in and out is a slope under the surface. A pool over a room on the f
 
 **The Stack** (`tools/levels/stack.py`) shows all of it: two halls with a door between their balconies, a loft over a
 store room, a sump and a vault underneath reached by a pit and a lift, and a sunk pool.
+
+
+## More behaviours (the Dancer, the Hammerhead Gallumper)
+
+- **`"equalizer"`** on an actor (`glow`, `energy`, `idle`, `rate`, `bars`, `lo`, `hi`): for a model with its own textures,
+  whatever is red on it lights up in columns that rise and fall between heights `lo` and `hi` (model units). Low and slow
+  while it idles, full and fast while it attacks (`engine/shaders/equalizer.gdshader`).
+- **`"dance"`** on an actor (`reach`, `speed`, `radius`): before it has noticed anybody it circles the spot it started on,
+  or, with another of its kind within `reach`, the two circle the point between them, always opposite each other. Its
+  idle clip is the dance step. The generator's `"pairs": ["dancer"]` places such actors two at a time.
+- **Attack `"clip"`**: an attack can name its own clip (`"clip": "butt"`); otherwise `attack` is played.
+- **`"type": "grapple"`** attack (`range`, `windup`, `hold`, `damage`, `dps`, `throw`, `throw_damage`, `break`, `reach`,
+  `lift`, `miss_at`): if its arms close on the player at `windup` it holds them `reach` metres in front of it, `lift` off
+  the floor, for `hold` seconds, hurting them `dps` a second, then throws them. The player cannot move but can look and
+  shoot; `break` damage dealt to it during the hold makes it let go and staggers it. `miss_at` is the time in the clip to
+  jump to when it grabs nothing, or when it throws.

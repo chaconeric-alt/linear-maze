@@ -434,6 +434,13 @@
      }
     ]
    }
+  },
+  {
+   "actor": "dancer",
+   "at": [
+    19,
+    3
+   ]
   }
  ],
  "objectives": [

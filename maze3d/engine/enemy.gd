@@ -47,6 +47,13 @@ var _climb_t := 2.0
 var _lounge: Dictionary = {}      # what it is doing instead of its job
 var _puff_t := 2.0
 var _stun := 0.0
+var _grab_t := 0.0                # how much longer it will hold the player (an attack of "type": "grapple")
+var _grab_tick_t := 0.0
+var _grab_hp := 0.0
+var _eq: Array = []               # the materials of an "equalizer" model
+var _eq_drive := 0.0
+var _partner: Node3D = null
+var _partner_t := 0.0
 var _base_y := 0.0                # the height of the floor it last stood on
 var _touch_t := 0.0
 var _face: Label3D                # a screen on the model that shows what it is saying
@@ -114,6 +121,8 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 		_make_face()
 	if d.has("jelly"):
 		_make_jelly()
+	if d.has("equalizer"):
+		_make_eq()
 	vis.rotation.y = deg_to_rad(d.get("model_yaw", 0.0))      # models from elsewhere do not always face our way
 	vis.position.y = d.get("model_y", 0.0)
 	_climb_t = randf_range(1.0, 3.0)
@@ -207,10 +216,18 @@ func _physics_process(dt: float) -> void:
 			for m in _meshes:
 				m.material_overlay = null
 	if dead:
+		if _grab_t > 0.0:
+			_let_player_go(false)
 		if _surf != 0:                               # shot off the wall: what is left comes down
 			_fall_tick(dt, Vector3.ZERO)
 		return
 	_wet = _surf == 0 and level.fluid_at(global_position)
+	if not _eq.is_empty():                           # the lights work as hard as it does
+		var want_drive := 1.0 if _atk != null else (0.75 if awake else 0.3)
+		if absf(want_drive - _eq_drive) > 0.01:
+			_eq_drive = move_toward(_eq_drive, want_drive, dt * 4.0)
+			for m in _eq:
+				m.set_shader_parameter("drive", _eq_drive)
 	if d.has("touch"):                               # its skin burns: being near enough to be brushed is enough
 		_touch_t -= dt
 		if _touch_t <= 0.0:
@@ -266,6 +283,9 @@ func _physics_process(dt: float) -> void:
 	_bark(dt)
 	if _aim_i >= 0:
 		_aim_tick(dt, pl)
+	if _grab_t > 0.0:                                # it has hold of them
+		_grab_tick(dt, pl)
+		return
 	# ---- an attack in progress
 	if _atk != null and _atk.get("type", "") == "pounce":
 		_pounce_tick(dt, pl, to, dist)
@@ -311,7 +331,8 @@ func _physics_process(dt: float) -> void:
 				if not _play("pounce", a.get("clip_windup", 0.3) / maxf(0.05, a.get("windup", 0.4))):
 					_play("attack")
 			else:
-				_play("attack", a.get("anim_speed", 1.0))
+				if not _play(a.get("clip", "attack"), a.get("anim_speed", 1.0)):      # an attack can have a clip of its own
+					_play("attack", a.get("anim_speed", 1.0))
 			if anim:
 				anim.seek(0.0)
 			LM.sound(a.get("windup_sound", ""), global_position)
@@ -433,6 +454,9 @@ func _idle(dt: float) -> void:
 	if _fixed or _surf != 0 or d.get("still", false) or e.get("still", false):
 		_play("idle")
 		return
+	if d.has("dance"):
+		_dance_tick(dt)
+		return
 	_wander_t -= dt
 	if _wander_t <= 0.0:
 		_wander_t = randf_range(2.0, 5.0)
@@ -469,6 +493,19 @@ func _strike(pl: Node3D, dist: float) -> void:
 			LM.sound(a.get("sound", "swing"), global_position)
 			if dist <= a.get("range", 2.0) + 0.7 and level.los(eye(), pl.global_position + Vector3(0, 1.0, 0)):
 				pl.hurt(a.get("damage", 10.0), {"type": a.get("kind", "melee"), "from": global_position, "by": self, "knock": a.get("knock", 3.0)})
+		"grapple":
+			_atk_done = true
+			LM.sound(a.get("sound", "clang"), global_position)
+			if dist <= a.get("range", 2.4) + 0.6 and absf(pl.global_position.y - global_position.y) < 2.0 and pl.held_by == null \
+					and level.los(eye(), pl.global_position + Vector3(0, 1.0, 0)):
+				_grab_t = a.get("hold", 1.6)
+				_grab_tick_t = 0.0
+				_grab_hp = hp
+				pl.held_by = self
+				pl.hurt(a.get("damage", 6.0), {"type": "crush", "by": self})
+				Fx.words(level, eye() + Vector3(0, 0.6, 0), a.get("text", "GOT YOU"), LM.col(d.get("bark_color"), Color(1.0, 0.4, 0.3)))
+			elif anim and a.has("miss_at"):
+				anim.seek(a["miss_at"])                  # closed on nothing: straight to the end of the clip
 		"ranged":
 			var fwd3: Vector3 = global_transform.basis.z
 			if _aim_i >= 0:                              # it fires where the turret points, not where the body does
@@ -994,3 +1031,118 @@ func _make_jelly() -> void:
 			sm.set_shader_parameter("wet", j.get("wet", 0.75))
 			mi.set_surface_override_material(i, sm)
 
+
+
+# ------------------------------------------------------------------ lights like a stereo (defs: "equalizer")
+## "equalizer": {"glow": [1, 0.12, 0.08], "energy": 5, "idle": 0.35, "rate": 7, "bars": 8, "lo": 0.05, "hi": 0.8}
+## For a model that keeps its own textures: whatever is red on it lights up in columns that rise and fall, between
+## heights lo and hi (the model's own units). Low and slow while it idles, full and fast while it attacks.
+func _make_eq() -> void:
+	var q: Dictionary = d["equalizer"]
+	var sh: Shader = load("res://engine/shaders/equalizer.gdshader")
+	for m in _meshes:
+		var mi := m as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var src := mi.get_active_material(i) as BaseMaterial3D
+			var sm := ShaderMaterial.new()
+			sm.shader = sh
+			if src:
+				sm.set_shader_parameter("albedo_tex", src.albedo_texture)
+				if src.normal_enabled and src.normal_texture:
+					sm.set_shader_parameter("normal_tex", src.normal_texture)
+					sm.set_shader_parameter("has_normal", true)
+				if src.roughness_texture:
+					sm.set_shader_parameter("orm_tex", src.roughness_texture)
+					sm.set_shader_parameter("has_orm", true)
+			var g := LM.col(q.get("glow"), Color(1.0, 0.12, 0.08))
+			sm.set_shader_parameter("glow", Vector3(g.r, g.g, g.b))
+			for k in ["energy", "idle", "rate", "bars", "lo", "hi"]:
+				if q.has(k):
+					sm.set_shader_parameter(k, float(q[k]))
+			mi.set_surface_override_material(i, sm)
+			_eq.append(sm)
+
+
+# ------------------------------------------------------------------ dancing (defs: "dance")
+## "dance": {"reach": 9, "speed": 1.6, "radius": 1.6}
+## Before it has noticed anybody it dances: round and round the spot it started on, or, if another of its kind is within
+## reach, the two of them round the point between them, always opposite each other. The idle clip is the dance step.
+func _dance_tick(dt: float) -> void:
+	var dn: Dictionary = d["dance"]
+	_partner_t -= dt
+	if _partner_t <= 0.0:
+		_partner_t = 1.5
+		_partner = null
+		var best: float = dn.get("reach", 9.0)
+		for a in level.actors:
+			if a == self or not is_instance_valid(a) or a.dead or a.awake or a.d.get("name", "") != d.get("name", "") or absf(a._home.y - _home.y) > 2.0:
+				continue
+			var dd: float = a._home.distance_to(_home)
+			if dd < best:
+				best = dd
+				_partner = a
+	var mid := _home
+	var rad: float = dn.get("radius", 1.6) * 0.55
+	var phase := 0.0
+	if _partner != null and is_instance_valid(_partner):
+		mid = (_home + _partner._home) / 2
+		rad = clampf(_home.distance_to(_partner._home) / 2, 1.2, dn.get("radius", 1.6) * 1.5)
+		phase = 0.0 if get_instance_id() < _partner.get_instance_id() else PI
+	var ang: float = Time.get_ticks_msec() * 0.001 * dn.get("speed", 1.6) / rad + phase
+	var spot := mid + Vector3(cos(ang), 0, sin(ang)) * rad
+	var go := Vector3(spot.x - global_position.x, 0, spot.z - global_position.z) * 3.0
+	if go.length() > 3.5:
+		go = go.normalized() * 3.5
+	velocity.x = move_toward(velocity.x, go.x, 12 * dt)
+	velocity.z = move_toward(velocity.z, go.z, 12 * dt)
+	_fall(dt)
+	move_and_slide()
+	_turn_to(Vector3(mid.x - global_position.x, 0, mid.z - global_position.z), dt, 4.0)      # facing its partner, or the middle of its own circle
+	_play("idle")
+
+
+# ------------------------------------------------------------------ grappling (an attack of "type": "grapple")
+## {"type": "grapple", "clip": "grapple", "range": 2.4, "windup": 0.5, "hold": 1.6, "damage": 6, "dps": 12, "throw": 13,
+##  "throw_damage": 10, "break": 40, "miss_at": 2.3, "recover": 0.6, "cooldown": 8}
+## If its arms close on the player (at `windup`) it holds them off the floor in front of it for `hold` seconds, hurting
+## them all the while, and then throws them. The player cannot move but can still look and shoot: doing `break` damage
+## to it before the throw makes it let go. `miss_at` is where in the clip to jump to when it grabs nothing.
+func _grab_tick(dt: float, pl: Node3D) -> void:
+	var a: Dictionary = _atk if _atk != null else {}
+	_grab_t -= dt
+	velocity.x = 0
+	velocity.z = 0
+	_fall(dt)
+	move_and_slide()
+	if not is_instance_valid(pl) or pl.dead or pl.held_by != self:
+		_let_player_go(false)
+		return
+	var hold: Vector3 = global_position + global_transform.basis.z * (d.get("radius", 0.8) + a.get("reach", 0.9)) + Vector3(0, a.get("lift", 0.7), 0)
+	pl.global_position = pl.global_position.lerp(hold, clampf(12 * dt, 0, 1))
+	pl.velocity = Vector3.ZERO
+	_grab_tick_t -= dt
+	if _grab_tick_t <= 0.0:
+		_grab_tick_t = 0.25
+		pl.hurt(a.get("dps", 12.0) * 0.25, {"type": "crush", "by": self})
+	if _grab_hp - hp >= a.get("break", 40.0):           # shot until it lets go
+		_let_player_go(false)
+		_stun = 0.9
+		_play("hurt")
+	elif _grab_t <= 0.0:
+		_let_player_go(true)
+
+
+func _let_player_go(thrown: bool) -> void:
+	var a: Dictionary = _atk if _atk != null else {}
+	_grab_t = 0.0
+	var pl := Game.player
+	if pl and is_instance_valid(pl) and pl.held_by == self:
+		pl.held_by = null
+		if thrown and not pl.dead:
+			pl.hurt(a.get("throw_damage", 10.0), {"type": "melee", "from": global_position, "by": self, "knock": a.get("throw", 13.0)})
+			pl.velocity.y = 5.0
+	if thrown and anim and a.has("miss_at"):
+		anim.seek(a["miss_at"])
+	_atk = null

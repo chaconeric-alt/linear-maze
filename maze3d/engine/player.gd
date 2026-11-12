@@ -10,6 +10,7 @@ var max_hp := 100.0
 var armor := 0.0
 var max_armor := 100.0
 var dead := false
+var held_by: Node = null         # the monster that has grabbed you, if one has
 var frozen := false
 var weapons: Array = []
 var ammo: Dictionary = {}
@@ -212,8 +213,11 @@ func _physics_process(dt: float) -> void:
 		velocity.y -= 22 * dt
 		move_and_slide()
 		return
+	if held_by != null and (not is_instance_valid(held_by) or held_by.dead):
+		held_by = null
+	var held := held_by != null                      # something has hold of you: look and shoot, but it decides where you are
 	var inp := Vector2.ZERO
-	if not frozen:
+	if not frozen and not held:
 		inp = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var dir := (global_transform.basis * Vector3(inp.x, 0, inp.y))
 	dir.y = 0
@@ -222,7 +226,7 @@ func _physics_process(dt: float) -> void:
 	if level and level.fluid_at(global_position):      # wading
 		speed *= 0.62
 	_dash_cool -= dt
-	if not frozen and Input.is_action_just_pressed("dash") and _dash_cool <= 0.0:
+	if not frozen and not held and Input.is_action_just_pressed("dash") and _dash_cool <= 0.0:
 		_dash_dir = dir if dir != Vector3.ZERO else -global_transform.basis.z
 		_dash_t = 0.17
 		_dash_cool = cfg.get("dash_cooldown", 0.85)
@@ -236,10 +240,12 @@ func _physics_process(dt: float) -> void:
 		velocity.x = move_toward(velocity.x, dir.x * speed, acc * dt)
 		velocity.z = move_toward(velocity.z, dir.z * speed, acc * dt)
 	if is_on_floor():
-		if not frozen and Input.is_action_just_pressed("jump"):
+		if not frozen and not held and Input.is_action_just_pressed("jump"):
 			velocity.y = cfg.get("jump", 7.6)
 	else:
 		velocity.y -= 22.0 * dt
+	if held:
+		velocity = Vector3.ZERO
 	move_and_slide()
 	var hs := Vector2(velocity.x, velocity.z).length()
 	if is_on_floor() and hs > 1.0:
