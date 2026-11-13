@@ -204,6 +204,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 		a["style"] = st
 		a["height"] = hgt
 		rooms.append({"name": "%s %d" % [st.capitalize(), seen_style[st]], "rect": [r.position.x, r.position.y, r.size.x, r.size.y], "style": st, "height": hgt, "quiet": true})
+		a["room"] = rooms.size() - 1
 
 	# ---- corridors: carve only; doors come afterwards
 	var carve := func(a: Vector2i, b: Vector2i, dry: bool) -> bool:      # dry: only say whether it would stay clear of the last room
@@ -450,6 +451,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	var actors: Array = p.get("actors", [])
 	var treasure: Array = p.get("treasure", [])
 	var loot: Array = p.get("locker_loot", treasure)
+	var seen_purpose: Dictionary = {}
 	for a in areas:
 		var i: int = a["unit"]
 		if i == 0:
@@ -487,6 +489,16 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 			if not used.has(c2) and not treasure.is_empty():
 				used[c2] = true
 				things.append({"at": [c2.x, c2.y], "item": treasure[rng.randi() % treasure.size()]})
+		# a room with a purpose is furnished for it: pieces along the walls, rows or a centrepiece on the floor, and
+		# always a clear way from every door to every other
+		var purposes: Array = p.get("purposes", {}).get(a["style"], [])
+		if not purposes.is_empty():
+			var pur: Dictionary = purposes[rng.randi() % purposes.size()]
+			if pur.has("name") and a.has("room"):
+				seen_purpose[pur["name"]] = seen_purpose.get(pur["name"], 0) + 1
+				rooms[a["room"]]["name"] = pur["name"] if seen_purpose[pur["name"]] == 1 else "%s %d" % [pur["name"], seen_purpose[pur["name"]]]
+			_furnish(g, room_of, i, floor_cells, used, pur, p.get("kit", "hightech"), float(p.get("furnish", 1.0)), rng, things)
+			props = pur.get("corner", props)
 		# dressing goes in the corners so it never blocks the way through
 		var dressed := 0
 		for corner in nooks:
@@ -971,6 +983,173 @@ func _shuffle(rng: RandomNumberGenerator, a: Array) -> void:
 func _is_door(g: Array, q: Vector2i) -> bool:
 	var ch: String = g[q.y][q.x]
 	return ch != "#" and ch != "." and ch != "~"
+
+
+## Furnish a room for its purpose (params "purposes": {style: [purpose, ..]}; one is picked per room):
+##   {"name": "Ward", "wall": [ids], "floor": [ids], "centre": [ids], "corner": [ids], "fill": 0.5, "rows": true}
+##   wall    pieces that stand against a wall, facing the room: on every other wall cell, up to `fill` of them
+##   centre  one piece in the middle of the room, with a clear lap all round it
+##   floor   pieces out on the floor, never two side by side; with "rows" they all face the same way (seats, pews, beds)
+##   corner  what goes in the corners (the old dressing); defaults to the theme's props
+## The rule that keeps a furnished room from becoming an obstacle course: the cells on the shortest way between every
+## pair of the room's doorways, and the cell in front of each, are never furnished; furniture out on the floor never has
+## furniture next to it; and anything that would cut off part of the floor is taken out again. Cells are 4 m, so a
+## clear cell is a lane a player at full speed fits down with room to spare. "furnish" (0..1) scales how much goes in.
+func _furnish(g: Array, room_of: Array, unit: int, cells: Array, used: Dictionary, pur: Dictionary, kit: String, amount: float, rng: RandomNumberGenerator, things: Array) -> void:
+	var inside: Dictionary = {}
+	for c in cells:
+		inside[c] = true
+	var fronts: Array = []                            # floor just inside each way in
+	var edge: Dictionary = {}                         # cell -> the direction of the wall behind it
+	for c in cells:
+		var walls := 0
+		var wall_d := -1
+		var opening := false
+		for d in 4:
+			var n: Vector2i = c + DIRS[d]
+			if g[n.y][n.x] == "#":
+				walls += 1
+				wall_d = d
+			elif not inside.has(n):
+				opening = true
+		if opening:
+			fronts.append(c)
+		elif walls == 1:
+			edge[c] = wall_d
+	var keep: Dictionary = {}                         # never furnished
+	for f in fronts:
+		keep[f] = true
+		for d in DIRS:
+			keep[f + d] = true
+	var mid: Vector2i = cells[0]
+	var sum := Vector2.ZERO
+	for c in cells:
+		sum += Vector2(c)
+	sum /= cells.size()
+	for c in cells:
+		if Vector2(c).distance_to(sum) < Vector2(mid).distance_to(sum):
+			mid = c
+	var targets: Array = fronts.duplicate()
+	if targets.size() < 2:
+		targets.append(mid)
+	for k in range(1, targets.size()):                # the ways through
+		for c in _room_path(inside, targets[0], targets[k]):
+			keep[c] = true
+	var placed: Array = []                            # [cell, thing]
+	var taken_here: Dictionary = {}
+	var put := func(c: Vector2i, id: String, face: int, hug: bool) -> void:
+		var e := {"at": [c.x, c.y], "prop": id, "face": NAMES[face], "blocks": true}      # monsters path round it, as the player walks round it
+		if hug:
+			var sz: Array = LM.model_meta(kit, id).get("solid", [1.0, 1.0, 1.0])
+			var push: float = maxf(0.0, 2.0 - float(sz[2]) / 2.0 - 0.12)
+			var wd: Vector2i = DIRS[(face + 2) % 4]
+			e["offset"] = [wd.x * push, 0, wd.y * push]
+		placed.append([c, e])
+		taken_here[c] = true
+	var free := func(c: Vector2i) -> bool: return inside.has(c) and not used.has(c) and not keep.has(c) and not taken_here.has(c)
+	# the centrepiece
+	var centre: Array = pur.get("centre", [])
+	if not centre.is_empty() and cells.size() >= 20:
+		var best := Vector2i(-1, -1)
+		for c in cells:
+			if free.call(c) and not edge.has(c) and (best.x < 0 or Vector2(c).distance_to(sum) < Vector2(best).distance_to(sum)):
+				var lap := true
+				for d in DIRS:
+					if not inside.has(c + d):
+						lap = false
+				if lap:
+					best = c
+		if best.x >= 0:
+			put.call(best, centre[rng.randi() % centre.size()], rng.randi() % 4, false)
+			for d in DIRS:
+				keep[best + d] = true
+	# along the walls
+	var wall: Array = pur.get("wall", [])
+	if not wall.is_empty():
+		var parity := rng.randi() % 2
+		var want := int(ceil(edge.size() * float(pur.get("fill", 0.5)) * amount))
+		var order: Array = edge.keys()
+		order.sort()
+		for c in order:
+			if want <= 0:
+				break
+			if (c.x + c.y) % 2 != parity or not free.call(c):
+				continue
+			put.call(c, wall[rng.randi() % wall.size()], (edge[c] + 2) % 4, true)
+			want -= 1
+	# out on the floor
+	var fl: Array = pur.get("floor", [])
+	if not fl.is_empty():
+		var facing := rng.randi() % 4
+		var want2 := int(round(cells.size() / 7.0 * float(pur.get("floor_fill", 1.0)) * amount))
+		var order2: Array = cells.duplicate()
+		order2.sort()
+		var stripe := rng.randi() % 2
+		for c in order2:
+			if want2 <= 0:
+				break
+			if edge.has(c) or not free.call(c):
+				continue
+			if pur.get("rows", false) and (c.y if facing % 2 == 0 else c.x) % 2 != stripe:
+				continue
+			var crowded := false
+			for d in DIRS:
+				if taken_here.has(c + d) or not inside.has(c + d):
+					crowded = true
+			if crowded:
+				continue
+			put.call(c, fl[rng.randi() % fl.size()], facing if pur.get("rows", false) else rng.randi() % 4, false)
+			want2 -= 1
+	# nothing may be cut off: take pieces out, last first, until every clear cell can be walked to
+	while not placed.is_empty():
+		var blocked: Dictionary = {}
+		for pc in placed:
+			blocked[pc[0]] = true
+		var start: Vector2i = targets[0]
+		var seen: Dictionary = {start: true}
+		var queue: Array = [start]
+		while not queue.is_empty():
+			var c: Vector2i = queue.pop_front()
+			for d in DIRS:
+				var n: Vector2i = c + d
+				if inside.has(n) and not blocked.has(n) and not seen.has(n):
+					seen[n] = true
+					queue.append(n)
+		var cut := false
+		for c in cells:
+			if not blocked.has(c) and not seen.has(c):
+				cut = true
+				break
+		if not cut:
+			break
+		placed.pop_back()
+	for pc in placed:
+		used[pc[0]] = true
+		things.append(pc[1])
+
+
+## The shortest way from a to b over a room's own cells (both ends included).
+func _room_path(inside: Dictionary, a: Vector2i, b: Vector2i) -> Array:
+	var from: Dictionary = {a: a}
+	var queue: Array = [a]
+	while not queue.is_empty():
+		var c: Vector2i = queue.pop_front()
+		if c == b:
+			break
+		for d in DIRS:
+			var n: Vector2i = c + d
+			if inside.has(n) and not from.has(n):
+				from[n] = c
+				queue.append(n)
+	var out: Array = []
+	if not from.has(b):
+		return out
+	var c2 := b
+	while c2 != a:
+		out.append(c2)
+		c2 = from[c2]
+	out.append(a)
+	return out
 
 
 func _weighted(rng: RandomNumberGenerator, list: Array) -> String:

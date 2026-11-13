@@ -98,12 +98,21 @@ def main():
     import agency
     mz.define_materials(palette.MATERIALS)
     mz.define_materials(agency.MATERIALS)
-    build_kit('hightech', tiles.TILES, props.PROPS, TILE_META, palette.MATERIALS)
-    build_kit('agency', agency.TILES, agency.PROPS, agency.TILE_META, agency.MATERIALS)
-    import kits3, actors2
-    for kid, k in kits3.KITS.items():
+    import kits3, kits4, actors2
+    later = dict(kits3.KITS)
+    later.update(kits4.KITS)
+    just = [k for k in os.environ.get('MZ_KITS', '').split(',') if k]        # MZ_KITS=hospital,basilica: only those kits, no actors
+    if not just:
+        build_kit('hightech', tiles.TILES, props.PROPS, TILE_META, palette.MATERIALS)
+        build_kit('agency', agency.TILES, agency.PROPS, agency.TILE_META, agency.MATERIALS)
+    for kid, k in later.items():
+        if just and kid not in just:
+            continue
         mz.define_materials(k['mats'])
         build_kit(kid, k['tiles'], k['props'], k['meta'], k['mats'])
+    if just:
+        print('done')
+        return
     actors.ACTORS.update(actors2.ACTORS2)
     os.makedirs(os.path.join(ROOT, 'actors'), exist_ok=True)
     for name, fn in actors.ACTORS.items():

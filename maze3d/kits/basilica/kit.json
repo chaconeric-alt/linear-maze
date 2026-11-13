@@ -1,0 +1,198 @@
+{
+ "name": "The Basilica of the Blessed Brand",
+ "about": "A cathedral to a logo: cream limestone and gold, windows of brand colour, neon halos, purple velvet, an altar with a till on it. Borrows the high-tech kit's items and machines.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.45,
+ "styles": {
+  "bb_cloister": {
+   "floor": [
+    [
+     "floor_bb_flag",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_bb_stone",
+     4
+    ],
+    [
+     "wall_bb_stone2",
+     3
+    ],
+    [
+     "wall_bb_niche",
+     1
+    ],
+    [
+     "wall_bb_votive",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_bb_vault",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_bb_halo",
+    "every": 2,
+    "flicker": 0.0
+   }
+  },
+  "bb_nave": {
+   "floor": [
+    [
+     "floor_bb_flag",
+     5
+    ],
+    [
+     "floor_bb_aisle",
+     2
+    ],
+    [
+     "floor_bb_logo",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_bb_glass",
+     3
+    ],
+    [
+     "wall_bb_glass2",
+     3
+    ],
+    [
+     "wall_bb_stone",
+     3
+    ],
+    [
+     "wall_bb_billboard",
+     2
+    ],
+    [
+     "wall_bb_organ",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_bb_glass",
+     2
+    ],
+    [
+     "wall_bb_glass2",
+     2
+    ],
+    [
+     "wall_bb_stone2",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_bb_vault",
+     3
+    ],
+    [
+     "ceil_bb_banner",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_bb_halo",
+    "every": 2,
+    "flicker": 0.0
+   }
+  },
+  "bb_chapel": {
+   "floor": [
+    [
+     "floor_bb_flag",
+     4
+    ],
+    [
+     "floor_bb_logo",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_bb_niche",
+     4
+    ],
+    [
+     "wall_bb_votive",
+     3
+    ],
+    [
+     "wall_bb_stone",
+     2
+    ],
+    [
+     "wall_bb_glass",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_bb_vault",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_bb_halo",
+    "every": 2,
+    "flicker": 0.0
+   }
+  },
+  "bb_vestry": {
+   "floor": [
+    [
+     "floor_bb_flag",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_bb_billboard",
+     3
+    ],
+    [
+     "wall_bb_stone2",
+     3
+    ],
+    [
+     "wall_bb_organ",
+     2
+    ],
+    [
+     "wall_bb_votive",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_bb_vault",
+     2
+    ],
+    [
+     "ceil_bb_banner",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_bb_halo",
+    "every": 2,
+    "flicker": 0.0
+   }
+  }
+ }
+}

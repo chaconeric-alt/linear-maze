@@ -1,0 +1,120 @@
+{
+ "amber": {
+  "color": [
+   1.0,
+   0.68,
+   0.25
+  ],
+  "emit": [
+   1.0,
+   0.66,
+   0.22
+  ],
+  "energy": 3.2,
+  "shader": "glow"
+ },
+ "book_a": {
+  "color": [
+   0.3,
+   0.08,
+   0.06
+  ],
+  "metal": 0.0,
+  "rough": 0.7
+ },
+ "book_b": {
+  "color": [
+   0.07,
+   0.16,
+   0.24
+  ],
+  "metal": 0.0,
+  "rough": 0.7
+ },
+ "book_c": {
+  "color": [
+   0.42,
+   0.34,
+   0.16
+  ],
+  "metal": 0.0,
+  "rough": 0.7
+ },
+ "carpet_jade": {
+  "color": [
+   0.14,
+   0.44,
+   0.32
+  ],
+  "metal": 0.0,
+  "rough": 0.97
+ },
+ "ebony": {
+  "color": [
+   0.27,
+   0.2,
+   0.155
+  ],
+  "grime": 0.15,
+  "metal": 0.0,
+  "rough": 0.32,
+  "shader": "worn"
+ },
+ "holo": {
+  "color": [
+   0.2,
+   0.95,
+   0.85
+  ],
+  "emit": [
+   0.2,
+   0.95,
+   0.85
+  ],
+  "energy": 3.0,
+  "pulse": 0.15,
+  "shader": "glow"
+ },
+ "jade": {
+  "color": [
+   0.15,
+   0.48,
+   0.34
+  ],
+  "grime": 0.15,
+  "metal": 0.15,
+  "rough": 0.18,
+  "shader": "worn"
+ },
+ "leather": {
+  "color": [
+   0.24,
+   0.04,
+   0.035
+  ],
+  "metal": 0.0,
+  "rough": 0.42
+ },
+ "marble_blk": {
+  "color": [
+   0.17,
+   0.24,
+   0.215
+  ],
+  "grime": 0.15,
+  "metal": 0.05,
+  "rough": 0.1,
+  "shader": "worn"
+ },
+ "rosewood": {
+  "color": [
+   0.58,
+   0.21,
+   0.11
+  ],
+  "grime": 0.2,
+  "metal": 0.0,
+  "rough": 0.3,
+  "shader": "worn"
+ }
+}

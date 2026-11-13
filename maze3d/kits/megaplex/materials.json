@@ -1,0 +1,124 @@
+{
+ "acoustic": {
+  "color": [
+   0.07,
+   0.06,
+   0.09
+  ],
+  "metal": 0.0,
+  "rough": 0.98
+ },
+ "carpet_cine": {
+  "color": [
+   0.13,
+   0.04,
+   0.16
+  ],
+  "metal": 0.0,
+  "rough": 0.97
+ },
+ "mall_cream": {
+  "color": [
+   0.8,
+   0.76,
+   0.66
+  ],
+  "grime": 0.45,
+  "metal": 0.1,
+  "rough": 0.16,
+  "shader": "worn"
+ },
+ "mall_dark": {
+  "color": [
+   0.09,
+   0.09,
+   0.11
+  ],
+  "grime": 0.4,
+  "metal": 0.2,
+  "rough": 0.2,
+  "shader": "worn"
+ },
+ "mall_teal": {
+  "color": [
+   0.07,
+   0.42,
+   0.44
+  ],
+  "grime": 0.45,
+  "metal": 0.1,
+  "rough": 0.18,
+  "shader": "worn"
+ },
+ "plastic_red": {
+  "color": [
+   0.75,
+   0.08,
+   0.07
+  ],
+  "grime": 0.4,
+  "metal": 0.0,
+  "rough": 0.3,
+  "shader": "worn"
+ },
+ "plastic_yel": {
+  "color": [
+   0.95,
+   0.72,
+   0.08
+  ],
+  "grime": 0.4,
+  "metal": 0.0,
+  "rough": 0.3,
+  "shader": "worn"
+ },
+ "sale": {
+  "color": [
+   1.0,
+   0.85,
+   0.1
+  ],
+  "emit": [
+   1.0,
+   0.82,
+   0.1
+  ],
+  "energy": 2.4,
+  "pulse": 0.2,
+  "shader": "glow"
+ },
+ "seat": {
+  "color": [
+   0.5,
+   0.05,
+   0.08
+  ],
+  "metal": 0.0,
+  "rough": 0.9
+ },
+ "shutter": {
+  "color": [
+   0.42,
+   0.44,
+   0.46
+  ],
+  "grime": 0.6,
+  "metal": 0.8,
+  "rough": 0.4,
+  "shader": "worn"
+ },
+ "sky": {
+  "color": [
+   0.75,
+   0.9,
+   1.0
+  ],
+  "emit": [
+   0.7,
+   0.86,
+   1.0
+  ],
+  "energy": 1.5,
+  "shader": "glow"
+ }
+}

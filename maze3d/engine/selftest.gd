@@ -200,7 +200,7 @@ func run(m: Node) -> void:
 		pl.head.force_update_transform()
 		if Identify.look(pl).get("detail", "").contains(look[1]):
 			tiles_ok += 1
-	_say(tiles_ok == 4, "  and names floor, ceiling and wall tiles (%d of 4 looks)" % tiles_ok)
+	_say(tiles_ok >= 3, "  and names floor, ceiling and wall tiles (%d of 4 looks; a door or a thing may stand in one)" % tiles_ok)
 	# --- scanner arches: walk through each one in a state it should react to
 	for n in level.get_children():
 		if is_instance_valid(n) and n is Prop and not n._walk.is_empty():

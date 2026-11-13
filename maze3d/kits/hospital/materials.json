@@ -1,0 +1,149 @@
+{
+ "curtain": {
+  "color": [
+   0.5,
+   0.66,
+   0.74
+  ],
+  "metal": 0.0,
+  "rough": 0.95
+ },
+ "grout": {
+  "color": [
+   0.3,
+   0.32,
+   0.31
+  ],
+  "metal": 0.0,
+  "rough": 0.9
+ },
+ "lino": {
+  "color": [
+   0.52,
+   0.64,
+   0.56
+  ],
+  "grime": 0.55,
+  "metal": 0.0,
+  "rough": 0.35,
+  "shader": "worn"
+ },
+ "lino_dark": {
+  "color": [
+   0.2,
+   0.3,
+   0.27
+  ],
+  "grime": 0.55,
+  "metal": 0.0,
+  "rough": 0.4,
+  "shader": "worn"
+ },
+ "mattress": {
+  "color": [
+   0.3,
+   0.42,
+   0.46
+  ],
+  "metal": 0.0,
+  "rough": 0.8
+ },
+ "pill_a": {
+  "color": [
+   0.75,
+   0.3,
+   0.1
+  ],
+  "metal": 0.0,
+  "rough": 0.3
+ },
+ "pill_b": {
+  "color": [
+   0.15,
+   0.3,
+   0.6
+  ],
+  "metal": 0.0,
+  "rough": 0.3
+ },
+ "sheet": {
+  "color": [
+   0.88,
+   0.88,
+   0.84
+  ],
+  "metal": 0.0,
+  "rough": 0.9
+ },
+ "stain": {
+  "color": [
+   0.22,
+   0.03,
+   0.03
+  ],
+  "metal": 0.0,
+  "rough": 0.5
+ },
+ "steel": {
+  "color": [
+   0.7,
+   0.72,
+   0.74
+  ],
+  "grime": 0.3,
+  "metal": 0.95,
+  "rough": 0.28,
+  "shader": "worn"
+ },
+ "surg": {
+  "color": [
+   1.0,
+   1.0,
+   0.96
+  ],
+  "emit": [
+   1.0,
+   1.0,
+   0.95
+  ],
+  "energy": 4.5,
+  "shader": "glow"
+ },
+ "tile_teal": {
+  "color": [
+   0.22,
+   0.52,
+   0.5
+  ],
+  "grime": 0.5,
+  "metal": 0.05,
+  "rough": 0.16,
+  "shader": "worn"
+ },
+ "tile_white": {
+  "color": [
+   0.84,
+   0.86,
+   0.84
+  ],
+  "grime": 0.5,
+  "metal": 0.05,
+  "rough": 0.14,
+  "shader": "worn"
+ },
+ "xray": {
+  "color": [
+   0.75,
+   0.9,
+   1.0
+  ],
+  "emit": [
+   0.7,
+   0.88,
+   1.0
+  ],
+  "energy": 2.0,
+  "flicker": 0.1,
+  "shader": "glow"
+ }
+}

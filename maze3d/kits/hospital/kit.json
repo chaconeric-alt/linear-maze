@@ -1,0 +1,188 @@
+{
+ "name": "The Hospital",
+ "about": "The Elective Suffering & Recovery Hospital: white ceramic tile with a teal band, pale green lino, steel, curtains, and a great deal of very bright light. Borrows the high-tech kit's items and machines.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.45,
+ "styles": {
+  "hs_hall": {
+   "floor": [
+    [
+     "floor_hs_lane",
+     3
+    ],
+    [
+     "floor_hs_lino",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hs_tile",
+     4
+    ],
+    [
+     "wall_hs_tile2",
+     3
+    ],
+    [
+     "wall_hs_light",
+     1
+    ],
+    [
+     "wall_hs_cabinet",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hs_tile",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hs_light",
+    "every": 2,
+    "flicker": 0.15
+   }
+  },
+  "hs_ward": {
+   "floor": [
+    [
+     "floor_hs_lino",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hs_panel",
+     4
+    ],
+    [
+     "wall_hs_curtain",
+     3
+    ],
+    [
+     "wall_hs_tile",
+     2
+    ],
+    [
+     "wall_hs_tile2",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hs_tile",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hs_tile",
+     2
+    ],
+    [
+     "ceil_hs_rail",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hs_light",
+    "every": 3,
+    "flicker": 0.1
+   }
+  },
+  "hs_theatre": {
+   "floor": [
+    [
+     "floor_hs_tile",
+     5
+    ],
+    [
+     "floor_hs_drain",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hs_window",
+     3
+    ],
+    [
+     "wall_hs_tile",
+     3
+    ],
+    [
+     "wall_hs_cabinet",
+     2
+    ],
+    [
+     "wall_hs_light",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hs_window",
+     2
+    ],
+    [
+     "wall_hs_tile",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hs_tile",
+     3
+    ],
+    [
+     "ceil_hs_light",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hs_surg",
+    "every": 3,
+    "flicker": 0.0
+   }
+  },
+  "hs_pharmacy": {
+   "floor": [
+    [
+     "floor_hs_tile",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hs_cabinet",
+     5
+    ],
+    [
+     "wall_hs_tile",
+     2
+    ],
+    [
+     "wall_hs_light",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hs_tile",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hs_light",
+    "every": 2,
+    "flicker": 0.25
+   }
+  }
+ }
+}

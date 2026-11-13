@@ -1,0 +1,251 @@
+{
+ "models": {
+  "door_ex_double": {
+   "model": "models/door_ex_double.glb",
+   "parts": {
+    "leaf_l": {
+     "move": [
+      -1.24,
+      0,
+      0
+     ]
+    },
+    "leaf_r": {
+     "move": [
+      1.24,
+      0,
+      0
+     ]
+    }
+   },
+   "sound": "door_heavy",
+   "time": 0.7,
+   "type": "door"
+  },
+  "ex_bar": {
+   "model": "models/ex_bar.glb",
+   "solid": [
+    1.9,
+    2.1,
+    0.65
+   ],
+   "type": "prop"
+  },
+  "ex_case": {
+   "model": "models/ex_case.glb",
+   "solid": [
+    0.95,
+    1.6,
+    0.95
+   ],
+   "type": "prop"
+  },
+  "ex_chair": {
+   "model": "models/ex_chair.glb",
+   "solid": [
+    0.95,
+    0.9,
+    0.9
+   ],
+   "type": "prop"
+  },
+  "ex_desk": {
+   "light": {
+    "at": [
+     0.95,
+     1.4,
+     0.2
+    ],
+    "color": [
+     1.0,
+     0.7,
+     0.3
+    ],
+    "energy": 0.8,
+    "range": 4.5
+   },
+   "model": "models/ex_desk.glb",
+   "solid": [
+    2.4,
+    1.0,
+    1.1
+   ],
+   "type": "prop"
+  },
+  "ex_globe": {
+   "light": {
+    "at": [
+     0,
+     1.5,
+     0
+    ],
+    "color": [
+     0.2,
+     0.95,
+     0.85
+    ],
+    "energy": 1.2,
+    "pulse": 0.15,
+    "range": 6
+   },
+   "model": "models/ex_globe.glb",
+   "solid": [
+    1.0,
+    2.0,
+    1.0
+   ],
+   "type": "prop"
+  },
+  "ex_table": {
+   "light": {
+    "at": [
+     0,
+     1.4,
+     0
+    ],
+    "color": [
+     0.2,
+     0.95,
+     0.85
+    ],
+    "energy": 0.7,
+    "range": 4
+   },
+   "model": "models/ex_table.glb",
+   "solid": [
+    3.4,
+    0.95,
+    1.5
+   ],
+   "type": "prop"
+  }
+ },
+ "tiles": {
+  "ceil_ex_coffer": {
+   "kind": "ceiling",
+   "model": "models/ceil_ex_coffer.glb"
+  },
+  "ceil_ex_dome": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.5,
+     0
+    ],
+    "color": [
+     1.0,
+     0.78,
+     0.46
+    ],
+    "energy": 7.0,
+    "range": 17
+   },
+   "model": "models/ceil_ex_dome.glb"
+  },
+  "ceil_ex_light": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.8,
+     0
+    ],
+    "color": [
+     1.0,
+     0.8,
+     0.5
+    ],
+    "energy": 7.0,
+    "range": 17
+   },
+   "model": "models/ceil_ex_light.glb"
+  },
+  "floor_ex_carpet": {
+   "kind": "floor",
+   "model": "models/floor_ex_carpet.glb"
+  },
+  "floor_ex_herring": {
+   "kind": "floor",
+   "model": "models/floor_ex_herring.glb"
+  },
+  "floor_ex_inlay": {
+   "kind": "floor",
+   "model": "models/floor_ex_inlay.glb"
+  },
+  "floor_ex_marble": {
+   "kind": "floor",
+   "model": "models/floor_ex_marble.glb"
+  },
+  "wall_ex_art": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.5,
+     0.6
+    ],
+    "color": [
+     0.2,
+     0.95,
+     0.85
+    ],
+    "energy": 0.4,
+    "range": 3.5
+   },
+   "model": "models/wall_ex_art.glb"
+  },
+  "wall_ex_marble": {
+   "kind": "wall",
+   "model": "models/wall_ex_marble.glb"
+  },
+  "wall_ex_panel": {
+   "kind": "wall",
+   "model": "models/wall_ex_panel.glb"
+  },
+  "wall_ex_panel2": {
+   "kind": "wall",
+   "model": "models/wall_ex_panel2.glb"
+  },
+  "wall_ex_sconce": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.6,
+     0.7
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 2.2,
+    "range": 9
+   },
+   "model": "models/wall_ex_sconce.glb"
+  },
+  "wall_ex_screen": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.5,
+     0.7
+    ],
+    "color": [
+     0.2,
+     0.9,
+     0.8
+    ],
+    "energy": 0.5,
+    "range": 4.5
+   },
+   "model": "models/wall_ex_screen.glb"
+  },
+  "wall_ex_shelves": {
+   "kind": "wall",
+   "model": "models/wall_ex_shelves.glb"
+  }
+ }
+}

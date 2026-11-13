@@ -1,0 +1,202 @@
+{
+ "name": "The Executive Floor",
+ "about": "Dead Signal's board floor with a little more high-tech: ebony and rosewood, green-veined black marble, jade, brass, low amber light, and thin cyan holo lines let into the luxury. Borrows the high-tech kit's items and machines.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.45,
+ "styles": {
+  "ex_hall": {
+   "floor": [
+    [
+     "floor_ex_marble",
+     6
+    ],
+    [
+     "floor_ex_inlay",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_ex_marble",
+     4
+    ],
+    [
+     "wall_ex_panel",
+     3
+    ],
+    [
+     "wall_ex_sconce",
+     2
+    ],
+    [
+     "wall_ex_art",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_ex_coffer",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_ex_light",
+    "every": 2,
+    "flicker": 0.0
+   }
+  },
+  "ex_office": {
+   "floor": [
+    [
+     "floor_ex_herring",
+     5
+    ],
+    [
+     "floor_ex_carpet",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_ex_panel",
+     4
+    ],
+    [
+     "wall_ex_panel2",
+     3
+    ],
+    [
+     "wall_ex_shelves",
+     3
+    ],
+    [
+     "wall_ex_sconce",
+     2
+    ],
+    [
+     "wall_ex_art",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_ex_panel2",
+     3
+    ],
+    [
+     "wall_ex_shelves",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_ex_coffer",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_ex_light",
+    "every": 2,
+    "flicker": 0.0
+   }
+  },
+  "ex_board": {
+   "floor": [
+    [
+     "floor_ex_carpet",
+     6
+    ],
+    [
+     "floor_ex_herring",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_ex_panel",
+     4
+    ],
+    [
+     "wall_ex_screen",
+     3
+    ],
+    [
+     "wall_ex_sconce",
+     2
+    ],
+    [
+     "wall_ex_panel2",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_ex_panel2",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_ex_coffer",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_ex_light",
+    "every": 2,
+    "flicker": 0.0
+   }
+  },
+  "ex_gallery": {
+   "floor": [
+    [
+     "floor_ex_marble",
+     4
+    ],
+    [
+     "floor_ex_inlay",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_ex_marble",
+     5
+    ],
+    [
+     "wall_ex_art",
+     3
+    ],
+    [
+     "wall_ex_sconce",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_ex_marble",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_ex_coffer",
+     2
+    ],
+    [
+     "ceil_ex_light",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_ex_dome",
+    "every": 2,
+    "flicker": 0.0
+   }
+  }
+ }
+}

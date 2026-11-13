@@ -459,12 +459,23 @@ func show_title() -> void:
 		var lv: Dictionary = LM.levels.get(id, {})
 		_overlay_box.add_child(_button("▸  " + lv.get("name", id), func(): start_requested.emit(id), true))
 	for gid in LM.generators:
-		_overlay_box.add_child(_button("▸  Random installation", func(): start_requested.emit("gen:" + gid)))
+		_overlay_box.add_child(_label("RANDOM INSTALLATIONS", 14, Color(0.7, 0.75, 0.75)))
+		var grid := GridContainer.new()                  # three across, so a dozen places still fit on the screen
+		grid.columns = 3
+		grid.add_theme_constant_override("h_separation", 8)
+		grid.add_theme_constant_override("v_separation", 6)
+		_overlay_box.add_child(grid)
+		var add := func(text: String, target: String) -> void:
+			var bt := _button(text, func(): start_requested.emit(target))
+			bt.add_theme_font_size_override("font_size", 16)
+			bt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			grid.add_child(bt)
+		add.call("▸ Mixed", "gen:" + gid)
 		var themes: Dictionary = g.get("generator_themes", {})
 		for th in themes:
 			if not themes[th].get("menu", true):          # kept off the title screen; still playable with --level=gen:<generator>:<theme>
 				continue
-			_overlay_box.add_child(_button("▸  Random: %s" % themes[th].get("title", th), func(): start_requested.emit("gen:%s:%s" % [gid, th])))
+			add.call("▸ %s" % themes[th].get("title", th), "gen:%s:%s" % [gid, th])
 	_overlay_box.add_child(_label("", 8, Color.WHITE))
 	_overlay_box.add_child(_label("WASD move · mouse look · click fire · Shift dash · Space jump\nE use · 1-9 / wheel weapons · F lamp · Tab map · Esc pause", 15, Color(0.7, 0.75, 0.75)))
 

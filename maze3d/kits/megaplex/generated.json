@@ -1,0 +1,308 @@
+{
+ "models": {
+  "door_mp_glass": {
+   "model": "models/door_mp_glass.glb",
+   "parts": {
+    "leaf_l": {
+     "move": [
+      -1.2,
+      0,
+      0
+     ]
+    },
+    "leaf_r": {
+     "move": [
+      1.2,
+      0,
+      0
+     ]
+    }
+   },
+   "sound": "door_slide",
+   "time": 0.55,
+   "type": "door"
+  },
+  "mp_autochef": {
+   "light": {
+    "at": [
+     0,
+     1.6,
+     0.7
+    ],
+    "color": [
+     1.0,
+     0.9,
+     0.6
+    ],
+    "energy": 0.7,
+    "range": 4
+   },
+   "model": "models/mp_autochef.glb",
+   "solid": [
+    2.2,
+    2.2,
+    0.85
+   ],
+   "type": "prop"
+  },
+  "mp_bench": {
+   "model": "models/mp_bench.glb",
+   "solid": [
+    3.5,
+    0.8,
+    0.9
+   ],
+   "type": "prop"
+  },
+  "mp_kiosk": {
+   "light": {
+    "at": [
+     0,
+     1.6,
+     0.9
+    ],
+    "color": [
+     1.0,
+     0.82,
+     0.3
+    ],
+    "energy": 0.7,
+    "range": 4.5
+   },
+   "model": "models/mp_kiosk.glb",
+   "solid": [
+    2.1,
+    2.6,
+    1.3
+   ],
+   "type": "prop"
+  },
+  "mp_seats": {
+   "model": "models/mp_seats.glb",
+   "solid": [
+    2.5,
+    1.0,
+    0.7
+   ],
+   "type": "prop"
+  },
+  "mp_table": {
+   "model": "models/mp_table.glb",
+   "solid": [
+    1.0,
+    0.85,
+    1.0
+   ],
+   "type": "prop"
+  },
+  "mp_vendor": {
+   "light": {
+    "at": [
+     0,
+     1.4,
+     0.8
+    ],
+    "color": [
+     1.0,
+     0.95,
+     0.9
+    ],
+    "energy": 0.6,
+    "range": 3.5
+   },
+   "model": "models/mp_vendor.glb",
+   "solid": [
+    1.1,
+    2.1,
+    0.8
+   ],
+   "type": "prop"
+  }
+ },
+ "tiles": {
+  "ceil_mp_dark": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.3,
+     0
+    ],
+    "color": [
+     0.55,
+     0.5,
+     0.85
+    ],
+    "energy": 1.1,
+    "range": 10
+   },
+   "model": "models/ceil_mp_dark.glb"
+  },
+  "ceil_mp_grid": {
+   "kind": "ceiling",
+   "model": "models/ceil_mp_grid.glb"
+  },
+  "ceil_mp_sign": {
+   "kind": "ceiling",
+   "model": "models/ceil_mp_sign.glb"
+  },
+  "ceil_mp_sky": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     0.2,
+     0
+    ],
+    "color": [
+     0.75,
+     0.88,
+     1.0
+    ],
+    "energy": 2.2,
+    "range": 13
+   },
+   "model": "models/ceil_mp_sky.glb"
+  },
+  "ceil_mp_track": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.4,
+     0
+    ],
+    "color": [
+     1.0,
+     0.97,
+     0.9
+    ],
+    "energy": 2.4,
+    "range": 11
+   },
+   "model": "models/ceil_mp_track.glb"
+  },
+  "floor_mp_arrow": {
+   "kind": "floor",
+   "model": "models/floor_mp_arrow.glb"
+  },
+  "floor_mp_carpet": {
+   "kind": "floor",
+   "model": "models/floor_mp_carpet.glb"
+  },
+  "floor_mp_check": {
+   "kind": "floor",
+   "model": "models/floor_mp_check.glb"
+  },
+  "floor_mp_tile": {
+   "kind": "floor",
+   "model": "models/floor_mp_tile.glb"
+  },
+  "wall_mp_ad": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.0,
+     0.8
+    ],
+    "color": [
+     0.2,
+     0.9,
+     0.8
+    ],
+    "energy": 0.7,
+    "range": 5
+   },
+   "model": "models/wall_mp_ad.glb"
+  },
+  "wall_mp_cinema": {
+   "kind": "wall",
+   "model": "models/wall_mp_cinema.glb"
+  },
+  "wall_mp_screen": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.2,
+     1.0
+    ],
+    "color": [
+     0.3,
+     0.8,
+     0.8
+    ],
+    "energy": 1.0,
+    "range": 9
+   },
+   "model": "models/wall_mp_screen.glb"
+  },
+  "wall_mp_shutter": {
+   "kind": "wall",
+   "model": "models/wall_mp_shutter.glb"
+  },
+  "wall_mp_store": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     3.1,
+     0.8
+    ],
+    "color": [
+     1.0,
+     0.4,
+     0.7
+    ],
+    "energy": 0.8,
+    "range": 6
+   },
+   "model": "models/wall_mp_store.glb"
+  },
+  "wall_mp_store2": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     3.1,
+     0.8
+    ],
+    "color": [
+     0.3,
+     0.9,
+     1.0
+    ],
+    "energy": 0.8,
+    "range": 6
+   },
+   "model": "models/wall_mp_store2.glb"
+  },
+  "wall_mp_tile": {
+   "kind": "wall",
+   "model": "models/wall_mp_tile.glb"
+  },
+  "wall_mp_tile2": {
+   "kind": "wall",
+   "model": "models/wall_mp_tile2.glb"
+  },
+  "wall_mp_vend": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     1.6,
+     0.9
+    ],
+    "color": [
+     1.0,
+     0.95,
+     0.9
+    ],
+    "energy": 0.7,
+    "range": 4.5
+   },
+   "model": "models/wall_mp_vend.glb"
+  }
+ }
+}

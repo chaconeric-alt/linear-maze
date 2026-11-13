@@ -348,6 +348,24 @@ func generate(seed: int, params: Dictionary) -> Dictionary   # a level dictionar
 
 `params` is the game's `generator_params`. `game.json` may also hold `generator_themes`: named sets of overrides (`title`, `place`, `kit`, `corridor`, `styles`, `doors`, `props`, `style_props`, `actors`, `boss`, `exit_prop`, `size`, `rooms`). Each theme gets its own title-screen entry and runs as `--level=gen:<name>:<theme>`. `style_props` maps a room style to the furniture that belongs in it, so a mixed level puts bunks in barracks and coffins in chapels. Each generator appears on the title screen; `--level=gen:<name> --seed=N` runs one from a terminal. `--up=1` starts on that storey, `--alert` wakes everything, `--trace=Name` prints where that monster is; `--calm` stops anything noticing the player (for looking); `--trace` prints every actor's change of state. `rooms.gd` (rooms, L-shaped corridors, doors on thresholds only (placed after all carving, so no door is ever left standing in a widened opening), scanner arches inside some doorways, wall lockers with loot, nothing, roaches or a charge, a red card and a vault door before the last room, monsters and treasure from weighted lists) is deliberately small. Because a level is plain data, a generator can also be written outside Godot: the 2D installation generator (`editor/gen/`) could emit this format from the same lists.
 
+### Rooms with a purpose
+
+A theme (or `generator_params`) may give `"purposes": {"<style>": [purpose, ..]}`. Each room of that style picks one, is named for it (the name Identify and the map show), and is furnished for it:
+
+```json
+{"name": "Ward", "wall": ["hs_bed", "hs_monitor"], "floor": ["hs_gurney"], "centre": ["hs_table"],
+ "corner": ["hs_screen"], "fill": 0.7, "floor_fill": 1.0, "rows": true}
+```
+
+- `wall`: pieces that stand against a wall facing the room, on every other wall cell, up to `fill` of the wall cells (0.5). Each is pushed back against the wall by its own depth (the model's `solid`).
+- `centre`: one piece in the middle of a room of 20 cells or more, with a clear lap all round it.
+- `floor`: pieces out in the open, about one per seven cells times `floor_fill`, never two side by side. With `rows` they all face the same way and sit in alternate rows (seats, pews, desks).
+- `corner`: what the old corner dressing uses in this room (defaults to the theme's `props`).
+
+What keeps a furnished room from becoming an obstacle course: the cells on the shortest way between every pair of the room's doorways, and the cell in front of each doorway, are never furnished; open-floor pieces never have furniture beside them; wall pieces alternate with empty cells; and after placing, anything that cuts part of the floor off is taken out again. Cells are 4 m, so a kept-clear cell is a lane a player at full speed fits down. Furnished cells are blocked for monster path-finding, so monsters walk round furniture too. `"furnish": 0..1` on a theme scales how much goes in (1 by default; 0 leaves only corner dressing).
+
+A model for a wall piece should be no deeper than 1.2 m; an open-floor piece should fit in 2.8 × 2.8 m; a centrepiece in 3.4 × 3.4 m.
+
 ## 6. Recipes
 
 **A new monster.** Model and rig it in Blender facing the front view, with the five clips as NLA tracks; export `.glb` into `actors/` (include animations; +Y up). Or add a function to `tools/blender/actors.py` and run `build_all.py -- <name>`. Add an entry to `games/havenot/defs/actors.json`. Place it with `{ "actor": "<id>" }`. Use the kit's material names and it is lit and worn like everything else.

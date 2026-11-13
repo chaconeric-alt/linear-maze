@@ -1,0 +1,206 @@
+{
+ "name": "The Megaplex",
+ "about": "The Infinite Satisfaction Retail Megaplex: cream and teal mall tile, chrome, shopfronts and shutters, backlit ads, a food court and a cinema, all still open. Borrows the high-tech kit's items and machines.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.5,
+ "styles": {
+  "mp_concourse": {
+   "floor": [
+    [
+     "floor_mp_tile",
+     6
+    ],
+    [
+     "floor_mp_arrow",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_mp_store",
+     3
+    ],
+    [
+     "wall_mp_store2",
+     3
+    ],
+    [
+     "wall_mp_shutter",
+     2
+    ],
+    [
+     "wall_mp_tile",
+     2
+    ],
+    [
+     "wall_mp_ad",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_mp_tile",
+     2
+    ],
+    [
+     "wall_mp_tile2",
+     2
+    ],
+    [
+     "wall_mp_ad",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_mp_grid",
+     3
+    ],
+    [
+     "ceil_mp_sign",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_mp_sky",
+    "every": 2,
+    "flicker": 0.02
+   }
+  },
+  "mp_shops": {
+   "floor": [
+    [
+     "floor_mp_tile",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_mp_tile",
+     4
+    ],
+    [
+     "wall_mp_tile2",
+     3
+    ],
+    [
+     "wall_mp_ad",
+     2
+    ],
+    [
+     "wall_mp_vend",
+     1
+    ],
+    [
+     "wall_mp_shutter",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_mp_grid",
+     3
+    ],
+    [
+     "ceil_mp_sign",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_mp_track",
+    "every": 2,
+    "flicker": 0.05
+   }
+  },
+  "mp_foodcourt": {
+   "floor": [
+    [
+     "floor_mp_check",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_mp_vend",
+     3
+    ],
+    [
+     "wall_mp_tile2",
+     3
+    ],
+    [
+     "wall_mp_ad",
+     2
+    ],
+    [
+     "wall_mp_tile",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_mp_tile2",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_mp_grid",
+     2
+    ],
+    [
+     "ceil_mp_sign",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_mp_track",
+    "every": 2,
+    "flicker": 0.05
+   }
+  },
+  "mp_cinema": {
+   "floor": [
+    [
+     "floor_mp_carpet",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_mp_cinema",
+     6
+    ],
+    [
+     "wall_mp_screen",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_mp_cinema",
+     2
+    ],
+    [
+     "wall_mp_screen",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_mp_dark",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_mp_dark",
+    "every": 2,
+    "flicker": 0.0
+   }
+  }
+ }
+}

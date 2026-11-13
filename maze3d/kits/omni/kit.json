@@ -1,11 +1,15 @@
 {
  "name": "Everything",
- "about": "No models of its own: borrows every kit so one level can run from the Agency through the Works and the Bunker down to the Crypt.",
+ "about": "No models of its own: borrows every kit so one level can use any of them.",
  "uses": [
   "agency",
   "works",
   "bunker",
   "crypt",
+  "executive",
+  "megaplex",
+  "hospital",
+  "basilica",
   "hightech"
  ],
  "cell": 4.0,

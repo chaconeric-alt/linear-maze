@@ -16,6 +16,10 @@
   "works",
   "bunker",
   "crypt",
+  "executive",
+  "megaplex",
+  "hospital",
+  "basilica",
   "omni"
  ],
  "defs": [
@@ -326,7 +330,73 @@
     "glow": 0.9
    },
    "ambush_text": "RED CARD REMOVED. The shift has been called in.",
-   "menu": false
+   "menu": true,
+   "purposes": {
+    "foundry": [
+     {
+      "name": "Foundry",
+      "centre": [
+       "wk_forge"
+      ],
+      "wall": [
+       "wk_vat",
+       "wk_drums"
+      ],
+      "corner": [
+       "wk_drums",
+       "barrel"
+      ],
+      "fill": 0.3
+     }
+    ],
+    "assembly": [
+     {
+      "name": "Assembly Line",
+      "floor": [
+       "wk_press"
+      ],
+      "rows": true,
+      "wall": [
+       "wk_bench",
+       "wk_drums"
+      ],
+      "corner": [
+       "crate",
+       "wk_drums"
+      ],
+      "fill": 0.3,
+      "floor_fill": 0.7
+     },
+     {
+      "name": "Workshop",
+      "wall": [
+       "wk_bench",
+       "wk_bench",
+       "wk_drums"
+      ],
+      "corner": [
+       "crate"
+      ],
+      "fill": 0.5
+     }
+    ],
+    "machine": [
+     {
+      "name": "Vat Room",
+      "floor": [
+       "wk_vat"
+      ],
+      "wall": [
+       "wk_drums"
+      ],
+      "corner": [
+       "barrel"
+      ],
+      "fill": 0.25,
+      "floor_fill": 0.6
+     }
+    ]
+   }
   },
   "bunker": {
    "title": "The Bunker",
@@ -418,7 +488,75 @@
     "glow": 0.1
    },
    "ambush_text": "RED CARD REMOVED. Stand to. Stand to.",
-   "menu": false
+   "menu": true,
+   "purposes": {
+    "barracks": [
+     {
+      "name": "Barracks",
+      "wall": [
+       "bk_bunk"
+      ],
+      "corner": [
+       "bk_crates"
+      ],
+      "fill": 0.7
+     },
+     {
+      "name": "Mess",
+      "floor": [
+       "bk_table"
+      ],
+      "rows": true,
+      "wall": [
+       "bk_crates"
+      ],
+      "corner": [
+       "bk_crates"
+      ],
+      "fill": 0.25,
+      "floor_fill": 1.0
+     }
+    ],
+    "bunker_ops": [
+     {
+      "name": "Operations",
+      "wall": [
+       "bk_console"
+      ],
+      "centre": [
+       "bk_table"
+      ],
+      "corner": [
+       "bk_crates"
+      ],
+      "fill": 0.5
+     },
+     {
+      "name": "Plant Room",
+      "centre": [
+       "bk_generator"
+      ],
+      "wall": [
+       "bk_crates",
+       "bk_console"
+      ],
+      "corner": [
+       "bk_crates"
+      ],
+      "fill": 0.25
+     },
+     {
+      "name": "Decontamination",
+      "wall": [
+       "bk_shower"
+      ],
+      "corner": [
+       "bk_crates"
+      ],
+      "fill": 0.5
+     }
+    ]
+   }
   },
   "crypt": {
    "title": "The Crypt",
@@ -513,7 +651,57 @@
      "vent": 3
     }
    },
-   "menu": false
+   "menu": true,
+   "purposes": {
+    "chapel": [
+     {
+      "name": "Chapel",
+      "centre": [
+       "cr_statue"
+      ],
+      "wall": [
+       "cr_brazier",
+       "cr_plinth"
+      ],
+      "corner": [
+       "cr_candles",
+       "cr_brazier"
+      ],
+      "fill": 0.3
+     }
+    ],
+    "ossuary": [
+     {
+      "name": "Ossuary",
+      "wall": [
+       "cr_coffin"
+      ],
+      "corner": [
+       "cr_bones",
+       "cr_candles"
+      ],
+      "fill": 0.55
+     }
+    ],
+    "catacomb": [
+     {
+      "name": "Tomb Hall",
+      "floor": [
+       "cr_coffin"
+      ],
+      "rows": true,
+      "wall": [
+       "cr_plinth"
+      ],
+      "corner": [
+       "cr_bones",
+       "cr_candles"
+      ],
+      "fill": 0.2,
+      "floor_fill": 0.9
+     }
+    ]
+   }
   },
   "deep": {
    "title": "All the way down",
@@ -679,6 +867,765 @@
      2
     ]
    ]
+  },
+  "executive": {
+   "title": "The Executive Floor",
+   "place": "Executive Floor",
+   "kit": "executive",
+   "corridor": "ex_hall",
+   "styles": [
+    "ex_office",
+    "ex_office",
+    "ex_board",
+    "ex_gallery"
+   ],
+   "doors": [
+    "door_ex_double",
+    "door_ex_double",
+    "door_iris"
+   ],
+   "arches": [
+    [
+     "arch_security",
+     3
+    ],
+    [
+     "arch_toll",
+     1
+    ]
+   ],
+   "exit_prop": "ex_globe",
+   "props": [
+    "ex_chair",
+    "ex_case",
+    "ex_globe",
+    "ex_bar"
+   ],
+   "purposes": {
+    "ex_office": [
+     {
+      "name": "Corner Office",
+      "centre": [
+       "ex_desk"
+      ],
+      "wall": [
+       "ex_bar",
+       "ex_case",
+       "ex_chair"
+      ],
+      "corner": [
+       "ex_globe",
+       "ex_chair",
+       "ex_case"
+      ],
+      "fill": 0.35
+     },
+     {
+      "name": "Executive Lounge",
+      "wall": [
+       "ex_bar",
+       "ex_chair",
+       "ex_chair"
+      ],
+      "floor": [
+       "ex_chair"
+      ],
+      "corner": [
+       "ex_globe",
+       "ex_case"
+      ],
+      "fill": 0.45,
+      "floor_fill": 0.6
+     },
+     {
+      "name": "Typing Pool",
+      "floor": [
+       "ex_desk"
+      ],
+      "rows": true,
+      "wall": [
+       "ex_case"
+      ],
+      "corner": [
+       "ex_chair"
+      ],
+      "fill": 0.2
+     }
+    ],
+    "ex_board": [
+     {
+      "name": "Boardroom",
+      "centre": [
+       "ex_table"
+      ],
+      "floor": [
+       "ex_table"
+      ],
+      "rows": true,
+      "wall": [
+       "ex_chair",
+       "ex_bar"
+      ],
+      "corner": [
+       "ex_globe"
+      ],
+      "fill": 0.35,
+      "floor_fill": 0.5
+     }
+    ],
+    "ex_gallery": [
+     {
+      "name": "Gallery",
+      "floor": [
+       "ex_case"
+      ],
+      "wall": [
+       "ex_chair"
+      ],
+      "corner": [
+       "ex_globe",
+       "ex_case"
+      ],
+      "fill": 0.15,
+      "floor_fill": 0.8
+     },
+     {
+      "name": "Rotunda",
+      "centre": [
+       "ex_globe"
+      ],
+      "wall": [
+       "ex_case",
+       "ex_chair"
+      ],
+      "corner": [
+       "ex_case"
+      ],
+      "fill": 0.3
+     }
+    ]
+   },
+   "actors": [
+    [
+     "monoid",
+     4
+    ],
+    [
+     "custodian",
+     2
+    ],
+    [
+     "turret",
+     2
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "dancer",
+     2
+    ],
+    [
+     "defender",
+     3
+    ],
+    [
+     "sphinx",
+     1
+    ]
+   ],
+   "boss": "sphinx",
+   "gallery_actors": [
+    [
+     "turret",
+     3
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "monoid",
+     2
+    ]
+   ],
+   "swimmers": [
+    [
+     "glorexx",
+     1
+    ]
+   ],
+   "fluid": {
+    "level": 0.7,
+    "color": [
+     0.05,
+     0.3,
+     0.22,
+     0.75
+    ],
+    "glow": 0.3
+   },
+   "ambush_text": "RED CARD REMOVED. The board has been informed.",
+   "shapes": {
+    "traps": {
+     "laser": 3,
+     "shock": 1,
+     "vent": 0
+    }
+   },
+   "menu": true
+  },
+  "megaplex": {
+   "title": "The Megaplex",
+   "place": "Megaplex",
+   "kit": "megaplex",
+   "corridor": "mp_concourse",
+   "styles": [
+    "mp_shops",
+    "mp_shops",
+    "mp_foodcourt",
+    "mp_cinema"
+   ],
+   "doors": [
+    "door_mp_glass",
+    "door_mp_glass",
+    "door_rise"
+   ],
+   "arches": [
+    [
+     "arch_toll",
+     3
+    ],
+    [
+     "arch_supply",
+     2
+    ],
+    [
+     "arch_security",
+     1
+    ]
+   ],
+   "exit_prop": "mp_kiosk",
+   "props": [
+    "mp_vendor",
+    "mp_bench",
+    "crate"
+   ],
+   "purposes": {
+    "mp_shops": [
+     {
+      "name": "Shop",
+      "centre": [
+       "mp_kiosk"
+      ],
+      "wall": [
+       "mp_vendor",
+       "mp_kiosk"
+      ],
+      "corner": [
+       "mp_vendor",
+       "crate"
+      ],
+      "fill": 0.4
+     },
+     {
+      "name": "Kiosk Court",
+      "floor": [
+       "mp_kiosk"
+      ],
+      "wall": [
+       "mp_bench",
+       "mp_vendor"
+      ],
+      "corner": [
+       "mp_vendor"
+      ],
+      "fill": 0.25,
+      "floor_fill": 0.8
+     },
+     {
+      "name": "Lounge",
+      "floor": [
+       "mp_bench"
+      ],
+      "wall": [
+       "mp_vendor",
+       "mp_bench"
+      ],
+      "corner": [
+       "mp_vendor"
+      ],
+      "fill": 0.3,
+      "floor_fill": 0.7
+     }
+    ],
+    "mp_foodcourt": [
+     {
+      "name": "Food Court",
+      "floor": [
+       "mp_table"
+      ],
+      "wall": [
+       "mp_autochef",
+       "mp_vendor",
+       "mp_autochef"
+      ],
+      "corner": [
+       "mp_vendor"
+      ],
+      "fill": 0.5,
+      "floor_fill": 1.4
+     }
+    ],
+    "mp_cinema": [
+     {
+      "name": "Screen",
+      "floor": [
+       "mp_seats"
+      ],
+      "rows": true,
+      "corner": [
+       "mp_vendor"
+      ],
+      "floor_fill": 1.6
+     }
+    ]
+   },
+   "actors": [
+    [
+     "eggbot",
+     3
+    ],
+    [
+     "defender",
+     4
+    ],
+    [
+     "drone",
+     3
+    ],
+    [
+     "dancer",
+     2
+    ],
+    [
+     "monoid",
+     2
+    ],
+    [
+     "roach",
+     3
+    ],
+    [
+     "custodian",
+     1
+    ]
+   ],
+   "boss": "plodder",
+   "gallery_actors": [
+    [
+     "drone",
+     3
+    ],
+    [
+     "defender",
+     2
+    ],
+    [
+     "eggbot",
+     2
+    ]
+   ],
+   "swimmers": [
+    [
+     "glorexx",
+     2
+    ],
+    [
+     "fouler",
+     1
+    ]
+   ],
+   "fluid": {
+    "level": 0.7,
+    "color": [
+     0.1,
+     0.5,
+     0.6,
+     0.6
+    ],
+    "glow": 0.3
+   },
+   "ambush_text": "RED CARD REMOVED. Attention shoppers: assistance is on its way.",
+   "shapes": {
+    "traps": {
+     "laser": 1,
+     "shock": 1,
+     "vent": 1
+    }
+   },
+   "menu": true
+  },
+  "hospital": {
+   "title": "The Hospital",
+   "place": "Hospital",
+   "kit": "hospital",
+   "corridor": "hs_hall",
+   "styles": [
+    "hs_ward",
+    "hs_ward",
+    "hs_theatre",
+    "hs_pharmacy"
+   ],
+   "doors": [
+    "door_hs_swing",
+    "door_hs_swing",
+    "door_split"
+   ],
+   "arches": [
+    [
+     "arch_medical",
+     4
+    ],
+    [
+     "arch_security",
+     1
+    ]
+   ],
+   "exit_prop": "hs_monitor",
+   "props": [
+    "hs_gurney",
+    "hs_screen",
+    "hs_monitor",
+    "hs_cabinet"
+   ],
+   "purposes": {
+    "hs_ward": [
+     {
+      "name": "Ward",
+      "wall": [
+       "hs_bed",
+       "hs_bed",
+       "hs_bed",
+       "hs_monitor"
+      ],
+      "corner": [
+       "hs_screen",
+       "hs_cabinet",
+       "hs_gurney"
+      ],
+      "fill": 0.7
+     },
+     {
+      "name": "Recovery",
+      "wall": [
+       "hs_bed",
+       "hs_screen"
+      ],
+      "floor": [
+       "hs_gurney"
+      ],
+      "corner": [
+       "hs_monitor",
+       "hs_cabinet"
+      ],
+      "fill": 0.5,
+      "floor_fill": 0.5
+     }
+    ],
+    "hs_theatre": [
+     {
+      "name": "Surgical Theatre",
+      "centre": [
+       "hs_table"
+      ],
+      "wall": [
+       "hs_monitor",
+       "hs_cabinet"
+      ],
+      "corner": [
+       "hs_gurney",
+       "hs_monitor"
+      ],
+      "fill": 0.25
+     }
+    ],
+    "hs_pharmacy": [
+     {
+      "name": "Dispensary",
+      "wall": [
+       "hs_cabinet"
+      ],
+      "floor": [
+       "hs_gurney"
+      ],
+      "corner": [
+       "hs_cabinet"
+      ],
+      "fill": 0.6,
+      "floor_fill": 0.3
+     }
+    ]
+   },
+   "actors": [
+    [
+     "custodian",
+     3
+    ],
+    [
+     "deadbot",
+     3
+    ],
+    [
+     "defender",
+     2
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "fouler",
+     2
+    ],
+    [
+     "mourner",
+     1
+    ],
+    [
+     "roach",
+     2
+    ]
+   ],
+   "boss": "princess",
+   "gallery_actors": [
+    [
+     "drone",
+     3
+    ],
+    [
+     "defender",
+     2
+    ]
+   ],
+   "swimmers": [
+    [
+     "fouler",
+     2
+    ],
+    [
+     "glorexx",
+     1
+    ]
+   ],
+   "fluid": {
+    "level": 0.7,
+    "color": [
+     0.5,
+     0.08,
+     0.08,
+     0.7
+    ],
+    "glow": 0.2
+   },
+   "ambush_text": "RED CARD REMOVED. Code Red. All staff to your location.",
+   "shapes": {
+    "traps": {
+     "laser": 1,
+     "shock": 1,
+     "vent": 2
+    }
+   },
+   "menu": true
+  },
+  "basilica": {
+   "title": "The Basilica",
+   "place": "Basilica",
+   "kit": "basilica",
+   "corridor": "bb_cloister",
+   "styles": [
+    "bb_nave",
+    "bb_chapel",
+    "bb_chapel",
+    "bb_vestry"
+   ],
+   "doors": [
+    "door_bb_gate"
+   ],
+   "arches": [
+    [
+     "arch_toll",
+     2
+    ]
+   ],
+   "exit_prop": "bb_altar",
+   "props": [
+    "bb_censer",
+    "bb_reliquary",
+    "bb_font"
+   ],
+   "purposes": {
+    "bb_nave": [
+     {
+      "name": "Nave",
+      "floor": [
+       "bb_pew"
+      ],
+      "rows": true,
+      "wall": [
+       "bb_censer"
+      ],
+      "corner": [
+       "bb_censer",
+       "bb_font"
+      ],
+      "fill": 0.15,
+      "floor_fill": 1.6
+     }
+    ],
+    "bb_chapel": [
+     {
+      "name": "Chapel of Offers",
+      "centre": [
+       "bb_altar"
+      ],
+      "wall": [
+       "bb_reliquary",
+       "bb_censer"
+      ],
+      "corner": [
+       "bb_censer"
+      ],
+      "fill": 0.3
+     },
+     {
+      "name": "Baptistry",
+      "centre": [
+       "bb_font"
+      ],
+      "wall": [
+       "bb_reliquary"
+      ],
+      "corner": [
+       "bb_censer"
+      ],
+      "fill": 0.25
+     },
+     {
+      "name": "Reliquary",
+      "floor": [
+       "bb_reliquary"
+      ],
+      "wall": [
+       "bb_censer"
+      ],
+      "corner": [
+       "bb_reliquary"
+      ],
+      "fill": 0.2,
+      "floor_fill": 0.8
+     }
+    ],
+    "bb_vestry": [
+     {
+      "name": "Pulpit Hall",
+      "centre": [
+       "bb_pulpit"
+      ],
+      "floor": [
+       "bb_pew"
+      ],
+      "rows": true,
+      "corner": [
+       "bb_censer"
+      ],
+      "floor_fill": 1.0
+     },
+     {
+      "name": "Vestry",
+      "wall": [
+       "bb_reliquary",
+       "bb_censer",
+       "bb_font"
+      ],
+      "corner": [
+       "bb_reliquary"
+      ],
+      "fill": 0.4
+     }
+    ]
+   },
+   "actors": [
+    [
+     "mourner",
+     3
+    ],
+    [
+     "dancer",
+     3
+    ],
+    [
+     "eggbot",
+     2
+    ],
+    [
+     "monoid",
+     2
+    ],
+    [
+     "deadbot",
+     2
+    ],
+    [
+     "drone",
+     2
+    ]
+   ],
+   "boss": "princess",
+   "gallery_actors": [
+    [
+     "mourner",
+     2
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "dancer",
+     2
+    ]
+   ],
+   "swimmers": [
+    [
+     "fouler",
+     1
+    ],
+    [
+     "glorexx",
+     1
+    ]
+   ],
+   "fluid": {
+    "level": 0.7,
+    "color": [
+     0.6,
+     0.1,
+     0.5,
+     0.7
+    ],
+    "glow": 0.6
+   },
+   "ambush_text": "RED CARD REMOVED. The congregation has been notified of your interest.",
+   "shapes": {
+    "traps": {
+     "laser": 0,
+     "shock": 1,
+     "vent": 2
+    }
+   },
+   "menu": true
   }
  },
  "easy": {
