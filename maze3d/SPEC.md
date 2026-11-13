@@ -197,6 +197,8 @@ Projectile: `speed`, `radius`, `color`, `light`, `gravity`, `kind`, `blast: { ra
 
 **The model** is any rigged glTF with an AnimationPlayer and clips named `idle`, `walk`, `attack`, `hurt`, `die` (Blender NLA tracks; name the looping ones `idle-loop`, `walk-loop` and Godot imports them as loops called `idle` and `walk`). It **faces Blender's front view (−Y)**, stands on z = 0, origin between its feet (for a ceiling mount: origin on the ceiling, hanging down). `attack` should land its blow at about the attack's `windup` time. `die` ends in the pose the body is left in.
 
+**Heavy feet.** `"footfall": {"at": [0.0, 0.5], "sound": "clang", "db": -9, "pitch": 0.45, "shake": 0.22, "reach": 9}`: each time the walk clip passes one of the `at` points (fractions of the clip, where a foot comes down) the actor sounds, kicks up dust, and shakes the player's view if they are within `reach` metres, harder the nearer they are (the Deadbot).
+
 An actor with `"dormant_clip": "<clip>"` plays that clip instead of idle until something wakes it (the Deadbot stands switched off; give it a short `sight` and `hearing`). Clips beyond the standard five are simply extra NLA tracks in the `.glb`.
 
 #### Behaviors that go with a personality

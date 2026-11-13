@@ -71,6 +71,7 @@ var _aim_pitch := 0.0
 var _gun_yaw := 0.0               # a gun that swivels on its turret ("bore"): the way its barrel is turned, off the turret's straight ahead
 var _aim_q: Dictionary = {}       # bone -> the turn the engine has given it, put back after every animation step
 var _bore0 := Vector3(0, 0, 1)    # the way the barrel points at rest, in the model
+var _foot_at := -1.0              # where in the walk clip it was last tick (0..1), for "footfall"
 var _atk_hold := 0.0              # how long this shot has been held back, waiting for the gun to come round
 var _wet := false                 # in fluid
 var _gait_t := 0.0
@@ -451,6 +452,8 @@ func _physics_process(dt: float) -> void:
 	if _atk == null:
 		if hv.length() > 0.5:
 			_play("walk", clamp(hv.length() / max(0.1, d.get("speed", 4.0)), 0.5, 1.5) * d.get("walk_rate", 1.0))
+			if d.has("footfall"):
+				_footfall()
 		else:
 			_play("idle")
 
@@ -1027,6 +1030,31 @@ func _aim_muzzle() -> Vector3:
 	var mb: int = _aim_j if _aim_j >= 0 else _aim_i
 	var mp: Array = d["aim"].get("muzzle", [0, d.get("eye", 1.2) / maxf(0.01, vis.scale.y), 0])
 	return _skel.global_transform * (_skel.get_bone_global_pose(mb) * (_skel.get_bone_global_rest(mb).affine_inverse() * Vector3(mp[0], mp[1], mp[2])))
+
+
+## Heavy feet ("footfall": {"at": [0.0, 0.5], "sound": "clang", "db": -6, "pitch": 0.5, "shake": 0.25, "reach": 9}):
+## each time the walk clip passes one of the `at` points (fractions of the clip: when a foot comes down) it sounds, kicks
+## up a little dust, and shakes the player's view if they are within `reach` metres, harder the nearer they are.
+func _footfall() -> void:
+	var ff: Dictionary = d["footfall"]
+	var nm: String = d.get("clips", {}).get("walk", "walk")
+	if anim == null or anim.current_animation != nm:
+		_foot_at = -1.0
+		return
+	var now: float = fposmod(anim.current_animation_position / maxf(0.01, anim.current_animation_length), 1.0)
+	if _foot_at >= 0.0 and now != _foot_at:
+		for t in ff.get("at", [0.0, 0.5]):
+			var hit: bool = (_foot_at < t and now >= t) if now > _foot_at else (t > _foot_at or t <= now)      # the clip wraps
+			if hit:
+				LM.sound(ff.get("sound", "step"), global_position, ff.get("db", -4.0), ff.get("pitch", 0.55) * randf_range(0.93, 1.07))
+				Fx.sparks(level, global_position + Vector3(0, 0.08, 0), Color(0.45, 0.42, 0.38), 4, 1.6, 0.35, 0.05)
+				var pl := Game.player
+				var reach: float = ff.get("reach", 9.0)
+				if pl and ff.get("shake", 0.0) > 0.0:
+					var far := global_position.distance_to(pl.global_position)
+					if far < reach:
+						pl.shake(ff["shake"] * (1.0 - far / reach))
+	_foot_at = now
 
 
 ## How far off the player the gun is pointing (radians): the angle between a line down the barrel and the line from its
