@@ -30,6 +30,9 @@ var _dash_cool := 0.0
 var _dash_dir := Vector3.ZERO
 var _bob := 0.0
 var _shake := 0.0
+var _test_zoom := OS.get_cmdline_user_args().has("--zoom")
+var zooming := false              # the right mouse button is held: sniper mode
+var zoom := 0.0                   # 0..1, how far in
 var _step := 0.0
 var _sway := Vector2.ZERO
 var _switch := 0.0
@@ -185,7 +188,7 @@ func _unhandled_input(ev: InputEvent) -> void:
 	if frozen or dead:
 		return
 	if ev is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		var s: float = cfg.get("sensitivity", 0.0022)
+		var s: float = cfg.get("sensitivity", 0.0022) * lerpf(1.0, cfg.get("zoom_fov", 20.0) / cfg.get("fov", 84.0), zoom)      # a steady hand when zoomed
 		rotation.y -= ev.relative.x * s
 		_pitch = clamp(_pitch - ev.relative.y * s, -1.5, 1.5)
 		_sway += ev.relative * 0.0004
@@ -229,6 +232,12 @@ func _physics_process(dt: float) -> void:
 	dir.y = 0
 	dir = dir.normalized()
 	var speed: float = cfg.get("speed", 8.5)
+	# sniper mode: hold the right mouse button. The view closes in, the cross hairs become a scope's, and you all but stop.
+	zooming = not frozen and not held and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and _dash_t <= 0.0
+	if _test_zoom:                                 # --zoom: the self-test and screenshots have no mouse to hold
+		zooming = true
+	zoom = move_toward(zoom, 1.0 if zooming else 0.0, dt * 7.0)
+	speed *= lerpf(1.0, cfg.get("zoom_speed", 0.22), zoom)
 	if level and level.fluid_at(global_position):      # wading
 		speed *= 0.62
 	_dash_cool -= dt
@@ -267,13 +276,14 @@ func _physics_process(dt: float) -> void:
 	head.rotation.x = _pitch + recoil * 0.05
 	cam.position = Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * _shake * 0.08 + Vector3(0, sin(_bob * 2.0) * 0.035, 0)
 	cam.rotation.z = -inp.x * 0.025 + randf_range(-1, 1) * _shake * 0.02
-	cam.fov = lerp(cam.fov, cfg.get("fov", 84.0) + (10.0 if _dash_t > 0.0 else 0.0), 12 * dt)
+	cam.fov = lerp(cam.fov, lerpf(cfg.get("fov", 84.0), cfg.get("zoom_fov", 20.0), zoom) + (10.0 if _dash_t > 0.0 else 0.0), 14 * dt)
 	# the weapon in hand
 	_sway = _sway.lerp(Vector2.ZERO, 8 * dt)
 	_switch = move_toward(_switch, 0.0, dt * 4.0)
 	var w := weapon()
 	var hp_off := LM.vec(w.get("hold"), Vector3(0.26, -0.24, -0.5))
-	hold.position = hp_off + Vector3(-_sway.x + cos(_bob) * 0.012, _sway.y + abs(sin(_bob)) * 0.014 - _switch * 0.4, recoil * 0.07)
+	hold.position = hp_off + Vector3(-_sway.x + cos(_bob) * 0.012, _sway.y + abs(sin(_bob)) * 0.014 - _switch * 0.4 - zoom * 0.5, recoil * 0.07)      # zoomed: the gun drops out of the scope's view
+	hold.visible = zoom < 0.85
 	hold.rotation = Vector3(0.05 + recoil * 0.22 - _switch * 0.8, 0.06 - _sway.x * 1.5, 0)
 	# firing
 	_cool -= dt

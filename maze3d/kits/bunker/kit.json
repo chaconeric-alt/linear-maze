@@ -100,7 +100,29 @@
     "tile": "ceil_bk_bulb",
     "every": 3,
     "flicker": 0.1
-   }
+   },
+   "wall_upper": [
+    [
+     "wall_bk_concrete",
+     3
+    ],
+    [
+     "wall_bk_lockers",
+     0.3
+    ],
+    [
+     "wall_bk_shelves",
+     0.2
+    ],
+    [
+     "wall_bk_lamp",
+     1
+    ],
+    [
+     "wall_bk_concrete2",
+     2
+    ]
+   ]
   },
   "bunker_ops": {
    "floor": [
@@ -153,7 +175,29 @@
     "tile": "ceil_bk_bulb",
     "every": 2,
     "flicker": 0.05
-   }
+   },
+   "wall_upper": [
+    [
+     "wall_bk_map",
+     2
+    ],
+    [
+     "wall_bk_conduit",
+     3
+    ],
+    [
+     "wall_bk_concrete",
+     3
+    ],
+    [
+     "wall_bk_shelves",
+     0.1
+    ],
+    [
+     "wall_bk_lamp",
+     1
+    ]
+   ]
   }
  }
 }

@@ -11,7 +11,7 @@ It is a separate codebase from the 2D Linear Maze engine in this repository (tha
 1. Open Godot 4.4 or newer (built and tested on 4.7.2) and import `maze3d/project.godot`. The first import takes a minute while Godot converts the models.
 2. Press F5.
 
-Controls: WASD move, mouse look, left click fire, Shift dash, Space jump, E use, 1–9 or the wheel to change weapon, F lamp, Tab bigger map, Esc pause. In easy mode, E also names what you are looking at (name, file id, kit, cell).
+Controls: WASD move, mouse look, left click fire, Shift dash, Space jump, E use, 1–9 or the wheel to change weapon, F lamp, Tab bigger map, Esc pause. Hold the right mouse button for sniper mode (zoomed, slow). In easy mode, E also names what you are looking at (name, file id, kit, cell).
 
 The title screen offers the built level and **Random installation**, which is made on the spot by the example generator in `generators/rooms.gd`.
 

@@ -114,7 +114,29 @@
     "tile": "ceil_mp_track",
     "every": 2,
     "flicker": 0.05
-   }
+   },
+   "wall_upper": [
+    [
+     "wall_mp_tile",
+     4
+    ],
+    [
+     "wall_mp_tile2",
+     3
+    ],
+    [
+     "wall_mp_ad",
+     2
+    ],
+    [
+     "wall_mp_vend",
+     0.1
+    ],
+    [
+     "wall_mp_shutter",
+     1
+    ]
+   ]
   },
   "mp_foodcourt": {
    "floor": [

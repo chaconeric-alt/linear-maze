@@ -47,7 +47,25 @@
     "tile": "ceil_hs_light",
     "every": 2,
     "flicker": 0.15
-   }
+   },
+   "wall_upper": [
+    [
+     "wall_hs_tile",
+     4
+    ],
+    [
+     "wall_hs_tile2",
+     3
+    ],
+    [
+     "wall_hs_light",
+     1
+    ],
+    [
+     "wall_hs_cabinet",
+     0.1
+    ]
+   ]
   },
   "hs_ward": {
    "floor": [
@@ -182,7 +200,21 @@
     "tile": "ceil_hs_light",
     "every": 2,
     "flicker": 0.25
-   }
+   },
+   "wall_upper": [
+    [
+     "wall_hs_cabinet",
+     0.5
+    ],
+    [
+     "wall_hs_tile",
+     2
+    ],
+    [
+     "wall_hs_light",
+     1
+    ]
+   ]
   }
  }
 }

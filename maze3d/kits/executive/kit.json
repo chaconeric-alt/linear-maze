@@ -1,6 +1,6 @@
 {
  "name": "The Executive Floor",
- "about": "Dead Signal's board floor with a little more high-tech: ebony and rosewood, green-veined black marble, jade, brass, low amber light, and thin cyan holo lines let into the luxury. Borrows the high-tech kit's items and machines.",
+ "about": "Dead Signal's board floor with a little more high-tech: dark walnut woods, black and jade marble, burnished gold, brown leather, candle-amber light kept low, and a thin jade-green line of light let into the luxury. No red. Borrows the high-tech kit's items and machines.",
  "uses": [
   "hightech"
  ],
@@ -12,7 +12,11 @@
    "floor": [
     [
      "floor_ex_marble",
-     6
+     4
+    ],
+    [
+     "floor_ex_jade",
+     3
     ],
     [
      "floor_ex_inlay",
@@ -85,11 +89,19 @@
    "wall_upper": [
     [
      "wall_ex_panel2",
-     3
+     5
+    ],
+    [
+     "wall_ex_panel",
+     4
+    ],
+    [
+     "wall_ex_sconce",
+     1
     ],
     [
      "wall_ex_shelves",
-     2
+     0.4
     ]
    ],
    "ceiling": [
@@ -154,8 +166,12 @@
   "ex_gallery": {
    "floor": [
     [
-     "floor_ex_marble",
+     "floor_ex_jade",
      4
+    ],
+    [
+     "floor_ex_marble",
+     2
     ],
     [
      "floor_ex_inlay",

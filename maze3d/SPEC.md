@@ -366,6 +366,8 @@ What keeps a furnished room from becoming an obstacle course: the cells on the s
 
 A model for a wall piece should be no deeper than 1.2 m; an open-floor piece should fit in 2.8 × 2.8 m; a centrepiece in 3.4 × 3.4 m.
 
+**Upstairs walls.** Shelving, lockers, cupboards and vending walls belong where someone can reach them. A style's `wall_upper` list (the walls of storeys above the ground floor of a tall room) should give them a small weight (0.4 against 3 to 5 for plain walls): rare, not never. Weights may be fractions.
+
 ## 6. Recipes
 
 **A new monster.** Model and rig it in Blender facing the front view, with the five clips as NLA tracks; export `.glb` into `actors/` (include animations; +Y up). Or add a function to `tools/blender/actors.py` and run `build_all.py -- <name>`. Add an entry to `games/havenot/defs/actors.json`. Place it with `{ "actor": "<id>" }`. Use the kit's material names and it is lit and worn like everything else.
@@ -420,6 +422,14 @@ The Fouler (`tools/blender/adopt_fouler.py`) came with no skeleton at all. It is
 blended weights, two lips, twelve toes and eight two-bone feelers, and its clips use bone *scale* as well as rotation
 (squash and stretch); scale compounds down a chain, so `whole(wide, tall)` spreads it over the spine as fifth roots.
 
+
+## Sniper mode (right mouse button)
+
+Hold the right mouse button: the view closes from `player.fov` (84) to `player.zoom_fov` (20), a scope's reticle replaces the cross hairs, the gun drops out of view, mouse sensitivity falls in step with the zoom, and movement slows to `player.zoom_speed` (0.22) of normal. Let go to come out. Dashing breaks it. All three numbers go in `game.json` `player`. `--zoom` holds it on for screenshots.
+
+## Dead things fall
+
+Anything killed off the ground (a flyer, something mid-pounce, something thrown, something over a pit or a pool) keeps half its speed and falls under gravity until it has lain still on a floor for 0.4 s. Only what is bolted to a ceiling (`"mount": "ceiling"`) stays up.
 
 ## Easy mode
 

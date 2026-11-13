@@ -14,18 +14,20 @@ from mz import Mesh, T, R, S
 from tiles import C, H, bsp
 from kits3 import courses, gothic, _frame, DW, DH, DT
 
-EXEC_MATS = {
-    'ebony':      dict(color=(0.27, 0.20, 0.155), metal=0.0, rough=0.32, shader='worn', grime=0.15),
-    'rosewood':   dict(color=(0.58, 0.21, 0.11), metal=0.0, rough=0.3, shader='worn', grime=0.2),
-    'marble_blk': dict(color=(0.17, 0.24, 0.215), metal=0.05, rough=0.1, shader='worn', grime=0.15),
-    'jade':       dict(color=(0.15, 0.48, 0.34), metal=0.15, rough=0.18, shader='worn', grime=0.15),
-    'carpet_jade': dict(color=(0.14, 0.44, 0.32), metal=0.0, rough=0.97),
-    'leather':    dict(color=(0.24, 0.04, 0.035), metal=0.0, rough=0.42),
-    'amber':      dict(color=(1.0, 0.68, 0.25), emit=(1.0, 0.66, 0.22), energy=3.2, shader='glow'),
-    'holo':       dict(color=(0.2, 0.95, 0.85), emit=(0.2, 0.95, 0.85), energy=3.0, shader='glow', pulse=0.15),
-    'book_a':     dict(color=(0.30, 0.08, 0.06), metal=0.0, rough=0.7),
-    'book_b':     dict(color=(0.07, 0.16, 0.24), metal=0.0, rough=0.7),
-    'book_c':     dict(color=(0.42, 0.34, 0.16), metal=0.0, rough=0.7),
+EXEC_MATS = {       # deep and quiet: dark woods, black and jade marble, burnished gold, candle amber. No red.
+    'ebony':      dict(color=(0.13, 0.085, 0.055), metal=0.0, rough=0.42, shader='worn', grime=0.15),      # near-black walnut
+    'rosewood':   dict(color=(0.27, 0.165, 0.085), metal=0.0, rough=0.45, shader='worn', grime=0.15),      # the lighter wood: warm brown walnut (the name is from the first version)
+    'gold_burn':  dict(color=(0.70, 0.50, 0.19), metal=1.0, rough=0.42, shader='worn', grime=0.25),         # burnished gold, as in the Basilica's floor but duller
+    'marble_blk': dict(color=(0.055, 0.07, 0.065), metal=0.05, rough=0.12, shader='worn', grime=0.1),
+    'jade':       dict(color=(0.09, 0.33, 0.23), metal=0.05, rough=0.16, shader='worn', grime=0.1),
+    'carpet_jade': dict(color=(0.06, 0.22, 0.16), metal=0.0, rough=0.97),
+    'leather':    dict(color=(0.21, 0.09, 0.045), metal=0.0, rough=0.45),                                    # rich brown leather
+    'amber':      dict(color=(1.0, 0.64, 0.24), emit=(1.0, 0.62, 0.22), energy=1.7, shader='glow', pulse=0.06),      # candle flame
+    'holo':       dict(color=(0.12, 0.72, 0.55), emit=(0.12, 0.72, 0.55), energy=1.5, shader='glow', pulse=0.1),     # the high-tech line: a deep jade light, not a pale blue
+    'portrait':   dict(color=(0.85, 0.6, 0.25), emit=(0.9, 0.62, 0.24), energy=0.9, shader='glow'),          # a likeness in old gold light
+    'book_a':     dict(color=(0.20, 0.10, 0.05), metal=0.0, rough=0.7),
+    'book_b':     dict(color=(0.06, 0.15, 0.12), metal=0.0, rough=0.7),
+    'book_c':     dict(color=(0.42, 0.32, 0.14), metal=0.0, rough=0.7),
 }
 MEGA_MATS = {
     'mall_cream': dict(color=(0.80, 0.76, 0.66), metal=0.1, rough=0.16, shader='worn', grime=0.45),
@@ -94,6 +96,7 @@ def ex_panels(m, x0, x1, z0, z1, cols, rows, wood='rosewood'):
             cx, cz = x0 + (i + 0.5) * w, z0 + (j + 0.5) * h
             m.box((w - 0.12, 0.05, h - 0.12), at=(cx, -0.025, cz), mat=wood, bevel=0.02)
             m.box((w - 0.36, 0.03, h - 0.36), at=(cx, -0.06, cz), mat='ebony', bevel=0.015)
+            m.box((w - 0.3, 0.012, h - 0.3), at=(cx, -0.052, cz), mat='gold_burn')
 
 
 def wall_ex_panel(seed):
@@ -175,10 +178,10 @@ def wall_ex_sconce(seed):
 
 def wall_ex_art(seed):
     m = wall_ex_panel(0)
-    m.box((1.9, 0.1, 1.5), at=(0, -0.09, 2.5), mat='brass', bevel=0.04)      # a gilt frame
+    m.box((1.9, 0.1, 1.5), at=(0, -0.09, 2.5), mat='gold_burn', bevel=0.04)      # a gilt frame
     m.box((1.6, 0.03, 1.2), at=(0, -0.14, 2.5), mat='marble_blk')
-    m.ball(0.3, at=(0, -0.16, 2.72), mat='holo', seg=10, scale=(0.9, 0.12, 1.1))      # the chairman, as a ghost of light
-    m.prism([(-0.5, 0), (0.5, 0), (0.3, 0.42), (-0.3, 0.42)], 0.03, at=(0, -0.13, 1.94), rot=(90, 0, 0), mat='holo')
+    m.ball(0.3, at=(0, -0.16, 2.72), mat='portrait', seg=10, scale=(0.9, 0.12, 1.1))      # the chairman, as a ghost of light
+    m.prism([(-0.5, 0), (0.5, 0), (0.3, 0.42), (-0.3, 0.42)], 0.03, at=(0, -0.13, 1.94), rot=(90, 0, 0), mat='portrait')
     m.box((0.5, 0.03, 0.08), at=(0, -0.13, 1.66), mat='brass')
     return m
 
@@ -186,13 +189,25 @@ def wall_ex_art(seed):
 def floor_ex_marble(seed):
     rnd = random.Random(seed)
     m = Mesh('floor')
-    slab_floor(m, 'brass')
+    slab_floor(m, 'gold_burn')
     for i in (-1, 1):
         for j in (-1, 1):
             m.box((1.97, 1.97, 0.04), at=(i, j, -0.021), mat='marble_blk', bevel=0.006)
     for k in range(5):                                                       # green veins
         x, y = rnd.uniform(-1.8, 1.8), rnd.uniform(-1.8, 1.8)
         m.box((rnd.uniform(0.6, 1.6), 0.02, 0.003), at=(x, y, 0.0), rot=(0, 0, rnd.uniform(0, 180)), mat='jade')
+    return m
+
+
+def floor_ex_jade(seed):
+    rnd = random.Random(seed)
+    m = Mesh('floor')
+    slab_floor(m, 'gold_burn')
+    for i in range(4):
+        for j in range(4):
+            m.box((0.975, 0.975, 0.04), at=(-1.5 + i, -1.5 + j, -0.021), mat='jade' if (i + j) % 2 else 'marble_blk', bevel=0.005)
+    for k in range(4):                                                       # pale veins in the jade
+        m.box((rnd.uniform(0.5, 1.2), 0.016, 0.003), at=(rnd.uniform(-1.7, 1.7), rnd.uniform(-1.7, 1.7), 0.0), rot=(0, 0, rnd.uniform(0, 180)), mat='gold_burn')
     return m
 
 
@@ -208,7 +223,7 @@ def floor_ex_herring(seed):
             for (dx, dy, a) in ((0, 0, 45), (0.33, 0.0, -45)):
                 cx, cy = x + dx, y + dy
                 if abs(cx) < 1.86 and abs(cy) < 1.86:
-                    m.box((L, W, 0.03), at=(cx, cy, -0.016), rot=(0, 0, a), mat='rosewood' if k % 5 else 'ebony', bevel=0.004)
+                    m.box((L, W, 0.03), at=(cx, cy, -0.016), rot=(0, 0, a), mat=('gold_burn' if k % 23 == 0 else 'ebony') if k % 5 == 0 else 'rosewood', bevel=0.004)
                 k += 1
             x += 0.66
         y += 0.29
@@ -249,7 +264,7 @@ def ceil_ex_coffer(seed):
     for i in (-1, 1):
         for j in (-1, 1):
             m.box((1.5, 1.5, 0.05), at=(i, j, 0.47), mat='rosewood', bevel=0.02)
-            m.box((1.72, 1.72, 0.03), at=(i, j, 0.49), mat='brass')
+            m.box((1.72, 1.72, 0.03), at=(i, j, 0.49), mat='gold_burn')
     return m
 
 
@@ -257,7 +272,10 @@ def ceil_ex_light(seed):
     m = ceil_ex_coffer(seed)
     for i in (-1, 1):
         for j in (-1, 1):
-            m.box((1.1, 1.1, 0.04), at=(i, j, 0.43), mat='amber')
+            m.box((0.7, 0.7, 0.04), at=(i, j, 0.43), mat='amber')
+            for q in (-1, 1):
+                m.box((0.76, 0.03, 0.03), at=(i, j + q * 0.2, 0.4), mat='gold_burn')
+                m.box((0.03, 0.76, 0.03), at=(i + q * 0.2, j, 0.4), mat='gold_burn')
     m.ring(0.5, 0.02, at=(0, 0, 0.06), mat='holo', seg=20, tseg=4)
     return m
 
@@ -313,7 +331,7 @@ def ex_desk():
     m.box((0.74, 0.06, 0.03), at=(0, -0.2, 0.86), mat='brass')
     m.lathe([(0.07, 0), (0.05, 0.02), (0.02, 0.3), (0.12, 0.34), (0.15, 0.46)], at=(0.95, -0.2, 0.84), mat='brass', seg=10)
     m.lathe([(0.1, 0), (0.14, 0.1)], at=(0.95, -0.2, 1.2), mat='amber', seg=10)
-    return dict(objects=[m.to_object()], meta=dict(type='prop', solid=(2.4, 1.0, 1.1), light=dict(color=(1.0, 0.7, 0.3), energy=0.8, range=4.5, at=(0.95, -0.2, 1.4))))
+    return dict(objects=[m.to_object()], meta=dict(type='prop', solid=(2.4, 1.0, 1.1), light=dict(color=(1.0, 0.64, 0.26), energy=0.6, range=4.5, at=(0.95, -0.2, 1.4), pulse=0.08)))
 
 
 def ex_chair():
@@ -340,7 +358,7 @@ def ex_table():
         m.box((0.34, 0.94, 0.04), at=(x, 0, 0.03), mat='brass')
     m.lathe([(0.0, 0), (0.2, 0.02), (0.22, 0.05)], at=(0, 0, 0.83), mat='brass', seg=14)
     m.lathe([(0.02, 0), (0.3, 0.25), (0.02, 0.55)], at=(0, 0, 0.92), mat='holo', seg=10)          # the projection over the middle
-    return dict(objects=[m.to_object()], meta=dict(type='prop', solid=(3.4, 0.95, 1.5), light=dict(color=(0.2, 0.95, 0.85), energy=0.7, range=4, at=(0, 0, 1.4))))
+    return dict(objects=[m.to_object()], meta=dict(type='prop', solid=(3.4, 0.95, 1.5), light=dict(color=(0.12, 0.72, 0.55), energy=0.4, range=4, at=(0, 0, 1.4))))
 
 
 def ex_bar():
@@ -369,7 +387,7 @@ def ex_globe():
     m.ball(0.5, at=(0, 0, 1.5), mat='holo', seg=14)
     m.ring(0.62, 0.02, at=(0, 0, 1.5), rot=(66, 0, 0), mat='brass', seg=24, tseg=5)
     m.ring(0.62, 0.02, at=(0, 0, 1.5), rot=(0, 0, 0), mat='brass', seg=24, tseg=5)
-    return dict(objects=[m.to_object()], meta=dict(type='prop', solid=(1.0, 2.0, 1.0), light=dict(color=(0.2, 0.95, 0.85), energy=1.2, range=6, at=(0, 0, 1.5), pulse=0.15)))
+    return dict(objects=[m.to_object()], meta=dict(type='prop', solid=(1.0, 2.0, 1.0), light=dict(color=(0.12, 0.72, 0.55), energy=0.6, range=5, at=(0, 0, 1.5), pulse=0.1)))
 
 
 def ex_case():
@@ -1336,14 +1354,14 @@ KITS = {
     'executive': dict(mats=EXEC_MATS,
         tiles={'wall_ex_panel': lambda: wall_ex_panel(1), 'wall_ex_panel2': lambda: wall_ex_panel(2), 'wall_ex_marble': lambda: wall_ex_marble(1), 'wall_ex_shelves': lambda: wall_ex_shelves(3),
                'wall_ex_screen': lambda: wall_ex_screen(1), 'wall_ex_sconce': lambda: wall_ex_sconce(1), 'wall_ex_art': lambda: wall_ex_art(1),
-               'floor_ex_marble': lambda: floor_ex_marble(1), 'floor_ex_herring': lambda: floor_ex_herring(1), 'floor_ex_carpet': lambda: floor_ex_carpet(1), 'floor_ex_inlay': lambda: floor_ex_inlay(2),
+               'floor_ex_marble': lambda: floor_ex_marble(1), 'floor_ex_herring': lambda: floor_ex_herring(1), 'floor_ex_carpet': lambda: floor_ex_carpet(1), 'floor_ex_inlay': lambda: floor_ex_inlay(2), 'floor_ex_jade': lambda: floor_ex_jade(3),
                'ceil_ex_coffer': lambda: ceil_ex_coffer(1), 'ceil_ex_light': lambda: ceil_ex_light(1), 'ceil_ex_dome': lambda: ceil_ex_dome(1)},
         props={'door_ex_double': door_ex_double, 'ex_desk': ex_desk, 'ex_chair': ex_chair, 'ex_table': ex_table, 'ex_bar': ex_bar, 'ex_globe': ex_globe, 'ex_case': ex_case},
-        meta={'ceil_ex_light': dict(light=dict(color=[1.0, 0.8, 0.5], energy=7.0, range=17, at=[0, -0.8, 0])),
-              'ceil_ex_dome': dict(light=dict(color=[1.0, 0.78, 0.46], energy=7.0, range=17, at=[0, -0.5, 0])),
-              'wall_ex_sconce': dict(light=dict(color=[1.0, 0.72, 0.4], energy=2.2, range=9, at=[0, 2.6, 0.7])),
-              'wall_ex_screen': dict(light=dict(color=[0.2, 0.9, 0.8], energy=0.5, range=4.5, at=[0, 2.5, 0.7])),
-              'wall_ex_art': dict(light=dict(color=[0.2, 0.95, 0.85], energy=0.4, range=3.5, at=[0, 2.5, 0.6]))}),
+        meta={'ceil_ex_light': dict(light=dict(color=[1.0, 0.72, 0.42], energy=3.2, range=14, at=[0, -0.8, 0], pulse=0.05)),
+              'ceil_ex_dome': dict(light=dict(color=[1.0, 0.72, 0.42], energy=3.4, range=15, at=[0, -0.5, 0], pulse=0.05)),
+              'wall_ex_sconce': dict(light=dict(color=[1.0, 0.66, 0.34], energy=1.2, range=8, at=[0, 2.6, 0.7])),
+              'wall_ex_screen': dict(light=dict(color=[0.15, 0.7, 0.55], energy=0.3, range=4.5, at=[0, 2.5, 0.7])),
+              'wall_ex_art': dict(light=dict(color=[1.0, 0.7, 0.35], energy=0.3, range=3.5, at=[0, 2.5, 0.6]))}),
     'megaplex': dict(mats=MEGA_MATS,
         tiles={'wall_mp_tile': lambda: wall_mp_tile(1), 'wall_mp_tile2': lambda: wall_mp_tile(2), 'wall_mp_store': lambda: wall_mp_store(1), 'wall_mp_store2': lambda: wall_mp_store(5),
                'wall_mp_shutter': lambda: wall_mp_shutter(1), 'wall_mp_ad': lambda: wall_mp_ad(1), 'wall_mp_vend': lambda: wall_mp_vend(1), 'wall_mp_cinema': lambda: wall_mp_cinema(1),

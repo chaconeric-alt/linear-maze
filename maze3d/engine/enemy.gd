@@ -71,6 +71,8 @@ var _aim_pitch := 0.0
 var _gun_yaw := 0.0               # a gun that swivels on its turret ("bore"): the way its barrel is turned, off the turret's straight ahead
 var _aim_q: Dictionary = {}       # bone -> the turn the engine has given it, put back after every animation step
 var _bore0 := Vector3(0, 0, 1)    # the way the barrel points at rest, in the model
+var _at_rest := false             # dead, and down: nothing more to do
+var _air_t := 0.0
 var _foot_at := -1.0              # where in the walk clip it was last tick (0..1), for "footfall"
 var _atk_hold := 0.0              # how long this shot has been held back, waiting for the gun to come round
 var _wet := false                 # in fluid
@@ -238,6 +240,23 @@ func _physics_process(dt: float) -> void:
 			_let_player_go(false)
 		if _surf != 0:                               # shot off the wall: what is left comes down
 			_fall_tick(dt, Vector3.ZERO)
+		elif not _at_rest:                           # killed in the air (flying, mid-leap, thrown, over a drop): it always comes down
+			velocity.y -= G * dt
+			velocity.x = move_toward(velocity.x, 0, 6 * dt)
+			velocity.z = move_toward(velocity.z, 0, 6 * dt)
+			var vy := velocity.y
+			move_and_slide()
+			vis.rotation.x = move_toward(vis.rotation.x, 0.0, 3.0 * dt)
+			if is_on_floor() or position.y <= level.f_min * level.H + 0.02:
+				_air_t = 0.0 if absf(velocity.x) + absf(velocity.z) > 0.2 else _air_t + dt
+				if vy < -6.0:                            # it landed hard
+					Fx.sparks(level, global_position + Vector3(0, 0.1, 0), Color(0.5, 0.5, 0.45), 8, 3.0, 0.3, 0.04)
+					LM.sound("step", global_position, 0.0, 0.6)
+				if _air_t > 0.4:
+					_at_rest = true
+					velocity = Vector3.ZERO
+			else:
+				_air_t = 0.0
 		return
 	_wet = _surf == 0 and level.fluid_at(global_position)
 	if not _eq.is_empty():                           # the lights work as hard as it does
@@ -620,7 +639,14 @@ func _die(info: Dictionary) -> void:
 		_surf = 0
 	collision_layer = 0
 	collision_mask = 1 | Level.GLASS
-	velocity = Vector3.ZERO if _surf == 0 else _wall_n * 1.5
+	if _surf != 0:
+		velocity = _wall_n * 1.5
+	elif is_on_floor() and not _fly:
+		velocity = Vector3.ZERO
+	else:
+		velocity = Vector3(velocity.x * 0.5, minf(velocity.y, 0.0), velocity.z * 0.5)      # in the air: it keeps some of its way and falls
+	_at_rest = d.get("mount", "") == "ceiling"       # what is bolted to the ceiling stays there
+	_air_t = 0.0
 	_play("die")
 	LM.sound(d.get("sounds", {}).get("die", "die"), global_position)
 	Game.stats["kills"] += 1
