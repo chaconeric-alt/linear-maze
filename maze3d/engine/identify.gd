@@ -123,7 +123,7 @@ static func _describe(n: Node, lv: Level) -> Dictionary:
 			bits.append("tag %s" % n.tag)
 	elif n is Prop:
 		var pid: String = n.e["prop"]
-		title = n.e.get("name", _nice(pid))
+		title = n.e.get("name", n.meta.get("name", _nice(pid)))
 		bits.append("prop \"%s\"" % pid)
 		bits.append("kit %s" % LM.home_kit(n.kit_id, pid))
 		var u: Dictionary = n.e.get("use", {})

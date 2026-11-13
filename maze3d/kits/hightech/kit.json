@@ -6,35 +6,356 @@
  "grime": 1.0,
  "styles": {
   "corridor": {
-   "floor": [["floor_plate_a", 5], ["floor_plate_b", 3], ["floor_broken", 1], ["floor_grate", 1]],
-   "wall": [["wall_plain_a", 4], ["wall_plain_b", 4], ["wall_plain_c", 3], ["wall_ribbed", 2], ["wall_pipes", 2], ["wall_breach", 1], ["wall_vent", 1]],
-   "ceiling": [["ceil_plain", 3], ["ceil_ducts", 3], ["ceil_cables", 2]],
-   "lights": {"tile": "ceil_light", "every": 2, "flicker": 0.4, "dead": 0.2, "dead_tile": "ceil_cables"}
+   "floor": [
+    [
+     "floor_plate_a",
+     5
+    ],
+    [
+     "floor_plate_b",
+     3
+    ],
+    [
+     "floor_broken",
+     1
+    ],
+    [
+     "floor_grate",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_plain_a",
+     4
+    ],
+    [
+     "wall_plain_b",
+     4
+    ],
+    [
+     "wall_plain_c",
+     3
+    ],
+    [
+     "wall_ribbed",
+     2
+    ],
+    [
+     "wall_pipes",
+     2
+    ],
+    [
+     "wall_breach",
+     1
+    ],
+    [
+     "wall_vent",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_plain",
+     3
+    ],
+    [
+     "ceil_ducts",
+     3
+    ],
+    [
+     "ceil_cables",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_light",
+    "every": 2,
+    "flicker": 0.4,
+    "dead": 0.2,
+    "dead_tile": "ceil_cables"
+   }
   },
   "lab": {
-   "floor": [["floor_glow", 1], ["floor_plate_b", 4], ["floor_plate_a", 3]],
-   "wall": [["wall_hex", 3], ["wall_screen", 2], ["wall_screen_dead", 1], ["wall_plain_c", 3], ["wall_ribbed", 2], ["wall_light", 1]],
-   "ceiling": [["ceil_plain", 4], ["ceil_ducts", 1]],
-   "lights": {"tile": "ceil_light", "every": 3, "flicker": 0.15, "dead": 0.1, "dead_tile": "ceil_plain"}
+   "floor": [
+    [
+     "floor_glow",
+     1
+    ],
+    [
+     "floor_plate_b",
+     4
+    ],
+    [
+     "floor_plate_a",
+     3
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hex",
+     3
+    ],
+    [
+     "wall_screen",
+     2
+    ],
+    [
+     "wall_screen_dead",
+     1
+    ],
+    [
+     "wall_plain_c",
+     3
+    ],
+    [
+     "wall_ribbed",
+     2
+    ],
+    [
+     "wall_light",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_plain",
+     4
+    ],
+    [
+     "ceil_ducts",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_light",
+    "every": 3,
+    "flicker": 0.15,
+    "dead": 0.1,
+    "dead_tile": "ceil_plain"
+   }
   },
   "machine": {
-   "floor": [["floor_grate", 4], ["floor_hazard", 2], ["floor_plate_a", 2]],
-   "wall": [["wall_pipes", 4], ["wall_vent", 2], ["wall_plain_a", 2], ["wall_breach", 1], ["wall_light", 1]],
-   "wall_upper": [["wall_plain_a", 2], ["wall_pipes", 2], ["wall_vent", 1], ["wall_ribbed", 2]],
-   "ceiling": [["ceil_truss", 3], ["ceil_ducts", 3]],
-   "lights": {"tile": "ceil_truss", "every": 2, "flicker": 0.2, "energy": 1.2}
+   "floor": [
+    [
+     "floor_grate",
+     4
+    ],
+    [
+     "floor_hazard",
+     2
+    ],
+    [
+     "floor_plate_a",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_pipes",
+     4
+    ],
+    [
+     "wall_vent",
+     2
+    ],
+    [
+     "wall_plain_a",
+     2
+    ],
+    [
+     "wall_breach",
+     1
+    ],
+    [
+     "wall_light",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_plain_a",
+     2
+    ],
+    [
+     "wall_pipes",
+     2
+    ],
+    [
+     "wall_vent",
+     1
+    ],
+    [
+     "wall_ribbed",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_truss",
+     3
+    ],
+    [
+     "ceil_ducts",
+     3
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_truss",
+    "every": 2,
+    "flicker": 0.2,
+    "energy": 1.2
+   }
   },
   "ruin": {
-   "floor": [["floor_broken", 4], ["floor_plate_a", 3], ["floor_grate", 1]],
-   "wall": [["wall_breach", 5], ["wall_plain_a", 2], ["wall_screen_dead", 2], ["wall_pipes", 1]],
-   "ceiling": [["ceil_cables", 5], ["ceil_plain", 1], ["ceil_ducts", 1]],
-   "lights": {"tile": "ceil_light", "every": 3, "flicker": 0.9, "dead": 0.35, "dead_tile": "ceil_cables"}
+   "floor": [
+    [
+     "floor_broken",
+     4
+    ],
+    [
+     "floor_plate_a",
+     3
+    ],
+    [
+     "floor_grate",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_breach",
+     5
+    ],
+    [
+     "wall_plain_a",
+     2
+    ],
+    [
+     "wall_screen_dead",
+     2
+    ],
+    [
+     "wall_pipes",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_cables",
+     5
+    ],
+    [
+     "ceil_plain",
+     1
+    ],
+    [
+     "ceil_ducts",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_light",
+    "every": 3,
+    "flicker": 0.9,
+    "dead": 0.35,
+    "dead_tile": "ceil_cables"
+   }
   },
   "vault": {
-   "floor": [["floor_glow", 3], ["floor_hazard", 1], ["floor_plate_b", 2]],
-   "wall": [["wall_ribbed", 4], ["wall_hex", 3], ["wall_light", 2], ["wall_plain_c", 1]],
-   "ceiling": [["ceil_plain", 3], ["ceil_ducts", 1]],
-   "lights": {"tile": "ceil_light", "every": 3, "flicker": 0.0}
+   "floor": [
+    [
+     "floor_glow",
+     3
+    ],
+    [
+     "floor_hazard",
+     1
+    ],
+    [
+     "floor_plate_b",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_ribbed",
+     4
+    ],
+    [
+     "wall_hex",
+     3
+    ],
+    [
+     "wall_light",
+     2
+    ],
+    [
+     "wall_plain_c",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_plain",
+     3
+    ],
+    [
+     "ceil_ducts",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_light",
+    "every": 3,
+    "flicker": 0.0
+   }
+  }
+ },
+ "models": {
+  "ht_chair_ops": {
+   "model": "models/ext/ht_chair_ops.glb",
+   "type": "prop",
+   "solid": [
+    0.96,
+    1.45,
+    0.74
+   ],
+   "source": "chair_ops.glb",
+   "name": "Operator's Chair"
+  },
+  "ht_chair_command": {
+   "model": "models/ext/ht_chair_command.glb",
+   "type": "prop",
+   "solid": [
+    1.43,
+    1.6,
+    0.8
+   ],
+   "source": "chair_command.glb",
+   "name": "Command Chair"
+  },
+  "ht_chair_cockpit": {
+   "model": "models/ext/ht_chair_cockpit.glb",
+   "type": "prop",
+   "solid": [
+    1.28,
+    1.5,
+    0.71
+   ],
+   "source": "chair_cockpit.glb",
+   "name": "Cockpit Chair"
+  },
+  "ht_chair_throne": {
+   "model": "models/ext/ht_chair_throne.glb",
+   "type": "prop",
+   "solid": [
+    1.47,
+    1.75,
+    0.77
+   ],
+   "source": "chair_throne.glb",
+   "name": "Throne Chair"
   }
  }
 }

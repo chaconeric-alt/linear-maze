@@ -985,6 +985,8 @@ func _is_door(g: Array, q: Vector2i) -> bool:
 	return ch != "#" and ch != "." and ch != "~"
 
 
+## Anywhere a piece is named, ["station", "chair"] names a set instead: the station goes where the piece would, and the
+## chair in front of it, facing it (the level's "seat"). Station depth + chair depth should come to under 3.3 m.
 ## Furnish a room for its purpose (params "purposes": {style: [purpose, ..]}; one is picked per room):
 ##   {"name": "Ward", "wall": [ids], "floor": [ids], "centre": [ids], "corner": [ids], "fill": 0.5, "rows": true}
 ##   wall    pieces that stand against a wall, facing the room: on every other wall cell, up to `fill` of them
@@ -1037,8 +1039,14 @@ func _furnish(g: Array, room_of: Array, unit: int, cells: Array, used: Dictionar
 			keep[c] = true
 	var placed: Array = []                            # [cell, thing]
 	var taken_here: Dictionary = {}
-	var put := func(c: Vector2i, id: String, face: int, hug: bool) -> void:
+	var put := func(c: Vector2i, item: Variant, face: int, hug: bool) -> void:
+		var id: String = item if item is String else item[0]      # ["station", "chair"]: a set
 		var e := {"at": [c.x, c.y], "prop": id, "face": NAMES[face], "blocks": true}      # monsters path round it, as the player walks round it
+		if item is Array and item.size() > 1:
+			e["seat"] = item[1]
+			if not hug:                                  # out on the floor the pair is centred on the cell, not the station
+				var bk: Vector2i = DIRS[(face + 2) % 4]
+				e["offset"] = [bk.x * 0.55, 0, bk.y * 0.55]
 		if hug:
 			var sz: Array = LM.model_meta(kit, id).get("solid", [1.0, 1.0, 1.0])
 			var push: float = maxf(0.0, 2.0 - float(sz[2]) / 2.0 - 0.12)

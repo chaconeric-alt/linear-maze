@@ -208,7 +208,156 @@
   },
   "pairs": [
    "dancer"
-  ]
+  ],
+  "purposes": {
+   "lab": [
+    {
+     "name": "Control Room",
+     "wall": [
+      [
+       "terminal_desk",
+       "ht_chair_ops"
+      ],
+      [
+       "terminal_desk",
+       "ht_chair_command"
+      ],
+      "server_rack"
+     ],
+     "centre": [
+      "holo_table"
+     ],
+     "corner": [
+      "server_rack",
+      "crate"
+     ],
+     "fill": 0.45
+    },
+    {
+     "name": "Laboratory",
+     "wall": [
+      "cryo_pod",
+      [
+       "terminal_desk",
+       "ht_chair_ops"
+      ],
+      "cryo_pod_broken"
+     ],
+     "corner": [
+      "crate",
+      "barrel"
+     ],
+     "fill": 0.45
+    },
+    {
+     "name": "Monitoring Station",
+     "floor": [
+      [
+       "terminal_desk",
+       "ht_chair_command"
+      ]
+     ],
+     "rows": true,
+     "wall": [
+      "server_rack"
+     ],
+     "corner": [
+      "crate"
+     ],
+     "fill": 0.25,
+     "floor_fill": 0.8
+    }
+   ],
+   "machine": [
+    {
+     "name": "Engine Room",
+     "centre": [
+      "fabricator"
+     ],
+     "wall": [
+      [
+       "terminal_desk",
+       "ht_chair_cockpit"
+      ],
+      "server_rack",
+      "barrel"
+     ],
+     "corner": [
+      "barrel",
+      "crate"
+     ],
+     "fill": 0.35
+    },
+    {
+     "name": "Server Hall",
+     "floor": [
+      "server_rack"
+     ],
+     "rows": true,
+     "wall": [
+      [
+       "terminal_desk",
+       "ht_chair_ops"
+      ]
+     ],
+     "corner": [
+      "crate"
+     ],
+     "fill": 0.2,
+     "floor_fill": 0.9
+    }
+   ],
+   "ruin": [
+    {
+     "name": "Wrecked Bridge",
+     "centre": [
+      [
+       "holo_table",
+       "ht_chair_throne"
+      ]
+     ],
+     "wall": [
+      [
+       "terminal_desk",
+       "ht_chair_cockpit"
+      ],
+      "ht_chair_cockpit"
+     ],
+     "corner": [
+      "debris",
+      "crate"
+     ],
+     "fill": 0.35
+    },
+    {
+     "name": "Crew Quarters",
+     "wall": [
+      "ht_chair_ops",
+      "crate",
+      "cryo_pod_broken"
+     ],
+     "corner": [
+      "debris",
+      "barrel"
+     ],
+     "fill": 0.3
+    }
+   ],
+   "vault": [
+    {
+     "name": "Vault",
+     "wall": [
+      "crate",
+      "server_rack"
+     ],
+     "corner": [
+      "crate",
+      "barrel"
+     ],
+     "fill": 0.3
+    }
+   ]
+  }
  },
  "start": "deepworks",
  "menu": [

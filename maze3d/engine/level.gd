@@ -1012,6 +1012,16 @@ func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 		pr.setup(self, e, kit_id)
 		if e.get("blocks", meta.has("solid") and meta["solid"][0] >= 1.4):
 			block(p, true, s)
+		if e.has("seat"):                            # a chair that goes with it: in front of it, facing it
+			var sm := LM.model_meta(kit_id, e["seat"])
+			var front := Vector3(sin(pr.rotation.y), 0, cos(pr.rotation.y))
+			var d0: float = meta.get("solid", [1.0, 1.0, 1.0])[2] * (1.0 if meta.get("mount", "") == "wall" else 0.5)
+			var d1: float = sm.get("solid", [1.0, 1.0, 1.0])[2] * 0.5
+			var ch := Prop.new()
+			add_child(ch)
+			ch.position = pr.position + front * (d0 + e.get("seat_gap", 0.25) + d1)
+			ch.rotation.y = pr.rotation.y + PI + deg_to_rad(e.get("seat_turn", 0.0))
+			ch.setup(self, {"prop": e["seat"], "at": e["at"]}, kit_id)
 		n = pr
 	elif e.has("item"):
 		var it := Pickup.new()
