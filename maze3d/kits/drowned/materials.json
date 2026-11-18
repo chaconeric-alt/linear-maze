@@ -1,0 +1,224 @@
+{
+ "accent": {
+  "color": [
+   0.8,
+   0.66,
+   0.12
+  ],
+  "grime": 0.6,
+  "metal": 0.1,
+  "rough": 0.6,
+  "shader": "worn"
+ },
+ "accent2": {
+  "color": [
+   0.55,
+   0.2,
+   0.12
+  ],
+  "grime": 0.6,
+  "metal": 0.2,
+  "rough": 0.6,
+  "shader": "worn"
+ },
+ "cable": {
+  "color": [
+   0.03,
+   0.06,
+   0.04
+  ],
+  "metal": 0.0,
+  "rough": 0.5
+ },
+ "chrome": {
+  "color": [
+   0.45,
+   0.5,
+   0.48
+  ],
+  "grime": 0.6,
+  "metal": 0.9,
+  "rough": 0.4,
+  "shader": "worn"
+ },
+ "copper": {
+  "color": [
+   0.22,
+   0.52,
+   0.42
+  ],
+  "grime": 0.5,
+  "metal": 0.5,
+  "rough": 0.7,
+  "shader": "worn"
+ },
+ "dial": {
+  "color": [
+   0.7,
+   0.74,
+   0.62
+  ],
+  "metal": 0.0,
+  "rough": 0.6
+ },
+ "floor": {
+  "color": [
+   0.13,
+   0.2,
+   0.19
+  ],
+  "grime": 0.7,
+  "metal": 0.6,
+  "rough": 0.35,
+  "shader": "worn"
+ },
+ "glow_a": {
+  "color": [
+   0.3,
+   1.0,
+   0.65
+  ],
+  "emit": [
+   0.3,
+   1.0,
+   0.65
+  ],
+  "energy": 3.4,
+  "flicker": 0.05,
+  "pulse": 0.12,
+  "shader": "glow"
+ },
+ "glow_white": {
+  "color": [
+   0.8,
+   1.0,
+   0.92
+  ],
+  "emit": [
+   0.75,
+   1.0,
+   0.9
+  ],
+  "energy": 3.2,
+  "pulse": 0.06,
+  "shader": "glow"
+ },
+ "hull": {
+  "color": [
+   0.3,
+   0.47,
+   0.42
+  ],
+  "grime": 0.8,
+  "metal": 0.1,
+  "rough": 0.5,
+  "shader": "worn"
+ },
+ "hull_dark": {
+  "color": [
+   0.035,
+   0.075,
+   0.075
+  ],
+  "grime": 0.6,
+  "metal": 0.7,
+  "rough": 0.4,
+  "shader": "worn"
+ },
+ "rot_a": {
+  "color": [
+   0.07,
+   0.17,
+   0.05
+  ],
+  "metal": 0.0,
+  "rough": 0.95
+ },
+ "rot_b": {
+  "color": [
+   0.66,
+   0.68,
+   0.6
+  ],
+  "metal": 0.0,
+  "rough": 0.9
+ },
+ "rot_c": {
+  "color": [
+   0.02,
+   0.07,
+   0.04
+  ],
+  "metal": 0.3,
+  "rough": 0.12
+ },
+ "rust": {
+  "color": [
+   0.36,
+   0.15,
+   0.06
+  ],
+  "grime": 0.95,
+  "metal": 0.3,
+  "rough": 0.9,
+  "shader": "worn"
+ },
+ "screen": {
+  "color": [
+   0.01,
+   0.05,
+   0.03
+  ],
+  "emit": [
+   0.25,
+   1.0,
+   0.55
+  ],
+  "energy": 1.5,
+  "shader": "screen"
+ },
+ "screen_dead": {
+  "color": [
+   0.02,
+   0.035,
+   0.03
+  ],
+  "metal": 0.3,
+  "rough": 0.12
+ },
+ "tank": {
+  "color": [
+   0.4,
+   1.0,
+   0.5
+  ],
+  "emit": [
+   0.35,
+   1.0,
+   0.45
+  ],
+  "energy": 1.6,
+  "pulse": 0.25,
+  "shader": "glow"
+ },
+ "trim": {
+  "color": [
+   0.33,
+   0.3,
+   0.19
+  ],
+  "grime": 0.7,
+  "metal": 0.85,
+  "rough": 0.45,
+  "shader": "worn"
+ },
+ "water": {
+  "color": [
+   0.02,
+   0.07,
+   0.07
+  ],
+  "metal": 0.6,
+  "rough": 0.04
+ }
+}

@@ -429,6 +429,24 @@ blended weights, two lips, twelve toes and eight two-bone feelers, and its clips
 (squash and stretch); scale compounds down a chain, so `whole(wide, tall)` spreads it over the spine as fifth roots.
 
 
+## Two more ruined installations (`kits/drowned`, `kits/dust`; `tools/blender/kits6.py`)
+
+Both are built with the Kaveros kit's own grammar (`tiles.plates()` packing every surface with plates, vents, light strips, indicator boxes and handles) and both rib their walls with lit moldings: a rib at the left of every wall tile, a line of light under the cornice, and on the plainer tiles a second line at hand height.
+
+| | Thalassa Deep Array (`drowned`, tag `dr`) | Helion Dust Station (`dust`, tag `du`) |
+|---|---|---|
+| Colours | sea-green paint over black hull, tarnished bronze, verdigris, signal yellow; pale green light | sun-bleached ivory ceramic over umber frames, sandblasted steel, faded red oxide; violet light |
+| Ribs and trim | round bulkhead ribs with collars and lamps let into them; a pipe rail along the skirting | slanted fins with slits of light; stepped skirting and cornice |
+| Decay | wet: algae up from the floor, slime trails from the cornice, salt and barnacles, rusted plates, standing water, salt points dripping from the ceiling | dry: sand drifted against walls and over floors, fallen tiles leaning where they landed, bleached and missing panels, cracks, wiring and ceiling panels hanging |
+| Lamps | a ring lamp in a bronze dish | three slanted bars in a steel tray |
+| Door | `door_dr_hatch`: two bulkhead leaves with portholes | `door_du_shutter`: a shutter in three segments that folds up |
+
+Each has 13 walls (`rib`, `rib2`, `plate`, `plate2`, `gauges`, `screens`, `bigscreen`, `bigscreen2`, `tank`, `rack`, `works`, `breach`, `light`), 6 floors (`plate`, `plate2`, `grate`, `glow`, `broken`, `work`), 5 ceilings (`plain`, `light`, `works`, `cables`, `rib`), and 7 pieces of furniture: `_console` (a work station; goes with a chair), `_bench` (lab equipment), `_rack`, `_cart`, `_arm` (a service arm, for robot rooms), and `dr_tank` / `du_reel`, `dr_pump` / `du_scope`. Styles: a hall, a lab, a data hall (`dr_servers`, `du_archive`), a robot bay and a ruin.
+
+**How the colours work.** Both kits give the ordinary material names (`hull`, `hull_dark`, `trim`, `floor`, `accent`, `rust`, `copper`, `screen`...) their own look in their own `materials.json`. A kit's models use that kit's materials, so the same modelling code comes out sea-green in one and ivory in the other, and furniture borrowed from the Kaveros kit keeps its own colours. `glow_a` is the kit's light; `rot_a`, `rot_b`, `rot_c` its decay (algae, salt, slime; sand, bleach, crack). A third installation in this family is `make(tag, wet)` with a new table of materials and whatever new shapes it needs.
+
+Themes `drowned` ("The Drowned Array") and `dust` ("The Dust Station") are on the title screen. Three in four robots wait in stations; each has robot-bay room types, laboratories, control rooms, monitoring floors, a server hall or archive, a machine hall. The drowned one floods more of its rooms; the dust one has no pools.
+
 ## Robot stations (`kits/robots`)
 
 Robots that are not out on patrol wait in a **station**: a bay with a lit ceiling and its own floor plate, fitted out to watch, mend and charge whatever stands in it (monitor, mending arm, charge coupling, tool rack, cables). One model for each kind of robot:

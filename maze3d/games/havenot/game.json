@@ -20,6 +20,8 @@
   "megaplex",
   "hospital",
   "basilica",
+  "drowned",
+  "dust",
   "omni",
   "robots",
   "loot"
@@ -1981,6 +1983,764 @@
    "sphinx": {
     "actor": "sphinx",
     "max": 1
+   }
+  },
+  "drowned": {
+   "title": "The Drowned Array",
+   "place": "Thalassa Array",
+   "kit": "drowned",
+   "corridor": "dr_hall",
+   "styles": [
+    "dr_lab",
+    "dr_servers",
+    "dr_bay",
+    "dr_lab",
+    "dr_sump",
+    "dr_servers"
+   ],
+   "doors": [
+    "door_dr_hatch",
+    "door_dr_hatch",
+    "door_iris",
+    "door_jaw"
+   ],
+   "props": [
+    "dr_cart",
+    "dr_rack",
+    "crate",
+    "barrel",
+    "debris"
+   ],
+   "actors": [
+    [
+     "custodian",
+     3
+    ],
+    [
+     "monoid",
+     3
+    ],
+    [
+     "eggbot",
+     2
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "defender",
+     2
+    ],
+    [
+     "fouler",
+     2
+    ],
+    [
+     "glorexx",
+     1
+    ],
+    [
+     "turret",
+     1
+    ],
+    [
+     "plodder",
+     1
+    ],
+    [
+     "deadbot",
+     1
+    ]
+   ],
+   "boss": "sphinx",
+   "swimmers": [
+    [
+     "glorexx",
+     3
+    ],
+    [
+     "fouler",
+     2
+    ]
+   ],
+   "gallery_actors": [
+    [
+     "monoid",
+     3
+    ],
+    [
+     "turret",
+     2
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "defender",
+     2
+    ]
+   ],
+   "fluid": {
+    "level": 0.7,
+    "color": [
+     0.04,
+     0.22,
+     0.18,
+     0.72
+    ],
+    "glow": 0.25
+   },
+   "ambush_text": "RED CARD REMOVED. Bilge alarm. All hands.",
+   "menu": true,
+   "containers": {
+    "shelf": "lt_shelf_ht",
+    "trophy": "lt_trophy_ht",
+    "box": "lt_box_ht",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 2
+   },
+   "stationed": 0.75,
+   "purposes": {
+    "dr_lab": [
+     {
+      "name": "Laboratory",
+      "wall": [
+       "dr_bench",
+       [
+        "dr_console",
+        "ht_chair_ops"
+       ],
+       "dr_tank",
+       "dr_bench"
+      ],
+      "floor": [
+       [
+        "dr_console",
+        "ht_chair_command"
+       ]
+      ],
+      "corner": [
+       "dr_cart",
+       "crate"
+      ],
+      "fill": 0.5,
+      "floor_fill": 0.35
+     },
+     {
+      "name": "Control Room",
+      "wall": [
+       [
+        "dr_console",
+        "ht_chair_ops"
+       ],
+       [
+        "dr_console",
+        "ht_chair_command"
+       ],
+       "dr_rack"
+      ],
+      "centre": [
+       [
+        "holo_table",
+        "ht_chair_throne"
+       ]
+      ],
+      "corner": [
+       "dr_cart",
+       "dr_rack"
+      ],
+      "fill": 0.5,
+      "valuable": true
+     },
+     {
+      "name": "Specimen Hall",
+      "floor": [
+       "dr_tank"
+      ],
+      "rows": true,
+      "wall": [
+       "dr_bench",
+       [
+        "dr_console",
+        "ht_chair_ops"
+       ]
+      ],
+      "corner": [
+       "dr_cart"
+      ],
+      "fill": 0.3,
+      "floor_fill": 0.8
+     },
+     {
+      "name": "Monitoring Floor",
+      "floor": [
+       [
+        "dr_console",
+        "ht_chair_command"
+       ],
+       [
+        "dr_console",
+        "ht_chair_ops"
+       ]
+      ],
+      "rows": true,
+      "wall": [
+       "dr_rack"
+      ],
+      "corner": [
+       "dr_cart"
+      ],
+      "fill": 0.25,
+      "floor_fill": 0.9
+     }
+    ],
+    "dr_servers": [
+     {
+      "name": "Server Hall",
+      "floor": [
+       "dr_rack"
+      ],
+      "rows": true,
+      "wall": [
+       [
+        "dr_console",
+        "ht_chair_ops"
+       ]
+      ],
+      "corner": [
+       "dr_cart"
+      ],
+      "fill": 0.2,
+      "floor_fill": 0.9,
+      "valuable": true
+     },
+     {
+      "name": "Machine Hall",
+      "centre": [
+       "dr_pump"
+      ],
+      "wall": [
+       [
+        "dr_console",
+        "ht_chair_cockpit"
+       ],
+       "dr_rack",
+       "dr_cart"
+      ],
+      "corner": [
+       "barrel",
+       "dr_cart"
+      ],
+      "fill": 0.35
+     },
+     {
+      "name": "Operations",
+      "floor": [
+       [
+        "dr_console",
+        "ht_chair_command"
+       ]
+      ],
+      "rows": true,
+      "wall": [
+       "dr_rack",
+       [
+        "dr_console",
+        "ht_chair_ops"
+       ]
+      ],
+      "corner": [
+       "dr_cart"
+      ],
+      "fill": 0.3,
+      "floor_fill": 0.7,
+      "valuable": true
+     }
+    ],
+    "dr_bay": [
+     {
+      "name": "Robot Bay",
+      "wall": [
+       "@custodian",
+       "@monoid",
+       "@defender",
+       "@drone",
+       "@eggbot",
+       "@deadbot"
+      ],
+      "centre": [
+       "dr_arm"
+      ],
+      "corner": [
+       "dr_cart",
+       "crate"
+      ],
+      "fill": 0.7,
+      "bay": true
+     },
+     {
+      "name": "Robot Workshop",
+      "floor": [
+       "dr_arm"
+      ],
+      "wall": [
+       "@custodian",
+       "@plodder",
+       "dr_bench",
+       [
+        "dr_console",
+        "ht_chair_ops"
+       ],
+       "@monoid"
+      ],
+      "corner": [
+       "dr_cart"
+      ],
+      "fill": 0.55,
+      "floor_fill": 0.5,
+      "bay": true
+     },
+     {
+      "name": "Service Bay",
+      "centre": [
+       "fabricator"
+      ],
+      "wall": [
+       "@dancer",
+       "@defender",
+       "@drone",
+       "dr_rack"
+      ],
+      "corner": [
+       "dr_cart",
+       "barrel"
+      ],
+      "fill": 0.6,
+      "bay": true
+     }
+    ],
+    "dr_sump": [
+     {
+      "name": "Flooded Section",
+      "wall": [
+       "dr_rack",
+       "dr_cart",
+       "cryo_pod_broken"
+      ],
+      "corner": [
+       "debris",
+       "dr_cart"
+      ],
+      "fill": 0.3
+     },
+     {
+      "name": "Wrecked Station",
+      "wall": [
+       "dr_console",
+       "dr_bench",
+       "debris"
+      ],
+      "centre": [
+       "dr_pump"
+      ],
+      "corner": [
+       "debris",
+       "crate"
+      ],
+      "fill": 0.3
+     }
+    ]
+   },
+   "shapes": {
+    "pool": 0.6,
+    "max_pools": 5,
+    "traps": {
+     "laser": 1,
+     "shock": 3,
+     "vent": 2
+    }
+   }
+  },
+  "dust": {
+   "title": "The Dust Station",
+   "place": "Helion Station",
+   "kit": "dust",
+   "corridor": "du_hall",
+   "styles": [
+    "du_lab",
+    "du_archive",
+    "du_bay",
+    "du_lab",
+    "du_ruin",
+    "du_archive"
+   ],
+   "doors": [
+    "door_du_shutter",
+    "door_du_shutter",
+    "door_iris",
+    "door_jaw"
+   ],
+   "props": [
+    "du_cart",
+    "du_rack",
+    "crate",
+    "barrel",
+    "debris"
+   ],
+   "actors": [
+    [
+     "deadbot",
+     3
+    ],
+    [
+     "monoid",
+     3
+    ],
+    [
+     "defender",
+     3
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "turret",
+     2
+    ],
+    [
+     "roach",
+     2
+    ],
+    [
+     "dancer",
+     1
+    ],
+    [
+     "plodder",
+     1
+    ],
+    [
+     "custodian",
+     1
+    ],
+    [
+     "eggbot",
+     1
+    ]
+   ],
+   "boss": "sphinx",
+   "swimmers": [
+    [
+     "roach",
+     1
+    ]
+   ],
+   "gallery_actors": [
+    [
+     "monoid",
+     3
+    ],
+    [
+     "turret",
+     3
+    ],
+    [
+     "drone",
+     2
+    ],
+    [
+     "defender",
+     2
+    ]
+   ],
+   "fluid": {
+    "level": 0.5,
+    "color": [
+     0.55,
+     0.42,
+     0.24,
+     0.95
+    ],
+    "glow": 0.0
+   },
+   "ambush_text": "RED CARD REMOVED. The station remembers what it was for.",
+   "menu": true,
+   "containers": {
+    "shelf": "lt_shelf_ht",
+    "trophy": "lt_trophy_ht",
+    "box": "lt_box_ht",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 2
+   },
+   "stationed": 0.75,
+   "purposes": {
+    "du_lab": [
+     {
+      "name": "Laboratory",
+      "wall": [
+       "du_bench",
+       [
+        "du_console",
+        "ht_chair_command"
+       ],
+       "du_reel",
+       "du_bench"
+      ],
+      "floor": [
+       [
+        "du_console",
+        "ht_chair_ops"
+       ]
+      ],
+      "corner": [
+       "du_cart",
+       "crate"
+      ],
+      "fill": 0.5,
+      "floor_fill": 0.35
+     },
+     {
+      "name": "Control Room",
+      "wall": [
+       [
+        "du_console",
+        "ht_chair_command"
+       ],
+       [
+        "du_console",
+        "ht_chair_ops"
+       ],
+       "du_rack"
+      ],
+      "centre": [
+       [
+        "holo_table",
+        "ht_chair_throne"
+       ]
+      ],
+      "corner": [
+       "du_cart",
+       "du_rack"
+      ],
+      "fill": 0.5,
+      "valuable": true
+     },
+     {
+      "name": "Assay Hall",
+      "floor": [
+       "du_reel"
+      ],
+      "rows": true,
+      "wall": [
+       "du_bench",
+       [
+        "du_console",
+        "ht_chair_command"
+       ]
+      ],
+      "corner": [
+       "du_cart"
+      ],
+      "fill": 0.3,
+      "floor_fill": 0.8
+     },
+     {
+      "name": "Monitoring Floor",
+      "floor": [
+       [
+        "du_console",
+        "ht_chair_ops"
+       ],
+       [
+        "du_console",
+        "ht_chair_command"
+       ]
+      ],
+      "rows": true,
+      "wall": [
+       "du_rack"
+      ],
+      "corner": [
+       "du_cart"
+      ],
+      "fill": 0.25,
+      "floor_fill": 0.9
+     }
+    ],
+    "du_archive": [
+     {
+      "name": "Archive",
+      "floor": [
+       "du_reel"
+      ],
+      "rows": true,
+      "wall": [
+       [
+        "du_console",
+        "ht_chair_command"
+       ]
+      ],
+      "corner": [
+       "du_cart"
+      ],
+      "fill": 0.2,
+      "floor_fill": 0.9,
+      "valuable": true
+     },
+     {
+      "name": "Machine Hall",
+      "centre": [
+       "du_scope"
+      ],
+      "wall": [
+       [
+        "du_console",
+        "ht_chair_cockpit"
+       ],
+       "du_rack",
+       "du_cart"
+      ],
+      "corner": [
+       "barrel",
+       "du_cart"
+      ],
+      "fill": 0.35
+     },
+     {
+      "name": "Operations",
+      "floor": [
+       [
+        "du_console",
+        "ht_chair_ops"
+       ]
+      ],
+      "rows": true,
+      "wall": [
+       "du_rack",
+       [
+        "du_console",
+        "ht_chair_command"
+       ]
+      ],
+      "corner": [
+       "du_cart"
+      ],
+      "fill": 0.3,
+      "floor_fill": 0.7,
+      "valuable": true
+     }
+    ],
+    "du_bay": [
+     {
+      "name": "Robot Bay",
+      "wall": [
+       "@custodian",
+       "@monoid",
+       "@defender",
+       "@drone",
+       "@eggbot",
+       "@deadbot"
+      ],
+      "centre": [
+       "du_arm"
+      ],
+      "corner": [
+       "du_cart",
+       "crate"
+      ],
+      "fill": 0.7,
+      "bay": true
+     },
+     {
+      "name": "Robot Workshop",
+      "floor": [
+       "du_arm"
+      ],
+      "wall": [
+       "@custodian",
+       "@plodder",
+       "du_bench",
+       [
+        "du_console",
+        "ht_chair_command"
+       ],
+       "@monoid"
+      ],
+      "corner": [
+       "du_cart"
+      ],
+      "fill": 0.55,
+      "floor_fill": 0.5,
+      "bay": true
+     },
+     {
+      "name": "Service Bay",
+      "centre": [
+       "fabricator"
+      ],
+      "wall": [
+       "@dancer",
+       "@defender",
+       "@drone",
+       "du_rack"
+      ],
+      "corner": [
+       "du_cart",
+       "barrel"
+      ],
+      "fill": 0.6,
+      "bay": true
+     }
+    ],
+    "du_ruin": [
+     {
+      "name": "Buried Section",
+      "wall": [
+       "du_rack",
+       "du_cart",
+       "cryo_pod_broken"
+      ],
+      "corner": [
+       "debris",
+       "du_cart"
+      ],
+      "fill": 0.3
+     },
+     {
+      "name": "Wrecked Station",
+      "wall": [
+       "du_console",
+       "du_bench",
+       "debris"
+      ],
+      "centre": [
+       "du_scope"
+      ],
+      "corner": [
+       "debris",
+       "crate"
+      ],
+      "fill": 0.3
+     }
+    ]
+   },
+   "shapes": {
+    "pool": 0.0,
+    "max_pools": 0,
+    "traps": {
+     "laser": 3,
+     "shock": 1,
+     "vent": 1
+    }
    }
   }
  },

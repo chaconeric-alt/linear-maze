@@ -1,0 +1,406 @@
+{
+ "name": "Thalassa Deep Array",
+ "about": "A high-technology installation that leaked for three hundred years: sea-green paint over black hull, bronze and verdigris, pale green light. Round bulkhead ribs with lamps let into them, a pipe rail along every skirting, instrument walls, specimen cylinders, server blades. Wet decay: algae, slime trails, salt, barnacles, rust, standing water, drips. 13 walls, 6 floors, 5 ceilings, a bulkhead hatch, 7 pieces of furniture.",
+ "uses": [
+  "hightech",
+  "robots",
+  "loot"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "styles": {
+  "dr_hall": {
+   "floor": [
+    [
+     "floor_dr_plate",
+     4
+    ],
+    [
+     "floor_dr_plate2",
+     3
+    ],
+    [
+     "floor_dr_glow",
+     2
+    ],
+    [
+     "floor_dr_grate",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_dr_rib",
+     4
+    ],
+    [
+     "wall_dr_rib2",
+     3
+    ],
+    [
+     "wall_dr_plate",
+     3
+    ],
+    [
+     "wall_dr_light",
+     1
+    ],
+    [
+     "wall_dr_works",
+     1
+    ],
+    [
+     "wall_dr_breach",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_dr_plate",
+     3
+    ],
+    [
+     "wall_dr_plate2",
+     3
+    ],
+    [
+     "wall_dr_rib",
+     2
+    ],
+    [
+     "wall_dr_works",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_dr_plain",
+     4
+    ],
+    [
+     "ceil_dr_rib",
+     2
+    ],
+    [
+     "ceil_dr_cables",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_dr_light",
+    "every": 3,
+    "flicker": 0.2,
+    "dead": 0.15,
+    "dead_tile": "ceil_dr_plain"
+   }
+  },
+  "dr_lab": {
+   "floor": [
+    [
+     "floor_dr_plate",
+     4
+    ],
+    [
+     "floor_dr_work",
+     2
+    ],
+    [
+     "floor_dr_glow",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_dr_tank",
+     3
+    ],
+    [
+     "wall_dr_gauges",
+     3
+    ],
+    [
+     "wall_dr_screens",
+     2
+    ],
+    [
+     "wall_dr_plate",
+     2
+    ],
+    [
+     "wall_dr_rib",
+     2
+    ],
+    [
+     "wall_dr_bigscreen",
+     1
+    ],
+    [
+     "wall_dr_light",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_dr_plate",
+     3
+    ],
+    [
+     "wall_dr_rib",
+     2
+    ],
+    [
+     "wall_dr_gauges",
+     1
+    ],
+    [
+     "wall_dr_plate2",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_dr_plain",
+     3
+    ],
+    [
+     "ceil_dr_works",
+     2
+    ],
+    [
+     "ceil_dr_rib",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_dr_light",
+    "every": 3,
+    "flicker": 0.2,
+    "dead": 0.15,
+    "dead_tile": "ceil_dr_plain"
+   }
+  },
+  "dr_servers": {
+   "floor": [
+    [
+     "floor_dr_grate",
+     3
+    ],
+    [
+     "floor_dr_plate",
+     3
+    ],
+    [
+     "floor_dr_work",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_dr_rack",
+     5
+    ],
+    [
+     "wall_dr_gauges",
+     2
+    ],
+    [
+     "wall_dr_rib",
+     2
+    ],
+    [
+     "wall_dr_screens",
+     2
+    ],
+    [
+     "wall_dr_bigscreen2",
+     1
+    ],
+    [
+     "wall_dr_breach",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_dr_rack",
+     3
+    ],
+    [
+     "wall_dr_plate2",
+     3
+    ],
+    [
+     "wall_dr_rib2",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_dr_cables",
+     3
+    ],
+    [
+     "ceil_dr_plain",
+     2
+    ],
+    [
+     "ceil_dr_rib",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_dr_light",
+    "every": 3,
+    "flicker": 0.3,
+    "dead": 0.15,
+    "dead_tile": "ceil_dr_plain"
+   }
+  },
+  "dr_bay": {
+   "floor": [
+    [
+     "floor_dr_work",
+     4
+    ],
+    [
+     "floor_dr_plate",
+     2
+    ],
+    [
+     "floor_dr_grate",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_dr_plate",
+     3
+    ],
+    [
+     "wall_dr_rib",
+     3
+    ],
+    [
+     "wall_dr_works",
+     2
+    ],
+    [
+     "wall_dr_gauges",
+     2
+    ],
+    [
+     "wall_dr_light",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_dr_plate",
+     3
+    ],
+    [
+     "wall_dr_rib2",
+     2
+    ],
+    [
+     "wall_dr_works",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_dr_works",
+     2
+    ],
+    [
+     "ceil_dr_rib",
+     3
+    ],
+    [
+     "ceil_dr_plain",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_dr_light",
+    "every": 2,
+    "flicker": 0.2,
+    "dead": 0.15,
+    "dead_tile": "ceil_dr_plain"
+   }
+  },
+  "dr_sump": {
+   "floor": [
+    [
+     "floor_dr_broken",
+     4
+    ],
+    [
+     "floor_dr_grate",
+     2
+    ],
+    [
+     "floor_dr_plate2",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_dr_breach",
+     4
+    ],
+    [
+     "wall_dr_works",
+     3
+    ],
+    [
+     "wall_dr_rib2",
+     2
+    ],
+    [
+     "wall_dr_plate2",
+     2
+    ],
+    [
+     "wall_dr_bigscreen2",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_dr_breach",
+     2
+    ],
+    [
+     "wall_dr_plate2",
+     3
+    ],
+    [
+     "wall_dr_works",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_dr_works",
+     3
+    ],
+    [
+     "ceil_dr_cables",
+     3
+    ],
+    [
+     "ceil_dr_plain",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_dr_light",
+    "every": 3,
+    "flicker": 0.5,
+    "dead": 0.45,
+    "dead_tile": "ceil_dr_plain"
+   }
+  }
+ }
+}

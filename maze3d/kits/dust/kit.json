@@ -1,0 +1,406 @@
+{
+ "name": "Helion Dust Station",
+ "about": "A high-technology installation the desert got into: sun-bleached ivory ceramic over umber frames, sandblasted steel, faded red oxide, violet light. Slanted fins with slits of light, stepped skirtings and cornices, instrument walls, sample cylinders, relay cabinets. Dry decay: sand drifts, fallen and leaning tiles, bleached and missing panels, cracks, hanging wiring and ceiling panels. 13 walls, 6 floors, 5 ceilings, a folding shutter, 7 pieces of furniture.",
+ "uses": [
+  "hightech",
+  "robots",
+  "loot"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "styles": {
+  "du_hall": {
+   "floor": [
+    [
+     "floor_du_plate",
+     4
+    ],
+    [
+     "floor_du_plate2",
+     3
+    ],
+    [
+     "floor_du_glow",
+     2
+    ],
+    [
+     "floor_du_grate",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_du_rib",
+     4
+    ],
+    [
+     "wall_du_rib2",
+     3
+    ],
+    [
+     "wall_du_plate",
+     3
+    ],
+    [
+     "wall_du_light",
+     1
+    ],
+    [
+     "wall_du_works",
+     1
+    ],
+    [
+     "wall_du_breach",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_du_plate",
+     3
+    ],
+    [
+     "wall_du_plate2",
+     3
+    ],
+    [
+     "wall_du_rib",
+     2
+    ],
+    [
+     "wall_du_works",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_du_plain",
+     4
+    ],
+    [
+     "ceil_du_rib",
+     2
+    ],
+    [
+     "ceil_du_cables",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_du_light",
+    "every": 3,
+    "flicker": 0.2,
+    "dead": 0.15,
+    "dead_tile": "ceil_du_plain"
+   }
+  },
+  "du_lab": {
+   "floor": [
+    [
+     "floor_du_plate",
+     4
+    ],
+    [
+     "floor_du_work",
+     2
+    ],
+    [
+     "floor_du_glow",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_du_tank",
+     3
+    ],
+    [
+     "wall_du_gauges",
+     3
+    ],
+    [
+     "wall_du_screens",
+     2
+    ],
+    [
+     "wall_du_plate",
+     2
+    ],
+    [
+     "wall_du_rib",
+     2
+    ],
+    [
+     "wall_du_bigscreen",
+     1
+    ],
+    [
+     "wall_du_light",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_du_plate",
+     3
+    ],
+    [
+     "wall_du_rib",
+     2
+    ],
+    [
+     "wall_du_gauges",
+     1
+    ],
+    [
+     "wall_du_plate2",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_du_plain",
+     3
+    ],
+    [
+     "ceil_du_works",
+     2
+    ],
+    [
+     "ceil_du_rib",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_du_light",
+    "every": 3,
+    "flicker": 0.2,
+    "dead": 0.15,
+    "dead_tile": "ceil_du_plain"
+   }
+  },
+  "du_archive": {
+   "floor": [
+    [
+     "floor_du_grate",
+     3
+    ],
+    [
+     "floor_du_plate",
+     3
+    ],
+    [
+     "floor_du_work",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_du_rack",
+     5
+    ],
+    [
+     "wall_du_gauges",
+     2
+    ],
+    [
+     "wall_du_rib",
+     2
+    ],
+    [
+     "wall_du_screens",
+     2
+    ],
+    [
+     "wall_du_bigscreen2",
+     1
+    ],
+    [
+     "wall_du_breach",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_du_rack",
+     3
+    ],
+    [
+     "wall_du_plate2",
+     3
+    ],
+    [
+     "wall_du_rib2",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_du_cables",
+     3
+    ],
+    [
+     "ceil_du_plain",
+     2
+    ],
+    [
+     "ceil_du_rib",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_du_light",
+    "every": 3,
+    "flicker": 0.3,
+    "dead": 0.15,
+    "dead_tile": "ceil_du_plain"
+   }
+  },
+  "du_bay": {
+   "floor": [
+    [
+     "floor_du_work",
+     4
+    ],
+    [
+     "floor_du_plate",
+     2
+    ],
+    [
+     "floor_du_grate",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_du_plate",
+     3
+    ],
+    [
+     "wall_du_rib",
+     3
+    ],
+    [
+     "wall_du_works",
+     2
+    ],
+    [
+     "wall_du_gauges",
+     2
+    ],
+    [
+     "wall_du_light",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_du_plate",
+     3
+    ],
+    [
+     "wall_du_rib2",
+     2
+    ],
+    [
+     "wall_du_works",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_du_works",
+     2
+    ],
+    [
+     "ceil_du_rib",
+     3
+    ],
+    [
+     "ceil_du_plain",
+     2
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_du_light",
+    "every": 2,
+    "flicker": 0.2,
+    "dead": 0.15,
+    "dead_tile": "ceil_du_plain"
+   }
+  },
+  "du_ruin": {
+   "floor": [
+    [
+     "floor_du_broken",
+     4
+    ],
+    [
+     "floor_du_grate",
+     2
+    ],
+    [
+     "floor_du_plate2",
+     2
+    ]
+   ],
+   "wall": [
+    [
+     "wall_du_breach",
+     4
+    ],
+    [
+     "wall_du_works",
+     3
+    ],
+    [
+     "wall_du_rib2",
+     2
+    ],
+    [
+     "wall_du_plate2",
+     2
+    ],
+    [
+     "wall_du_bigscreen2",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_du_breach",
+     2
+    ],
+    [
+     "wall_du_plate2",
+     3
+    ],
+    [
+     "wall_du_works",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_du_works",
+     3
+    ],
+    [
+     "ceil_du_cables",
+     3
+    ],
+    [
+     "ceil_du_plain",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_du_light",
+    "every": 3,
+    "flicker": 0.5,
+    "dead": 0.45,
+    "dead_tile": "ceil_du_plain"
+   }
+  }
+ }
+}

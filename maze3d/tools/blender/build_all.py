@@ -98,10 +98,11 @@ def main():
     import agency
     mz.define_materials(palette.MATERIALS)
     mz.define_materials(agency.MATERIALS)
-    import kits3, kits4, kits5, actors2
+    import kits3, kits4, kits5, kits6, actors2
     later = dict(kits3.KITS)
     later.update(kits4.KITS)
     later.update(kits5.KITS)
+    later.update(kits6.KITS)
     just = [k for k in os.environ.get('MZ_KITS', '').split(',') if k]        # MZ_KITS=hospital,basilica: only those kits, no actors
     if not just:
         build_kit('hightech', tiles.TILES, props.PROPS, TILE_META, palette.MATERIALS)

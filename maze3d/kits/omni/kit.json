@@ -12,7 +12,9 @@
   "basilica",
   "hightech",
   "robots",
-  "loot"
+  "loot",
+  "drowned",
+  "dust"
  ],
  "cell": 4.0,
  "height": 4.0,
