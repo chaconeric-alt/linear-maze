@@ -537,7 +537,9 @@ Ambient occlusion is on, gentle (intensity 1.2, radius 0.8) and at full resoluti
 
 The player's lamp (F) casts no shadows: a light at the eye throws slivers of shadow beside every ledge and pillar, and they shift whenever the view does. `--lights` prints how many lights a level has.
 
-While playing: **F1** room-light shadows on and off, **F2** steps the shadow softening (hard, then five grades of soft), **F3** ambient occlusion, **F4** volumetric fog. `--noao` and `--novfog` start without. (F5 to F8 are the editor's run and stop keys.)
+**Lighting tests while playing.** F1 picks the next test (F3 the one before) and says what it is and how it stands; F2 switches it. The tests: the view (normal, unshaded, lighting only, lights per screen area, overdraw, occlusion alone), surface grime, room-light shadows, shadow edges, ambient occlusion, volumetric fog, distance fog, glow, highlights, far lights fading out, the near clip plane, anti-aliasing, all room lights. `--noao` and `--novfog` start without those two. (F5 to F8 are the editor's run and stop keys.)
+
+The `worn` surface shader works out where each pixel is in the world from the camera's position and the view-space position, not from the model matrix, so its grime stays put on batched tiles whatever the engine does with model matrices. The global shader parameter `lm_grime` (1) scales grime everywhere.
 
 ## Sniper mode (right mouse button)
 
