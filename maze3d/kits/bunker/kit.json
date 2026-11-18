@@ -2,7 +2,9 @@
  "name": "The Bunker",
  "about": "Somebody planned to outlive the Age of War down here: board-marked concrete, olive steel, caged bulbs, bunks squared away for three hundred years.",
  "uses": [
-  "hightech"
+  "hightech",
+  "robots",
+  "loot"
  ],
  "cell": 4.0,
  "height": 4.0,

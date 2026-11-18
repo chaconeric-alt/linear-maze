@@ -9,6 +9,7 @@ var _vis: Node3D
 var _t := 0.0
 var _base_y := 0.0
 var _armed := 0.5
+var _rest := false          # lying on a shelf, in a case or on the floor: it does not hover or turn
 
 
 func setup(lv: Level, entry: Dictionary, kit_id: String) -> void:
@@ -20,7 +21,8 @@ func setup(lv: Level, entry: Dictionary, kit_id: String) -> void:
 	collision_mask = 2
 	var cs := CollisionShape3D.new()
 	var s := SphereShape3D.new()
-	s.radius = 0.9
+	_rest = d.get("rest", false)
+	s.radius = 1.3 if _rest else 0.9      # near enough to reach on to the shelf
 	cs.shape = s
 	add_child(cs)
 	var over := {}
@@ -32,17 +34,35 @@ func setup(lv: Level, entry: Dictionary, kit_id: String) -> void:
 		m.albedo_color = Color(c.r * 2, c.g * 2, c.b * 2)
 		over["lock"] = m
 	_vis = LM.spawn_model(d.get("kit", kit_id), d.get("model", "item_chips"), over)
-	_vis.scale = Vector3.ONE * d.get("scale", 1.6)
+	_vis.scale = Vector3.ONE * d.get("scale", 1.6) * (0.72 if _rest else 1.0)
 	add_child(_vis)
+	if _rest:                                        # it sits on what it is on
+		var acc: Array = [null]
+		_bounds(_vis, Transform3D.IDENTITY, acc)
+		if acc[0] != null:
+			_vis.position.y -= (acc[0] as AABB).position.y
+		_vis.rotation.y = randf_range(-0.5, 0.5)
+		cs.position.y = 0.3
 	var l := OmniLight3D.new()
 	l.light_color = c
-	l.light_energy = 0.6
-	l.omni_range = 2.5
+	l.light_energy = 0.35 if _rest else 0.6
+	l.omni_range = 1.6 if _rest else 2.5
+	l.position.y = 0.25 if _rest else 0.0
 	add_child(l)
 	if d.get("kind", "") == "treasure":
 		Game.stats["treasure_total"] += 1
 	body_entered.connect(_on_body)
 	_t = randf() * 6.0
+
+
+static func _bounds(n: Node, xf: Transform3D, acc: Array) -> void:
+	if n is Node3D:
+		xf = xf * (n as Node3D).transform
+	if n is MeshInstance3D and (n as MeshInstance3D).mesh != null:
+		var b: AABB = xf * (n as MeshInstance3D).mesh.get_aabb()
+		acc[0] = b if acc[0] == null else (acc[0] as AABB).merge(b)
+	for c in n.get_children():
+		_bounds(c, xf, acc)
 
 
 func _ready() -> void:
@@ -52,8 +72,9 @@ func _ready() -> void:
 func _process(dt: float) -> void:
 	_t += dt
 	_armed -= dt
-	_vis.rotation.y = _t * 1.6
-	_vis.position.y = sin(_t * 2.2) * 0.08
+	if not _rest:
+		_vis.rotation.y = _t * 1.6
+		_vis.position.y = sin(_t * 2.2) * 0.08
 	var pl := Game.player
 	if pl and _armed <= 0.0 and overlaps_body(pl):
 		_on_body(pl)

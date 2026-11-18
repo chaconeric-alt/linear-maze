@@ -1,0 +1,335 @@
+{
+ "amber": {
+  "color": [
+   1.0,
+   0.64,
+   0.24
+  ],
+  "emit": [
+   1.0,
+   0.62,
+   0.22
+  ],
+  "energy": 1.7,
+  "pulse": 0.06,
+  "shader": "glow"
+ },
+ "concrete_dark": {
+  "color": [
+   0.24,
+   0.24,
+   0.23
+  ],
+  "grime": 0.7,
+  "metal": 0.0,
+  "rough": 0.95,
+  "shader": "worn"
+ },
+ "ebony": {
+  "color": [
+   0.13,
+   0.085,
+   0.055
+  ],
+  "grime": 0.15,
+  "metal": 0.0,
+  "rough": 0.42,
+  "shader": "worn"
+ },
+ "flame": {
+  "color": [
+   1.0,
+   0.7,
+   0.25
+  ],
+  "emit": [
+   1.0,
+   0.66,
+   0.22
+  ],
+  "energy": 5.0,
+  "flicker": 0.3,
+  "pulse": 0.3,
+  "shader": "glow"
+ },
+ "furnace": {
+  "color": [
+   1.0,
+   0.45,
+   0.08
+  ],
+  "emit": [
+   1.0,
+   0.42,
+   0.08
+  ],
+  "energy": 5.0,
+  "flicker": 0.25,
+  "pulse": 0.3,
+  "shader": "glow"
+ },
+ "gold_burn": {
+  "color": [
+   0.7,
+   0.5,
+   0.19
+  ],
+  "grime": 0.25,
+  "metal": 1.0,
+  "rough": 0.42,
+  "shader": "worn"
+ },
+ "halo": {
+  "color": [
+   1.0,
+   0.3,
+   0.75
+  ],
+  "emit": [
+   1.0,
+   0.3,
+   0.75
+  ],
+  "energy": 4.0,
+  "pulse": 0.2,
+  "shader": "glow"
+ },
+ "iron": {
+  "color": [
+   0.2,
+   0.19,
+   0.19
+  ],
+  "grime": 0.8,
+  "metal": 0.85,
+  "rough": 0.55,
+  "shader": "worn"
+ },
+ "lime": {
+  "color": [
+   0.66,
+   0.6,
+   0.48
+  ],
+  "grime": 0.5,
+  "metal": 0.0,
+  "rough": 0.88,
+  "shader": "worn"
+ },
+ "mall_cream": {
+  "color": [
+   0.8,
+   0.76,
+   0.66
+  ],
+  "grime": 0.45,
+  "metal": 0.1,
+  "rough": 0.16,
+  "shader": "worn"
+ },
+ "mall_teal": {
+  "color": [
+   0.07,
+   0.42,
+   0.44
+  ],
+  "grime": 0.45,
+  "metal": 0.1,
+  "rough": 0.18,
+  "shader": "worn"
+ },
+ "neon_pink": {
+  "color": [
+   1.0,
+   0.2,
+   0.6
+  ],
+  "emit": [
+   1.0,
+   0.16,
+   0.58
+  ],
+  "energy": 2.6,
+  "shader": "glow"
+ },
+ "olive": {
+  "color": [
+   0.2,
+   0.24,
+   0.12
+  ],
+  "grime": 0.55,
+  "metal": 0.5,
+  "rough": 0.55,
+  "shader": "worn"
+ },
+ "pew": {
+  "color": [
+   0.13,
+   0.07,
+   0.04
+  ],
+  "grime": 0.3,
+  "metal": 0.05,
+  "rough": 0.4,
+  "shader": "worn"
+ },
+ "porcelain": {
+  "color": [
+   0.8,
+   0.8,
+   0.79
+  ],
+  "grime": 0.22,
+  "metal": 0.0,
+  "rough": 0.16,
+  "shader": "worn"
+ },
+ "porcelain_grey": {
+  "color": [
+   0.6,
+   0.61,
+   0.65
+  ],
+  "grime": 0.3,
+  "metal": 0.0,
+  "rough": 0.24,
+  "shader": "worn"
+ },
+ "rb_charge": {
+  "color": [
+   0.3,
+   1.0,
+   0.55
+  ],
+  "emit": [
+   0.3,
+   1.0,
+   0.55
+  ],
+  "energy": 2.6,
+  "pulse": 0.35,
+  "shader": "glow"
+ },
+ "rb_frame": {
+  "color": [
+   0.3,
+   0.32,
+   0.35
+  ],
+  "grime": 0.5,
+  "metal": 0.8,
+  "rough": 0.4,
+  "shader": "worn"
+ },
+ "rb_plate": {
+  "color": [
+   0.1,
+   0.11,
+   0.13
+  ],
+  "grime": 0.5,
+  "metal": 0.7,
+  "rough": 0.45,
+  "shader": "worn"
+ },
+ "rose_gold": {
+  "color": [
+   0.95,
+   0.6,
+   0.5
+  ],
+  "metal": 1.0,
+  "rough": 0.2
+ },
+ "rosewood": {
+  "color": [
+   0.27,
+   0.165,
+   0.085
+  ],
+  "grime": 0.15,
+  "metal": 0.0,
+  "rough": 0.45,
+  "shader": "worn"
+ },
+ "sale": {
+  "color": [
+   1.0,
+   0.85,
+   0.1
+  ],
+  "emit": [
+   1.0,
+   0.82,
+   0.1
+  ],
+  "energy": 2.4,
+  "pulse": 0.2,
+  "shader": "glow"
+ },
+ "soot": {
+  "color": [
+   0.02,
+   0.02,
+   0.02
+  ],
+  "metal": 0.0,
+  "rough": 0.98
+ },
+ "steel": {
+  "color": [
+   0.7,
+   0.72,
+   0.74
+  ],
+  "grime": 0.3,
+  "metal": 0.95,
+  "rough": 0.28,
+  "shader": "worn"
+ },
+ "stone": {
+  "color": [
+   0.2,
+   0.21,
+   0.24
+  ],
+  "grime": 0.7,
+  "metal": 0.0,
+  "rough": 0.93,
+  "shader": "worn"
+ },
+ "stone_light": {
+  "color": [
+   0.42,
+   0.41,
+   0.38
+  ],
+  "grime": 0.6,
+  "metal": 0.0,
+  "rough": 0.9,
+  "shader": "worn"
+ },
+ "tile_white": {
+  "color": [
+   0.84,
+   0.86,
+   0.84
+  ],
+  "grime": 0.5,
+  "metal": 0.05,
+  "rough": 0.14,
+  "shader": "worn"
+ },
+ "tin": {
+  "color": [
+   0.62,
+   0.62,
+   0.6
+  ],
+  "grime": 0.4,
+  "metal": 0.9,
+  "rough": 0.4,
+  "shader": "worn"
+ }
+}

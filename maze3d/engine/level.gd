@@ -409,12 +409,8 @@ func _shell_cell(batches: Dictionary, styles: Dictionary, x: int, y: int, f: int
 	if above.get("pit", false):                          # ... and the room under a pit has a hole in its ceiling
 		pass
 	elif not above["solid"]:                             # a room right on top of this one: ceiling tiles stand too tall to fit under
-		_boxes.append(Transform3D(Basis().scaled(Vector3(C, UNDER, C)), p + Vector3(0, hh * H - UNDER / 2 - 0.005, 0)))      # its floor, so the ceiling here is a plain slab
-		var lmeta: Dictionary = kit["tiles"].get(ceil_tile, {})
-		if lmeta.has("light"):                           # where a light would have been, a strip light
-			var lxf := Transform3D(Basis(Vector3.UP, (x + y) % 2 * PI / 2), p + Vector3(0, hh * H - UNDER - 0.03, 0))
-			_lamps.append(lxf * Transform3D(Basis().scaled(Vector3(1.6, 0.05, 0.3)), Vector3.ZERO))
-			_make_light(lmeta["light"], lxf.translated(Vector3(0, -0.3, 0)), room, li.get("flicker", 0.0), li.get("shadows", true), li.get("energy", 1.0))
+		_boxes.append(Transform3D(Basis().scaled(Vector3(C, UNDER, C)), p + Vector3(0, hh * H - UNDER / 2 - 0.005, 0)))      # its floor: the slab between the two rooms
+		_add(batches, ceil_tile, _under(ceil_tile, p + Vector3(0, hh * H - UNDER, 0), UNDER - 0.22), x, y, room, st, hh)      # ... and this room's own ceiling on the underside of it
 	else:
 		_add(batches, ceil_tile, Transform3D(Basis(Vector3.UP, _rng.randi() % 4 * PI / 2), p + Vector3(0, hh * H, 0)), x, y, room, st, hh)
 	var closed: Array = DIAG[c["diag"]][0] if c["diag"] != "" else []
@@ -437,8 +433,10 @@ func _shell_cell(batches: Dictionary, styles: Dictionary, x: int, y: int, f: int
 				var tile := _pick(st.get("wall") if lv == 0 else st.get("wall_upper", st.get("wall")))
 				_add(batches, tile, Transform3D(Basis(Vector3.UP, DIR_ROT[d]), wp + Vector3(0, lv * H, 0)), x, y, room, st)
 	for lv in [0] + c["decks"]:                      # a rail wherever a floor or a balcony ends in a drop
-		if lv > 0:                                       # a balcony: a slab and a floor on it
+		if lv > 0:                                       # a balcony: a slab and a floor on it, and a ceiling on its underside
 			_boxes.append(Transform3D(Basis().scaled(Vector3(C, 0.3, C)), p + Vector3(0, lv * H - 0.16, 0)))
+			var under_tile := _pick(st.get("ceiling"))
+			_add(batches, under_tile, _under(under_tile, p + Vector3(0, lv * H - 0.31, 0), 0.24), x, y, room)
 			_add(batches, _pick(st.get("floor")), Transform3D(Basis(Vector3.UP, quarter), p + Vector3(0, lv * H, 0)), x, y, room)
 		elif c["door"] != "" or c.has("lift"):
 			continue
@@ -523,6 +521,20 @@ func _shape(body: StaticBody3D, xf: Transform3D, size: Vector3) -> void:
 	cs.shape = b
 	cs.transform = xf
 	body.add_child(cs)
+
+
+## Where a ceiling tile goes when there is a floor right on top of it (a room over a room, the underside of a balcony).
+## A ceiling tile is modelled to stand up into empty rock, as much as 1.4 m for a vault; here it has only `room` metres
+## before it would come through the floor above. So it is hung at the underside and pressed flat to fit: the same
+## panels, beams and fittings, shallower.
+func _under(tile: String, at: Vector3, room: float) -> Transform3D:
+	var tall := 0.6
+	var mesh := LM.tile_mesh(kit_id, tile) if tile != "" else null
+	if mesh != null:
+		var bb := mesh.get_aabb()
+		tall = maxf(0.05, bb.position.y + bb.size.y)
+	var squash := minf(1.0, room / tall)
+	return Transform3D(Basis(Vector3.UP, _rng.randi() % 4 * PI / 2).scaled_local(Vector3(1, squash, 1)), at)
 
 
 func _lights_for(st: Dictionary, room: String) -> Dictionary:
@@ -990,7 +1002,24 @@ func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 		pt.setup(self, e, p, s)
 		_register(pt, e.get("tag", ""))
 		return pt
-	if e.has("actor"):
+	if e.has("station"):                             # a robot's station, and the robot waiting in it (if any)
+		var stn := Station.new()
+		add_child(stn)
+		stn.position = pos
+		stn.rotation.y = _face_yaw(e.get("face", "s"))
+		var se: Dictionary = e.duplicate()
+		se["prop"] = e["station"]
+		se.erase("actor")
+		stn.setup(self, se, kit_id)
+		if e.get("blocks", false):
+			block(p, true, s)
+		if str(e.get("actor", "")) != "":
+			var be := {"actor": e["actor"], "at": e["at"], "face": e.get("face", "s"), "lounge": "none", "still": true}
+			if s != 0:
+				be["level"] = s
+			stn.hold(spawn_thing(be, p) as Enemy)
+		n = stn
+	elif e.has("actor"):
 		var a := Enemy.new()
 		add_child(a)
 		a.position = pos
@@ -1022,11 +1051,23 @@ func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 			ch.position = pr.position + front * (d0 + e.get("seat_gap", 0.25) + d1)
 			ch.rotation.y = pr.rotation.y + PI + deg_to_rad(e.get("seat_turn", 0.0))
 			ch.setup(self, {"prop": e["seat"], "at": e["at"]}, kit_id)
+		var slots: Array = meta.get("slots", [])     # a container: what it holds sits in its places, to be taken
+		var hi := 0
+		for held in e.get("holds", []):
+			if hi >= slots.size():
+				break
+			var ie: Dictionary = (held if held is Dictionary else {"item": held}).duplicate()
+			ie["rest"] = true
+			var pk := Pickup.new()
+			add_child(pk)
+			pk.position = pr.transform * LM.vec(slots[hi])
+			pk.setup(self, ie, kit_id)
+			hi += 1
 		n = pr
 	elif e.has("item"):
 		var it := Pickup.new()
 		add_child(it)
-		it.position = pos + Vector3(0, e.get("y", 1.0), 0)
+		it.position = pos + Vector3(0, e.get("y", 0.0 if e.get("rest", false) else 1.0), 0)
 		it.setup(self, e, kit_id)
 		n = it
 	elif e.has("trap"):

@@ -2,7 +2,9 @@
  "name": "The Basilica of the Blessed Brand",
  "about": "A cathedral to a logo: cream limestone and gold, windows of brand colour, neon halos, purple velvet, an altar with a till on it. Borrows the high-tech kit's items and machines.",
  "uses": [
-  "hightech"
+  "hightech",
+  "robots",
+  "loot"
  ],
  "cell": 4.0,
  "height": 4.0,

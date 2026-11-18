@@ -126,6 +126,17 @@ static func _describe(n: Node, lv: Level) -> Dictionary:
 		title = n.e.get("name", n.meta.get("name", _nice(pid)))
 		bits.append("prop \"%s\"" % pid)
 		bits.append("kit %s" % LM.home_kit(n.kit_id, pid))
+		if n is Station:
+			var who := "empty"
+			if n.bot != null and is_instance_valid(n.bot) and not n.bot.dead and n.bot.dock == n:
+				who = "holds %s" % n.bot.d.get("name", "a robot")
+			bits.append("robot station, %s, %s" % ["open" if n._open > 0.5 else "shut", who])
+		if n.e.has("holds"):
+			var left: Array = []
+			for k in n.get_parent().get_children():
+				if k is Pickup and k._rest and k.global_position.distance_to(n.global_position) < 2.2:
+					left.append(str(k.d.get("item", "?")))
+			bits.append("container, holds: %s" % (", ".join(PackedStringArray(left)) if not left.is_empty() else "nothing now"))
 		var u: Dictionary = n.e.get("use", {})
 		if not u.is_empty():
 			bits.append("use: %s%s" % [u.get("type", "effects"), " (used)" if n.used > 0 else ""])
@@ -133,7 +144,7 @@ static func _describe(n: Node, lv: Level) -> Dictionary:
 			bits.append("walk-through arch")
 		if n.e.has("hp"):
 			bits.append("breakable, hp %d" % ceil(n.hp))
-		if u.is_empty() and n._walk.is_empty() and not n.e.has("hp"):
+		if u.is_empty() and n._walk.is_empty() and not n.e.has("hp") and not n is Station and not n.e.has("holds"):
 			bits.append("furniture (does nothing)")
 		if n.tag != "":
 			bits.append("tag %s" % n.tag)

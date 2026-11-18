@@ -1,0 +1,572 @@
+{
+ "id": "depot",
+ "name": "The Depot (robot stations, loot containers)",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "Every robot has a station. The ones along the north wall stand open; the ones along the south wall are shut. Next door: what treasure is kept in.",
+ "ambient_energy": 0.7,
+ "legend": {
+  "+": {
+   "door": "door_split"
+  }
+ },
+ "map": [
+  "###########################",
+  "#.#.#.#.#.#.#.#.##........#",
+  "#................#........#",
+  "#................+........#",
+  "#................#........#",
+  "#................#........#",
+  "#.#.#.#.#.#.#.#.##........#",
+  "###########################"
+ ],
+ "rooms": [
+  {
+   "name": "Depot",
+   "rect": [
+    1,
+    1,
+    16,
+    6
+   ],
+   "style": "machine",
+   "height": 1
+  },
+  {
+   "name": "Stores",
+   "rect": [
+    18,
+    1,
+    8,
+    6
+   ],
+   "style": "vault",
+   "height": 1
+  }
+ ],
+ "things": [
+  {
+   "start": true,
+   "face": "w",
+   "at": [
+    16,
+    3
+   ]
+  },
+  {
+   "sign": "THE DEPOT\nopen stations north, shut ones south",
+   "face": "w",
+   "color": [
+    0.4,
+    1.0,
+    0.6
+   ],
+   "size": 44,
+   "y": 3.0,
+   "at": [
+    16,
+    2
+   ]
+  },
+  {
+   "station": "rb_station_custodian",
+   "actor": "custodian",
+   "face": "s",
+   "at": [
+    1,
+    1
+   ]
+  },
+  {
+   "station": "rb_station_custodian",
+   "actor": "custodian",
+   "face": "n",
+   "shut": true,
+   "at": [
+    1,
+    6
+   ]
+  },
+  {
+   "station": "rb_station_dancer",
+   "actor": "dancer",
+   "face": "s",
+   "at": [
+    3,
+    1
+   ]
+  },
+  {
+   "station": "rb_station_dancer",
+   "actor": "dancer",
+   "face": "n",
+   "shut": true,
+   "at": [
+    3,
+    6
+   ]
+  },
+  {
+   "station": "rb_station_knife",
+   "actor": "drone",
+   "face": "s",
+   "at": [
+    5,
+    1
+   ]
+  },
+  {
+   "station": "rb_station_knife",
+   "actor": "drone",
+   "face": "n",
+   "shut": true,
+   "at": [
+    5,
+    6
+   ]
+  },
+  {
+   "station": "rb_station_plodder",
+   "actor": "plodder",
+   "face": "s",
+   "at": [
+    7,
+    1
+   ]
+  },
+  {
+   "station": "rb_station_plodder",
+   "actor": "plodder",
+   "face": "n",
+   "shut": true,
+   "at": [
+    7,
+    6
+   ]
+  },
+  {
+   "station": "rb_station_monoid",
+   "actor": "monoid",
+   "face": "s",
+   "at": [
+    9,
+    1
+   ]
+  },
+  {
+   "station": "rb_station_monoid",
+   "actor": "monoid",
+   "face": "n",
+   "shut": true,
+   "at": [
+    9,
+    6
+   ]
+  },
+  {
+   "station": "rb_station_deadbot",
+   "actor": "deadbot",
+   "face": "s",
+   "at": [
+    11,
+    1
+   ]
+  },
+  {
+   "station": "rb_station_deadbot",
+   "actor": "deadbot",
+   "face": "n",
+   "shut": true,
+   "at": [
+    11,
+    6
+   ]
+  },
+  {
+   "station": "rb_station_eggbot",
+   "actor": "eggbot",
+   "face": "s",
+   "at": [
+    13,
+    1
+   ]
+  },
+  {
+   "station": "rb_station_eggbot",
+   "actor": "eggbot",
+   "face": "n",
+   "shut": true,
+   "at": [
+    13,
+    6
+   ]
+  },
+  {
+   "station": "rb_station_defender",
+   "actor": "defender",
+   "face": "s",
+   "at": [
+    15,
+    1
+   ]
+  },
+  {
+   "station": "rb_station_defender",
+   "actor": "defender",
+   "face": "n",
+   "shut": true,
+   "at": [
+    15,
+    6
+   ]
+  },
+  {
+   "prop": "lt_shelf_ht",
+   "at": [
+    18,
+    1
+   ],
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.5999999999999999
+   ],
+   "blocks": false,
+   "holds": [
+    "cookies",
+    "circuit",
+    "fuel_cell"
+   ]
+  },
+  {
+   "prop": "lt_trophy_ag",
+   "at": [
+    19,
+    1
+   ],
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.4
+   ],
+   "blocks": false,
+   "holds": [
+    "statuette"
+   ]
+  },
+  {
+   "prop": "lt_box_ht",
+   "at": [
+    20,
+    1
+   ],
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.5
+   ],
+   "blocks": false,
+   "holds": [
+    "chips",
+    "crystal"
+   ]
+  },
+  {
+   "prop": "lt_charge_rack",
+   "at": [
+    21,
+    1
+   ],
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.5999999999999999
+   ],
+   "blocks": false,
+   "holds": [
+    "fuel_cell",
+    "fuel_cell",
+    "fuel_cell_big",
+    "fuel_cell"
+   ]
+  },
+  {
+   "prop": "lt_shelf_wk",
+   "at": [
+    22,
+    1
+   ],
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.5999999999999999
+   ],
+   "blocks": false,
+   "holds": [
+    "circuit",
+    "circuit"
+   ]
+  },
+  {
+   "prop": "lt_trophy_wk",
+   "at": [
+    23,
+    1
+   ],
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.4
+   ],
+   "blocks": false,
+   "holds": [
+    "statuette"
+   ]
+  },
+  {
+   "prop": "lt_box_wk",
+   "at": [
+    24,
+    1
+   ],
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.5
+   ],
+   "blocks": false,
+   "holds": [
+    "chips"
+   ]
+  },
+  {
+   "prop": "lt_reliquary",
+   "at": [
+    25,
+    1
+   ],
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.45
+   ],
+   "blocks": false,
+   "holds": [
+    "crystal",
+    "crystal"
+   ]
+  },
+  {
+   "prop": "lt_shelf_ex",
+   "at": [
+    18,
+    6
+   ],
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    1.5999999999999999
+   ],
+   "blocks": false,
+   "holds": [
+    "cookies",
+    "cookies",
+    "cookies"
+   ]
+  },
+  {
+   "prop": "lt_trophy_ex",
+   "at": [
+    19,
+    6
+   ],
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    1.4
+   ],
+   "blocks": false,
+   "holds": [
+    "statuette"
+   ]
+  },
+  {
+   "prop": "lt_box_ex",
+   "at": [
+    20,
+    6
+   ],
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    1.5
+   ],
+   "blocks": false,
+   "holds": [
+    "chips",
+    "chips"
+   ]
+  },
+  {
+   "prop": "lt_shelf_bb",
+   "at": [
+    21,
+    6
+   ],
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    1.5999999999999999
+   ],
+   "blocks": false,
+   "holds": [
+    "cookies",
+    "circuit"
+   ]
+  },
+  {
+   "prop": "lt_shelf_hs",
+   "at": [
+    22,
+    6
+   ],
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    1.5999999999999999
+   ],
+   "blocks": false,
+   "holds": [
+    "fuel_cell",
+    "fuel_cell"
+   ]
+  },
+  {
+   "prop": "lt_trophy_mp",
+   "at": [
+    23,
+    6
+   ],
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    1.4
+   ],
+   "blocks": false,
+   "holds": [
+    "statuette"
+   ]
+  },
+  {
+   "prop": "lt_box_cr",
+   "at": [
+    24,
+    6
+   ],
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    1.5
+   ],
+   "blocks": false,
+   "holds": [
+    "crystal"
+   ]
+  },
+  {
+   "prop": "lt_shelf_bk",
+   "at": [
+    25,
+    6
+   ],
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    1.5999999999999999
+   ],
+   "blocks": false,
+   "holds": [
+    "cookies",
+    "fuel_cell",
+    "circuit"
+   ]
+  },
+  {
+   "item": "scattergun",
+   "at": [
+    15,
+    4
+   ]
+  },
+  {
+   "item": "shells",
+   "at": [
+    15,
+    5
+   ]
+  },
+  {
+   "item": "plasma",
+   "at": [
+    14,
+    4
+   ]
+  },
+  {
+   "item": "cells",
+   "at": [
+    14,
+    5
+   ]
+  },
+  {
+   "item": "chips",
+   "rest": true,
+   "at": [
+    22,
+    3
+   ]
+  },
+  {
+   "prop": "holo_table",
+   "at": [
+    24,
+    3
+   ],
+   "blocks": false,
+   "use": {
+    "type": "effects",
+    "prompt": "Sign out",
+    "effects": [
+     {
+      "type": "end",
+      "title": "Depot inspected",
+      "text": "Everything is where it is kept."
+     }
+    ]
+   }
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Wake them one at a time, or do not."
+  }
+ ],
+ "triggers": []
+}

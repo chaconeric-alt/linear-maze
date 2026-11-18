@@ -2,7 +2,9 @@
  "name": "The Crypt",
  "about": "Not high-tech at all: coursed stone, rib vaults, bone walls, candles and coloured glass. The first kit for games set somewhere older.",
  "uses": [
-  "hightech"
+  "hightech",
+  "robots",
+  "loot"
  ],
  "cell": 4.0,
  "height": 4.0,

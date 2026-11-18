@@ -29,6 +29,8 @@ The title screen offers the built level and **Random installation**, which is ma
 | `kits/megaplex/` | The Infinite Satisfaction Retail Megaplex: cream and teal mall tile, chrome, shopfronts, shutters, backlit ads, vending walls, a cinema's acoustic walls and screen; tile, checker, cinema-carpet and way-finding floors; grid, track-light, skylight, hanging-sign and starry cinema ceilings; kiosk, vending machine, cinema seats, food-court table, bench, auto-chef; automatic glass doors. 9 walls, 4 floors, 5 ceilings, 6 props, 1 door. |
 | `kits/hospital/` | The Elective Suffering & Recovery Hospital: white tile with a teal band, bedhead service panels, drawn curtains, medicine cupboards, x-ray light boxes, a surgical theatre's observation window; lino, way-finding, tile and drain floors; drop ceilings, troffers, curtain rails and a surgical lamp; ward bed, operating table, medicine cabinet, gurney, monitor, privacy screen; swing doors with portholes. 7 walls, 4 floors, 4 ceilings, 6 props, 1 door. |
 | `kits/basilica/` | The Basilica of the Blessed Brand: cream limestone and gold, logo glass in magenta, cyan and yellow, gilt-framed billboards, product niches with neon halos, organ pipes, votive racks; flagstone, logo-roundel and aisle-runner floors; rib vaults with neon halo chandeliers and banners; checkout altar, pew, sample font, pulpit, censer, reliquary; gilded gates. 8 walls, 3 floors, 3 ceilings, 6 props, 1 door. |
+| `kits/robots/` | Robot stations: one for each kind of robot, with a shutter that closes over a hibernating one. 8 models. Every kit uses it. |
+| `kits/loot/` | What treasure is kept in: shelves, a trophy case and a strongbox in each of nine places' own materials, a power-cell charging rack, a reliquary. 29 models. Every kit uses it. |
 | `kits/omni/` | No models: borrows every kit so one level can use them all. |
 | `actors/source/` | Models made elsewhere, as they arrived: the Tripo Roach, Monoid and Glorexx. `tools/blender/adopt_*.py` turn them into `actors/*_tripo.glb` with clips. |
 | `actors/` | 17 rigged, animated monsters as `.glb`: Gladiator Roach, Custodian, Monoid, Glorexx, ceiling turret; and Eggbot, Grease Monkey, Dancer, Snapper, Deadbot, Desktop Defender, Sphinx Gun, Plodder, Drone, Fouler, Mourner and the Princess. |
@@ -49,6 +51,8 @@ Off the Concourse, south: the **Brand Experience Suite**, the Agency's showroom,
 The title screen also offers random installations in each place: mixed, The Works, The Bunker, The Crypt, and "All the way down", which uses every kit and every monster and keeps the Princess in the last room.
 
 **Staff Only** is a third small level for behaviors: a break room where three Monoids lean, smoke and sit until you interrupt them, and next door a nest where Roaches and a Glorexx wait on the walls and ceiling, cross the ceiling to get above you, and pounce; a Glorexx swims in the flooded corner.
+
+**The Depot** is a small level to look at things in: every robot's station, open along the north wall and shut along the south, with the robot in it; and next door every kind of loot container, stocked.
 
 **The Atrium** is a fourth small level for level shapes: an annexe with a thin wall and two windows, opening into an eight-sided hall three storeys high with a balcony at the first storey, another at the second, ramps between, and windows through to a control room. Enemies you have seen show red on the map.
 

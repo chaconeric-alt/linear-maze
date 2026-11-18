@@ -1,0 +1,10 @@
+{
+ "name": "Robot Stations",
+ "about": "A station for each kind of robot: a bay with a lit ceiling and its own floor, fitted out to watch, mend and charge whatever stands in it, with a shutter that closes over a hibernating one. Every other kit uses this one.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "styles": {}
+}

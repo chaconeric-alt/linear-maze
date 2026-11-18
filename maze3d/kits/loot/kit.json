@@ -1,0 +1,10 @@
+{
+ "name": "Loot Containers",
+ "about": "What treasure is kept in: shelves, a trophy case and a strongbox in each place's own materials, a charging rack for power cells, a reliquary. Every other kit uses this one.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "styles": {}
+}

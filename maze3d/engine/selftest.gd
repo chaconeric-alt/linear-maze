@@ -151,7 +151,12 @@ func run(m: Node) -> void:
 	for n in level.get_children():
 		if not is_instance_valid(n) or not (n is Prop or n is Pickup or n is Door or n is Trap or (n is Enemy and n._surf == 0 and not n.dead)):
 			continue
+		if (n is Pickup and n._rest and n.position.y - level.floor_y(n.position) > 0.4) or (n is Enemy and n.dock != null and n.dock._open < 0.5):
+			continue                                 # in a container (E names the container, and what it holds), or behind a shutter
 		var want := ""
+		var want2 := "\u0000"
+		if n is Station and n.bot != null and is_instance_valid(n.bot) and not n.bot.dead:
+			want2 = "monster \"%s\"" % str(LM.defs["actors"].find_key(n.bot.d))      # an open one: what you see first is who is in it
 		if n is Prop:
 			want = "prop \"%s\"" % n.e["prop"]
 		elif n is Pickup:
@@ -181,7 +186,7 @@ func run(m: Node) -> void:
 			_look_at(mid)
 			pl.head.force_update_transform()
 			var seen: Dictionary = Identify.look(pl)
-			if seen.get("detail", "").contains(want):
+			if seen.get("detail", "").contains(want) or seen.get("detail", "").contains(want2):
 				got_it = true
 				break
 		if got_it:
@@ -238,6 +243,12 @@ func run(m: Node) -> void:
 		pl._equip(wi % pl.weapons.size())
 		wi += 1
 		var nm: String = a.d.get("name", "?")
+		if a.dock != null:                           # switch it on and let it out of its station
+			var was_calm: bool = Game.calm
+			a.dock.release()
+			for _i in 110:
+				await get_tree().physics_frame
+			Game.calm = was_calm
 		if a._surf != 0:                             # bring it down off the wall to be fought
 			a._drop()
 			for _i in 50:

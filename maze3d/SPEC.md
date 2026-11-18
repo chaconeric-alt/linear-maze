@@ -429,6 +429,60 @@ blended weights, two lips, twelve toes and eight two-bone feelers, and its clips
 (squash and stretch); scale compounds down a chain, so `whole(wide, tall)` spreads it over the spine as fifth roots.
 
 
+## Robot stations (`kits/robots`)
+
+Robots that are not out on patrol wait in a **station**: a bay with a lit ceiling and its own floor plate, fitted out to watch, mend and charge whatever stands in it (monitor, mending arm, charge coupling, tool rack, cables). One model for each kind of robot:
+
+| Robot | Station | Shape |
+|---|---|---|
+| Custodian (maintenance) | `rb_station_custodian` | a 3.5 m cube |
+| Dancer (spinning) | `rb_station_dancer` | a cylinder; the front third of the drum turns round behind the rest |
+| Knife Fighter | `rb_station_knife` | a pillar it rests over, a mast with lamp and monitor, a cage that sinks into the floor |
+| Plodder (big sentry) | `rb_station_plodder` | tall (3.95 m) and heavy: ribs, clamps, hazard stripes |
+| Monoid | `rb_station_monoid` | a narrow upright frame |
+| Deadbot | `rb_station_deadbot` | a rusted rack |
+| Eggbot | `rb_station_eggbot` | a low dock |
+| Desktop Defender | `rb_station_defender` | a waist-high kennel with a flap |
+
+In a level's `things`: `{"station": "rb_station_custodian", "actor": "custodian", "at": [x, y], "face": "s", "shut": true}`. `face` is the way the opening looks. `shut`: the shutter is down over a hibernating robot; otherwise the station is an open frame with the robot standing in it. Leave `actor` out for an empty station (its robot is out). `"blocks": true` when it stands in a room and not in an alcove of its own.
+
+The robot is switched off until something activates it: it sees the player; the station's sensor does (8 m for a shut one, 14 m for an open one, `"wake"` to change it, and it needs a line of sight from the door); it is shot at; it hears gunfire; or a robot within 10 m raises the alarm. Then the shutter opens (the model's `time`) and it comes out. So a row of stations goes off together.
+
+A station model is an ordinary prop built SHUT, with a part named `shutter` in `parts` (how it moves to open), `solids` for its walls, `"shut_box": [x, y, z, w, h, d]` (what the shutter stops while it is down: sight, shots, the player), `"stand"` (where the robot stands, from the middle of the cell) and a `light`. `engine/station.gd` (`Station extends Prop`).
+
+**The generator** (`rooms.gd`): `"stations": {actor: model}` says which robots have one; `"stationed": 0.65` of those on the main floor are taken off patrol and put in a station, `"hibernating": 0.5` of them shut. Each station is let into the wall of the room its robot was in: an alcove of its own, one cell of rock opened on to the room, by the same rule that finds a lift its nook (below). Where a room has no rock to spare it stands against the wall with clear floor in front and to both sides. A purpose's wall pieces may name `"@custodian"`: that robot's station, 60% of them occupied; a purpose with `"bay": true` is a robot room ("Robot Bay", "Drone Bay", "Security Annex"...), and gets the power-cell charging rack.
+
+### Lifts and Sphinx guns have nooks too
+
+A lift is never out in a room: the generator opens one cell of rock off a one-storey room for it (rock on three sides, nothing else let into the wall beside it) and keeps the floor in front clear. In the basement and upstairs the room it serves is put beside the shaft, not round it.
+
+`"sphinx": {"actor": "sphinx", "max": 2}`: Sphinx guns are no longer rolled with the other monsters. One is let into the wall of each **valuable** room, in the alcove nearest that room's door, up to `max` a level. A room is valuable if its purpose says `"valuable": true` (Server Hall, Vault, Control Room, Operations, Dispensary, Reliquary, Gallery...) or if it got a trophy case or a strongbox.
+
+## Loot is kept in something (`kits/loot`)
+
+Treasure does not float about the rooms. The generator puts it in a container standing against a wall, with the things in it to be taken by walking up:
+
+| Kind | Model | Holds | Places |
+|---|---|---|---|
+| `shelf` | `lt_shelf_<tag>` | cookie boxes, power cells, circuit boards | 6 |
+| `trophy` | `lt_trophy_<tag>` | the Employee of the Century | 1 |
+| `box` | `lt_box_<tag>` (the Basilica: `lt_reliquary`) | credit chips, crystals | 2 |
+| `cells` | `lt_charge_rack` | power cells on charge, in robot rooms | 6 |
+
+`<tag>` is the place: `ht ag wk bk cr ex mp hs bb`, each in that kit's own materials. `"containers": {kind: model}` on a theme picks them; `"loot_kinds": {item: kind}` says what goes in what. Walls with a container against them get no window (and upstairs, no door).
+
+In `things`: `{"prop": "lt_shelf_ex", "at": [x, y], "face": "s", "offset": [0, 0, -1.6], "blocks": false, "holds": ["cookies", "cookies", "circuit"]}`. Any model with `"slots": [[x, y, z], ..]` (places, in the model's own space) can hold things. A held thing is a pickup with `"rest": true`: it sits on its place, does not hover or turn, and is taken from 1.3 m. `{"item": "chips", "rest": true}` alone is a thing lying on the floor, which is what the generator does where there is no wall to stand a container against (a landing, the middle of an upstairs room), and what dropped things are. Things thrown out of lockers, crates and coffins still hover so they are seen.
+
+Easy mode's E on a container names it and what is left in it; on a station, whether it is open and who is in it.
+
+**The Depot** (`levels/depot.json`, `--level=depot`) has every station twice (open along the north wall, shut along the south) and every kind of container next door.
+
+## Ceilings under other rooms; things that die on lifts
+
+The ceiling of a room with another room over it is now that room's own ceiling tiles, squashed to fit the 0.8 m under the slab above (it was a bare slab with a strip lamp). The underside of a balcony gets the same.
+
+A dead thing that has come to rest checks every half second that there is still floor under it, and one lying on a lift never settles for good: it rides the lift, and falls if the lift leaves.
+
 ## Sniper mode (right mouse button)
 
 Hold the right mouse button: the view closes from `player.fov` (84) to `player.zoom_fov` (20), a scope's reticle replaces the cross hairs, the gun drops out of view, mouse sensitivity falls in step with the zoom, and movement slows to `player.zoom_speed` (0.22) of normal. Let go to come out. Dashing breaks it. All three numbers go in `game.json` `player`. `--zoom` holds it on for screenshots.

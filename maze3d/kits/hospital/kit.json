@@ -2,7 +2,9 @@
  "name": "The Hospital",
  "about": "The Elective Suffering & Recovery Hospital: white ceramic tile with a teal band, pale green lino, steel, curtains, and a great deal of very bright light. Borrows the high-tech kit's items and machines.",
  "uses": [
-  "hightech"
+  "hightech",
+  "robots",
+  "loot"
  ],
  "cell": 4.0,
  "height": 4.0,

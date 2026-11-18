@@ -2,7 +2,9 @@
  "name": "The Megaplex",
  "about": "The Infinite Satisfaction Retail Megaplex: cream and teal mall tile, chrome, shopfronts and shutters, backlit ads, a food court and a cinema, all still open. Borrows the high-tech kit's items and machines.",
  "uses": [
-  "hightech"
+  "hightech",
+  "robots",
+  "loot"
  ],
  "cell": 4.0,
  "height": 4.0,

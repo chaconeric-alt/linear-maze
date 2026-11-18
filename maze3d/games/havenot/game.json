@@ -20,7 +20,9 @@
   "megaplex",
   "hospital",
   "basilica",
-  "omni"
+  "omni",
+  "robots",
+  "loot"
  ],
  "defs": [
   "defs/arsenal.json",
@@ -33,7 +35,8 @@
   "levels/menagerie.json",
   "levels/staffonly.json",
   "levels/atrium.json",
-  "levels/stack.json"
+  "levels/stack.json",
+  "levels/depot.json"
  ],
  "generators": [
   "rooms"
@@ -231,7 +234,8 @@
       "server_rack",
       "crate"
      ],
-     "fill": 0.45
+     "fill": 0.45,
+     "valuable": true
     },
     {
      "name": "Laboratory",
@@ -304,7 +308,24 @@
       "crate"
      ],
      "fill": 0.2,
-     "floor_fill": 0.9
+     "floor_fill": 0.9,
+     "valuable": true
+    },
+    {
+     "name": "Robot Bay",
+     "wall": [
+      "@custodian",
+      "@monoid",
+      "@dancer",
+      "@defender",
+      "@drone"
+     ],
+     "corner": [
+      "crate",
+      "server_rack"
+     ],
+     "fill": 0.7,
+     "bay": true
     }
    ],
    "ruin": [
@@ -354,9 +375,41 @@
       "crate",
       "barrel"
      ],
-     "fill": 0.3
+     "fill": 0.3,
+     "valuable": true
     }
    ]
+  },
+  "stations": {
+   "custodian": "rb_station_custodian",
+   "plodder": "rb_station_plodder",
+   "monoid": "rb_station_monoid",
+   "deadbot": "rb_station_deadbot",
+   "eggbot": "rb_station_eggbot",
+   "dancer": "rb_station_dancer",
+   "drone": "rb_station_knife",
+   "defender": "rb_station_defender"
+  },
+  "stationed": 0.65,
+  "hibernating": 0.5,
+  "sphinx": {
+   "actor": "sphinx",
+   "max": 1
+  },
+  "loot_kinds": {
+   "statuette": "trophy",
+   "cookies": "shelf",
+   "fuel_cell": "shelf",
+   "fuel_cell_big": "shelf",
+   "circuit": "shelf",
+   "chips": "box",
+   "crystal": "box"
+  },
+  "containers": {
+   "shelf": "lt_shelf_ht",
+   "trophy": "lt_trophy_ag",
+   "box": "lt_box_ht",
+   "cells": "lt_charge_rack"
   }
  },
  "start": "deepworks",
@@ -364,7 +417,8 @@
   "deepworks",
   "menagerie",
   "staffonly",
-  "atrium"
+  "atrium",
+  "depot"
  ],
  "player": {
   "hp": 100,
@@ -431,10 +485,6 @@
      1
     ],
     [
-     "sphinx",
-     1
-    ],
-    [
      "roach",
      2
     ]
@@ -458,10 +508,6 @@
     [
      "drone",
      2
-    ],
-    [
-     "sphinx",
-     1
     ],
     [
      "defender",
@@ -526,7 +572,23 @@
       "corner": [
        "crate"
       ],
-      "fill": 0.5
+      "fill": 0.5,
+      "valuable": true
+     },
+     {
+      "name": "Robot Bay",
+      "wall": [
+       "@eggbot",
+       "@defender",
+       "@plodder",
+       "@drone"
+      ],
+      "corner": [
+       "crate",
+       "barrel"
+      ],
+      "fill": 0.7,
+      "bay": true
      }
     ],
     "machine": [
@@ -545,6 +607,16 @@
       "floor_fill": 0.6
      }
     ]
+   },
+   "containers": {
+    "shelf": "lt_shelf_wk",
+    "trophy": "lt_trophy_wk",
+    "box": "lt_box_wk",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 2
    }
   },
   "bunker": {
@@ -589,10 +661,6 @@
      1
     ],
     [
-     "sphinx",
-     1
-    ],
-    [
      "turret",
      1
     ],
@@ -620,10 +688,6 @@
     [
      "defender",
      2
-    ],
-    [
-     "sphinx",
-     1
     ]
    ],
    "fluid": {
@@ -678,7 +742,8 @@
       "corner": [
        "bk_crates"
       ],
-      "fill": 0.5
+      "fill": 0.5,
+      "valuable": true
      },
      {
       "name": "Plant Room",
@@ -703,8 +768,33 @@
        "bk_crates"
       ],
       "fill": 0.5
+     },
+     {
+      "name": "Drone Bay",
+      "wall": [
+       "@deadbot",
+       "@plodder",
+       "@defender",
+       "@drone",
+       "@custodian"
+      ],
+      "corner": [
+       "bk_crates"
+      ],
+      "fill": 0.7,
+      "bay": true
      }
     ]
+   },
+   "containers": {
+    "shelf": "lt_shelf_bk",
+    "trophy": "lt_trophy_bk",
+    "box": "lt_box_bk",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 2
    }
   },
   "crypt": {
@@ -847,9 +937,20 @@
        "cr_candles"
       ],
       "fill": 0.2,
-      "floor_fill": 0.9
+      "floor_fill": 0.9,
+      "valuable": true
      }
     ]
+   },
+   "containers": {
+    "shelf": "lt_shelf_cr",
+    "trophy": "lt_trophy_cr",
+    "box": "lt_box_cr",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 0
    }
   },
   "deep": {
@@ -985,10 +1086,6 @@
      1
     ],
     [
-     "sphinx",
-     1
-    ],
-    [
      "plodder",
      1
     ],
@@ -1015,7 +1112,17 @@
      "fouler",
      2
     ]
-   ]
+   ],
+   "containers": {
+    "shelf": "lt_shelf_ht",
+    "trophy": "lt_trophy_ht",
+    "box": "lt_box_ht",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 2
+   }
   },
   "executive": {
    "title": "The Executive Floor",
@@ -1067,7 +1174,8 @@
        "ex_chair",
        "ex_case"
       ],
-      "fill": 0.35
+      "fill": 0.35,
+      "valuable": true
      },
      {
       "name": "Executive Lounge",
@@ -1099,6 +1207,20 @@
        "ex_chair"
       ],
       "fill": 0.2
+     },
+     {
+      "name": "Security Annex",
+      "wall": [
+       "@monoid",
+       "@custodian",
+       "@defender",
+       "@drone"
+      ],
+      "corner": [
+       "crate"
+      ],
+      "fill": 0.7,
+      "bay": true
      }
     ],
     "ex_board": [
@@ -1119,7 +1241,8 @@
        "ex_globe"
       ],
       "fill": 0.35,
-      "floor_fill": 0.5
+      "floor_fill": 0.5,
+      "valuable": true
      }
     ],
     "ex_gallery": [
@@ -1136,7 +1259,8 @@
        "ex_case"
       ],
       "fill": 0.15,
-      "floor_fill": 0.8
+      "floor_fill": 0.8,
+      "valuable": true
      },
      {
       "name": "Rotunda",
@@ -1178,10 +1302,6 @@
     [
      "defender",
      3
-    ],
-    [
-     "sphinx",
-     1
     ]
    ],
    "boss": "sphinx",
@@ -1223,7 +1343,17 @@
      "vent": 0
     }
    },
-   "menu": true
+   "menu": true,
+   "containers": {
+    "shelf": "lt_shelf_ex",
+    "trophy": "lt_trophy_ex",
+    "box": "lt_box_ex",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 2
+   }
   },
   "megaplex": {
    "title": "The Megaplex",
@@ -1276,7 +1406,8 @@
        "mp_vendor",
        "crate"
       ],
-      "fill": 0.4
+      "fill": 0.4,
+      "valuable": true
      },
      {
       "name": "Kiosk Court",
@@ -1307,6 +1438,21 @@
       ],
       "fill": 0.3,
       "floor_fill": 0.7
+     },
+     {
+      "name": "Service Bay",
+      "wall": [
+       "@eggbot",
+       "@defender",
+       "@custodian",
+       "@monoid",
+       "@drone"
+      ],
+      "corner": [
+       "crate"
+      ],
+      "fill": 0.7,
+      "bay": true
      }
     ],
     "mp_foodcourt": [
@@ -1414,7 +1560,17 @@
      "vent": 1
     }
    },
-   "menu": true
+   "menu": true,
+   "containers": {
+    "shelf": "lt_shelf_mp",
+    "trophy": "lt_trophy_mp",
+    "box": "lt_box_mp",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 0
+   }
   },
   "hospital": {
    "title": "The Hospital",
@@ -1513,7 +1669,22 @@
        "hs_cabinet"
       ],
       "fill": 0.6,
-      "floor_fill": 0.3
+      "floor_fill": 0.3,
+      "valuable": true
+     },
+     {
+      "name": "Orderly Bay",
+      "wall": [
+       "@custodian",
+       "@deadbot",
+       "@defender",
+       "@drone"
+      ],
+      "corner": [
+       "crate"
+      ],
+      "fill": 0.7,
+      "bay": true
      }
     ]
    },
@@ -1586,7 +1757,17 @@
      "vent": 2
     }
    },
-   "menu": true
+   "menu": true,
+   "containers": {
+    "shelf": "lt_shelf_hs",
+    "trophy": "lt_trophy_hs",
+    "box": "lt_box_hs",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 1
+   }
   },
   "basilica": {
    "title": "The Basilica",
@@ -1646,7 +1827,8 @@
       "corner": [
        "bb_censer"
       ],
-      "fill": 0.3
+      "fill": 0.3,
+      "valuable": true
      },
      {
       "name": "Baptistry",
@@ -1673,7 +1855,8 @@
        "bb_reliquary"
       ],
       "fill": 0.2,
-      "floor_fill": 0.8
+      "floor_fill": 0.8,
+      "valuable": true
      }
     ],
     "bb_vestry": [
@@ -1702,6 +1885,20 @@
        "bb_reliquary"
       ],
       "fill": 0.4
+     },
+     {
+      "name": "Sexton's Bay",
+      "wall": [
+       "@monoid",
+       "@dancer",
+       "@eggbot",
+       "@drone"
+      ],
+      "corner": [
+       "crate"
+      ],
+      "fill": 0.7,
+      "bay": true
      }
     ]
    },
@@ -1774,7 +1971,17 @@
      "vent": 2
     }
    },
-   "menu": true
+   "menu": true,
+   "containers": {
+    "shelf": "lt_shelf_bb",
+    "trophy": "lt_trophy_bb",
+    "box": "lt_reliquary",
+    "cells": "lt_charge_rack"
+   },
+   "sphinx": {
+    "actor": "sphinx",
+    "max": 1
+   }
   }
  },
  "easy": {

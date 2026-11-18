@@ -121,15 +121,20 @@ func _process(dt: float) -> void:
 				tw.tween_property(n, "rotation:y", rest.basis.get_euler().y, 0.05)
 	if _open != _open_target:
 		_open = move_toward(_open, _open_target, dt / max(0.05, meta.get("time", 0.5)))
-		for p in _parts:
-			var spec: Dictionary = p["spec"]
-			var k := _open * _open * (3.0 - 2.0 * _open)
-			var rest: Transform3D = p["rest"]
-			var xf := rest
-			if spec.has("rot_axis"):
-				xf.basis = rest.basis * Basis(LM.vec(spec["rot_axis"]).normalized(), deg_to_rad(spec.get("rot_deg", 0.0)) * k)
-			xf.origin = rest.origin + LM.vec(spec.get("move")) * k
-			p["n"].transform = xf
+		_pose()
+
+
+## Put the moving parts where _open (0 shut .. 1 open) says they are.
+func _pose() -> void:
+	for p in _parts:
+		var spec: Dictionary = p["spec"]
+		var k := _open * _open * (3.0 - 2.0 * _open)
+		var rest: Transform3D = p["rest"]
+		var xf := rest
+		if spec.has("rot_axis"):
+			xf.basis = rest.basis * Basis(LM.vec(spec["rot_axis"]).normalized(), deg_to_rad(spec.get("rot_deg", 0.0)) * k)
+		xf.origin = rest.origin + LM.vec(spec.get("move")) * k
+		p["n"].transform = xf
 
 
 # ------------------------------------------------------------------ walking through it (arches)

@@ -34,6 +34,10 @@ const NAMES := ["n", "e", "s", "w"]
 const CORNERS := [["nw", 0, 0, -1, -1], ["ne", 1, 0, 1, -1], ["sw", 0, 1, -1, 1], ["se", 1, 1, 1, 1]]     # name, which end in x, in y, outward x, y
 
 
+var _stations: Dictionary = {}       # actor id -> the station model its kind waits in (params "stations")
+var _hibernate := 0.5
+
+
 func generate(seed_value: int, p: Dictionary) -> Dictionary:
 	for attempt in 40:
 		var lv := _try(seed_value + attempt * 7919, p)
@@ -56,6 +60,8 @@ func _local(r: Rect2i, side: int, u: int, v: int) -> Vector2i:
 func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
+	_stations = p.get("stations", {})
+	_hibernate = float(p.get("hibernating", 0.5))
 	var sh: Dictionary = p.get("shapes", {})
 	var size: Array = p.get("size", [36, 28])
 	var W: int = int(size[0])
@@ -452,6 +458,51 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	var treasure: Array = p.get("treasure", [])
 	var loot: Array = p.get("locker_loot", treasure)
 	var seen_purpose: Dictionary = {}
+	# Treasure is kept in something: a trophy case, shelves, a strongbox, a charging rack (params "containers": kind ->
+	# model, "loot_kinds": item -> kind), standing against a wall with the things in it. Only where there is no wall to
+	# stand one against does a thing lie on the floor, as if dropped.
+	var no_win := {}                                  # walls with a container against them: no window there
+	var no_door_up := {}                              # nor, upstairs, a door
+	var valuable := {}                                # unit -> how much it is worth guarding
+	var bays := {}                                    # units where robots are kept
+	var kit_name: String = p.get("kit", "hightech")
+	var stow := func(c: Vector2i, grid: Array, lvl: int, item: String, kind_as: String) -> String:
+		var kind: String = kind_as if kind_as != "" else str(p.get("loot_kinds", {}).get(item, "box"))
+		var id: String = str(p.get("containers", {}).get(kind, ""))
+		var wd := -1
+		var d0 := rng.randi() % 4
+		var by_door := false
+		for k in 4:
+			var d := (d0 + k) % 4
+			var n: Vector2i = c + DIRS[d]
+			if n.x < 0 or n.y < 0 or n.x >= W or n.y >= H:
+				continue
+			var ch: String = grid[n.y][n.x]
+			if ch == "#" and wd < 0:
+				wd = d
+			elif ch != "#" and ch != "." and ch != "~":
+				by_door = true
+		if id == "" or wd < 0 or by_door:
+			var e0 := {"at": [c.x, c.y], "item": item, "rest": true}
+			if lvl != 0:
+				e0["level"] = lvl
+			things.append(e0)
+			return ""
+		var holds: Array = []
+		var count: int = {"trophy": 1, "box": rng.randi_range(1, 2), "shelf": rng.randi_range(2, 3), "cells": rng.randi_range(2, 4)}.get(kind, 1)
+		for k in count:
+			holds.append(item)
+		var depth: float = float(LM.model_meta(kit_name, id).get("solid", [1.0, 1.0, 1.0])[2])
+		var push: float = 2.0 - depth / 2.0 - 0.1
+		var e := {"at": [c.x, c.y], "prop": id, "face": NAMES[(wd + 2) % 4], "offset": [DIRS[wd].x * push, 0, DIRS[wd].y * push], "blocks": false, "holds": holds}
+		if lvl != 0:
+			e["level"] = lvl
+			if lvl > 0:
+				no_door_up[c + DIRS[wd]] = true
+		else:
+			no_win[c + DIRS[wd]] = true
+		things.append(e)
+		return kind
 	for a in areas:
 		var i: int = a["unit"]
 		if i == 0:
@@ -484,16 +535,38 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 			things.append({"at": [c.x, c.y], "actor": who, "face": NAMES[rng.randi() % 4]})
 			if who in p.get("pairs", []):                 # some things come in twos
 				things.append({"at": [c.x, c.y], "actor": who, "offset": [1.5, 0, 1.0], "face": NAMES[rng.randi() % 4]})
-		for k in 1 + int(rng.randf() * 2.0):
-			var c2: Vector2i = free.call()
-			if not used.has(c2) and not treasure.is_empty():
-				used[c2] = true
-				things.append({"at": [c2.x, c2.y], "item": treasure[rng.randi() % treasure.size()]})
+		var purposes: Array = p.get("purposes", {}).get(a["style"], [])
+		var pur: Dictionary = purposes[rng.randi() % purposes.size()] if not purposes.is_empty() else {}
+		if pur.get("valuable", false):
+			valuable[i] = 2
+		if pur.get("bay", false):
+			bays[i] = true
+		var wall_spots: Array = []                        # against a wall, not beside a way in
+		for c in floor_cells:
+			var walls_n := 0
+			var door_n := 0
+			for d in DIRS:
+				var ch: String = g[c.y + d.y][c.x + d.x]
+				if ch == "#":
+					walls_n += 1
+				elif room_of[c.y + d.y][c.x + d.x] != i:
+					door_n += 1
+			if walls_n >= 1 and door_n == 0 and not used.has(c):
+				wall_spots.append(c)
+		_shuffle(rng, wall_spots)
+		var n_cont := (1 + int(rng.randf() < 0.4)) if not treasure.is_empty() else 0
+		if bays.has(i) and p.get("containers", {}).has("cells"):      # where the robots are kept, their power cells are on charge: that, and the walls left for stations
+			n_cont = 1
+		for k in mini(n_cont, wall_spots.size()):
+			var c2: Vector2i = wall_spots[k]
+			used[c2] = true
+			var as_cells: bool = bays.has(i) and k == 0 and p.get("containers", {}).has("cells")
+			var got: String = stow.call(c2, g, 0, "fuel_cell" if as_cells else treasure[rng.randi() % treasure.size()], "cells" if as_cells else "")
+			if got == "trophy" or got == "box":
+				valuable[i] = maxi(valuable.get(i, 0), 1)
 		# a room with a purpose is furnished for it: pieces along the walls, rows or a centrepiece on the floor, and
 		# always a clear way from every door to every other
-		var purposes: Array = p.get("purposes", {}).get(a["style"], [])
 		if not purposes.is_empty():
-			var pur: Dictionary = purposes[rng.randi() % purposes.size()]
 			if pur.has("name") and a.has("room"):
 				seen_purpose[pur["name"]] = seen_purpose.get(pur["name"], 0) + 1
 				rooms[a["room"]]["name"] = pur["name"] if seen_purpose[pur["name"]] == 1 else "%s %d" % [pur["name"], seen_purpose[pur["name"]]]
@@ -573,14 +646,14 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 		up_used[keyu] = true
 		per_unit[pick[2]] = cnt + 1
 		if cnt % 2 == 0 and not treasure.is_empty():
-			things.append({"at": [pick[0].x, pick[0].y], "level": pick[1], "item": treasure[rng.randi() % treasure.size()]})
+			stow.call(pick[0], g, pick[1], treasure[rng.randi() % treasure.size()], "")
 		elif not actors.is_empty() and pick[2] != 0:
 			things.append({"at": [pick[0].x, pick[0].y], "level": pick[1], "actor": _weighted(rng, p.get("gallery_actors", actors)), "face": NAMES[rng.randi() % 4]})
 
 	# ---- windows: a wall one cell thick with floor both sides and wall either end
 	for y in range(1, H - 1):
 		for x in range(1, W - 1):
-			if g[y][x] != "#" or rng.randf() >= sh.get("window", 0.45):
+			if g[y][x] != "#" or no_win.has(Vector2i(x, y)) or rng.randf() >= sh.get("window", 0.45):
 				continue
 			var ns: bool = g[y - 1][x] == "." and g[y + 1][x] == "." and g[y][x - 1] == "#" and g[y][x + 1] == "#"
 			var ew: bool = g[y][x - 1] == "." and g[y][x + 1] == "." and g[y - 1][x] == "#" and g[y + 1][x] == "#"
@@ -697,19 +770,33 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	var inside := func(c: Vector2i) -> bool: return c.x >= 1 and c.y >= 1 and c.x < W - 1 and c.y < H - 1
 	var plain := func(c: Vector2i) -> bool:           # main-floor cell with nothing on it that would mind
 		return g[c.y][c.x] == "." and not used.has(c) and not taken.has(c) and not busy.has(c) and not trapped.has(c) and not lift_at.has(c)
-	var nook := func(c: Vector2i) -> bool:            # ... in the corner of a one-storey room the player can get to: where a lift can stand
-		if not plain.call(c) or room_of[c.y][c.x] < 1 or h0[c.y][c.x] != 1 or not seen.has(c):
-			return false
-		var r: Rect2i = rects[room_of[c.y][c.x]]
-		if c.x == r.get_center().x or c.y == r.get_center().y:
-			return false
-		var n_solid := 0
+	# Where a lift can stand: a nook of its own. A cell of rock with rock on three sides, opening on to the plain floor
+	# of a one-storey room the player can get to. The lift is let into the wall there, never out in the room.
+	var nook_tall := [false]                          # a lift's nook opens on a one-storey room; a station's can open on a tall one
+	var nook_front := func(c: Vector2i) -> Vector2i:
+		if g[c.y][c.x] != "#" or is_win.has(c) or lift_at.has(c) or up[c.y][c.x] != "#":
+			return Vector2i(-1, -1)
+		var front := Vector2i(-1, -1)
 		for d in DIRS:
-			if g[c.y + d.y][c.x + d.x] == "#":
-				n_solid += 1
-			elif g[c.y + d.y][c.x + d.x] != ".":
-				return false                             # beside a door or a pool
-		return n_solid >= 2
+			var n: Vector2i = c + d
+			if g[n.y][n.x] == "#" and not lift_at.has(n):
+				continue
+			if front.x >= 0 or not plain.call(n) or room_of[n.y][n.x] < 1 or (h0[n.y][n.x] != 1 and not nook_tall[0]) or not seen.has(n):
+				return Vector2i(-1, -1)                  # open on two sides, or on to a door, a pool, a hall, something in the way
+			front = n
+		if front.x < 0:
+			return front
+		for dx in [-1, 0, 1]:                         # and nothing else let into the rock right beside it
+			for dy in [-1, 0, 1]:
+				var q := Vector2i(c.x + dx, c.y + dy)
+				if q != c and q != front and g[q.y][q.x] != "#" and (q - front).length_squared() > 1:
+					return Vector2i(-1, -1)
+		return front
+	var nook := func(c: Vector2i) -> bool: return nook_front.call(c).x >= 0
+	var dig := func(c: Vector2i) -> void:             # open the nook, and keep the floor in front of it clear
+		used[nook_front.call(c)] = true
+		g[c.y][c.x] = "."
+		h0[c.y][c.x] = 1
 	var wall_cells: Array = []
 	for y in range(2, H - 2):
 		for x in range(2, W - 2):
@@ -725,7 +812,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 			var s2: Vector2i = DIRS[(k + 1) % 4]
 			var a: Vector2i = c + f
 			var b: Vector2i = c - f
-			if not deck1.has(a) or g[b.y][b.x] != "." or h0[b.y][b.x] < 2 or room_of[a.y][a.x] == room_of[b.y][b.x] or taken.has(b):
+			if no_door_up.has(c) or not deck1.has(a) or g[b.y][b.x] != "." or h0[b.y][b.x] < 2 or room_of[a.y][a.x] == room_of[b.y][b.x] or taken.has(b):
 				continue
 			if h0[c.y + s2.y][c.x + s2.x] > 1 or h0[c.y - s2.y][c.x - s2.x] > 1 or up[c.y][c.x] != "#":
 				continue
@@ -735,7 +822,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 					decks.append({"at": [land.x, land.y], "level": 1})
 					deck1[land] = true
 			if not treasure.is_empty():
-				things.append({"at": [b.x, b.y], "level": 1, "item": treasure[rng.randi() % treasure.size()]})
+				stow.call(b, up, 1, treasure[rng.randi() % treasure.size()], "")
 			n_up_doors += 1
 			break
 	var fits_up := func(r: Rect2i, door: Vector2i) -> bool:      # a room upstairs can go over rock or over one-storey rooms, and not against another
@@ -750,6 +837,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 					return false
 		return true
 	var under := {}                                   # basement cells with something in them: no pit over those
+	var grid_of := {1: up}
 	var furnish := func(r: Rect2i, level: int, name: String) -> Dictionary:
 		var st: String = styles[rng.randi() % styles.size()]
 		var cells2: Array = []
@@ -765,7 +853,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 			if level < 0:
 				under[c] = true
 			if n % 2 == 1 and not treasure.is_empty():
-				things.append({"at": [c.x, c.y], "level": level, "item": treasure[rng.randi() % treasure.size()]})
+				stow.call(c, grid_of[level], level, treasure[rng.randi() % treasure.size()], "")
 			elif not actors.is_empty():
 				things.append({"at": [c.x, c.y], "level": level, "actor": _weighted(rng, actors), "face": NAMES[rng.randi() % 4]})
 		return {"name": name, "rect": [r.position.x, r.position.y, r.size.x, r.size.y], "style": st, "height": 1, "quiet": true}
@@ -776,7 +864,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 		for k in 4:
 			var f: Vector2i = DIRS[k]
 			var s2: Vector2i = DIRS[(k + 1) % 4]
-			if not deck1.has(c + f) or up[c.y][c.x] != "#" or h0[c.y + s2.y][c.x + s2.x] > 1 or h0[c.y - s2.y][c.x - s2.x] > 1:
+			if no_door_up.has(c) or not deck1.has(c + f) or up[c.y][c.x] != "#" or h0[c.y + s2.y][c.x + s2.x] > 1 or h0[c.y - s2.y][c.x - s2.x] > 1:
 				continue
 			var deep := rng.randi_range(3, 4)
 			var wide := rng.randi_range(3, 5)
@@ -824,6 +912,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 			for y in range(r.position.y, r.end.y):
 				for x in range(r.position.x, r.end.x):
 					up[y][x] = "."
+			dig.call(c)
 			lift_at[c] = true
 			used[c] = true
 			things.append({"at": [c.x, c.y], "lift": [0, 1], "home": 0})
@@ -862,9 +951,13 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 				var bw := rng.randi_range(4, 7)
 				var bh := rng.randi_range(3, 6)
 				var br2 := Rect2i(rng.randi_range(1, W - bw - 1), rng.randi_range(1, H - bh - 1), bw, bh)
-				if brects.is_empty():                         # the first one has the lift in it, off its middle lines
-					br2.position = shaft - Vector2i(rng.randi_range(0, bw - 1), rng.randi_range(0, bh - 1))
-					if br2.position.x < 1 or br2.position.y < 1 or br2.end.x > W - 1 or br2.end.y > H - 1 or shaft.x == br2.get_center().x or shaft.y == br2.get_center().y:
+				if brects.is_empty():                         # the first one stands beside the shaft: down there too the lift is in a nook of its own
+					var bf: Vector2i = DIRS[rng.randi() % 4]
+					if bf.x == 0:
+						br2.position = Vector2i(shaft.x - rng.randi_range(0, bw - 1), shaft.y + 1 if bf.y > 0 else shaft.y - bh)
+					else:
+						br2.position = Vector2i(shaft.x + 1 if bf.x > 0 else shaft.x - bw, shaft.y - rng.randi_range(0, bh - 1))
+					if br2.position.x < 1 or br2.position.y < 1 or br2.end.x > W - 1 or br2.end.y > H - 1 or br2.has_point(shaft):
 						continue
 				var clash := false
 				for o2 in brects:
@@ -900,11 +993,14 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 									and (b_in[y + f.y][x + f.x] >= 0) != (b_in[y - f.y][x - f.x] >= 0):
 								bg[y][x] = letters[rng.randi() % doors.size()]
 								break
+				dig.call(shaft)
+				bg[shaft.y][shaft.x] = "."
 				lift_at[shaft] = true
 				used[shaft] = true
 				things.append({"at": [shaft.x, shaft.y], "lift": [-1, 0], "home": 0})
 				var b_rooms: Array = []
 				for i in brects.size():
+					grid_of[-1] = bg
 					b_rooms.append(furnish.call(brects[i], -1, "%s %d" % [p.get("basement_name", "Undercroft"), i + 1]))
 				var spots: Array = []                         # pits: in a room, off the lines the corridors come in on, over the basement
 				for y in range(2, H - 2):
@@ -937,6 +1033,96 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 				for row in bg:
 					rowsb.append("".join(PackedStringArray(row)))
 				storeys.append({"level": -1, "map": rowsb, "rooms": b_rooms})
+
+	# ---- robots off duty wait in stations let into the walls: an alcove of its own off the room each was in
+	var alcoves := {}                                 # unit -> [rock cells that would make one]
+	nook_tall[0] = true
+	for y in range(2, H - 2):
+		for x in range(2, W - 2):
+			var fr: Vector2i = nook_front.call(Vector2i(x, y))
+			if fr.x >= 0:
+				var un: int = room_of[fr.y][fr.x]
+				if not alcoves.has(un):
+					alcoves[un] = []
+				alcoves[un].append(Vector2i(x, y))
+	for un in alcoves:
+		_shuffle(rng, alcoves[un])
+	var alcove_for := func(un: int, near: Vector2i) -> Vector2i:      # one still good, the nearest to `near` if that is given
+		var best := Vector2i(-1, -1)
+		for c in alcoves.get(un, []):
+			if nook.call(c) and (best.x < 0 or (near.x >= 0 and (c - near).length_squared() < (best - near).length_squared())):
+				best = c
+				if near.x < 0:
+					break
+		return best
+	# Sphinx guns first: they guard what is worth guarding. One by each valuable room, in the wall beside its door.
+	var sx: Dictionary = p.get("sphinx", {})
+	var guards := 0
+	var worth: Array = valuable.keys()
+	_shuffle(rng, worth)
+	worth.sort_custom(func(a2: int, b2: int) -> bool: return valuable[a2] > valuable[b2])
+	for un in worth:
+		if guards >= int(sx.get("max", 0)) or un == 0:
+			continue
+		var door_in := Vector2i(-1, -1)
+		for dc in door_cells:
+			var ins: Vector2i = dc[0] + DIRS[dc[1]]
+			if inside.call(ins) and room_of[ins.y][ins.x] == un:
+				door_in = ins
+				break
+		var spot: Vector2i = alcove_for.call(un, door_in)
+		if spot.x < 0:
+			continue
+		var fr2: Vector2i = nook_front.call(spot)
+		dig.call(spot)
+		things.append({"at": [spot.x, spot.y], "actor": str(sx.get("actor", "sphinx")), "face": NAMES[DIRS.find(fr2 - spot)], "lounge": "none"})
+		guards += 1
+	var wall_bays := {}
+	if not _stations.is_empty():
+		for ti in things.size():
+			var t: Dictionary = things[ti]
+			if not t.has("actor") or t.has("level") or t.has("offset") or t.has("alert") or t.has("station") or not _stations.has(t["actor"]):
+				continue
+			if rng.randf() >= float(p.get("stationed", 0.65)):
+				continue
+			var tc := Vector2i(int(t["at"][0]), int(t["at"][1]))
+			var un2: int = room_of[tc.y][tc.x]
+			var spot2: Vector2i = alcove_for.call(un2, Vector2i(-1, -1))
+			if spot2.x >= 0:
+				var fr3: Vector2i = nook_front.call(spot2)
+				dig.call(spot2)
+				things[ti] = {"at": [spot2.x, spot2.y], "station": _stations[t["actor"]], "actor": t["actor"], "face": NAMES[DIRS.find(fr3 - spot2)],
+					"shut": rng.randf() < _hibernate}
+				continue
+			if un2 < 1:
+				continue
+			# no rock to let one into: it stands against the room's wall instead, with clear floor in front and to both sides
+			if not wall_bays.has(un2):
+				wall_bays[un2] = []
+				for y in range(2, H - 2):
+					for x in range(2, W - 2):
+						if room_of[y][x] == un2 and g[y][x] == ".":
+							wall_bays[un2].append(Vector2i(x, y))
+				_shuffle(rng, wall_bays[un2])
+			for c in wall_bays[un2]:
+				if not plain.call(c):
+					continue
+				var wd2 := -1
+				var ok := true
+				for d in 4:
+					var n: Vector2i = c + DIRS[d]
+					if g[n.y][n.x] == "#":
+						ok = ok and wd2 < 0
+						wd2 = d
+					elif g[n.y][n.x] != "." or room_of[n.y][n.x] != un2 or not plain.call(n):
+						ok = false
+				if not ok or wd2 < 0:
+					continue
+				used[c] = true
+				used[c - DIRS[wd2]] = true
+				things[ti] = {"at": [c.x, c.y], "station": _stations[t["actor"]], "actor": t["actor"], "face": NAMES[(wd2 + 2) % 4], "shut": rng.randf() < _hibernate,
+					"blocks": true}
+				break
 
 	# ---- taking the card brings company to the big room
 	var triggers: Array = []
@@ -1042,6 +1228,15 @@ func _furnish(g: Array, room_of: Array, unit: int, cells: Array, used: Dictionar
 	var put := func(c: Vector2i, item: Variant, face: int, hug: bool) -> void:
 		var id: String = item if item is String else item[0]      # ["station", "chair"]: a set
 		var e := {"at": [c.x, c.y], "prop": id, "face": NAMES[face], "blocks": true}      # monsters path round it, as the player walks round it
+		if id.begins_with("@"):                           # "@custodian": that robot's station. Some are empty (it is out), some shut
+			var who := id.substr(1)
+			if not _stations.has(who):
+				return
+			e = {"at": [c.x, c.y], "station": _stations[who], "face": NAMES[face], "blocks": true}
+			if rng.randf() < 0.6:
+				e["actor"] = who
+				e["shut"] = rng.randf() < _hibernate
+			hug = false
 		if item is Array and item.size() > 1:
 			e["seat"] = item[1]
 			if not hug:                                  # out on the floor the pair is centred on the cell, not the station

@@ -11,6 +11,7 @@ var hp := 30.0
 var max_hp := 30.0
 var dead := false
 var awake := false
+var dock: Node = null                            # the Station it is waiting in, switched off (engine/station.gd)
 var vis: Node3D
 var anim: AnimationPlayer
 var _atk: Variant = null          # the attack in progress
@@ -191,6 +192,9 @@ func _play(clip: String, speed := 1.0, loop := false) -> bool:
 func alert() -> void:
 	if awake or dead:
 		return
+	if dock != null:                                 # in its station: the station opens first, then switches it on
+		dock.release()
+		return
 	if not _lounge.is_empty():                       # caught slacking
 		_lounge = {}
 		_stun = d.get("startle_time", 0.55)
@@ -240,6 +244,12 @@ func _physics_process(dt: float) -> void:
 			_let_player_go(false)
 		if _surf != 0:                               # shot off the wall: what is left comes down
 			_fall_tick(dt, Vector3.ZERO)
+		elif _at_rest:                               # down and still; but a floor can go from under it (a lift, a trapdoor)
+			_air_t += dt
+			if _air_t > 0.5:
+				_air_t = 0.0
+				if d.get("mount", "") != "ceiling" and not test_move(global_transform, Vector3(0, -0.12, 0)):
+					_at_rest = false
 		elif not _at_rest:                           # killed in the air (flying, mid-leap, thrown, over a drop): it always comes down
 			velocity.y -= G * dt
 			velocity.x = move_toward(velocity.x, 0, 6 * dt)
@@ -252,7 +262,11 @@ func _physics_process(dt: float) -> void:
 				if vy < -6.0:                            # it landed hard
 					Fx.sparks(level, global_position + Vector3(0, 0.1, 0), Color(0.5, 0.5, 0.45), 8, 3.0, 0.3, 0.04)
 					LM.sound("step", global_position, 0.0, 0.6)
-				if _air_t > 0.4:
+				var on_lift := false                         # on a lift it never settles for good: it rides, and falls if the lift leaves
+				for ci in get_slide_collision_count():
+					if get_slide_collision(ci).get_collider() is AnimatableBody3D:
+						on_lift = true
+				if _air_t > 0.4 and not on_lift:
 					_at_rest = true
 					velocity = Vector3.ZERO
 			else:
@@ -275,7 +289,7 @@ func _physics_process(dt: float) -> void:
 				if td < d.get("radius", 0.5) + 0.45 + d["touch"].get("reach", 0.3):
 					tp.hurt(d["touch"].get("dps", 12.0) * 0.25, {"type": d["touch"].get("kind", "acid"), "from": global_position, "by": self})
 	if _fly and d.has("bob"):                        # a flyer that will not hold its height
-		vis.position.y = d.get("model_y", 0.0) + sin(Time.get_ticks_msec() * 0.001 * d["bob"].get("rate", 5.0) + get_index()) * d["bob"].get("height", 0.2) * (1.0 if awake else 0.35)
+		vis.position.y = d.get("model_y", 0.0) + sin(Time.get_ticks_msec() * 0.001 * d["bob"].get("rate", 5.0) + get_index()) * d["bob"].get("height", 0.2) * (1.0 if awake else (0.0 if dock != null else 0.35))
 	if _face and not awake:
 		_face_t -= dt
 		if _face_t <= 0.0:
@@ -606,7 +620,8 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 	hp -= amount
 	if not awake:
 		alert()
-	awake = true
+	if dock == null:
+		awake = true
 	if (_surf == 1 or _surf == 2) and hp > 0.0 and (amount > max_hp * 0.25 or randf() < 0.4):
 		_drop()                                      # knocked off
 	_flash_t = 0.08

@@ -2,7 +2,9 @@
  "name": "The Executive Floor",
  "about": "Dead Signal's board floor with a little more high-tech: dark walnut woods, black and jade marble, burnished gold, brown leather, candle-amber light kept low, and a thin jade-green line of light let into the luxury. No red. Borrows the high-tech kit's items and machines.",
  "uses": [
-  "hightech"
+  "hightech",
+  "robots",
+  "loot"
  ],
  "cell": 4.0,
  "height": 4.0,
