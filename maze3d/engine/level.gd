@@ -409,7 +409,7 @@ func _shell_cell(batches: Dictionary, styles: Dictionary, x: int, y: int, f: int
 	if above.get("pit", false):                          # ... and the room under a pit has a hole in its ceiling
 		pass
 	elif not above["solid"]:                             # a room right on top of this one: ceiling tiles stand too tall to fit under
-		_boxes.append(Transform3D(Basis().scaled(Vector3(C, UNDER, C)), p + Vector3(0, hh * H - UNDER / 2 - 0.005, 0)))      # its floor: the slab between the two rooms
+		_boxes.append(Transform3D(Basis().scaled(Vector3(C, 0.2, C)), p + Vector3(0, hh * H - 0.105, 0)))      # its floor: the slab between the two rooms. Thin, and at the top: ceiling tiles are modelled upward from their face, so the tile fills the rest of the gap from below
 		_add(batches, ceil_tile, _under(ceil_tile, p + Vector3(0, hh * H - UNDER, 0), UNDER - 0.22), x, y, room, st, hh)      # ... and this room's own ceiling on the underside of it
 	else:
 		_add(batches, ceil_tile, Transform3D(Basis(Vector3.UP, _rng.randi() % 4 * PI / 2), p + Vector3(0, hh * H, 0)), x, y, room, st, hh)
@@ -436,7 +436,7 @@ func _shell_cell(batches: Dictionary, styles: Dictionary, x: int, y: int, f: int
 		if lv > 0:                                       # a balcony: a slab and a floor on it, and a ceiling on its underside
 			_boxes.append(Transform3D(Basis().scaled(Vector3(C, 0.3, C)), p + Vector3(0, lv * H - 0.16, 0)))
 			var under_tile := _pick(st.get("ceiling"))
-			_add(batches, under_tile, _under(under_tile, p + Vector3(0, lv * H - 0.31, 0), 0.24), x, y, room)
+			_add(batches, under_tile, _under(under_tile, p + Vector3(0, lv * H - 0.55, 0), 0.24), x, y, room)      # below the slab, not inside it
 			_add(batches, _pick(st.get("floor")), Transform3D(Basis(Vector3.UP, quarter), p + Vector3(0, lv * H, 0)), x, y, room)
 		elif c["door"] != "" or c.has("lift"):
 			continue
