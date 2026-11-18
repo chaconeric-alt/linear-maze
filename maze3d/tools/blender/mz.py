@@ -244,9 +244,95 @@ class Mesh:
         return self._done([v for r_ in rings for v in r_], mat, True)
 
     # --- finish
+    def _unfight(self, step=0.004, tol=0.0016):
+        """Two faces of different materials in the same plane, facing the same way and overlapping, are drawn in the
+        same place: which one shows changes from pixel to pixel and from frame to frame (z-fighting). Parts are laid
+        on in order, detail over base, so the later part wins: its face is moved out along its normal by `step` for
+        each layer under it. A part is a connected piece of the mesh."""
+        try:
+            from shapely.geometry import Polygon
+            from shapely.ops import unary_union
+        except ImportError:
+            return 0
+        bm = self.bm
+        bm.faces.ensure_lookup_table()
+        part = {}
+        n_parts = 0
+        for f in bm.faces:                               # connected pieces, numbered in the order they were made
+            if f.index in part:
+                continue
+            stack = [f]
+            part[f.index] = n_parts
+            while stack:
+                g = stack.pop()
+                for v in g.verts:
+                    for h in v.link_faces:
+                        if h.index not in part:
+                            part[h.index] = n_parts
+                            stack.append(h)
+            n_parts += 1
+        groups = {}
+        for f in bm.faces:
+            if f.calc_area() < 1e-6:
+                continue
+            n = f.normal
+            key = (round(n.x, 2), round(n.y, 2), round(n.z, 2))
+            groups.setdefault(key, []).append((n.dot(f.verts[0].co), f))
+        moved = 0
+        for key, lst in groups.items():
+            lst.sort(key=lambda t: t[0])
+            runs, run = [], [lst[0]]
+            for t in lst[1:]:                            # runs of faces whose planes are within `tol` of each other
+                if t[0] - run[-1][0] <= tol:
+                    run.append(t)
+                else:
+                    runs.append(run)
+                    run = [t]
+            runs.append(run)
+            nrm = Vector(key).normalized()
+            ax = max(range(3), key=lambda i: abs(nrm[i]))
+            u = Vector((0, 0, 1)).cross(nrm) if ax != 2 else Vector((1, 0, 0)).cross(nrm)
+            u.normalize()
+            w = nrm.cross(u)
+            for run in runs:
+                by = {}                                  # (part, material) -> faces
+                for d, f in run:
+                    by.setdefault((part[f.index], f.material_index), []).append(f)
+                if len({k[1] for k in by}) < 2:
+                    continue
+                shape = {}
+                for k, fs in by.items():
+                    polys = []
+                    for f in fs:
+                        p = Polygon([(v.co.dot(u), v.co.dot(w)) for v in f.verts])
+                        if p.is_valid and p.area > 1e-7:
+                            polys.append(p)
+                    if polys:
+                        shape[k] = unary_union(polys)
+                order = sorted(shape)
+                level = {}
+                for i, k in enumerate(order):
+                    lv = 0
+                    for j in order[:i]:
+                        if j[0] != k[0] and j[1] != k[1] and shape[j].intersects(shape[k]) and shape[j].intersection(shape[k]).area > 2e-4:
+                            lv = max(lv, level[j] + 1)
+                    level[k] = lv
+                for k, lv in level.items():
+                    if lv == 0:
+                        continue
+                    seen = set()
+                    for f in by[k]:
+                        for v in f.verts:
+                            if v.index not in seen:
+                                seen.add(v.index)
+                                v.co += nrm * (step * lv)
+                    moved += 1
+        return moved
+
     def to_object(self, collection=None, origin=None):
         """Make the Blender object. `origin` puts the object's pivot there (doors, lids, spinners)."""
         bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)
+        self._unfight()
         if origin is not None:
             bmesh.ops.translate(self.bm, verts=self.bm.verts, vec=-Vector(origin))
         me = bpy.data.meshes.new(self.name)

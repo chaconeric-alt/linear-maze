@@ -436,7 +436,7 @@ func _shell_cell(batches: Dictionary, styles: Dictionary, x: int, y: int, f: int
 				_add(batches, tile, Transform3D(Basis(Vector3.UP, DIR_ROT[d]), wp + Vector3(0, lv * H, 0)), x, y, room, st)
 	for lv in [0] + c["decks"]:                      # a rail wherever a floor or a balcony ends in a drop
 		if lv > 0:                                       # a balcony: a slab and a floor on it, and a ceiling on its underside
-			_boxes.append(Transform3D(Basis().scaled(Vector3(C, 0.3, C)), p + Vector3(0, lv * H - 0.16, 0)))
+			_boxes.append(Transform3D(Basis().scaled(Vector3(C - 0.03, 0.3, C - 0.03)), p + Vector3(0, lv * H - 0.17, 0)))      # a little inside the floor tile on it, so their edges are not drawn in the same place
 			var under_tile := _pick(st.get("ceiling"))
 			_add(batches, under_tile, _under(under_tile, p + Vector3(0, lv * H - 0.55, 0), 0.24), x, y, room)      # below the slab, not inside it
 			_add(batches, _pick(st.get("floor")), Transform3D(Basis(Vector3.UP, quarter), p + Vector3(0, lv * H, 0)), x, y, room)
@@ -516,7 +516,7 @@ func _ramp(x: int, y: int, c: Dictionary, tile: String, batches: Dictionary, roo
 	var xb := Vector3.UP.cross(hz).normalized()
 	var yb := zb.cross(xb).normalized()
 	var top := Transform3D(Basis(xb, yb, zb), center(Vector2i(x, y)) + Vector3(0, (y0 + y1) / 2, 0))
-	_boxes.append(top * Transform3D(Basis().scaled(Vector3(C, 0.3, length)), Vector3(0, -0.16, 0)))
+	_boxes.append(top * Transform3D(Basis().scaled(Vector3(C - 0.03, 0.3, length - 0.03)), Vector3(0, -0.17, 0)))
 	_shape(_solid, top * Transform3D(Basis(), Vector3(0, -0.15, 0)), Vector3(C, 0.3, length))
 	_add(batches, tile, top * Transform3D(Basis().scaled(Vector3(1, 1, length / C)), Vector3.ZERO), x, y, room)
 	for s in [-1, 1]:                                # a rail down each side, unless a wall is there

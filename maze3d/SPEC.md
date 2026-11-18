@@ -541,6 +541,12 @@ The player's lamp (F) casts no shadows: a light at the eye throws slivers of sha
 
 The `worn` surface shader works out where each pixel is in the world from the camera's position and the view-space position, not from the model matrix, so its grime stays put on batched tiles whatever the engine does with model matrices. The global shader parameter `lm_grime` (1) scales grime everywhere.
 
+## Layers in the same place (z-fighting)
+
+Two faces of different materials in the same plane, facing the same way and overlapping, are drawn in the same place, and which shows changes from pixel to pixel as the view moves: bands and saw-teeth of the wrong colour that flicker. `mz.py` now separates them when a model is built (`Mesh._unfight`): a model is laid on part by part, detail over base, so the later part's face is moved 4 mm out along its normal for each layer beneath it. It needs `shapely` (`pip install shapely`); without it the step is skipped. `tools/blender/check_layers.py 'kits/*/models/*.glb'` lists what is left. For hand-made and outside models: never leave two coloured faces coplanar; give a decal, panel, plinth or inlay at least 3 mm of its own.
+
+The engine's own slabs under balconies and ramps are 3 cm smaller than the floor tile on them for the same reason.
+
 ## Sniper mode (right mouse button)
 
 Hold the right mouse button: the view closes from `player.fov` (84) to `player.zoom_fov` (20), a scope's reticle replaces the cross hairs, the gun drops out of view, mouse sensitivity falls in step with the zoom, and movement slows to `player.zoom_speed` (0.22) of normal. Let go to come out. Dashing breaks it. All three numbers go in `game.json` `player`. `--zoom` holds it on for screenshots.
