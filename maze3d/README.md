@@ -37,7 +37,7 @@ The title screen offers the built level and **Random installation**, which is ma
 | `games/havenot/` | The game: `game.json`, `defs/` (weapons, projectiles, actors, items, sounds), `levels/`. |
 | `generators/` | Level generators. `rooms.gd` is a small working example of the interface. |
 | `tools/blender/` | The scripts that model everything (`mz.py` is the modelling library). Run them in Blender or with `pip install bpy`. |
-| `tools/levels/` | The script that lays out the Deepworks level. |
+| `tools/levels/` | The scripts that lay out the hand-made levels. `staffonly.py` builds the test floor from whatever exists. |
 | `SPEC.md` | The reference: file formats, conventions, and how to add a monster, a tile, a door, a prop, a kit, a level or a generator. |
 
 ## The level
@@ -50,7 +50,7 @@ Off the Concourse, south: the **Brand Experience Suite**, the Agency's showroom,
 
 The title screen also offers random installations in each place: mixed, The Works, The Bunker, The Crypt, and "All the way down", which uses every kit and every monster and keeps the Princess in the last room.
 
-**Staff Only** is a third small level for behaviors: a break room where three Monoids lean, smoke and sit until you interrupt them, and next door a nest where Roaches and a Glorexx wait on the walls and ceiling, cross the ceiling to get above you, and pounce; a Glorexx swims in the flooded corner.
+**Staff Only** is the test floor, and it has everything: a room in every style of every kit, one of every piece of furniture and every door, every monster (wandering, lounging, perched, and every robot in its station open and shut), every loot container, a gun range, a lift, a pit, a pool, balconies, a loft, a basement, arches, traps, lockers, a blue card, a red card and a way out. Everything on it is off duty: press E on a monster to talk to it (the Sphinx Gun asks riddles, the Monoids complain and offer you a smoke, the Knife Fighter insults you), and ask it to show you what it does: it goes to the gun range, or shoots the target beside it, and does not shoot you. It is written by `tools/levels/staffonly.py` from whatever kits, monsters and items exist; run that again after adding anything.
 
 **The Depot** is a small level to look at things in: every robot's station, open along the north wall and shut along the south, with the robot in it; and next door every kind of loot container, stocked.
 

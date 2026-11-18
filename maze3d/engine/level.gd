@@ -31,6 +31,7 @@ var rooms: Array = []
 var nav := AStar3D.new()          # points: ground, deck 1, deck 2 and ramp, per cell
 var start_level := 0
 var tiles_at: Dictionary = {}    # Vector2i -> [[tile id, where it was laid], ..]: which tile is where (Identify)
+var targets: Array = []         # Targets (engine/target.gd)
 var _boxes: Array = []           # unit cubes that make decks, ramps and railings
 var _rails: Array = []
 var _lamps: Array = []
@@ -445,6 +446,30 @@ func _shell_cell(batches: Dictionary, styles: Dictionary, x: int, y: int, f: int
 				_rail(Transform3D(Basis(Vector3.UP, DIR_ROT[d]), p + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - 0.08) + Vector3(0, lv * H, 0)), C)
 	if not c["ramp"].is_empty():
 		_ramp(x, y, c, _pick(st.get("floor")), batches, room)
+
+
+## A Target for an off-duty monster to show its attacks on. What cannot move needs one it can see from where it is;
+## what can goes to the gun range (targets tagged "range"), or failing that to the nearest.
+func drill_target_for(a: Enemy) -> Node3D:
+	var rooted: bool = a._fixed or a.d.get("mount", "") == "ceiling" or a.d.get("still", false)
+	var best: Node3D = null
+	var best_d := 1e9
+	for pass_n in 2:
+		for t in targets:
+			if not is_instance_valid(t) or t.busy != null:
+				continue
+			var dd: float = a.global_position.distance_to(t.global_position)
+			if rooted:
+				if dd > a.d.get("sight", 24.0) or not los(a.eye(), t.global_position + Vector3(0, 1.3, 0)):
+					continue
+			elif pass_n == 0 and t.tag != "range":
+				continue
+			if dd < best_d:
+				best = t
+				best_d = dd
+		if best != null or rooted:
+			break
+	return best
 
 
 ## Is there a drop off this side of a floor (lv 0) or a balcony lv storeys up?
@@ -1002,7 +1027,15 @@ func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 		pt.setup(self, e, p, s)
 		_register(pt, e.get("tag", ""))
 		return pt
-	if e.has("station"):                             # a robot's station, and the robot waiting in it (if any)
+	if e.has("target"):                              # something for off-duty monsters (and the player) to hit
+		var tg := Target.new()
+		add_child(tg)
+		tg.position = pos
+		tg.rotation.y = _face_yaw(e.get("face", "s"))
+		tg.setup(self, e)
+		targets.append(tg)
+		n = tg
+	elif e.has("station"):                           # a robot's station, and the robot waiting in it (if any)
 		var stn := Station.new()
 		add_child(stn)
 		stn.position = pos
@@ -1015,6 +1048,9 @@ func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 			block(p, true, s)
 		if str(e.get("actor", "")) != "":
 			var be := {"actor": e["actor"], "at": e["at"], "face": e.get("face", "s"), "lounge": "none", "still": true}
+			for k in ["off_duty", "tag", "greet"]:
+				if e.has(k):
+					be[k] = e[k]
 			if s != 0:
 				be["level"] = s
 			stn.hold(spawn_thing(be, p) as Enemy)
@@ -1308,6 +1344,26 @@ func actor_died(a: Node) -> void:
 func run_effect(ef: Dictionary, ctx: Dictionary) -> void:
 	var tag: String = ef.get("tag", "")
 	match ef.get("type", ""):
+		"drill":                                         # an off-duty monster of that kind (the nearest to the target) shows what it does
+			var want: String = ef.get("actor", "")
+			var tgt: Node3D = null
+			for t in targets:
+				if is_instance_valid(t) and t.busy == null and (tag == "" or t.tag == tag):
+					tgt = t
+					break
+			var best: Enemy = null
+			for a in actors:
+				if is_instance_valid(a) and not a.dead and a.off_duty and a._foe == null and a._od == "" and (want == "" or LM.defs["actors"].find_key(a.d) == want):
+					if tgt != null and (best == null or a.global_position.distance_to(tgt.global_position) < best.global_position.distance_to(tgt.global_position)):
+						best = a
+			if best == null or tgt == null or not best.drill(tgt):
+				Game.say("Range: nobody free to shoot." if tgt != null else "Range: every lane is in use.", "warn")
+			else:
+				Game.say("Range: %s to the line." % best.d.get("name", "shooter"), "info")
+		"drill_stop":
+			for a in actors:
+				if is_instance_valid(a) and a.off_duty and a._foe != null:
+					a.drill_end()
 		"unlock", "open", "seal", "close":
 			for d in things_by_tag.get(tag, []):
 				if d is Door:

@@ -11,6 +11,24 @@ var hp := 30.0
 var max_hp := 30.0
 var dead := false
 var awake := false
+var off_duty := false                            # it will talk, and show what it does, but it will not fight (see "off duty" below)
+var _foe: Node3D = null                           # off duty, what it is showing its attacks on (a Target)
+var _drill_t := 0.0
+var _drill_max := 0.0
+var _drill_on := false
+var _od := ""                                     # "back": on its way home after a drill
+var _post := Vector3.ZERO
+var _post_yaw := 0.0
+var _post_lounge: Dictionary = {}
+var _leaving: Node3D = null                       # the station it is on its way out of: out through the front first
+var _dock_in := false
+var _roused := false                              # off duty: somebody is here, so it is paying attention
+var _rouse_t := 0.0
+var _chat_t := 4.0
+var _roam_t := 3.0
+var _roam: PackedVector3Array = PackedVector3Array()
+var _roam_for := 0.0
+var _ow_t := 0.0
 var dock: Node = null                            # the Station it is waiting in, switched off (engine/station.gd)
 var vis: Node3D
 var anim: AnimationPlayer
@@ -152,7 +170,11 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 	_play("idle")
 	if anim:
 		anim.seek(randf() * 2.0)
-	if e.get("alert", false):
+	if e.get("off_duty", lv.data.get("off_duty", false)):      # nothing on this floor fights, whatever let it out
+		off_duty = true
+		add_to_group("usable")
+		_od_init.call_deferred()
+	elif e.get("alert", false):
 		alert()
 
 
@@ -171,7 +193,7 @@ func _play(clip: String, speed := 1.0, loop := false) -> bool:
 		if not _lounge.is_empty():
 			clip = _lounge.get("clip", "idle")       # off duty
 			loop = true
-		elif d.has("dormant_clip"):
+		elif d.has("dormant_clip") and not _roused:
 			clip = d["dormant_clip"]                 # things that stand switched off until you are close
 			loop = true
 	if _wet and d.has("swim") and (clip == "walk" or clip == "idle") and not dead:
@@ -190,7 +212,7 @@ func _play(clip: String, speed := 1.0, loop := false) -> bool:
 
 
 func alert() -> void:
-	if awake or dead:
+	if awake or dead or off_duty:
 		return
 	if dock != null:                                 # in its station: the station opens first, then switches it on
 		dock.release()
@@ -284,7 +306,7 @@ func _physics_process(dt: float) -> void:
 		if _touch_t <= 0.0:
 			_touch_t = 0.25
 			var tp := Game.player
-			if tp and is_instance_valid(tp) and not tp.dead and absf(tp.global_position.y - global_position.y) < d.get("height", 1.6):
+			if tp and is_instance_valid(tp) and not tp.dead and not off_duty and absf(tp.global_position.y - global_position.y) < d.get("height", 1.6):
 				var td := Vector2(tp.global_position.x - global_position.x, tp.global_position.z - global_position.z).length()
 				if td < d.get("radius", 0.5) + 0.45 + d["touch"].get("reach", 0.3):
 					tp.hurt(d["touch"].get("dps", 12.0) * 0.25, {"type": d["touch"].get("kind", "acid"), "from": global_position, "by": self})
@@ -298,7 +320,21 @@ func _physics_process(dt: float) -> void:
 			_show(il[randi() % il.size()])
 	if d.has("swim"):                                # a swimmer rides low in it
 		vis.position.y = move_toward(vis.position.y, d.get("model_y", 0.0) - (d["swim"].get("sink", 0.0) if _wet else 0.0), dt * 1.5)
-	var pl := Game.player
+	var pl: Node3D = Game.player
+	if off_duty:
+		if _foe == null or not is_instance_valid(_foe):
+			_foe = null
+			_off_duty(dt, pl)
+			return
+		pl = _foe                                    # showing what it does: the same fight, with a target for the player
+		_drill_max -= dt
+		if _atk != null:
+			_drill_on = true
+		if _drill_on:
+			_drill_t -= dt
+		if (_drill_t <= 0.0 or _drill_max <= 0.0) and _atk == null and _grab_t <= 0.0 and (_surf == 0 or _drill_max <= 0.0):
+			drill_end()
+			return
 	if pl == null or not is_instance_valid(pl) or pl.dead:
 		_play("idle")
 		return
@@ -465,6 +501,16 @@ func _physics_process(dt: float) -> void:
 			want = Vector3(next.x - global_position.x, 0, next.z - global_position.z).normalized()
 		elif _see:
 			want = flat.normalized()
+	if _leaving != null:                             # a station has walls: the way out is the front, wherever it is going
+		if not is_instance_valid(_leaving):
+			_leaving = null
+		else:
+			var out_dir: Vector3 = _leaving.global_transform.basis.z
+			var rel: Vector3 = global_position - _leaving.global_position
+			if rel.dot(out_dir) < _leaving._front + 0.5 and Vector2(rel.x, rel.z).length() < 3.2:
+				want = Vector3(out_dir.x, 0, out_dir.z) - Vector3(rel.x, 0, rel.z).slide(out_dir) * 0.5
+			else:
+				_leaving = null
 	want = want.normalized()
 	if _wet:
 		speed = d["swim"].get("speed", speed) if d.has("swim") else speed * 0.6
@@ -620,7 +666,11 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 	hp -= amount
 	if not awake:
 		alert()
-	if dock == null:
+	if off_duty:
+		if _foe == null and _ow_t <= 0.0 and hp - amount > 0.0:
+			_ow_t = 2.0
+			_say_od("hurt", ["HEY", "I AM ON MY BREAK", "RUDE"])
+	elif dock == null:
 		awake = true
 	if (_surf == 1 or _surf == 2) and hp > 0.0 and (amount > max_hp * 0.25 or randf() < 0.4):
 		_drop()                                      # knocked off
@@ -890,7 +940,7 @@ func _fall_tick(dt: float, flat: Vector3) -> void:
 		if not dead:
 			var pl := Game.player
 			var dmg: float = d.get("climb", {}).get("drop_damage", 0.0)
-			if dmg > 0.0 and pl and global_position.distance_to(pl.global_position) < d.get("radius", 0.5) + 1.2:
+			if dmg > 0.0 and pl and not off_duty and global_position.distance_to(pl.global_position) < d.get("radius", 0.5) + 1.2:
 				pl.hurt(dmg, {"type": "melee", "from": global_position, "by": self, "knock": 3.0})
 			Fx.sparks(level, global_position + Vector3(0, 0.1, 0), Color(0.5, 0.5, 0.45), 6, 2.5, 0.3, 0.04)
 			LM.sound("step", global_position)
@@ -1333,7 +1383,7 @@ func _grab_tick(dt: float, pl: Node3D) -> void:
 func _let_player_go(thrown: bool) -> void:
 	var a: Dictionary = _atk if _atk != null else {}
 	_grab_t = 0.0
-	var pl := Game.player
+	var pl: Node3D = _foe if _foe != null and is_instance_valid(_foe) else Game.player
 	if pl and is_instance_valid(pl) and pl.held_by == self:
 		pl.held_by = null
 		if thrown and not pl.dead:
@@ -1386,3 +1436,314 @@ func _trail_tick(dt: float) -> void:
 			var axis: Vector3 = (e2[2] * h.normalized().cross(Vector3.UP)).normalized()
 			q = q * Quaternion(axis, deg_to_rad(minf(h.length(), top * 1.3)))
 		_skel.set_bone_pose_rotation(e2[0], q)
+
+
+# ------------------------------------------------------------------ off duty (a level's "off_duty": true, or a thing's)
+## Nothing off duty fights. It notices the player (within `talk.reach`, 9 m; `wake_sight` for things that stand
+## dormant), says one of `talk.greet`, turns to them, and now and then says one of `talk.idle` (its `barks`, without).
+## When the player has been gone four seconds it stops paying attention: a thing with a `dormant_clip` goes dormant again,
+## and its station, if it has one, shuts over it. Things that can walk and have nothing better to do (no station, no
+## lounging, no perch) wander about near where the level put them (`"roam": cells`, 4; `"still": true` for none).
+## E on one talks to it: defs `talk` (see use()). And it will show what it does on duty, on a Target: drill().
+func _od_init() -> void:
+	_post = position
+	_post_yaw = rotation.y
+	_post_lounge = _lounge
+
+
+func _od_reach() -> float:
+	return float(e.get("greet", d.get("talk", {}).get("reach", d.get("wake_sight", 9.0) if d.has("dormant_clip") else 9.0)))
+
+
+func _say_od(kind: String, fallback: Array = []) -> void:
+	var lines: Array = d.get("talk", {}).get(kind, fallback if not fallback.is_empty() else d.get("barks", []))
+	if lines.is_empty():
+		return
+	var line: String = lines[randi() % lines.size()]
+	_show(line)
+	Fx.words(level, eye() + Vector3(0, 0.6, 0), line, LM.col(d.get("talk", {}).get("color", d.get("bark_color")), Color(0.6, 0.95, 0.8)), 2.6)
+	LM.sound(d.get("sounds", {}).get("bark", ""), global_position, -6.0)
+
+
+func _off_duty(dt: float, pl: Node3D) -> void:
+	_ow_t -= dt
+	var flat := Vector3.ZERO
+	var dist := 1e9
+	if pl != null and is_instance_valid(pl) and not pl.dead and not Game.calm:
+		flat = Vector3(pl.global_position.x - global_position.x, 0, pl.global_position.z - global_position.z)
+		dist = flat.length()
+		_see_t -= dt
+		if _see_t <= 0.0:
+			_see_t = 0.25
+			_see = dist < _od_reach() and absf(pl.global_position.y - global_position.y) < 5.0 and (dock == null or dock._open > 0.9) \
+					and level.los(eye(), pl.global_position + Vector3(0, 1.3, 0))
+			if _see and not seen:
+				seen = true
+	else:
+		_see = false
+	if _see:
+		_rouse_t = 0.0
+		if not _roused:
+			_roused = true
+			_chat_t = randf_range(6.0, 11.0)
+			_say_od("greet")
+			if d.has("dormant_clip") and _play("startle"):       # powering up takes a moment
+				_stun = d.get("startle_time", 1.0)
+				anim.seek(0.0)
+	elif _roused:
+		_rouse_t += dt
+		if _rouse_t > 4.0:                               # they have gone
+			_roused = false
+	if _stun > 0.0:
+		_stun -= dt
+		_od_stand(dt)
+		return
+	if _roused and dist < 14.0:
+		_chat_t -= dt
+		if _chat_t <= 0.0:
+			_chat_t = randf_range(8.0, 15.0)
+			_say_od("idle")
+	if _od == "back":                                # going home after a drill
+		var gone := Vector2(_post.x - global_position.x, _post.z - global_position.z).length()
+		_roam_for += dt
+		if _fixed or _surf != 0 or d.get("mount", "") == "ceiling" or gone < 0.45 or _roam_for > 300.0:
+			_od = ""
+			_dock_in = false
+			if gone < 1.5 or _roam_for > 300.0:
+				position = Vector3(_post.x, position.y if _post_lounge.is_empty() else _post.y, _post.z)
+				rotation.y = _post_yaw
+				if not _post_lounge.is_empty():
+					_lounge = _post_lounge
+					_cs.position.y = d.get("center", d.get("height", 1.6) / 2) + _lounge.get("drop", 0.0)
+			velocity = Vector3.ZERO
+			return
+		var dest := _post                            # into a station: to the front of it, then straight in
+		if dock != null and not _dock_in:
+			var fr: Vector3 = dock.global_position + dock.global_transform.basis.z * (dock._front + 1.3)
+			if Vector2(fr.x - global_position.x, fr.z - global_position.z).length() < 0.9:
+				_dock_in = true
+			else:
+				dest = fr
+		_go(dt, dest, 0.9, _dock_in)
+		return
+	if not _lounge.is_empty():
+		_idle(dt)
+		return
+	if dock != null or _fixed or _surf != 0 or d.get("mount", "") == "ceiling" or d.get("still", false) or e.get("still", false):
+		if _roused and dock == null and _surf == 0 and dist < 1e8:
+			_turn_to(flat, dt, 3.0)
+		_od_stand(dt, dock == null and _surf == 0 and d.get("mount", "") != "ceiling")
+		return
+	if d.has("dormant_clip") and not _roused:
+		_od_stand(dt)
+		return
+	if _roused and dist < 4.5:                       # somebody to talk to
+		_turn_to(flat, dt, 4.0)
+		_od_stand(dt)
+		return
+	if d.has("dance"):
+		_dance_tick(dt)
+		return
+	# ---- wandering about
+	if _roam.size() > 1:
+		_roam_for += dt
+		if _follow(dt, 0.4) or _roam_for > 14.0:
+			_roam = PackedVector3Array()
+			_roam_t = randf_range(3.0, 9.0)
+		return
+	_od_stand(dt)
+	_roam_t -= dt
+	if _roam_t <= 0.0:
+		_roam_t = 1.5
+		var r: int = int(e.get("roam", 4))
+		var pc := level.cell_of(_post)
+		var c := pc + Vector2i(randi_range(-r, r), randi_range(-r, r))
+		var st := _st()
+		if r <= 0 or c.x < 1 or c.y < 1 or c.x >= level.w - 1 or c.y >= level.h - 1:
+			return
+		var ac: Dictionary = level.air(c.x, c.y, st)
+		if ac["solid"] or ac["door"] != "" or ac.get("pit", false) or ac.has("lift") or level.is_blocked(c, st) or (ac["fluid"] and not d.has("swim")):
+			return
+		var pth := level.path(global_position, level.center(c, st * level.H))
+		if pth.size() > 1 and pth.size() < 16:
+			_roam = pth
+			_roam_for = 0.0
+
+
+func _od_stand(dt: float, move := true) -> void:
+	velocity.x = move_toward(velocity.x, 0, 30 * dt)
+	velocity.z = move_toward(velocity.z, 0, 30 * dt)
+	if move:
+		_fall(dt)
+		move_and_slide()
+	_play("idle")
+
+
+## Walk along _roam at `pace` of its speed. True when it has got to the end.
+func _follow(dt: float, pace: float) -> bool:
+	var next := _roam[1]
+	if Vector2(next.x - global_position.x, next.z - global_position.z).length() < 0.9:
+		if _roam.size() <= 2:
+			return true
+		_roam.remove_at(1)
+		next = _roam[1]
+	var want := Vector3(next.x - global_position.x, 0, next.z - global_position.z).normalized()
+	var speed: float = d.get("speed", 4.0) * pace
+	if _wet:
+		speed = d["swim"].get("speed", speed) * pace if d.has("swim") else speed * 0.6
+	velocity.x = move_toward(velocity.x, want.x * speed, d.get("accel", 30.0) * dt)
+	velocity.z = move_toward(velocity.z, want.z * speed, d.get("accel", 30.0) * dt)
+	_fall(dt)
+	move_and_slide()
+	var hv := Vector3(velocity.x, 0, velocity.z)
+	if hv.length() > 0.3:
+		_turn_to(hv, dt, 6.0)
+		_play("walk", clamp(hv.length() / max(0.1, d.get("speed", 4.0)), 0.5, 1.5) * d.get("walk_rate", 1.0))
+		if d.has("footfall"):
+			_footfall()
+	else:
+		_play("idle")
+	return false
+
+
+func _go(dt: float, dest: Vector3, pace: float, direct := false) -> void:
+	var left := Vector3(dest.x - global_position.x, 0, dest.z - global_position.z)
+	if left.length() < 1.6 or direct or level.cell_of(dest) == level.cell_of(global_position):                          # the last step, off the cell's middle: straight at it
+		var speed: float = d.get("speed", 4.0) * pace * clampf(left.length() / 1.0, 0.35, 1.0)
+		velocity.x = move_toward(velocity.x, left.normalized().x * speed, d.get("accel", 30.0) * dt)
+		velocity.z = move_toward(velocity.z, left.normalized().z * speed, d.get("accel", 30.0) * dt)
+		_fall(dt)
+		move_and_slide()
+		_turn_to(left, dt, 6.0)
+		_play("walk", 0.6 * d.get("walk_rate", 1.0))
+		return
+	_path_t -= dt
+	if _path_t <= 0.0 or _roam.size() < 2:
+		_path_t = 0.7
+		_roam = level.path(global_position, dest)
+	if _roam.size() > 1:
+		if _follow(dt, pace):
+			_roam = PackedVector3Array()
+	else:
+		_od_stand(dt)
+
+
+## Show what it does on duty: fight a Target (the level finds one if none is given) for `talk.drill_time` seconds (8)
+## from its first attack, then go back to where it was. What cannot move needs a target it can see from where it is;
+## what can goes to the gun range (targets tagged "range").
+func drill(target: Node3D = null) -> bool:
+	if not off_duty or dead or _foe != null or d.get("attacks", []).is_empty():
+		return false
+	if target == null:
+		target = level.drill_target_for(self)
+	if target == null:
+		return false
+	target.busy = self
+	_foe = target
+	_od = ""
+	_roam = PackedVector3Array()
+	_drill_t = float(d.get("talk", {}).get("drill_time", 8.0))
+	_drill_max = 240.0                               # however far it has to walk
+	_drill_on = false
+	_atk = null
+	_see = false
+	_see_t = 0.0
+	_path_t = 0.0
+	if not _lounge.is_empty():
+		_lounge = {}
+		_cs.position.y = d.get("center", d.get("height", 1.6) / 2)
+	awake = true
+	_roused = true
+	_stun = 0.0
+	_dock_in = false
+	if dock != null:
+		_leaving = dock
+		dock.let_go()
+		if dock._open < 0.9:
+			_stun = 1.0
+	if d.has("dormant_clip") and _play("startle"):
+		_stun = maxf(_stun, d.get("startle_time", 1.0))
+		anim.seek(0.0)
+	LM.sound(d.get("sounds", {}).get("alert", ""), global_position)
+	return true
+
+
+func drill_end() -> void:
+	if _foe != null and is_instance_valid(_foe) and _foe.busy == self:
+		_foe.busy = null
+	if _grab_t > 0.0:
+		_let_player_go(false)
+	_foe = null
+	_atk = null
+	awake = false
+	_od = "back"
+	_roam = PackedVector3Array()
+	_roam_for = 0.0
+	_path_t = 0.0
+	_rouse_t = 0.0
+	if anim:
+		anim.speed_scale = 1.0
+
+
+func drill_ask() -> void:
+	if drill():
+		Game.say("%s: %s" % [d.get("name", "It"), "heading for the range." if not (_fixed or d.get("mount", "") == "ceiling") else "taking aim."], "info")
+	else:
+		Game.say("%s has nothing to show that on." % d.get("name", "It"), "warn")
+
+
+func use_again() -> void:
+	use.call_deferred(Game.player)
+
+
+func focus_point() -> Vector3:
+	return global_position + Vector3(0, clampf(d.get("center", d.get("height", 1.6) / 2), 0.4, 1.6) * (-1.0 if d.get("mount", "") == "ceiling" else 1.0), 0)
+
+
+func set_screen(text: String) -> void:
+	_show(text)
+
+
+func prompt() -> String:
+	if not off_duty or dead or _foe != null or (dock != null and dock._open < 0.9):
+		return ""
+	return d.get("talk", {}).get("prompt", "Talk to the %s" % d.get("name", "thing"))
+
+
+## Talking to it. defs `talk`:
+##   {"kicker": "OFF DUTY", "open": [what the panel says, one picked], "greet": [..], "idle": [..], "hurt": [..],
+##    "options": [{"label": "..", "result": ".." or "results": [one picked], "effects": [..]}],
+##    "riddles": [{"q": "..", "answers": ["..", ".."], "right": 0, "yes": "..", "no": ".."}], "prize": credits (once),
+##    "drill_label": "..", "reach": 9, "drill_time": 8, "color": [r, g, b]}
+## Anything with attacks gets a last option that calls drill().
+func use(_player: Node) -> void:
+	if prompt() == "":
+		return
+	var t: Dictionary = d.get("talk", {})
+	var opens: Array = t.get("open", ["It looks at you. It does not seem to mind."])
+	var spec := {"kicker": t.get("kicker", "OFF DUTY"), "title": d.get("name", ""), "text": opens[randi() % opens.size()], "options": []}
+	e["_used"] = {}
+	if t.has("riddles"):
+		var r: Dictionary = t["riddles"][randi() % t["riddles"].size()]
+		spec["text"] = "%s\n\n%s" % [spec["text"], r.get("q", "")]
+		var order: Array = range(r.get("answers", []).size())
+		order.shuffle()
+		for i in order:
+			var right: bool = i == int(r.get("right", 0))
+			var o := {"label": r["answers"][i], "result": r.get("yes", "CORRECT.") if right else r.get("no", "INCORRECT."), "final": true}
+			if right and t.has("prize") and not e.get("_prize", false):
+				o["effects"] = [{"type": "credits", "amount": int(t["prize"])}]
+				o["call"] = "_prize_given"
+			spec["options"].append(o)
+		spec["options"].append({"label": t.get("again", "Another riddle"), "call": "use_again", "close": true, "after": true})
+	for o in t.get("options", []):
+		spec["options"].append(o)
+	if not d.get("attacks", []).is_empty():
+		spec["options"].append({"label": t.get("drill_label", "Show me what you do on duty"), "call": "drill_ask", "close": true, "after": true})
+	_roused = true
+	_rouse_t = 0.0
+	Game.hud.open_panel(self, spec)
+
+
+func _prize_given() -> void:
+	e["_prize"] = true

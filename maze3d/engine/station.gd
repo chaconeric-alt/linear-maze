@@ -13,6 +13,7 @@ var _shut_cs: CollisionShape3D
 var _poll := 0.0
 var _opening := false
 var _front := 2.0
+var _away_t := 0.0
 
 
 func setup(lv: Level, entry: Dictionary, kit: String) -> void:
@@ -55,6 +56,9 @@ func _process(dt: float) -> void:
 		_let_out()
 	if released or bot == null or not is_instance_valid(bot) or bot.dead:
 		return
+	if bot.off_duty:
+		_off_duty(dt)
+		return
 	_poll -= dt
 	if _poll > 0.0:
 		return
@@ -86,5 +90,39 @@ func _let_out() -> void:
 	if bot == null or not is_instance_valid(bot) or bot.dead:
 		return
 	bot.dock = null
+	bot._leaving = self
 	bot.e["still"] = false
 	bot.alert()
+
+
+## Off duty (see Enemy): the station opens when the player comes up to it and shuts again when they have gone, if it
+## was a shut one and its robot is in it. The robot does not come out unless it is sent to show what it does.
+func _off_duty(dt: float) -> void:
+	var home: bool = bot.dock == self and bot._foe == null and bot._od == ""
+	if _shut_cs:
+		_shut_cs.disabled = _open > 0.5 or not home
+	_poll -= dt
+	if _poll > 0.0:
+		return
+	_poll = 0.25
+	var pl := Game.player
+	var near := false
+	if pl != null and is_instance_valid(pl) and not pl.dead and not Game.calm:
+		var eye: Vector3 = global_position + global_transform.basis.z * _front + Vector3(0, 1.4, 0)
+		near = eye.distance_to(pl.global_position) < float(e.get("wake", meta.get("wake", 8.0))) and level.los(eye, pl.global_position + Vector3(0, 1.3, 0))
+	if near or not home:
+		_away_t = 0.0
+		if _open_target < 1.0:
+			_open_target = 1.0
+			LM.sound("locker", global_position)
+	elif e.get("shut", false):
+		_away_t += 0.25
+		if _away_t > 4.0 and _open_target > 0.0 and not bot._roused:
+			_open_target = 0.0
+			LM.sound("locker", global_position, -4.0)
+
+
+## Open up for a robot that is being sent out and will come back.
+func let_go() -> void:
+	_open_target = 1.0
+	_away_t = 0.0

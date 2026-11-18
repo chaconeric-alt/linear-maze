@@ -483,6 +483,54 @@ The ceiling of a room with another room over it is now that room's own ceiling t
 
 A dead thing that has come to rest checks every half second that there is still floor under it, and one lying on a lift never settles for good: it rides the lift, and falls if the lift leaves.
 
+## Off duty (`"off_duty": true`), talking, and showing what it does
+
+A level with `"off_duty": true` (or one thing with it) is a floor where nothing fights. Every monster on it:
+
+- **notices you** when you are in sight within `talk.reach` (9 m; `wake_sight` for things that stand dormant): it says one of `talk.greet` as floating words, turns to you if it can, and every so often says one of `talk.idle` (its `barks`, without);
+- **stops noticing** four seconds after you have gone. A thing with a `dormant_clip` (Sphinx Gun, Plodder, Deadbot) powers up when you arrive and goes dormant again when you leave. One in a station that was `shut` is shut in again: the station opens as you come up to it and closes behind you;
+- **wanders** near where the level put it, if it can walk and has nothing else to do (not in a station, not lounging, not perched, not `"still": true`). `"roam": cells` on the thing sets how far (4);
+- **talks** when you press E on it (the prompt is "Talk to the ..."). The panel is the terminal panel;
+- **shows what it does**: the last option in every panel asks it to. It then runs its ordinary fighting code against a **Target** in place of you, for `talk.drill_time` seconds (8) from its first attack, and goes back to where it was (a lounger goes back to lounging, a station's robot back into its station). What can walk goes to the gun range: the nearest free target tagged `range`. What cannot (turrets, the Snapper, anything on a ceiling) needs a target it can see from where it stands;
+- can be shot, and dies, and says one of `talk.hurt` about it, and still does not fight. Things let out by lockers and arches on such a floor are off duty too.
+
+`talk` in an actor's def:
+
+```json
+"talk": {"kicker": "OFF DUTY", "reach": 9, "drill_time": 8, "color": [0.6, 0.95, 0.8],
+  "greet": ["OH. IT'S YOU."], "idle": ["FIFTEEN MINUTES. I TIMED IT."], "hurt": ["I'M ON MY BREAK"],
+  "open": ["what the panel says when it opens; one is picked"],
+  "options": [{"label": "\"What's wrong?\"", "results": ["one of these is picked", "..."]},
+              {"label": "Take the coolant stick", "result": "...", "effects": [{"type": "message", "text": "..."}]}],
+  "riddles": [{"q": "...", "answers": ["right", "wrong", "wrong"], "right": 0, "yes": "...", "no": "..."}],
+  "prize": 25, "again": "Another riddle", "drill_label": "Show me what you do on duty"}
+```
+
+With `riddles`, each time the panel opens it asks one, with the answers shuffled; a right answer pays `prize` credits the first time. Panel options (terminals too) may now have `results` (a list; one is picked), `final` (after it, only options marked `after` are offered) and `call` (a method of the thing itself).
+
+**Targets**: `{"target": "range", "at": [x, y], "face": "w"}`. The name is its tag. A target stands in for the player in a monster's fighting code: it is seen, shot, hit, pounced on, grabbed and thrown, counts what lands on a label over it, and rocks. The player can shoot it too. It does not block sight. (`engine/target.gd`)
+
+**Effects**: `{"type": "drill", "actor": "monoid", "tag": "range"}` sends the nearest free off-duty monster of that kind to the first free target with that tag (any kind, without `actor`); `{"type": "drill_stop"}` calls them all off.
+
+## Staff Only: the test floor (`tools/levels/staffonly.py`)
+
+`games/havenot/levels/staffonly.json` is written by `python3 tools/levels/staffonly.py`, from what exists: the script reads every kit in `game.json` and the game's defs, and lays out one spine corridor with wings off it in bands.
+
+| Wing | What is in it |
+|---|---|
+| Break Room | Where you start. Monoids smoking, leaning and sitting; the notice that says where things are. Next door the Locker Room: both lockers (locker 1 has the **blue card**), the WellPoint, one of every item. |
+| one wing for each kit | The kit's hall style as the corridor, a room in each of its other styles (the style's name is on a sign over the door), every piece of the kit's furniture once round the walls, the kit's door, and the monsters that belong there. The high-tech hall has the four scanner arches and the three traps (one lane is always clear) and a Sphinx Gun with its target; its Vault is behind the **blue door** and has the cache with the **red card**. |
+| Gun Range | Four targets at the east end, a gallery behind glass along the north side, and two consoles that call any kind of monster that can walk. |
+| Robot Depot | Every robot's station twice: open, and shut. |
+| Stores | Every loot container, stocked, and a Sphinx Gun with its target. |
+| The Nest | Two storeys, a pool: Roaches on the walls and ceiling, Glorexx (one in the water), the Snapper with its target, the Fouler. |
+| Shapes | An atrium with a balcony, a ramp, a cut corner and windows; a store with a loft over it (door off the balcony); a lift lobby with a lift, a pit, and a basement under it. |
+| Way Out | A security lobby, the **red door**, and the terminal that ends the level. |
+
+Every door kind is used in turn. Everything is off duty.
+
+**Keeping it complete.** Add a kit, a style, a model, a door, a monster or an item and run the script again: a new kit gets a wing, a new style a room, new furniture a place on a wall, a new monster a place on the spine (give it a home in `HOMES` at the top of the script to put it somewhere better), a new station a bay in the Depot, a new container a place in the Stores. The script stops with an error naming anything it could not place. The level is marked `"covers_all": true`, and with that the self-test (`--level=staffonly --selftest`) fails if any style, prop, door, monster or item in the game is not on the floor; on an off-duty floor it also checks that every kind of monster talks, lands an attack on a target, hurts nobody, that one called from the range walks there and back, and that a shut station shuts again.
+
 ## Sniper mode (right mouse button)
 
 Hold the right mouse button: the view closes from `player.fov` (84) to `player.zoom_fov` (20), a scope's reticle replaces the cross hairs, the gun drops out of view, mouse sensitivity falls in step with the zoom, and movement slows to `player.zoom_speed` (0.22) of normal. Let go to come out. Dashing breaks it. All three numbers go in `game.json` `player`. `--zoom` holds it on for screenshots.

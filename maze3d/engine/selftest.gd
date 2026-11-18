@@ -237,8 +237,12 @@ func run(m: Node) -> void:
 		pl.ammo[k] = 9999
 	var wi := 0
 	var took := 0.0
+	if level.data.get("off_duty", false):
+		await _off_duty()
+	if level.data.get("covers_all", false):
+		_covers_all()
 	for a in level.actors.duplicate():
-		if not is_instance_valid(a) or a.dead:
+		if not is_instance_valid(a) or a.dead or a.off_duty:
 			continue
 		pl._equip(wi % pl.weapons.size())
 		wi += 1
@@ -276,7 +280,8 @@ func run(m: Node) -> void:
 			t += 1
 		took += hp0 - pl.hp
 		_say(not is_instance_valid(a) or a.dead, "%s dies to the %s (%d frames, it dealt %.0f)" % [nm, pl.weapon().get("name", "?"), t, hp0 - pl.hp])
-	_say(took > 0.0, "actors fight back (%.0f damage taken in all)" % took)
+	if not level.data.get("off_duty", false):
+		_say(took > 0.0, "actors fight back (%.0f damage taken in all)" % took)
 	await _frames(30)
 	# --- the E key really reaches the player (a key event, not a direct call)
 	for n in get_tree().get_nodes_in_group("usable"):
@@ -412,3 +417,167 @@ func run(m: Node) -> void:
 	print("RESULT  %d failures" % fails)
 	get_tree().paused = false
 	get_tree().quit(fails)
+
+
+## A floor where everything is off duty: nothing hurts the player, everything talks when asked, everything with an
+## attack can show it on a target, and a robot in a shut station is shut in again when the player has gone.
+func _off_duty() -> void:
+	var kinds := {}
+	for a in level.actors:
+		if is_instance_valid(a) and a.off_duty and not a.dead:
+			var id: String = str(LM.defs["actors"].find_key(a.d))
+			if not kinds.has(id) or (kinds[id].dock != null and a.dock == null):
+				kinds[id] = a
+	pl.hp = pl.max_hp
+	var hp_was: float = pl.hp
+	var silent := 0
+	if OS.has_environment("LM_RANGE_ONLY"):          # (for chasing one thing down)
+		kinds = {}
+	for id in kinds:
+		var a: Enemy = kinds[id]
+		var nm: String = a.d.get("name", id)
+		# ---- talking
+		var c := level.cell_of(a.global_position)
+		var st := _storey(a.global_position)
+		var stood := false
+		for dv in [a.global_transform.basis.z, -a.global_transform.basis.x, a.global_transform.basis.x, -a.global_transform.basis.z]:
+			var at: Vector3 = Vector3(a.global_position.x, st * level.H + 0.05, a.global_position.z) + Vector3(dv.x, 0, dv.z).normalized() * (a.d.get("radius", 0.5) + 1.6)
+			var ac := level.cell_of(at)
+			if level.open_s(ac.x, ac.y, st) and not level.is_blocked(ac, st):
+				pl.global_position = at
+				stood = true
+				break
+		if not stood:
+			pl.global_position = level.center(c, st * level.H + 0.05)
+		pl.velocity = Vector3.ZERO
+		_look_at(a.focus_point())
+		await _frames(130 if a.dock != null else 20)
+		_look_at(a.focus_point())
+		await _frames(3)
+		var offered: bool = a.prompt() != ""
+		a.use(pl)
+		var opened: bool = Game.hud._state == "panel"
+		if opened:
+			var opts: Array = Game.hud._panel_spec.get("options", [])
+			for i in opts.size():
+				if not opts[i].has("call"):
+					await Game.hud._choose(i)
+			Game.hud.close_panel()
+		await _frames(3)
+		_say(offered and opened, "%s talks when asked (%s)" % [nm, "in reach: %s" % (pl.focus == a)])
+		if a.d.get("talk", {}).is_empty():
+			silent += 1
+		# ---- showing what it does
+		if a.d.get("attacks", []).is_empty():
+			continue
+		var rooted: bool = a._fixed or a.d.get("mount", "") == "ceiling" or a.d.get("still", false)
+		var tgt: Node3D = level.drill_target_for(a)
+		if tgt == null:
+			_say(false, "%s has a target to show its attack on" % nm)
+			continue
+		var was: Vector3 = a.global_position
+		pl.global_position = tgt.global_position + Vector3(0, 0.05, 0) - tgt.global_transform.basis.z * 3.0 + tgt.global_transform.basis.x * 3.0      # out of the way, watching
+		if not rooted:                               # the walk to the range is not what is being tested
+			a.global_position = tgt.global_position + tgt.global_transform.basis.z * 9.0
+			a.velocity = Vector3.ZERO
+		var hits0: int = tgt.hits
+		var ok: bool = a.drill(tgt)
+		var t := 0
+		var struck := false
+		while ok and t < 900 and tgt.hits == hits0:
+			await _frames(5)
+			t += 5
+			struck = struck or a._atk != null
+		_say(ok and tgt.hits > hits0, "%s shows its attack on a target (%d frames%s)" % [nm, t, "" if tgt.hits > hits0 else (", it attacked but nothing landed" if struck else ", it never attacked")])
+		a.drill_end()
+		if not rooted:
+			a.global_position = was
+			a._od = ""
+			a.velocity = Vector3.ZERO
+		await _frames(5)
+	_say(silent == 0, "everything off duty has something to say (%d kinds do not)" % silent)
+	_say(pl.hp >= hp_was, "nothing off duty hurt the player (%.0f lost)" % (hp_was - pl.hp))
+	# ---- a shut station shuts again
+	for n in level.get_children():
+		if n is Station and n.e.get("shut", false) and n.bot != null and is_instance_valid(n.bot) and not n.bot.dead and n.bot.dock == n:
+			pl.global_position = n.global_position + n.global_transform.basis.z * 4.5 + Vector3(0, 0.05, 0)
+			await _frames(140)
+			var opened2: bool = n._open > 0.9
+			var roused: bool = n.bot._roused
+			pl.global_position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
+			await _frames(520)
+			_say(opened2 and roused and n._open < 0.1 and not n.bot._roused, "a shut station opens when you come up to it, and shuts over its robot when you leave (opened %s, robot roused %s, now open %.1f)" % [opened2, roused, n._open])
+			break
+	# ---- called from the range, one walks there from wherever it was, shoots, and walks back
+	var range_t: Node3D = null
+	for t in level.targets:
+		if t.tag == "range" and t.busy == null:
+			range_t = t
+			break
+	if range_t != null:
+		var h0: int = range_t.hits
+		pl.global_position = range_t.global_position + Vector3(0, 0.05, 0) - range_t.global_transform.basis.z * 3.0
+		var who_id: String = OS.get_environment("LM_RANGE_ACTOR") if OS.has_environment("LM_RANGE_ACTOR") else "monoid"
+		level.run_effect({"type": "drill", "tag": "range", "actor": who_id}, {})
+		var walker: Enemy = range_t.busy as Enemy
+		var far := 0.0
+		var t2 := 0
+		if walker != null:
+			far = walker.global_position.distance_to(range_t.global_position)
+			while t2 < 12000 and range_t.hits == h0 and walker._foe != null:
+				await _frames(10)
+				t2 += 10
+		_say(walker != null and range_t.hits > h0, "called to the range, %s walks %d m to it and hits the target (%d frames)" % [walker.d.get("name", "?") if walker else "nobody", roundi(far), t2])
+		if walker != null:
+			var t3 := 0
+			while t3 < 12000 and (walker._foe != null or walker._od != ""):
+				await _frames(10)
+				t3 += 10
+			_say(walker._od == "" and walker.global_position.distance_to(walker._post) < 2.0, "  and goes back to where it was (%d frames, %.1f m off)" % [t3, walker.global_position.distance_to(walker._post)])
+	pl.hp = pl.max_hp
+	pl.global_position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
+
+
+## The test floor has to have everything in it: every style, every piece of furniture, every door, monster and item.
+func _covers_all() -> void:
+	var missing: Array = []
+	var styles := {}
+	for f in level.floors:
+		for y in level.h:
+			for x in level.w:
+				var c: Dictionary = level.cell(x, y, f)
+				if not c["solid"]:
+					styles[c["style"]] = true
+	for s in level.kit["styles"]:
+		if not styles.has(s):
+			missing.append("style " + s)
+	var have := {}
+	for n in level.get_children():
+		if n is Prop:
+			have[n.e["prop"]] = true
+			for k in n.get_children():
+				if k is Prop:
+					have[k.e["prop"]] = true
+	var doors := {}
+	for src in [level.data.get("legend", {})] + level.data.get("floors", []).map(func(fd): return fd.get("legend", {})):
+		for ch in src:
+			if src[ch] is Dictionary and src[ch].has("door"):
+				doors[src[ch]["door"]] = true
+	for id in level.kit["models"]:
+		var m: Dictionary = level.kit["models"][id]
+		if m.get("type", "") == "prop" and not have.has(id) and not id.begins_with("trap_") and id != "window_obs":
+			missing.append("prop " + id)
+		elif m.get("type", "") == "door" and not doors.has(id):
+			missing.append("door " + id)
+	var who := {}
+	for a in level.actors:
+		if is_instance_valid(a):
+			who[str(LM.defs["actors"].find_key(a.d))] = true
+	for id in LM.defs["actors"]:
+		if not who.has(id):
+			missing.append("monster " + id)
+	var things := JSON.stringify(level.data.get("things", []))
+	for id in LM.defs["items"]:
+		if not things.contains("\"%s\"" % id):
+			missing.append("item " + id)
+	_say(missing.is_empty(), "the test floor has everything in it (%s)" % ("missing: " + ", ".join(PackedStringArray(missing)) if not missing.is_empty() else "%d styles, %d kinds of furniture, %d of door, %d of monster" % [styles.size(), have.size(), doors.size(), who.size()]))

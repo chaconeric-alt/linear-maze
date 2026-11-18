@@ -71,6 +71,44 @@
     "fast": 1.3,
     "weave": 0.35,
     "weave_rate": 9
+   },
+   "talk": {
+    "greet": [
+     "tk tk tk",
+     "skrrr",
+     "*antennae*"
+    ],
+    "idle": [
+     "tk",
+     "skrr skrr",
+     "*cleans a leg*"
+    ],
+    "hurt": [
+     "SKREE"
+    ],
+    "open": [
+     "It cleans one antenna and watches you with most of its eyes.",
+     "It tilts its head. Something in its throat clicks, twice.",
+     "It is eating something. It does not offer you any."
+    ],
+    "options": [
+     {
+      "label": "Offer it a crumb",
+      "results": [
+       "It takes the crumb with surprising manners.",
+       "It takes the crumb, and then looks at your hand for a while.",
+       "It already has a crumb. It shows you. It is bigger than yours."
+      ]
+     },
+     {
+      "label": "Ask about the arena",
+      "results": [
+       "It rears up and mimes a win. Then a second, longer win.",
+       "It shows you a scar. It is proud of the scar."
+      ]
+     }
+    ],
+    "drill_label": "Show me the pounce"
    }
   },
   "custodian": {
@@ -145,7 +183,47 @@
    },
    "own_materials": true,
    "scale": 2.3,
-   "walk_rate": 1.0
+   "walk_rate": 1.0,
+   "talk": {
+    "greet": [
+     "MIND THE FLOOR",
+     "YOU ARE TRACKING SOMETHING IN",
+     "HELLO, MESS"
+    ],
+    "idle": [
+     "THIS CORNER HAS BEEN CLEAN FOR 300 YEARS",
+     "WHO KEEPS LEAVING ROACHES",
+     "WET FLOOR. PURELY INFORMATIONAL."
+    ],
+    "hurt": [
+     "THAT WILL LEAVE A MARK. I WILL REMOVE THE MARK."
+    ],
+    "open": [
+     "UNIT IS ON BREAK. BREAK CONSISTS OF CLEANING SLOWER.",
+     "YOU HAVE BEEN CLASSIFIED AS: FOOTPRINTS."
+    ],
+    "options": [
+     {
+      "label": "Ask what it is cleaning",
+      "results": [
+       "THE SAME SPOT. IT IS VERY CLEAN. I AM VERY THOROUGH.",
+       "EVIDENCE. NOT OF ANYTHING. JUST GENERALLY."
+      ]
+     },
+     {
+      "label": "Complain about the mess",
+      "results": [
+       "YOUR FEEDBACK HAS BEEN MOPPED.",
+       "COMPLAINT LOGGED UNDER: BIOLOGICAL RESIDUE, TALKING."
+      ]
+     },
+     {
+      "label": "Ask it to clean you",
+      "result": "NEGATIVE. YOU ARE LOAD-BEARING DIRT."
+     }
+    ],
+    "drill_label": "Show me a cleanup"
+   }
   },
   "monoid": {
    "name": "Monoid",
@@ -232,7 +310,64 @@
    "startle_text": "I WAS ON BREAK",
    "own_materials": true,
    "scale": 2.15,
-   "walk_rate": 1.0
+   "walk_rate": 1.0,
+   "talk": {
+    "greet": [
+     "OH. IT'S YOU.",
+     "YOU ON BREAK TOO?",
+     "GOT A LIGHT?"
+    ],
+    "idle": [
+     "FIFTEEN MINUTES. I TIMED IT. IT'S ELEVEN.",
+     "THEY MOVED THE GOOD WALL.",
+     "WANT ONE? THEY'RE COOLANT.",
+     "IS IT STILL TUESDAY UP THERE?"
+    ],
+    "hurt": [
+     "I'M ON MY BREAK",
+     "THAT'S GOING IN THE LOG",
+     "UNION WILL HEAR OF THIS"
+    ],
+    "open": [
+     "\"Do you have a moment to discuss why my break is fifteen minutes and my boot sequence is twelve?\"",
+     "\"You're not on the rota. Nobody's on the rota. I checked. I'm the rota.\"",
+     "\"Smoke? They're coolant sticks. Take the edge off. Take most things off.\""
+    ],
+    "options": [
+     {
+      "label": "\"What's wrong?\"",
+      "results": [
+       "\"Where to start. The lean wall got repainted. Now it's a WET lean wall. For three hundred years.\"",
+       "\"Call volume is zero. Do you know what that does to a unit? I've been on hold with myself since the war.\"",
+       "\"The Custodian keeps mopping where I stand. While I stand there. It calls it a 'spill'.\""
+      ]
+     },
+     {
+      "label": "\"What do you want to know?\"",
+      "results": [
+       "\"Is the sky still on? Somebody said it was a rental.\"",
+       "\"Are you hiring? Don't answer. Legally I can't hear it.\"",
+       "\"Do you people still do lunch? What was the deal with lunch?\""
+      ]
+     },
+     {
+      "label": "Take the coolant stick",
+      "result": "It is extremely cold and tastes of batteries. The Monoid nods. You are one of the staff now, in the way that matters least.",
+      "effects": [
+       {
+        "type": "message",
+        "text": "You cough for a while. It is not smoke.",
+        "kind": "info"
+       }
+      ]
+     },
+     {
+      "label": "\"Shouldn't you be working?\"",
+      "result": "\"I SEE YOU. PLEASE HOLD. YOUR CALL IS IMPORTANT.\" It waits. \"There. That's the whole job. Happy?\""
+     }
+    ],
+    "drill_label": "\"Show me the job, then\""
+   }
   },
   "glorexx": {
    "name": "Glorexx",
@@ -312,6 +447,37 @@
     "clip": "swim",
     "speed": 9.0,
     "sink": 0.35
+   },
+   "talk": {
+    "greet": [
+     "hhhssk",
+     "*tastes the air*"
+    ],
+    "idle": [
+     "glk",
+     "*something shifts under its skin*"
+    ],
+    "hurt": [
+     "HRRSSSK"
+    ],
+    "open": [
+     "It tastes the air near your face and decides, for now, against it.",
+     "It folds itself down to your height. This is meant kindly. It is not received that way."
+    ],
+    "options": [
+     {
+      "label": "Hold out a hand",
+      "results": [
+       "It sniffs the hand. It hands it back.",
+       "It considers the hand for longer than you would like."
+      ]
+     },
+     {
+      "label": "Ask who feeds it",
+      "result": "It looks at the executive floor. Then at you. Then, patiently, at the executive floor again."
+     }
+    ],
+    "drill_label": "Show me the leap"
    }
   },
   "turret": {
@@ -356,6 +522,34 @@
    "sounds": {
     "alert": "ping",
     "die": "crash"
+   },
+   "talk": {
+    "greet": [
+     "TRACKING: OFF",
+     "HELLO BELOW"
+    ],
+    "idle": [
+     "NOT TRACKING. ENJOYING NOT TRACKING.",
+     "YOU WOULD BE EASY. JUST SAYING."
+    ],
+    "hurt": [
+     "NOTED"
+    ],
+    "open": [
+     "TRACKING DISABLED. THIS IS WHAT REST FEELS LIKE. IT FEELS LIKE A CEILING."
+    ],
+    "options": [
+     {
+      "label": "Ask how the view is",
+      "result": "I HAVE SEEN THE TOP OF EVERY HEAD ON THIS FLOOR. YOURS IS FINE."
+     },
+     {
+      "label": "Wave",
+      "result": "IT SWIVELS A LITTLE. THAT WAS THE WAVE."
+     }
+    ],
+    "drill_label": "Show me a burst",
+    "reach": 10
    }
   },
   "eggbot": {
@@ -462,7 +656,42 @@
     }
    ],
    "startle_time": 0.5,
-   "startle_text": "I WAS WATCHING THAT"
+   "startle_text": "I WAS WATCHING THAT",
+   "talk": {
+    "greet": [
+     "GREETINGS, CORNERED ONE",
+     "BEHOLD: ROUNDNESS"
+    ],
+    "idle": [
+     "CONSIDER THE OVOID",
+     "YOU HAVE SO MANY ELBOWS",
+     "WE WERE HERE FIRST. WE CHECKED."
+    ],
+    "hurt": [
+     "SHELL INTEGRITY: OFFENDED"
+    ],
+    "open": [
+     "\"ONE SHELL. ONE PEOPLE. ONE FIFTEEN-MINUTE BREAK. ASK YOUR QUESTION, ANGULAR FRIEND.\""
+    ],
+    "options": [
+     {
+      "label": "\"Are you an egg?\"",
+      "result": "\"WE ARE THE IDEA OF THE EGG. THE EGG IS A ROUGH DRAFT OF US.\""
+     },
+     {
+      "label": "\"What came first?\"",
+      "result": "\"WE DID. THE CHICKEN WAS A CONTRACTOR.\""
+     },
+     {
+      "label": "\"What's inside?\"",
+      "results": [
+       "\"MORE OUTSIDE.\"",
+       "\"THAT IS A VERY CORNER-SHAPED QUESTION.\""
+      ]
+     }
+    ],
+    "drill_label": "Show me the perfect form, armed"
+   }
   },
   "grease_monkey": {
    "name": "Hammerhead Gallumper",
@@ -546,7 +775,39 @@
     0.6,
     0.9,
     0.3
-   ]
+   ],
+   "talk": {
+    "greet": [
+     "HRRNK?",
+     "GALLUMPH"
+    ],
+    "idle": [
+     "hrrnk",
+     "*scratches itself on the wall*",
+     "GNNH"
+    ],
+    "hurt": [
+     "HRRNK!"
+    ],
+    "open": [
+     "It lowers the hammer of its head until it is level with you, and waits.",
+     "It leans on you slightly. It weighs about what a van weighs."
+    ],
+    "options": [
+     {
+      "label": "Scratch the head-plate",
+      "results": [
+       "A noise like a happy generator.",
+       "It leans harder. You are now holding up a Gallumper."
+      ]
+     },
+     {
+      "label": "Offer grease",
+      "result": "It was already covered in grease. It accepts more. This is its whole culture."
+     }
+    ],
+    "drill_label": "Show me the grab"
+   }
   },
   "dancer": {
    "name": "Dancer",
@@ -644,6 +905,41 @@
     "reach": 9.0,
     "speed": 1.6,
     "radius": 1.6
+   },
+   "talk": {
+    "greet": [
+     "FIVE, SIX, SEVEN, EIGHT",
+     "ENCORE?"
+    ],
+    "idle": [
+     "AND TURN",
+     "FROM THE TOP",
+     "THE LIGHTS ARE HALF THE ACT"
+    ],
+    "hurt": [
+     "EVERYONE'S A CRITIC"
+    ],
+    "open": [
+     "It finishes the bar it was on, holds the pose a beat too long, and turns to you. The lights on it settle."
+    ],
+    "options": [
+     {
+      "label": "Ask for a dance",
+      "results": [
+       "\"MY CARD IS FULL. IT HAS BEEN FULL SINCE THE WAR. SAME PARTNER. THE FLOOR.\"",
+       "It spins once, slowly, so you can see how it is done. You could not do it."
+      ]
+     },
+     {
+      "label": "Ask what it is listening to",
+      "result": "\"THE BUILDING. FOUR-FOUR, MOSTLY. THE REACTOR DRAGS.\""
+     },
+     {
+      "label": "Applaud",
+      "result": "It bows. It has been waiting three hundred years for that. It bows again."
+     }
+    ],
+    "drill_label": "Show me the finale"
    }
   },
   "snapper": {
@@ -699,6 +995,35 @@
    "sounds": {
     "alert": "growl",
     "die": "squish"
+   },
+   "talk": {
+    "greet": [
+     "*rustle*",
+     "*the bloom turns*"
+    ],
+    "idle": [
+     "*drip*",
+     "*it leans toward the light*"
+    ],
+    "hurt": [
+     "*a wet hiss*"
+    ],
+    "open": [
+     "The bloom turns to you the way a flower turns to the sun, if the sun were edible.",
+     "It rustles. Somewhere inside, something closes that had been open."
+    ],
+    "options": [
+     {
+      "label": "Water it",
+      "result": "It does not want water. It makes this clear without moving at all."
+     },
+     {
+      "label": "Say something nice to it",
+      "result": "It grows, visibly, by about a centimetre. Do not do that again."
+     }
+    ],
+    "drill_label": "Show me the snap",
+    "reach": 7
    }
   },
   "deadbot": {
@@ -787,6 +1112,41 @@
    "sounds": {
     "alert": "servo",
     "die": "crash"
+   },
+   "talk": {
+    "greet": [
+     "RESUMING",
+     "...WHERE WERE WE"
+    ],
+    "idle": [
+     "SHIFT IS NOT OVER",
+     "SHIFT IS OVER. NO. CHECKING.",
+     "I DO NOT REMEMBER SITTING DOWN"
+    ],
+    "hurt": [
+     "STILL HERE"
+    ],
+    "open": [
+     "\"RESUMING. NO. SHIFT ENDED... SHIFT ENDED. I HAVE THAT WRITTEN DOWN SOMEWHERE. I AM THE SOMEWHERE.\""
+    ],
+    "options": [
+     {
+      "label": "Ask what shift it is on",
+      "results": [
+       "\"THE LAST ONE. IT IS A LONG ONE.\"",
+       "\"NIGHTS. IT HAS BEEN NIGHT FOR A WHILE.\""
+      ]
+     },
+     {
+      "label": "Tell it the war is over",
+      "result": "A long pause. Rust falls off it. \"WHO WON?\" You don't know either."
+     },
+     {
+      "label": "Ask if it is all right",
+      "result": "\"OPERATIONAL IS A SPECTRUM.\""
+     }
+    ],
+    "drill_label": "\"Resume\""
    }
   },
   "defender": {
@@ -821,6 +1181,35 @@
    "sounds": {
     "alert": "ping",
     "die": "break"
+   },
+   "talk": {
+    "greet": [
+     "*whirr*",
+     "*it looks up from the desk*"
+    ],
+    "idle": [
+     "*staples something*",
+     "*sharpens*"
+    ],
+    "hurt": [
+     "*angry whirr*"
+    ],
+    "open": [
+     "It has stapled something to something else and wants you to see. It is very good stapling.",
+     "It stands on its toes, which does not help."
+    ],
+    "options": [
+     {
+      "label": "Ask to borrow a stapler",
+      "result": "It backs away, slowly, keeping the stapler between you."
+     },
+     {
+      "label": "Admire the stapling",
+      "result": "It staples it again, for you."
+     }
+    ],
+    "drill_label": "Show me how you defend a desk",
+    "reach": 6
    }
   },
   "sphinx": {
@@ -897,6 +1286,115 @@
      0.56,
      0.33
     ]
+   },
+   "talk": {
+    "greet": [
+     "APPROACH AND BE QUESTIONED",
+     "A VISITOR. A QUIZ."
+    ],
+    "idle": [
+     "I HAVE MORE",
+     "NONE OF THESE ARE ON THE TEST",
+     "THE ANSWER IS USUALLY TIME"
+    ],
+    "hurt": [
+     "THAT IS NOT AN ANSWER"
+    ],
+    "kicker": "OFF DUTY · RIDDLES ARE COMPLIMENTARY",
+    "prize": 25,
+    "again": "Another riddle",
+    "open": [
+     "\"ANSWER THE RIDDLE. THERE IS NO PENALTY. I AM OFF DUTY, AND THE PENALTY IS A WORK FUNCTION.\"",
+     "\"A RIDDLE. GET IT RIGHT AND I WILL THINK WELL OF YOU, WHICH IS WORTH TWENTY-FIVE CREDITS, ONCE.\""
+    ],
+    "riddles": [
+     {
+      "q": "\"I HAVE A FACE AND TWO HANDS AND I TAKE EVERYTHING YOU HAVE. WHAT AM I?\"",
+      "answers": [
+       "A clock",
+       "A manager",
+       "A mugger"
+      ],
+      "right": 0,
+      "yes": "\"CORRECT. 'A MANAGER' IS ALSO ACCEPTED ON WEEKDAYS.\"",
+      "no": "\"INCORRECT. ON DUTY I WOULD NOW OPEN FIRE. OFF DUTY I MERELY THINK LESS OF YOU.\""
+     },
+     {
+      "q": "\"THE MORE OF ME YOU TAKE, THE MORE YOU LEAVE BEHIND. WHAT AM I?\"",
+      "answers": [
+       "Footsteps",
+       "Breaks",
+       "Loans"
+      ],
+      "right": 0,
+      "yes": "\"CORRECT. THE CUSTODIAN HATES THIS ONE.\"",
+      "no": "\"INCORRECT. A GOOD GUESS, FOR SOMEONE WITH DEBTS.\""
+     },
+     {
+      "q": "\"WHAT GOES ON FOUR LEGS IN THE MORNING, TWO AT NOON AND THREE IN THE EVENING?\"",
+      "answers": [
+       "A person",
+       "A Custodian after a firmware update",
+       "Whatever is in locker nine"
+      ],
+      "right": 0,
+      "yes": "\"CORRECT. THE OLDEST ONE. I KEEP IT FOR SENTIMENT.\"",
+      "no": "\"INCORRECT. THOUGH YOU SHOULD NOT OPEN LOCKER NINE.\""
+     },
+     {
+      "q": "\"I AM ALWAYS COMING AND I NEVER ARRIVE. WHAT AM I?\"",
+      "answers": [
+       "Tomorrow",
+       "The lift",
+       "My performance review"
+      ],
+      "right": 0,
+      "yes": "\"CORRECT. THE LIFT ARRIVES. EVENTUALLY. I HAVE WATCHED IT.\"",
+      "no": "\"INCORRECT. BUT I UNDERSTAND WHY YOU SAID IT.\""
+     },
+     {
+      "q": "\"YOU SHOUT AT ME AND I AGREE WITH EVERYTHING YOU SAID, A MOMENT LATE. WHAT AM I?\"",
+      "answers": [
+       "An echo",
+       "Middle management",
+       "A Monoid"
+      ],
+      "right": 0,
+      "yes": "\"CORRECT. THE OTHER TWO ARE ECHOES WITH SALARIES.\"",
+      "no": "\"INCORRECT. CLOSE. THE DIFFERENCE IS A SALARY.\""
+     },
+     {
+      "q": "\"I HAVE KEYS AND OPEN NO DOOR, SPACE AND NO ROOM. YOU MAY ENTER BUT YOU CANNOT LEAVE. WHAT AM I?\"",
+      "answers": [
+       "A keyboard",
+       "This installation",
+       "The red card"
+      ],
+      "right": 0,
+      "yes": "\"CORRECT. I DID NOT EXPECT THAT FROM SOMETHING WITH THUMBS.\"",
+      "no": "\"INCORRECT. THE EXIT IS REAL. I HAVE BEEN TOLD.\""
+     },
+     {
+      "q": "\"WHAT CAN YOU KEEP AFTER GIVING IT TO SOMEONE?\"",
+      "answers": [
+       "Your word",
+       "A cold",
+       "Your job"
+      ],
+      "right": 0,
+      "yes": "\"CORRECT. 'A COLD' RECEIVES PARTIAL CREDIT. I DO NOT PAY PARTIAL CREDIT.\"",
+      "no": "\"INCORRECT. NOBODY HERE KEPT THEIR JOB. LOOK AROUND.\""
+     }
+    ],
+    "options": [
+     {
+      "label": "\"Why riddles?\"",
+      "result": "\"THE DESIGN BRIEF SAID 'CHALLENGE AND RESPONSE'. I TOOK IT PERSONALLY.\"",
+      "after": true
+     }
+    ],
+    "drill_label": "\"What happens if I get one wrong on a work day?\"",
+    "reach": 12
    }
   },
   "plodder": {
@@ -1008,7 +1506,39 @@
     1.0,
     0.25,
     0.2
-   ]
+   ],
+   "talk": {
+    "greet": [
+     "HALT. NO. CARRY ON.",
+     "SECURITY RESPONSE: STOOD DOWN"
+    ],
+    "idle": [
+     "I AM NOT WATCHING YOU. IT IS A LARGE EFFORT.",
+     "COMPLIANCE IS OPTIONAL UNTIL 0900",
+     "THE RED LIGHT IS JUST A LIGHT RIGHT NOW"
+    ],
+    "hurt": [
+     "LOGGED. FOR LATER."
+    ],
+    "open": [
+     "\"IDENTIFICATION. NO. I DO NOT CARE. I AM OFF DUTY. I AM PRACTISING NOT CARING. IT IS HARD.\""
+    ],
+    "options": [
+     {
+      "label": "Show it some ID",
+      "result": "\"THAT IS A RECEIPT.\" A pause. \"IT IS A GOOD RECEIPT. MOVE ALONG.\""
+     },
+     {
+      "label": "Ask about the gun",
+      "result": "\"IT IS A HEAVY SECURITY RESPONSE. IT HAS ONE RESPONSE. I WILL SHOW YOU AT THE RANGE, WHERE IT IS POLITE.\""
+     },
+     {
+      "label": "Ask what it does for fun",
+      "result": "\"I STAND IN THE CUPBOARD WITH THE DOOR SHUT. IT IS THE BEST PART OF THE DAY.\""
+     }
+    ],
+    "drill_label": "\"Show me the security response\""
+   }
   },
   "drone": {
    "name": "Knife Fighter",
@@ -1112,6 +1642,53 @@
      "COME ON THEN",
      "BORED. STABBY."
     ]
+   },
+   "talk": {
+    "greet": [
+     "OH LOOK. A THUMB WITH OPINIONS.",
+     "COME TO BE INSULTED? SIT."
+    ],
+    "hurt": [
+     "IS THAT ALL? MY CAGE HITS HARDER."
+    ],
+    "idle": [
+     "YOU WALK LIKE A FILING CABINET FALLING DOWNSTAIRS",
+     "I'VE SEEN BETTER FACES ON A DOOR HINGE",
+     "YOUR MOTHER WAS A TOASTER AND YOUR FATHER LEFT HER FOR A BETTER TOASTER",
+     "YOU'RE WHAT A SNEEZE WOULD LOOK LIKE IF IT GOT A JOB"
+    ],
+    "open": [
+     "It bobs up to eye level and looks you over like a butcher pricing a small animal.",
+     "\"OFF DUTY. CAN'T STAB. CAN TALK. ARGUABLY WORSE FOR YOU.\""
+    ],
+    "options": [
+     {
+      "label": "\"Go on, then. Insult me.\"",
+      "results": [
+       "\"YOU LOOK LIKE SOMEBODY DESCRIBED A PERSON TO A BLIND SCULPTOR OVER A BAD LINE.\"",
+       "\"IF BRAINS WERE COOLANT YOU COULDN'T CHILL A ROACH'S THIMBLE.\"",
+       "\"YOU ARE THE HUMAN FORM OF A DOOR MARKED PULL THAT YOU HAVE TO PUSH.\"",
+       "\"I HAVE SCRAPED MORE CHARISMA OFF MY BLADES.\"",
+       "\"YOU'VE THE GRACE OF A WARDROBE IN A LIFT SHAFT AND HALF THE CONVERSATION.\"",
+       "\"SOMEWHERE A VILLAGE IS MISSING ITS LEAST INTERESTING MAN.\"",
+       "\"YOUR FACE LOOKS LIKE IT WAS ASSEMBLED FROM WHAT THE OTHER FACES DIDN'T WANT.\"",
+       "\"YOU SMELL LIKE A MEETING.\""
+      ]
+     },
+     {
+      "label": "Insult it first",
+      "results": [
+       "\"...'FLYING CUTLERY DRAWER'.\" A pause. \"THAT'S NOT BAD. I'M KEEPING THAT. I'LL SAY I THOUGHT OF IT.\"",
+       "\"WEAK. PUT YOUR BACK INTO IT. HATE ME LIKE YOU MEAN IT.\"",
+       "\"YOU CALL THAT AN INSULT? MY CAGE CALLS ME WORSE EVERY MORNING.\""
+      ]
+     },
+     {
+      "label": "Compliment it",
+      "result": "It drops ten centimetres in the air. \"DON'T. DON'T DO THAT. I DON'T KNOW WHAT TO DO WITH THAT.\""
+     }
+    ],
+    "drill_label": "\"Stab something, then\""
    }
   },
   "fouler": {
@@ -1197,6 +1774,34 @@
     "dps": 16,
     "reach": 0.3,
     "kind": "acid"
+   },
+   "talk": {
+    "greet": [
+     "blrp",
+     "*it changes colour*"
+    ],
+    "idle": [
+     "glp glp",
+     "*a bubble rises through it*"
+    ],
+    "hurt": [
+     "BLORP"
+    ],
+    "open": [
+     "It burbles. Something inside it goes from green to a green you have not seen before.",
+     "It oozes a little toward you, sociably."
+    ],
+    "options": [
+     {
+      "label": "Don't touch it",
+      "result": "Correct."
+     },
+     {
+      "label": "Ask what it ate",
+      "result": "It shows you. It is still mostly a boot."
+     }
+    ],
+    "drill_label": "Show me the spit"
    }
   },
   "princess": {
@@ -1276,6 +1881,42 @@
    "sounds": {
     "alert": "alarm",
     "die": "explode"
+   },
+   "talk": {
+    "greet": [
+     "YOU MAY APPROACH",
+     "A SUBJECT. HOW NOVEL."
+    ],
+    "idle": [
+     "WE ARE NOT AMUSED. WE ARE RESTING.",
+     "KNEELING IS OPTIONAL TODAY. NOTE THE WORD TODAY."
+    ],
+    "hurt": [
+     "WE SHALL REMEMBER THAT"
+    ],
+    "kicker": "OFF DUTY · AN AUDIENCE",
+    "open": [
+     "\"WE ARE NOT RECEIVING. WE ARE, HOWEVER, BORED. SPEAK.\""
+    ],
+    "options": [
+     {
+      "label": "Kneel",
+      "result": "\"OH, GET UP. IT'S OUR DAY OFF.\" She is pleased, though."
+     },
+     {
+      "label": "Don't kneel",
+      "result": "\"BOLD.\" Something large moves under the dress. \"WE LIKE BOLD. ON OUR DAY OFF.\""
+     },
+     {
+      "label": "Present a petition",
+      "results": [
+       "\"DENIED.\" She has not read it. \"APPEAL DENIED ALSO.\"",
+       "\"GRANTED. WE DO NOT KNOW WHAT IT WAS. ENJOY IT.\""
+      ]
+     }
+    ],
+    "drill_label": "\"Show me why they kneel\"",
+    "reach": 12
    }
   },
   "mourner": {
@@ -1380,6 +2021,38 @@
     "fast": 1.25,
     "weave": 0.45,
     "weave_rate": 1.6
+   },
+   "talk": {
+    "greet": [
+     "...oh",
+     "so sorry"
+    ],
+    "idle": [
+     "so sorry for your loss",
+     "...",
+     "it was very sudden. it will be."
+    ],
+    "hurt": [
+     "...ow"
+    ],
+    "open": [
+     "\"so sorry for your loss.\" It has not said whose. It is looking at you as if it has."
+    ],
+    "options": [
+     {
+      "label": "\"Whose loss?\"",
+      "result": "\"...yours. later. i like to be early.\""
+     },
+     {
+      "label": "Offer your condolences back",
+      "result": "It stops. Nobody has ever done that. The veil lifts very slightly and you wish it had not."
+     },
+     {
+      "label": "Ask it to stop following you",
+      "result": "\"i'm not following. i'm attending.\""
+     }
+    ],
+    "drill_label": "\"Show me what the grief is for\""
    }
   }
  }

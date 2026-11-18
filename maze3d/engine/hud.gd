@@ -379,6 +379,8 @@ func _on_toast(text: String, kind: String) -> void:
 
 # ------------------------------------------------------------------ panels (terminals, things to read)
 func open_panel(prop: Node, spec: Dictionary) -> void:
+	if _state == "panel":
+		return
 	_panel_prop = prop
 	_panel_spec = spec
 	_state = "panel"
@@ -389,7 +391,7 @@ func open_panel(prop: Node, spec: Dictionary) -> void:
 	_panel.visible = true
 
 
-func _fill_panel(text: String, working := "") -> void:
+func _fill_panel(text: String, working := "", final := false) -> void:
 	for c in _panel_body.get_children():
 		_panel_body.remove_child(c)
 		c.queue_free()
@@ -413,6 +415,8 @@ func _fill_panel(text: String, working := "") -> void:
 			continue
 		if o.get("once", false) and used.has(i):
 			continue
+		if final and not o.get("after", false):          # that was an answer: only what may follow it is offered
+			continue
 		n += 1
 		_panel_body.add_child(_button("%d   %s" % [n, o.get("label", "")], _choose.bind(i), n == 1))
 	_panel_body.add_child(_button("Esc   Step away", close_panel))
@@ -435,10 +439,16 @@ func _choose(i: int) -> void:
 			_panel_prop.set_screen(o["screen"])
 	LM.sound("confirm")
 	Game.run_effects(o.get("effects"))
+	var who: Node = _panel_prop
+	var result: String = o.get("result", _panel_spec.get("text", ""))
+	if o.has("results"):                             # one of several things it might say
+		result = o["results"][randi() % o["results"].size()]
 	if o.get("close", false):
 		close_panel()
 	else:
-		_fill_panel(o.get("result", _panel_spec.get("text", "")))
+		_fill_panel(result, "", o.get("final", false))
+	if o.has("call") and who != null and is_instance_valid(who) and who.has_method(o["call"]):      # something the thing itself does
+		who.call(o["call"])
 
 
 func close_panel() -> void:

@@ -118,7 +118,7 @@ func _someone_near() -> bool:
 	if is_locked():
 		return false
 	for a in level.actors:
-		if is_instance_valid(a) and not a.dead and a.awake and a.global_position.distance_to(global_position) < 3.4:
+		if is_instance_valid(a) and not a.dead and (a.awake or (a.off_duty and (a._od != "" or a._roam.size() > 1))) and a.global_position.distance_to(global_position) < 3.4:      # ... or off duty and going somewhere
 			return true
 	return false
 

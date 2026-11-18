@@ -49,7 +49,7 @@ static func look(pl: Player) -> Dictionary:
 static func _owner_of(col: Object, lv: Level) -> Node:
 	var n := col as Node
 	while n != null and n != lv:
-		if n is Prop or n is Door or n is Enemy or n is Pickup or n is Lift or n is Pit or n is Trap:
+		if n is Prop or n is Door or n is Enemy or n is Pickup or n is Lift or n is Pit or n is Trap or n is Target:
 			return n
 		n = n.get_parent()
 	return null
@@ -121,6 +121,12 @@ static func _describe(n: Node, lv: Level) -> Dictionary:
 		bits.append("behaviour %s" % n.d.get("behavior", "chaser"))
 		if n.tag != "":
 			bits.append("tag %s" % n.tag)
+		if n.off_duty:
+			bits.append("off duty%s" % (" (showing its attacks)" if n._foe != null else (", in its station" if n.dock != null else "")))
+	elif n is Target:
+		title = "Target"
+		bits.append("target \"%s\"" % n.tag)
+		bits.append("%d hits, %d damage%s" % [n.hits, roundi(n.total), ", in use" if n.busy != null else ""])
 	elif n is Prop:
 		var pid: String = n.e["prop"]
 		title = n.e.get("name", n.meta.get("name", _nice(pid)))

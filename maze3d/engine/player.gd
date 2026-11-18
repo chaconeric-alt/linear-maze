@@ -379,7 +379,7 @@ func _find_focus() -> void:
 	for n in get_tree().get_nodes_in_group("usable"):
 		if not is_instance_valid(n) or n.prompt() == "":
 			continue
-		var at: Vector3 = n.global_position + Vector3(0, 1.2, 0)
+		var at: Vector3 = n.focus_point() if n.has_method("focus_point") else n.global_position + Vector3(0, 1.2, 0)
 		var to := at - from
 		var dist := to.length()
 		if dist > 3.6:
