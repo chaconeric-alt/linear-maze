@@ -115,6 +115,19 @@ func _process(_dt: float) -> void:
 		return
 	_frame += 1
 	if _frame == 2:
+		if _args.has("lights"):                      # --lights: how many lights the level has, and the most the view could hold at once
+			var ls: Array = []
+			for n in level.get_children():
+				if n is OmniLight3D:
+					ls.append(n.global_position)
+			var worst := 0
+			for i in range(0, ls.size(), 7):
+				var c := 0
+				for q in ls:
+					if q.distance_to(ls[i]) < 48.0:
+						c += 1
+				worst = maxi(worst, c)
+			print("LIGHTS  %d omni lights in the level; up to %d within 48 m of one place (Forward+ holds %d in view)" % [ls.size(), worst, ProjectSettings.get_setting("rendering/limits/cluster_builder/max_clustered_elements")])
 		if _args.has("god"):
 			player.max_hp = 99999
 			player.hp = 99999

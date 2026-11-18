@@ -70,7 +70,7 @@ func setup(lv: Level, config: Dictionary) -> void:
 	lamp.spot_angle_attenuation = 0.8
 	lamp.light_energy = 2.2
 	lamp.light_color = Color(0.9, 0.95, 1.0)
-	lamp.shadow_enabled = true
+	lamp.shadow_enabled = false                      # a light at your eye throws slivers of shadow beside every ledge and pillar, and they move whenever you do
 	lamp.position = Vector3(0.2, -0.15, 0)
 	lamp.light_cull_mask = 1
 	lamp.visible = cfg.get("lamp", true)

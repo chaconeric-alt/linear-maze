@@ -535,6 +535,8 @@ Every door kind is used in turn. Everything is off duty.
 
 Ambient occlusion is on, gentle (intensity 1.2, radius 0.8) and at full resolution. Screen-space indirect light is off (`--ssil` turns it on). Volumetric fog is on in Forward+. The shadow atlas has four equal quadrants (64 shadows at 1024 px) so a shadow's resolution does not change as its light's share of the screen does. Shadow edges are softened at the "high" grade with a narrow blur (0.6): Godot dithers soft shadow edges with a pattern fixed to the screen, so a wide, coarse one crawls as the view turns.
 
+The player's lamp (F) casts no shadows: a light at the eye throws slivers of shadow beside every ledge and pillar, and they shift whenever the view does. `--lights` prints how many lights a level has.
+
 While playing: **F1** room-light shadows on and off, **F2** steps the shadow softening (hard, then five grades of soft), **F3** ambient occlusion, **F4** volumetric fog. `--noao` and `--novfog` start without. (F5 to F8 are the editor's run and stop keys.)
 
 ## Sniper mode (right mouse button)
