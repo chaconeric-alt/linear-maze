@@ -604,6 +604,7 @@ func _make_light(spec: Dictionary, xf: Transform3D, room: String, flicker := 0.0
 	l.omni_attenuation = 1.0
 	l.shadow_enabled = shadows
 	l.shadow_bias = 0.08
+	l.shadow_blur = 0.6                              # soft edges are dithered on screen: the wider the blur, the more they crawl as the view turns
 	l.distance_fade_enabled = true
 	l.distance_fade_begin = 38.0
 	l.distance_fade_length = 10.0
@@ -1253,7 +1254,7 @@ func _build_environment() -> void:
 	env.fog_density = fog.get("density", 0.012)
 	# Screen-space effects are worked out from what is on screen, so they change as the view turns. Ambient occlusion is
 	# kept gentle (and at full resolution: project.godot); indirect light (SSIL) crawled badly along wall bases and under
-	# ledges and is off unless asked for (--ssil). F6, F7, F8 switch occlusion, indirect light and volumetric fog while playing.
+	# ledges and is off unless asked for (--ssil). F1 to F4 switch shadows, shadow softening, occlusion and fog while playing.
 	var args := OS.get_cmdline_user_args()
 	var forward: bool = RenderingServer.get_current_rendering_method() == "forward_plus"
 	env.ssao_enabled = not args.has("--noao")
@@ -1274,18 +1275,35 @@ func _build_environment() -> void:
 
 
 # ------------------------------------------------------------------ while playing
-## F6 ambient occlusion, F7 screen-space indirect light, F8 volumetric fog: for finding out which of them is misbehaving.
+## F1 to F4 switch parts of the lighting while playing, for finding out which of them is misbehaving:
+## F1 shadows from room lights, F2 how shadow edges are softened (hard, and five grades of soft), F3 ambient occlusion,
+## F4 volumetric fog. (Not F5 to F8: the editor uses those to run and stop the game.)
+const SHADOW_FILTERS := ["hard", "soft, very low", "soft, low", "soft, medium", "soft, high", "soft, ultra"]
+var _shadow_filter := 4
+var _shadows_on := true
+
+
 func _unhandled_key_input(ev: InputEvent) -> void:
 	if not (ev is InputEventKey) or not ev.pressed or ev.echo or _env == null:
 		return
 	match ev.keycode:
-		KEY_F6:
+		KEY_F1:
+			_shadows_on = not _shadows_on
+			for room in lights_by_room:
+				for l in lights_by_room[room]:
+					if is_instance_valid(l):
+						if not l.has_meta("shadow"):
+							l.set_meta("shadow", l.shadow_enabled)
+						l.shadow_enabled = _shadows_on and l.get_meta("shadow")
+			Game.say("Room-light shadows %s" % ("on" if _shadows_on else "off"), "info")
+		KEY_F2:
+			_shadow_filter = (_shadow_filter + 1) % SHADOW_FILTERS.size()
+			RenderingServer.positional_soft_shadow_filter_set_quality(_shadow_filter)
+			Game.say("Shadow edges: %s" % SHADOW_FILTERS[_shadow_filter], "info")
+		KEY_F3:
 			_env.ssao_enabled = not _env.ssao_enabled
 			Game.say("Ambient occlusion %s" % ("on" if _env.ssao_enabled else "off"), "info")
-		KEY_F7:
-			_env.ssil_enabled = not _env.ssil_enabled
-			Game.say("Screen-space indirect light %s" % ("on" if _env.ssil_enabled else "off"), "info")
-		KEY_F8:
+		KEY_F4:
 			_env.volumetric_fog_enabled = not _env.volumetric_fog_enabled
 			Game.say("Volumetric fog %s" % ("on" if _env.volumetric_fog_enabled else "off"), "info")
 
