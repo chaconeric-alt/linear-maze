@@ -531,6 +531,10 @@ Every door kind is used in turn. Everything is off duty.
 
 **Keeping it complete.** Add a kit, a style, a model, a door, a monster or an item and run the script again: a new kit gets a wing, a new style a room, new furniture a place on a wall, a new monster a place on the spine (give it a home in `HOMES` at the top of the script to put it somewhere better), a new station a bay in the Depot, a new container a place in the Stores. The script stops with an error naming anything it could not place. The level is marked `"covers_all": true`, and with that the self-test (`--level=staffonly --selftest`) fails if any style, prop, door, monster or item in the game is not on the floor; on an off-duty floor it also checks that every kind of monster talks, lands an attack on a target, hurts nobody, that one called from the range walks there and back, and that a shut station shuts again.
 
+## Screen-space effects, and switching them while playing
+
+Ambient occlusion is on, gentle (intensity 1.2, radius 0.8) and at full resolution. Screen-space indirect light is off (`--ssil` turns it on): it crawled along wall bases and under ledges when the view turned. Volumetric fog is on in Forward+. **F6**, **F7** and **F8** switch occlusion, indirect light and volumetric fog on and off in a running game, to see which of them is responsible for something. `--noao` and `--novfog` start without. The shadow atlas has four equal quadrants (64 shadows at 1024 px) so a shadow's resolution does not change as its light's share of the screen does.
+
 ## Sniper mode (right mouse button)
 
 Hold the right mouse button: the view closes from `player.fov` (84) to `player.zoom_fov` (20), a scope's reticle replaces the cross hairs, the gun drops out of view, mouse sensitivity falls in step with the zoom, and movement slows to `player.zoom_speed` (0.22) of normal. Let go to come out. Dashing breaks it. All three numbers go in `game.json` `player`. `--zoom` holds it on for screenshots.

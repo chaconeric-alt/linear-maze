@@ -31,6 +31,7 @@ var rooms: Array = []
 var nav := AStar3D.new()          # points: ground, deck 1, deck 2 and ramp, per cell
 var start_level := 0
 var tiles_at: Dictionary = {}    # Vector2i -> [[tile id, where it was laid], ..]: which tile is where (Identify)
+var _env: Environment
 var targets: Array = []         # Targets (engine/target.gd)
 var _boxes: Array = []           # unit cubes that make decks, ramps and railings
 var _rails: Array = []
@@ -1250,11 +1251,18 @@ func _build_environment() -> void:
 	env.fog_enabled = true
 	env.fog_light_color = LM.col(fog.get("color"), Color(0.1, 0.14, 0.17))
 	env.fog_density = fog.get("density", 0.012)
-	env.ssao_enabled = true
-	env.ssao_intensity = 2.2
+	# Screen-space effects are worked out from what is on screen, so they change as the view turns. Ambient occlusion is
+	# kept gentle (and at full resolution: project.godot); indirect light (SSIL) crawled badly along wall bases and under
+	# ledges and is off unless asked for (--ssil). F6, F7, F8 switch occlusion, indirect light and volumetric fog while playing.
+	var args := OS.get_cmdline_user_args()
 	var forward: bool = RenderingServer.get_current_rendering_method() == "forward_plus"
-	env.ssil_enabled = forward
-	env.volumetric_fog_enabled = forward and fog.get("volumetric", true)
+	env.ssao_enabled = not args.has("--noao")
+	env.ssao_intensity = 1.2
+	env.ssao_radius = 0.8
+	env.ssao_power = 1.3
+	env.ssil_enabled = forward and args.has("--ssil")
+	_env = env
+	env.volumetric_fog_enabled = forward and fog.get("volumetric", true) and not args.has("--novfog")
 	env.volumetric_fog_density = fog.get("density", 0.012) * 1.6
 	env.volumetric_fog_albedo = LM.col(fog.get("color"), Color(0.5, 0.6, 0.65))
 	env.volumetric_fog_length = 48.0
@@ -1266,6 +1274,22 @@ func _build_environment() -> void:
 
 
 # ------------------------------------------------------------------ while playing
+## F6 ambient occlusion, F7 screen-space indirect light, F8 volumetric fog: for finding out which of them is misbehaving.
+func _unhandled_key_input(ev: InputEvent) -> void:
+	if not (ev is InputEventKey) or not ev.pressed or ev.echo or _env == null:
+		return
+	match ev.keycode:
+		KEY_F6:
+			_env.ssao_enabled = not _env.ssao_enabled
+			Game.say("Ambient occlusion %s" % ("on" if _env.ssao_enabled else "off"), "info")
+		KEY_F7:
+			_env.ssil_enabled = not _env.ssil_enabled
+			Game.say("Screen-space indirect light %s" % ("on" if _env.ssil_enabled else "off"), "info")
+		KEY_F8:
+			_env.volumetric_fog_enabled = not _env.volumetric_fog_enabled
+			Game.say("Volumetric fog %s" % ("on" if _env.volumetric_fog_enabled else "off"), "info")
+
+
 func _process(dt: float) -> void:
 	_t += dt
 	for f in _flick:
