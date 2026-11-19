@@ -436,7 +436,10 @@ func _fill_panel(text: String, working := "", final := false) -> void:
 		if final and not o.get("after", false):          # that was an answer: only what may follow it is offered
 			continue
 		n += 1
-		_panel_body.add_child(_button("%d   %s" % [n, o.get("label", "")], _choose.bind(i), n == 1))
+		var lab: String = o.get("label", "")
+		if o.has("hack"):                                # a hack shows its odds
+			lab += "   [hack: %d%%]" % roundi(Game.hack_chance(float(o.get("hard", 0.0))) * 100.0)
+		_panel_body.add_child(_button("%d   %s" % [n, lab], _choose.bind(i), n == 1))
 	_panel_body.add_child(_button("Esc   Step away", close_panel))
 
 
@@ -447,12 +450,26 @@ func _choose(i: int) -> void:
 		LM.sound("denied")
 		_fill_panel("%s\n\nThat is %d cr. You have %d." % [_panel_spec.get("text", ""), cost, Game.credits])
 		return
-	var secs: float = o.get("hack", 0.0)
-	if secs > 0.0:
+	# "hack": a job the hacker may fail. The chance is Game.hack_chance(o["hard"]): 10% + 5% a level, less what the job takes off.
+	# Failing runs "fail" (if any) and says "fail_result"; it can be tried again, at the same price.
+	if o.has("hack"):
 		_fill_panel(_panel_spec.get("text", ""), o.get("working", "Bypassing…"))
 		LM.sound("hack")
-		await get_tree().create_timer(secs, true).timeout
+		var testing: bool = OS.get_cmdline_user_args().has("--selftest")      # a self-test's hacks are instant and always come off
+		await get_tree().create_timer(0.02 if testing else 1.2, true).timeout
 		if _state != "panel":
+			return
+		if not testing and randf() >= Game.hack_chance(float(o.get("hard", 0.0))):
+			LM.sound("denied")
+			var fctx := {}
+			if _panel_prop is Node3D and is_instance_valid(_panel_prop):
+				fctx = {"at": (_panel_prop as Node3D).global_position, "prop": _panel_prop}
+			Game.run_effects(o.get("fail"), fctx)
+			if o.has("fail") and o.get("fail_close", true):
+				close_panel()
+				Game.say(o.get("fail_result", "The hack failed."), "warn")
+			else:
+				_fill_panel("%s\n\n%s" % [_panel_spec.get("text", ""), o.get("fail_result", "The hack failed. It can be tried again.")])
 			return
 	if _panel_prop and is_instance_valid(_panel_prop):
 		if not _panel_prop.e.has("_used"):

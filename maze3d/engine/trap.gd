@@ -18,6 +18,7 @@ var _along_x := true
 var _light: OmniLight3D
 var _parts: CPUParticles3D
 var _on := false
+var _storey := 0
 var _plate: Node3D
 var _volleys := 0
 var _next := 0.0
@@ -28,6 +29,7 @@ func setup(lv: Level, entry: Dictionary, p: Vector2i, kit_id: String) -> void:
 	e = entry
 	cell_pos = p
 	kind = e["trap"]
+	_storey = int(e.get("level", 0))
 	_t = e.get("phase", 0.0)
 	_light = OmniLight3D.new()
 	_light.omni_range = 5.0
@@ -35,7 +37,7 @@ func setup(lv: Level, entry: Dictionary, p: Vector2i, kit_id: String) -> void:
 	add_child(_light)
 	match kind:
 		"laser":
-			_along_x = lv.cell(p.x - 1, p.y)["solid"] and lv.cell(p.x + 1, p.y)["solid"]
+			_along_x = _wall(lv, p.x - 1, p.y) and _wall(lv, p.x + 1, p.y)
 			if e.has("axis"):
 				_along_x = e["axis"] == "x"
 			rotation.y = 0.0 if _along_x else PI / 2
@@ -63,7 +65,7 @@ func setup(lv: Level, entry: Dictionary, p: Vector2i, kit_id: String) -> void:
 			_light.light_color = Color(1.0, 0.1, 0.05)
 			_light.position.y = 1.2
 		"darts":
-			_along_x = lv.cell(p.x - 1, p.y)["solid"] and lv.cell(p.x + 1, p.y)["solid"]
+			_along_x = _wall(lv, p.x - 1, p.y) and _wall(lv, p.x + 1, p.y)
 			if e.has("axis"):
 				_along_x = e["axis"] == "x"
 			rotation.y = 0.0 if _along_x else PI / 2
@@ -71,6 +73,10 @@ func setup(lv: Level, entry: Dictionary, p: Vector2i, kit_id: String) -> void:
 			add_child(_plate)
 			for zz in [-1.1, 0.0, 1.1]:
 				for s in [-1.0, 1.0]:
+					var side: Vector3 = Vector3(s, 0, 0).rotated(Vector3.UP, rotation.y)
+					var sc: Dictionary = lv.air(p.x + roundi(side.x), p.y + roundi(side.z), _storey)
+					if not sc["solid"] or sc.get("door", "") != "" or sc.get("window", "") != "":
+						continue                             # a door or a window on that side: no wall there to put a port in
 					var port := LM.spawn_model(kit_id, "trap_dart")
 					add_child(port)
 					port.position = Vector3(s * lv.C / 2, 1.25, zz)
@@ -131,6 +137,8 @@ func _process(dt: float) -> void:
 	if pl == null or not is_instance_valid(pl):
 		return
 	var rel: Vector3 = pl.global_position - global_position
+	if rel.y < -0.6 or rel.y > level.H - 0.8:        # they are on another storey: a trap works on its own floor only
+		return
 	var here: bool = abs(rel.x) < level.C / 2 and abs(rel.z) < level.C / 2
 	match kind:
 		"laser":
@@ -214,3 +222,8 @@ func _near(pl: Node3D) -> bool:
 	if e.get("quiet", false) or pl == null or not is_instance_valid(pl):
 		return false
 	return pl.global_position.distance_to(global_position) < float(e.get("hear", 12.0)) and level.floor_of(pl.global_position) == level.floor_of(global_position)
+
+
+## Is that cell, on this trap's storey, something to fix an emitter to?
+func _wall(lv: Level, x: int, y: int) -> bool:
+	return lv.air(x, y, _storey)["solid"]

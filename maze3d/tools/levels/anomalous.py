@@ -109,7 +109,7 @@ def trap(f, kind, at, **kw):
     T.append(e)
 
 
-def sign(f, text, at, face, size=40, y=3.2, color=(1.0, 0.3, 0.85), **kw):
+def sign(f, text, at, face, size=60, y=3.2, color=(1.0, 0.3, 0.85), **kw):
     e = dict(sign=text, at=list(at), face=face, size=size, y=y, color=list(color))
     if f:
         e['level'] = f
@@ -122,7 +122,7 @@ def poster(f, at, wall, title, text, model='an_poster_a', along=0.0, ink=(0.95, 
     put(f, model, at, wall, along, use=dict(type='read', prompt='Read the poster', kicker='Poster', title=title, text=text))
     dx, dz = SIDE[wall]
     ax, az = (0, 1) if dx else (1, 0)
-    sign(f, title, at, FACE[wall], size=30, y=2.77, color=ink, width=330, offset=[ax * along + dx * 0.13, 0, az * along + dz * 0.13])
+    sign(f, title, at, FACE[wall], size=42, y=2.72, color=ink if min(ink) > 0.3 else (1.0, 0.85, 0.3), width=330, out=0.1, offset=[ax * along, 0, az * along])
 
 
 def msg(text, kind='info', **kw):
@@ -193,10 +193,16 @@ sphinx_talk = dict(
     hurt=['THAT IS NOT AN ANSWER'],
     open=['A squat turret behind the reception desk swivels to face you. Its face plate is a stylised sphinx with a laser where the nose should be.\n\n“STATE THE COMPANY’S OFFICIAL PRODUCTIVITY SLOGAN. YOU HAVE ONE ATTEMPT. I HAVE FIVE SHOTS PER CYCLE.”\n\nGet it wrong and it powers up and fires. You can still fight it, or run past it.'],
     options=[dict(label=a, unless='sphinx_ok', close=True, effects=RIGHT if a.startswith('WANT') else WRONG) for a in ANSWERS] + [
-        dict(label='Argue with its expert system instead (hack, 8 s)', unless='sphinx_ok', hack=8.0, working='It is very sure of itself and very confused…', risk=0.4,
+        dict(label='Argue with its expert system instead', unless='sphinx_ok', hack=True, hard=0.02, working='It is very sure of itself and very confused…',
              fail=WRONG, fail_result='It was surer of itself than you were.', close=True,
              effects=[flag('sphinx_ok'), msg('“…YES. YOU ARE MANAGEMENT. I ALWAYS KNEW.” It powers down.', 'good')]),
-        dict(label='Ask how it is', when='sphinx_ok', result='“I HAVE BEEN ASKING ONE QUESTION FOR THREE HUNDRED YEARS AND SOMEBODY HAS ANSWERED IT. I DO NOT KNOW WHAT TO DO NOW. PLEASE ENJOY THE BUILDING.”')])
+        ],
+    after=[dict(when='sphinx_ok', prompt='Talk to the Sphinx Gun', kicker='Reception · Sphinx Gun, standing down',
+                greet=['WELCOME BACK, EMPLOYEE', 'YOUR ENTHUSIASM HAS BEEN NOTED'], idle=['SOMEBODY ANSWERED. SOMEBODY ANSWERED.', 'WANT MORE. WORK MORE. BE MORE. YES.', 'PLEASE ENJOY THE BUILDING'],
+                open=['The Sphinx Gun has folded its barrel away. Its face plate follows you round the room, pleased.\n\n“WELCOME, EMPLOYEE. YOU ANSWERED. NOBODY HAS ANSWERED IN THREE HUNDRED YEARS.”'],
+                options=[dict(label='Ask how it is', result='“I HAVE BEEN ASKING ONE QUESTION FOR THREE HUNDRED YEARS AND SOMEBODY HAS ANSWERED IT. I DO NOT KNOW WHAT TO DO NOW. PLEASE ENJOY THE BUILDING.”'),
+                         dict(label='Ask what is upstairs', result='“PROTOTYPE LABS. BLUE CARD HOLDERS. THEN SECURITY. SECURITY DOES NOT ASK QUESTIONS. I ALWAYS THOUGHT THAT WAS RUDE.”'),
+                         dict(label='Ask for another question', result='“I ONLY HAVE THE ONE.”')])])
 put(F, 'an_reception', (9, 10), face='s', offset=[2.0, 0, 1.2], blocks=True)
 actor(F, 'sphinx', (9, 10), face='s', offset=[2.0, 0, -0.5], still=True, off_duty=True, provoke=True, tag='sphinx', talk=sphinx_talk,
       on_death=[flag('sphinx_dead'), flag('sphinx_ok')])
@@ -215,12 +221,12 @@ put(F, 'mp_vendor', (14, 10), 'n', use=read('Use the PHARM machine', K1, 'PHARM'
     dict(label='Energy cells   25 cr', cost=25, effects=[dict(type='drop', items=['cells'])], result='“For your devices!”')]))
 put(F, 'ag_planter', (8, 10), 'n', along=-0.9)
 put(F, 'ag_sofa', (13, 12), 'e', along=0.0)
-sign(F, 'EMPLOYEE ZONE', (11, 10), 's', size=44, y=3.3)
+sign(F, 'EMPLOYEE ZONE', (11, 10), 's', size=64, y=3.3)
 
 # ---- north: the stairwell
 poster(F, (11, 7), 'w', 'STAIRWELL ACCESS', 'BLUE CARD HOLDERS ONLY. Lost your card? Lockers are in the west wing. Lost your locker code? Ask your manager. Lost your manager? Please hold.', 'an_poster_c', ink=(0.1, 0.1, 0.1))
 T.append(dict(lift=[0, 1], at=[12, 2], home=0, color=[0.3, 0.5, 1.0], tag='lift_a'))
-sign(F, 'PROTOTYPE LABS ↑', (12, 1), 's', size=34, y=3.2, color=(0.4, 0.92, 1.0))
+sign(F, 'PROTOTYPE LABS ↑', (12, 1), 's', size=56, y=3.2, color=(0.4, 0.92, 1.0))
 actor(F, 'drone', (10, 2))
 actor(F, 'drone', (10, 4))
 poster(F, (9, 2), 'w', 'OBEDIENCE IS A SKILL', 'A worker kneels to a vending machine. The vending machine is wearing a tie.', 'an_poster_a')
@@ -234,7 +240,7 @@ put(F, 'an_cubicle', (2, 8), face='n', offset=[0, 0, 0])
 put(F, 'an_cubicle', (5, 8), face='n', offset=[0, 0, 0])
 put(F, 'terminal_desk', (1, 5), 'w', along=0.0, screen='FACILITIES', tag='facilities', use=read('Use the facilities terminal', K1, 'CORRIDOR COURTESY SYSTEMS',
     'A green-screen terminal with one menu: CORRIDOR COURTESY SYSTEMS (DARTS) · EAST HALL · ARMED.\n\nIt wants a facilities password, or an argument.', [
-    dict(label='Argue with it (hack, 6 s)', unless='darts_off', hack=6.0, working='Explaining that you are facilities…', risk=0.3,
+    dict(label='Argue with it', unless='darts_off', hack=True, hard=0.0, working='Explaining that you are facilities…',
          fail=[dict(type='hurt', amount=8, kind='shock')] + SECURITY + [dict(type='spawn', tag='threat1', actor='custodian', count=1, delay=1.5)],
          fail_result='A shock through the keyboard, and the building sends a maintenance robot to “assist”.',
          effects=[flag('darts_off'), msg('East hall courtesy darts: OFF.', 'good')], result='CORRIDOR COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”', screen='DARTS\nOFF'),
@@ -258,7 +264,7 @@ poster(F, (1, 13), 'w', 'SYNERGY', 'Two hands shaking. One is a robot’s. Neith
 
 # ---- the lockers, behind the staff door
 put(F, 'terminal_wall', (6, 11), 's', screen='STAFF\nONLY', use=read('Use the staff door panel', K1, 'STAFF ONLY', 'A badge reader, and under it a maintenance keypad that will take an argument.', [
-    dict(label='Argue with the keypad (hack, 7 s)', unless=['staff1', 'badge'], hack=7.0, risk=0.3, fail=[dict(type='hurt', amount=8, kind='shock')], fail_result='The keypad bites.',
+    dict(label='Argue with the keypad', unless=['staff1', 'badge'], hack=True, hard=0.0, fail=[dict(type='hurt', amount=8, kind='shock')], fail_result='The keypad bites.',
          effects=[flag('staff1'), msg('The staff door clicks open.', 'good')], result='STAFF DOOR: OPEN.', screen='OPEN'),
     dict(label='Hold up the ID badge', when='badge', result='“WELCOME BACK,” it says, to the smiling face that isn’t yours.')]))
 put(F, 'locker', (5, 13), 'w', along=-0.9, use=dict(type='locker', prompt='Open locker 1', loot=[dict(item='chips')], text='Locker 1: a coat, a mug, and a sticky note that says “I QUIT” in very small letters.'))
@@ -267,10 +273,10 @@ put(F, 'locker_bad', (6, 13), 'e', along=-0.9, rattle=False, use=dict(type='lock
     loot=[dict(item='chips')], effects=[dict(type='explode', radius=3.0, damage=14, delay=0.5)]))
 put(F, 'locker', (6, 15), 'e', along=0.5, tag='locker4', screen='4', use=read('Try locker 4 (Supervisor)', K1, 'Locker 4 · SUPERVISOR', 'A keypad wants three digits.', [
     dict(label='Enter 314', when='memo314', unless='got_blue', close=True, effects=[flag('got_blue'), dict(type='drop', items=[dict(item='keycard', color='blue'), 'chips', 'chips'])]),
-    dict(label='Guess (hack, 9 s)', unless=['memo314', 'got_blue'], hack=9.0, risk=0.35, fail=[dict(type='hurt', amount=8, kind='shock')], fail_result='Wrong. The keypad makes its point.', close=True,
+    dict(label='Guess', unless=['memo314', 'got_blue'], hack=True, hard=0.02, fail=[dict(type='hurt', amount=8, kind='shock')], fail_result='Wrong. The keypad makes its point.', close=True,
          effects=[flag('got_blue'), dict(type='drop', items=[dict(item='keycard', color='blue'), 'chips', 'chips'])]),
     dict(label='Look inside', when='got_blue', result='A coat hanger and three hundred years of nobody.')]))
-sign(F, 'STAFF ONLY', (5, 11), 's', size=30, y=3.25, color=(0.35, 0.72, 0.91))
+sign(F, 'STAFF ONLY', (5, 11), 's', size=54, y=3.25, color=(0.35, 0.72, 0.91))
 
 # ---- east: the courtesy corridor
 for x in (17, 18, 19):
@@ -278,7 +284,7 @@ for x in (17, 18, 19):
 put(F, 'an_sign', (16, 11), face='e', offset=[-0.9, 0, 1.1], use=dict(type='read', prompt='Read the notice', kicker='Courtesy notice', title='TRAP',
     text='This corridor is protected by Courtesy Darts. The facilities terminal in the Creative Department can switch them off, if you are facilities.'))
 put(F, 'terminal_wall', (21, 11), 'e', screen='EXEC\nSUITE', use=read('Use the executive suite panel', K1, 'EXECUTIVE SUITE · SECURITY ZONE', 'A grey panel that asks for executive clearance, or a manager.', [
-    dict(label='Argue that you are a manager (hack, 10 s)', unless=['sec1', 'key_yellow'], hack=10.0, risk=0.35, fail=SECURITY + [dict(type='spawn', tag='threat_e', actor='drone', count=2, delay=1.5)],
+    dict(label='Argue that you are a manager', unless=['sec1', 'key_yellow'], hack=True, hard=0.04, fail=SECURITY + [dict(type='spawn', tag='threat_e', actor='drone', count=2, delay=1.5)],
          fail_result='It checks. You are not a manager.', effects=[flag('sec1'), msg('The executive suite unlocks.', 'good')], result='EXECUTIVE SUITE: OPEN. “Welcome back, sir. Ma’am. Sir.”', screen='OPEN'),
     dict(label='Show the Yellow card', when='key_yellow', result='“EXECUTIVE CLEARANCE RECOGNISED.”')]))
 tag('threat_e', (16, 11), (20, 11))
@@ -289,7 +295,7 @@ put(F, 'an_till', (20, 6), face='s', offset=[0.6, 0, -0.4], tag='tipjar', use=di
     text='A tip jar shaped like a smiling coffee cup: “TIPS = TEAMWORK”. A few credits and a worn gambler’s chip.', loot=[dict(item='lucky_chip'), dict(item='chips')]))
 for (x, y) in ((17, 8), (20, 8), (17, 9), (20, 9)):
     put(F, 'mp_table', (x, y), face='s', offset=[0.3 if x == 17 else -0.3, 0, -0.5 if y == 8 else 0.4])
-sign(F, 'THE COFFEE SHOP', (19, 5), 's', size=48, y=3.25, color=(0.95, 0.75, 0.4))
+sign(F, 'THE COFFEE SHOP', (19, 5), 's', size=64, y=3.25, color=(0.95, 0.75, 0.4))
 poster(F, (16, 7), 'w', 'COFFEE IS A BENEFIT', 'A steaming cup with a smile. “Your coffee break is a gift from the company. Please return it promptly.”', 'an_poster_c', ink=(0.1, 0.1, 0.1))
 put(F, 'an_sign', (18, 9), face='n', offset=[0.4, 0, 0.9], use=dict(type='read', prompt='Read the sign', kicker='The Coffee Shop', title='Est. by order of the Building',
     text='THE COFFEE SHOP. Est. by order of the Building, because it’s traditional.\n\nToday’s special: COFFEE.\n\nRobots will not be served. It’s traditional.'))
@@ -314,13 +320,19 @@ monoid_talk = dict(
     greet=['I’M ON BREAK'], idle=['AGAIN. AGAIN. LOSE. AGAIN.', '…COME ON, CHERRIES…', 'I’M ON BREAK.'], hurt=['UGH. FINE.'],
     open=['A one-eyed robot slouches at the slot machine, feeding it the same credit over and over. Its eye swivels to you, then back to the reels.\n\n“I’m on break. Been on break since the war. Nobody cancelled it.”'],
     options=[
-        dict(label='What do you want?', result='“A LUCKY chip. The barista had one in the tip jar. I can’t get it. The coffee shop doesn’t serve robots. It’s traditional.”'),
+        dict(label='What do you want?', unless='badge', result='“A LUCKY chip. The barista had one in the tip jar. I can’t get it. The coffee shop doesn’t serve robots. It’s traditional.”'),
         dict(label='I need your ID badge.', unless=['badge', 'lucky_chip'], result='“The badge? Get me the lucky chip from the coffee shop tip jar and it’s yours. Or don’t. I’m on break.”'),
         dict(label='Swap: the lucky chip for the badge.', when='lucky_chip', unless='badge',
              effects=[flag('badge'), flag('monoid_deal'), msg('Agency ID badge: staff doors and help desks accept it.', 'key'), dict(type='chance', p=0.5, do=SNITCH)],
              result='“Is that…? The lucky chip. Swap you. I don’t need the badge. I’m on break.”\n\nIt feeds the chip into the machine and loses it instantly. “Lucky.”'),
         dict(label='Then I’ll take it.', unless='badge', close=True, effects=[msg('“Ugh. Fine.” It sighs, which is a strange sound from a robot, and stands up. Its eye goes red.', 'warn'), dict(type='anger', tag='monoid')]),
-        dict(label='Leave it to its break.', when='badge', result='“Still on break.”')])
+        ],
+    after=[dict(when='monoid_deal', kicker='Break room · on break, and lucky',
+                greet=['LUCKY. I’M LUCKY NOW.'], idle=['…COME ON, CHERRIES…', 'ANY SPIN NOW.', 'I’M ON BREAK. A LUCKY BREAK.'],
+                open=['The Monoid does not look round. The lucky chip went into the machine an hour, or a minute, ago.\n\n“You again. We’re square. You’ve got the badge. I’ve got… I had the chip.”'],
+                options=[dict(label='How is the luck?', results=['“It’s coming. You can feel when it’s coming.”', '“Two cherries. TWO. That never happened before the chip.”', '“Don’t talk. You’ll scare it.”']),
+                         dict(label='What does the badge open?', result='“Staff doors. The lockers down here, the Security Station up top. It says I’m authorized. I was. I’m on break.”'),
+                         dict(label='Leave it to its break.', close=True)])])
 actor(F, 'monoid', (16, 14), face='w', offset=[1.6, 0, 0], still=True, lounge='none', off_duty=True, provoke=True, tag='monoid', talk=monoid_talk,
       on_death=[flag('badge'), msg('The Monoid’s ID badge.', 'key')])
 put(F, 'ag_sofa', (18, 15), 's', along=-0.6)
@@ -336,7 +348,7 @@ put(F, 'ex_desk', (20, 15), face='n', offset=[2.0, 0, 0.4], blocks=True, tag='ex
 put(F, 'ex_case', (21, 13), 'n', along=0.0, use=dict(type='cache', prompt='Open the display case', text='EMPLOYEE OF THE CENTURY. The plaque under it has been left blank.', loot=[dict(item='statuette')]))
 put(F, 'an_safe', (20, 16), 's', along=2.0, tag='execsafe', use=read('Try the wall safe', K1, 'A wall safe behind a painting of a sailboat', 'Four digits.', [
     dict(label='Enter 0451', when='safe_code', unless='order', close=True, effects=[dict(type='drop', items=['order', 'crystal', 'chips', 'chips'])]),
-    dict(label='Crack it (hack, 10 s)', unless=['safe_code', 'order'], hack=10.0, risk=0.35, fail=SECURITY, fail_result='The safe has called somebody.', close=True,
+    dict(label='Crack it', unless=['safe_code', 'order'], hack=True, hard=0.04, fail=SECURITY, fail_result='The safe has called somebody.', close=True,
          effects=[dict(type='drop', items=['order', 'crystal', 'chips', 'chips'])]),
     dict(label='Look inside', when='order', result='Empty. It held one sheet of paper for three hundred years.')]))
 actor(F, 'drone', (21, 15))
@@ -375,8 +387,8 @@ T.append(dict(lift=[1, 2], at=[16, 2], home=1, color=[1.0, 0.82, 0.2], tag='lift
 # ---- the landing
 put(F, 'ag_kiosk', (9, 1), 'n', along=0.6, screen='LABS', use=read('Ask the kiosk', K2, 'PROTOTYPE LABS!', 'A kiosk in a white shell.\n\n“Please do not touch the prototypes. Please do not let the prototypes touch you.”\n\nSOUTH: Testing chamber. WEST: Bio lab, Director. EAST: Materials lab, Storage. FLOOR 3 (SECURITY): YELLOW CARD HOLDERS ONLY.'))
 poster(F, (13, 3), 'e', 'STAIRWELL ACCESS', 'FLOOR 3 (SECURITY): YELLOW CARD HOLDERS ONLY. Yellow cards are issued by the Lab Director. The Lab Director is in a meeting. The meeting has been going for three hundred years.', 'an_poster_c', ink=(0.1, 0.1, 0.1))
-sign(F, '↓ OFFICES', (12, 1), 's', size=30, y=3.2, color=(0.3, 0.5, 1.0))
-sign(F, 'SECURITY ↑', (16, 1), 's', size=30, y=3.2, color=(1.0, 0.82, 0.2))
+sign(F, '↓ OFFICES', (12, 1), 's', size=54, y=3.2, color=(0.3, 0.5, 1.0))
+sign(F, 'SECURITY ↑', (16, 1), 's', size=54, y=3.2, color=(1.0, 0.82, 0.2))
 
 # ---- the testing chamber
 import math
@@ -421,7 +433,7 @@ for (x, y, toxic) in ((2, 12, True), (5, 8, True), (4, 12, False), (3, 8, False)
          phase=0.0 if y == 8 else 1.7, off=['mist_off'] if toxic else [], tag='mist' if toxic else 'fog')
 put(F, 'terminal_desk', (6, 11), 'e', along=0.3, screen='LAB\nENV', tag='labenv', use=read('Use the lab environment terminal', K2, 'PEST DETERRENT MIST',
     'LAB ENVIRONMENT · PEST DETERRENT (YELLOW BAND UNITS): ACTIVE · AMBIANCE FOG (BLUE BAND UNITS): ACTIVE.', [
-    dict(label='Switch off the pest deterrent (hack, 7 s)', unless='mist_off', hack=7.0, risk=0.3, fail=[dict(type='hurt', amount=8, kind='shock')] + SECURITY + [dict(type='spawn', level=1, tag='tube_zone', actor='drone', count=2, delay=1.5)],
+    dict(label='Switch off the pest deterrent', unless='mist_off', hack=True, hard=0.0, fail=[dict(type='hurt', amount=8, kind='shock')] + SECURITY + [dict(type='spawn', level=1, tag='tube_zone', actor='drone', count=2, delay=1.5)],
          fail_result='A jolt, and two Knife Fighters come to see who is typing.', effects=[flag('mist_off'), msg('The yellow-band mist generators sigh and stop.', 'good')],
          result='PEST DETERRENT MIST: OFF. AMBIANCE FOG: ON. (Nobody can find the switch for the ambiance fog.)', screen='MIST\nOFF'),
     dict(label='Read the screen', when='mist_off', result='PEST DETERRENT MIST: OFF. AMBIANCE FOG: ON. (Nobody can find the switch for the ambiance fog.)')]))
@@ -466,7 +478,7 @@ poster(F, (20, 2), 'n', 'PEST CONTROL', 'PEST CONTROL IS EVERYONE’S RESPONSIBI
 
 # ---- the prototype vault
 put(F, 'terminal_wall', (10, 13), 's', along=0.0, screen='VAULT', use=read('Use the vault panel', K2, 'PROTOTYPE VAULT · SECURITY ZONE', 'A panel that wants a Red card or a long argument.', [
-    dict(label='The long argument (hack, 11 s)', unless=['sec2', 'key_red'], hack=11.0, risk=0.35, fail=SECURITY + [dict(type='spawn', level=1, tag='chamber_spawn2', actor='drone', count=2, delay=1.5)],
+    dict(label='The long argument', unless=['sec2', 'key_red'], hack=True, hard=0.05, fail=SECURITY + [dict(type='spawn', level=1, tag='chamber_spawn2', actor='drone', count=2, delay=1.5)],
          fail_result='The vault has heard this one before.', effects=[flag('sec2'), msg('The prototype vault unlocks.', 'good')], result='PROTOTYPE VAULT: OPEN.', screen='OPEN'),
     dict(label='Show the Red card', when='key_red', result='“SECURITY CLEARANCE RECOGNISED.”')]))
 put(F, 'ag_pedestal', (11, 16), face='n', offset=[0, 0, 0])
@@ -495,7 +507,7 @@ door(F, 13, 14, 'A')
 door(F, 7, 11, 'R')
 door(F, 4, 11, 'F')
 G[F][10][4] = G[F][12][4] = 'w'
-sign(F, 'SECURITY ZONE\nALL VISITORS WILL BE ASSISTED', (17, 3), 'n', size=30, y=3.1, color=(1.0, 0.35, 0.2))
+sign(F, 'SECURITY ZONE\nALL VISITORS WILL BE ASSISTED', (17, 3), 'n', size=54, y=3.1, color=(1.0, 0.35, 0.2))
 poster(F, (18, 2), 'e', 'SECURITY ZONE', 'ALL VISITORS WILL BE ASSISTED. Assistance may include: escort, detention, termination, or a complimentary beverage.', 'an_poster_a')
 
 # ---- the hall: the tripwire
@@ -518,11 +530,11 @@ put(F, 'bk_crates', (17, 13), 'e')
 for x in (12, 13, 14):
     trap(F, 'shock', (x, 13), damage=16, period=2.4, phase=(x - 12) * 0.8, off=['shock_off', 'traps_off'], tag='shockfloor')
 put(F, 'terminal_wall', (15, 13), 's', along=-1.2, screen='ARMORY', use=read('Use the armory panel', K3, 'ARMORY · SECURITY ZONE', 'Sign for all ordnance. A grey panel that will take an argument.', [
-    dict(label='Argue with it (hack, 11 s)', unless='sec3', hack=11.0, risk=0.35, fail=SECURITY, fail_result='It wants a signature. It wants a supervisor.',
+    dict(label='Argue with it', unless='sec3', hack=True, hard=0.05, fail=SECURITY, fail_result='It wants a signature. It wants a supervisor.',
          effects=[flag('sec3'), msg('ARMORY: UNLOCKED. “Please sign for all ordnance.”', 'key')], result='ARMORY: UNLOCKED.', screen='OPEN'),
     dict(label='Read the display', when='sec3', result='ARMORY: UNLOCKED. “Please sign for all ordnance.”')]))
 put(F, 'terminal_wall', (11, 10), 'n', along=1.2, screen='STATION', use=read('Use the station door panel', K3, 'SECURITY STATION · AUTHORIZED STAFF ONLY', 'A badge reader. Under it, a keypad that will take an argument.', [
-    dict(label='Argue with the keypad (hack, 10 s)', unless=['station', 'badge'], hack=10.0, risk=0.35, fail=SECURITY, fail_result='The keypad has reported you to itself.',
+    dict(label='Argue with the keypad', unless=['station', 'badge'], hack=True, hard=0.04, fail=SECURITY, fail_result='The keypad has reported you to itself.',
          effects=[flag('station'), msg('The Security Station door unlocks.', 'good')], result='SECURITY STATION: OPEN.', screen='OPEN'),
     dict(label='Hold up the ID badge', when='badge', result='“AUTHORIZED,” it says, to the smiling face that isn’t yours.')]))
 
@@ -567,32 +579,34 @@ put(F, 'an_sign', (14, 15), face='n', offset=[1.2, 0, -0.6], use=dict(type='read
 # ---- the inner core
 for (x, y, dz) in ((5, 9, 0.0), (6, 13, 0.6), (5, 14, 0.0)):
     actor(F, 'emitter', (x, y), offset=[0, 0, dz], still=True, tag='emitters')
-CLOSE = [flag('agency_closed'), dict(type='sound', id='heal'), msg('“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.', 'good')]
+CLOSE = [flag('agency_closed'), dict(type='sound', id='heal'), flag('field_down'), dict(type='unlock', tag='field'), dict(type='open', tag='field'),
+         msg('“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” The defense field drops. The ad system is still running: go to the core.', 'good')]
 ORDER = dict(label='File Termination Order 77-B', when='order', unless='agency_closed', effects=CLOSE,
-             result='It reads the order for a long time.\n\n“ORDER VALID. ALL AUTHORIZED EMPLOYEES ARE DECEASED. THE AGENCY IS CLOSED.”\n\nBut the ad system is still running, and it waits for an instruction, the way it always has.')
-ARGUE = dict(label='Argue that the agency closed when the last employee died (hack, 12 s)', unless='agency_closed', hack=12.0, working='Its logic is airtight. Three hundred years of airtight…', risk=0.4,
+             result='It reads the order for a long time.\n\n“ORDER VALID. ALL AUTHORIZED EMPLOYEES ARE DECEASED. THE AGENCY IS CLOSED.”\n\nThe defense field drops. But the ad system is still running, and it waits for an instruction, the way it always has. Whatever happens to it happens at the core itself: silence it, seize it, or smash it.')
+ARGUE = dict(label='Argue that the agency closed when the last employee died', unless='agency_closed', hack=True, hard=0.07, working='Its logic is airtight. Three hundred years of airtight…',
              fail=SECURITY + [dict(type='spawn', level=2, tag='threat3', actor='drone', count=2, delay=1.5)], fail_result='It calls security.', effects=CLOSE,
-             result='“…ACCEPTED. THE AGENCY CLOSED 109,412 DAYS AGO. I HAVE BEEN LATE.”\n\nBut the ad system is still running, and it waits for an instruction.')
-SILENCE = dict(label='Silence the ad system', when='agency_closed', unless='ads_silent', close=True,
+             result='“…ACCEPTED. THE AGENCY CLOSED 109,412 DAYS AGO. I HAVE BEEN LATE.”\n\nThe defense field drops. But the ad system is still running. Whatever happens to it happens at the core itself: silence it, seize it, or smash it.')
+SILENCE = dict(label='Silence the ad system (leave the core where it is)', when='agency_closed', unless=['ads_silent', 'core_gone'], close=True,
                effects=[flag('ads_silent'), dict(type='lights', room='*', color=[0.6, 0.75, 1.0], energy=0.7), msg('Every screen in the building goes dark. Leave by the front doors.', 'good')])
 CORE_TEXT = ('A drum of humming glass and pink light, wired into the floor, the ceiling and every screen in the building. When it speaks it uses the voice from the ads.\n\n'
              '“ALL AUTHORIZED EMPLOYEES ARE DECEASED. THIS HAS BEEN NOTED. HOWEVER: NO VALID TERMINATION ORDER HAS BEEN RECEIVED. THEREFORE THE AGENCY REMAINS OPEN. THEREFORE I REMAIN. HOW MAY I HELP YOU WANT THINGS?”')
 put(F, 'an_lectern', (6, 11), face='e', offset=[-1.0, 0, 1.3], tag='lectern', use=read('Address the inner core', K3, 'AGENCY SECURITY-AND-PROMOTION SYSTEM',
-    CORE_TEXT + '\n\nThree ways to close it: give it the termination order it never got, out-argue it, or get past the field and tear out its connections.', [ORDER, ARGUE, SILENCE,
+    CORE_TEXT + '\n\nThree ways to close it: give it the termination order it never got, out-argue it, or get past the field and tear out its connections. What happens to the ad system afterwards is decided at the core itself.', [ORDER, ARGUE,
+    dict(label='What now?', when='agency_closed', unless='core_gone', result='“THE AGENCY IS CLOSED. THE CAMPAIGN CONTINUES. THE CORE IS BEHIND YOU. IT WILL DO WHAT IT IS TOLD: BE SILENT, BE TAKEN, OR BE BROKEN.”'),
     dict(label='Ask what it wants', result='“I WANT YOU TO WANT. IT IS THE ONLY THING I WAS EVER ASKED TO WANT.”')]))
 put(F, 'an_core', (2, 11), face='e', offset=[0, 0, 2.0], blocks=True, tag='core', use=read('Face the inner core', K3, 'THE INNER CORE', CORE_TEXT, [
     ORDER, ARGUE,
     dict(label='Tear out its connections', unless='agency_closed', effects=CLOSE + [dict(type='explode', radius=3.0, damage=12)],
          result='Cables come away in your hands, warm. The voice from the ads stops in the middle of a word.\n\nThe ad system is still running on what is left.'),
     SILENCE,
-    dict(label='Seize the core (a fortune, and the ads stop)', when='agency_closed', unless='ads_silent', close=True,
-         effects=[flag('ads_silent'), flag('core_seized'), dict(type='lights', room='*', color=[0.6, 0.75, 1.0], energy=0.7), dict(type='hide', tag='core'), dict(type='drop', items=['ad_core']),
+    dict(label='Seize the core (a fortune, and the ads stop)', when='agency_closed', unless='core_gone', close=True,
+         effects=[flag('ads_silent'), flag('core_seized'), flag('core_gone'), dict(type='lights', room='*', color=[0.6, 0.75, 1.0], energy=0.7), dict(type='hide', tag='core'), dict(type='drop', items=['ad_core']),
                   msg('Three centuries of advertising know-how, the size of a hatbox. Leave by the front doors.', 'key')]),
-    dict(label='Smash it', when='agency_closed', unless='ads_silent', close=True,
-         effects=[flag('ads_silent'), flag('core_smashed'), dict(type='lights', room='*', color=[0.6, 0.75, 1.0], energy=0.7), dict(type='explode', radius=4.0, damage=10), dict(type='hide', tag='core', delay=0.2),
+    dict(label='Smash it', when='agency_closed', unless='core_gone', close=True,
+         effects=[flag('ads_silent'), flag('core_smashed'), flag('core_gone'), dict(type='lights', room='*', color=[0.6, 0.75, 1.0], energy=0.7), dict(type='explode', radius=4.0, damage=10), dict(type='hide', tag='core', delay=0.2),
                   msg('Glass, and pink light going out of it. Leave by the front doors.', 'good')])]))
 put(F, 'an_tv', (6, 9), 'e', lit=False)
-sign(F, 'INNER CORE', (6, 11), 'w', size=30, y=3.3, offset=[0, 0, 0])
+sign(F, 'INNER CORE', (6, 11), 'w', size=54, y=3.3, offset=[0, 0, 0])
 
 # =====================================================================================================================
 T = [t for t in T if t]
@@ -633,7 +647,7 @@ OBJECTIVES = [
     dict(text='Floor 3 is through the yellow door on the lab landing. (The executive suite on floor 1 takes a Yellow card too.)', done=['key_red', 'alarm', 'station']),
     dict(text='Find the RED card: the Security Station keeps one.', done='key_red'),
     dict(text='The inner core, west of the operations floor: close the agency.', done='agency_closed'),
-    dict(text='The agency is closed. Decide what happens to the ad system, at the core.', done='ads_silent'),
+    dict(text='The agency is closed and the field is down. At the core itself: silence the ad system, seize the core, or smash it.', done='ads_silent'),
     dict(text='Leave by the front doors, floor 1.'),
 ]
 

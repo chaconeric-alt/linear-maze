@@ -69,6 +69,14 @@ func set_flag(name: String) -> void:
 	changed.emit()
 
 
+## The chance a hack comes off: "hacking" in game.json ({"base": 0.10, "per_level": 0.05}) and the character's level
+## ("player": {"level": 1}); a hard job takes `hard` off it (0.05 = five points). Skill and equipment will add to this later.
+func hack_chance(hard := 0.0) -> float:
+	var h: Dictionary = LM.game.get("hacking", {})
+	var lv: int = int(LM.game.get("player", {}).get("level", 1))
+	return clampf(float(h.get("base", 0.10)) + float(h.get("per_level", 0.05)) * lv - hard, 0.01, 0.95)
+
+
 func has_flag(f: Variant) -> bool:
 	if f == null:
 		return true

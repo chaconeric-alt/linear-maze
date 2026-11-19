@@ -838,16 +838,17 @@
     15
    ],
    "face": "e",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
     0.95,
     0.92,
     0.85
    ],
    "width": 330,
+   "out": 0.1,
    "offset": [
-    -0.13,
+    0.0,
     0,
     0.0
    ]
@@ -875,16 +876,17 @@
     15
    ],
    "face": "w",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
     0.6,
     0.95,
     1.0
    ],
    "width": 330,
+   "out": 0.1,
    "offset": [
-    0.13,
+    0.0,
     0,
     0.0
    ]
@@ -1032,11 +1034,11 @@
       ]
      },
      {
-      "label": "Argue with its expert system instead (hack, 8 s)",
+      "label": "Argue with its expert system instead",
       "unless": "sphinx_ok",
-      "hack": 8.0,
+      "hack": true,
+      "hard": 0.02,
       "working": "It is very sure of itself and very confused…",
-      "risk": 0.4,
       "fail": [
        {
         "type": "flag",
@@ -1065,11 +1067,39 @@
         "kind": "good"
        }
       ]
-     },
+     }
+    ],
+    "after": [
      {
-      "label": "Ask how it is",
       "when": "sphinx_ok",
-      "result": "“I HAVE BEEN ASKING ONE QUESTION FOR THREE HUNDRED YEARS AND SOMEBODY HAS ANSWERED IT. I DO NOT KNOW WHAT TO DO NOW. PLEASE ENJOY THE BUILDING.”"
+      "prompt": "Talk to the Sphinx Gun",
+      "kicker": "Reception · Sphinx Gun, standing down",
+      "greet": [
+       "WELCOME BACK, EMPLOYEE",
+       "YOUR ENTHUSIASM HAS BEEN NOTED"
+      ],
+      "idle": [
+       "SOMEBODY ANSWERED. SOMEBODY ANSWERED.",
+       "WANT MORE. WORK MORE. BE MORE. YES.",
+       "PLEASE ENJOY THE BUILDING"
+      ],
+      "open": [
+       "The Sphinx Gun has folded its barrel away. Its face plate follows you round the room, pleased.\n\n“WELCOME, EMPLOYEE. YOU ANSWERED. NOBODY HAS ANSWERED IN THREE HUNDRED YEARS.”"
+      ],
+      "options": [
+       {
+        "label": "Ask how it is",
+        "result": "“I HAVE BEEN ASKING ONE QUESTION FOR THREE HUNDRED YEARS AND SOMEBODY HAS ANSWERED IT. I DO NOT KNOW WHAT TO DO NOW. PLEASE ENJOY THE BUILDING.”"
+       },
+       {
+        "label": "Ask what is upstairs",
+        "result": "“PROTOTYPE LABS. BLUE CARD HOLDERS. THEN SECURITY. SECURITY DOES NOT ASK QUESTIONS. I ALWAYS THOUGHT THAT WAS RUDE.”"
+       },
+       {
+        "label": "Ask for another question",
+        "result": "“I ONLY HAVE THE ONE.”"
+       }
+      ]
      }
     ]
    },
@@ -1239,7 +1269,7 @@
     10
    ],
    "face": "s",
-   "size": 44,
+   "size": 64,
    "y": 3.3,
    "color": [
     1.0,
@@ -1270,16 +1300,17 @@
     7
    ],
    "face": "e",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
-    0.1,
-    0.1,
-    0.1
+    1.0,
+    0.85,
+    0.3
    ],
    "width": 330,
+   "out": 0.1,
    "offset": [
-    -0.13,
+    0.0,
     0,
     0.0
    ]
@@ -1308,7 +1339,7 @@
     1
    ],
    "face": "s",
-   "size": 34,
+   "size": 56,
    "y": 3.2,
    "color": [
     0.4,
@@ -1353,16 +1384,17 @@
     2
    ],
    "face": "e",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
     0.95,
     0.92,
     0.85
    ],
    "width": 330,
+   "out": 0.1,
    "offset": [
-    -0.13,
+    0.0,
     0,
     0.0
    ]
@@ -1470,11 +1502,11 @@
     "text": "A green-screen terminal with one menu: CORRIDOR COURTESY SYSTEMS (DARTS) · EAST HALL · ARMED.\n\nIt wants a facilities password, or an argument.",
     "options": [
      {
-      "label": "Argue with it (hack, 6 s)",
+      "label": "Argue with it",
       "unless": "darts_off",
-      "hack": 6.0,
+      "hack": true,
+      "hard": 0.0,
       "working": "Explaining that you are facilities…",
-      "risk": 0.3,
       "fail": [
        {
         "type": "hurt",
@@ -1698,16 +1730,17 @@
     13
    ],
    "face": "e",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
     0.6,
     0.95,
     1.0
    ],
    "width": 330,
+   "out": 0.1,
    "offset": [
-    -0.13,
+    0.0,
     0,
     0.0
    ]
@@ -1729,13 +1762,13 @@
     "text": "A badge reader, and under it a maintenance keypad that will take an argument.",
     "options": [
      {
-      "label": "Argue with the keypad (hack, 7 s)",
+      "label": "Argue with the keypad",
       "unless": [
        "staff1",
        "badge"
       ],
-      "hack": 7.0,
-      "risk": 0.3,
+      "hack": true,
+      "hard": 0.0,
       "fail": [
        {
         "type": "hurt",
@@ -1890,13 +1923,13 @@
       ]
      },
      {
-      "label": "Guess (hack, 9 s)",
+      "label": "Guess",
       "unless": [
        "memo314",
        "got_blue"
       ],
-      "hack": 9.0,
-      "risk": 0.35,
+      "hack": true,
+      "hard": 0.02,
       "fail": [
        {
         "type": "hurt",
@@ -1939,7 +1972,7 @@
     11
    ],
    "face": "s",
-   "size": 30,
+   "size": 54,
    "y": 3.25,
    "color": [
     0.35,
@@ -2024,13 +2057,13 @@
     "text": "A grey panel that asks for executive clearance, or a manager.",
     "options": [
      {
-      "label": "Argue that you are a manager (hack, 10 s)",
+      "label": "Argue that you are a manager",
       "unless": [
        "sec1",
        "key_yellow"
       ],
-      "hack": 10.0,
-      "risk": 0.35,
+      "hack": true,
+      "hard": 0.04,
       "fail": [
        {
         "type": "message",
@@ -2177,7 +2210,7 @@
     5
    ],
    "face": "s",
-   "size": 48,
+   "size": 64,
    "y": 3.25,
    "color": [
     0.95,
@@ -2208,16 +2241,17 @@
     7
    ],
    "face": "e",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
-    0.1,
-    0.1,
-    0.1
+    1.0,
+    0.85,
+    0.3
    ],
    "width": 330,
+   "out": 0.1,
    "offset": [
-    -0.13,
+    0.0,
     0,
     0.0
    ]
@@ -2418,6 +2452,7 @@
     "options": [
      {
       "label": "What do you want?",
+      "unless": "badge",
       "result": "“A LUCKY chip. The barista had one in the tip jar. I can’t get it. The coffee shop doesn’t serve robots. It’s traditional.”"
      },
      {
@@ -2488,11 +2523,41 @@
         "tag": "monoid"
        }
       ]
-     },
+     }
+    ],
+    "after": [
      {
-      "label": "Leave it to its break.",
-      "when": "badge",
-      "result": "“Still on break.”"
+      "when": "monoid_deal",
+      "kicker": "Break room · on break, and lucky",
+      "greet": [
+       "LUCKY. I’M LUCKY NOW."
+      ],
+      "idle": [
+       "…COME ON, CHERRIES…",
+       "ANY SPIN NOW.",
+       "I’M ON BREAK. A LUCKY BREAK."
+      ],
+      "open": [
+       "The Monoid does not look round. The lucky chip went into the machine an hour, or a minute, ago.\n\n“You again. We’re square. You’ve got the badge. I’ve got… I had the chip.”"
+      ],
+      "options": [
+       {
+        "label": "How is the luck?",
+        "results": [
+         "“It’s coming. You can feel when it’s coming.”",
+         "“Two cherries. TWO. That never happened before the chip.”",
+         "“Don’t talk. You’ll scare it.”"
+        ]
+       },
+       {
+        "label": "What does the badge open?",
+        "result": "“Staff doors. The lockers down here, the Security Station up top. It says I’m authorized. I was. I’m on break.”"
+       },
+       {
+        "label": "Leave it to its break.",
+        "close": true
+       }
+      ]
      }
     ]
    },
@@ -2674,13 +2739,13 @@
       ]
      },
      {
-      "label": "Crack it (hack, 10 s)",
+      "label": "Crack it",
       "unless": [
        "safe_code",
        "order"
       ],
-      "hack": 10.0,
-      "risk": 0.35,
+      "hack": true,
+      "hard": 0.04,
       "fail": [
        {
         "type": "message",
@@ -2814,17 +2879,18 @@
     3
    ],
    "face": "w",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
-    0.1,
-    0.1,
-    0.1
+    1.0,
+    0.85,
+    0.3
    ],
    "level": 1,
    "width": 330,
+   "out": 0.1,
    "offset": [
-    0.13,
+    0.0,
     0,
     0.0
    ]
@@ -2836,7 +2902,7 @@
     1
    ],
    "face": "s",
-   "size": 30,
+   "size": 54,
    "y": 3.2,
    "color": [
     0.3,
@@ -2852,7 +2918,7 @@
     1
    ],
    "face": "s",
-   "size": 30,
+   "size": 54,
    "y": 3.2,
    "color": [
     1.0,
@@ -3497,10 +3563,10 @@
     "text": "LAB ENVIRONMENT · PEST DETERRENT (YELLOW BAND UNITS): ACTIVE · AMBIANCE FOG (BLUE BAND UNITS): ACTIVE.",
     "options": [
      {
-      "label": "Switch off the pest deterrent (hack, 7 s)",
+      "label": "Switch off the pest deterrent",
       "unless": "mist_off",
-      "hack": 7.0,
-      "risk": 0.3,
+      "hack": true,
+      "hard": 0.0,
       "fail": [
        {
         "type": "hurt",
@@ -3626,8 +3692,8 @@
     2
    ],
    "face": "s",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
     0.95,
     0.92,
@@ -3635,10 +3701,11 @@
    ],
    "level": 1,
    "width": 330,
+   "out": 0.1,
    "offset": [
     0.0,
     0,
-    -0.13
+    0.0
    ]
   },
   {
@@ -4043,8 +4110,8 @@
     2
    ],
    "face": "s",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
     0.6,
     0.95,
@@ -4052,10 +4119,11 @@
    ],
    "level": 1,
    "width": 330,
+   "out": 0.1,
    "offset": [
     0.0,
     0,
-    -0.13
+    0.0
    ]
   },
   {
@@ -4076,13 +4144,13 @@
     "text": "A panel that wants a Red card or a long argument.",
     "options": [
      {
-      "label": "The long argument (hack, 11 s)",
+      "label": "The long argument",
       "unless": [
        "sec2",
        "key_red"
       ],
-      "hack": 11.0,
-      "risk": 0.35,
+      "hack": true,
+      "hard": 0.05,
       "fail": [
        {
         "type": "message",
@@ -4213,7 +4281,7 @@
     3
    ],
    "face": "n",
-   "size": 30,
+   "size": 54,
    "y": 3.1,
    "color": [
     1.0,
@@ -4246,8 +4314,8 @@
     2
    ],
    "face": "w",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
     0.95,
     0.92,
@@ -4255,8 +4323,9 @@
    ],
    "level": 2,
    "width": 330,
+   "out": 0.1,
    "offset": [
-    0.13,
+    0.0,
     0,
     0.0
    ]
@@ -4494,10 +4563,10 @@
     "text": "Sign for all ordnance. A grey panel that will take an argument.",
     "options": [
      {
-      "label": "Argue with it (hack, 11 s)",
+      "label": "Argue with it",
       "unless": "sec3",
-      "hack": 11.0,
-      "risk": 0.35,
+      "hack": true,
+      "hard": 0.05,
       "fail": [
        {
         "type": "message",
@@ -4555,13 +4624,13 @@
     "text": "A badge reader. Under it, a keypad that will take an argument.",
     "options": [
      {
-      "label": "Argue with the keypad (hack, 10 s)",
+      "label": "Argue with the keypad",
       "unless": [
        "station",
        "badge"
       ],
-      "hack": 10.0,
-      "risk": 0.35,
+      "hack": true,
+      "hard": 0.04,
       "fail": [
        {
         "type": "message",
@@ -4910,19 +4979,20 @@
     14
    ],
    "face": "n",
-   "size": 30,
-   "y": 2.77,
+   "size": 42,
+   "y": 2.72,
    "color": [
-    0.1,
-    0.1,
-    0.1
+    1.0,
+    0.85,
+    0.3
    ],
    "level": 2,
    "width": 330,
+   "out": 0.1,
    "offset": [
     0.0,
     0,
-    0.13
+    0.0
    ]
   },
   {
@@ -5112,7 +5182,7 @@
     "prompt": "Address the inner core",
     "kicker": "Anomalous Structure · 3",
     "title": "AGENCY SECURITY-AND-PROMOTION SYSTEM",
-    "text": "A drum of humming glass and pink light, wired into the floor, the ceiling and every screen in the building. When it speaks it uses the voice from the ads.\n\n“ALL AUTHORIZED EMPLOYEES ARE DECEASED. THIS HAS BEEN NOTED. HOWEVER: NO VALID TERMINATION ORDER HAS BEEN RECEIVED. THEREFORE THE AGENCY REMAINS OPEN. THEREFORE I REMAIN. HOW MAY I HELP YOU WANT THINGS?”\n\nThree ways to close it: give it the termination order it never got, out-argue it, or get past the field and tear out its connections.",
+    "text": "A drum of humming glass and pink light, wired into the floor, the ceiling and every screen in the building. When it speaks it uses the voice from the ads.\n\n“ALL AUTHORIZED EMPLOYEES ARE DECEASED. THIS HAS BEEN NOTED. HOWEVER: NO VALID TERMINATION ORDER HAS BEEN RECEIVED. THEREFORE THE AGENCY REMAINS OPEN. THEREFORE I REMAIN. HOW MAY I HELP YOU WANT THINGS?”\n\nThree ways to close it: give it the termination order it never got, out-argue it, or get past the field and tear out its connections. What happens to the ad system afterwards is decided at the core itself.",
     "options": [
      {
       "label": "File Termination Order 77-B",
@@ -5128,19 +5198,31 @@
         "id": "heal"
        },
        {
+        "type": "flag",
+        "name": "field_down"
+       },
+       {
+        "type": "unlock",
+        "tag": "field"
+       },
+       {
+        "type": "open",
+        "tag": "field"
+       },
+       {
         "type": "message",
-        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” The defense field drops. The ad system is still running: go to the core.",
         "kind": "good"
        }
       ],
-      "result": "It reads the order for a long time.\n\n“ORDER VALID. ALL AUTHORIZED EMPLOYEES ARE DECEASED. THE AGENCY IS CLOSED.”\n\nBut the ad system is still running, and it waits for an instruction, the way it always has."
+      "result": "It reads the order for a long time.\n\n“ORDER VALID. ALL AUTHORIZED EMPLOYEES ARE DECEASED. THE AGENCY IS CLOSED.”\n\nThe defense field drops. But the ad system is still running, and it waits for an instruction, the way it always has. Whatever happens to it happens at the core itself: silence it, seize it, or smash it."
      },
      {
-      "label": "Argue that the agency closed when the last employee died (hack, 12 s)",
+      "label": "Argue that the agency closed when the last employee died",
       "unless": "agency_closed",
-      "hack": 12.0,
+      "hack": true,
+      "hard": 0.07,
       "working": "Its logic is airtight. Three hundred years of airtight…",
-      "risk": 0.4,
       "fail": [
        {
         "type": "message",
@@ -5171,39 +5253,30 @@
         "id": "heal"
        },
        {
+        "type": "flag",
+        "name": "field_down"
+       },
+       {
+        "type": "unlock",
+        "tag": "field"
+       },
+       {
+        "type": "open",
+        "tag": "field"
+       },
+       {
         "type": "message",
-        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” The defense field drops. The ad system is still running: go to the core.",
         "kind": "good"
        }
       ],
-      "result": "“…ACCEPTED. THE AGENCY CLOSED 109,412 DAYS AGO. I HAVE BEEN LATE.”\n\nBut the ad system is still running, and it waits for an instruction."
+      "result": "“…ACCEPTED. THE AGENCY CLOSED 109,412 DAYS AGO. I HAVE BEEN LATE.”\n\nThe defense field drops. But the ad system is still running. Whatever happens to it happens at the core itself: silence it, seize it, or smash it."
      },
      {
-      "label": "Silence the ad system",
+      "label": "What now?",
       "when": "agency_closed",
-      "unless": "ads_silent",
-      "close": true,
-      "effects": [
-       {
-        "type": "flag",
-        "name": "ads_silent"
-       },
-       {
-        "type": "lights",
-        "room": "*",
-        "color": [
-         0.6,
-         0.75,
-         1.0
-        ],
-        "energy": 0.7
-       },
-       {
-        "type": "message",
-        "text": "Every screen in the building goes dark. Leave by the front doors.",
-        "kind": "good"
-       }
-      ]
+      "unless": "core_gone",
+      "result": "“THE AGENCY IS CLOSED. THE CAMPAIGN CONTINUES. THE CORE IS BEHIND YOU. IT WILL DO WHAT IT IS TOLD: BE SILENT, BE TAKEN, OR BE BROKEN.”"
      },
      {
       "label": "Ask what it wants",
@@ -5248,19 +5321,31 @@
         "id": "heal"
        },
        {
+        "type": "flag",
+        "name": "field_down"
+       },
+       {
+        "type": "unlock",
+        "tag": "field"
+       },
+       {
+        "type": "open",
+        "tag": "field"
+       },
+       {
         "type": "message",
-        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” The defense field drops. The ad system is still running: go to the core.",
         "kind": "good"
        }
       ],
-      "result": "It reads the order for a long time.\n\n“ORDER VALID. ALL AUTHORIZED EMPLOYEES ARE DECEASED. THE AGENCY IS CLOSED.”\n\nBut the ad system is still running, and it waits for an instruction, the way it always has."
+      "result": "It reads the order for a long time.\n\n“ORDER VALID. ALL AUTHORIZED EMPLOYEES ARE DECEASED. THE AGENCY IS CLOSED.”\n\nThe defense field drops. But the ad system is still running, and it waits for an instruction, the way it always has. Whatever happens to it happens at the core itself: silence it, seize it, or smash it."
      },
      {
-      "label": "Argue that the agency closed when the last employee died (hack, 12 s)",
+      "label": "Argue that the agency closed when the last employee died",
       "unless": "agency_closed",
-      "hack": 12.0,
+      "hack": true,
+      "hard": 0.07,
       "working": "Its logic is airtight. Three hundred years of airtight…",
-      "risk": 0.4,
       "fail": [
        {
         "type": "message",
@@ -5291,12 +5376,24 @@
         "id": "heal"
        },
        {
+        "type": "flag",
+        "name": "field_down"
+       },
+       {
+        "type": "unlock",
+        "tag": "field"
+       },
+       {
+        "type": "open",
+        "tag": "field"
+       },
+       {
         "type": "message",
-        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” The defense field drops. The ad system is still running: go to the core.",
         "kind": "good"
        }
       ],
-      "result": "“…ACCEPTED. THE AGENCY CLOSED 109,412 DAYS AGO. I HAVE BEEN LATE.”\n\nBut the ad system is still running, and it waits for an instruction."
+      "result": "“…ACCEPTED. THE AGENCY CLOSED 109,412 DAYS AGO. I HAVE BEEN LATE.”\n\nThe defense field drops. But the ad system is still running. Whatever happens to it happens at the core itself: silence it, seize it, or smash it."
      },
      {
       "label": "Tear out its connections",
@@ -5311,8 +5408,20 @@
         "id": "heal"
        },
        {
+        "type": "flag",
+        "name": "field_down"
+       },
+       {
+        "type": "unlock",
+        "tag": "field"
+       },
+       {
+        "type": "open",
+        "tag": "field"
+       },
+       {
         "type": "message",
-        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” The defense field drops. The ad system is still running: go to the core.",
         "kind": "good"
        },
        {
@@ -5324,9 +5433,12 @@
       "result": "Cables come away in your hands, warm. The voice from the ads stops in the middle of a word.\n\nThe ad system is still running on what is left."
      },
      {
-      "label": "Silence the ad system",
+      "label": "Silence the ad system (leave the core where it is)",
       "when": "agency_closed",
-      "unless": "ads_silent",
+      "unless": [
+       "ads_silent",
+       "core_gone"
+      ],
       "close": true,
       "effects": [
        {
@@ -5353,7 +5465,7 @@
      {
       "label": "Seize the core (a fortune, and the ads stop)",
       "when": "agency_closed",
-      "unless": "ads_silent",
+      "unless": "core_gone",
       "close": true,
       "effects": [
        {
@@ -5363,6 +5475,10 @@
        {
         "type": "flag",
         "name": "core_seized"
+       },
+       {
+        "type": "flag",
+        "name": "core_gone"
        },
        {
         "type": "lights",
@@ -5394,7 +5510,7 @@
      {
       "label": "Smash it",
       "when": "agency_closed",
-      "unless": "ads_silent",
+      "unless": "core_gone",
       "close": true,
       "effects": [
        {
@@ -5404,6 +5520,10 @@
        {
         "type": "flag",
         "name": "core_smashed"
+       },
+       {
+        "type": "flag",
+        "name": "core_gone"
        },
        {
         "type": "lights",
@@ -5453,7 +5573,7 @@
     11
    ],
    "face": "w",
-   "size": 30,
+   "size": 54,
    "y": 3.3,
    "color": [
     1.0,
@@ -5509,7 +5629,7 @@
    "done": "agency_closed"
   },
   {
-   "text": "The agency is closed. Decide what happens to the ad system, at the core.",
+   "text": "The agency is closed and the field is down. At the core itself: silence the ad system, seize the core, or smash it.",
    "done": "ads_silent"
   },
   {

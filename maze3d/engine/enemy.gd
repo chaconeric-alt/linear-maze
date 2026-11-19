@@ -54,6 +54,7 @@ var _home: Vector3
 var _wander_t := 0.0
 var _wander := Vector3.ZERO
 var _fly := false
+var _vis_top := -1.0             # how far the model's top is above its origin (measured once; flyers duck under low ceilings)
 var _fixed := false
 const G := 22.0
 var _cs: CollisionShape3D
@@ -339,6 +340,14 @@ func _physics_process(dt: float) -> void:
 					tp.hurt(d["touch"].get("dps", 12.0) * 0.25, {"type": d["touch"].get("kind", "acid"), "from": global_position, "by": self})
 	if _fly and d.has("bob"):                        # a flyer that will not hold its height
 		vis.position.y = d.get("model_y", 0.0) + sin(Time.get_ticks_msec() * 0.001 * d["bob"].get("rate", 5.0) + get_index()) * d["bob"].get("height", 0.2) * (1.0 if awake else (0.0 if dock != null else 0.35))
+	if _fly and not dead:                            # under a room the ceiling is lower (the slab between storeys): a flyer keeps its head out of it
+		if _vis_top < 0.0:
+			var acc: Array = [null]
+			Pickup._bounds(vis, Transform3D.IDENTITY, acc)
+			_vis_top = ((acc[0] as AABB).end.y - vis.position.y) if acc[0] != null else d.get("height", 1.6)
+		var fc := level.cell_of(global_position)
+		var room_top: float = level.ceiling_y(fc.x, fc.y, floori((global_position.y + 0.9) / level.H)) - global_position.y - 0.12
+		vis.position.y = minf(vis.position.y, maxf(0.0, room_top - _vis_top))
 	if _face and not awake:
 		_face_t -= dt
 		if _face_t <= 0.0:
@@ -1484,8 +1493,21 @@ func _od_reach() -> float:
 	return float(e.get("greet", d.get("talk", {}).get("reach", d.get("wake_sight", 9.0) if d.has("dormant_clip") else 9.0)))
 
 
+## What this one has to say: its kind's "talk", or its own (the thing's "talk"), with any "after" block whose flag is set laid
+## over it: "after": [{"when": "sphinx_ok", "prompt": ..., "open": [...], "greet": [...], "idle": [...], "options": [...]}].
+func talk() -> Dictionary:
+	var t: Dictionary = e.get("talk", d.get("talk", {}))
+	for blk in t.get("after", []):
+		if Game.has_flag(blk.get("when", "")):
+			t = t.duplicate()
+			for k in blk:
+				if k != "when":
+					t[k] = blk[k]
+	return t
+
+
 func _say_od(kind: String, fallback: Array = []) -> void:
-	var lines: Array = d.get("talk", {}).get(kind, fallback if not fallback.is_empty() else d.get("barks", []))
+	var lines: Array = talk().get(kind, fallback if not fallback.is_empty() else d.get("barks", []))
 	if lines.is_empty():
 		return
 	var line: String = lines[randi() % lines.size()]
@@ -1736,7 +1758,7 @@ func set_screen(text: String) -> void:
 func prompt() -> String:
 	if not off_duty or dead or _foe != null or (dock != null and dock._open < 0.9):
 		return ""
-	return e.get("talk", d.get("talk", {})).get("prompt", "Talk to the %s" % d.get("name", "thing"))
+	return talk().get("prompt", "Talk to the %s" % d.get("name", "thing"))
 
 
 ## Talking to it. defs `talk`:
@@ -1748,7 +1770,7 @@ func prompt() -> String:
 func use(_player: Node) -> void:
 	if prompt() == "":
 		return
-	var t: Dictionary = e.get("talk", d.get("talk", {}))      # the level may give this one its own conversation
+	var t: Dictionary = talk()                       # the level may give this one its own conversation
 	var opens: Array = t.get("open", ["It looks at you. It does not seem to mind."])
 	var spec := {"kicker": t.get("kicker", "OFF DUTY"), "title": d.get("name", ""), "text": opens[randi() % opens.size()], "options": []}
 	e["_used"] = {}

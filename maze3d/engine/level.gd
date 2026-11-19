@@ -1161,10 +1161,64 @@ func _sign(e: Dictionary, p: Vector2i) -> Node3D:
 	l.double_sided = false
 	l.width = float(e.get("width", 800))
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(l)
-	l.position = center(p, int(e.get("level", 0)) * H) + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - 0.2) + Vector3(0, e.get("y", 2.6), 0) + LM.vec(e.get("offset"), Vector3.ZERO)
-	l.rotation.y = DIR_ROT[d]
-	return l
+	l.outline_size = 0
+	# Lettering is shown on a monitor of its own: a dark screen in a bezel, standing off the wall far enough to clear whatever
+	# the wall has on it (pipes, shelves, a poster), with a mount behind it. "plain": true is bare lettering, as it used to be.
+	var out: float = e.get("out", 0.36)                 # how far the screen's face stands off the wall
+	var root := Node3D.new()
+	add_child(root)
+	root.position = center(p, int(e.get("level", 0)) * H) + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - out) + Vector3(0, e.get("y", 2.6), 0) + LM.vec(e.get("offset"), Vector3.ZERO)
+	root.rotation.y = DIR_ROT[d]
+	root.add_child(l)
+	if e.get("plain", false):
+		l.outline_size = 8
+		return root
+	l.position.z = 0.012
+	var fnt: Font = l.font if l.font != null else ThemeDB.fallback_font      # measured, not asked of the label: it does not know its size until it is drawn
+	var px: Vector2 = fnt.get_multiline_string_size(l.text, HORIZONTAL_ALIGNMENT_CENTER, l.width - 40.0, l.font_size) * l.pixel_size
+	var sw: float = minf(px.x, C - 0.5) + 0.3
+	var sh: float = px.y * 1.12 + 0.24
+	var tint: Color = l.modulate
+	var screen := MeshInstance3D.new()
+	var qm := BoxMesh.new()
+	qm.size = Vector3(sw, sh, 0.02)
+	var sm := StandardMaterial3D.new()
+	sm.albedo_color = Color(0.015, 0.02, 0.025)
+	sm.emission_enabled = true
+	sm.emission = Color(tint.r, tint.g, tint.b) * 0.06
+	sm.roughness = 0.25
+	qm.material = sm
+	screen.mesh = qm
+	root.add_child(screen)
+	var bezel := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(sw + 0.14, sh + 0.14, 0.09)
+	var bmat := StandardMaterial3D.new()
+	bmat.albedo_color = Color(0.09, 0.1, 0.11)
+	bmat.metallic = 0.6
+	bmat.roughness = 0.45
+	bm.material = bmat
+	bezel.mesh = bm
+	bezel.position.z = -0.05
+	root.add_child(bezel)
+	var arm := MeshInstance3D.new()                    # the mount, back to the wall
+	var am := BoxMesh.new()
+	am.size = Vector3(minf(0.5, sw * 0.5), minf(0.3, sh * 0.6), maxf(0.02, out - 0.09))
+	am.material = bmat
+	arm.mesh = am
+	arm.position.z = -0.09 - am.size.z / 2
+	root.add_child(arm)
+	var glow := MeshInstance3D.new()                   # a line of the sign's own colour under the screen
+	var gm := BoxMesh.new()
+	gm.size = Vector3(sw * 0.6, 0.02, 0.012)
+	var gmat := StandardMaterial3D.new()
+	gmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	gmat.albedo_color = tint
+	gm.material = gmat
+	glow.mesh = gm
+	glow.position = Vector3(0, -sh / 2 - 0.035, -0.002)
+	root.add_child(glow)
+	return root
 
 
 # ------------------------------------------------------------------ fluid

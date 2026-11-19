@@ -438,7 +438,8 @@
    "shells": 0,
    "cells": 0
   },
-  "lamp": true
+  "lamp": true,
+  "level": 1
  },
  "words": {
   "death_title": "YOU BECAME SALVAGE",
@@ -2753,5 +2754,9 @@
  "easy": {
   "deal": 3,
   "take": 3
+ },
+ "hacking": {
+  "base": 0.1,
+  "per_level": 0.05
  }
 }

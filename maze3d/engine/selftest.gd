@@ -354,7 +354,6 @@ func run(m: Node) -> void:
 			n.use(pl)
 			_say(Game.hud._state == "panel" and get_tree().paused, "terminal opens and pauses the world: " + n.e["use"].get("title", "?"))
 			for i in opts.size():
-				opts[i]["hack"] = min(0.05, opts[i].get("hack", 0.0))
 				await Game.hud._choose(i)
 			Game.hud.close_panel()
 			await _frames(3)
@@ -786,8 +785,6 @@ func _pick(n: Node, label: String) -> bool:
 		if (o.has("when") and not Game.has_flag(o["when"])) or (o.has("unless") and Game.has_flag(o["unless"])):
 			continue
 		o.erase("risk")
-		if o.has("hack"):
-			o["hack"] = 0.02
 		Game.credits = maxi(Game.credits, int(o.get("cost", 0)))
 		await Game.hud._choose(i)
 		found = true
