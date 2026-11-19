@@ -240,6 +240,16 @@
    "decay": 0.5,
    "gain": 0.25
   },
+  "shock_charge": {
+   "freq": 70,
+   "to": 150,
+   "dur": 0.6,
+   "wave": "saw",
+   "noise": 0.5,
+   "decay": 0.6,
+   "gain": 0.2,
+   "lowpass": 0.25
+  },
   "alarm": {
    "freq": 700,
    "to": 500,

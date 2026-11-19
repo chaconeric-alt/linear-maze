@@ -185,12 +185,14 @@ func _process(dt: float) -> void:
 				_light.light_energy = (ph - warn) * 2.0
 				if not _on:
 					_on = true
-					LM.sound("charge", global_position, -6.0)
+					if _near(pl):                    # a floor that charges every few seconds is a siren if it carries: only up close
+						LM.sound("shock_charge", global_position, -8.0)
 			elif ph >= period - 0.25:
 				_light.light_energy = 6.0
 				if _on:
 					_on = false
-					LM.sound("zap", global_position)
+					if _near(pl):
+						LM.sound("zap", global_position, -4.0)
 					Fx.sparks(level, global_position + Vector3(0, 0.3, 0), Color(0.5, 0.9, 1.0), 24, 6.0)
 					if here and rel.y < 0.4:
 						pl.hurt(e.get("damage", 18.0), {"type": "shock", "from": global_position})
@@ -205,3 +207,10 @@ func _process(dt: float) -> void:
 			if _on and _cool <= 0.0 and Vector2(rel.x, rel.z).length() < 1.3 and rel.y < 3.0:
 				_cool = 0.4
 				pl.hurt(e.get("damage", 7.0), {"type": "toxic", "from": global_position})
+
+
+## Traps that cycle for ever (the shock floor) are heard only from close by, on their own storey: "hear" metres (12), or "quiet": true for never.
+func _near(pl: Node3D) -> bool:
+	if e.get("quiet", false) or pl == null or not is_instance_valid(pl):
+		return false
+	return pl.global_position.distance_to(global_position) < float(e.get("hear", 12.0)) and level.floor_of(pl.global_position) == level.floor_of(global_position)

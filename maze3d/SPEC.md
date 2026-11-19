@@ -291,7 +291,7 @@ A level is a dictionary: a JSON file in `games/<game>/levels/`, or what a genera
 | `actor: id` | `still` (doesn't wander), `alert`, `hp_mul`, `on_death` (effects). |
 | `prop: model` | `use`, `hp`, `loot`, `explode`, `screen` (text on its display), `solid`, `blocks`, `lit`, `turn`. |
 | `item: id` | Any item field, to override it for this one (`color`, `value`, `flag`). `y` for its height. |
-| `trap: kind` | `laser` (`cycle: [on, off]`, `heights`, `damage`, `axis`), `shock` (`period`, `damage`), `vent` (`period`, `on`, `damage`, `color`); all take `off` (a flag that disarms it) and `phase`. |
+| `trap: kind` | `laser` (`cycle: [on, off]`, `heights`, `damage`, `axis`), `shock` (`period`, `damage`), `vent` (`period`, `on`, `damage`, `color`); all take `off` (a flag that disarms it) and `phase`. A shock plate cycles for ever, so its charge and discharge are heard only within `hear` metres (12) on its own storey; `quiet: true` silences it. |
 | `sign: text` | Lettering on the wall behind it: `size`, `color`, `y`. |
 | `light: {color, energy, range}` | A loose light: `y`, `flicker`, `shadows`. |
 
