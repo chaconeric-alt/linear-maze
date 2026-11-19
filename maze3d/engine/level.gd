@@ -32,6 +32,7 @@ var nav := AStar3D.new()          # points: ground, deck 1, deck 2 and ramp, per
 var start_level := 0
 var tiles_at: Dictionary = {}    # Vector2i -> [[tile id, where it was laid], ..]: which tile is where (Identify)
 var _env: Environment
+var home: Home = null             # the bunker's workings, on a level with "home": true (engine/home.gd)
 var targets: Array = []         # Targets (engine/target.gd)
 var _boxes: Array = []           # unit cubes that make decks, ramps and railings
 var _rails: Array = []
@@ -82,6 +83,11 @@ func build(level_data: Dictionary) -> void:
 	for t in data.get("triggers", []):
 		_triggers.append({"t": t, "fired": false})
 	Game.flag_set.connect(_on_flag)
+	if data.get("home", false):
+		home = Home.new()
+		home.name = "Home"
+		add_child(home)
+		home.setup(self)
 
 
 # ------------------------------------------------------------------ reading the map

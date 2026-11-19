@@ -16,6 +16,7 @@ var hud: Node = null
 var flags: Dictionary = {}
 var keys: Dictionary = {}          # colour -> true
 var credits := 0
+var haul: Dictionary = {}          # item id -> how many picked up on this expedition (banked in the bunker if you get out: Profile)
 var stats := {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}
 var playing := false
 var over := false
@@ -50,6 +51,7 @@ func reset() -> void:
 	flags.clear()
 	keys.clear()
 	credits = 0
+	haul.clear()
 	stats = {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}
 	over = false
 

@@ -12,6 +12,7 @@ config/features=PackedStringArray("4.4", "Forward Plus")
 
 LM="*res://engine/lm.gd"
 Game="*res://engine/game.gd"
+Profile="*res://engine/profile.gd"
 
 [maze3d]
 

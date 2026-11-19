@@ -33,6 +33,7 @@ The title screen offers the built level and **Random installation**, which is ma
 | `kits/loot/` | What treasure is kept in: shelves, a trophy case and a strongbox in each of nine places' own materials, a power-cell charging rack, a reliquary. 29 models. Every kit uses it. |
 | `kits/drowned/` | Thalassa Deep Array: a high-tech installation that leaked for three hundred years. Sea-green and bronze, pale green light, round lit ribs; algae, slime, salt, rust, standing water. 13 walls, 6 floors, 5 ceilings, a hatch, 7 pieces of furniture. |
 | `kits/dust/` | Helion Dust Station: a high-tech installation the desert got into. Bleached ivory and sandblasted steel, violet light, slanted lit fins; sand drifts, fallen tiles, cracks, hanging wiring. 13 walls, 6 floors, 5 ceilings, a shutter, 7 pieces of furniture. |
+| `kits/home/` | The scavenger's own bunker: cozy brass steampunk that is still high technology. Walnut panelling, brass and copper pipe, gear trains that work the doors, oxblood leather, ceramic tile and oak, amber video in wood-and-brass cabinets; a white-tile bathroom; a grey armoured security room behind a vault door. 11 walls, 8 floors, 8 ceilings, 2 doors, 20 pieces of room furniture, 8 catalogue furnishings. |
 | `kits/omni/` | No models: borrows every kit so one level can use them all. |
 | `actors/source/` | Models made elsewhere, as they arrived: the Tripo Roach, Monoid and Glorexx. `tools/blender/adopt_*.py` turn them into `actors/*_tripo.glb` with clips. |
 | `actors/` | 17 rigged, animated monsters as `.glb`: Gladiator Roach, Custodian, Monoid, Glorexx, ceiling turret; and Eggbot, Grease Monkey, Dancer, Snapper, Deadbot, Desktop Defender, Sphinx Gun, Plodder, Drone, Fouler, Mourner and the Princess. |
@@ -51,6 +52,8 @@ Off the Concourse, south: the **Brand Experience Suite**, the Agency's showroom,
 **The Menagerie** is a second, small level: a ticket hall, then three halls (Works, Bunker, Crypt) with the twelve newer monsters in them. It is there to look at things and to shoot them.
 
 The title screen also offers random installations in each place: mixed, The Works, The Bunker, The Crypt, and "All the way down", which uses every kit and every monster and keeps the Princess in the last room.
+
+**Home** is your bunker, first on the title screen: bedroom, bathroom, den, living room, communications room, armoury, robot room, and a security room behind a vault door where the lift is. Nothing in it fights. What you carry out of an installation alive is banked there (`user://havenot_home.json`): credits, the weapons on the armoury rack, the vest on the stand, trophies in the den's case. The ledger on the den's desk sells furnishings, and **B** puts them down wherever you like (click to place, R to turn, Z for the next thing, X to take one back). The dead Custodian in the robot room can be repaired with 3 circuit boards and 2 fuel cells brought home. The lift goes to any installation, and takes the armoury with you. The end-of-level screen offers the way home.
 
 **Staff Only** is the test floor, and it has everything: a room in every style of every kit, one of every piece of furniture and every door, every monster (wandering, lounging, perched, and every robot in its station open and shut), every loot container, a gun range, a lift, a pit, a pool, balconies, a loft, a basement, arches, traps, lockers, a blue card, a red card and a way out. Everything on it is off duty: press E on a monster to talk to it (the Sphinx Gun asks riddles, the Monoids complain and offer you a smoke, the Knife Fighter insults you), and ask it to show you what it does: it goes to the gun range, or shoots the target beside it, and does not shoot you. It is written by `tools/levels/staffonly.py` from whatever kits, monsters and items exist; run that again after adding anything.
 
@@ -75,7 +78,8 @@ The self-test plays the level by script: it walks and jumps, checks that everyth
 
 ## Not done yet
 
-- No saving. One level, start to finish.
+- No saving inside a level. The bunker (Home) is what lasts between levels.
+- The outdoor near-area map and the Anomalous Structure from the 2D game are not built yet: the bunker's lift goes straight to an installation.
 - No HaveNot character creation, missions, vendors or hacking rolls: this is the shooter underneath.
 - One enemy faction: everything hunts the player.
 - Sound is synthesised placeholders (as in the 2D engine); no music.

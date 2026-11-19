@@ -224,7 +224,7 @@ func refresh() -> void:
 	_hp_label.text = "%d" % ceil(pl.hp) + ("   +%d" % pl.armor if pl.armor > 0 else "") + ("   EASY" if Game.easy else "")
 	var w: Dictionary = pl.weapon()
 	_weapon.text = str(w.get("name", "")).to_upper()
-	_ammo.text = "∞" if w.get("ammo") == null else str(pl.ammo.get(w["ammo"], 0))
+	_ammo.text = "" if w.is_empty() else ("∞" if w.get("ammo") == null else str(pl.ammo.get(w["ammo"], 0)))
 	_credits.text = "%d cr" % Game.credits
 	for c in _keys.get_children():
 		c.queue_free()
@@ -391,6 +391,24 @@ func open_panel(prop: Node, spec: Dictionary) -> void:
 	_panel.visible = true
 
 
+## A panel whose options carry "do": a Callable. Opens it, or swaps what an open panel shows (engine/home.gd).
+func repanel(prop: Node, spec: Dictionary) -> void:
+	if _state != "panel":
+		open_panel(prop, spec)
+		return
+	_panel_prop = prop
+	_panel_spec = spec
+	_fill_panel(spec.get("text", ""))
+
+
+func in_panel() -> bool:
+	return _state == "panel"
+
+
+func playing() -> bool:
+	return _state == "play"
+
+
 func _fill_panel(text: String, working := "", final := false) -> void:
 	for c in _panel_body.get_children():
 		_panel_body.remove_child(c)
@@ -439,6 +457,11 @@ func _choose(i: int) -> void:
 			_panel_prop.set_screen(o["screen"])
 	LM.sound("confirm")
 	Game.run_effects(o.get("effects"))
+	if o.has("do"):                                  # the panel's owner does something, and may put up another panel or close this one
+		var was := _panel_spec
+		(o["do"] as Callable).call()
+		if _state != "panel" or not is_same(was, _panel_spec):
+			return
 	var who: Node = _panel_prop
 	var result: String = o.get("result", _panel_spec.get("text", ""))
 	if o.has("results"):                             # one of several things it might say
@@ -491,7 +514,7 @@ func show_title() -> void:
 	_overlay_box.add_child(_label("", 8, Color.WHITE))
 	for id in g.get("menu", LM.levels.keys()):
 		var lv: Dictionary = LM.levels.get(id, {})
-		_overlay_box.add_child(_button("▸  " + lv.get("name", id), func(): start_requested.emit(id), true))
+		_overlay_box.add_child(_button(("⌂  " if lv.get("home", false) else "▸  ") + lv.get("name", id), func(): start_requested.emit(id), true))
 	for gid in LM.generators:
 		_overlay_box.add_child(_label("RANDOM INSTALLATIONS", 14, Color(0.7, 0.75, 0.75)))
 		var grid := GridContainer.new()                  # three across, so a dozen places still fit on the screen
@@ -555,7 +578,15 @@ func _on_end(info: Dictionary) -> void:
 		_overlay_box.add_child(t)
 	var s: Dictionary = Game.stats
 	_overlay_box.add_child(_label("Salvage  %d cr      Finds  %d / %d      Kills  %d      Time  %d:%02d" % [Game.credits, s["treasure"], s["treasure_total"], s["kills"], int(s["time"]) / 60, int(s["time"]) % 60], 17, Color(0.8, 0.85, 0.85)))
-	_overlay_box.add_child(_button("Go again", func(): restart_requested.emit(), true))
+	var home_id := ""
+	for id in LM.levels:
+		if LM.levels[id].get("home", false):
+			home_id = id
+	var at_home: bool = Game.level != null and Game.level.data.get("home", false)
+	if home_id != "" and not at_home:
+		var s2: String = "Wake up in the bunker (what you were carrying is gone)" if info.get("dead", false) else "Home to the bunker (%d cr banked)" % Game.credits
+		_overlay_box.add_child(_button(s2, func(): start_requested.emit(home_id), not info.get("dead", false)))
+	_overlay_box.add_child(_button("Go again", func(): restart_requested.emit(), home_id == "" or info.get("dead", false)))
 	_overlay_box.add_child(_button("Back to the title", func(): start_requested.emit("")))
 
 

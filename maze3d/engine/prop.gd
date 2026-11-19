@@ -263,6 +263,9 @@ func use(_player: Node) -> void:
 			elif u.get("loot", []).is_empty() and not u.has("effects"):
 				Game.say(u.get("text", "Empty. Somebody got here first, three hundred years ago."), "info")
 			Game.run_effects(u.get("effects"), {"at": front, "prop": self})
+		"home":                                      # the bunker's furniture: engine/home.gd knows what each piece does
+			if level.home:
+				level.home.use_prop(self, u.get("what", ""))
 		"heal":
 			var left: int = int(u.get("charges", 3)) - used
 			if left <= 0:

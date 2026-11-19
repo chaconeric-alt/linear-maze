@@ -1,0 +1,865 @@
+{
+ "models": {
+  "door_hm_gear": {
+   "model": "models/door_hm_gear.glb",
+   "parts": {
+    "gear0": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -300
+    },
+    "gear1": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": 375
+    },
+    "gear2": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -250
+    },
+    "gear3": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": 300
+    },
+    "gear4": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -375
+    },
+    "gear5": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": 250
+    },
+    "leaf_l": {
+     "move": [
+      -1.24,
+      0,
+      0
+     ]
+    },
+    "leaf_r": {
+     "move": [
+      1.24,
+      0,
+      0
+     ]
+    }
+   },
+   "sound": "door_heavy",
+   "time": 0.9,
+   "type": "door"
+  },
+  "door_hm_vault": {
+   "model": "models/door_hm_vault.glb",
+   "parts": {
+    "slab": {
+     "move": [
+      2.7,
+      0,
+      0
+     ]
+    },
+    "wheel": {
+     "rot_axis": [
+      0,
+      0,
+      -1
+     ],
+     "rot_deg": -720
+    }
+   },
+   "sound": "door_heavy",
+   "time": 2.4,
+   "type": "door"
+  },
+  "hm_aquarium": {
+   "light": {
+    "at": [
+     0,
+     1.2,
+     0.5
+    ],
+    "color": [
+     0.5,
+     0.9,
+     1.0
+    ],
+    "energy": 0.6,
+    "range": 4.0
+   },
+   "model": "models/hm_aquarium.glb",
+   "name": "Aquarium",
+   "solid": [
+    1.55,
+    1.65,
+    0.65
+   ],
+   "type": "prop"
+  },
+  "hm_armchair": {
+   "model": "models/hm_armchair.glb",
+   "name": "Armchair",
+   "solid": [
+    1.05,
+    1.3,
+    0.95
+   ],
+   "type": "prop"
+  },
+  "hm_armor": {
+   "holds": "armor",
+   "model": "models/hm_armor.glb",
+   "name": "Armour Stand",
+   "slots": [
+    [
+     0,
+     1.02,
+     -0.2
+    ]
+   ],
+   "solid": [
+    0.8,
+    1.95,
+    0.6
+   ],
+   "type": "prop"
+  },
+  "hm_bed": {
+   "light": {
+    "at": [
+     0.86,
+     1.7,
+     -0.7
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 0.6,
+    "range": 4.0
+   },
+   "model": "models/hm_bed.glb",
+   "name": "Bed",
+   "solid": [
+    1.8,
+    1.45,
+    2.3
+   ],
+   "type": "prop"
+  },
+  "hm_bookcase": {
+   "model": "models/hm_bookcase.glb",
+   "name": "Bookcase",
+   "solid": [
+    1.9,
+    2.5,
+    0.55
+   ],
+   "type": "prop"
+  },
+  "hm_clock": {
+   "model": "models/hm_clock.glb",
+   "mount": "wall",
+   "name": "Brass Clock",
+   "type": "prop"
+  },
+  "hm_console": {
+   "light": {
+    "at": [
+     0,
+     1.3,
+     0.6
+    ],
+    "color": [
+     0.4,
+     1.0,
+     0.5
+    ],
+    "energy": 0.5,
+    "range": 3.5
+   },
+   "model": "models/hm_console.glb",
+   "name": "Security Desk",
+   "solid": [
+    2.1,
+    1.6,
+    0.95
+   ],
+   "type": "prop"
+  },
+  "hm_cradle": {
+   "model": "models/hm_cradle.glb",
+   "name": "Repair Cradle",
+   "solid": [
+    1.6,
+    2.6,
+    1.6
+   ],
+   "solids": [
+    [
+     0,
+     0.07,
+     0,
+     1.6,
+     0.14,
+     1.6
+    ],
+    [
+     0,
+     1.3,
+     -0.6,
+     1.6,
+     2.5,
+     0.14
+    ]
+   ],
+   "type": "prop"
+  },
+  "hm_desk": {
+   "light": {
+    "at": [
+     0.4,
+     1.2,
+     0.2
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 0.7,
+    "range": 4.0
+   },
+   "model": "models/hm_desk.glb",
+   "name": "Desk",
+   "solid": [
+    2.0,
+    1.4,
+    0.95
+   ],
+   "type": "prop"
+  },
+  "hm_dresser": {
+   "model": "models/hm_dresser.glb",
+   "name": "Dresser",
+   "solid": [
+    1.56,
+    2.2,
+    0.66
+   ],
+   "type": "prop"
+  },
+  "hm_globe": {
+   "model": "models/hm_globe.glb",
+   "name": "Globe",
+   "solid": [
+    0.9,
+    1.55,
+    0.9
+   ],
+   "type": "prop"
+  },
+  "hm_gramophone": {
+   "model": "models/hm_gramophone.glb",
+   "name": "Gramophone",
+   "solid": [
+    0.75,
+    2.0,
+    0.75
+   ],
+   "type": "prop"
+  },
+  "hm_lamp": {
+   "light": {
+    "at": [
+     0,
+     1.6,
+     0
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 1.3,
+    "range": 7.0
+   },
+   "model": "models/hm_lamp.glb",
+   "name": "Standing Lamp",
+   "solid": [
+    0.5,
+    1.9,
+    0.5
+   ],
+   "type": "prop"
+  },
+  "hm_lift": {
+   "light": {
+    "at": [
+     0,
+     2.6,
+     0.8
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 0.9,
+    "range": 6.0
+   },
+   "model": "models/hm_lift.glb",
+   "name": "Lift",
+   "solid": [
+    3.0,
+    3.7,
+    1.0
+   ],
+   "type": "prop"
+  },
+  "hm_medic": {
+   "model": "models/hm_medic.glb",
+   "mount": "wall",
+   "name": "Medical Station",
+   "type": "prop"
+  },
+  "hm_painting": {
+   "model": "models/hm_painting.glb",
+   "mount": "wall",
+   "name": "Painting",
+   "type": "prop"
+  },
+  "hm_plant": {
+   "model": "models/hm_plant.glb",
+   "name": "Fern in a Copper Pot",
+   "solid": [
+    0.7,
+    1.5,
+    0.7
+   ],
+   "type": "prop"
+  },
+  "hm_rack": {
+   "holds": "weapons",
+   "light": {
+    "at": [
+     0,
+     1.6,
+     0.6
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 0.5,
+    "range": 3.5
+   },
+   "model": "models/hm_rack.glb",
+   "name": "Weapon Rack",
+   "slots": [
+    [
+     -0.78,
+     0.87,
+     -0.06
+    ],
+    [
+     0.0,
+     0.87,
+     -0.06
+    ],
+    [
+     0.78,
+     0.87,
+     -0.06
+    ],
+    [
+     -0.78,
+     1.62,
+     -0.06
+    ],
+    [
+     0.0,
+     1.62,
+     -0.06
+    ],
+    [
+     0.78,
+     1.62,
+     -0.06
+    ]
+   ],
+   "solid": [
+    2.5,
+    2.25,
+    0.55
+   ],
+   "type": "prop"
+  },
+  "hm_radio": {
+   "light": {
+    "at": [
+     -0.35,
+     1.5,
+     0.7
+    ],
+    "color": [
+     1.0,
+     0.62,
+     0.25
+    ],
+    "energy": 0.8,
+    "range": 4.5
+   },
+   "model": "models/hm_radio.glb",
+   "name": "Video Radio",
+   "solid": [
+    2.1,
+    2.2,
+    0.95
+   ],
+   "type": "prop"
+  },
+  "hm_rug": {
+   "model": "models/hm_rug.glb",
+   "name": "Rug",
+   "type": "prop"
+  },
+  "hm_shower": {
+   "model": "models/hm_shower.glb",
+   "name": "Shower",
+   "solid": [
+    1.35,
+    2.6,
+    1.35
+   ],
+   "solids": [
+    [
+     0,
+     1.3,
+     -0.6,
+     1.3,
+     2.5,
+     0.12
+    ],
+    [
+     0.64,
+     1.3,
+     0,
+     0.06,
+     2.4,
+     1.2
+    ],
+    [
+     -0.64,
+     1.3,
+     0,
+     0.06,
+     2.4,
+     1.2
+    ]
+   ],
+   "type": "prop"
+  },
+  "hm_sink": {
+   "model": "models/hm_sink.glb",
+   "name": "Basin",
+   "solid": [
+    1.1,
+    1.2,
+    0.6
+   ],
+   "type": "prop"
+  },
+  "hm_sofa": {
+   "model": "models/hm_sofa.glb",
+   "name": "Leather Sofa",
+   "solid": [
+    2.6,
+    1.15,
+    1.0
+   ],
+   "type": "prop"
+  },
+  "hm_table": {
+   "model": "models/hm_table.glb",
+   "name": "Low Table",
+   "solid": [
+    1.3,
+    0.55,
+    0.75
+   ],
+   "type": "prop"
+  },
+  "hm_toilet": {
+   "model": "models/hm_toilet.glb",
+   "name": "Toilet",
+   "solid": [
+    0.7,
+    1.2,
+    0.8
+   ],
+   "type": "prop"
+  },
+  "hm_trophy": {
+   "holds": "trophy",
+   "light": {
+    "at": [
+     0,
+     1.6,
+     0.5
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 0.5,
+    "range": 3.0
+   },
+   "model": "models/hm_trophy.glb",
+   "name": "Trophy Case",
+   "slots": [
+    [
+     -0.5,
+     0.64,
+     0.0
+    ],
+    [
+     0.0,
+     0.64,
+     0.0
+    ],
+    [
+     0.5,
+     0.64,
+     0.0
+    ],
+    [
+     -0.5,
+     1.1400000000000001,
+     0.0
+    ],
+    [
+     0.0,
+     1.1400000000000001,
+     0.0
+    ],
+    [
+     0.5,
+     1.1400000000000001,
+     0.0
+    ],
+    [
+     -0.5,
+     1.6400000000000001,
+     0.0
+    ],
+    [
+     0.0,
+     1.6400000000000001,
+     0.0
+    ],
+    [
+     0.5,
+     1.6400000000000001,
+     0.0
+    ]
+   ],
+   "solid": [
+    1.7,
+    2.3,
+    0.62
+   ],
+   "type": "prop"
+  },
+  "hm_video": {
+   "light": {
+    "at": [
+     0,
+     2.2,
+     1.0
+    ],
+    "color": [
+     1.0,
+     0.62,
+     0.25
+    ],
+    "energy": 0.9,
+    "range": 6.0
+   },
+   "model": "models/hm_video.glb",
+   "mount": "wall",
+   "name": "Wall Video",
+   "type": "prop"
+  },
+  "hm_workbench": {
+   "light": {
+    "at": [
+     0.6,
+     1.6,
+     0.3
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 0.8,
+    "range": 4.0
+   },
+   "model": "models/hm_workbench.glb",
+   "name": "Workbench",
+   "solid": [
+    2.3,
+    1.95,
+    0.9
+   ],
+   "type": "prop"
+  }
+ },
+ "tiles": {
+  "ceil_hm_beam": {
+   "kind": "ceiling",
+   "model": "models/ceil_hm_beam.glb"
+  },
+  "ceil_hm_lamp": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.7,
+     0
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 2.2,
+    "range": 11
+   },
+   "model": "models/ceil_hm_lamp.glb"
+  },
+  "ceil_hm_steel": {
+   "kind": "ceiling",
+   "model": "models/ceil_hm_steel.glb"
+  },
+  "ceil_hm_steellight": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.4,
+     0
+    ],
+    "color": [
+     1.0,
+     0.8,
+     0.55
+    ],
+    "energy": 1.8,
+    "range": 10
+   },
+   "model": "models/ceil_hm_steellight.glb"
+  },
+  "ceil_hm_tin": {
+   "kind": "ceiling",
+   "model": "models/ceil_hm_tin.glb"
+  },
+  "ceil_hm_tinlamp": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.6,
+     0
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 2.2,
+    "range": 11
+   },
+   "model": "models/ceil_hm_tinlamp.glb"
+  },
+  "ceil_hm_white": {
+   "kind": "ceiling",
+   "model": "models/ceil_hm_white.glb"
+  },
+  "ceil_hm_whitelight": {
+   "kind": "ceiling",
+   "light": {
+    "at": [
+     0,
+     -0.3,
+     0
+    ],
+    "color": [
+     0.9,
+     0.95,
+     1.0
+    ],
+    "energy": 1.3,
+    "range": 9
+   },
+   "model": "models/ceil_hm_whitelight.glb"
+  },
+  "floor_hm_drain": {
+   "kind": "floor",
+   "model": "models/floor_hm_drain.glb"
+  },
+  "floor_hm_rug": {
+   "kind": "floor",
+   "model": "models/floor_hm_rug.glb"
+  },
+  "floor_hm_steel": {
+   "kind": "floor",
+   "model": "models/floor_hm_steel.glb"
+  },
+  "floor_hm_steel2": {
+   "kind": "floor",
+   "model": "models/floor_hm_steel2.glb"
+  },
+  "floor_hm_terra": {
+   "kind": "floor",
+   "model": "models/floor_hm_terra.glb"
+  },
+  "floor_hm_tile": {
+   "kind": "floor",
+   "model": "models/floor_hm_tile.glb"
+  },
+  "floor_hm_white": {
+   "kind": "floor",
+   "model": "models/floor_hm_white.glb"
+  },
+  "floor_hm_wood": {
+   "kind": "floor",
+   "model": "models/floor_hm_wood.glb"
+  },
+  "wall_hm_gears": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.5,
+     0.6
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 0.4,
+    "range": 4
+   },
+   "model": "models/wall_hm_gears.glb"
+  },
+  "wall_hm_lamp": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.8,
+     0.6
+    ],
+    "color": [
+     1.0,
+     0.72,
+     0.4
+    ],
+    "energy": 1.1,
+    "range": 7
+   },
+   "model": "models/wall_hm_lamp.glb"
+  },
+  "wall_hm_panel": {
+   "kind": "wall",
+   "model": "models/wall_hm_panel.glb"
+  },
+  "wall_hm_panel2": {
+   "kind": "wall",
+   "model": "models/wall_hm_panel2.glb"
+  },
+  "wall_hm_pipes": {
+   "kind": "wall",
+   "model": "models/wall_hm_pipes.glb"
+  },
+  "wall_hm_screen": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.6,
+     0.7
+    ],
+    "color": [
+     1.0,
+     0.62,
+     0.25
+    ],
+    "energy": 0.6,
+    "range": 5
+   },
+   "model": "models/wall_hm_screen.glb"
+  },
+  "wall_hm_shelf": {
+   "kind": "wall",
+   "model": "models/wall_hm_shelf.glb"
+  },
+  "wall_hm_steel": {
+   "kind": "wall",
+   "model": "models/wall_hm_steel.glb"
+  },
+  "wall_hm_steel2": {
+   "kind": "wall",
+   "light": {
+    "at": [
+     0,
+     2.3,
+     0.6
+    ],
+    "color": [
+     0.4,
+     1.0,
+     0.5
+    ],
+    "energy": 0.4,
+    "range": 4
+   },
+   "model": "models/wall_hm_steel2.glb"
+  },
+  "wall_hm_tile": {
+   "kind": "wall",
+   "model": "models/wall_hm_tile.glb"
+  },
+  "wall_hm_tile2": {
+   "kind": "wall",
+   "model": "models/wall_hm_tile2.glb"
+  }
+ }
+}

@@ -1,0 +1,821 @@
+{
+ "id": "home",
+ "name": "Home (your bunker)",
+ "kit": "home",
+ "style": "hm_hall",
+ "home": true,
+ "off_duty": true,
+ "intro": "Home. The door seals, the kettle works, and nothing in here wants you dead. B: decorate.",
+ "ambient": [
+  0.42,
+  0.33,
+  0.24
+ ],
+ "ambient_energy": 0.6,
+ "exposure": 1.0,
+ "fog": {
+  "color": [
+   0.16,
+   0.11,
+   0.07
+  ],
+  "density": 0.004
+ },
+ "player": {
+  "weapons": [],
+  "lamp": false
+ },
+ "legend": {
+  "g": {
+   "door": "door_hm_gear"
+  },
+  "V": {
+   "door": "door_hm_vault"
+  }
+ },
+ "map": [
+  "################",
+  "#..#.#..#..#####",
+  "#..#.#..#..#####",
+  "##g#g#g##g##...#",
+  "#..........V...#",
+  "##g###g##g##...#",
+  "#...#..#...#####",
+  "#...#..#...#####",
+  "################"
+ ],
+ "rooms": [
+  {
+   "name": "Bedroom",
+   "rect": [
+    1,
+    1,
+    2,
+    2
+   ],
+   "style": "hm_bedroom",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 48,
+    "oy": 48
+   }
+  },
+  {
+   "name": "Bathroom",
+   "rect": [
+    4,
+    1,
+    1,
+    2
+   ],
+   "style": "hm_bath",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 46,
+    "oy": 48
+   }
+  },
+  {
+   "name": "Den",
+   "rect": [
+    6,
+    1,
+    2,
+    2
+   ],
+   "style": "hm_den",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 43,
+    "oy": 48
+   }
+  },
+  {
+   "name": "Communications",
+   "rect": [
+    9,
+    1,
+    2,
+    2
+   ],
+   "style": "hm_comms",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 40,
+    "oy": 48
+   }
+  },
+  {
+   "name": "Hall",
+   "rect": [
+    1,
+    4,
+    10,
+    1
+   ],
+   "style": "hm_hall",
+   "height": 1,
+   "lights": {
+    "every": 2,
+    "ox": 0,
+    "oy": 0
+   }
+  },
+  {
+   "name": "Living Room",
+   "rect": [
+    1,
+    6,
+    3,
+    2
+   ],
+   "style": "hm_living",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 48,
+    "oy": 43
+   }
+  },
+  {
+   "name": "Armoury",
+   "rect": [
+    5,
+    6,
+    2,
+    2
+   ],
+   "style": "hm_armory",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 44,
+    "oy": 44
+   }
+  },
+  {
+   "name": "Robot Room",
+   "rect": [
+    8,
+    6,
+    3,
+    2
+   ],
+   "style": "hm_robot",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 41,
+    "oy": 44
+   }
+  },
+  {
+   "name": "Security",
+   "rect": [
+    12,
+    3,
+    3,
+    3
+   ],
+   "style": "hm_security",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 37,
+    "oy": 46
+   }
+  }
+ ],
+ "things": [
+  {
+   "prop": "hm_bed",
+   "at": [
+    1,
+    1
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.6,
+    0,
+    -0.47
+   ],
+   "use": {
+    "type": "home",
+    "what": "bed",
+    "prompt": "Sleep"
+   }
+  },
+  {
+   "prop": "hm_dresser",
+   "at": [
+    1,
+    2
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.29,
+    0,
+    0.4
+   ]
+  },
+  {
+   "prop": "hm_armchair",
+   "at": [
+    2,
+    1
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.15,
+    0,
+    -0.3
+   ]
+  },
+  {
+   "prop": "hm_painting",
+   "at": [
+    2,
+    1
+   ],
+   "blocks": false,
+   "face": "s"
+  },
+  {
+   "prop": "hm_shower",
+   "at": [
+    4,
+    1
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.25,
+    0,
+    -0.94
+   ]
+  },
+  {
+   "prop": "hm_toilet",
+   "at": [
+    4,
+    1
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.22,
+    0,
+    1.2
+   ]
+  },
+  {
+   "prop": "hm_sink",
+   "at": [
+    4,
+    2
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.32,
+    0,
+    -0.4
+   ]
+  },
+  {
+   "prop": "hm_medic",
+   "at": [
+    4,
+    2
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    0.0,
+    0,
+    0.5
+   ],
+   "use": {
+    "type": "home",
+    "what": "medic",
+    "prompt": "Use the medical station"
+   },
+   "tag": "medic"
+  },
+  {
+   "prop": "hm_bookcase",
+   "at": [
+    6,
+    1
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.35
+   ]
+  },
+  {
+   "prop": "hm_bookcase",
+   "at": [
+    7,
+    1
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.35
+   ]
+  },
+  {
+   "prop": "hm_desk",
+   "at": [
+    7,
+    2
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    -1.2,
+    0,
+    -1.6
+   ],
+   "use": {
+    "type": "home",
+    "what": "ledger",
+    "prompt": "Open the Expedition Ledger"
+   },
+   "tag": "ledger"
+  },
+  {
+   "prop": "hm_trophy",
+   "at": [
+    7,
+    2
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.31,
+    0,
+    0.3
+   ],
+   "use": {
+    "type": "home",
+    "what": "trophy",
+    "prompt": "Look at the trophy case"
+   },
+   "tag": "trophy"
+  },
+  {
+   "prop": "hm_globe",
+   "at": [
+    6,
+    2
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.17,
+    0,
+    0.9
+   ]
+  },
+  {
+   "prop": "hm_clock",
+   "at": [
+    6,
+    1
+   ],
+   "blocks": false,
+   "face": "e"
+  },
+  {
+   "prop": "hm_radio",
+   "at": [
+    10,
+    1
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    -2.0,
+    0,
+    -1.15
+   ],
+   "use": {
+    "type": "home",
+    "what": "comms",
+    "prompt": "Use the video radio"
+   },
+   "tag": "comms"
+  },
+  {
+   "prop": "hm_armchair",
+   "at": [
+    10,
+    2
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    -2.0,
+    0,
+    -0.9
+   ]
+  },
+  {
+   "prop": "hm_table",
+   "at": [
+    10,
+    2
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.25,
+    0,
+    0.2
+   ]
+  },
+  {
+   "prop": "hm_gramophone",
+   "at": [
+    9,
+    1
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.25,
+    0,
+    -0.9
+   ]
+  },
+  {
+   "prop": "hm_sofa",
+   "at": [
+    1,
+    7
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.12,
+    0,
+    -2.0
+   ],
+   "use": {
+    "type": "home",
+    "what": "sofa",
+    "prompt": "Sit down and watch"
+   }
+  },
+  {
+   "prop": "hm_table",
+   "at": [
+    1,
+    7
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    0.6,
+    0,
+    -2.0
+   ]
+  },
+  {
+   "prop": "hm_video",
+   "at": [
+    3,
+    7
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    -0.0,
+    0,
+    -2.0
+   ],
+   "tag": "video"
+  },
+  {
+   "prop": "hm_armchair",
+   "at": [
+    2,
+    7
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    1.0,
+    0,
+    1.15
+   ]
+  },
+  {
+   "prop": "hm_plant",
+   "at": [
+    1,
+    6
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    -1.2,
+    0,
+    -1.27
+   ]
+  },
+  {
+   "prop": "hm_lamp",
+   "at": [
+    1,
+    7
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    -1.3,
+    0,
+    1.37
+   ]
+  },
+  {
+   "prop": "hm_aquarium",
+   "at": [
+    3,
+    7
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    0.3,
+    0,
+    1.29
+   ]
+  },
+  {
+   "prop": "hm_rack",
+   "at": [
+    5,
+    7
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    2.0,
+    0,
+    1.35
+   ],
+   "use": {
+    "type": "home",
+    "what": "rack",
+    "prompt": "Look over the weapon rack"
+   },
+   "tag": "rack"
+  },
+  {
+   "prop": "hm_armor",
+   "at": [
+    6,
+    7
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.32,
+    0,
+    -0.6
+   ],
+   "use": {
+    "type": "home",
+    "what": "armor",
+    "prompt": "Look at the armour stand"
+   },
+   "tag": "armor"
+  },
+  {
+   "prop": "locker",
+   "at": [
+    5,
+    6
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    0.0,
+    0,
+    1.2
+   ],
+   "use": {
+    "type": "home",
+    "what": "locker",
+    "prompt": "Open the supply locker"
+   },
+   "tag": "locker"
+  },
+  {
+   "prop": "hm_workbench",
+   "at": [
+    5,
+    6
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.3,
+    0,
+    -1.17
+   ]
+  },
+  {
+   "prop": "hm_cradle",
+   "at": [
+    9,
+    7
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    0.0,
+    0,
+    0.82
+   ],
+   "use": {
+    "type": "home",
+    "what": "cradle",
+    "prompt": "Look at the robot"
+   },
+   "tag": "cradle"
+  },
+  {
+   "prop": "hm_workbench",
+   "at": [
+    10,
+    7
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.17,
+    0,
+    -0.6
+   ]
+  },
+  {
+   "prop": "lt_shelf_wk",
+   "at": [
+    8,
+    7
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.32,
+    0,
+    0.0
+   ],
+   "holds": []
+  },
+  {
+   "prop": "hm_console",
+   "at": [
+    8,
+    6
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.3,
+    0,
+    -1.15
+   ],
+   "use": {
+    "type": "home",
+    "what": "diagnostic",
+    "prompt": "Read the diagnostic"
+   }
+  },
+  {
+   "prop": "hm_lift",
+   "at": [
+    14,
+    4
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.42,
+    0,
+    0.0
+   ],
+   "use": {
+    "type": "home",
+    "what": "lift",
+    "prompt": "Call the lift"
+   },
+   "tag": "lift"
+  },
+  {
+   "prop": "hm_console",
+   "at": [
+    13,
+    3
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.15
+   ],
+   "use": {
+    "type": "home",
+    "what": "security",
+    "prompt": "Check the cameras"
+   }
+  },
+  {
+   "prop": "hm_plant",
+   "at": [
+    1,
+    4
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.27,
+    0,
+    -1.2
+   ]
+  },
+  {
+   "prop": "hm_clock",
+   "at": [
+    5,
+    4
+   ],
+   "blocks": false,
+   "face": "s"
+  },
+  {
+   "prop": "hm_painting",
+   "at": [
+    8,
+    4
+   ],
+   "blocks": false,
+   "face": "s"
+  },
+  {
+   "prop": "hm_painting",
+   "at": [
+    4,
+    4
+   ],
+   "blocks": false,
+   "face": "n"
+  },
+  {
+   "start": true,
+   "at": [
+    3,
+    4
+   ],
+   "face": "e"
+  },
+  {
+   "sign": "HOME",
+   "at": [
+    10,
+    4
+   ],
+   "face": "w",
+   "color": [
+    1.0,
+    0.72,
+    0.4
+   ],
+   "size": 40,
+   "y": 3.3
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Home. The lift out is behind the vault door, at the east end of the hall."
+  }
+ ],
+ "triggers": []
+}

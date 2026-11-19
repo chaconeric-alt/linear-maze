@@ -1,0 +1,336 @@
+{
+ "hm_book_a": {
+  "color": [
+   0.4,
+   0.1,
+   0.08
+  ],
+  "metal": 0.0,
+  "rough": 0.7
+ },
+ "hm_book_b": {
+  "color": [
+   0.1,
+   0.22,
+   0.3
+  ],
+  "metal": 0.0,
+  "rough": 0.7
+ },
+ "hm_book_c": {
+  "color": [
+   0.55,
+   0.42,
+   0.2
+  ],
+  "metal": 0.0,
+  "rough": 0.7
+ },
+ "hm_brass": {
+  "color": [
+   0.72,
+   0.52,
+   0.2
+  ],
+  "grime": 0.3,
+  "metal": 0.9,
+  "rough": 0.3,
+  "shader": "worn"
+ },
+ "hm_chrome": {
+  "color": [
+   0.8,
+   0.82,
+   0.84
+  ],
+  "metal": 1.0,
+  "rough": 0.12
+ },
+ "hm_copper": {
+  "color": [
+   0.7,
+   0.36,
+   0.2
+  ],
+  "grime": 0.3,
+  "metal": 0.9,
+  "rough": 0.32,
+  "shader": "worn"
+ },
+ "hm_cream": {
+  "color": [
+   0.82,
+   0.76,
+   0.62
+  ],
+  "grime": 0.15,
+  "metal": 0.0,
+  "rough": 0.25,
+  "shader": "worn"
+ },
+ "hm_glow": {
+  "color": [
+   1.0,
+   0.72,
+   0.36
+  ],
+  "emit": [
+   1.0,
+   0.7,
+   0.34
+  ],
+  "energy": 3.0,
+  "pulse": 0.04,
+  "shader": "glow"
+ },
+ "hm_glow_cool": {
+  "color": [
+   0.85,
+   0.95,
+   1.0
+  ],
+  "emit": [
+   0.85,
+   0.95,
+   1.0
+  ],
+  "energy": 1.6,
+  "pulse": 0.02,
+  "shader": "glow"
+ },
+ "hm_glow_red": {
+  "color": [
+   1.0,
+   0.2,
+   0.1
+  ],
+  "emit": [
+   1.0,
+   0.2,
+   0.1
+  ],
+  "energy": 2.4,
+  "pulse": 0.3,
+  "shader": "glow"
+ },
+ "hm_glow_soft": {
+  "color": [
+   1.0,
+   0.8,
+   0.5
+  ],
+  "emit": [
+   1.0,
+   0.78,
+   0.48
+  ],
+  "energy": 1.6,
+  "pulse": 0.03,
+  "shader": "glow"
+ },
+ "hm_green": {
+  "color": [
+   0.12,
+   0.3,
+   0.1
+  ],
+  "metal": 0.0,
+  "rough": 0.8
+ },
+ "hm_iron": {
+  "color": [
+   0.13,
+   0.12,
+   0.12
+  ],
+  "grime": 0.4,
+  "metal": 0.8,
+  "rough": 0.5,
+  "shader": "worn"
+ },
+ "hm_leather": {
+  "color": [
+   0.32,
+   0.08,
+   0.05
+  ],
+  "grime": 0.2,
+  "metal": 0.0,
+  "rough": 0.45,
+  "shader": "worn"
+ },
+ "hm_leather2": {
+  "color": [
+   0.36,
+   0.2,
+   0.09
+  ],
+  "grime": 0.2,
+  "metal": 0.0,
+  "rough": 0.5,
+  "shader": "worn"
+ },
+ "hm_linen": {
+  "color": [
+   0.8,
+   0.74,
+   0.62
+  ],
+  "metal": 0.0,
+  "rough": 0.95
+ },
+ "hm_picture": {
+  "color": [
+   0.2,
+   0.3,
+   0.34
+  ],
+  "metal": 0.0,
+  "rough": 0.8
+ },
+ "hm_plaster": {
+  "color": [
+   0.7,
+   0.62,
+   0.48
+  ],
+  "grime": 0.3,
+  "metal": 0.0,
+  "rough": 0.9,
+  "shader": "worn"
+ },
+ "hm_screen": {
+  "color": [
+   0.06,
+   0.03,
+   0.01
+  ],
+  "emit": [
+   1.0,
+   0.62,
+   0.22
+  ],
+  "energy": 1.5,
+  "shader": "screen"
+ },
+ "hm_screen_g": {
+  "color": [
+   0.01,
+   0.05,
+   0.03
+  ],
+  "emit": [
+   0.4,
+   1.0,
+   0.5
+  ],
+  "energy": 1.4,
+  "shader": "screen"
+ },
+ "hm_steel": {
+  "color": [
+   0.36,
+   0.38,
+   0.4
+  ],
+  "grime": 0.4,
+  "metal": 0.85,
+  "rough": 0.45,
+  "shader": "worn"
+ },
+ "hm_steel_dark": {
+  "color": [
+   0.16,
+   0.17,
+   0.19
+  ],
+  "grime": 0.4,
+  "metal": 0.85,
+  "rough": 0.5,
+  "shader": "worn"
+ },
+ "hm_teal": {
+  "color": [
+   0.1,
+   0.34,
+   0.33
+  ],
+  "grime": 0.15,
+  "metal": 0.0,
+  "rough": 0.22,
+  "shader": "worn"
+ },
+ "hm_terra": {
+  "color": [
+   0.46,
+   0.24,
+   0.15
+  ],
+  "grime": 0.2,
+  "metal": 0.0,
+  "rough": 0.5,
+  "shader": "worn"
+ },
+ "hm_white": {
+  "color": [
+   0.74,
+   0.76,
+   0.76
+  ],
+  "grime": 0.08,
+  "metal": 0.0,
+  "rough": 0.15,
+  "shader": "worn"
+ },
+ "hm_wood": {
+  "color": [
+   0.3,
+   0.16,
+   0.08
+  ],
+  "grime": 0.25,
+  "metal": 0.0,
+  "rough": 0.55,
+  "shader": "worn"
+ },
+ "hm_wood_dark": {
+  "color": [
+   0.14,
+   0.075,
+   0.04
+  ],
+  "grime": 0.25,
+  "metal": 0.0,
+  "rough": 0.5,
+  "shader": "worn"
+ },
+ "hm_wood_pale": {
+  "color": [
+   0.52,
+   0.36,
+   0.2
+  ],
+  "grime": 0.25,
+  "metal": 0.0,
+  "rough": 0.6,
+  "shader": "worn"
+ },
+ "hm_wool": {
+  "color": [
+   0.42,
+   0.1,
+   0.08
+  ],
+  "metal": 0.0,
+  "rough": 1.0
+ },
+ "hm_wool2": {
+  "color": [
+   0.72,
+   0.56,
+   0.26
+  ],
+  "metal": 0.0,
+  "rough": 1.0
+ }
+}

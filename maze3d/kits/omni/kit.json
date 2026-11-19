@@ -14,7 +14,8 @@
   "robots",
   "loot",
   "drowned",
-  "dust"
+  "dust",
+  "home"
  ],
  "cell": 4.0,
  "height": 4.0,

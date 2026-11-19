@@ -48,7 +48,7 @@ NOT_FURNITURE = lambda n: n.startswith('trap_') or n == 'window_obs'        # tr
 ARCHES = sorted(n for n, m in META.items() if m.get('arch'))
 STATIONS = game['generator_params']['stations']                             # actor -> station model
 HALLS = {'hightech': 'corridor', 'agency': 'white_hall', 'works': 'greaseway', 'bunker': 'bunker_hall', 'crypt': 'catacomb',
-         'executive': 'ex_hall', 'megaplex': 'mp_concourse', 'hospital': 'hs_hall', 'basilica': 'bb_cloister'}
+         'executive': 'ex_hall', 'megaplex': 'mp_concourse', 'hospital': 'hs_hall', 'basilica': 'bb_cloister', 'home': 'hm_hall'}
 # Where each monster is at home (a style), and how it spends its time there. Anything not listed wanders the spine.
 HOMES = {'monoid': 'BREAK', 'custodian': 'SPINE', 'eggbot': 'mp_concourse', 'dancer': 'mp_cinema', 'drone': 'showroom', 'defender': 'ex_office',
          'deadbot': 'bunker_hall', 'plodder': 'LOBBY', 'mourner': 'chapel', 'princess': 'bb_nave', 'grease_monkey': 'foundry',
@@ -254,6 +254,9 @@ def kit_wing(b, side, kid):
         r = i % len(styles)
         if not all_mid[r]:
             r = max(range(len(styles)), key=lambda q: len(all_mid[q]))
+        if not all_mid[r]:                           # a wing of many narrow rooms has no middles: it goes against a wall like the rest
+            small.insert(0, n)
+            continue
         cx, cy = all_mid[r].pop(0)
         prop(n, cx, cy)
     order_ = [s for row in zip(*[sl + [None] * 40 for sl in all_slots]) for s in row if s]      # round the rooms in turn

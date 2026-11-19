@@ -685,3 +685,22 @@ store room, a sump and a vault underneath reached by a pit and a lift, and a sun
   starts with `prefix` hangs from its head and is driven by the engine, not by clips. It streams out behind the thing as
   it moves, swings wide when it turns, and overshoots and settles when it stops. Bones ending in `_b` are lower lengths
   and lean further and more loosely (the Mourner's tatters: `tools/blender/adopt_mourner.py`).
+
+
+## Home: the bunker (`kits/home`, `tools/blender/kits7.py`, `tools/levels/home.py`, `engine/home.gd`, `engine/profile.gd`)
+
+**The kit** (`home`, tag `hm`) is cozy brass steampunk that keeps a high-tech sense. Styles: `hm_hall`, `hm_living`, `hm_bedroom`, `hm_den`, `hm_comms`, `hm_armory`, `hm_robot` (walnut wainscot, a brass dado rail with a line of lamplight, plaster, a copper pipe under the cornice; variants with pipes and gauges, built-in bookshelves, an amber video cabinet, a wall lamp between pictures, gear trains under glass), `hm_bath` (white tile, teal band, chrome, cool light) and `hm_security` (grey riveted armour plate, green monitors). `door_hm_gear` is two walnut leaves under a lintel of six gears that turn as it opens (door `parts` with `rot_axis`); `door_hm_vault` is half a metre of steel that rolls aside on a rack in 2.4 s. Room furniture: `hm_bed`, `hm_dresser`, `hm_toilet`, `hm_shower`, `hm_sink`, `hm_medic` (wall), `hm_bookcase`, `hm_desk`, `hm_trophy` (9 `slots`), `hm_sofa`, `hm_armchair`, `hm_table`, `hm_video` (wall), `hm_radio`, `hm_rack` (6 `slots`), `hm_armor`, `hm_workbench`, `hm_cradle`, `hm_console`, `hm_lift`. Catalogue furnishings: `hm_plant`, `hm_painting` (wall), `hm_rug`, `hm_lamp` (lights), `hm_clock` (wall), `hm_globe`, `hm_gramophone`, `hm_aquarium`. Wall-mounted models have their height built in.
+
+**The level** is any level with `"home": true`. `Level.build` gives it a `Home` node (`level.home`). Furniture that does something carries `"use": {"type": "home", "what": <word>, "prompt": ...}` and `Prop.use` passes the word to `Home.use_prop`: `comms`, `ledger`, `trophy`, `rack`, `armor`, `locker`, `medic`, `bed`, `sofa`, `security`, `cradle`, `diagnostic`, `lift`. `Home` finds the rack, the armour stand, the trophy case and the cradle by `tag` (`rack`, `armor`, `trophy`, `cradle`). The home level gives the player no weapons (`"player": {"weapons": []}`) and is `off_duty`.
+
+**Profile** (autoload, `user://havenot_home.json`): `credits`, `weapons`, `armor`, `salvage` {item id: count}, `trophies` [item ids], `owned` {model: count}, `decor` [{m, x, z, yaw}], `robot`, `runs`, `deaths`, `best`. `--selftest` and `--noprofile` keep it in memory and never touch the file.
+- **Banking.** Treasure picked up is counted in `Game.haul`. When a level ends and the player is alive, `Main` calls `Profile.bank(credits, weapons, armor, haul)`; items whose def has `"trophy": true` (data crystal, Employee of the Century, heavy fuel cell) also go in the trophy case. Dying banks nothing.
+- **Setting out.** `Home.go(level_id)` sets `Profile.sortie`; the next level's player gets every banked weapon, the banked armour, and half a load of ammunition for each (`Profile.outfit`). Levels started from the title screen are not outfitted.
+- **Panels.** `Hud.repanel(owner, spec)` opens a panel or swaps the one that is open; an option may carry `"do": Callable`.
+- **The robot.** `Home.REPAIR` (`circuit` 3, `fuel_cell` 2) is taken from `salvage`; then `Profile.robot` is true and an off-duty `Home.ROBOT` (the Custodian) lives in the bunker and talks. Until then its model hangs in the cradle.
+- **Decorating.** `Home.CATALOGUE` is [model, price]. `buy(i)` pays from banked credits. **B** toggles decorating: the next unplaced thing is carried as a ghost on the floor in front of the player (snapped to 0.25 m and 45°), or on the wall being looked at for wall-mounted models; click places it (a `Prop`, saved in `decor`), **R** turns, **Z** or the wheel picks the next, **X** takes back the nearest placed thing within reach. To add a furnishing: model it in `kits7.py`, add it to `PROPS` and to `CATALOGUE`.
+- **Retiring** (the ledger) empties the profile.
+
+Self-test: `--level=home --selftest` checks the rooms, every working piece of furniture, banking and what goes on show, the repair, buying, placing (floor and wall), taking back, the vault door, the lift's destinations, the outfit, and that a reload finds it all as it was left.
+
+Not built yet: the outdoor near-area map (the security desk says so; the lift lists installations instead) and the Anomalous Structure.

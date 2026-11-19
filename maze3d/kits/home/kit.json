@@ -1,0 +1,484 @@
+{
+ "name": "Home Bunker",
+ "about": "The scavenger's own bunker: cozy brass steampunk that is still high technology. Walnut panelling under cream plaster, brass and copper pipe, gear trains that work the doors, oxblood leather, ceramic tile and oak floors, amber video in wood-and-brass cabinets, a line of lamplight on every dado rail. The bathroom is white tile and chrome; the security room is grey armour plate round a vault door. 11 walls, 8 floors, 8 ceilings, a gear door, a vault door, 20 pieces of room furniture and 8 things from the catalogue.",
+ "uses": [
+  "hightech",
+  "robots",
+  "loot"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.45,
+ "styles": {
+  "hm_hall": {
+   "floor": [
+    [
+     "floor_hm_tile",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_panel",
+     4
+    ],
+    [
+     "wall_hm_panel2",
+     3
+    ],
+    [
+     "wall_hm_pipes",
+     2
+    ],
+    [
+     "wall_hm_lamp",
+     2
+    ],
+    [
+     "wall_hm_gears",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_panel",
+     4
+    ],
+    [
+     "wall_hm_panel2",
+     3
+    ],
+    [
+     "wall_hm_pipes",
+     2
+    ],
+    [
+     "wall_hm_lamp",
+     2
+    ],
+    [
+     "wall_hm_gears",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_tin",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_tinlamp",
+    "every": 3
+   }
+  },
+  "hm_living": {
+   "floor": [
+    [
+     "floor_hm_wood",
+     4
+    ],
+    [
+     "floor_hm_rug",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_panel",
+     3
+    ],
+    [
+     "wall_hm_panel2",
+     3
+    ],
+    [
+     "wall_hm_lamp",
+     2
+    ],
+    [
+     "wall_hm_shelf",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_panel",
+     3
+    ],
+    [
+     "wall_hm_panel2",
+     3
+    ],
+    [
+     "wall_hm_lamp",
+     2
+    ],
+    [
+     "wall_hm_shelf",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_beam",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_lamp",
+    "every": 3
+   }
+  },
+  "hm_bedroom": {
+   "floor": [
+    [
+     "floor_hm_wood",
+     3
+    ],
+    [
+     "floor_hm_rug",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_panel2",
+     4
+    ],
+    [
+     "wall_hm_panel",
+     2
+    ],
+    [
+     "wall_hm_lamp",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_panel2",
+     4
+    ],
+    [
+     "wall_hm_panel",
+     2
+    ],
+    [
+     "wall_hm_lamp",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_beam",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_lamp",
+    "every": 3
+   }
+  },
+  "hm_den": {
+   "floor": [
+    [
+     "floor_hm_wood",
+     3
+    ],
+    [
+     "floor_hm_rug",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_shelf",
+     4
+    ],
+    [
+     "wall_hm_panel",
+     2
+    ],
+    [
+     "wall_hm_lamp",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_shelf",
+     4
+    ],
+    [
+     "wall_hm_panel",
+     2
+    ],
+    [
+     "wall_hm_lamp",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_tin",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_tinlamp",
+    "every": 3
+   }
+  },
+  "hm_bath": {
+   "floor": [
+    [
+     "floor_hm_white",
+     4
+    ],
+    [
+     "floor_hm_drain",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_tile",
+     1
+    ],
+    [
+     "wall_hm_tile2",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_tile",
+     1
+    ],
+    [
+     "wall_hm_tile2",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_white",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_whitelight",
+    "every": 3
+   }
+  },
+  "hm_comms": {
+   "floor": [
+    [
+     "floor_hm_terra",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_screen",
+     3
+    ],
+    [
+     "wall_hm_pipes",
+     2
+    ],
+    [
+     "wall_hm_panel",
+     2
+    ],
+    [
+     "wall_hm_gears",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_screen",
+     3
+    ],
+    [
+     "wall_hm_pipes",
+     2
+    ],
+    [
+     "wall_hm_panel",
+     2
+    ],
+    [
+     "wall_hm_gears",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_beam",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_lamp",
+    "every": 3
+   }
+  },
+  "hm_armory": {
+   "floor": [
+    [
+     "floor_hm_terra",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_panel",
+     3
+    ],
+    [
+     "wall_hm_pipes",
+     2
+    ],
+    [
+     "wall_hm_gears",
+     1
+    ],
+    [
+     "wall_hm_lamp",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_panel",
+     3
+    ],
+    [
+     "wall_hm_pipes",
+     2
+    ],
+    [
+     "wall_hm_gears",
+     1
+    ],
+    [
+     "wall_hm_lamp",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_tin",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_tinlamp",
+    "every": 3
+   }
+  },
+  "hm_robot": {
+   "floor": [
+    [
+     "floor_hm_terra",
+     2
+    ],
+    [
+     "floor_hm_tile",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_gears",
+     3
+    ],
+    [
+     "wall_hm_pipes",
+     3
+    ],
+    [
+     "wall_hm_screen",
+     1
+    ],
+    [
+     "wall_hm_panel",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_gears",
+     3
+    ],
+    [
+     "wall_hm_pipes",
+     3
+    ],
+    [
+     "wall_hm_screen",
+     1
+    ],
+    [
+     "wall_hm_panel",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_beam",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_lamp",
+    "every": 3
+   }
+  },
+  "hm_security": {
+   "floor": [
+    [
+     "floor_hm_steel",
+     3
+    ],
+    [
+     "floor_hm_steel2",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_hm_steel",
+     1
+    ],
+    [
+     "wall_hm_steel2",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_hm_steel",
+     1
+    ],
+    [
+     "wall_hm_steel2",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_hm_steel",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_hm_steellight",
+    "every": 3
+   }
+  }
+ }
+}

@@ -89,6 +89,7 @@ func _on_body(b: Node) -> void:
 		"treasure":
 			Game.add_credits(int(d.get("value", 10)))
 			Game.stats["treasure"] += 1
+			Game.haul[d.get("item", "")] = int(Game.haul.get(d.get("item", ""), 0)) + 1
 			Game.say("%s  +%d cr" % [name, d.get("value", 10)], "loot")
 		"health":
 			if pl.hp >= pl.max_hp:

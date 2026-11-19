@@ -26,6 +26,7 @@ func _ready() -> void:
 	Game.hud = hud
 	hud.start_requested.connect(_on_start)
 	hud.restart_requested.connect(func(): _on_start(_level_id))
+	Game.ended.connect(_on_ended)
 	var first: String = _args.get("level", LM.game.get("start", ""))
 	_load(first, true)
 	if _args.has("level"):
@@ -102,12 +103,25 @@ func _load(id: String, _attract: bool) -> void:
 	var cfg: Dictionary = LM.game.get("player", {}).duplicate(true)
 	for k in data.get("player", {}):
 		cfg[k] = data["player"][k]
+	if Profile.sortie and not data.get("home", false):      # they came by the bunker's lift: the armoury comes too
+		Profile.outfit(cfg)
+	Profile.sortie = false
 	player.setup(level, cfg)
 	Game.player = player
 	Game.playing = true
 	if data.has("intro"):
 		Game.say(data["intro"], "info")
 	hud.refresh()
+
+
+## An expedition is over. Out alive: what was carried is banked in the bunker. Dead: it is not.
+func _on_ended(info: Dictionary) -> void:
+	if level == null or level.data.get("home", false):
+		return
+	if info.get("dead", false):
+		Profile.died()
+	elif player:
+		Profile.bank(Game.credits, player.weapons, player.armor, Game.haul)
 
 
 func _process(_dt: float) -> void:

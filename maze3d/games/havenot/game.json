@@ -24,7 +24,8 @@
   "dust",
   "omni",
   "robots",
-  "loot"
+  "loot",
+  "home"
  ],
  "defs": [
   "defs/arsenal.json",
@@ -33,6 +34,7 @@
   "defs/sounds.json"
  ],
  "levels": [
+  "levels/home.json",
   "levels/deepworks.json",
   "levels/menagerie.json",
   "levels/staffonly.json",
@@ -416,6 +418,7 @@
  },
  "start": "deepworks",
  "menu": [
+  "home",
   "deepworks",
   "menagerie",
   "staffonly",
