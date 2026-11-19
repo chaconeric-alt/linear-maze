@@ -122,7 +122,7 @@ def poster(f, at, wall, title, text, model='an_poster_a', along=0.0, ink=(0.95, 
     put(f, model, at, wall, along, use=dict(type='read', prompt='Read the poster', kicker='Poster', title=title, text=text))
     dx, dz = SIDE[wall]
     ax, az = (0, 1) if dx else (1, 0)
-    sign(f, title, at, FACE[wall], size=42, y=2.72, color=ink if min(ink) > 0.3 else (1.0, 0.85, 0.3), width=330, out=0.1, offset=[ax * along, 0, az * along])
+    sign(f, title, at, FACE[wall], size=38, y=2.76, color=ink if min(ink) > 0.3 else (1.0, 0.85, 0.3), width=290, out=0.2, offset=[ax * along, 0, az * along])
 
 
 def msg(text, kind='info', **kw):

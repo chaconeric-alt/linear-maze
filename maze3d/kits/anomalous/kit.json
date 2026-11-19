@@ -63,7 +63,8 @@
    "lights": {
     "tile": "ceil_an_gridlight",
     "every": 3
-   }
+   },
+   "wall_plain": "wall_an_office"
   },
   "an_reception": {
    "floor": [
@@ -121,7 +122,8 @@
    "lights": {
     "tile": "ceil_an_gridlight",
     "every": 2
-   }
+   },
+   "wall_plain": "wall_an_office"
   },
   "an_office": {
    "floor": [
@@ -183,7 +185,8 @@
    "lights": {
     "tile": "ceil_an_gridlight",
     "every": 2
-   }
+   },
+   "wall_plain": "wall_an_office"
   },
   "an_cafe": {
    "floor": [
@@ -263,7 +266,8 @@
    "lights": {
     "tile": "ceil_an_gridlight",
     "every": 3
-   }
+   },
+   "wall_plain": "wall_an_office"
   },
   "an_lab": {
    "floor": [
@@ -309,7 +313,8 @@
    "lights": {
     "tile": "ceil_an_whitelight",
     "every": 2
-   }
+   },
+   "wall_plain": "wall_an_white"
   },
   "an_chamber": {
    "floor": [
@@ -351,7 +356,8 @@
    "lights": {
     "tile": "ceil_an_whitelight",
     "every": 3
-   }
+   },
+   "wall_plain": "wall_an_white"
   },
   "an_core": {
    "floor": [
@@ -389,7 +395,8 @@
    "lights": {
     "tile": "ceil_an_corelight",
     "every": 2
-   }
+   },
+   "wall_plain": "wall_an_core"
   }
  }
 }

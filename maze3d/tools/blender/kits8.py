@@ -360,8 +360,8 @@ def an_reception():
 def _poster(name, ground, band, title):
     def make():
         m = Mesh(name)
-        m.push(T(0, 0, 2.15))
-        m.box((1.5, 0.04, 2.0), at=(0, -0.02, 0), mat='an_grey', bevel=0.015)
+        m.push(T(0, -0.09, 2.15))                          # on a backing board: walls have panels and rails that a flat sheet would sink into
+        m.box((1.5, 0.13, 2.0), at=(0, 0.025, 0), mat='an_grey', bevel=0.015)
         m.box((1.38, 0.012, 1.88), at=(0, -0.046, 0), mat=ground)
         m.box((1.38, 0.008, 0.42), at=(0, -0.054, 0.62), mat=band)
         m.cyl(0.32, 0.008, at=(0, -0.054, -0.12), rot=(90, 0, 0), mat=band, seg=20)                        # the picture is always a circle with a face

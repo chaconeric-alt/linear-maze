@@ -54,6 +54,7 @@ var _home: Vector3
 var _wander_t := 0.0
 var _wander := Vector3.ZERO
 var _fly := false
+var _vis_bot := 0.0              # ... and how far its underside is (below it: negative)
 var _vis_top := -1.0             # how far the model's top is above its origin (measured once; flyers duck under low ceilings)
 var _fixed := false
 const G := 22.0
@@ -319,6 +320,11 @@ func _physics_process(dt: float) -> void:
 				if _air_t > 0.4 and not on_lift:
 					_at_rest = true
 					velocity = Vector3.ZERO
+					if _fly and _vis_top >= 0.0:             # what can be shot of a flyer is up where it flew, so its body comes to rest with the model partly under the floor: lift the model onto it
+						var foot: float = _cs.position.y - d.get("height", 1.6) / 2.0
+						var want_y: float = foot - _vis_bot + 0.03
+						if want_y > vis.position.y:
+							create_tween().tween_property(vis, "position:y", want_y, 0.25)
 			else:
 				_air_t = 0.0
 		return
@@ -345,6 +351,7 @@ func _physics_process(dt: float) -> void:
 			var acc: Array = [null]
 			Pickup._bounds(vis, Transform3D.IDENTITY, acc)
 			_vis_top = ((acc[0] as AABB).end.y - vis.position.y) if acc[0] != null else d.get("height", 1.6)
+			_vis_bot = ((acc[0] as AABB).position.y - vis.position.y) if acc[0] != null else 0.0
 		var fc := level.cell_of(global_position)
 		var room_top: float = level.ceiling_y(fc.x, fc.y, floori((global_position.y + 0.9) / level.H)) - global_position.y - 0.12
 		vis.position.y = minf(vis.position.y, maxf(0.0, room_top - _vis_top))

@@ -75,6 +75,7 @@ func build(level_data: Dictionary) -> void:
 	_glass.collision_layer = GLASS
 	_glass.collision_mask = 0
 	add_child(_glass)
+	_find_hung()
 	_build_shell()
 	_build_collision()
 	_build_nav()
@@ -441,6 +442,8 @@ func _shell_cell(batches: Dictionary, styles: Dictionary, x: int, y: int, f: int
 			var need: bool = not (edge == "window" and lv == 0) if edge != "" else not open_s(n.x, n.y, f + lv)
 			if need:
 				var tile := _pick(st.get("wall") if lv == 0 else st.get("wall_upper", st.get("wall")))
+				if lv == 0 and _hung.has(Vector4i(x, y, f, d)):      # something hangs here: the plain wall, so it is not lost among pipes and screens
+					tile = _plain_wall(st)
 				_add(batches, tile, Transform3D(Basis(Vector3.UP, DIR_ROT[d]), wp + Vector3(0, lv * H, 0)), x, y, room, st)
 	for lv in [0] + c["decks"]:                      # a rail wherever a floor or a balcony ends in a drop
 		if lv > 0:                                       # a balcony: a slab and a floor on it, and a ceiling on its underside
@@ -1138,6 +1141,41 @@ func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 	return n
 
 
+## Wall faces that have a sign or a wall-mounted prop on them: Vector4i(x, y, storey, side). Those get the style's plain wall
+## ("wall_plain" in the style, or else its commonest wall tile).
+var _hung: Dictionary = {}
+
+
+func _find_hung() -> void:
+	_hung.clear()
+	for e in data.get("things", []):
+		if not (e is Dictionary) or not e.has("at"):
+			continue
+		var hangs: bool = e.has("sign")
+		if e.has("prop"):
+			hangs = LM.model_meta(kit_id, e["prop"]).get("mount", "") == "wall"
+		if hangs:
+			var s := int(e.get("level", 0))
+			var p := Vector2i(int(e["at"][0]), int(e["at"][1]))
+			_hung[Vector4i(p.x, p.y, s, _wall_side(p, e.get("face", ""), s))] = true
+
+
+func _plain_wall(st: Dictionary) -> String:
+	if st.has("wall_plain"):
+		return st["wall_plain"]
+	var list: Variant = st.get("wall")
+	if list is String:
+		return list
+	var best := ""
+	var bw := -1.0
+	for it in list:
+		var wgt: float = it[1] if it is Array else 1.0
+		if wgt > bw:
+			bw = wgt
+			best = it[0] if it is Array else it
+	return best
+
+
 func _wall_side(p: Vector2i, want: String, s := 0) -> int:
 	# `want` is the way the thing faces; it hangs on the wall behind it
 	if DIR_NAMES.has(want):
@@ -1159,25 +1197,51 @@ func _sign(e: Dictionary, p: Vector2i) -> Node3D:
 	l.outline_size = 8
 	l.shaded = false
 	l.double_sided = false
-	l.width = float(e.get("width", 800))
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.outline_size = 0
 	# Lettering is shown on a monitor of its own: a dark screen in a bezel, standing off the wall far enough to clear whatever
-	# the wall has on it (pipes, shelves, a poster), with a mount behind it. "plain": true is bare lettering, as it used to be.
+	# the wall has on it, with a mount behind it. "plain": true is bare lettering, as it used to be. The words are wrapped here
+	# (to "width" pixels; a word too long for it makes the lettering smaller) so the screen is exactly the size of what it shows.
+	var fnt: Font = l.font if l.font != null else ThemeDB.fallback_font
+	var maxw: float = minf(float(e.get("width", 800)), (C - 0.7) / l.pixel_size)
+	for word in l.text.replace("\n", " ").split(" ", false):
+		var ww: float = fnt.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, l.font_size).x
+		if ww > maxw:
+			l.font_size = maxi(12, int(l.font_size * maxw / ww))
+	var lines: Array = []
+	for para in l.text.split("\n"):
+		var cur := ""
+		for word in para.split(" ", false):
+			var tryl: String = word if cur == "" else cur + " " + word
+			if cur != "" and fnt.get_string_size(tryl, HORIZONTAL_ALIGNMENT_LEFT, -1, l.font_size).x > maxw:
+				lines.append(cur)
+				cur = word
+			else:
+				cur = tryl
+		lines.append(cur)
+	l.text = "\n".join(lines)
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var px := Vector2.ZERO
+	for ln in lines:
+		px.x = maxf(px.x, fnt.get_string_size(ln, HORIZONTAL_ALIGNMENT_LEFT, -1, l.font_size).x)
+	px.y = lines.size() * (fnt.get_height(l.font_size) + l.line_spacing)
+	px *= l.pixel_size
+	var sw: float = px.x + 0.3
+	var sh: float = px.y + 0.2
+	var st := int(e.get("level", 0))
 	var out: float = e.get("out", 0.36)                 # how far the screen's face stands off the wall
 	var root := Node3D.new()
 	add_child(root)
-	root.position = center(p, int(e.get("level", 0)) * H) + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - out) + Vector3(0, e.get("y", 2.6), 0) + LM.vec(e.get("offset"), Vector3.ZERO)
+	var yy: float = e.get("y", 2.6)
+	if not e.get("plain", false):                       # all of it below the ceiling (lower under a room than under rock) and clear of the floor
+		var top: float = ceiling_y(p.x, p.y, st) - st * H - 0.12
+		yy = clampf(yy, sh / 2 + 0.2, maxf(sh / 2 + 0.2, top - sh / 2 - 0.07))
+	root.position = center(p, st * H) + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - out) + Vector3(0, yy, 0) + LM.vec(e.get("offset"), Vector3.ZERO)
 	root.rotation.y = DIR_ROT[d]
 	root.add_child(l)
 	if e.get("plain", false):
 		l.outline_size = 8
 		return root
 	l.position.z = 0.012
-	var fnt: Font = l.font if l.font != null else ThemeDB.fallback_font      # measured, not asked of the label: it does not know its size until it is drawn
-	var px: Vector2 = fnt.get_multiline_string_size(l.text, HORIZONTAL_ALIGNMENT_CENTER, l.width - 40.0, l.font_size) * l.pixel_size
-	var sw: float = minf(px.x, C - 0.5) + 0.3
-	var sh: float = px.y * 1.12 + 0.24
 	var tint: Color = l.modulate
 	var screen := MeshInstance3D.new()
 	var qm := BoxMesh.new()
