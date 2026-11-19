@@ -105,6 +105,8 @@ func _on_body(b: Node) -> void:
 			if not pl.add_ammo(d.get("ammo", "bullets"), int(d.get("amount", 10))):
 				return
 			Game.say("%s  +%d" % [name, d.get("amount", 10)], "loot")
+		"quest":                                     # something the story wants: it sets its "flag", and says what it is
+			Game.say(d.get("text", name), "key")
 		"key":
 			Game.give_key(d.get("color", "red"))
 			Game.say("%s card. Somebody's whole career, once." % str(d.get("color", "red")).capitalize(), "key")

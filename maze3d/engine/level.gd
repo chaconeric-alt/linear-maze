@@ -33,6 +33,7 @@ var start_level := 0
 var tiles_at: Dictionary = {}    # Vector2i -> [[tile id, where it was laid], ..]: which tile is where (Identify)
 var _env: Environment
 var home: Home = null             # the bunker's workings, on a level with "home": true (engine/home.gd)
+var died: Array = []               # [kind, storey] of everything that has died here, in order (the repair bay reads it)
 var targets: Array = []         # Targets (engine/target.gd)
 var _boxes: Array = []           # unit cubes that make decks, ramps and railings
 var _rails: Array = []
@@ -406,7 +407,8 @@ func _shell_cell(batches: Dictionary, styles: Dictionary, x: int, y: int, f: int
 	var room: String = c["room"]
 	var quarter := _rng.randi() % 4 * PI / 2
 	if not c.get("pit", false):                          # a pit has a trapdoor for a floor; a pool's floor is down in the pool
-		_add(batches, _pick(st.get("floor")), Transform3D(Basis(Vector3.UP, quarter), p - Vector3(0, sunk if c["fluid"] else 0.0, 0)), x, y, room)
+		# a floor above the lowest is laid 12 mm proud: the walls of a narrower room below reach exactly to its top face, and two faces in one plane flicker
+		_add(batches, _pick(st.get("floor")), Transform3D(Basis(Vector3.UP, quarter), p - Vector3(0, sunk if c["fluid"] else (-0.012 if f > f_min else 0.0), 0)), x, y, room)
 	var ceil_tile := _pick(st.get("ceiling"))
 	var li: Dictionary = _lights_for(st, room)
 	if not li.is_empty() and c["door"] == "":
@@ -1114,10 +1116,16 @@ func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 		it.position = pos + Vector3(0, e.get("y", 0.0 if e.get("rest", false) else 1.0), 0)
 		it.setup(self, e, kit_id)
 		n = it
+	elif e.has("rebuild"):                           # a repair bay: destroyed robots come back out of it (engine/rebuilder.gd)
+		var rb := Rebuilder.new()
+		add_child(rb)
+		rb.position = pos
+		rb.setup(self, e)
+		n = rb
 	elif e.has("trap"):
 		var tr := Trap.new()
 		add_child(tr)
-		tr.position = center(p, s * H)
+		tr.position = center(p, s * H) + Vector3(off.x, 0, off.z)
 		tr.setup(self, e, p, kit_id)
 		n = tr
 	elif e.has("sign"):
@@ -1151,10 +1159,10 @@ func _sign(e: Dictionary, p: Vector2i) -> Node3D:
 	l.outline_size = 8
 	l.shaded = false
 	l.double_sided = false
-	l.width = 800
+	l.width = float(e.get("width", 800))
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(l)
-	l.position = center(p, int(e.get("level", 0)) * H) + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - 0.2) + Vector3(0, e.get("y", 2.6), 0)
+	l.position = center(p, int(e.get("level", 0)) * H) + Vector3(DIRS[d].x, 0, DIRS[d].y) * (C / 2 - 0.2) + Vector3(0, e.get("y", 2.6), 0) + LM.vec(e.get("offset"), Vector3.ZERO)
 	l.rotation.y = DIR_ROT[d]
 	return l
 
@@ -1441,6 +1449,7 @@ func _fire(kind: String, what: String) -> void:
 
 
 func actor_died(a: Node) -> void:
+	died.append([LM.defs["actors"].find_key(a.d), floor_of(a.global_position)])
 	var tag: String = a.tag
 	if tag == "":
 		return
@@ -1478,30 +1487,69 @@ func run_effect(ef: Dictionary, ctx: Dictionary) -> void:
 			for d in things_by_tag.get(tag, []):
 				if d is Door:
 					d.command(ef["type"])
-		"lights":
+		"lights":                                        # "room": "*" is every room; "floor": n keeps it to one storey
 			var on: bool = ef.get("on", true)
-			for l in lights_by_room.get(ef.get("room", ""), []):
-				l.set_meta("off", not on)
-				l.light_energy = l.get_meta("base") if on else 0.0
-				if ef.has("color"):
-					l.light_color = LM.col(ef["color"])
+			var which: Array = lights_by_room.keys() if ef.get("room", "") == "*" else [ef.get("room", "")]
+			for rn in which:
+				for l in lights_by_room.get(rn, []):
+					if not is_instance_valid(l) or (ef.has("floor") and floori((l.global_position.y - 0.1) / H) != int(ef["floor"])):
+						continue
+					l.set_meta("off", not on)
+					l.light_energy = l.get_meta("base") * float(ef.get("energy", 1.0)) if on else 0.0
+					if ef.has("color"):
+						l.light_color = LM.col(ef["color"])
+		"anger", "pacify":                               # off-duty things with that tag turn on you; or things stand down for good
+			for a in things_by_tag.get(tag, []):
+				if a is Enemy and is_instance_valid(a) and not a.dead:
+					if ef["type"] == "anger":
+						a.anger()
+					else:
+						a.stand_down()
+		"show", "hide":                                  # props placed with "hidden": true, and props that should go
+			for t in things_by_tag.get(tag, []):
+				if is_instance_valid(t) and t.has_method("show_up"):
+					t.show_up(ef["type"] == "show")
+		"drop":                                          # things to pick up, where the thing that ran the effect is (or at the player's feet)
+			var base: Vector3 = Game.player.global_position + Vector3(0, 0.2, 0)
+			if ctx.has("prop") and is_instance_valid(ctx["prop"]):
+				var pr: Node3D = ctx["prop"]
+				var toward: Vector3 = Game.player.global_position - pr.global_position
+				toward.y = 0
+				base = pr.global_position + toward.normalized() * minf(1.5, toward.length() * 0.6)
+				var st: int = floor_of(Game.player.global_position)
+				var bc := cell_of(base)
+				if not open_s(bc.x, bc.y, st):               # that is inside a wall: in front of the thing, then, or at their feet
+					base = pr.global_position + pr.global_transform.basis.z * 1.3
+					bc = cell_of(base)
+					if not open_s(bc.x, bc.y, st):
+						base = Game.player.global_position
+				base.y = floor_y(Game.player.global_position) + 0.2
+			var items: Array = ef.get("items", [])
+			for i in items.size():
+				var pk := Pickup.new()
+				add_child(pk)
+				var a2: float = TAU * i / maxf(1.0, items.size())
+				pk.global_position = base + Vector3(cos(a2), 0, sin(a2)) * (0.5 if items.size() > 1 else 0.0) + Vector3(0, 0.9, 0)
+				pk.setup(self, items[i] if items[i] is Dictionary else {"item": items[i]}, kit_id)
 		"spawn":
 			var spots: Array = tags.get(tag, [])
+			var storey: int = int(ef.get("level", 0))        # "level": the storey its tagged cells are on
 			if ef.get("here", false) and ctx.has("at"):        # where the thing that ran the effect stands
 				spots = [cell_of(ctx["at"])]
+				storey = floor_of(ctx["at"])
 			for i in int(ef.get("count", 1)):
 				if spots.is_empty():
 					break
 				var p: Vector2i = spots[i % spots.size()]
-				var e := {"actor": ef.get("actor", ""), "tag": ef.get("as", ""), "alert": ef.get("alert", true),
+				var e := {"actor": ef.get("actor", ""), "tag": ef.get("as", ""), "alert": ef.get("alert", true), "level": storey,
 					"offset": [randf_range(-1.0, 1.0), 0, randf_range(-1.0, 1.0)]}
 				spawn_thing(e, p)
 		"alarm":
 			LM.sound("alarm")
 			for a in actors:
 				if is_instance_valid(a) and not a.dead:
-					if not ef.has("radius") or a.global_position.distance_to(Game.player.global_position) < ef["radius"]:
-						a.alert()
+					if not ef.has("radius") or (a.global_position.distance_to(Game.player.global_position) < ef["radius"] and floor_of(a.global_position) == floor_of(Game.player.global_position)):
+						a.alert()                                # an alarm with a radius is heard on its own floor
 		"enable", "disable":
 			for t in things_by_tag.get(tag, []):
 				if t.has_method("set_enabled"):

@@ -1,0 +1,395 @@
+{
+ "name": "The Anomalous Structure",
+ "about": "Installation A of the 2D game: an Age of War advertising agency. Institutional offices (beige panels, carpet tile, a drop ceiling with fluorescent panels, a coffee shop), Sterile White labs (seamless white with a hairline of cyan light) and the Core (black glass with pink traces). 13 walls, 8 floors, 7 ceilings, a force-field door, and everything the dungeon needs that no other kit had: the reception desk, posters, cubicles, a slot machine, the coffee counter and its tip jar, a wall safe, a dead scavenger, the test console, a hologram, packing crates, mist generators, the shopper tablet, the security station, the repair gantry, the core and its lectern, the dart plate, quest items and the arc carbine.",
+ "uses": [
+  "hightech",
+  "agency",
+  "executive",
+  "megaplex",
+  "bunker",
+  "works",
+  "robots",
+  "loot"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "grime": 0.7,
+ "styles": {
+  "an_hall": {
+   "floor": [
+    [
+     "floor_an_lino",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_an_office",
+     4
+    ],
+    [
+     "wall_an_grille",
+     2
+    ],
+    [
+     "wall_an_notice",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_an_office",
+     4
+    ],
+    [
+     "wall_an_grille",
+     2
+    ],
+    [
+     "wall_an_notice",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_an_grid",
+     4
+    ],
+    [
+     "ceil_an_gridbroken",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_an_gridlight",
+    "every": 3
+   }
+  },
+  "an_reception": {
+   "floor": [
+    [
+     "floor_an_lino",
+     3
+    ],
+    [
+     "floor_an_line",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_an_office",
+     3
+    ],
+    [
+     "wall_an_ad",
+     1
+    ],
+    [
+     "wall_an_ad2",
+     1
+    ],
+    [
+     "wall_an_blinds",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_an_office",
+     3
+    ],
+    [
+     "wall_an_ad",
+     1
+    ],
+    [
+     "wall_an_ad2",
+     1
+    ],
+    [
+     "wall_an_blinds",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_an_grid",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_an_gridlight",
+    "every": 2
+   }
+  },
+  "an_office": {
+   "floor": [
+    [
+     "floor_an_carpet",
+     3
+    ],
+    [
+     "floor_an_carpet2",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_an_office",
+     3
+    ],
+    [
+     "wall_an_notice",
+     1
+    ],
+    [
+     "wall_an_grille",
+     1
+    ],
+    [
+     "wall_an_blinds",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_an_office",
+     3
+    ],
+    [
+     "wall_an_notice",
+     1
+    ],
+    [
+     "wall_an_grille",
+     1
+    ],
+    [
+     "wall_an_blinds",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_an_grid",
+     4
+    ],
+    [
+     "ceil_an_gridbroken",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_an_gridlight",
+    "every": 2
+   }
+  },
+  "an_cafe": {
+   "floor": [
+    [
+     "floor_an_check",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_an_cafe",
+     2
+    ],
+    [
+     "wall_an_cafe2",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_an_cafe",
+     2
+    ],
+    [
+     "wall_an_cafe2",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_an_grid",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_an_gridlight",
+    "every": 2
+   }
+  },
+  "an_store": {
+   "floor": [
+    [
+     "floor_an_lino",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_an_office",
+     2
+    ],
+    [
+     "wall_an_grille",
+     2
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_an_office",
+     2
+    ],
+    [
+     "wall_an_grille",
+     2
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_an_gridbroken",
+     2
+    ],
+    [
+     "ceil_an_grid",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_an_gridlight",
+    "every": 3
+   }
+  },
+  "an_lab": {
+   "floor": [
+    [
+     "floor_an_white",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_an_white",
+     3
+    ],
+    [
+     "wall_an_white2",
+     2
+    ],
+    [
+     "wall_an_white3",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_an_white",
+     3
+    ],
+    [
+     "wall_an_white2",
+     2
+    ],
+    [
+     "wall_an_white3",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_an_white",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_an_whitelight",
+    "every": 2
+   }
+  },
+  "an_chamber": {
+   "floor": [
+    [
+     "floor_an_white",
+     3
+    ],
+    [
+     "floor_an_ring",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_an_white",
+     3
+    ],
+    [
+     "wall_an_white2",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_an_white",
+     3
+    ],
+    [
+     "wall_an_white2",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_an_white",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_an_whitelight",
+    "every": 3
+   }
+  },
+  "an_core": {
+   "floor": [
+    [
+     "floor_an_core",
+     1
+    ]
+   ],
+   "wall": [
+    [
+     "wall_an_core",
+     3
+    ],
+    [
+     "wall_an_core2",
+     1
+    ]
+   ],
+   "wall_upper": [
+    [
+     "wall_an_core",
+     3
+    ],
+    [
+     "wall_an_core2",
+     1
+    ]
+   ],
+   "ceiling": [
+    [
+     "ceil_an_core",
+     1
+    ]
+   ],
+   "lights": {
+    "tile": "ceil_an_corelight",
+    "every": 2
+   }
+  }
+ }
+}

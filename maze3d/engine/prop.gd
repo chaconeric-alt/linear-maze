@@ -24,6 +24,8 @@ var _side := 0.0
 var _bar: Node3D
 var _bar_rest := Vector3.ZERO
 var _rattle := 0.0
+var _layer_was := 0
+var _lights: Array = []
 
 
 func setup(lv: Level, entry: Dictionary, kit: String) -> void:
@@ -81,6 +83,8 @@ func setup(lv: Level, entry: Dictionary, kit: String) -> void:
 		add_to_group("breakable")
 	if e.has("use"):
 		add_to_group("usable")
+	if e.get("hidden", false):                       # not there until a "show" effect on its tag
+		_hide_now.call_deferred()
 	if e.has("screen") and meta.has("screen"):
 		var sc: Dictionary = meta["screen"]
 		_label = Label3D.new()
@@ -193,6 +197,39 @@ func _sweep() -> void:
 	tw.tween_property(_bar, "position:y", _bar_rest.y, 0.35)
 
 
+## "hidden": true and the effects show / hide. A thing that is shown comes up through the floor.
+func _hide_now() -> void:
+	visible = false
+	_layer_was = collision_layer
+	collision_layer = 0
+	remove_from_group("usable")
+	for l in level.get_children():
+		if l is OmniLight3D and l.get_meta("prop", false) and l.global_position.distance_to(global_position) < 4.5 and not l.has_meta("owner"):
+			l.set_meta("owner", get_instance_id())
+			l.visible = false
+			_lights.append(l)
+	level.block(level.cell_of(global_position), false, roundi(global_position.y / level.H))
+
+
+func show_up(on: bool) -> void:
+	if on == visible:
+		return
+	if not on:
+		_hide_now()
+		return
+	visible = true
+	collision_layer = _layer_was if _layer_was != 0 else 1
+	if e.has("use"):
+		add_to_group("usable")
+	for l in _lights:
+		if is_instance_valid(l):
+			l.visible = true
+	var y := position.y
+	position.y = y - 2.2
+	create_tween().tween_property(self, "position:y", y, 1.2).set_trans(Tween.TRANS_SINE)
+	LM.sound("door_heavy", global_position)
+
+
 func set_enabled(on: bool) -> void:
 	if not on and not _walk.is_empty():
 		_walk_left = 0
@@ -226,6 +263,8 @@ func use(_player: Node) -> void:
 			used += 1
 			_open_target = 1.0
 			LM.sound("cache", global_position)
+			if u.has("text"):
+				Game.say(u["text"], u.get("text_kind", "info"))
 			var i := 0
 			for it in u.get("loot", []):
 				var p := Pickup.new()
@@ -234,11 +273,14 @@ func use(_player: Node) -> void:
 				p.setup(level, it, kit_id)
 				var a: float = TAU * i / maxf(1.0, u["loot"].size()) + global_rotation.y
 				var to := global_position + Vector3(cos(a) * 1.5, 1.0, sin(a) * 1.5 + 0.2)
+				var tc := level.cell_of(to)
+				if not level.open_s(tc.x, tc.y, level.floor_of(global_position + global_transform.basis.z * 0.8 + Vector3(0, 0.5, 0))):      # against a wall: it all comes out the front
+					to = global_position + global_transform.basis.z * 1.3 + global_transform.basis.x * (i - (u["loot"].size() - 1) / 2.0) * 0.6 + Vector3(0, 1.0, 0)
 				var tw := p.create_tween()
 				tw.tween_property(p, "global_position", (p.global_position + to) / 2 + Vector3(0, 1.0, 0), 0.25)
 				tw.tween_property(p, "global_position", to, 0.25)
 				i += 1
-			Game.run_effects(u.get("effects"))
+			Game.run_effects(u.get("effects"), {"at": global_position, "prop": self})
 		"locker":
 			# what is in it comes out: things to take, things that bite, or things that go off
 			used += 1

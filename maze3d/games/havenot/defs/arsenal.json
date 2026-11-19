@@ -80,6 +80,31 @@
     -0.22,
     -0.38
    ]
+  },
+  "arc": {
+   "name": "Arc Carbine",
+   "model": "weapon_arc",
+   "kit": "anomalous",
+   "ammo": "cells",
+   "per_shot": 1,
+   "pickup_ammo": 30,
+   "damage": 11,
+   "rate": 9.0,
+   "spread": 1.5,
+   "recoil": 0.22,
+   "kick": 0.03,
+   "range": 38,
+   "sound": "zap",
+   "color": [
+    0.4,
+    0.92,
+    1.0
+   ],
+   "hold": [
+    0.24,
+    -0.2,
+    -0.42
+   ]
   }
  },
  "projectiles": {

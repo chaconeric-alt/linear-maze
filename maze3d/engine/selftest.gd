@@ -74,6 +74,12 @@ func run(m: Node) -> void:
 	Game.ended.disconnect(Game.hud._on_end)       # the test dies on purpose; keep the end screen out of it
 	await _frames(10)
 	print("INFO  level ", level.data.get("id"), ": ", level.w, "x", level.h, " cells, ", level.actors.size(), " actors, ", level.doors.size(), " doors")
+	if OS.get_cmdline_user_args().has("--story") and level.data.get("id", "") == "anomalous":      # the Anomalous Structure, played the way it is meant to go
+		await _anomalous()
+		print("RESULT  %d failures" % fails)
+		get_tree().paused = false
+		get_tree().quit(fails)
+		return
 	if level.home:                                   # the bunker: nothing to fight and no way to finish; it has a test of its own
 		await _home()
 		print("RESULT  %d failures" % fails)
@@ -124,7 +130,10 @@ func run(m: Node) -> void:
 	for n in level.get_children():
 		if (n is Prop or n is Pickup or n is Enemy) and absf(n.global_position.y) > 2.0 and not (n is Enemy and (n._surf != 0 or n.d.get("mount", "") == "ceiling" or n._fly)):
 			upstairs += 1
-			if not level.reach(start, n.global_position) or (not n is Prop and absf(level.floor_y(n.global_position) - n.global_position.y) > 1.6):
+			var got: bool = level.reach(start, n.global_position)
+			if not got and n is Prop:                # on a wall: it is reached from in front of it
+				got = level.reach(start, n.global_position + n.global_transform.basis.z * 0.9)
+			if not got or (not n is Prop and absf(level.floor_y(n.global_position) - n.global_position.y) > 1.6):
 				stranded += 1
 				print("INFO  no way up to ", n.get_class(), " at ", n.global_position)
 	if upstairs > 0:
@@ -142,7 +151,12 @@ func run(m: Node) -> void:
 			Game.over = false
 			pl.global_position = n.global_position + Vector3(0, 0.05, 0)
 			await _frames(330)
-			_say(pl.hp < pl.max_hp, "%s trap at %s hurts (%.0f)" % [n.kind, n.cell_pos, pl.max_hp - pl.hp])
+			if n.e.get("trip", false):                # a tripwire tells somebody instead
+				_say(not n.enabled, "the tripwire at %s trips, once" % n.cell_pos)
+			elif float(n.e.get("damage", 1.0)) <= 0.0:    # ambiance
+				_say(true, "%s at %s is harmless, as it says" % [n.kind, n.cell_pos])
+			else:
+				_say(pl.hp < pl.max_hp, "%s trap at %s hurts (%.0f)" % [n.kind, n.cell_pos, pl.max_hp - pl.hp])
 	pl.max_hp = 1000000.0
 	pl.hp = pl.max_hp
 	pl.dead = false
@@ -159,6 +173,16 @@ func run(m: Node) -> void:
 			continue
 		if (n is Pickup and n._rest and n.position.y - level.floor_y(n.position) > 0.4) or (n is Enemy and n.dock != null and n.dock._open < 0.5):
 			continue                                 # in a container (E names the container, and what it holds), or behind a shutter
+		if n is Prop and not n.visible:
+			continue                                 # hidden until something shows it
+		if n is Trap or n is Pickup:                 # standing in or on a piece of furniture (a vent under its generator, a gun on a pedestal): E names the furniture
+			var onp := false
+			for q in level.get_children():
+				if q is Prop and q.visible and absf(q.global_position.y - n.global_position.y) < 2.5 and Vector2(q.global_position.x - n.global_position.x, q.global_position.z - n.global_position.z).length() < 0.8:
+					onp = true
+					break
+			if onp:
+				continue
 		var want := ""
 		var want2 := "\u0000"
 		if n is Station and n.bot != null and is_instance_valid(n.bot) and not n.bot.dead:
@@ -730,3 +754,284 @@ func _home() -> void:
 	hm = level.home
 	_say(hm != null and hm._placed.size() == saved.size() and hm.robot is Enemy and hm._shown.size() == 7 and Game.credits == int(Profile.d["credits"]),
 		"after coming back in: the furnishings, the robot, the rack and the credits are as they were left")
+
+
+# ------------------------------------------------------------------ the Anomalous Structure: its story, end to end
+func _thing(tag: String) -> Node3D:
+	var l: Array = level.things_by_tag.get(tag, [])
+	for n in l:
+		if is_instance_valid(n):
+			return n
+	return null
+
+
+## Use a thing and take the option whose label starts with `label` (hacks are instant and never fail here). False if it is not offered.
+func _pick(n: Node, label: String) -> bool:
+	if n == null:
+		return false
+	if Game.hud.in_panel():
+		Game.hud.close_panel()
+	pl.global_position = n.global_position + n.global_transform.basis.z * 1.6
+	pl.global_position.y = level.floor_y(n.global_position + n.global_transform.basis.z * 1.6 + Vector3(0, 0.5, 0)) + 0.05
+	n.use(pl)
+	await _frames(2)
+	if not Game.hud.in_panel():
+		return false
+	var opts: Array = Game.hud._panel_spec.get("options", [])
+	var found := false
+	for i in opts.size():
+		var o: Dictionary = opts[i]
+		if not str(o.get("label", "")).begins_with(label):
+			continue
+		if (o.has("when") and not Game.has_flag(o["when"])) or (o.has("unless") and Game.has_flag(o["unless"])):
+			continue
+		o.erase("risk")
+		if o.has("hack"):
+			o["hack"] = 0.02
+		Game.credits = maxi(Game.credits, int(o.get("cost", 0)))
+		await Game.hud._choose(i)
+		found = true
+		break
+	await _frames(3)
+	if Game.hud.in_panel():
+		Game.hud.close_panel()
+	await _frames(2)
+	return found
+
+
+## Walk over every loose pickup of that kind (what a container has just thrown out).
+func _take(kind: String) -> int:
+	var n := 0
+	for it in level.get_children():
+		if is_instance_valid(it) and it is Pickup and not it.is_queued_for_deletion() and it.d.get("item", "") == kind:
+			pl.hp = minf(pl.hp, pl.max_hp - 1.0)
+			pl.armor = 0.0
+			pl.global_position = Vector3(it.global_position.x, level.floor_y(it.global_position) + 0.05, it.global_position.z)
+			await _frames(8)
+			n += 1
+	return n
+
+
+func _go(cellp: Vector2i, storey := 0) -> void:
+	pl.global_position = level.center(cellp, storey * level.H + 0.05)
+	pl.velocity = Vector3.ZERO
+
+
+func _door(x: int, y: int, storey := 0) -> Door:
+	return level.doors.get(Vector2i(x, y)) if storey == 0 else level.doors_up.get(Vector3i(x, y, storey))
+
+
+## A door the player could not walk through as things stand.
+func _shut(d: Door) -> bool:
+	return d.sealed or (d.lock != "" and not Game.keys.has(d.lock)) or (d.flag != null and not Game.has_flag(d.flag))
+
+
+func _kinds(kind: String, storey := -99) -> Array:
+	return level.actors.filter(func(a): return is_instance_valid(a) and not a.dead and LM.defs["actors"].find_key(a.d) == kind and (storey == -99 or level.floor_of(a.global_position) == storey))
+
+
+func _anomalous() -> void:
+	Game.calm = false
+	pl.max_hp = 100000.0
+	pl.hp = pl.max_hp
+	_say(level.floors.size() == 3 and level.lifts.size() == 2, "three floors and two lifts (%d, %d)" % [level.floors.size(), level.lifts.size()])
+	for nm in ["Reception", "Creative Department", "The Coffee Shop", "Break room", "Executive suite", "Testing chamber", "Bio lab", "Director’s office", "Materials lab", "Prototype vault",
+			"Operations floor", "Security Station", "Robot Repair Bay", "Armory", "The inner core"]:
+		if level.rooms.filter(func(r): return r.get("name", "") == nm).is_empty():
+			_say(false, "there is a room called %s" % nm)
+	var sphinx: Enemy = _thing("sphinx")
+	var monoid: Enemy = _thing("monoid")
+	_say(sphinx != null and sphinx.off_duty and monoid != null and monoid.off_duty, "the Sphinx Gun and the Monoid wait to be spoken to")
+	# --- A: the rude way. Walk past the Sphinx; take the Monoid's badge off it.
+	_go(Vector2i(11, 13))
+	await _frames(20)
+	_say(sphinx.off_duty, "  standing inside the door, it only asks")
+	_go(Vector2i(14, 11))
+	await _frames(30)
+	_say(not sphinx.off_duty and Game.has_flag("sphinx_angry"), "  walk past it unanswered and it opens fire")
+	sphinx.hurt(99999.0, {})
+	await _frames(5)
+	_say(Game.has_flag("sphinx_ok"), "  killing it clears reception")
+	_say(not Game.has_flag("badge") and await _pick(monoid, "Then I"), "the Monoid can be told you will take the badge")
+	await _frames(10)
+	_say(not monoid.off_duty, "  and it gets up")
+	monoid.hurt(99999.0, {})
+	await _frames(5)
+	_say(Game.has_flag("badge"), "  its badge is yours when it is dead")
+	# --- B: the polite way, from the start
+	main._on_start("anomalous")
+	await _frames(10)
+	level = main.level
+	pl = main.player
+	pl.max_hp = 100000.0
+	pl.hp = pl.max_hp
+	sphinx = _thing("sphinx")
+	monoid = _thing("monoid")
+	_say(not Game.has_flag("badge") and not Game.has_flag("sphinx_ok"), "starting again starts clean")
+	_say(await _pick(sphinx, "WANT MORE") and Game.has_flag("sphinx_ok") and sphinx.off_duty, "the right slogan stands the Sphinx Gun down")
+	_go(Vector2i(8, 11))
+	await _frames(30)
+	_say(sphinx.off_duty and not Game.has_flag("sphinx_angry"), "  and then you may walk past it")
+	# darts
+	pl.hp = 1000.0
+	_go(Vector2i(18, 11))
+	await _frames(100)
+	var dart_hurt: float = 1000.0 - pl.hp
+	_say(dart_hurt > 0.0, "the courtesy darts hurt (%.0f)" % dart_hurt)
+	_say(await _pick(_thing("facilities"), "Argue") and Game.has_flag("darts_off"), "the facilities terminal shuts them off")
+	pl.hp = 1000.0
+	_go(Vector2i(18, 11))
+	await _frames(100)
+	_say(pl.hp == 1000.0, "  and then they do not")
+	pl.hp = pl.max_hp
+	# the blue card
+	_say(_door(5, 12).is_locked(), "the staff door is locked")
+	var l4 := _thing("locker4")
+	_say(not await _pick(l4, "Enter 314"), "locker 4 wants a code you do not have")
+	var memo: Node = null
+	for n in level.get_children():
+		if n is Prop and str(n.e.get("use", {}).get("title", "")).begins_with("Memo"):
+			memo = n
+	_say(await _pick(memo, "Remember") and Game.has_flag("memo314"), "the memo in the Creative Department has it")
+	# the chip, the Monoid, the badge
+	_say(not await _pick(monoid, "Swap"), "the Monoid will not swap for nothing")
+	var jar := _thing("tipjar")
+	_go(Vector2i(20, 7))
+	jar.use(pl)
+	await _frames(40)
+	await _take("lucky_chip")
+	_say(Game.has_flag("lucky_chip"), "the lucky chip is in the coffee shop's tip jar")
+	_say(await _pick(monoid, "Swap") and Game.has_flag("badge") and monoid.off_duty, "the Monoid swaps its badge for it, and goes on with its break")
+	await _frames(20)
+	_say(not _door(5, 12).is_locked(), "the badge opens the staff door")
+	_say(await _pick(l4, "Enter 314"), "locker 4 opens to 314")
+	await _frames(40)
+	await _take("keycard")
+	_say(Game.has_flag("key_blue"), "  the BLUE card is in it")
+	_say(not _shut(_door(11, 5)), "  and it opens the stairwell")
+	# the executive suite
+	_say(_door(20, 12).is_locked(), "the executive suite is locked")
+	var panel: Node = null
+	for n in level.get_children():
+		if n is Prop and str(n.e.get("use", {}).get("title", "")).begins_with("EXECUTIVE SUITE"):
+			panel = n
+	_say(await _pick(panel, "Argue") and not _door(20, 12).is_locked(), "  until its panel is argued with")
+	_say(not await _pick(_thing("execsafe"), "Enter 0451"), "the safe wants a code")
+	var before: int = _kinds("defender").size()
+	_say(await _pick(_thing("execdesk"), "Take the watch") and Game.has_flag("safe_code"), "the desk has the code")
+	await _frames(80)
+	_say(_kinds("defender").size() == before + 2, "  and two Desktop Defenders (%d)" % (_kinds("defender").size() - before))
+	for a in _kinds("defender"):
+		a.hurt(9999.0, {})
+	_say(await _pick(_thing("execsafe"), "Enter 0451"), "the safe opens to 0451")
+	await _frames(40)
+	await _take("order")
+	_say(Game.has_flag("order"), "  Termination Order 77-B is in it")
+	# --- floor 2
+	var la: Node3D = _thing("lift_a")
+	_say(level.reach(level.center(Vector2i(11, 16), 0.0), level.center(Vector2i(10, 2), level.H)), "the lift in the north stairwell goes up to the labs")
+	_say(_shut(_door(14, 2, 1)), "the way to floor 3 is locked")
+	_go(Vector2i(3, 5), 1)
+	_thing("director").use(pl)
+	await _frames(40)
+	await _take("keycard")
+	_say(Game.has_flag("key_yellow") and not _shut(_door(14, 2, 1)), "the YELLOW card is in the Lab Director's desk, and opens it")
+	# the tubes
+	var tubes: Array = level.things_by_tag.get("tubes", [])
+	var broken: Array = level.things_by_tag.get("tubes_broken", [])
+	_say(tubes.size() == 2 and tubes[0].visible and broken.size() == 2 and not broken[0].visible, "two stasis tubes, whole")
+	_go(Vector2i(3, 10), 1)
+	await _frames(90)
+	_say(not tubes[0].visible and broken[0].visible and _kinds("glorexx", 1).size() == 2, "cross the middle of the bio lab and they decant (%d Glorexx)" % _kinds("glorexx", 1).size())
+	for a in _kinds("glorexx"):
+		a.hurt(99999.0, {})
+	# the mist
+	var mist: Trap = _thing("mist")
+	pl.hp = 1000.0
+	pl.global_position = mist.global_position + Vector3(0.9, 0.05, 0)
+	await _frames(240)
+	_say(pl.hp < 1000.0, "yellow-band mist is toxic (%.0f)" % (1000.0 - pl.hp))
+	_say(await _pick(_thing("labenv"), "Switch off") and not mist.enabled and (_thing("fog") as Trap).enabled, "the lab terminal stops it; the blue fog carries on")
+	pl.hp = pl.max_hp
+	# the chamber
+	var con := _thing("testconsole")
+	var prize := _thing("prize")
+	_say(not prize.visible and not _thing("archive").visible and not _thing("holo").visible, "the chamber's surprises are out of sight")
+	for a in _kinds("drone", 1) + _kinds("custodian", 1):
+		a.hurt(99999.0, {})
+	await _frames(5)
+	_say(await _pick(con, "ENDURANCE") and Game.has_flag("test_endure"), "ENDURANCE can be chosen")
+	await _frames(150)
+	var units: Array = level.things_by_tag.get("endurance", []).filter(func(a): return is_instance_valid(a) and not a.dead)
+	_say(units.size() == 4 and _door(7, 10, 1).sealed and _door(11, 6, 1).sealed, "  it seals the chamber and sends in four units (%d)" % units.size())
+	for a in units:
+		a.hurt(99999.0, {})
+	await _frames(20)
+	_say(Game.has_flag("endure_done") and not _door(7, 10, 1).sealed and prize.visible, "  beat them and it opens again, with a prize")
+	_say(not await _pick(con, "ARCHIVE"), "  one mode only: the console is locked")
+	# --- floor 3
+	_say(level.reach(level.center(Vector2i(10, 2), level.H), level.center(Vector2i(17, 2), 2 * level.H)), "the second lift goes up to the Security Complex")
+	var heavy: Enemy = _thing("heavy")
+	_say(heavy != null and not heavy.awake, "the Heavy Security Drone is on its station, dormant")
+	var trip: Trap = _thing("tripwire")
+	var n3: int = _kinds("drone", 2).size()
+	pl.global_position = trip.global_position + Vector3(0, 0.05, 0)
+	await _frames(120)
+	var red := false
+	for l in level.lights_by_room.get("Operations floor", []):
+		red = red or (l.light_color.r > 0.8 and l.light_color.g < 0.4)
+	_say(Game.has_flag("alarm") and not trip.enabled and red and _kinds("drone", 2).size() == n3 + 2, "the tripwire raises the alarm: red light, two more Knife Fighters")
+	for a in level.actors:
+		if is_instance_valid(a) and not a.dead and level.floor_of(a.global_position) == 2 and LM.defs["actors"].find_key(a.d) in ["drone", "turret", "heavy"]:
+			a.hurt(999999.0, {})
+	await _frames(10)
+	_say(_door(10, 9, 2).is_locked() == false, "the badge opens the Security Station")
+	var shock: Trap = _thing("shockfloor")
+	_say(await _pick(_thing("station_console"), "Shut down") and Game.has_flag("traps_off") and not shock.enabled, "its console shuts the crossing traps down")
+	_say(_door(13, 14, 2).is_locked() and await _pick(_thing("station_console"), "Unlock the armory") and not _door(13, 14, 2).is_locked(), "  and unlocks the armory")
+	_go(Vector2i(9, 7), 2)
+	_thing("redlocker").use(pl)
+	await _frames(40)
+	await _take("keycard")
+	_say(Game.has_flag("key_red"), "the RED card is in the duty officer's locker")
+	_say(not _shut(_door(7, 11, 2)) and not _shut(_door(11, 14, 1)), "  it opens the inner core, and the prototype vault downstairs")
+	_go(Vector2i(13, 16), 2)
+	await _frames(10)
+	await _take("arc")
+	_say(pl.weapons.has("arc"), "the arc carbine is in the armory")
+	# the repair bay
+	var bay: Rebuilder = _thing("bay")
+	var cust: Array = _kinds("custodian", 2)
+	var w0: int = bay.waiting().size()
+	_say(bay != null and not cust.is_empty(), "the Repair Bay is running (%d robots owed)" % w0)
+	cust[0].hurt(99999.0, {})
+	await _frames(5)
+	_say(bay.waiting().size() == w0 + 1, "  destroy a robot on its floor and it has one more to rebuild")
+	var c0: int = _kinds("custodian", 2).size() + _kinds("drone", 2).size()
+	bay.rebuild(bay.waiting()[0])
+	await _frames(5)
+	_say(_kinds("custodian", 2).size() + _kinds("drone", 2).size() == c0 + 1 and bay.waiting().size() == w0, "  and it rebuilds one")
+	_say(await _pick(_thing("bay_console"), "Pull the power coupling") and Game.has_flag("bay_off"), "  until its coupling is pulled")
+	# the core
+	var field: Door = _door(4, 11, 2)
+	var em: Array = level.things_by_tag.get("emitters", [])
+	_say(field.sealed and em.size() == 3, "three emitters hold a field across the core")
+	_say(not await _pick(_thing("lectern"), "Silence"), "the ad system cannot be silenced while the agency is open")
+	for a in em:
+		a.hurt(9999.0, {})
+	await _frames(20)
+	_say(Game.has_flag("field_down") and not field.sealed, "  destroy them and it drops")
+	_say(await _pick(_thing("lectern"), "File Termination Order") and Game.has_flag("agency_closed"), "Termination Order 77-B closes the agency")
+	var cr0 := Game.credits
+	_say(await _pick(_thing("core"), "Seize the core") and Game.has_flag("ads_silent"), "the core can be seized")
+	await _frames(40)
+	await _take("ad_core")
+	_say(Game.credits >= cr0 + 2500, "  and is worth a fortune (+%d cr)" % (Game.credits - cr0))
+	_say(not _thing("core").visible, "  and is not there any more")
+	# out
+	var ended: Array = []
+	Game.ended.connect(func(info): ended.append(info), CONNECT_ONE_SHOT)
+	_say(await _pick(_thing("exit"), "Leave. (The agency is closed and its ads are silent.)") or not ended.is_empty(), "the front doors let you out")
+	await _frames(5)
+	_say(not ended.is_empty() and ended[0].get("title", "") == "The Last Campaign", "  with the ending you earned (%s)" % (ended[0].get("title", "?") if not ended.is_empty() else "none"))
+	_say(Profile.d["trophies"].has("ad_core") and Profile.d["weapons"].has("arc") and int(Profile.d["credits"]) >= 2500, "  and what you carried out is banked at home")

@@ -13,6 +13,11 @@
   "cells": {"name": "Energy cells", "kind": "ammo", "ammo": "cells", "amount": 12, "model": "item_ammo_cells", "glow": [0.2, 0.9, 1.0]},
   "keycard": {"name": "Key card", "kind": "key", "model": "item_keycard", "color": "red", "scale": 2.0},
   "scattergun": {"name": "Pump Scattergun", "kind": "weapon", "weapon": "scattergun", "model": "weapon_scattergun", "glow": [1.0, 0.6, 0.3], "scale": 1.3},
+  "lucky_chip": {"name": "Lucky chip", "kind": "quest", "model": "item_chip", "kit": "anomalous", "flag": "lucky_chip", "text": "A worn gambler's chip. Somebody wants this more than you do.", "glow": [1.0, 0.8, 0.3], "scale": 2.2},
+  "badge": {"name": "Agency ID badge", "kind": "quest", "model": "item_badge", "kit": "anomalous", "flag": "badge", "text": "Agency ID badge: a smiling face that isn't yours. Staff doors accept it.", "glow": [0.35, 0.72, 0.91], "scale": 2.2},
+  "order": {"name": "Termination Order 77-B", "kind": "quest", "model": "item_order", "kit": "anomalous", "flag": "order", "text": "Termination Order 77-B: the order to close the agency, signed, never filed.", "glow": [1.0, 0.3, 0.2], "scale": 2.2},
+  "ad_core": {"trophy": true, "name": "The agency's inner core", "kind": "treasure", "model": "item_core", "kit": "anomalous", "value": 2500, "glow": [1.0, 0.3, 0.85], "scale": 2.4},
+  "arc": {"name": "Arc Carbine", "kind": "weapon", "weapon": "arc", "model": "weapon_arc", "kit": "anomalous", "glow": [0.4, 0.92, 1.0], "scale": 1.3},
   "plasma": {"name": "Plasma Musket", "kind": "weapon", "weapon": "plasma", "model": "weapon_plasma", "glow": [0.3, 0.9, 1.0], "scale": 1.3}
  }
 }

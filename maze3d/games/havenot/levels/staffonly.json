@@ -71,6 +71,9 @@
   },
   "S": {
    "door": "door_hm_vault"
+  },
+  "T": {
+   "door": "door_an_field"
   }
  },
  "map": [
@@ -116,7 +119,7 @@
   "#................#...............#..#..........#..........#..........#",
   "#................#...............#..#..........#..........#..........#",
   "#................#...............#..#..........#..........#..........#",
-  "#########P###############Q########..######R##########S##########A#####",
+  "#########P###############Q########..######R##########S##########T#####",
   "#....................................................................#",
   "#....................................................................#",
   "##################################..##################################",
@@ -125,7 +128,7 @@
   "#..........#..........#..........#..#..........#..........#..........#",
   "#..........#..........#..........#..#..........#..........#..........#",
   "#..........#..........#..........#..#..........#..........#..........#",
-  "######B##########C##########E#####..######D##########G##########H#####",
+  "######A##########B##########C#####..######E##########D##########G#####",
   "#....................................................................#",
   "#....................................................................#",
   "##################################..##################################",
@@ -134,36 +137,36 @@
   "#..........#..........#..........#..#....#...#...#...#...#...#...#...#",
   "#..........#..........#..........#..#....#...#...#...#...#...#...#...#",
   "#..........#..........#..........#..#....#...#...#...#...#...#...#...#",
-  "######J##########K##########L#####..###M###N###O###P###Q###R###S###A##",
+  "######H##########J##########K#####..###L###M###N###O###P###Q###R###S##",
   "#....................................................................#",
   "#....................................................................#",
   "##################################..##################################",
-  "#........#.......#.......#.......#..#........#.......#.......#.......#",
-  "#........#.......#.......#.......#..#........#.......#.......#.......#",
-  "#........#.......#.......#.......#..#........#.......#.......#.......#",
-  "#........#.......#.......#.......#..#........#.......#.......#.......#",
-  "#........#.......#.......#.......#..#........#.......#.......#.......#",
-  "#####B#######C#######E#######D####..#####G#######H#######J#######K####",
+  "#....#....#....#....#....#...#...#..#........#.......#.......#.......#",
+  "#....#....#....#....#....#...#...#..#........#.......#.......#.......#",
+  "#....#....#....#....#....#...#...#..#........#.......#.......#.......#",
+  "#....#....#....#....#....#...#...#..#........#.......#.......#.......#",
+  "#....#....#....#....#....#...#...#..#........#.......#.......#.......#",
+  "###T####A####B####C####E###D###G##..#####H#######J#######K#######L####",
+  "#....................................................................#",
+  "#....................................................................#",
+  "##################################..##################################",
+  "#........#.......#.......#.......#..#................................#",
+  "#........#.......#.......#.......#..#................................#",
+  "#........#.......#.......#.......#..#................................#",
+  "#........#.......#.......#.......#..#................................#",
+  "#........#.......#.......#.......#..#................................#",
+  "#####M#######N#######O#######P####..######Q###############R###########",
   "#....................................................................#",
   "#....................................................................#",
   "##################################..##################################",
   "#................................#..#................................#",
-  "#................................#..#............~~~~~~~.............#",
-  "#................................#..#............~~~~~~~.............#",
-  "#................................#..#............~~~~~~~.............#",
+  "#............~~~~~~~.............#..#................................#",
+  "#............~~~~~~~.............#..#................................#",
+  "#............~~~~~~~.............#..#................................#",
   "#................................#..#................................#",
-  "######L###############M###########..##########N###############O#######",
+  "##########S###############T#######..########A###############B#########",
   "#....................................................................#",
   "#....................................................................#",
-  "##################################..##################################",
-  "#................................#..##################################",
-  "#................................#..##################################",
-  "#................................#..##################################",
-  "#................................#..##################################",
-  "#................................#..##################################",
-  "########P###############Q#########..##################################",
-  "#...................................##################################",
-  "#...................................##################################",
   "######################################################################"
  ],
  "fluid": {
@@ -783,9 +786,97 @@
    "height": 1
   },
   {
-   "name": "Thalassa Deep Array · hall",
+   "name": "The Anomalous Structure · hall",
    "rect": [
     1,
+    70,
+    33,
+    2
+   ],
+   "style": "an_hall",
+   "height": 1
+  },
+  {
+   "name": "The Anomalous Structure · an_reception",
+   "rect": [
+    1,
+    64,
+    4,
+    5
+   ],
+   "style": "an_reception",
+   "height": 1
+  },
+  {
+   "name": "The Anomalous Structure · an_office",
+   "rect": [
+    6,
+    64,
+    4,
+    5
+   ],
+   "style": "an_office",
+   "height": 1
+  },
+  {
+   "name": "The Anomalous Structure · an_cafe",
+   "rect": [
+    11,
+    64,
+    4,
+    5
+   ],
+   "style": "an_cafe",
+   "height": 1
+  },
+  {
+   "name": "The Anomalous Structure · an_store",
+   "rect": [
+    16,
+    64,
+    4,
+    5
+   ],
+   "style": "an_store",
+   "height": 1
+  },
+  {
+   "name": "The Anomalous Structure · an_lab",
+   "rect": [
+    21,
+    64,
+    4,
+    5
+   ],
+   "style": "an_lab",
+   "height": 1
+  },
+  {
+   "name": "The Anomalous Structure · an_chamber",
+   "rect": [
+    26,
+    64,
+    3,
+    5
+   ],
+   "style": "an_chamber",
+   "height": 1
+  },
+  {
+   "name": "The Anomalous Structure · an_core",
+   "rect": [
+    30,
+    64,
+    3,
+    5
+   ],
+   "style": "an_core",
+   "height": 1
+  },
+  {
+   "name": "Thalassa Deep Array · hall",
+   "rect": [
+    36,
     70,
     33,
     2
@@ -796,7 +887,7 @@
   {
    "name": "Thalassa Deep Array · dr_lab",
    "rect": [
-    1,
+    37,
     64,
     8,
     5
@@ -807,7 +898,7 @@
   {
    "name": "Thalassa Deep Array · dr_servers",
    "rect": [
-    10,
+    46,
     64,
     7,
     5
@@ -818,7 +909,7 @@
   {
    "name": "Thalassa Deep Array · dr_bay",
    "rect": [
-    18,
+    54,
     64,
     7,
     5
@@ -829,7 +920,7 @@
   {
    "name": "Thalassa Deep Array · dr_sump",
    "rect": [
-    26,
+    62,
     64,
     7,
     5
@@ -840,8 +931,8 @@
   {
    "name": "Helion Dust Station · hall",
    "rect": [
-    36,
-    70,
+    1,
+    79,
     33,
     2
    ],
@@ -851,8 +942,8 @@
   {
    "name": "Helion Dust Station · du_lab",
    "rect": [
-    37,
-    64,
+    1,
+    73,
     8,
     5
    ],
@@ -862,8 +953,8 @@
   {
    "name": "Helion Dust Station · du_archive",
    "rect": [
-    46,
-    64,
+    10,
+    73,
     7,
     5
    ],
@@ -873,8 +964,8 @@
   {
    "name": "Helion Dust Station · du_bay",
    "rect": [
-    54,
-    64,
+    18,
+    73,
     7,
     5
    ],
@@ -884,8 +975,8 @@
   {
    "name": "Helion Dust Station · du_ruin",
    "rect": [
-    62,
-    64,
+    26,
+    73,
     7,
     5
    ],
@@ -895,7 +986,7 @@
   {
    "name": "Stores · hall",
    "rect": [
-    1,
+    36,
     79,
     33,
     2
@@ -906,7 +997,7 @@
   {
    "name": "Stores",
    "rect": [
-    1,
+    37,
     73,
     32,
     5
@@ -917,8 +1008,8 @@
   {
    "name": "The Nest · hall",
    "rect": [
-    36,
-    79,
+    1,
+    88,
     33,
     2
    ],
@@ -928,8 +1019,8 @@
   {
    "name": "The Nest",
    "rect": [
-    37,
-    73,
+    1,
+    82,
     32,
     5
    ],
@@ -939,7 +1030,7 @@
   {
    "name": "Robot Depot · hall",
    "rect": [
-    1,
+    36,
     88,
     33,
     2
@@ -950,7 +1041,7 @@
   {
    "name": "Robot Depot",
    "rect": [
-    1,
+    37,
     82,
     32,
     5
@@ -2475,94 +2566,129 @@
    ]
   },
   {
-   "item": "armor",
+   "item": "ad_core",
    "at": [
     2,
     31
    ]
   },
   {
-   "item": "cells",
+   "item": "arc",
    "at": [
     3,
     31
    ]
   },
   {
-   "item": "chips",
+   "item": "armor",
    "at": [
     4,
     31
    ]
   },
   {
-   "item": "circuit",
+   "item": "badge",
    "at": [
     5,
     31
    ]
   },
   {
-   "item": "cookies",
+   "item": "cells",
    "at": [
     6,
     31
    ]
   },
   {
-   "item": "crystal",
+   "item": "chips",
    "at": [
     7,
     31
    ]
   },
   {
-   "item": "fuel_cell",
+   "item": "circuit",
    "at": [
     8,
     31
    ]
   },
   {
-   "item": "fuel_cell_big",
+   "item": "cookies",
    "at": [
     9,
     31
    ]
   },
   {
-   "item": "health",
+   "item": "crystal",
    "at": [
     10,
     31
    ]
   },
   {
-   "item": "plasma",
+   "item": "fuel_cell",
+   "at": [
+    11,
+    31
+   ]
+  },
+  {
+   "item": "fuel_cell_big",
    "at": [
     12,
     31
    ]
   },
   {
-   "item": "scattergun",
+   "item": "health",
    "at": [
     13,
     31
    ]
   },
   {
+   "item": "lucky_chip",
+   "at": [
+    15,
+    31
+   ]
+  },
+  {
+   "item": "order",
+   "at": [
+    2,
+    32
+   ]
+  },
+  {
+   "item": "plasma",
+   "at": [
+    3,
+    32
+   ]
+  },
+  {
+   "item": "scattergun",
+   "at": [
+    4,
+    32
+   ]
+  },
+  {
    "item": "shells",
    "at": [
-    14,
-    31
+    5,
+    32
    ]
   },
   {
    "item": "statuette",
    "at": [
-    15,
-    31
+    6,
+    32
    ]
   },
   {
@@ -2727,6 +2853,17 @@
       "result": "Called. Give it a moment to walk here."
      },
      {
+      "label": "Call Glorexx",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "glorexx",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
       "label": "Cease fire",
       "effects": [
        {
@@ -2761,22 +2898,22 @@
     "text": "Pick somebody. The nearest one of that kind that is free walks to the range, shows what it does for a few seconds, and goes back to where it was.\n\nYou can also ask any of them yourself (E).",
     "options": [
      {
-      "label": "Call Glorexx",
+      "label": "Call Hammerhead Gallumper",
       "effects": [
        {
         "type": "drill",
-        "actor": "glorexx",
+        "actor": "grease_monkey",
         "tag": "range"
        }
       ],
       "result": "Called. Give it a moment to walk here."
      },
      {
-      "label": "Call Hammerhead Gallumper",
+      "label": "Call Heavy Security Drone",
       "effects": [
        {
         "type": "drill",
-        "actor": "grease_monkey",
+        "actor": "heavy",
         "tag": "range"
        }
       ],
@@ -4020,7 +4157,7 @@
    "blocks": false
   },
   {
-   "sign": "THALASSA DEEP ARRAY",
+   "sign": "THE ANOMALOUS STRUCTURE",
    "face": "e",
    "color": [
     0.4,
@@ -4035,7 +4172,7 @@
    ]
   },
   {
-   "sign": "dr_lab",
+   "sign": "an_reception",
    "face": "n",
    "color": [
     0.8,
@@ -4045,12 +4182,27 @@
    "size": 30,
    "y": 3.3,
    "at": [
-    5,
+    3,
     68
    ]
   },
   {
-   "sign": "dr_servers",
+   "sign": "an_office",
+   "face": "n",
+   "color": [
+    0.8,
+    0.85,
+    0.9
+   ],
+   "size": 30,
+   "y": 3.3,
+   "at": [
+    8,
+    68
+   ]
+  },
+  {
+   "sign": "an_cafe",
    "face": "n",
    "color": [
     0.8,
@@ -4065,7 +4217,7 @@
    ]
   },
   {
-   "sign": "dr_bay",
+   "sign": "an_store",
    "face": "n",
    "color": [
     0.8,
@@ -4075,12 +4227,12 @@
    "size": 30,
    "y": 3.3,
    "at": [
-    21,
+    18,
     68
    ]
   },
   {
-   "sign": "dr_sump",
+   "sign": "an_lab",
    "face": "n",
    "color": [
     0.8,
@@ -4090,110 +4242,367 @@
    "size": 30,
    "y": 3.3,
    "at": [
-    29,
+    23,
     68
    ]
   },
   {
-   "prop": "dr_arm",
+   "sign": "an_chamber",
+   "face": "n",
+   "color": [
+    0.8,
+    0.85,
+    0.9
+   ],
+   "size": 30,
+   "y": 3.3,
+   "at": [
+    27,
+    68
+   ]
+  },
+  {
+   "sign": "an_core",
+   "face": "n",
+   "color": [
+    0.8,
+    0.85,
+    0.9
+   ],
+   "size": 30,
+   "y": 3.3,
+   "at": [
+    31,
+    68
+   ]
+  },
+  {
+   "prop": "an_station",
    "at": [
     2,
     64
    ],
    "face": "s",
-   "offset": [
-    0.0,
-    0,
-    -1.38
-   ],
-   "blocks": false
+   "blocks": true
   },
   {
-   "prop": "dr_bench",
+   "prop": "an_reception",
    "at": [
-    11,
+    7,
     64
    ],
    "face": "s",
-   "offset": [
-    0.0,
-    0,
-    -1.46
-   ],
-   "blocks": false
+   "blocks": true
   },
   {
-   "prop": "dr_cart",
+   "prop": "an_gantry",
    "at": [
-    19,
+    12,
     64
    ],
    "face": "s",
-   "offset": [
-    0.0,
-    0,
-    -1.5
-   ],
-   "blocks": false
+   "blocks": true
   },
   {
-   "prop": "dr_console",
+   "prop": "an_counter",
+   "at": [
+    17,
+    64
+   ],
+   "face": "s",
+   "blocks": true
+  },
+  {
+   "prop": "an_core",
+   "at": [
+    22,
+    64
+   ],
+   "face": "s",
+   "blocks": true
+  },
+  {
+   "prop": "an_conf",
    "at": [
     27,
     64
    ],
    "face": "s",
-   "offset": [
-    0.0,
-    0,
-    -1.4
-   ],
-   "blocks": false
+   "blocks": true
   },
   {
-   "prop": "dr_pump",
+   "prop": "an_body",
    "at": [
-    4,
+    31,
     64
    ],
    "face": "s",
-   "offset": [
-    0.0,
-    0,
-    -1.13
-   ],
    "blocks": false
   },
   {
-   "prop": "dr_rack",
+   "prop": "an_box",
    "at": [
-    13,
-    64
+    1,
+    66
    ],
-   "face": "s",
+   "face": "e",
+   "blocks": false
+  },
+  {
+   "prop": "an_cooler",
+   "at": [
+    6,
+    66
+   ],
+   "face": "e",
    "offset": [
-    0.0,
+    -1.63,
     0,
-    -1.43
+    0.0
    ],
    "blocks": false
   },
   {
-   "prop": "dr_tank",
+   "prop": "an_copier",
+   "at": [
+    11,
+    66
+   ],
+   "face": "e",
+   "offset": [
+    -1.46,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_crate",
+   "at": [
+    16,
+    66
+   ],
+   "face": "e",
+   "offset": [
+    -1.38,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_cubicle",
    "at": [
     21,
-    64
+    66
    ],
-   "face": "s",
+   "face": "e",
    "offset": [
-    0.0,
+    -1.03,
     0,
-    -1.23
+    0.0
    ],
    "blocks": false
   },
   {
-   "sign": "HELION DUST STATION",
+   "prop": "an_filing",
+   "at": [
+    26,
+    66
+   ],
+   "face": "e",
+   "offset": [
+    -1.48,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_floorsafe",
+   "at": [
+    30,
+    66
+   ],
+   "face": "e",
+   "offset": [
+    -1.38,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_holo",
+   "at": [
+    4,
+    66
+   ],
+   "face": "w",
+   "blocks": false
+  },
+  {
+   "prop": "an_lectern",
+   "at": [
+    9,
+    66
+   ],
+   "face": "w",
+   "offset": [
+    1.53,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_mist_b",
+   "at": [
+    14,
+    66
+   ],
+   "face": "w",
+   "offset": [
+    1.48,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_mist_y",
+   "at": [
+    19,
+    66
+   ],
+   "face": "w",
+   "offset": [
+    1.48,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_poster_a",
+   "at": [
+    24,
+    66
+   ],
+   "face": "w"
+  },
+  {
+   "prop": "an_poster_b",
+   "at": [
+    28,
+    66
+   ],
+   "face": "w"
+  },
+  {
+   "prop": "an_poster_c",
+   "at": [
+    32,
+    66
+   ],
+   "face": "w"
+  },
+  {
+   "prop": "an_safe",
+   "at": [
+    1,
+    68
+   ],
+   "face": "e"
+  },
+  {
+   "prop": "an_sign",
+   "at": [
+    6,
+    68
+   ],
+   "face": "e",
+   "offset": [
+    -1.63,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_slot",
+   "at": [
+    11,
+    68
+   ],
+   "face": "e",
+   "offset": [
+    -1.48,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_tablet",
+   "at": [
+    16,
+    68
+   ],
+   "face": "e",
+   "offset": [
+    -1.58,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_test",
+   "at": [
+    21,
+    68
+   ],
+   "face": "e",
+   "offset": [
+    -1.43,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_till",
+   "at": [
+    26,
+    68
+   ],
+   "face": "e",
+   "offset": [
+    -1.38,
+    0,
+    0.0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "an_tv",
+   "at": [
+    30,
+    68
+   ],
+   "face": "e"
+  },
+  {
+   "prop": "an_whiteboard",
+   "at": [
+    4,
+    68
+   ],
+   "face": "w"
+  },
+  {
+   "sign": "THALASSA DEEP ARRAY",
    "face": "w",
    "color": [
     0.4,
@@ -4208,7 +4617,7 @@
    ]
   },
   {
-   "sign": "du_lab",
+   "sign": "dr_lab",
    "face": "n",
    "color": [
     0.8,
@@ -4223,7 +4632,7 @@
    ]
   },
   {
-   "sign": "du_archive",
+   "sign": "dr_servers",
    "face": "n",
    "color": [
     0.8,
@@ -4238,7 +4647,7 @@
    ]
   },
   {
-   "sign": "du_bay",
+   "sign": "dr_bay",
    "face": "n",
    "color": [
     0.8,
@@ -4253,7 +4662,7 @@
    ]
   },
   {
-   "sign": "du_ruin",
+   "sign": "dr_sump",
    "face": "n",
    "color": [
     0.8,
@@ -4268,15 +4677,7 @@
    ]
   },
   {
-   "prop": "du_scope",
-   "at": [
-    39,
-    66
-   ],
-   "blocks": true
-  },
-  {
-   "prop": "du_arm",
+   "prop": "dr_arm",
    "at": [
     38,
     64
@@ -4290,7 +4691,7 @@
    "blocks": false
   },
   {
-   "prop": "du_bench",
+   "prop": "dr_bench",
    "at": [
     47,
     64
@@ -4304,7 +4705,7 @@
    "blocks": false
   },
   {
-   "prop": "du_cart",
+   "prop": "dr_cart",
    "at": [
     55,
     64
@@ -4318,7 +4719,7 @@
    "blocks": false
   },
   {
-   "prop": "du_console",
+   "prop": "dr_console",
    "at": [
     63,
     64
@@ -4332,9 +4733,23 @@
    "blocks": false
   },
   {
-   "prop": "du_rack",
+   "prop": "dr_pump",
    "at": [
     40,
+    64
+   ],
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.13
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "dr_rack",
+   "at": [
+    49,
     64
    ],
    "face": "s",
@@ -4346,21 +4761,21 @@
    "blocks": false
   },
   {
-   "prop": "du_reel",
+   "prop": "dr_tank",
    "at": [
-    49,
+    57,
     64
    ],
    "face": "s",
    "offset": [
     0.0,
     0,
-    -1.5
+    -1.23
    ],
    "blocks": false
   },
   {
-   "sign": "STORES",
+   "sign": "HELION DUST STATION",
    "face": "e",
    "color": [
     0.4,
@@ -4375,9 +4790,176 @@
    ]
   },
   {
+   "sign": "du_lab",
+   "face": "n",
+   "color": [
+    0.8,
+    0.85,
+    0.9
+   ],
+   "size": 30,
+   "y": 3.3,
+   "at": [
+    5,
+    77
+   ]
+  },
+  {
+   "sign": "du_archive",
+   "face": "n",
+   "color": [
+    0.8,
+    0.85,
+    0.9
+   ],
+   "size": 30,
+   "y": 3.3,
+   "at": [
+    13,
+    77
+   ]
+  },
+  {
+   "sign": "du_bay",
+   "face": "n",
+   "color": [
+    0.8,
+    0.85,
+    0.9
+   ],
+   "size": 30,
+   "y": 3.3,
+   "at": [
+    21,
+    77
+   ]
+  },
+  {
+   "sign": "du_ruin",
+   "face": "n",
+   "color": [
+    0.8,
+    0.85,
+    0.9
+   ],
+   "size": 30,
+   "y": 3.3,
+   "at": [
+    29,
+    77
+   ]
+  },
+  {
+   "prop": "du_scope",
+   "at": [
+    3,
+    75
+   ],
+   "blocks": true
+  },
+  {
+   "prop": "du_arm",
+   "at": [
+    2,
+    73
+   ],
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.38
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "du_bench",
+   "at": [
+    11,
+    73
+   ],
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.46
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "du_cart",
+   "at": [
+    19,
+    73
+   ],
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.5
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "du_console",
+   "at": [
+    27,
+    73
+   ],
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.4
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "du_rack",
+   "at": [
+    4,
+    73
+   ],
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.43
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "du_reel",
+   "at": [
+    13,
+    73
+   ],
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.5
+   ],
+   "blocks": false
+  },
+  {
+   "sign": "STORES",
+   "face": "w",
+   "color": [
+    0.4,
+    0.9,
+    1.0
+   ],
+   "size": 40,
+   "y": 3.1,
+   "at": [
+    36,
+    79
+   ]
+  },
+  {
    "prop": "lt_box_ag",
    "at": [
-    1,
+    37,
     73
    ],
    "face": "s",
@@ -4395,7 +4977,7 @@
   {
    "prop": "lt_box_bb",
    "at": [
-    2,
+    38,
     73
    ],
    "face": "s",
@@ -4413,7 +4995,7 @@
   {
    "prop": "lt_box_bk",
    "at": [
-    3,
+    39,
     73
    ],
    "face": "s",
@@ -4431,7 +5013,7 @@
   {
    "prop": "lt_box_cr",
    "at": [
-    4,
+    40,
     73
    ],
    "face": "s",
@@ -4449,7 +5031,7 @@
   {
    "prop": "lt_box_ex",
    "at": [
-    5,
+    41,
     73
    ],
    "face": "s",
@@ -4467,7 +5049,7 @@
   {
    "prop": "lt_box_hs",
    "at": [
-    6,
+    42,
     73
    ],
    "face": "s",
@@ -4485,7 +5067,7 @@
   {
    "prop": "lt_box_ht",
    "at": [
-    7,
+    43,
     73
    ],
    "face": "s",
@@ -4503,7 +5085,7 @@
   {
    "prop": "lt_box_mp",
    "at": [
-    8,
+    44,
     73
    ],
    "face": "s",
@@ -4521,7 +5103,7 @@
   {
    "prop": "lt_box_wk",
    "at": [
-    9,
+    45,
     73
    ],
    "face": "s",
@@ -4539,7 +5121,7 @@
   {
    "prop": "lt_charge_rack",
    "at": [
-    10,
+    46,
     73
    ],
    "face": "s",
@@ -4558,7 +5140,7 @@
   {
    "prop": "lt_reliquary",
    "at": [
-    11,
+    47,
     73
    ],
    "face": "s",
@@ -4576,7 +5158,7 @@
   {
    "prop": "lt_shelf_ag",
    "at": [
-    12,
+    48,
     73
    ],
    "face": "s",
@@ -4595,7 +5177,7 @@
   {
    "prop": "lt_shelf_bb",
    "at": [
-    13,
+    49,
     73
    ],
    "face": "s",
@@ -4614,7 +5196,7 @@
   {
    "prop": "lt_shelf_bk",
    "at": [
-    14,
+    50,
     73
    ],
    "face": "s",
@@ -4633,7 +5215,7 @@
   {
    "prop": "lt_shelf_cr",
    "at": [
-    15,
+    51,
     73
    ],
    "face": "s",
@@ -4652,7 +5234,7 @@
   {
    "prop": "lt_shelf_ex",
    "at": [
-    16,
+    52,
     73
    ],
    "face": "s",
@@ -4671,7 +5253,7 @@
   {
    "prop": "lt_shelf_hs",
    "at": [
-    17,
+    53,
     73
    ],
    "face": "s",
@@ -4690,7 +5272,7 @@
   {
    "prop": "lt_shelf_ht",
    "at": [
-    18,
+    54,
     73
    ],
    "face": "s",
@@ -4709,7 +5291,7 @@
   {
    "prop": "lt_shelf_mp",
    "at": [
-    19,
+    55,
     73
    ],
    "face": "s",
@@ -4728,7 +5310,7 @@
   {
    "prop": "lt_shelf_wk",
    "at": [
-    20,
+    56,
     73
    ],
    "face": "s",
@@ -4747,7 +5329,7 @@
   {
    "prop": "lt_trophy_ag",
    "at": [
-    21,
+    57,
     73
    ],
    "face": "s",
@@ -4764,7 +5346,7 @@
   {
    "prop": "lt_trophy_bb",
    "at": [
-    22,
+    58,
     73
    ],
    "face": "s",
@@ -4781,7 +5363,7 @@
   {
    "prop": "lt_trophy_bk",
    "at": [
-    23,
+    59,
     73
    ],
    "face": "s",
@@ -4798,7 +5380,7 @@
   {
    "prop": "lt_trophy_cr",
    "at": [
-    24,
+    60,
     73
    ],
    "face": "s",
@@ -4815,7 +5397,7 @@
   {
    "prop": "lt_trophy_ex",
    "at": [
-    25,
+    61,
     73
    ],
    "face": "s",
@@ -4832,7 +5414,7 @@
   {
    "prop": "lt_trophy_hs",
    "at": [
-    26,
+    62,
     73
    ],
    "face": "s",
@@ -4849,7 +5431,7 @@
   {
    "prop": "lt_trophy_ht",
    "at": [
-    27,
+    63,
     73
    ],
    "face": "s",
@@ -4866,7 +5448,7 @@
   {
    "prop": "lt_trophy_mp",
    "at": [
-    28,
+    64,
     73
    ],
    "face": "s",
@@ -4883,7 +5465,7 @@
   {
    "prop": "lt_trophy_wk",
    "at": [
-    29,
+    65,
     73
    ],
    "face": "s",
@@ -4900,7 +5482,7 @@
   {
    "actor": "sphinx",
    "at": [
-    32,
+    68,
     80
    ],
    "face": "w",
@@ -4909,7 +5491,7 @@
   {
    "target": "spot",
    "at": [
-    27,
+    63,
     80
    ],
    "face": "e"
@@ -4925,132 +5507,12 @@
    "size": 40,
    "y": 3.0,
    "at": [
-    14,
+    50,
     77
    ]
   },
   {
    "sign": "THE NEST",
-   "face": "w",
-   "color": [
-    0.4,
-    0.9,
-    1.0
-   ],
-   "size": 40,
-   "y": 3.1,
-   "at": [
-    36,
-    79
-   ]
-  },
-  {
-   "actor": "roach",
-   "at": [
-    39,
-    73
-   ],
-   "perch": "wall"
-  },
-  {
-   "actor": "roach",
-   "at": [
-    42,
-    73
-   ],
-   "perch": "wall"
-  },
-  {
-   "actor": "roach",
-   "at": [
-    45,
-    73
-   ],
-   "perch": "ceiling"
-  },
-  {
-   "actor": "roach",
-   "at": [
-    59,
-    73
-   ],
-   "perch": "ceiling"
-  },
-  {
-   "actor": "roach",
-   "at": [
-    61,
-    73
-   ],
-   "perch": "wall"
-  },
-  {
-   "actor": "roach",
-   "at": [
-    40,
-    76
-   ],
-   "perch": "floor"
-  },
-  {
-   "actor": "glorexx",
-   "at": [
-    64,
-    73
-   ],
-   "perch": "wall"
-  },
-  {
-   "actor": "glorexx",
-   "at": [
-    52,
-    75
-   ],
-   "perch": "floor",
-   "face": "e",
-   "roam": 2
-  },
-  {
-   "actor": "snapper",
-   "at": [
-    67,
-    76
-   ],
-   "face": "w"
-  },
-  {
-   "target": "spot",
-   "at": [
-    65,
-    76
-   ],
-   "face": "e"
-  },
-  {
-   "actor": "fouler",
-   "at": [
-    58,
-    76
-   ],
-   "roam": 3
-  },
-  {
-   "sign": "THE NEST\nlook up",
-   "face": "n",
-   "color": [
-    0.5,
-    1.0,
-    0.3
-   ],
-   "size": 40,
-   "y": 3.0,
-   "at": [
-    52,
-    77
-   ]
-  },
-  {
-   "sign": "ROBOT DEPOT",
    "face": "e",
    "color": [
     0.4,
@@ -5065,56 +5527,176 @@
    ]
   },
   {
-   "station": "rb_station_custodian",
-   "actor": "custodian",
-   "at": [
-    1,
-    82
-   ],
-   "face": "s",
-   "shut": false,
-   "blocks": true
-  },
-  {
-   "station": "rb_station_custodian",
-   "actor": "custodian",
+   "actor": "roach",
    "at": [
     3,
     82
    ],
-   "face": "s",
-   "shut": true,
-   "blocks": true
+   "perch": "wall"
   },
   {
-   "station": "rb_station_dancer",
-   "actor": "dancer",
+   "actor": "roach",
    "at": [
-    5,
+    6,
     82
    ],
-   "face": "s",
-   "shut": false,
-   "blocks": true
+   "perch": "wall"
   },
   {
-   "station": "rb_station_dancer",
-   "actor": "dancer",
-   "at": [
-    7,
-    82
-   ],
-   "face": "s",
-   "shut": true,
-   "blocks": true
-  },
-  {
-   "station": "rb_station_deadbot",
-   "actor": "deadbot",
+   "actor": "roach",
    "at": [
     9,
     82
    ],
+   "perch": "ceiling"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    23,
+    82
+   ],
+   "perch": "ceiling"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    25,
+    82
+   ],
+   "perch": "wall"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    4,
+    85
+   ],
+   "perch": "floor"
+  },
+  {
+   "actor": "glorexx",
+   "at": [
+    28,
+    82
+   ],
+   "perch": "wall"
+  },
+  {
+   "actor": "glorexx",
+   "at": [
+    16,
+    84
+   ],
+   "perch": "floor",
+   "face": "e",
+   "roam": 2
+  },
+  {
+   "actor": "snapper",
+   "at": [
+    31,
+    85
+   ],
+   "face": "w"
+  },
+  {
+   "target": "spot",
+   "at": [
+    29,
+    85
+   ],
+   "face": "e"
+  },
+  {
+   "actor": "fouler",
+   "at": [
+    22,
+    85
+   ],
+   "roam": 3
+  },
+  {
+   "sign": "THE NEST\nlook up",
+   "face": "n",
+   "color": [
+    0.5,
+    1.0,
+    0.3
+   ],
+   "size": 40,
+   "y": 3.0,
+   "at": [
+    16,
+    86
+   ]
+  },
+  {
+   "sign": "ROBOT DEPOT",
+   "face": "w",
+   "color": [
+    0.4,
+    0.9,
+    1.0
+   ],
+   "size": 40,
+   "y": 3.1,
+   "at": [
+    36,
+    88
+   ]
+  },
+  {
+   "station": "rb_station_custodian",
+   "actor": "custodian",
+   "at": [
+    37,
+    82
+   ],
+   "face": "s",
+   "shut": false,
+   "blocks": true
+  },
+  {
+   "station": "rb_station_custodian",
+   "actor": "custodian",
+   "at": [
+    39,
+    82
+   ],
+   "face": "s",
+   "shut": true,
+   "blocks": true
+  },
+  {
+   "station": "rb_station_dancer",
+   "actor": "dancer",
+   "at": [
+    41,
+    82
+   ],
+   "face": "s",
+   "shut": false,
+   "blocks": true
+  },
+  {
+   "station": "rb_station_dancer",
+   "actor": "dancer",
+   "at": [
+    43,
+    82
+   ],
+   "face": "s",
+   "shut": true,
+   "blocks": true
+  },
+  {
+   "station": "rb_station_deadbot",
+   "actor": "deadbot",
+   "at": [
+    45,
+    82
+   ],
    "face": "s",
    "shut": false,
    "blocks": true
@@ -5123,7 +5705,7 @@
    "station": "rb_station_deadbot",
    "actor": "deadbot",
    "at": [
-    11,
+    47,
     82
    ],
    "face": "s",
@@ -5134,7 +5716,7 @@
    "station": "rb_station_defender",
    "actor": "defender",
    "at": [
-    13,
+    49,
     82
    ],
    "face": "s",
@@ -5145,7 +5727,7 @@
    "station": "rb_station_defender",
    "actor": "defender",
    "at": [
-    15,
+    51,
     82
    ],
    "face": "s",
@@ -5156,7 +5738,7 @@
    "station": "rb_station_knife",
    "actor": "drone",
    "at": [
-    17,
+    53,
     82
    ],
    "face": "s",
@@ -5167,7 +5749,7 @@
    "station": "rb_station_knife",
    "actor": "drone",
    "at": [
-    19,
+    55,
     82
    ],
    "face": "s",
@@ -5178,7 +5760,7 @@
    "station": "rb_station_eggbot",
    "actor": "eggbot",
    "at": [
-    21,
+    57,
     82
    ],
    "face": "s",
@@ -5189,7 +5771,7 @@
    "station": "rb_station_eggbot",
    "actor": "eggbot",
    "at": [
-    23,
+    59,
     82
    ],
    "face": "s",
@@ -5200,7 +5782,7 @@
    "station": "rb_station_monoid",
    "actor": "monoid",
    "at": [
-    25,
+    61,
     82
    ],
    "face": "s",
@@ -5211,7 +5793,7 @@
    "station": "rb_station_monoid",
    "actor": "monoid",
    "at": [
-    27,
+    63,
     82
    ],
    "face": "s",
@@ -5222,7 +5804,7 @@
    "station": "rb_station_plodder",
    "actor": "plodder",
    "at": [
-    29,
+    65,
     82
    ],
    "face": "s",
@@ -5233,7 +5815,7 @@
    "station": "rb_station_plodder",
    "actor": "plodder",
    "at": [
-    31,
+    67,
     82
    ],
    "face": "s",
@@ -5251,7 +5833,7 @@
    "size": 40,
    "y": 3.0,
    "at": [
-    16,
+    52,
     86
    ]
   },
@@ -5358,10 +5940,33 @@
    "lounge": "none"
   },
   {
+   "target": "spot",
+   "at": [
+    32,
+    45
+   ],
+   "face": "e"
+  },
+  {
+   "actor": "emitter",
+   "at": [
+    35,
+    45
+   ],
+   "face": "w"
+  },
+  {
    "actor": "grease_monkey",
    "at": [
     2,
     22
+   ]
+  },
+  {
+   "actor": "heavy",
+   "at": [
+    35,
+    15
    ]
   },
   {

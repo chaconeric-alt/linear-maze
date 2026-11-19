@@ -1,6 +1,9 @@
 extends Node3D
-## Trap - hazards built into a cell. Three kinds ship with the engine (laser, shock, vent);
-## every one can be switched off by a story flag or an "disable" effect on its tag.
+## Trap - hazards built into a cell: laser, shock, vent and darts.
+## Every one can be switched off by a story flag ("off": a flag, or a list of them) or a "disable" effect on its tag.
+##   laser  "trip": true makes it a tripwire: it does not burn, it runs its "effects" once and goes out.
+##   darts  a pressure plate between two walls with dart ports in them. Step on it and, after "delay" (0.3 s), "volleys" (2)
+##          cross the cell "interval" (0.3 s) apart, "damage" (9) each to anyone still on the plate. "cooldown" (2.5 s).
 class_name Trap
 
 var level: Level
@@ -15,6 +18,9 @@ var _along_x := true
 var _light: OmniLight3D
 var _parts: CPUParticles3D
 var _on := false
+var _plate: Node3D
+var _volleys := 0
+var _next := 0.0
 
 
 func setup(lv: Level, entry: Dictionary, p: Vector2i, kit_id: String) -> void:
@@ -56,6 +62,21 @@ func setup(lv: Level, entry: Dictionary, p: Vector2i, kit_id: String) -> void:
 				_beams.append(mi)
 			_light.light_color = Color(1.0, 0.1, 0.05)
 			_light.position.y = 1.2
+		"darts":
+			_along_x = lv.cell(p.x - 1, p.y)["solid"] and lv.cell(p.x + 1, p.y)["solid"]
+			if e.has("axis"):
+				_along_x = e["axis"] == "x"
+			rotation.y = 0.0 if _along_x else PI / 2
+			_plate = LM.spawn_model(kit_id, "trap_plate")
+			add_child(_plate)
+			for zz in [-1.1, 0.0, 1.1]:
+				for s in [-1.0, 1.0]:
+					var port := LM.spawn_model(kit_id, "trap_dart")
+					add_child(port)
+					port.position = Vector3(s * lv.C / 2, 1.25, zz)
+					port.rotation.y = -s * PI / 2
+			_light.light_color = Color(1.0, 0.8, 0.2)
+			_light.position.y = 1.2
 		"shock":
 			add_child(LM.spawn_model(kit_id, "trap_shock"))
 			_light.light_color = Color(0.3, 0.8, 1.0)
@@ -83,9 +104,11 @@ func setup(lv: Level, entry: Dictionary, p: Vector2i, kit_id: String) -> void:
 			_parts.emitting = false
 			_parts.position.y = 0.15
 			add_child(_parts)
-	if e.has("off") and Game.has_flag(e["off"]):
-		set_enabled(false)
-	Game.flag_set.connect(func(n): if e.get("off", "") == n: set_enabled(false))
+	var offs: Array = e["off"] if e.get("off") is Array else ([e["off"]] if e.has("off") else [])
+	for f in offs:
+		if Game.has_flag(f):
+			set_enabled(false)
+	Game.flag_set.connect(func(n): if offs.has(n): set_enabled(false))
 
 
 func set_enabled(on: bool) -> void:
@@ -122,11 +145,38 @@ func _process(dt: float) -> void:
 					for b in _beams:
 						if b.position.y > rel.y - 0.05 and b.position.y < rel.y + 1.8:
 							_cool = 0.5
+							if e.get("trip", false):             # a tripwire: it tells somebody, once
+								LM.sound("alarm", global_position)
+								Game.run_effects(e.get("effects"))
+								set_enabled(false)
+								break
 							pl.hurt(e.get("damage", 14.0), {"type": "laser", "from": global_position})
 							LM.sound("zap", global_position)
 							Fx.sparks(level, pl.global_position + Vector3(0, b.position.y, 0), Color(1, 0.3, 0.1), 8)
 							Game.run_effects(e.get("effects"))
 							break
+		"darts":
+			var on_plate: bool = here and absf(rel.y) < 0.5
+			if _plate:
+				_plate.position.y = lerpf(_plate.position.y, -0.022 if on_plate else 0.0, 0.3)
+			_light.light_energy = maxf(0.0, _light.light_energy - dt * 4.0)
+			if on_plate and _cool <= 0.0 and _volleys == 0:
+				_cool = e.get("cooldown", 2.5)
+				_volleys = int(e.get("volleys", 2))
+				_next = e.get("delay", 0.3)
+				LM.sound("click", global_position)
+			if _volleys > 0:
+				_next -= dt
+				if _next <= 0.0:
+					_volleys -= 1
+					_next = e.get("interval", 0.3)
+					LM.sound("swing", global_position)
+					_light.light_energy = 1.5
+					for zz in [-1.1, 0.0, 1.1]:
+						Fx.tracer(level, to_global(Vector3(-level.C / 2 + 0.1, 1.25, zz)), to_global(Vector3(level.C / 2 - 0.1, 1.25, zz)), Color(1.0, 0.85, 0.3))
+					if on_plate:
+						pl.hurt(e.get("damage", 9.0), {"type": "trap", "from": global_position})
+						Fx.sparks(level, pl.global_position + Vector3(0, 1.2, 0), Color(1.0, 0.85, 0.3), 6)
 		"shock":
 			var period: float = e.get("period", 2.6)
 			var ph := fmod(_t, period)

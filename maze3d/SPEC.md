@@ -703,4 +703,39 @@ store room, a sump and a vault underneath reached by a pit and a lift, and a sun
 
 Self-test: `--level=home --selftest` checks the rooms, every working piece of furniture, banking and what goes on show, the repair, buying, placing (floor and wall), taking back, the vault door, the lift's destinations, the outfit, and that a reload finds it all as it was left.
 
-Not built yet: the outdoor near-area map (the security desk says so; the lift lists installations instead) and the Anomalous Structure.
+Not built yet: the outdoor near-area map (the security desk says so; the lift lists installations instead).
+
+
+## The Anomalous Structure (`kits/anomalous`, `tools/blender/kits8.py`, `tools/levels/anomalous.py`)
+
+The 2D game's Installation A (`games/havenot/packs/hn-anomalous`), as one level of three stacked floors (storeys 0, 1, 2) joined by two lifts: `lift_a` (0 to 1) behind the blue door, `lift_b` (1 to 2) behind the yellow door. The rooms, the puzzle chain, the text and the three endings follow the 2D floors; the plan is redrawn at about a third of the 2D tile count because a cell here is 4 m.
+
+**What the level needed that the engine did not have** (all usable anywhere):
+
+| Thing | Where | What it does |
+|---|---|---|
+| effect `anger` / `pacify` `{tag}` | `Level.run_effect` | An off-duty actor with that tag becomes a monster and comes for you (`Enemy.anger()`); or a monster stands down for good (`stand_down()`). A thing's `on_anger` effects run when it turns. |
+| thing `off_duty: true` on one actor | already there | With `talk: {...}` on the thing, that actor has its own conversation instead of its kind's (same format as a def's `talk`; no drill option). `provoke: true`: shooting it angers it. |
+| effect `show` / `hide` `{tag}` | `Prop.show_up` | Props placed with `hidden: true` are not there (no collision, no light, cannot be used) until shown; they rise through the floor. `hide` takes a prop away. |
+| effect `drop` `{items: [...]}` | `Level.run_effect` | Pickups appear between the thing that ran the effect and the player (never inside a wall). An item is an id or an item entry. |
+| effect `chance` `{p, do: [...]}` | `Game._run` | Sometimes. |
+| effect `lights` | | `room: "*"` is every room; `floor: n` keeps it to one storey; `energy` scales. |
+| effect `spawn` | | `level: n` says which storey its tagged cells are on; `here: true` uses the storey of the thing that ran it. |
+| effect `alarm` with `radius` | | Heard on the player's own floor only. Noise and death cries no longer carry through floors either. |
+| panel option `cost` | `Hud._choose` | Credits; not enough and it says so. |
+| panel option `risk`, `fail`, `fail_result`, `fail_close` | | `risk` (0 to 1) is the chance a choice goes wrong: `fail` effects run instead of `effects`, and it can be tried again. With `hack` this is a hack that can fail. Effects from a panel now know which prop ran them. |
+| trap `darts` | `Trap` | A pressure plate between two walls with dart ports: `delay`, `volleys`, `interval`, `damage`, `cooldown`. Needs the kit models `trap_plate`, `trap_dart`. |
+| trap `laser` with `trip: true` | | A tripwire: no damage; runs its `effects` once and goes out. |
+| trap `off` | | A flag or a list of flags. Traps take `offset`. |
+| thing `rebuild` | `engine/rebuilder.gd` | A repair bay: while its `off` flag is unset, every `every` seconds it rebuilds one destroyed robot of the listed kinds on its storey (`max` in all), unless the player is within 7 m. `Level.died` is the log it reads. |
+| item kind `quest` | `Pickup` | Says its `text` and sets its `flag`. |
+| `sign` `width`, `offset` | | So lettering can sit on a poster. |
+| cache `text`; loot from a wall-mounted cache comes out the front | `Prop` | |
+
+**New things in the defs.** Actors: `heavy` (Heavy Security Drone: flies, dormant on its station until you are within 13 m or it is hurt, 320 hp, a six-bolt burst and a shell) and `emitter` (Field Emitter: stands still, no attacks, 70 hp; three of them hold the core's field up). Items: `lucky_chip`, `badge`, `order` (quest), `ad_core` (2500 cr, a trophy), `arc`. Weapon: `arc` (Arc Carbine: cells, 9 shots a second, 11 damage).
+
+**Flags** the level uses: `sphinx_ok`, `sphinx_angry`, `sphinx_dead`, `memo314`, `got_blue`, `darts_off`, `lucky_chip`, `badge`, `monoid_deal`, `staff1`, `sec1`, `safe_code`, `order`, `test_done` + `test_show` / `test_archive` / `test_endure`, `endure_done`, `mist_off`, `sec2`, `bolthole`, `alarm`, `station`, `sec3`, `traps_off` (+ `shock_off`, `beam_off`), `bay_off`, `coupling`, `field_down`, `agency_closed`, `ads_silent`, `core_seized`, `core_smashed`, and `key_blue` / `key_yellow` / `key_red` from the cards.
+
+**Changed from the 2D game.** Hacks are a timed panel choice with a chance of failure rather than a skill roll. The Sphinx Gun asks when you come in and fires if you leave reception without answering. The core's field is solid, so there is a lectern outside it for filing the order or arguing; tearing out the connections, seizing and smashing need the field down. The Repair Bay rebuilds robots during the level (on floor 3) rather than between missions. The threat sensor, hypno-tabs, grenades and the carapace suit are stood in for by things this game has (vest, health, cells, shells). Nothing persists between visits except what is banked at home.
+
+**Tests.** `--level=anomalous --selftest` is the standard test. `--level=anomalous --selftest --story` plays the intended route by script (66 checks): both ways past the Sphinx Gun and the Monoid, the darts and their terminal, the memo and locker 4, the three cards, the executive desk and safe, both lifts, the tubes, the mist, ENDURANCE, the tripwire, the Security Station, the Repair Bay, the emitters and the field, closing the agency, seizing the core, leaving, and what is banked.

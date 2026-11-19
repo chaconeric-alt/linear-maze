@@ -25,7 +25,8 @@
   "omni",
   "robots",
   "loot",
-  "home"
+  "home",
+  "anomalous"
  ],
  "defs": [
   "defs/arsenal.json",
@@ -35,6 +36,7 @@
  ],
  "levels": [
   "levels/home.json",
+  "levels/anomalous.json",
   "levels/deepworks.json",
   "levels/menagerie.json",
   "levels/staffonly.json",
@@ -419,6 +421,7 @@
  "start": "deepworks",
  "menu": [
   "home",
+  "anomalous",
   "deepworks",
   "menagerie",
   "staffonly",

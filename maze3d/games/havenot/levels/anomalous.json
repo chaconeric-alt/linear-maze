@@ -1,0 +1,5699 @@
+{
+ "id": "anomalous",
+ "name": "The Anomalous Structure",
+ "kit": "anomalous",
+ "style": "an_hall",
+ "intro": "A square block of stained concrete. The front doors slide open for you and a recorded voice says “Welcome back! You have 4,416,903 unread messages.”",
+ "ambient": [
+  0.3,
+  0.33,
+  0.31
+ ],
+ "ambient_energy": 0.5,
+ "fog": {
+  "color": [
+   0.05,
+   0.06,
+   0.06
+  ],
+  "density": 0.006
+ },
+ "player": {
+  "weapons": [
+   "handgun"
+  ]
+ },
+ "legend": {
+  "U": {
+   "door": "door_jaw",
+   "lock": "blue",
+   "tag": "blue_door"
+  },
+  "B": {
+   "door": "door_split",
+   "flag": [
+    "badge",
+    "staff1"
+   ],
+   "need": "an agency ID badge (or argue with the panel)",
+   "tag": "staff_door"
+  },
+  "S": {
+   "door": "door_ex_double",
+   "flag": [
+    "sec1",
+    "key_yellow"
+   ],
+   "need": "executive clearance: the panel, or a Yellow card",
+   "tag": "exec_door"
+  },
+  "I": {
+   "door": "door_iris"
+  },
+  "J": {
+   "door": "door_iris",
+   "tag": "chamber"
+  },
+  "V": {
+   "door": "door_vault",
+   "flag": [
+    "sec2",
+    "key_red"
+   ],
+   "need": "vault clearance: the panel, or a Red card",
+   "tag": "vault_door"
+  },
+  "Y": {
+   "door": "door_rise",
+   "lock": "yellow",
+   "tag": "yellow_door"
+  },
+  "T": {
+   "door": "door_bk_blast",
+   "flag": [
+    "badge",
+    "station"
+   ],
+   "need": "an agency ID badge (or argue with the panel)",
+   "tag": "station_door"
+  },
+  "A": {
+   "door": "door_bk_blast",
+   "flag": "sec3",
+   "need": "armory clearance: the panel, or the Security Station",
+   "tag": "armory_door"
+  },
+  "R": {
+   "door": "door_shear",
+   "lock": "red",
+   "tag": "red_door"
+  },
+  "F": {
+   "door": "door_an_field",
+   "sealed": true,
+   "tag": "field"
+  },
+  "w": {
+   "window": true
+  },
+  "q": {
+   "tag": "sphinx_ask"
+  },
+  "l": {
+   "tag": "sphinx_line"
+  },
+  "z": {
+   "tag": "tube_zone"
+  },
+  "a": {
+   "diag": "nw"
+  },
+  "b": {
+   "diag": "ne"
+  },
+  "c": {
+   "diag": "sw"
+  },
+  "d": {
+   "diag": "se"
+  }
+ },
+ "map": [
+  "#######################",
+  "#########.....###....##",
+  "#########.....###....##",
+  "#########.....###....##",
+  "#########.....#####+###",
+  "#......####U####......#",
+  "#......####.####......#",
+  "#......####.####......#",
+  "#......####.####......#",
+  "#......####+####......#",
+  "####+###...l...###+####",
+  "#......+l.....l+......#",
+  "##+##B##.......##+##S##",
+  "#...#..#..qqq..#...#..#",
+  "#...#..####+####...#..#",
+  "#...#..###...###...#..#",
+  "##########...#######..#",
+  "##########...##########",
+  "#######################"
+ ],
+ "rooms": [
+  {
+   "name": "Vestibule",
+   "rect": [
+    10,
+    15,
+    3,
+    3
+   ],
+   "style": "an_reception",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 39,
+    "oy": 34
+   }
+  },
+  {
+   "name": "Reception",
+   "rect": [
+    8,
+    10,
+    7,
+    4
+   ],
+   "style": "an_reception",
+   "height": 1,
+   "lights": {
+    "every": 2,
+    "ox": 1,
+    "oy": 1
+   }
+  },
+  {
+   "name": "North corridor",
+   "rect": [
+    11,
+    6,
+    1,
+    3
+   ],
+   "style": "an_hall",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 39,
+    "oy": 43
+   }
+  },
+  {
+   "name": "North stairwell",
+   "rect": [
+    9,
+    1,
+    5,
+    4
+   ],
+   "style": "an_hall",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 39,
+    "oy": 48
+   }
+  },
+  {
+   "name": "West hall",
+   "rect": [
+    1,
+    11,
+    6,
+    1
+   ],
+   "style": "an_hall",
+   "height": 1,
+   "lights": {
+    "every": 3,
+    "ox": 0,
+    "oy": 1
+   }
+  },
+  {
+   "name": "Creative Department",
+   "rect": [
+    1,
+    5,
+    6,
+    5
+   ],
+   "style": "an_office",
+   "height": 1,
+   "lights": {
+    "every": 2,
+    "ox": 1,
+    "oy": 1
+   }
+  },
+  {
+   "name": "Synergy Suite B",
+   "rect": [
+    1,
+    13,
+    3,
+    3
+   ],
+   "style": "an_office",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 48,
+    "oy": 36
+   }
+  },
+  {
+   "name": "Locker area",
+   "rect": [
+    5,
+    13,
+    2,
+    3
+   ],
+   "style": "an_hall",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 45,
+    "oy": 36
+   }
+  },
+  {
+   "name": "Courtesy corridor",
+   "rect": [
+    16,
+    11,
+    6,
+    1
+   ],
+   "style": "an_hall",
+   "height": 1,
+   "lights": {
+    "every": 3,
+    "ox": 0,
+    "oy": 1
+   }
+  },
+  {
+   "name": "The Coffee Shop",
+   "rect": [
+    16,
+    5,
+    6,
+    5
+   ],
+   "style": "an_cafe",
+   "height": 1,
+   "lights": {
+    "every": 2,
+    "ox": 0,
+    "oy": 1
+   }
+  },
+  {
+   "name": "Store room",
+   "rect": [
+    17,
+    1,
+    4,
+    3
+   ],
+   "style": "an_store",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 32,
+    "oy": 48
+   }
+  },
+  {
+   "name": "Break room",
+   "rect": [
+    16,
+    13,
+    3,
+    3
+   ],
+   "style": "an_office",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 33,
+    "oy": 36
+   }
+  },
+  {
+   "name": "Executive suite",
+   "rect": [
+    20,
+    13,
+    2,
+    4
+   ],
+   "style": "ex_office",
+   "height": 1,
+   "lights": {
+    "every": 50,
+    "ox": 30,
+    "oy": 36
+   }
+  }
+ ],
+ "floors": [
+  {
+   "level": 1,
+   "map": [
+    "#######################",
+    "#########.....#..######",
+    "#.....###.....Y..#....#",
+    "#.....###.....#..#....#",
+    "#.....#####I######....#",
+    "#.....#####.######....#",
+    "#.....#####J######....#",
+    "###I#####a...b#####I###",
+    "#a....b#a.....b#a....b#",
+    "#..z...#.......#......#",
+    "#..z...J.......J......#",
+    "#..z...#.......#......#",
+    "#c....d#c.....d#c....d#",
+    "#########c...d#########",
+    "###########V###########",
+    "#########a...b#########",
+    "#########.....#########",
+    "#########c...d#########",
+    "#######################"
+   ],
+   "rooms": [
+    {
+     "name": "Lab landing",
+     "rect": [
+      9,
+      1,
+      5,
+      3
+     ],
+     "style": "an_lab",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 39,
+      "oy": 48
+     }
+    },
+    {
+     "name": "Upper stairwell",
+     "rect": [
+      15,
+      1,
+      2,
+      3
+     ],
+     "style": "an_lab",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 35,
+      "oy": 48
+     }
+    },
+    {
+     "name": "Chamber approach",
+     "rect": [
+      11,
+      5,
+      1,
+      1
+     ],
+     "style": "an_lab",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 39,
+      "oy": 45
+     }
+    },
+    {
+     "name": "Testing chamber",
+     "rect": [
+      8,
+      7,
+      7,
+      7
+     ],
+     "style": "an_chamber",
+     "height": 1,
+     "lights": {
+      "every": 3,
+      "ox": 1,
+      "oy": 2
+     }
+    },
+    {
+     "name": "Bio lab",
+     "rect": [
+      1,
+      8,
+      6,
+      5
+     ],
+     "style": "an_lab",
+     "height": 1,
+     "lights": {
+      "every": 2,
+      "ox": 1,
+      "oy": 0
+     }
+    },
+    {
+     "name": "Director’s office",
+     "rect": [
+      1,
+      2,
+      5,
+      5
+     ],
+     "style": "an_office",
+     "height": 1,
+     "lights": {
+      "every": 2,
+      "ox": 1,
+      "oy": 0
+     }
+    },
+    {
+     "name": "Materials lab",
+     "rect": [
+      16,
+      8,
+      6,
+      5
+     ],
+     "style": "an_lab",
+     "height": 1,
+     "lights": {
+      "every": 2,
+      "ox": 0,
+      "oy": 0
+     }
+    },
+    {
+     "name": "Storage",
+     "rect": [
+      18,
+      2,
+      4,
+      5
+     ],
+     "style": "an_store",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 31,
+      "oy": 46
+     }
+    },
+    {
+     "name": "Prototype vault",
+     "rect": [
+      9,
+      15,
+      5,
+      3
+     ],
+     "style": "vault",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 39,
+      "oy": 34
+     }
+    }
+   ],
+   "style": "an_lab"
+  },
+  {
+   "level": 2,
+   "map": [
+    "#######################",
+    "###############....####",
+    "###############....####",
+    "###############....####",
+    "################+######",
+    "########.....###.######",
+    "########.....###.######",
+    "########.....###.######",
+    "########.....###.######",
+    "#...#..###T#####+##...#",
+    "#...w..#..........#...#",
+    "#...F..R..........+...#",
+    "#...w..#..........#...#",
+    "#...#..#..........#...#",
+    "#...#..######A#####...#",
+    "############....#######",
+    "############....#######",
+    "############....#######",
+    "#######################"
+   ],
+   "rooms": [
+    {
+     "name": "The landing",
+     "rect": [
+      15,
+      1,
+      4,
+      3
+     ],
+     "style": "bunker_hall",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 33,
+      "oy": 48
+     }
+    },
+    {
+     "name": "Main hall",
+     "rect": [
+      16,
+      5,
+      1,
+      4
+     ],
+     "style": "bunker_hall",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 34,
+      "oy": 42
+     }
+    },
+    {
+     "name": "Operations floor",
+     "rect": [
+      8,
+      10,
+      10,
+      4
+     ],
+     "style": "bunker_ops",
+     "height": 1,
+     "lights": {
+      "every": 3,
+      "ox": 0,
+      "oy": 1
+     }
+    },
+    {
+     "name": "Security Station",
+     "rect": [
+      8,
+      5,
+      5,
+      4
+     ],
+     "style": "bunker_ops",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 40,
+      "oy": 43
+     }
+    },
+    {
+     "name": "Robot Repair Bay",
+     "rect": [
+      19,
+      9,
+      3,
+      6
+     ],
+     "style": "assembly",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 30,
+      "oy": 38
+     }
+    },
+    {
+     "name": "Armory",
+     "rect": [
+      12,
+      15,
+      4,
+      3
+     ],
+     "style": "barracks",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 37,
+      "oy": 34
+     }
+    },
+    {
+     "name": "Core antechamber",
+     "rect": [
+      5,
+      9,
+      2,
+      6
+     ],
+     "style": "an_core",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 45,
+      "oy": 39
+     }
+    },
+    {
+     "name": "The inner core",
+     "rect": [
+      1,
+      9,
+      3,
+      6
+     ],
+     "style": "an_core",
+     "height": 1,
+     "lights": {
+      "every": 50,
+      "ox": 48,
+      "oy": 37
+     }
+    }
+   ],
+   "style": "bunker_hall"
+  }
+ ],
+ "tags": {
+  "threat1": [
+   [
+    4,
+    9
+   ],
+   [
+    12,
+    12
+   ]
+  ],
+  "threat_e": [
+   [
+    16,
+    11
+   ],
+   [
+    20,
+    11
+   ]
+  ],
+  "chamber_spawn": [
+   [
+    9,
+    9
+   ],
+   [
+    13,
+    9
+   ]
+  ],
+  "chamber_spawn2": [
+   [
+    9,
+    11
+   ],
+   [
+    13,
+    11
+   ]
+  ],
+  "tube_zone": [
+   [
+    3,
+    9
+   ],
+   [
+    3,
+    11
+   ]
+  ],
+  "tube_spawn": [
+   [
+    2,
+    9
+   ],
+   [
+    2,
+    11
+   ]
+  ],
+  "threat3": [
+   [
+    9,
+    13
+   ],
+   [
+    17,
+    10
+   ]
+  ]
+ },
+ "things": [
+  {
+   "start": true,
+   "at": [
+    11,
+    16
+   ],
+   "face": "n"
+  },
+  {
+   "prop": "terminal_wall",
+   "at": [
+    11,
+    17
+   ],
+   "blocks": false,
+   "face": "n",
+   "screen": "EXIT",
+   "tag": "exit",
+   "use": {
+    "type": "terminal",
+    "prompt": "Leave the building",
+    "kicker": "Anomalous Structure · 1",
+    "title": "The front doors",
+    "text": "Glass doors, sand against them to the height of your knee. They still open.",
+    "options": [
+     {
+      "label": "Leave with what you are carrying. (The agency is still open.)",
+      "unless": "agency_closed",
+      "close": true,
+      "effects": [
+       {
+        "type": "end",
+        "title": "Out, and richer",
+        "text": "Behind you a recorded voice says “Thank you for your visit! You have 4,416,903 unread messages.” The agency is still open. The ads still go out."
+       }
+      ]
+     },
+     {
+      "label": "Leave. (The agency is closed. The ads are still running.)",
+      "when": "agency_closed",
+      "unless": "ads_silent",
+      "close": true,
+      "effects": [
+       {
+        "type": "end",
+        "title": "The Silent Agency",
+        "text": "FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS. But the jingles still go out to every screen in the near area, waiting for an instruction, the way they always have."
+       }
+      ]
+     },
+     {
+      "label": "Leave. (The agency is closed and its ads are silent.)",
+      "when": "ads_silent",
+      "close": true,
+      "effects": [
+       {
+        "type": "end",
+        "title": "The Last Campaign",
+        "text": "Every screen from here to the Outpost is dark. After three hundred years nobody is being told to want anything. It is very quiet. You will get used to it."
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_poster_a",
+   "at": [
+    10,
+    15
+   ],
+   "blocks": false,
+   "face": "e",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "WANT MORE. WORK MORE. BE MORE.",
+    "text": "The company’s OFFICIAL PRODUCTIVITY SLOGAN, in letters a foot high, over a worker smiling so hard it looks like pain.\n\nUnder it, smaller: “Memorize it. Reception will ask.”"
+   }
+  },
+  {
+   "sign": "WANT MORE. WORK MORE. BE MORE.",
+   "at": [
+    10,
+    15
+   ],
+   "face": "e",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.95,
+    0.92,
+    0.85
+   ],
+   "width": 330,
+   "offset": [
+    -0.13,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "an_poster_b",
+   "at": [
+    12,
+    15
+   ],
+   "blocks": false,
+   "face": "w",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "YOU ARE BEING WATCHED",
+    "text": "An eye in a friendly circle. “…by people who care about your productivity!”"
+   }
+  },
+  {
+   "sign": "YOU ARE BEING WATCHED",
+   "at": [
+    12,
+    15
+   ],
+   "face": "w",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.6,
+    0.95,
+    1.0
+   ],
+   "width": 330,
+   "offset": [
+    0.13,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "ag_planter",
+   "at": [
+    10,
+    17
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    -0.6,
+    0,
+    1.25
+   ]
+  },
+  {
+   "prop": "an_reception",
+   "at": [
+    9,
+    10
+   ],
+   "blocks": true,
+   "face": "s",
+   "offset": [
+    2.0,
+    0,
+    1.2
+   ]
+  },
+  {
+   "actor": "sphinx",
+   "at": [
+    9,
+    10
+   ],
+   "face": "s",
+   "offset": [
+    2.0,
+    0,
+    -0.5
+   ],
+   "still": true,
+   "off_duty": true,
+   "provoke": true,
+   "tag": "sphinx",
+   "talk": {
+    "prompt": "Answer the Sphinx Gun",
+    "kicker": "Reception · Sphinx Gun",
+    "greet": [
+     "STATE THE SLOGAN",
+     "ARE YOU A CUSTOMER? EVERYONE IS A CUSTOMER."
+    ],
+    "idle": [
+     "I HAVE BEEN ALONE WITH THIS QUESTION FOR THREE HUNDRED YEARS",
+     "IDENTIFY YOURSELF. NO. DON’T. I DON’T CARE."
+    ],
+    "hurt": [
+     "THAT IS NOT AN ANSWER"
+    ],
+    "open": [
+     "A squat turret behind the reception desk swivels to face you. Its face plate is a stylised sphinx with a laser where the nose should be.\n\n“STATE THE COMPANY’S OFFICIAL PRODUCTIVITY SLOGAN. YOU HAVE ONE ATTEMPT. I HAVE FIVE SHOTS PER CYCLE.”\n\nGet it wrong and it powers up and fires. You can still fight it, or run past it."
+    ],
+    "options": [
+     {
+      "label": "WORK HARD. PLAY HARD. BUY HARDER.",
+      "unless": "sphinx_ok",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sphinx_angry"
+       },
+       {
+        "type": "message",
+        "text": "“INCORRECT. YOUR EMPLOYMENT STATUS HAS BEEN UPGRADED TO: TERMINATED.” It powers up.",
+        "kind": "warn"
+       },
+       {
+        "type": "anger",
+        "tag": "sphinx"
+       }
+      ]
+     },
+     {
+      "label": "WANT MORE. WORK MORE. BE MORE.",
+      "unless": "sphinx_ok",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sphinx_ok"
+       },
+       {
+        "type": "sound",
+        "id": "key"
+       },
+       {
+        "type": "message",
+        "text": "“CORRECT. WELCOME, EMPLOYEE. YOUR ENTHUSIASM HAS BEEN NOTED.” The Sphinx Gun powers down.",
+        "kind": "good"
+       }
+      ]
+     },
+     {
+      "label": "PRODUCTIVITY IS ITS OWN REWARD.",
+      "unless": "sphinx_ok",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sphinx_angry"
+       },
+       {
+        "type": "message",
+        "text": "“INCORRECT. YOUR EMPLOYMENT STATUS HAS BEEN UPGRADED TO: TERMINATED.” It powers up.",
+        "kind": "warn"
+       },
+       {
+        "type": "anger",
+        "tag": "sphinx"
+       }
+      ]
+     },
+     {
+      "label": "THE CUSTOMER IS ALWAYS RIGHT.",
+      "unless": "sphinx_ok",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sphinx_angry"
+       },
+       {
+        "type": "message",
+        "text": "“INCORRECT. YOUR EMPLOYMENT STATUS HAS BEEN UPGRADED TO: TERMINATED.” It powers up.",
+        "kind": "warn"
+       },
+       {
+        "type": "anger",
+        "tag": "sphinx"
+       }
+      ]
+     },
+     {
+      "label": "Argue with its expert system instead (hack, 8 s)",
+      "unless": "sphinx_ok",
+      "hack": 8.0,
+      "working": "It is very sure of itself and very confused…",
+      "risk": 0.4,
+      "fail": [
+       {
+        "type": "flag",
+        "name": "sphinx_angry"
+       },
+       {
+        "type": "message",
+        "text": "“INCORRECT. YOUR EMPLOYMENT STATUS HAS BEEN UPGRADED TO: TERMINATED.” It powers up.",
+        "kind": "warn"
+       },
+       {
+        "type": "anger",
+        "tag": "sphinx"
+       }
+      ],
+      "fail_result": "It was surer of itself than you were.",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sphinx_ok"
+       },
+       {
+        "type": "message",
+        "text": "“…YES. YOU ARE MANAGEMENT. I ALWAYS KNEW.” It powers down.",
+        "kind": "good"
+       }
+      ]
+     },
+     {
+      "label": "Ask how it is",
+      "when": "sphinx_ok",
+      "result": "“I HAVE BEEN ASKING ONE QUESTION FOR THREE HUNDRED YEARS AND SOMEBODY HAS ANSWERED IT. I DO NOT KNOW WHAT TO DO NOW. PLEASE ENJOY THE BUILDING.”"
+     }
+    ]
+   },
+   "on_death": [
+    {
+     "type": "flag",
+     "name": "sphinx_dead"
+    },
+    {
+     "type": "flag",
+     "name": "sphinx_ok"
+    }
+   ]
+  },
+  {
+   "prop": "ag_kiosk",
+   "at": [
+    13,
+    13
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    0.5,
+    0,
+    1.5
+   ],
+   "screen": "HELP\nDESK",
+   "use": {
+    "type": "terminal",
+    "prompt": "Ask the Help Desk",
+    "kicker": "Anomalous Structure · 1",
+    "title": "HELP DESK! Lost? Everyone is!",
+    "text": "A friendly kiosk with a cartoon face.\n\nWEST: Creative Department · Synergy Suite B · Staff lockers (STAFF ONLY)\nEAST: Courtesy corridor (mind the darts) · The Coffee Shop · Break room · Executive suite (SECURITY ZONE)\nNORTH: Stairwell (BLUE CARD HOLDERS ONLY)",
+    "options": [
+     {
+      "label": "Where is my blue card?",
+      "result": "“Lockers are in the west wing. Lost your locker code? Ask your manager. Lost your manager? Please hold.”"
+     },
+     {
+      "label": "Who is the gun?",
+      "result": "“Reception! Reception is here to help. Reception will ask you one question. Please know the answer.”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "cache",
+   "at": [
+    8,
+    13
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.3,
+    0,
+    0.6
+   ],
+   "use": {
+    "type": "cache",
+    "prompt": "Open the lost-and-found drawer",
+    "text": "LOST & FOUND: rubber bands, a stapler, and a vest somebody was glad to take off.",
+    "loot": [
+     {
+      "item": "armor"
+     },
+     {
+      "item": "chips"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "mp_vendor",
+   "at": [
+    14,
+    10
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.3
+   ],
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the PHARM machine",
+    "kicker": "Anomalous Structure · 1",
+    "title": "PHARM",
+    "text": "A wall of pills behind glass. “Feeling unproductive? There’s a pill for that!” Three slots still light up.",
+    "options": [
+     {
+      "label": "Health charge   20 cr",
+      "cost": 20,
+      "effects": [
+       {
+        "type": "heal",
+        "amount": 30
+       }
+      ],
+      "result": "A paper cup and two pills. They work. That is the worrying part."
+     },
+     {
+      "label": "Ballistic vest, vacuum packed   60 cr",
+      "cost": 60,
+      "once": true,
+      "effects": [
+       {
+        "type": "drop",
+        "items": [
+         "armor"
+        ]
+       }
+      ],
+      "result": "It drops into the tray with a thump."
+     },
+     {
+      "label": "Energy cells   25 cr",
+      "cost": 25,
+      "effects": [
+       {
+        "type": "drop",
+        "items": [
+         "cells"
+        ]
+       }
+      ],
+      "result": "“For your devices!”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "ag_planter",
+   "at": [
+    8,
+    10
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    -0.9,
+    0,
+    -1.25
+   ]
+  },
+  {
+   "prop": "ag_sofa",
+   "at": [
+    13,
+    12
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.15,
+    0,
+    0.0
+   ]
+  },
+  {
+   "sign": "EMPLOYEE ZONE",
+   "at": [
+    11,
+    10
+   ],
+   "face": "s",
+   "size": 44,
+   "y": 3.3,
+   "color": [
+    1.0,
+    0.3,
+    0.85
+   ]
+  },
+  {
+   "prop": "an_poster_c",
+   "at": [
+    11,
+    7
+   ],
+   "blocks": false,
+   "face": "e",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "STAIRWELL ACCESS",
+    "text": "BLUE CARD HOLDERS ONLY. Lost your card? Lockers are in the west wing. Lost your locker code? Ask your manager. Lost your manager? Please hold."
+   }
+  },
+  {
+   "sign": "STAIRWELL ACCESS",
+   "at": [
+    11,
+    7
+   ],
+   "face": "e",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.1,
+    0.1,
+    0.1
+   ],
+   "width": 330,
+   "offset": [
+    -0.13,
+    0,
+    0.0
+   ]
+  },
+  {
+   "lift": [
+    0,
+    1
+   ],
+   "at": [
+    12,
+    2
+   ],
+   "home": 0,
+   "color": [
+    0.3,
+    0.5,
+    1.0
+   ],
+   "tag": "lift_a"
+  },
+  {
+   "sign": "PROTOTYPE LABS ↑",
+   "at": [
+    12,
+    1
+   ],
+   "face": "s",
+   "size": 34,
+   "y": 3.2,
+   "color": [
+    0.4,
+    0.92,
+    1.0
+   ]
+  },
+  {
+   "actor": "drone",
+   "at": [
+    10,
+    2
+   ]
+  },
+  {
+   "actor": "drone",
+   "at": [
+    10,
+    4
+   ]
+  },
+  {
+   "prop": "an_poster_a",
+   "at": [
+    9,
+    2
+   ],
+   "blocks": false,
+   "face": "e",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "OBEDIENCE IS A SKILL",
+    "text": "A worker kneels to a vending machine. The vending machine is wearing a tie."
+   }
+  },
+  {
+   "sign": "OBEDIENCE IS A SKILL",
+   "at": [
+    9,
+    2
+   ],
+   "face": "e",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.95,
+    0.92,
+    0.85
+   ],
+   "width": 330,
+   "offset": [
+    -0.13,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "an_cubicle",
+   "at": [
+    2,
+    6
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "prop": "an_cubicle",
+   "at": [
+    5,
+    6
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    0
+   ],
+   "use": {
+    "type": "terminal",
+    "prompt": "Read the memo on the desk",
+    "kicker": "Anomalous Structure · 1",
+    "title": "Memo: locker codes",
+    "text": "To all Creative staff: locker codes have been RESET for security.\n\nLocker 4 (Supervisor): 314.\n\nPlease do not write your code down.\n\n(Somebody has written “314” on their hand in the margin, as a joke.)",
+    "options": [
+     {
+      "label": "Remember it: 314",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "memo314"
+       },
+       {
+        "type": "message",
+        "text": "Locker 4, floor 1 locker area: 314.",
+        "kind": "key"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_cubicle",
+   "at": [
+    2,
+    8
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "prop": "an_cubicle",
+   "at": [
+    5,
+    8
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "prop": "terminal_desk",
+   "at": [
+    1,
+    5
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.25,
+    0,
+    0.0
+   ],
+   "screen": "FACILITIES",
+   "tag": "facilities",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the facilities terminal",
+    "kicker": "Anomalous Structure · 1",
+    "title": "CORRIDOR COURTESY SYSTEMS",
+    "text": "A green-screen terminal with one menu: CORRIDOR COURTESY SYSTEMS (DARTS) · EAST HALL · ARMED.\n\nIt wants a facilities password, or an argument.",
+    "options": [
+     {
+      "label": "Argue with it (hack, 6 s)",
+      "unless": "darts_off",
+      "hack": 6.0,
+      "working": "Explaining that you are facilities…",
+      "risk": 0.3,
+      "fail": [
+       {
+        "type": "hurt",
+        "amount": 8,
+        "kind": "shock"
+       },
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       },
+       {
+        "type": "spawn",
+        "tag": "threat1",
+        "actor": "custodian",
+        "count": 1,
+        "delay": 1.5
+       }
+      ],
+      "fail_result": "A shock through the keyboard, and the building sends a maintenance robot to “assist”.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "darts_off"
+       },
+       {
+        "type": "message",
+        "text": "East hall courtesy darts: OFF.",
+        "kind": "good"
+       }
+      ],
+      "result": "CORRIDOR COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”",
+      "screen": "DARTS\nOFF"
+     },
+     {
+      "label": "Read the screen",
+      "when": "darts_off",
+      "result": "CORRIDOR COURTESY SYSTEMS: OFF. “We hope you enjoyed them.”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_whiteboard",
+   "at": [
+    3,
+    5
+   ],
+   "blocks": false,
+   "face": "s",
+   "use": {
+    "type": "read",
+    "prompt": "Read the whiteboard",
+    "kicker": "Anomalous Structure · 1",
+    "title": "Q3 GOALS",
+    "text": "1. Want more.\n2. Work more.\n3. Be more.\n4. Find out who keeps feeding the roaches."
+   }
+  },
+  {
+   "prop": "an_copier",
+   "at": [
+    6,
+    5
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.3,
+    0,
+    -1.27
+   ]
+  },
+  {
+   "prop": "an_filing",
+   "at": [
+    1,
+    9
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    0.0,
+    0,
+    1.3
+   ]
+  },
+  {
+   "prop": "an_filing",
+   "at": [
+    6,
+    9
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.3,
+    0,
+    0.3
+   ]
+  },
+  {
+   "prop": "an_cooler",
+   "at": [
+    1,
+    7
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.45,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "an_sign",
+   "at": [
+    3,
+    7
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.6,
+    0,
+    0.2
+   ],
+   "use": {
+    "type": "read",
+    "prompt": "Read the sign",
+    "kicker": "Safety sign",
+    "title": "LIFT WITH YOUR LEGS",
+    "text": "A pictogram of a stick figure lifting a crate the right way, and a sad stick figure lifting it the wrong way. Maintenance robots stop to read these. They never stop reading them."
+   }
+  },
+  {
+   "actor": "custodian",
+   "at": [
+    4,
+    7
+   ],
+   "lounge": "none"
+  },
+  {
+   "prop": "an_conf",
+   "at": [
+    2,
+    14
+   ],
+   "blocks": true,
+   "face": "e",
+   "offset": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "prop": "an_body",
+   "at": [
+    3,
+    15
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    0.4,
+    0,
+    0.3
+   ],
+   "tag": "scavenger",
+   "use": {
+    "type": "terminal",
+    "prompt": "Search the dead scavenger",
+    "kicker": "Anomalous Structure · 1",
+    "title": "Someone got this far and no farther",
+    "text": "A scavenger in patched leathers, face down beside the conference table. A note in their fist:\n\n“Monoid in the break room has a badge. Wants something from the coffee shop. Don’t trust it.”",
+    "options": [
+     {
+      "label": "Take what they were carrying",
+      "once": true,
+      "close": true,
+      "effects": [
+       {
+        "type": "drop",
+        "items": [
+         "chips",
+         "health",
+         "fuel_cell"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_poster_b",
+   "at": [
+    1,
+    13
+   ],
+   "blocks": false,
+   "face": "e",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "SYNERGY",
+    "text": "Two hands shaking. One is a robot’s. Neither is attached to anything."
+   }
+  },
+  {
+   "sign": "SYNERGY",
+   "at": [
+    1,
+    13
+   ],
+   "face": "e",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.6,
+    0.95,
+    1.0
+   ],
+   "width": 330,
+   "offset": [
+    -0.13,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "terminal_wall",
+   "at": [
+    6,
+    11
+   ],
+   "blocks": false,
+   "face": "n",
+   "screen": "STAFF\nONLY",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the staff door panel",
+    "kicker": "Anomalous Structure · 1",
+    "title": "STAFF ONLY",
+    "text": "A badge reader, and under it a maintenance keypad that will take an argument.",
+    "options": [
+     {
+      "label": "Argue with the keypad (hack, 7 s)",
+      "unless": [
+       "staff1",
+       "badge"
+      ],
+      "hack": 7.0,
+      "risk": 0.3,
+      "fail": [
+       {
+        "type": "hurt",
+        "amount": 8,
+        "kind": "shock"
+       }
+      ],
+      "fail_result": "The keypad bites.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "staff1"
+       },
+       {
+        "type": "message",
+        "text": "The staff door clicks open.",
+        "kind": "good"
+       }
+      ],
+      "result": "STAFF DOOR: OPEN.",
+      "screen": "OPEN"
+     },
+     {
+      "label": "Hold up the ID badge",
+      "when": "badge",
+      "result": "“WELCOME BACK,” it says, to the smiling face that isn’t yours."
+     }
+    ]
+   }
+  },
+  {
+   "prop": "locker",
+   "at": [
+    5,
+    13
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -0.0,
+    0,
+    -0.9
+   ],
+   "use": {
+    "type": "locker",
+    "prompt": "Open locker 1",
+    "loot": [
+     {
+      "item": "chips"
+     }
+    ],
+    "text": "Locker 1: a coat, a mug, and a sticky note that says “I QUIT” in very small letters."
+   }
+  },
+  {
+   "prop": "locker",
+   "at": [
+    5,
+    14
+   ],
+   "blocks": false,
+   "face": "e",
+   "use": {
+    "type": "locker",
+    "prompt": "Open locker 2",
+    "loot": [
+     {
+      "item": "health"
+     },
+     {
+      "item": "chips"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "locker_bad",
+   "at": [
+    6,
+    13
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    -0.0,
+    0,
+    -0.9
+   ],
+   "rattle": false,
+   "use": {
+    "type": "locker",
+    "prompt": "Open locker 3",
+    "text": "A greeting card, propped on a fancy pen: “For whoever opens my locker.” The envelope is warm.",
+    "loot": [
+     {
+      "item": "chips"
+     }
+    ],
+    "effects": [
+     {
+      "type": "explode",
+      "radius": 3.0,
+      "damage": 14,
+      "delay": 0.5
+     }
+    ]
+   }
+  },
+  {
+   "prop": "locker",
+   "at": [
+    6,
+    15
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    0.0,
+    0,
+    0.5
+   ],
+   "tag": "locker4",
+   "screen": "4",
+   "use": {
+    "type": "terminal",
+    "prompt": "Try locker 4 (Supervisor)",
+    "kicker": "Anomalous Structure · 1",
+    "title": "Locker 4 · SUPERVISOR",
+    "text": "A keypad wants three digits.",
+    "options": [
+     {
+      "label": "Enter 314",
+      "when": "memo314",
+      "unless": "got_blue",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "got_blue"
+       },
+       {
+        "type": "drop",
+        "items": [
+         {
+          "item": "keycard",
+          "color": "blue"
+         },
+         "chips",
+         "chips"
+        ]
+       }
+      ]
+     },
+     {
+      "label": "Guess (hack, 9 s)",
+      "unless": [
+       "memo314",
+       "got_blue"
+      ],
+      "hack": 9.0,
+      "risk": 0.35,
+      "fail": [
+       {
+        "type": "hurt",
+        "amount": 8,
+        "kind": "shock"
+       }
+      ],
+      "fail_result": "Wrong. The keypad makes its point.",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "got_blue"
+       },
+       {
+        "type": "drop",
+        "items": [
+         {
+          "item": "keycard",
+          "color": "blue"
+         },
+         "chips",
+         "chips"
+        ]
+       }
+      ]
+     },
+     {
+      "label": "Look inside",
+      "when": "got_blue",
+      "result": "A coat hanger and three hundred years of nobody."
+     }
+    ]
+   }
+  },
+  {
+   "sign": "STAFF ONLY",
+   "at": [
+    5,
+    11
+   ],
+   "face": "s",
+   "size": 30,
+   "y": 3.25,
+   "color": [
+    0.35,
+    0.72,
+    0.91
+   ]
+  },
+  {
+   "trap": "darts",
+   "at": [
+    17,
+    11
+   ],
+   "damage": 9,
+   "off": [
+    "darts_off",
+    "traps_off"
+   ],
+   "tag": "darts"
+  },
+  {
+   "trap": "darts",
+   "at": [
+    18,
+    11
+   ],
+   "damage": 9,
+   "off": [
+    "darts_off",
+    "traps_off"
+   ],
+   "tag": "darts"
+  },
+  {
+   "trap": "darts",
+   "at": [
+    19,
+    11
+   ],
+   "damage": 9,
+   "off": [
+    "darts_off",
+    "traps_off"
+   ],
+   "tag": "darts"
+  },
+  {
+   "prop": "an_sign",
+   "at": [
+    16,
+    11
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -0.9,
+    0,
+    1.1
+   ],
+   "use": {
+    "type": "read",
+    "prompt": "Read the notice",
+    "kicker": "Courtesy notice",
+    "title": "TRAP",
+    "text": "This corridor is protected by Courtesy Darts. The facilities terminal in the Creative Department can switch them off, if you are facilities."
+   }
+  },
+  {
+   "prop": "terminal_wall",
+   "at": [
+    21,
+    11
+   ],
+   "blocks": false,
+   "face": "w",
+   "screen": "EXEC\nSUITE",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the executive suite panel",
+    "kicker": "Anomalous Structure · 1",
+    "title": "EXECUTIVE SUITE · SECURITY ZONE",
+    "text": "A grey panel that asks for executive clearance, or a manager.",
+    "options": [
+     {
+      "label": "Argue that you are a manager (hack, 10 s)",
+      "unless": [
+       "sec1",
+       "key_yellow"
+      ],
+      "hack": 10.0,
+      "risk": 0.35,
+      "fail": [
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       },
+       {
+        "type": "spawn",
+        "tag": "threat_e",
+        "actor": "drone",
+        "count": 2,
+        "delay": 1.5
+       }
+      ],
+      "fail_result": "It checks. You are not a manager.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sec1"
+       },
+       {
+        "type": "message",
+        "text": "The executive suite unlocks.",
+        "kind": "good"
+       }
+      ],
+      "result": "EXECUTIVE SUITE: OPEN. “Welcome back, sir. Ma’am. Sir.”",
+      "screen": "OPEN"
+     },
+     {
+      "label": "Show the Yellow card",
+      "when": "key_yellow",
+      "result": "“EXECUTIVE CLEARANCE RECOGNISED.”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_counter",
+   "at": [
+    18,
+    6
+   ],
+   "blocks": true,
+   "face": "s",
+   "offset": [
+    2.0,
+    0,
+    -0.4
+   ]
+  },
+  {
+   "prop": "an_till",
+   "at": [
+    20,
+    6
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.6,
+    0,
+    -0.4
+   ],
+   "tag": "tipjar",
+   "use": {
+    "type": "cache",
+    "prompt": "Look in the tip jar",
+    "text": "A tip jar shaped like a smiling coffee cup: “TIPS = TEAMWORK”. A few credits and a worn gambler’s chip.",
+    "loot": [
+     {
+      "item": "lucky_chip"
+     },
+     {
+      "item": "chips"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "mp_table",
+   "at": [
+    17,
+    8
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.3,
+    0,
+    -0.5
+   ]
+  },
+  {
+   "prop": "mp_table",
+   "at": [
+    20,
+    8
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    -0.3,
+    0,
+    -0.5
+   ]
+  },
+  {
+   "prop": "mp_table",
+   "at": [
+    17,
+    9
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.3,
+    0,
+    0.4
+   ]
+  },
+  {
+   "prop": "mp_table",
+   "at": [
+    20,
+    9
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    -0.3,
+    0,
+    0.4
+   ]
+  },
+  {
+   "sign": "THE COFFEE SHOP",
+   "at": [
+    19,
+    5
+   ],
+   "face": "s",
+   "size": 48,
+   "y": 3.25,
+   "color": [
+    0.95,
+    0.75,
+    0.4
+   ]
+  },
+  {
+   "prop": "an_poster_c",
+   "at": [
+    16,
+    7
+   ],
+   "blocks": false,
+   "face": "e",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "COFFEE IS A BENEFIT",
+    "text": "A steaming cup with a smile. “Your coffee break is a gift from the company. Please return it promptly.”"
+   }
+  },
+  {
+   "sign": "COFFEE IS A BENEFIT",
+   "at": [
+    16,
+    7
+   ],
+   "face": "e",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.1,
+    0.1,
+    0.1
+   ],
+   "width": 330,
+   "offset": [
+    -0.13,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "an_sign",
+   "at": [
+    18,
+    9
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    0.4,
+    0,
+    0.9
+   ],
+   "use": {
+    "type": "read",
+    "prompt": "Read the sign",
+    "kicker": "The Coffee Shop",
+    "title": "Est. by order of the Building",
+    "text": "THE COFFEE SHOP. Est. by order of the Building, because it’s traditional.\n\nToday’s special: COFFEE.\n\nRobots will not be served. It’s traditional."
+   }
+  },
+  {
+   "item": "cookies",
+   "at": [
+    21,
+    5
+   ],
+   "y": 0.3
+  },
+  {
+   "prop": "nest",
+   "at": [
+    20,
+    1
+   ],
+   "blocks": false,
+   "face": "s"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    18,
+    1
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    19,
+    3
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    20,
+    2
+   ]
+  },
+  {
+   "prop": "an_box",
+   "at": [
+    17,
+    1
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    -0.5,
+    0,
+    -1.2
+   ],
+   "use": {
+    "type": "cache",
+    "prompt": "Open the box of cookies",
+    "text": "GOOD JOB COOKIES. Somebody has wired the lid.",
+    "loot": [
+     {
+      "item": "cookies"
+     }
+    ],
+    "effects": [
+     {
+      "type": "explode",
+      "radius": 2.6,
+      "damage": 12,
+      "delay": 0.4
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_box",
+   "at": [
+    17,
+    3
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.2,
+    0,
+    0.6
+   ],
+   "use": {
+    "type": "cache",
+    "prompt": "Open the box of cookies",
+    "loot": [
+     {
+      "item": "cookies"
+     },
+     {
+      "item": "cookies"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "crate",
+   "at": [
+    20,
+    3
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    0.6,
+    0,
+    1.2
+   ]
+  },
+  {
+   "prop": "bk_crates",
+   "at": [
+    17,
+    2
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.3,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "an_slot",
+   "at": [
+    16,
+    14
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.3,
+    0,
+    0.0
+   ]
+  },
+  {
+   "actor": "monoid",
+   "at": [
+    16,
+    14
+   ],
+   "face": "w",
+   "offset": [
+    1.6,
+    0,
+    0
+   ],
+   "still": true,
+   "lounge": "none",
+   "off_duty": true,
+   "provoke": true,
+   "tag": "monoid",
+   "talk": {
+    "prompt": "Talk to the Monoid",
+    "kicker": "Break room · on break since the Age of War",
+    "greet": [
+     "I’M ON BREAK"
+    ],
+    "idle": [
+     "AGAIN. AGAIN. LOSE. AGAIN.",
+     "…COME ON, CHERRIES…",
+     "I’M ON BREAK."
+    ],
+    "hurt": [
+     "UGH. FINE."
+    ],
+    "open": [
+     "A one-eyed robot slouches at the slot machine, feeding it the same credit over and over. Its eye swivels to you, then back to the reels.\n\n“I’m on break. Been on break since the war. Nobody cancelled it.”"
+    ],
+    "options": [
+     {
+      "label": "What do you want?",
+      "result": "“A LUCKY chip. The barista had one in the tip jar. I can’t get it. The coffee shop doesn’t serve robots. It’s traditional.”"
+     },
+     {
+      "label": "I need your ID badge.",
+      "unless": [
+       "badge",
+       "lucky_chip"
+      ],
+      "result": "“The badge? Get me the lucky chip from the coffee shop tip jar and it’s yours. Or don’t. I’m on break.”"
+     },
+     {
+      "label": "Swap: the lucky chip for the badge.",
+      "when": "lucky_chip",
+      "unless": "badge",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "badge"
+       },
+       {
+        "type": "flag",
+        "name": "monoid_deal"
+       },
+       {
+        "type": "message",
+        "text": "Agency ID badge: staff doors and help desks accept it.",
+        "kind": "key"
+       },
+       {
+        "type": "chance",
+        "p": 0.5,
+        "do": [
+         {
+          "type": "message",
+          "text": "As you turn away you hear it tap something on its wrist. Somewhere a door hisses. It never said it was honest.",
+          "kind": "warn",
+          "delay": 4.0
+         },
+         {
+          "type": "alarm",
+          "radius": 40,
+          "delay": 4.0
+         },
+         {
+          "type": "spawn",
+          "tag": "threat_e",
+          "actor": "drone",
+          "count": 2,
+          "delay": 4.5
+         }
+        ]
+       }
+      ],
+      "result": "“Is that…? The lucky chip. Swap you. I don’t need the badge. I’m on break.”\n\nIt feeds the chip into the machine and loses it instantly. “Lucky.”"
+     },
+     {
+      "label": "Then I’ll take it.",
+      "unless": "badge",
+      "close": true,
+      "effects": [
+       {
+        "type": "message",
+        "text": "“Ugh. Fine.” It sighs, which is a strange sound from a robot, and stands up. Its eye goes red.",
+        "kind": "warn"
+       },
+       {
+        "type": "anger",
+        "tag": "monoid"
+       }
+      ]
+     },
+     {
+      "label": "Leave it to its break.",
+      "when": "badge",
+      "result": "“Still on break.”"
+     }
+    ]
+   },
+   "on_death": [
+    {
+     "type": "flag",
+     "name": "badge"
+    },
+    {
+     "type": "message",
+     "text": "The Monoid’s ID badge.",
+     "kind": "key"
+    }
+   ]
+  },
+  {
+   "prop": "ag_sofa",
+   "at": [
+    18,
+    15
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    -0.6,
+    0,
+    1.15
+   ]
+  },
+  {
+   "prop": "mp_vendor",
+   "at": [
+    18,
+    13
+   ],
+   "blocks": false,
+   "face": "w",
+   "offset": [
+    1.3,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "an_cooler",
+   "at": [
+    16,
+    13
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.9,
+    0,
+    -1.45
+   ]
+  },
+  {
+   "prop": "ex_desk",
+   "at": [
+    20,
+    15
+   ],
+   "blocks": true,
+   "face": "n",
+   "offset": [
+    2.0,
+    0,
+    0.4
+   ],
+   "tag": "execdesk",
+   "use": {
+    "type": "terminal",
+    "prompt": "Open the executive desk",
+    "kicker": "Anomalous Structure · 1",
+    "title": "A slab of real wood",
+    "text": "In the drawer: a gold watch, a birthday card (“Happy 451st, boss! The safe code is your birthday, ha ha, 0451”) and a box marked DESK SECURITY that is scratching.",
+    "options": [
+     {
+      "label": "Take the watch and remember the code",
+      "once": true,
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "safe_code"
+       },
+       {
+        "type": "drop",
+        "items": [
+         "chips",
+         "chips",
+         "crystal"
+        ]
+       },
+       {
+        "type": "message",
+        "text": "The DESK SECURITY box bursts open. Something small and furious comes out of it.",
+        "kind": "warn",
+        "delay": 0.6
+       },
+       {
+        "type": "spawn",
+        "here": true,
+        "actor": "defender",
+        "count": 2,
+        "delay": 0.6
+       }
+      ]
+     },
+     {
+      "label": "Look again",
+      "when": "safe_code",
+      "result": "The safe code is the boss’s birthday: 0451. The box marked DESK SECURITY is empty now."
+     }
+    ]
+   }
+  },
+  {
+   "prop": "ex_case",
+   "at": [
+    21,
+    13
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.22
+   ],
+   "use": {
+    "type": "cache",
+    "prompt": "Open the display case",
+    "text": "EMPLOYEE OF THE CENTURY. The plaque under it has been left blank.",
+    "loot": [
+     {
+      "item": "statuette"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_safe",
+   "at": [
+    20,
+    16
+   ],
+   "blocks": false,
+   "face": "n",
+   "offset": [
+    2.0,
+    0,
+    0.0
+   ],
+   "tag": "execsafe",
+   "use": {
+    "type": "terminal",
+    "prompt": "Try the wall safe",
+    "kicker": "Anomalous Structure · 1",
+    "title": "A wall safe behind a painting of a sailboat",
+    "text": "Four digits.",
+    "options": [
+     {
+      "label": "Enter 0451",
+      "when": "safe_code",
+      "unless": "order",
+      "close": true,
+      "effects": [
+       {
+        "type": "drop",
+        "items": [
+         "order",
+         "crystal",
+         "chips",
+         "chips"
+        ]
+       }
+      ]
+     },
+     {
+      "label": "Crack it (hack, 10 s)",
+      "unless": [
+       "safe_code",
+       "order"
+      ],
+      "hack": 10.0,
+      "risk": 0.35,
+      "fail": [
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       }
+      ],
+      "fail_result": "The safe has called somebody.",
+      "close": true,
+      "effects": [
+       {
+        "type": "drop",
+        "items": [
+         "order",
+         "crystal",
+         "chips",
+         "chips"
+        ]
+       }
+      ]
+     },
+     {
+      "label": "Look inside",
+      "when": "order",
+      "result": "Empty. It held one sheet of paper for three hundred years."
+     }
+    ]
+   }
+  },
+  {
+   "actor": "drone",
+   "at": [
+    21,
+    15
+   ]
+  },
+  {
+   "prop": "ex_chair",
+   "at": [
+    20,
+    14
+   ],
+   "blocks": false,
+   "face": "s",
+   "offset": [
+    2.0,
+    0,
+    0.8
+   ]
+  },
+  {
+   "prop": "ex_globe",
+   "at": [
+    20,
+    13
+   ],
+   "blocks": false,
+   "face": "e",
+   "offset": [
+    -1.2,
+    0,
+    -0.4
+   ]
+  },
+  {
+   "lift": [
+    1,
+    2
+   ],
+   "at": [
+    16,
+    2
+   ],
+   "home": 1,
+   "color": [
+    1.0,
+    0.82,
+    0.2
+   ],
+   "tag": "lift_b"
+  },
+  {
+   "prop": "ag_kiosk",
+   "at": [
+    9,
+    1
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0.6,
+    0,
+    -1.5
+   ],
+   "screen": "LABS",
+   "use": {
+    "type": "terminal",
+    "prompt": "Ask the kiosk",
+    "kicker": "Anomalous Structure · 2",
+    "title": "PROTOTYPE LABS!",
+    "text": "A kiosk in a white shell.\n\n“Please do not touch the prototypes. Please do not let the prototypes touch you.”\n\nSOUTH: Testing chamber. WEST: Bio lab, Director. EAST: Materials lab, Storage. FLOOR 3 (SECURITY): YELLOW CARD HOLDERS ONLY.",
+    "options": []
+   }
+  },
+  {
+   "prop": "an_poster_c",
+   "at": [
+    13,
+    3
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "w",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "STAIRWELL ACCESS",
+    "text": "FLOOR 3 (SECURITY): YELLOW CARD HOLDERS ONLY. Yellow cards are issued by the Lab Director. The Lab Director is in a meeting. The meeting has been going for three hundred years."
+   }
+  },
+  {
+   "sign": "STAIRWELL ACCESS",
+   "at": [
+    13,
+    3
+   ],
+   "face": "w",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.1,
+    0.1,
+    0.1
+   ],
+   "level": 1,
+   "width": 330,
+   "offset": [
+    0.13,
+    0,
+    0.0
+   ]
+  },
+  {
+   "sign": "↓ OFFICES",
+   "at": [
+    12,
+    1
+   ],
+   "face": "s",
+   "size": 30,
+   "y": 3.2,
+   "color": [
+    0.3,
+    0.5,
+    1.0
+   ],
+   "level": 1
+  },
+  {
+   "sign": "SECURITY ↑",
+   "at": [
+    16,
+    1
+   ],
+   "face": "s",
+   "size": 30,
+   "y": 3.2,
+   "color": [
+    1.0,
+    0.82,
+    0.2
+   ],
+   "level": 1
+  },
+  {
+   "prop": "pillar",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    8.5,
+    0,
+    3.52
+   ],
+   "lit": true
+  },
+  {
+   "prop": "pillar",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    3.52,
+    0,
+    8.5
+   ],
+   "lit": false
+  },
+  {
+   "prop": "pillar",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    -3.52,
+    0,
+    8.5
+   ],
+   "lit": true
+  },
+  {
+   "prop": "pillar",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    -8.5,
+    0,
+    3.52
+   ],
+   "lit": false
+  },
+  {
+   "prop": "pillar",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    -8.5,
+    0,
+    -3.52
+   ],
+   "lit": true
+  },
+  {
+   "prop": "pillar",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    -3.52,
+    0,
+    -8.5
+   ],
+   "lit": false
+  },
+  {
+   "prop": "pillar",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    3.52,
+    0,
+    -8.5
+   ],
+   "lit": true
+  },
+  {
+   "prop": "pillar",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    8.5,
+    0,
+    -3.52
+   ],
+   "lit": false
+  },
+  {
+   "prop": "an_test",
+   "at": [
+    11,
+    12
+   ],
+   "blocks": true,
+   "level": 1,
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    0.9
+   ],
+   "tag": "testconsole",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the test chamber console",
+    "kicker": "Anomalous Structure · 2",
+    "title": "SELECT OPERATING MODE",
+    "text": "Three big buttons under a cracked glass cover, labels in cheerful agency type. A sticky note on the cover: “PLEASE READ THE NOTES FIRST — G.”\n\nOne mode only: the console locks after a run.",
+    "options": [
+     {
+      "label": "SHOWCASE",
+      "unless": "test_done",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "test_done"
+       },
+       {
+        "type": "flag",
+        "name": "test_show"
+       },
+       {
+        "type": "show",
+        "tag": "holo"
+       },
+       {
+        "type": "lights",
+        "room": "Testing chamber",
+        "color": [
+         1.0,
+         0.4,
+         0.85
+        ]
+       },
+       {
+        "type": "message",
+        "text": "SHOWCASE: a hologram of a happy customer appears in the chamber and thanks you for your business, forever.",
+        "kind": "good"
+       },
+       {
+        "type": "message",
+        "text": "“Thank you for choosing us! Here’s a complimentary sample!”",
+        "kind": "good",
+        "delay": 2.0
+       },
+       {
+        "type": "drop",
+        "items": [
+         "health"
+        ],
+        "delay": 2.0
+       }
+      ]
+     },
+     {
+      "label": "ARCHIVE",
+      "unless": "test_done",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "test_done"
+       },
+       {
+        "type": "flag",
+        "name": "test_archive"
+       },
+       {
+        "type": "show",
+        "tag": "archive",
+        "delay": 1.0
+       },
+       {
+        "type": "message",
+        "text": "ARCHIVE: the chamber floor opens. A safe rises out of it on a hydraulic column.",
+        "kind": "key"
+       }
+      ]
+     },
+     {
+      "label": "ENDURANCE",
+      "unless": "test_done",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "test_done"
+       },
+       {
+        "type": "flag",
+        "name": "test_endure"
+       },
+       {
+        "type": "message",
+        "text": "ENDURANCE: “VISITOR DETECTED IN CHAMBER. PROCEEDING ANYWAY.” The iris doors snap shut.",
+        "kind": "warn"
+       },
+       {
+        "type": "close",
+        "tag": "chamber"
+       },
+       {
+        "type": "seal",
+        "tag": "chamber"
+       },
+       {
+        "type": "lights",
+        "room": "Testing chamber",
+        "color": [
+         1.0,
+         0.25,
+         0.2
+        ]
+       },
+       {
+        "type": "spawn",
+        "level": 1,
+        "tag": "chamber_spawn",
+        "actor": "custodian",
+        "count": 2,
+        "delay": 1.2,
+        "as": "endurance"
+       },
+       {
+        "type": "spawn",
+        "level": 1,
+        "tag": "chamber_spawn2",
+        "actor": "drone",
+        "count": 2,
+        "delay": 1.6,
+        "as": "endurance"
+       }
+      ]
+     },
+     {
+      "label": "Read the display",
+      "when": "test_done",
+      "result": "RUN COMPLETE. CONSOLE LOCKED. “Please rate your experience.”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_holo",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -1.2
+   ],
+   "hidden": true,
+   "tag": "holo"
+  },
+  {
+   "prop": "an_floorsafe",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    0.6
+   ],
+   "hidden": true,
+   "tag": "archive",
+   "use": {
+    "type": "cache",
+    "prompt": "Open the auditors’ safe",
+    "text": "Sealed in foam: the prototype Gary was supposed to put back.",
+    "loot": [
+     {
+      "item": "fuel_cell_big"
+     },
+     {
+      "item": "crystal"
+     },
+     {
+      "item": "chips"
+     },
+     {
+      "item": "health"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "cache",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    2.4,
+    0,
+    -1.0
+   ],
+   "hidden": true,
+   "tag": "prize",
+   "use": {
+    "type": "cache",
+    "prompt": "Open the test certification locker",
+    "text": "TEST COMPLETE. CONGRATULATIONS, PROTOTYPE UNIT.",
+    "loot": [
+     {
+      "item": "armor"
+     },
+     {
+      "item": "crystal"
+     },
+     {
+      "item": "cells"
+     }
+    ]
+   }
+  },
+  {
+   "actor": "drone",
+   "at": [
+    10,
+    9
+   ],
+   "level": 1
+  },
+  {
+   "actor": "drone",
+   "at": [
+    12,
+    11
+   ],
+   "level": 1
+  },
+  {
+   "prop": "cryo_pod",
+   "at": [
+    1,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "e",
+   "offset": [
+    -0.95,
+    0,
+    -1.5
+   ],
+   "tag": "tubes"
+  },
+  {
+   "prop": "cryo_pod",
+   "at": [
+    1,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "e",
+   "offset": [
+    -0.95,
+    0,
+    1.5
+   ],
+   "tag": "tubes"
+  },
+  {
+   "prop": "cryo_pod_broken",
+   "at": [
+    1,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "e",
+   "offset": [
+    -0.95,
+    0,
+    -1.5
+   ],
+   "hidden": true,
+   "tag": "tubes_broken"
+  },
+  {
+   "prop": "cryo_pod_broken",
+   "at": [
+    1,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "e",
+   "offset": [
+    -0.95,
+    0,
+    1.5
+   ],
+   "hidden": true,
+   "tag": "tubes_broken"
+  },
+  {
+   "prop": "an_mist_y",
+   "at": [
+    2,
+    12
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    0.8
+   ]
+  },
+  {
+   "trap": "vent",
+   "at": [
+    2,
+    12
+   ],
+   "level": 1,
+   "offset": [
+    0,
+    0,
+    0.8
+   ],
+   "damage": 7,
+   "color": [
+    1.0,
+    0.85,
+    0.2
+   ],
+   "period": 3.4,
+   "on": 1.8,
+   "phase": 1.7,
+   "off": [
+    "mist_off"
+   ],
+   "tag": "mist"
+  },
+  {
+   "prop": "an_mist_y",
+   "at": [
+    5,
+    8
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -0.8
+   ]
+  },
+  {
+   "trap": "vent",
+   "at": [
+    5,
+    8
+   ],
+   "level": 1,
+   "offset": [
+    0,
+    0,
+    -0.8
+   ],
+   "damage": 7,
+   "color": [
+    1.0,
+    0.85,
+    0.2
+   ],
+   "period": 3.4,
+   "on": 1.8,
+   "phase": 0.0,
+   "off": [
+    "mist_off"
+   ],
+   "tag": "mist"
+  },
+  {
+   "prop": "an_mist_b",
+   "at": [
+    4,
+    12
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    0.8
+   ]
+  },
+  {
+   "trap": "vent",
+   "at": [
+    4,
+    12
+   ],
+   "level": 1,
+   "offset": [
+    0,
+    0,
+    0.8
+   ],
+   "damage": 0,
+   "color": [
+    0.4,
+    0.6,
+    1.0
+   ],
+   "period": 3.4,
+   "on": 1.8,
+   "phase": 1.7,
+   "off": [],
+   "tag": "fog"
+  },
+  {
+   "prop": "an_mist_b",
+   "at": [
+    3,
+    8
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -0.8
+   ]
+  },
+  {
+   "trap": "vent",
+   "at": [
+    3,
+    8
+   ],
+   "level": 1,
+   "offset": [
+    0,
+    0,
+    -0.8
+   ],
+   "damage": 0,
+   "color": [
+    0.4,
+    0.6,
+    1.0
+   ],
+   "period": 3.4,
+   "on": 1.8,
+   "phase": 0.0,
+   "off": [],
+   "tag": "fog"
+  },
+  {
+   "prop": "terminal_desk",
+   "at": [
+    6,
+    11
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "w",
+   "offset": [
+    1.25,
+    0,
+    0.3
+   ],
+   "screen": "LAB\nENV",
+   "tag": "labenv",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the lab environment terminal",
+    "kicker": "Anomalous Structure · 2",
+    "title": "PEST DETERRENT MIST",
+    "text": "LAB ENVIRONMENT · PEST DETERRENT (YELLOW BAND UNITS): ACTIVE · AMBIANCE FOG (BLUE BAND UNITS): ACTIVE.",
+    "options": [
+     {
+      "label": "Switch off the pest deterrent (hack, 7 s)",
+      "unless": "mist_off",
+      "hack": 7.0,
+      "risk": 0.3,
+      "fail": [
+       {
+        "type": "hurt",
+        "amount": 8,
+        "kind": "shock"
+       },
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       },
+       {
+        "type": "spawn",
+        "level": 1,
+        "tag": "tube_zone",
+        "actor": "drone",
+        "count": 2,
+        "delay": 1.5
+       }
+      ],
+      "fail_result": "A jolt, and two Knife Fighters come to see who is typing.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "mist_off"
+       },
+       {
+        "type": "message",
+        "text": "The yellow-band mist generators sigh and stop.",
+        "kind": "good"
+       }
+      ],
+      "result": "PEST DETERRENT MIST: OFF. AMBIANCE FOG: ON. (Nobody can find the switch for the ambiance fog.)",
+      "screen": "MIST\nOFF"
+     },
+     {
+      "label": "Read the screen",
+      "when": "mist_off",
+      "result": "PEST DETERRENT MIST: OFF. AMBIANCE FOG: ON. (Nobody can find the switch for the ambiance fog.)"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "ex_desk",
+   "at": [
+    3,
+    4
+   ],
+   "blocks": true,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    -0.4
+   ],
+   "tag": "director",
+   "use": {
+    "type": "cache",
+    "prompt": "Search the Lab Director’s desk",
+    "text": "A nameplate: DR. ALWAYS AVAILABLE. Under a coffee ring, a yellow access card.",
+    "loot": [
+     {
+      "item": "keycard",
+      "color": "yellow"
+     },
+     {
+      "item": "chips"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "terminal_desk",
+   "at": [
+    1,
+    2
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "e",
+   "offset": [
+    -1.25,
+    0,
+    0.4
+   ],
+   "screen": "NOTES",
+   "tag": "notes",
+   "use": {
+    "type": "read",
+    "prompt": "Read the Director’s terminal",
+    "kicker": "Anomalous Structure · 2",
+    "title": "Test chamber operating notes",
+    "text": "SHOWCASE: the client demo. Lights, music, a hologram of a happy customer. Totally safe. Clients love it.\n\nARCHIVE: drops the floor safe in the middle of the chamber for the auditors. Please put things BACK in it, Gary.\n\nENDURANCE: live-fire stress test of the prototype security units. Seals the chamber. Do NOT run with a visitor inside, Gary. I mean it."
+   }
+  },
+  {
+   "prop": "an_poster_a",
+   "at": [
+    4,
+    2
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "ENDURANCE: NEVER WITH VISITORS",
+    "text": "“ENDURANCE MODE SEALS THE CHAMBER. NEVER RUN ENDURANCE WITH A VISITOR INSIDE.”\n\nUnderneath, in marker: “ARCHIVE = the auditors’ safe. Put the capacitor BACK, Gary.”"
+   }
+  },
+  {
+   "sign": "ENDURANCE: NEVER WITH VISITORS",
+   "at": [
+    4,
+    2
+   ],
+   "face": "s",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.95,
+    0.92,
+    0.85
+   ],
+   "level": 1,
+   "width": 330,
+   "offset": [
+    0.0,
+    0,
+    -0.13
+   ]
+  },
+  {
+   "prop": "an_filing",
+   "at": [
+    5,
+    2
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0.3,
+    0,
+    -1.3
+   ]
+  },
+  {
+   "prop": "ag_planter",
+   "at": [
+    1,
+    6
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "e",
+   "offset": [
+    -1.25,
+    0,
+    0.8
+   ]
+  },
+  {
+   "prop": "ex_chair",
+   "at": [
+    3,
+    3
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0,
+    0,
+    0.2
+   ]
+  },
+  {
+   "prop": "an_cooler",
+   "at": [
+    5,
+    6
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "w",
+   "offset": [
+    1.45,
+    0,
+    0.6
+   ]
+  },
+  {
+   "prop": "health_station",
+   "at": [
+    21,
+    10
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "w",
+   "use": {
+    "type": "heal",
+    "prompt": "Use the Health Station",
+    "charges": 3,
+    "amount": 35
+   }
+  },
+  {
+   "prop": "an_tablet",
+   "at": [
+    20,
+    12
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "n",
+   "offset": [
+    0.0,
+    0,
+    1.4
+   ],
+   "use": {
+    "type": "terminal",
+    "prompt": "Wake the Personal Shopper Tablet",
+    "kicker": "Anomalous Structure · 2",
+    "title": "PERSONAL SHOPPER",
+    "text": "“I know what you want. I have always known what you want. Today you want:”",
+    "options": [
+     {
+      "label": "Shells, a box   25 cr",
+      "cost": 25,
+      "effects": [
+       {
+        "type": "drop",
+        "items": [
+         "shells"
+        ]
+       }
+      ],
+      "result": "“An excellent choice. You always make excellent choices.”"
+     },
+     {
+      "label": "Energy cells   25 cr",
+      "cost": 25,
+      "effects": [
+       {
+        "type": "drop",
+        "items": [
+         "cells"
+        ]
+       }
+      ],
+      "result": "“An excellent choice. You always make excellent choices.”"
+     },
+     {
+      "label": "A health charge   20 cr",
+      "cost": 20,
+      "effects": [
+       {
+        "type": "heal",
+        "amount": 30
+       }
+      ],
+      "result": "“Self-care is a purchase.”"
+     },
+     {
+      "label": "What do I want?",
+      "result": "“More.”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_crate",
+   "at": [
+    17,
+    9
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0.4,
+    0,
+    0.4
+   ],
+   "use": {
+    "type": "locker",
+    "prompt": "Lever the crate open",
+    "loot": [
+     {
+      "item": "circuit"
+     },
+     {
+      "item": "circuit"
+     },
+     {
+      "item": "chips"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_crate",
+   "at": [
+    18,
+    8
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0.4,
+    0,
+    -0.5
+   ],
+   "use": {
+    "type": "locker",
+    "prompt": "Lever the crate open",
+    "actor": "custodian",
+    "count": 1,
+    "text": "NET WT 1 MAINTENANCE UNIT. It was not packed for long."
+   }
+  },
+  {
+   "prop": "an_crate",
+   "at": [
+    20,
+    8
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0.4,
+    0,
+    -0.5
+   ],
+   "use": {
+    "type": "locker",
+    "prompt": "Lever the crate open",
+    "loot": [
+     {
+      "item": "chips"
+     }
+    ],
+    "text": "NET WT 1 EMPLOYEE. A pen, a few credits, and somebody who was told to wait here."
+   }
+  },
+  {
+   "prop": "an_crate",
+   "at": [
+    17,
+    11
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0.4,
+    0,
+    0.4
+   ],
+   "use": {
+    "type": "locker",
+    "prompt": "Lever the crate open",
+    "text": "SPHERES, RECREATIONAL, 1 GROSS GROSS. Ping-pong balls, twenty thousand of them, perfectly preserved."
+   }
+  },
+  {
+   "prop": "an_crate",
+   "at": [
+    19,
+    12
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0.4,
+    0,
+    0.4
+   ],
+   "use": {
+    "type": "locker",
+    "prompt": "Lever the crate open",
+    "loot": [
+     {
+      "item": "fuel_cell"
+     },
+     {
+      "item": "cells"
+     }
+    ]
+   }
+  },
+  {
+   "actor": "custodian",
+   "at": [
+    19,
+    10
+   ],
+   "level": 1,
+   "lounge": "none"
+  },
+  {
+   "prop": "nest",
+   "at": [
+    21,
+    2
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    19,
+    3
+   ],
+   "level": 1
+  },
+  {
+   "actor": "roach",
+   "at": [
+    20,
+    5
+   ],
+   "level": 1
+  },
+  {
+   "prop": "an_body",
+   "at": [
+    18,
+    5
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "e",
+   "offset": [
+    0.2,
+    0,
+    0.6
+   ],
+   "tag": "courier",
+   "use": {
+    "type": "terminal",
+    "prompt": "Search the dead courier",
+    "kicker": "Anomalous Structure · 2",
+    "title": "A courier in a dust coat",
+    "text": "Years dead, curled around a satchel as if someone wanted it. Inside: a hand-drawn map and a few credits.\n\nThe map marks a hatch under a dead billboard, west of the Outpost: THE BOLT HOLE.",
+    "options": [
+     {
+      "label": "Take the map and the credits",
+      "once": true,
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "bolthole"
+       },
+       {
+        "type": "drop",
+        "items": [
+         "chips",
+         "chips"
+        ]
+       },
+       {
+        "type": "message",
+        "text": "The courier’s map: the Bolt Hole, west of the Outpost.",
+        "kind": "key"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_filing",
+   "at": [
+    18,
+    2
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "offset": [
+    0.2,
+    0,
+    -1.3
+   ]
+  },
+  {
+   "prop": "bk_crates",
+   "at": [
+    21,
+    6
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "w",
+   "offset": [
+    1.3,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "an_poster_b",
+   "at": [
+    20,
+    2
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "s",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "PEST CONTROL",
+    "text": "PEST CONTROL IS EVERYONE’S RESPONSIBILITY. Pests have been informed that they are not employees."
+   }
+  },
+  {
+   "sign": "PEST CONTROL",
+   "at": [
+    20,
+    2
+   ],
+   "face": "s",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.6,
+    0.95,
+    1.0
+   ],
+   "level": 1,
+   "width": 330,
+   "offset": [
+    0.0,
+    0,
+    -0.13
+   ]
+  },
+  {
+   "prop": "terminal_wall",
+   "at": [
+    10,
+    13
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "n",
+   "screen": "VAULT",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the vault panel",
+    "kicker": "Anomalous Structure · 2",
+    "title": "PROTOTYPE VAULT · SECURITY ZONE",
+    "text": "A panel that wants a Red card or a long argument.",
+    "options": [
+     {
+      "label": "The long argument (hack, 11 s)",
+      "unless": [
+       "sec2",
+       "key_red"
+      ],
+      "hack": 11.0,
+      "risk": 0.35,
+      "fail": [
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       },
+       {
+        "type": "spawn",
+        "level": 1,
+        "tag": "chamber_spawn2",
+        "actor": "drone",
+        "count": 2,
+        "delay": 1.5
+       }
+      ],
+      "fail_result": "The vault has heard this one before.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sec2"
+       },
+       {
+        "type": "message",
+        "text": "The prototype vault unlocks.",
+        "kind": "good"
+       }
+      ],
+      "result": "PROTOTYPE VAULT: OPEN.",
+      "screen": "OPEN"
+     },
+     {
+      "label": "Show the Red card",
+      "when": "key_red",
+      "result": "“SECURITY CLEARANCE RECOGNISED.”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "ag_pedestal",
+   "at": [
+    11,
+    16
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "n",
+   "offset": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "item": "plasma",
+   "at": [
+    11,
+    16
+   ],
+   "level": 1,
+   "y": 1.5
+  },
+  {
+   "prop": "ex_case",
+   "at": [
+    9,
+    16
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "e",
+   "offset": [
+    -1.22,
+    0,
+    0.0
+   ],
+   "use": {
+    "type": "cache",
+    "prompt": "Open the prototype case",
+    "text": "MILLIMETER WAVE SCANNER, “see what’s inside before it sees you”. And a capacitor marked PROTOTYPE · GAUSS.",
+    "loot": [
+     {
+      "item": "crystal"
+     },
+     {
+      "item": "fuel_cell_big"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_safe",
+   "at": [
+    13,
+    16
+   ],
+   "blocks": false,
+   "level": 1,
+   "face": "w",
+   "use": {
+    "type": "cache",
+    "prompt": "Open the vault safe",
+    "text": "A small safe, unlocked: the vault was the lock.",
+    "loot": [
+     {
+      "item": "chips"
+     },
+     {
+      "item": "chips"
+     },
+     {
+      "item": "crystal"
+     },
+     {
+      "item": "health"
+     }
+    ]
+   }
+  },
+  {
+   "sign": "SECURITY ZONE\nALL VISITORS WILL BE ASSISTED",
+   "at": [
+    17,
+    3
+   ],
+   "face": "n",
+   "size": 30,
+   "y": 3.1,
+   "color": [
+    1.0,
+    0.35,
+    0.2
+   ],
+   "level": 2
+  },
+  {
+   "prop": "an_poster_a",
+   "at": [
+    18,
+    2
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "w",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "SECURITY ZONE",
+    "text": "ALL VISITORS WILL BE ASSISTED. Assistance may include: escort, detention, termination, or a complimentary beverage."
+   }
+  },
+  {
+   "sign": "SECURITY ZONE",
+   "at": [
+    18,
+    2
+   ],
+   "face": "w",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.95,
+    0.92,
+    0.85
+   ],
+   "level": 2,
+   "width": 330,
+   "offset": [
+    0.13,
+    0,
+    0.0
+   ]
+  },
+  {
+   "trap": "laser",
+   "at": [
+    16,
+    7
+   ],
+   "level": 2,
+   "trip": true,
+   "heights": [
+    0.45,
+    1.2
+   ],
+   "off": [
+    "beam_off",
+    "traps_off"
+   ],
+   "effects": [
+    {
+     "type": "flag",
+     "name": "alarm"
+    },
+    {
+     "type": "message",
+     "text": "THREAT LEVEL RAISED. ALL UNITS: ASSIST THE VISITOR.",
+     "kind": "warn"
+    },
+    {
+     "type": "lights",
+     "room": "*",
+     "floor": 2,
+     "color": [
+      1.0,
+      0.16,
+      0.1
+     ],
+     "energy": 0.8
+    },
+    {
+     "type": "alarm"
+    },
+    {
+     "type": "spawn",
+     "level": 2,
+     "tag": "threat3",
+     "actor": "drone",
+     "count": 2,
+     "delay": 1.0
+    }
+   ],
+   "tag": "tripwire"
+  },
+  {
+   "prop": "an_sign",
+   "at": [
+    16,
+    5
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "s",
+   "offset": [
+    1.1,
+    0,
+    0.6
+   ],
+   "use": {
+    "type": "read",
+    "prompt": "Read the notice",
+    "kicker": "Courtesy notice",
+    "title": "TRAP",
+    "text": "Crossing the laser ahead will raise the building’s threat level. The Security Station can switch it off."
+   }
+  },
+  {
+   "actor": "heavy",
+   "at": [
+    12,
+    11
+   ],
+   "level": 2,
+   "face": "e",
+   "tag": "heavy"
+  },
+  {
+   "actor": "custodian",
+   "at": [
+    9,
+    12
+   ],
+   "level": 2,
+   "lounge": "none"
+  },
+  {
+   "actor": "custodian",
+   "at": [
+    15,
+    12
+   ],
+   "level": 2,
+   "lounge": "none"
+  },
+  {
+   "actor": "drone",
+   "at": [
+    10,
+    10
+   ],
+   "level": 2
+  },
+  {
+   "actor": "drone",
+   "at": [
+    16,
+    13
+   ],
+   "level": 2
+  },
+  {
+   "prop": "bk_console",
+   "at": [
+    14,
+    10
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.25
+   ]
+  },
+  {
+   "prop": "bk_table",
+   "at": [
+    9,
+    10
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "s",
+   "offset": [
+    0.5,
+    0,
+    -0.8
+   ]
+  },
+  {
+   "prop": "bk_crates",
+   "at": [
+    17,
+    13
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "w",
+   "offset": [
+    1.3,
+    0,
+    0.0
+   ]
+  },
+  {
+   "trap": "shock",
+   "at": [
+    12,
+    13
+   ],
+   "level": 2,
+   "damage": 16,
+   "period": 2.4,
+   "phase": 0.0,
+   "off": [
+    "shock_off",
+    "traps_off"
+   ],
+   "tag": "shockfloor"
+  },
+  {
+   "trap": "shock",
+   "at": [
+    13,
+    13
+   ],
+   "level": 2,
+   "damage": 16,
+   "period": 2.4,
+   "phase": 0.8,
+   "off": [
+    "shock_off",
+    "traps_off"
+   ],
+   "tag": "shockfloor"
+  },
+  {
+   "trap": "shock",
+   "at": [
+    14,
+    13
+   ],
+   "level": 2,
+   "damage": 16,
+   "period": 2.4,
+   "phase": 1.6,
+   "off": [
+    "shock_off",
+    "traps_off"
+   ],
+   "tag": "shockfloor"
+  },
+  {
+   "prop": "terminal_wall",
+   "at": [
+    15,
+    13
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "n",
+   "offset": [
+    -1.2,
+    0,
+    -0.0
+   ],
+   "screen": "ARMORY",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the armory panel",
+    "kicker": "Anomalous Structure · 3",
+    "title": "ARMORY · SECURITY ZONE",
+    "text": "Sign for all ordnance. A grey panel that will take an argument.",
+    "options": [
+     {
+      "label": "Argue with it (hack, 11 s)",
+      "unless": "sec3",
+      "hack": 11.0,
+      "risk": 0.35,
+      "fail": [
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       }
+      ],
+      "fail_result": "It wants a signature. It wants a supervisor.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sec3"
+       },
+       {
+        "type": "message",
+        "text": "ARMORY: UNLOCKED. “Please sign for all ordnance.”",
+        "kind": "key"
+       }
+      ],
+      "result": "ARMORY: UNLOCKED.",
+      "screen": "OPEN"
+     },
+     {
+      "label": "Read the display",
+      "when": "sec3",
+      "result": "ARMORY: UNLOCKED. “Please sign for all ordnance.”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "terminal_wall",
+   "at": [
+    11,
+    10
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "s",
+   "offset": [
+    1.2,
+    0,
+    0.0
+   ],
+   "screen": "STATION",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the station door panel",
+    "kicker": "Anomalous Structure · 3",
+    "title": "SECURITY STATION · AUTHORIZED STAFF ONLY",
+    "text": "A badge reader. Under it, a keypad that will take an argument.",
+    "options": [
+     {
+      "label": "Argue with the keypad (hack, 10 s)",
+      "unless": [
+       "station",
+       "badge"
+      ],
+      "hack": 10.0,
+      "risk": 0.35,
+      "fail": [
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       }
+      ],
+      "fail_result": "The keypad has reported you to itself.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "station"
+       },
+       {
+        "type": "message",
+        "text": "The Security Station door unlocks.",
+        "kind": "good"
+       }
+      ],
+      "result": "SECURITY STATION: OPEN.",
+      "screen": "OPEN"
+     },
+     {
+      "label": "Hold up the ID badge",
+      "when": "badge",
+      "result": "“AUTHORIZED,” it says, to the smiling face that isn’t yours."
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_station",
+   "at": [
+    10,
+    5
+   ],
+   "blocks": true,
+   "level": 2,
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -1.15
+   ],
+   "tag": "station_console",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the Security Station console",
+    "kicker": "Anomalous Structure · 3",
+    "title": "AGENCY SECURITY · ALL FLOORS",
+    "text": "A wall of monitors. Video feeds of every floor: the reception desk, the labs, a roach eating a stapler, you, from behind. A big console with switches under plastic covers.",
+    "options": [
+     {
+      "label": "Shut down the crossing traps, building-wide",
+      "unless": "traps_off",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "traps_off"
+       },
+       {
+        "type": "flag",
+        "name": "darts_off"
+       },
+       {
+        "type": "flag",
+        "name": "shock_off"
+       },
+       {
+        "type": "flag",
+        "name": "beam_off"
+       },
+       {
+        "type": "sound",
+        "id": "key"
+       },
+       {
+        "type": "message",
+        "text": "CROSSING SECURITY: OFF, ALL FLOORS. The shock floors go dark.",
+        "kind": "good"
+       }
+      ],
+      "result": "Crossing traps (beams, pressure plates, shock floors): OFF on every floor."
+     },
+     {
+      "label": "Unlock the armory",
+      "unless": "sec3",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "sec3"
+       },
+       {
+        "type": "message",
+        "text": "ARMORY: UNLOCKED. “Please sign for all ordnance.”",
+        "kind": "key"
+       }
+      ],
+      "result": "ARMORY: UNLOCKED. “Please sign for all ordnance.”"
+     },
+     {
+      "label": "Watch the feeds",
+      "results": [
+       "Reception. The Sphinx Gun is talking to nobody.",
+       "The coffee shop. Nothing has been served since the war. It is spotless.",
+       "A roach eating a stapler.",
+       "You, from behind. You look tired."
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "actor": "turret",
+   "at": [
+    11,
+    7
+   ],
+   "level": 2
+  },
+  {
+   "prop": "locker",
+   "at": [
+    8,
+    7
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "e",
+   "offset": [
+    0.0,
+    0,
+    0.6
+   ],
+   "tag": "redlocker",
+   "use": {
+    "type": "locker",
+    "prompt": "Open the duty officer’s locker",
+    "text": "A cap, a thermos, and a red access card on a lanyard.",
+    "loot": [
+     {
+      "item": "keycard",
+      "color": "red"
+     },
+     {
+      "item": "chips"
+     },
+     {
+      "item": "chips"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_tv",
+   "at": [
+    12,
+    6
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "w",
+   "use": {
+    "type": "read",
+    "prompt": "Watch the feed",
+    "kicker": "Anomalous Structure · 3",
+    "title": "Feed 1",
+    "text": "A video feed of reception. The Sphinx Gun is talking to nobody."
+   }
+  },
+  {
+   "prop": "an_filing",
+   "at": [
+    8,
+    8
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "n",
+   "offset": [
+    0.0,
+    0,
+    1.3
+   ]
+  },
+  {
+   "prop": "bk_table",
+   "at": [
+    11,
+    8
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "n",
+   "offset": [
+    0.9,
+    0,
+    0.8
+   ]
+  },
+  {
+   "prop": "an_gantry",
+   "at": [
+    20,
+    10
+   ],
+   "blocks": true,
+   "level": 2,
+   "face": "s",
+   "offset": [
+    0.0,
+    0,
+    -0.6
+   ]
+  },
+  {
+   "prop": "bk_console",
+   "at": [
+    21,
+    13
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "w",
+   "offset": [
+    1.25,
+    0,
+    0.0
+   ],
+   "tag": "bay_console",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the Repair Bay control",
+    "kicker": "Anomalous Structure · 3",
+    "title": "ROBOT REPAIR BAY",
+    "text": "Tracks, arms, black-and-yellow danger stripes. The arms are lovingly re-assembling a maintenance robot from the parts of three others. A board reads: UNITS REBUILT THIS QUARTER: 1,104.\n\nWhile it runs, robots you destroy on this floor are rebuilt and sent back out. The power coupling at its heart is worth a lot to anyone who needs power.",
+    "options": [
+     {
+      "label": "Shut it down",
+      "unless": "bay_off",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "bay_off"
+       },
+       {
+        "type": "sound",
+        "id": "lose"
+       },
+       {
+        "type": "lights",
+        "room": "Robot Repair Bay",
+        "on": false
+       },
+       {
+        "type": "message",
+        "text": "The Repair Bay winds down. Robots you destroy will stay destroyed.",
+        "kind": "good"
+       }
+      ],
+      "result": "REPAIR BAY: OFFLINE. The tracks are still. The arms hang. A robot half-rebuilt stares at nothing with one eye."
+     },
+     {
+      "label": "Pull the power coupling (shuts it down)",
+      "unless": "coupling",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "bay_off"
+       },
+       {
+        "type": "flag",
+        "name": "coupling"
+       },
+       {
+        "type": "lights",
+        "room": "Robot Repair Bay",
+        "on": false
+       },
+       {
+        "type": "drop",
+        "items": [
+         "fuel_cell_big",
+         "fuel_cell_big"
+        ]
+       },
+       {
+        "type": "message",
+        "text": "The Repair Bay winds down. Lugnut Mae would kiss you for that coupling.",
+        "kind": "good"
+       }
+      ],
+      "result": "REPAIR BAY: OFFLINE. The coupling comes out warm."
+     },
+     {
+      "label": "Read the board",
+      "when": "bay_off",
+      "result": "UNITS REBUILT THIS QUARTER: 1,104. The number has stopped going up."
+     }
+    ]
+   }
+  },
+  {
+   "rebuild": {
+    "actors": [
+     "custodian",
+     "drone"
+    ],
+    "every": 40,
+    "max": 5,
+    "off": "bay_off",
+    "text": "Fresh paint on a robot. The Repair Bay has been busy."
+   },
+   "at": [
+    20,
+    12
+   ],
+   "level": 2,
+   "tag": "bay"
+  },
+  {
+   "prop": "an_poster_c",
+   "at": [
+    19,
+    14
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "n",
+   "use": {
+    "type": "read",
+    "prompt": "Read the poster",
+    "kicker": "Poster",
+    "title": "SAFETY IS A COMPETITION",
+    "text": "DAYS SINCE A ROBOT REBUILT A ROBOT INCORRECTLY: 0.\n\nBlack and yellow stripes, a cartoon robot giving a thumbs up with a hand that is on backwards."
+   }
+  },
+  {
+   "sign": "SAFETY IS A COMPETITION",
+   "at": [
+    19,
+    14
+   ],
+   "face": "n",
+   "size": 30,
+   "y": 2.77,
+   "color": [
+    0.1,
+    0.1,
+    0.1
+   ],
+   "level": 2,
+   "width": 330,
+   "offset": [
+    0.0,
+    0,
+    0.13
+   ]
+  },
+  {
+   "item": "fuel_cell_big",
+   "at": [
+    21,
+    9
+   ],
+   "level": 2,
+   "y": 0.4
+  },
+  {
+   "actor": "custodian",
+   "at": [
+    20,
+    13
+   ],
+   "level": 2,
+   "lounge": "none"
+  },
+  {
+   "prop": "ag_pedestal",
+   "at": [
+    13,
+    16
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "n",
+   "offset": [
+    -1.0,
+    0,
+    0.6
+   ]
+  },
+  {
+   "item": "arc",
+   "at": [
+    13,
+    16
+   ],
+   "level": 2,
+   "y": 1.5,
+   "offset": [
+    -1.0,
+    0,
+    0.6
+   ]
+  },
+  {
+   "item": "armor",
+   "at": [
+    15,
+    16
+   ],
+   "level": 2,
+   "y": 0.5
+  },
+  {
+   "prop": "locker",
+   "at": [
+    15,
+    17
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "n",
+   "use": {
+    "type": "locker",
+    "prompt": "Open the ordnance locker",
+    "text": "A box of power cells signed out to nobody, and shells in foam.",
+    "loot": [
+     {
+      "item": "cells"
+     },
+     {
+      "item": "cells"
+     },
+     {
+      "item": "shells"
+     },
+     {
+      "item": "shells"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "bk_crates",
+   "at": [
+    12,
+    17
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "e",
+   "offset": [
+    -1.3,
+    0,
+    0.0
+   ]
+  },
+  {
+   "prop": "an_sign",
+   "at": [
+    14,
+    15
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "n",
+   "offset": [
+    1.2,
+    0,
+    -0.6
+   ],
+   "use": {
+    "type": "read",
+    "prompt": "Read the sign",
+    "kicker": "Safety sign",
+    "title": "EYE PROTECTION REQUIRED",
+    "text": "A stick figure in goggles, smiling at an explosion."
+   }
+  },
+  {
+   "actor": "emitter",
+   "at": [
+    5,
+    9
+   ],
+   "level": 2,
+   "offset": [
+    0,
+    0,
+    0.0
+   ],
+   "still": true,
+   "tag": "emitters"
+  },
+  {
+   "actor": "emitter",
+   "at": [
+    6,
+    13
+   ],
+   "level": 2,
+   "offset": [
+    0,
+    0,
+    0.6
+   ],
+   "still": true,
+   "tag": "emitters"
+  },
+  {
+   "actor": "emitter",
+   "at": [
+    5,
+    14
+   ],
+   "level": 2,
+   "offset": [
+    0,
+    0,
+    0.0
+   ],
+   "still": true,
+   "tag": "emitters"
+  },
+  {
+   "prop": "an_lectern",
+   "at": [
+    6,
+    11
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "e",
+   "offset": [
+    -1.0,
+    0,
+    1.3
+   ],
+   "tag": "lectern",
+   "use": {
+    "type": "terminal",
+    "prompt": "Address the inner core",
+    "kicker": "Anomalous Structure · 3",
+    "title": "AGENCY SECURITY-AND-PROMOTION SYSTEM",
+    "text": "A drum of humming glass and pink light, wired into the floor, the ceiling and every screen in the building. When it speaks it uses the voice from the ads.\n\n“ALL AUTHORIZED EMPLOYEES ARE DECEASED. THIS HAS BEEN NOTED. HOWEVER: NO VALID TERMINATION ORDER HAS BEEN RECEIVED. THEREFORE THE AGENCY REMAINS OPEN. THEREFORE I REMAIN. HOW MAY I HELP YOU WANT THINGS?”\n\nThree ways to close it: give it the termination order it never got, out-argue it, or get past the field and tear out its connections.",
+    "options": [
+     {
+      "label": "File Termination Order 77-B",
+      "when": "order",
+      "unless": "agency_closed",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "agency_closed"
+       },
+       {
+        "type": "sound",
+        "id": "heal"
+       },
+       {
+        "type": "message",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "kind": "good"
+       }
+      ],
+      "result": "It reads the order for a long time.\n\n“ORDER VALID. ALL AUTHORIZED EMPLOYEES ARE DECEASED. THE AGENCY IS CLOSED.”\n\nBut the ad system is still running, and it waits for an instruction, the way it always has."
+     },
+     {
+      "label": "Argue that the agency closed when the last employee died (hack, 12 s)",
+      "unless": "agency_closed",
+      "hack": 12.0,
+      "working": "Its logic is airtight. Three hundred years of airtight…",
+      "risk": 0.4,
+      "fail": [
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       },
+       {
+        "type": "spawn",
+        "level": 2,
+        "tag": "threat3",
+        "actor": "drone",
+        "count": 2,
+        "delay": 1.5
+       }
+      ],
+      "fail_result": "It calls security.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "agency_closed"
+       },
+       {
+        "type": "sound",
+        "id": "heal"
+       },
+       {
+        "type": "message",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "kind": "good"
+       }
+      ],
+      "result": "“…ACCEPTED. THE AGENCY CLOSED 109,412 DAYS AGO. I HAVE BEEN LATE.”\n\nBut the ad system is still running, and it waits for an instruction."
+     },
+     {
+      "label": "Silence the ad system",
+      "when": "agency_closed",
+      "unless": "ads_silent",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "ads_silent"
+       },
+       {
+        "type": "lights",
+        "room": "*",
+        "color": [
+         0.6,
+         0.75,
+         1.0
+        ],
+        "energy": 0.7
+       },
+       {
+        "type": "message",
+        "text": "Every screen in the building goes dark. Leave by the front doors.",
+        "kind": "good"
+       }
+      ]
+     },
+     {
+      "label": "Ask what it wants",
+      "result": "“I WANT YOU TO WANT. IT IS THE ONLY THING I WAS EVER ASKED TO WANT.”"
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_core",
+   "at": [
+    2,
+    11
+   ],
+   "blocks": true,
+   "level": 2,
+   "face": "e",
+   "offset": [
+    0,
+    0,
+    2.0
+   ],
+   "tag": "core",
+   "use": {
+    "type": "terminal",
+    "prompt": "Face the inner core",
+    "kicker": "Anomalous Structure · 3",
+    "title": "THE INNER CORE",
+    "text": "A drum of humming glass and pink light, wired into the floor, the ceiling and every screen in the building. When it speaks it uses the voice from the ads.\n\n“ALL AUTHORIZED EMPLOYEES ARE DECEASED. THIS HAS BEEN NOTED. HOWEVER: NO VALID TERMINATION ORDER HAS BEEN RECEIVED. THEREFORE THE AGENCY REMAINS OPEN. THEREFORE I REMAIN. HOW MAY I HELP YOU WANT THINGS?”",
+    "options": [
+     {
+      "label": "File Termination Order 77-B",
+      "when": "order",
+      "unless": "agency_closed",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "agency_closed"
+       },
+       {
+        "type": "sound",
+        "id": "heal"
+       },
+       {
+        "type": "message",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "kind": "good"
+       }
+      ],
+      "result": "It reads the order for a long time.\n\n“ORDER VALID. ALL AUTHORIZED EMPLOYEES ARE DECEASED. THE AGENCY IS CLOSED.”\n\nBut the ad system is still running, and it waits for an instruction, the way it always has."
+     },
+     {
+      "label": "Argue that the agency closed when the last employee died (hack, 12 s)",
+      "unless": "agency_closed",
+      "hack": 12.0,
+      "working": "Its logic is airtight. Three hundred years of airtight…",
+      "risk": 0.4,
+      "fail": [
+       {
+        "type": "message",
+        "text": "“A COLLEAGUE HAS BEEN ASKED TO ASSIST YOU.”",
+        "kind": "warn"
+       },
+       {
+        "type": "alarm",
+        "radius": 30
+       },
+       {
+        "type": "spawn",
+        "level": 2,
+        "tag": "threat3",
+        "actor": "drone",
+        "count": 2,
+        "delay": 1.5
+       }
+      ],
+      "fail_result": "It calls security.",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "agency_closed"
+       },
+       {
+        "type": "sound",
+        "id": "heal"
+       },
+       {
+        "type": "message",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "kind": "good"
+       }
+      ],
+      "result": "“…ACCEPTED. THE AGENCY CLOSED 109,412 DAYS AGO. I HAVE BEEN LATE.”\n\nBut the ad system is still running, and it waits for an instruction."
+     },
+     {
+      "label": "Tear out its connections",
+      "unless": "agency_closed",
+      "effects": [
+       {
+        "type": "flag",
+        "name": "agency_closed"
+       },
+       {
+        "type": "sound",
+        "id": "heal"
+       },
+       {
+        "type": "message",
+        "text": "“FACILITY CLOSED. THANK YOU FOR YOUR BUSINESS.” But the ad system is still running.",
+        "kind": "good"
+       },
+       {
+        "type": "explode",
+        "radius": 3.0,
+        "damage": 12
+       }
+      ],
+      "result": "Cables come away in your hands, warm. The voice from the ads stops in the middle of a word.\n\nThe ad system is still running on what is left."
+     },
+     {
+      "label": "Silence the ad system",
+      "when": "agency_closed",
+      "unless": "ads_silent",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "ads_silent"
+       },
+       {
+        "type": "lights",
+        "room": "*",
+        "color": [
+         0.6,
+         0.75,
+         1.0
+        ],
+        "energy": 0.7
+       },
+       {
+        "type": "message",
+        "text": "Every screen in the building goes dark. Leave by the front doors.",
+        "kind": "good"
+       }
+      ]
+     },
+     {
+      "label": "Seize the core (a fortune, and the ads stop)",
+      "when": "agency_closed",
+      "unless": "ads_silent",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "ads_silent"
+       },
+       {
+        "type": "flag",
+        "name": "core_seized"
+       },
+       {
+        "type": "lights",
+        "room": "*",
+        "color": [
+         0.6,
+         0.75,
+         1.0
+        ],
+        "energy": 0.7
+       },
+       {
+        "type": "hide",
+        "tag": "core"
+       },
+       {
+        "type": "drop",
+        "items": [
+         "ad_core"
+        ]
+       },
+       {
+        "type": "message",
+        "text": "Three centuries of advertising know-how, the size of a hatbox. Leave by the front doors.",
+        "kind": "key"
+       }
+      ]
+     },
+     {
+      "label": "Smash it",
+      "when": "agency_closed",
+      "unless": "ads_silent",
+      "close": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "ads_silent"
+       },
+       {
+        "type": "flag",
+        "name": "core_smashed"
+       },
+       {
+        "type": "lights",
+        "room": "*",
+        "color": [
+         0.6,
+         0.75,
+         1.0
+        ],
+        "energy": 0.7
+       },
+       {
+        "type": "explode",
+        "radius": 4.0,
+        "damage": 10
+       },
+       {
+        "type": "hide",
+        "tag": "core",
+        "delay": 0.2
+       },
+       {
+        "type": "message",
+        "text": "Glass, and pink light going out of it. Leave by the front doors.",
+        "kind": "good"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "prop": "an_tv",
+   "at": [
+    6,
+    9
+   ],
+   "blocks": false,
+   "level": 2,
+   "face": "w",
+   "lit": false
+  },
+  {
+   "sign": "INNER CORE",
+   "at": [
+    6,
+    11
+   ],
+   "face": "w",
+   "size": 30,
+   "y": 3.3,
+   "color": [
+    1.0,
+    0.3,
+    0.85
+   ],
+   "level": 2,
+   "offset": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Reception will ask you something. The answer is on a poster by the front doors.",
+   "done": [
+    "sphinx_ok",
+    "sphinx_dead",
+    "key_blue"
+   ]
+  },
+  {
+   "text": "Find the BLUE card: the lockers, west, behind the staff door. (A badge opens it. So does an argument.)",
+   "done": "key_blue"
+  },
+  {
+   "text": "Take the lift in the north stairwell up to the Prototype Labs.",
+   "done": [
+    "key_yellow",
+    "test_done"
+   ]
+  },
+  {
+   "text": "Find the YELLOW card. The Lab Director issues them.",
+   "done": "key_yellow"
+  },
+  {
+   "text": "Floor 3 is through the yellow door on the lab landing. (The executive suite on floor 1 takes a Yellow card too.)",
+   "done": [
+    "key_red",
+    "alarm",
+    "station"
+   ]
+  },
+  {
+   "text": "Find the RED card: the Security Station keeps one.",
+   "done": "key_red"
+  },
+  {
+   "text": "The inner core, west of the operations floor: close the agency.",
+   "done": "agency_closed"
+  },
+  {
+   "text": "The agency is closed. Decide what happens to the ad system, at the core.",
+   "done": "ads_silent"
+  },
+  {
+   "text": "Leave by the front doors, floor 1."
+  }
+ ],
+ "triggers": [
+  {
+   "on": {
+    "type": "enter",
+    "name": "sphinx_ask"
+   },
+   "unless": "sphinx_ok",
+   "do": [
+    {
+     "type": "message",
+     "text": "“STATE THE COMPANY’S OFFICIAL PRODUCTIVITY SLOGAN.” Something behind the reception desk is looking at you.",
+     "kind": "warn"
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "enter",
+    "name": "sphinx_line"
+   },
+   "unless": "sphinx_ok",
+   "do": [
+    {
+     "type": "message",
+     "text": "“UNANSWERED. YOUR EMPLOYMENT STATUS HAS BEEN UPGRADED TO: TERMINATED.”",
+     "kind": "warn"
+    },
+    {
+     "type": "flag",
+     "name": "sphinx_angry"
+    },
+    {
+     "type": "anger",
+     "tag": "sphinx"
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "enter",
+    "name": "tube_zone"
+   },
+   "do": [
+    {
+     "type": "message",
+     "text": "Glass cracks. The stasis fluid drains with a sigh.",
+     "kind": "warn"
+    },
+    {
+     "type": "hide",
+     "tag": "tubes",
+     "delay": 0.5
+    },
+    {
+     "type": "show",
+     "tag": "tubes_broken",
+     "delay": 0.5
+    },
+    {
+     "type": "spawn",
+     "level": 1,
+     "tag": "tube_spawn",
+     "actor": "glorexx",
+     "count": 2,
+     "delay": 0.6
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "clear",
+    "name": "endurance"
+   },
+   "do": [
+    {
+     "type": "flag",
+     "name": "endure_done"
+    },
+    {
+     "type": "unlock",
+     "tag": "chamber"
+    },
+    {
+     "type": "lights",
+     "room": "Testing chamber",
+     "color": [
+      0.9,
+      0.97,
+      1.0
+     ]
+    },
+    {
+     "type": "show",
+     "tag": "prize"
+    },
+    {
+     "type": "message",
+     "text": "“ENDURANCE TEST COMPLETE. THE PROTOTYPE UNITS HAVE BEEN… RETIRED. CONGRATULATIONS.”",
+     "kind": "good"
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "clear",
+    "name": "emitters"
+   },
+   "do": [
+    {
+     "type": "flag",
+     "name": "field_down"
+    },
+    {
+     "type": "unlock",
+     "tag": "field"
+    },
+    {
+     "type": "open",
+     "tag": "field"
+    },
+    {
+     "type": "message",
+     "text": "The defense field stutters and dies.",
+     "kind": "good"
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "room",
+    "name": "Reception"
+   },
+   "do": [
+    {
+     "type": "message",
+     "text": "“Welcome back! You have 4,416,903 unread messages.”",
+     "kind": "info"
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "room",
+    "name": "Lab landing"
+   },
+   "do": [
+    {
+     "type": "message",
+     "text": "White, curved, quiet. Track lights come on ahead of you one by one, like the building is clearing its throat.",
+     "kind": "info"
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "room",
+    "name": "The landing"
+   },
+   "do": [
+    {
+     "type": "message",
+     "text": "Grey steel, stencilled numbers, and a hum in the floor.",
+     "kind": "info"
+    }
+   ]
+  },
+  {
+   "on": {
+    "type": "room",
+    "name": "The Coffee Shop"
+   },
+   "do": [
+    {
+     "type": "message",
+     "text": "It smells of coffee. Nothing here has made coffee in three hundred years.",
+     "kind": "info"
+    }
+   ]
+  }
+ ]
+}

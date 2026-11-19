@@ -48,7 +48,7 @@ NOT_FURNITURE = lambda n: n.startswith('trap_') or n == 'window_obs'        # tr
 ARCHES = sorted(n for n, m in META.items() if m.get('arch'))
 STATIONS = game['generator_params']['stations']                             # actor -> station model
 HALLS = {'hightech': 'corridor', 'agency': 'white_hall', 'works': 'greaseway', 'bunker': 'bunker_hall', 'crypt': 'catacomb',
-         'executive': 'ex_hall', 'megaplex': 'mp_concourse', 'hospital': 'hs_hall', 'basilica': 'bb_cloister', 'home': 'hm_hall'}
+         'executive': 'ex_hall', 'megaplex': 'mp_concourse', 'hospital': 'hs_hall', 'basilica': 'bb_cloister', 'home': 'hm_hall', 'anomalous': 'an_hall'}
 # Where each monster is at home (a style), and how it spends its time there. Anything not listed wanders the spine.
 HOMES = {'monoid': 'BREAK', 'custodian': 'SPINE', 'eggbot': 'mp_concourse', 'dancer': 'mp_cinema', 'drone': 'showroom', 'defender': 'ex_office',
          'deadbot': 'bunker_hall', 'plodder': 'LOBBY', 'mourner': 'chapel', 'princess': 'bb_nave', 'grease_monkey': 'foundry',

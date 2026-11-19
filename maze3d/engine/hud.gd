@@ -442,6 +442,11 @@ func _fill_panel(text: String, working := "", final := false) -> void:
 
 func _choose(i: int) -> void:
 	var o: Dictionary = _panel_spec["options"][i]
+	var cost: int = int(o.get("cost", 0))            # "cost": credits. Not enough: it says so and nothing happens.
+	if cost > Game.credits:
+		LM.sound("denied")
+		_fill_panel("%s\n\nThat is %d cr. You have %d." % [_panel_spec.get("text", ""), cost, Game.credits])
+		return
 	var secs: float = o.get("hack", 0.0)
 	if secs > 0.0:
 		_fill_panel(_panel_spec.get("text", ""), o.get("working", "Bypassing…"))
@@ -455,8 +460,24 @@ func _choose(i: int) -> void:
 		_panel_prop.e["_used"][i] = true
 		if o.has("screen"):
 			_panel_prop.set_screen(o["screen"])
+	var ctx := {}
+	if _panel_prop is Node3D and is_instance_valid(_panel_prop):
+		ctx = {"at": (_panel_prop as Node3D).global_position, "prop": _panel_prop}
+	if cost > 0:
+		Game.add_credits(-cost)
+	if o.has("risk") and randf() < float(o["risk"]) and not OS.get_cmdline_user_args().has("--selftest"):  # "risk": 0..1. It goes wrong: "fail" effects, "fail_result" words, and it can be tried again
+		LM.sound("denied")
+		if _panel_prop and is_instance_valid(_panel_prop):
+			_panel_prop.e["_used"].erase(i)
+		Game.run_effects(o.get("fail"), ctx)
+		if o.get("fail_close", true):
+			close_panel()
+			Game.say(o.get("fail_result", "It did not work."), "warn")
+		else:
+			_fill_panel(o.get("fail_result", "It did not work."))
+		return
 	LM.sound("confirm")
-	Game.run_effects(o.get("effects"))
+	Game.run_effects(o.get("effects"), ctx)
 	if o.has("do"):                                  # the panel's owner does something, and may put up another panel or close this one
 		var was := _panel_spec
 		(o["do"] as Callable).call()

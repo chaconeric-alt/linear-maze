@@ -138,6 +138,9 @@ func _run(ef: Dictionary, ctx: Dictionary) -> void:
 		"quake":
 			if player:
 				player.shake(ef.get("strength", 0.5))
+		"chance":        # {"p": 0.5, "do": [effects]}: sometimes
+			if randf() < float(ef.get("p", 0.5)):
+				run_effects(ef.get("do"), ctx)
 		"end":
 			finish(ef)
 		_:

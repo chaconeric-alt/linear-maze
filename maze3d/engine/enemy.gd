@@ -211,6 +211,33 @@ func _play(clip: String, speed := 1.0, loop := false) -> bool:
 	return true
 
 
+## An off-duty thing stops being off duty (the effect "anger"): it is a monster again, and it knows where you are.
+func anger() -> void:
+	if dead or not off_duty:
+		return
+	off_duty = false
+	_foe = null
+	_od = ""
+	remove_from_group("usable")
+	if Game.hud and Game.hud.in_panel():
+		Game.hud.close_panel()
+	Game.run_effects(e.get("on_anger"))
+	alert()
+	awake = true
+
+
+## The other way (the effect "pacify"): it will not fight again. It can still be talked to.
+func stand_down() -> void:
+	if dead or off_duty:
+		return
+	off_duty = true
+	awake = false
+	_roused = false
+	add_to_group("usable")
+	_od_init.call_deferred()
+	_play(d.get("dormant_clip", "idle"))
+
+
 func alert() -> void:
 	if awake or dead or off_duty:
 		return
@@ -238,12 +265,12 @@ func alert() -> void:
 	awake = true
 	LM.sound(d.get("sounds", {}).get("alert", ""), global_position)
 	for a in level.actors:       # friends close by wake too
-		if is_instance_valid(a) and a != self and not a.awake and not a.dead and a.global_position.distance_to(global_position) < 10.0:
+		if is_instance_valid(a) and a != self and not a.awake and not a.dead and a.global_position.distance_to(global_position) < 10.0 and level.floor_of(a.global_position) == level.floor_of(global_position):
 			a.call_deferred("alert")
 
 
 func hear(from: Vector3) -> void:
-	if not awake and from.distance_to(global_position) < d.get("hearing", 18.0):
+	if not awake and from.distance_to(global_position) < d.get("hearing", 18.0) and level.floor_of(from) == level.floor_of(global_position):      # not through a floor
 		alert()
 
 
@@ -666,6 +693,8 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 	hp -= amount
 	if not awake:
 		alert()
+	if off_duty and e.get("provoke", false) and info.get("from_player", info.get("type", "") != "trap"):
+		anger()                                      # this one was only being polite
 	if off_duty:
 		if _foe == null and _ow_t <= 0.0 and hp - amount > 0.0:
 			_ow_t = 2.0
@@ -1707,7 +1736,7 @@ func set_screen(text: String) -> void:
 func prompt() -> String:
 	if not off_duty or dead or _foe != null or (dock != null and dock._open < 0.9):
 		return ""
-	return d.get("talk", {}).get("prompt", "Talk to the %s" % d.get("name", "thing"))
+	return e.get("talk", d.get("talk", {})).get("prompt", "Talk to the %s" % d.get("name", "thing"))
 
 
 ## Talking to it. defs `talk`:
@@ -1719,7 +1748,7 @@ func prompt() -> String:
 func use(_player: Node) -> void:
 	if prompt() == "":
 		return
-	var t: Dictionary = d.get("talk", {})
+	var t: Dictionary = e.get("talk", d.get("talk", {}))      # the level may give this one its own conversation
 	var opens: Array = t.get("open", ["It looks at you. It does not seem to mind."])
 	var spec := {"kicker": t.get("kicker", "OFF DUTY"), "title": d.get("name", ""), "text": opens[randi() % opens.size()], "options": []}
 	e["_used"] = {}
@@ -1738,7 +1767,7 @@ func use(_player: Node) -> void:
 		spec["options"].append({"label": t.get("again", "Another riddle"), "call": "use_again", "close": true, "after": true})
 	for o in t.get("options", []):
 		spec["options"].append(o)
-	if not d.get("attacks", []).is_empty():
+	if not d.get("attacks", []).is_empty() and not e.has("talk"):
 		spec["options"].append({"label": t.get("drill_label", "Show me what you do on duty"), "call": "drill_ask", "close": true, "after": true})
 	_roused = true
 	_rouse_t = 0.0
