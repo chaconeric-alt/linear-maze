@@ -5,8 +5,8 @@ extends RefCounted
 ##                        it can be tried again, at the same price
 ##   "risk": 0..1         it goes wrong that often, after it has been paid for: "fail" effects, "fail_result" words,
 ##                        and it can be tried again
-## Each is registered with the EffectRegistry as a gate (register_gate). `s` is the panel session: in_panel(),
-## panel_text(), show_panel(text, working), close_panel(), panel_ctx(), unmark_used().
+## Each is registered with the EffectRegistry as a gate (register_gate). `s` is the panel session (Game.interaction):
+## in_panel(), panel_text(), show_panel(text, working), close_panel(), panel_ctx(), unmark_used().
 class_name OptionGates
 
 
@@ -32,15 +32,15 @@ func cost_pay(o: Dictionary, _s: Object) -> bool:
 	return true
 
 
-## The chance is Game.hack_chance(o["hard"]): 10% + 5% a level, less what the job takes off.
+## The chance is Game.hack_chance(o["hard"]): 10% + 5% a level, less what the job takes off. Debug.sure_rolls (the
+## self-test) makes every hack come off, and Debug.quick_hacks makes the wait a moment.
 func hack(o: Dictionary, s: Object) -> bool:
 	s.show_panel(s.panel_text(), o.get("working", "Bypassing…"))
 	LM.sound("hack")
-	var testing: bool = OS.get_cmdline_user_args().has("--selftest")      # a self-test's hacks are instant and always come off
-	await Game.get_tree().create_timer(0.02 if testing else 1.2, true).timeout
+	await Game.get_tree().create_timer(0.02 if Debug.quick_hacks else 1.2, true).timeout
 	if not s.in_panel():
 		return false
-	if testing or randf() < Game.hack_chance(float(o.get("hard", 0.0))):
+	if Debug.sure_rolls or randf() < Game.hack_chance(float(o.get("hard", 0.0))):
 		return true
 	LM.sound("denied")
 	Game.run_effects(o.get("fail"), s.panel_ctx())
@@ -53,7 +53,7 @@ func hack(o: Dictionary, s: Object) -> bool:
 
 
 func risk(o: Dictionary, s: Object) -> bool:
-	if not (randf() < float(o["risk"]) and not OS.get_cmdline_user_args().has("--selftest")):
+	if not (randf() < float(o["risk"]) and not Debug.sure_rolls):
 		return true
 	LM.sound("denied")
 	s.unmark_used()

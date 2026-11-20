@@ -30,7 +30,6 @@ var _dash_cool := 0.0
 var _dash_dir := Vector3.ZERO
 var _bob := 0.0
 var _shake := 0.0
-var _test_zoom := OS.get_cmdline_user_args().has("--zoom")
 var zooming := false              # the right mouse button is held: sniper mode
 var zoom := 0.0                   # 0..1, how far in
 var _step := 0.0
@@ -234,7 +233,7 @@ func _physics_process(dt: float) -> void:
 	var speed: float = cfg.get("speed", 8.5)
 	# sniper mode: hold the right mouse button. The view closes in, the cross hairs become a scope's, and you all but stop.
 	zooming = not frozen and not held and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and _dash_t <= 0.0
-	if _test_zoom:                                 # --zoom: the self-test and screenshots have no mouse to hold
+	if Debug.hold_zoom:                            # --zoom: the self-test and screenshots have no mouse to hold
 		zooming = true
 	zoom = move_toward(zoom, 1.0 if zooming else 0.0, dt * 7.0)
 	speed *= lerpf(1.0, cfg.get("zoom_speed", 0.22), zoom)

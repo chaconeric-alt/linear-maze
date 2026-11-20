@@ -18,8 +18,9 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=")
 		_args[kv[0]] = kv[1] if kv.size() > 1 else "1"
+	_debug_switches()
 	LM.boot(_args.get("game", ProjectSettings.get_setting("maze3d/game", "havenot")))
-	if not _args.has("selftest"):                    # the self-test always measures the game as designed
+	if not Debug.fixed_settings:                     # the self-test always measures the game as designed
 		Game.load_settings()
 	hud = Hud.new()
 	add_child(hud)
@@ -38,6 +39,20 @@ func _ready() -> void:
 	else:
 		hud.show_title()
 		get_tree().paused = true
+
+
+## Switches for testing and looking at things, from the command line. Game code asks Debug (engine/debug.gd), never
+## the command line; the self-test sets its own.
+func _debug_switches() -> void:
+	if _args.has("selftest"):
+		load("res://engine/selftest.gd").configure()
+	Debug.hold_zoom = Debug.hold_zoom or _args.has("zoom")
+	Debug.memory_profile = Debug.memory_profile or _args.has("noprofile")
+	Debug.no_ao = _args.has("noao")
+	Debug.ssil = _args.has("ssil")
+	Debug.no_vfog = _args.has("novfog")
+	if Debug.memory_profile:
+		Profile.keep_in_memory()
 
 
 func _inputs() -> void:

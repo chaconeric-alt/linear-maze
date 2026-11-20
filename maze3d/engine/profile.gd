@@ -10,7 +10,7 @@ extends Node
 
 const PATH := "user://havenot_home.json"
 var d: Dictionary = {}
-var memory_only := false        # the self-test: never read or write the real file
+var memory_only := false        # never read or write the real file (Debug.memory_profile: the self-test, --noprofile)
 var sortie := false             # the next level is entered from the bunker's lift: take the armoury along
 
 
@@ -20,13 +20,16 @@ func blank() -> Dictionary:
 
 func _ready() -> void:
 	d = blank()
-	if OS.get_cmdline_user_args().has("--selftest") or OS.get_cmdline_user_args().has("--noprofile"):
-		memory_only = true
-		return
 	var got: Variant = LM.read_json(PATH)
 	if got is Dictionary:
 		for k in got:
 			d[k] = got[k]
+
+
+## Forget the file: start from a blank bunker that lives in memory only (Main, when Debug.memory_profile is set).
+func keep_in_memory() -> void:
+	memory_only = true
+	d = blank()
 
 
 func save() -> void:

@@ -29,9 +29,6 @@ var _panel: PanelContainer
 var _panel_body: VBoxContainer
 var _overlay: ColorRect
 var _overlay_box: VBoxContainer
-var _panel_prop: Node = null
-var _panel_spec: Dictionary = {}
-var _choosing := -1                  # the option being worked through: its "used" mark is undone if it goes wrong
 var _big_map := false
 var _state := "title"
 var _font_mono: SystemFont
@@ -165,6 +162,7 @@ func _ready() -> void:
 	Game.toast.connect(_on_toast)
 	Game.changed.connect(refresh)
 	Game.ended.connect(_on_end)
+	Game.interaction.view = self                    # the rules of panels are there; this only draws them
 
 
 func _label(text: String, size: int, c: Color) -> Label:
@@ -379,11 +377,11 @@ func _on_toast(text: String, kind: String) -> void:
 
 
 # ------------------------------------------------------------------ panels (terminals, things to read)
+## What a panel offers and what choosing does is engine/interaction.gd (Game.interaction); here it is only drawn.
 func open_panel(prop: Node, spec: Dictionary) -> void:
 	if _state == "panel":
 		return
-	_panel_prop = prop
-	_panel_spec = spec
+	Game.interaction.open(prop, spec)
 	_state = "panel"
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -397,8 +395,7 @@ func repanel(prop: Node, spec: Dictionary) -> void:
 	if _state != "panel":
 		open_panel(prop, spec)
 		return
-	_panel_prop = prop
-	_panel_spec = spec
+	Game.interaction.open(prop, spec)
 	_fill_panel(spec.get("text", ""))
 
 
@@ -410,11 +407,16 @@ func playing() -> bool:
 	return _state == "play"
 
 
+## Draw the open panel again: `text` as its body, then what it offers (or `working` while a hack runs).
+func draw_panel(text: String, working := "", final := false) -> void:
+	_fill_panel(text, working, final)
+
+
 func _fill_panel(text: String, working := "", final := false) -> void:
 	for c in _panel_body.get_children():
 		_panel_body.remove_child(c)
 		c.queue_free()
-	var spec := _panel_spec
+	var spec: Dictionary = Game.interaction.spec
 	_panel_body.add_child(_label(str(spec.get("kicker", "TERMINAL")).to_upper(), 13, Color(0.2, 0.9, 0.8)))
 	_panel_body.add_child(_label(spec.get("title", ""), 28, Color.WHITE))
 	var body := _label(text, 18, Color(0.75, 0.95, 0.9))
@@ -425,84 +427,10 @@ func _fill_panel(text: String, working := "", final := false) -> void:
 		_panel_body.add_child(_label(working, 18, accent))
 		return
 	var n := 0
-	var used: Dictionary = _panel_prop.e.get("_used", {}) if _panel_prop else {}
-	for i in spec.get("options", []).size():
-		var o: Dictionary = spec["options"][i]
-		if o.has("when") and not Game.has_flag(o["when"]):
-			continue
-		if o.has("unless") and Game.has_flag(o["unless"]):
-			continue
-		if o.get("once", false) and used.has(i):
-			continue
-		if final and not o.get("after", false):          # that was an answer: only what may follow it is offered
-			continue
+	for it in Game.interaction.offered(final):
 		n += 1
-		var lab: String = o.get("label", "")
-		if o.has("hack"):                                # a hack shows its odds
-			lab += "   [hack: %d%%]" % roundi(Game.hack_chance(float(o.get("hard", 0.0))) * 100.0)
-		_panel_body.add_child(_button("%d   %s" % [n, lab], _choose.bind(i), n == 1))
+		_panel_body.add_child(_button("%d   %s" % [n, it[1]], Game.interaction.choose.bind(it[0]), n == 1))
 	_panel_body.add_child(_button("Esc   Step away", close_panel))
-
-
-func _choose(i: int) -> void:
-	var o: Dictionary = _panel_spec["options"][i]
-	_choosing = i
-	var reg: EffectRegistry = Game.effects
-	for key in reg.gates():                          # "cost", "hack": what has to be got past first (engine/option_gates.gd)
-		var check: Callable = reg.gate(key)["check"]
-		if o.has(key) and check.is_valid():
-			var ok: bool = await check.call(o, self)
-			if not ok:
-				return
-	if _panel_prop and is_instance_valid(_panel_prop):
-		if not _panel_prop.e.has("_used"):
-			_panel_prop.e["_used"] = {}
-		_panel_prop.e["_used"][i] = true
-		if o.has("screen"):
-			_panel_prop.set_screen(o["screen"])
-	var ctx := panel_ctx()
-	for key in reg.gates():                          # ... and what is settled once it goes ahead ("cost" is paid; "risk" can still undo it)
-		var settle: Callable = reg.gate(key)["settle"]
-		if o.has(key) and settle.is_valid() and not settle.call(o, self):
-			return
-	LM.sound("confirm")
-	Game.run_effects(o.get("effects"), ctx)
-	if o.has("do"):                                  # the panel's owner does something, and may put up another panel or close this one
-		var was := _panel_spec
-		(o["do"] as Callable).call()
-		if _state != "panel" or not is_same(was, _panel_spec):
-			return
-	var who: Node = _panel_prop
-	var result: String = o.get("result", _panel_spec.get("text", ""))
-	if o.has("results"):                             # one of several things it might say
-		result = o["results"][randi() % o["results"].size()]
-	if o.get("close", false):
-		close_panel()
-	else:
-		_fill_panel(result, "", o.get("final", false))
-	if o.has("call") and who != null and is_instance_valid(who) and who.has_method(o["call"]):      # something the thing itself does
-		who.call(o["call"])
-
-
-## The panel session, for the option gates (engine/option_gates.gd).
-func panel_text() -> String:
-	return _panel_spec.get("text", "")
-
-
-func show_panel(text: String, working := "") -> void:
-	_fill_panel(text, working)
-
-
-## Where the effects of an option happen: at the thing the panel belongs to.
-func panel_ctx() -> Dictionary:
-	if _panel_prop is Node3D and is_instance_valid(_panel_prop):
-		return {"at": (_panel_prop as Node3D).global_position, "prop": _panel_prop}
-	return {}
-
-
-func unmark_used() -> void:
-	if _panel_prop and is_instance_valid(_panel_prop):
-		_panel_prop.e["_used"].erase(_choosing)
 
 
 func close_panel() -> void:

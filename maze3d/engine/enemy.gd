@@ -1790,7 +1790,7 @@ func use(_player: Node) -> void:
 	var t: Dictionary = talk()                       # the level may give this one its own conversation
 	var opens: Array = t.get("open", ["It looks at you. It does not seem to mind."])
 	var spec := {"kicker": t.get("kicker", "OFF DUTY"), "title": d.get("name", ""), "text": opens[randi() % opens.size()], "options": []}
-	e["_used"] = {}
+	Game.interaction.forget_used(self)              # a new conversation: every option is on offer again
 	if t.has("riddles"):
 		var r: Dictionary = t["riddles"][randi() % t["riddles"].size()]
 		spec["text"] = "%s\n\n%s" % [spec["text"], r.get("q", "")]
@@ -1799,7 +1799,7 @@ func use(_player: Node) -> void:
 		for i in order:
 			var right: bool = i == int(r.get("right", 0))
 			var o := {"label": r["answers"][i], "result": r.get("yes", "CORRECT.") if right else r.get("no", "INCORRECT."), "final": true}
-			if right and t.has("prize") and not e.get("_prize", false):
+			if right and t.has("prize") and not Game.interaction.has_mark(self, "prize"):
 				o["effects"] = [{"type": "credits", "amount": int(t["prize"])}]
 				o["call"] = "_prize_given"
 			spec["options"].append(o)
@@ -1814,4 +1814,4 @@ func use(_player: Node) -> void:
 
 
 func _prize_given() -> void:
-	e["_prize"] = true
+	Game.interaction.set_mark(self, "prize")

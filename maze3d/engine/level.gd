@@ -1390,15 +1390,14 @@ func _build_environment() -> void:
 	# Screen-space effects are worked out from what is on screen, so they change as the view turns. Ambient occlusion is
 	# kept gentle (and at full resolution: project.godot); indirect light (SSIL) crawled badly along wall bases and under
 	# ledges and is off unless asked for (--ssil). F1/F2/F3 step through lighting tests while playing (below).
-	var args := OS.get_cmdline_user_args()
 	var forward: bool = RenderingServer.get_current_rendering_method() == "forward_plus"
-	env.ssao_enabled = not args.has("--noao")
+	env.ssao_enabled = not Debug.no_ao
 	env.ssao_intensity = 1.2
 	env.ssao_radius = 0.8
 	env.ssao_power = 1.3
-	env.ssil_enabled = forward and args.has("--ssil")
+	env.ssil_enabled = forward and Debug.ssil
 	_env = env
-	env.volumetric_fog_enabled = forward and fog.get("volumetric", true) and not args.has("--novfog")
+	env.volumetric_fog_enabled = forward and fog.get("volumetric", true) and not Debug.no_vfog
 	env.volumetric_fog_density = fog.get("density", 0.012) * 1.6
 	env.volumetric_fog_albedo = LM.col(fog.get("color"), Color(0.5, 0.6, 0.65))
 	env.volumetric_fog_length = 48.0

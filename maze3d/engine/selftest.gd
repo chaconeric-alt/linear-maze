@@ -11,6 +11,16 @@ var pl: Player
 var fails := 0
 
 
+## What the self-test needs switched before the first level is loaded (Main calls this for --selftest): hacks are
+## instant and always come off, nothing risky goes wrong, the bunker lives in memory only, and remembered settings
+## are not loaded, so the test measures the game as designed.
+static func configure() -> void:
+	Debug.sure_rolls = true
+	Debug.quick_hacks = true
+	Debug.memory_profile = true
+	Debug.fixed_settings = true
+
+
 func _say(ok: bool, what: String) -> void:
 	print(("PASS  " if ok else "FAIL  ") + what)
 	if not ok:
@@ -352,9 +362,9 @@ func run(m: Node) -> void:
 			if ending:
 				continue
 			n.use(pl)
-			_say(Game.hud._state == "panel" and get_tree().paused, "terminal opens and pauses the world: " + n.e["use"].get("title", "?"))
+			_say(Game.hud.in_panel() and get_tree().paused, "terminal opens and pauses the world: " + n.e["use"].get("title", "?"))
 			for i in opts.size():
-				await Game.hud._choose(i)
+				await Game.interaction.choose(i)
 			Game.hud.close_panel()
 			await _frames(3)
 		elif kind == "heal":
@@ -436,11 +446,11 @@ func run(m: Node) -> void:
 	for n in get_tree().get_nodes_in_group("usable"):
 		if is_instance_valid(n) and n is Prop and str(n.e.get("use", {})).contains("\"end\""):
 			n.use(pl)
-			if Game.hud._state == "panel":
+			if Game.hud.in_panel():
 				var opts2: Array = n.e["use"].get("options", [])
 				for i in opts2.size():
 					if str(opts2[i]).contains("\"end\""):
-						await Game.hud._choose(i)
+						await Game.interaction.choose(i)
 	await _frames(5)
 	_say(Game.over, "the level can be finished")
 	print("RESULT  %d failures" % fails)
@@ -485,12 +495,12 @@ func _off_duty() -> void:
 		await _frames(3)
 		var offered: bool = a.prompt() != ""
 		a.use(pl)
-		var opened: bool = Game.hud._state == "panel"
+		var opened: bool = Game.hud.in_panel()
 		if opened:
-			var opts: Array = Game.hud._panel_spec.get("options", [])
+			var opts: Array = Game.interaction.spec.get("options", [])
 			for i in opts.size():
 				if not opts[i].has("call"):
-					await Game.hud._choose(i)
+					await Game.interaction.choose(i)
 			Game.hud.close_panel()
 		await _frames(3)
 		_say(offered and opened, "%s talks when asked (%s)" % [nm, "in reach: %s" % (pl.focus == a)])
@@ -776,7 +786,7 @@ func _pick(n: Node, label: String) -> bool:
 	await _frames(2)
 	if not Game.hud.in_panel():
 		return false
-	var opts: Array = Game.hud._panel_spec.get("options", [])
+	var opts: Array = Game.interaction.spec.get("options", [])
 	var found := false
 	for i in opts.size():
 		var o: Dictionary = opts[i]
@@ -786,7 +796,7 @@ func _pick(n: Node, label: String) -> bool:
 			continue
 		o.erase("risk")
 		Game.credits = maxi(Game.credits, int(o.get("cost", 0)))
-		await Game.hud._choose(i)
+		await Game.interaction.choose(i)
 		found = true
 		break
 	await _frames(3)

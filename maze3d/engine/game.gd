@@ -23,6 +23,7 @@ var over := false
 var effects := EffectRegistry.new()     # effect type -> handler: the one place that says what each effect does
 var _prop_uses := PropUses.new()        # held here: the registry's handlers do not keep their owners alive
 var _gates := OptionGates.new()
+var interaction := Interaction.new()    # the rules of panels, and what has been used (engine/interaction.gd)
 
 
 func _init() -> void:
@@ -61,6 +62,7 @@ func reset() -> void:
 	haul.clear()
 	stats = {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}
 	over = false
+	interaction.reset()
 
 
 func _process(dt: float) -> void:

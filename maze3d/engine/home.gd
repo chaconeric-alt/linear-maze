@@ -28,7 +28,6 @@ const PROGRAMMES := ["An advertisement for a kettle. The kettle company outlived
 	"Test card. A girl, a clown, a noughts-and-crosses board. You watch it for longer than you meant to."]
 
 var level: Level
-var e: Dictionary = {}                   # the HUD's panel asks its owner for this
 var decorating := false
 var robot: Node3D = null                 # the repaired robot (an Enemy, off duty), or the wreck in the cradle
 var _shown: Array = []                   # what is on the rack, the stand and in the trophy case
