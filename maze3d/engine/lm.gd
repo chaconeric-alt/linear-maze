@@ -59,6 +59,16 @@ func boot(game_id: String) -> void:
 		if s != null:
 			generators[g] = s.new()
 	_build_sounds()
+	_check_schema()
+
+
+## Report keys in the defs and level files that SPEC.md does not list (Schema): a misspelt key is otherwise ignored.
+func _check_schema() -> void:
+	var problems := Schema.check_defs(defs)
+	for id in levels:
+		problems += Schema.check_level(levels[id])
+	for w in problems:
+		push_warning("Schema: " + w)
 
 
 func load_kit(id: String) -> void:

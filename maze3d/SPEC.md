@@ -184,9 +184,10 @@ Projectile: `speed`, `radius`, `color`, `light`, `gravity`, `kind`, `blast: { ra
 | Field | Meaning |
 |---|---|
 | `name`, `model` (path from the project root), `kit`, `scale` | |
-| `hp`, `armor` (0–1), `takes: { blast: 1.6 }`, `mass` | |
+| `hp`, `armor` (0–1), `takes: { blast: 1.6 }`, `mass`, `gib` | `gib: false`: a blast that kills it throws no burst of sparks (machines that should just stop). |
 | `speed`, `accel`, `radius`, `height`, `center`, `eye` | The body is a capsule; `center` is its middle's height (default half the height). |
 | `fly`, `mount: "ceiling"` | Ignores gravity; hangs from the ceiling. |
+| `still`, `turn` | `still: true`: it never walks (turrets, emitters); `turn`: how fast a thing that cannot walk turns to face you (4). |
 | `sight`, `hearing` | It notices you in sight (or behind it, close), when shot, or when it hears a shot. Noticing wakes friends within 10 m. |
 | `behavior` | `chaser`, `skirmisher` (holds `keep: [min, max]` and strafes), `turret`. |
 | `attacks` | Tried in order. `{ type: "melee", damage, range, windup, recover, cooldown, knock }` or `{ type: "ranged", projectile, damage, range, min_range, burst, burst_gap, spread, lead, muzzle, windup, recover, cooldown }`. |
@@ -256,7 +257,7 @@ Any rigged `.glb` in `actors/` works. To give one clips, `tools/blender/adopt.py
 
 ### 3.4 Items (`defs`: `items`)
 
-`name`, `kind` (`treasure` with `value`; `health`, `armor` with `amount`; `ammo` with `ammo`, `amount`; `key` with `color`; `weapon` with `weapon`), `model`, `scale`, `glow`, `sound`, `effects`, `flag`. Item models are centred on their own middle.
+`name`, `kind` (`treasure` with `value`; `health`, `armor` with `amount`; `ammo` with `ammo`, `amount`; `key` with `color`; `weapon` with `weapon`; `quest` with `text`), `model`, `kit` (the kit its model is in, if not the level's), `scale`, `glow`, `sound`, `effects`, `flag`, `trophy`. Item models are centred on their own middle.
 
 ### 3.5 Sounds (`defs`: `sounds`)
 
@@ -507,7 +508,7 @@ A level with `"off_duty": true` (or one thing with it) is a floor where nothing 
 
 - **notices you** when you are in sight within `talk.reach` (9 m; `wake_sight` for things that stand dormant): it says one of `talk.greet` as floating words, turns to you if it can, and every so often says one of `talk.idle` (its `barks`, without);
 - **stops noticing** four seconds after you have gone. A thing with a `dormant_clip` (Sphinx Gun, Plodder, Deadbot) powers up when you arrive and goes dormant again when you leave. One in a station that was `shut` is shut in again: the station opens as you come up to it and closes behind you;
-- **wanders** near where the level put it, if it can walk and has nothing else to do (not in a station, not lounging, not perched, not `"still": true`). `"roam": cells` on the thing sets how far (4);
+- **wanders** near where the level put it, if it can walk and has nothing else to do (not in a station, not lounging, not perched, not `"still": true`). `"roam": cells` on the thing sets how far (4), and `"greet": metres` how near you must come before it notices you;
 - **talks** when you press E on it (the prompt is "Talk to the ..."). The panel is the terminal panel;
 - **shows what it does**: the last option in every panel asks it to. It then runs its ordinary fighting code against a **Target** in place of you, for `talk.drill_time` seconds (8) from its first attack, and goes back to where it was (a lounger goes back to lounging, a station's robot back into its station). What can walk goes to the gun range: the nearest free target tagged `range`. What cannot (turrets, the Snapper, anything on a ceiling) needs a target it can see from where it stands;
 - can be shot, and dies, and says one of `talk.hurt` about it, and still does not fight. Things let out by lockers and arches on such a floor are off duty too.

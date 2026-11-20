@@ -39,6 +39,18 @@ func _look_at(target: Vector3) -> void:
 	pl.head.rotation.x = pl.pitch
 
 
+## Every def and every thing in this level uses keys SPEC.md lists, and SPEC.md lists every key the schema knows.
+func _check_schema() -> void:
+	var problems: Array = Schema.check_defs(LM.defs) + Schema.check_level(level.data)
+	for w in problems:
+		print("INFO  schema: ", w)
+	_say(problems.is_empty(), "the defs and this level's things use only keys SPEC.md lists (%d unknown)" % problems.size())
+	var spec := FileAccess.get_file_as_string("res://SPEC.md")
+	if spec != "":
+		var missing := Schema.undocumented(spec)
+		_say(missing.is_empty(), "every key the schema checks is written in SPEC.md (%s)" % (", ".join(missing) if not missing.is_empty() else "all of them"))
+
+
 ## The storey something is in: the one its height says, or the nearest one below that has air there (it may be on a ceiling).
 func _storey(pos: Vector3) -> int:
 	var c := level.cell_of(pos)
@@ -84,6 +96,7 @@ func run(m: Node) -> void:
 	Game.ended.disconnect(Game.hud._on_end)       # the test dies on purpose; keep the end screen out of it
 	await _frames(10)
 	print("INFO  level ", level.data.get("id"), ": ", level.w, "x", level.h, " cells, ", level.actors.size(), " actors, ", level.doors.size(), " doors")
+	_check_schema()
 	if OS.get_cmdline_user_args().has("--story") and level.data.get("id", "") == "anomalous":      # the Anomalous Structure, played the way it is meant to go
 		await _anomalous()
 		print("RESULT  %d failures" % fails)
