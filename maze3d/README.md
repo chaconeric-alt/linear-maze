@@ -38,11 +38,14 @@ The title screen offers the built level and **Random installation**, which is ma
 | `kits/omni/` | No models: borrows every kit so one level can use them all. |
 | `actors/source/` | Models made elsewhere, as they arrived: the Tripo Roach, Monoid and Glorexx. `tools/blender/adopt_*.py` turn them into `actors/*_tripo.glb` with clips. |
 | `actors/` | 17 rigged, animated monsters as `.glb`: Gladiator Roach, Custodian, Monoid, Glorexx, ceiling turret; and Eggbot, Grease Monkey, Dancer, Snapper, Deadbot, Desktop Defender, Sphinx Gun, Plodder, Drone, Fouler, Mourner and the Princess. |
-| `games/havenot/` | The game: `game.json`, `defs/` (weapons, projectiles, actors, items, sounds), `levels/`. |
-| `generators/` | Level generators. `rooms.gd` is a small working example of the interface. |
+| `games/havenot/` | The game: `game.json`, `defs/` (weapons, projectiles, actors, items, sounds, the bunker), `levels/`. |
+| `generators/` | Level generators. `rooms.gd` is a working example of the interface: a pipeline of stages in `generators/rooms/`. |
 | `tools/blender/` | The scripts that model everything (`mz.py` is the modelling library). Run them in Blender or with `pip install bpy`. |
 | `tools/levels/` | The scripts that lay out the hand-made levels, on the helpers in `levelkit.py` (grids, rooms, things against walls, signs, tags, door letters, writing the file). `staffonly.py` builds the test floor from whatever exists. |
-| `SPEC.md` | The reference: file formats, conventions, and how to add a monster, a tile, a door, a prop, a kit, a level or a generator. |
+| `tests/` | The self-test: a runner and one part per feature. A level's own test sits beside its level file (`games/havenot/levels/<id>_test.gd`). |
+| `SPEC.md` | The reference, one section per subsystem: file formats, conventions, and how to add a monster, a tile, a door, a prop, a kit, a level or a generator. |
+| `CHANGELOG.md` | What changed and when. |
+| `CLAUDE.md` | Notes for whoever works on the code: where things live, the rules the code keeps, how to run the tests, size budgets. |
 
 ## The level
 
@@ -76,7 +79,7 @@ godot --headless --path maze3d -- --level=gen:rooms --seed=5 --selftest
 godot --headless --path maze3d -- --level=anomalous --selftest --story
 ```
 
-The self-test plays the level by script: it walks and jumps, checks that everything placed can be reached, stands in every trap, fights every actor with every weapon in turn, opens every container, works every terminal, takes every pickup, opens every door and finishes the level. It prints PASS/FAIL lines and exits with the number of failures. Both commands above pass.
+The self-test plays the level by script: it checks the data's keys, walks and jumps, checks that everything placed can be reached, stands in every trap, fights every actor with every weapon in turn, opens every container, works every terminal, takes every pickup, opens every door and finishes the level. It prints PASS/FAIL lines and exits with the number of failures. The commands above pass. `CLAUDE.md` lists the full baseline and how to compare two versions exactly.
 
 `-- --level=deepworks --at=15,21 --yaw=0 --shot=C:/tmp/a.png --frames=30` saves a picture from a given cell.
 
@@ -88,4 +91,4 @@ The self-test plays the level by script: it walks and jumps, checks that everyth
 - One enemy faction: everything hunts the player.
 - Sound is synthesised placeholders (as in the 2D engine); no music.
 - Balance has had scripted tests only, not a human play-through.
-- Rendering was checked with Godot's Compatibility (OpenGL) renderer. The project is set to Forward+, which adds volumetric fog, SSAO and SSIL from the same settings; look at it on a real GPU and tune `engine/level.gd` `_build_environment` to taste.
+- Rendering was checked with Godot's Compatibility (OpenGL) renderer. The project is set to Forward+, which adds volumetric fog, SSAO and SSIL from the same settings; look at it on a real GPU and tune `engine/level/environment.gd` (`LevelEnvironment`) to taste.
