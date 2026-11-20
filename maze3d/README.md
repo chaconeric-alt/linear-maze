@@ -41,7 +41,7 @@ The title screen offers the built level and **Random installation**, which is ma
 | `games/havenot/` | The game: `game.json`, `defs/` (weapons, projectiles, actors, items, sounds), `levels/`. |
 | `generators/` | Level generators. `rooms.gd` is a small working example of the interface. |
 | `tools/blender/` | The scripts that model everything (`mz.py` is the modelling library). Run them in Blender or with `pip install bpy`. |
-| `tools/levels/` | The scripts that lay out the hand-made levels. `staffonly.py` builds the test floor from whatever exists. |
+| `tools/levels/` | The scripts that lay out the hand-made levels, on the helpers in `levelkit.py` (grids, rooms, things against walls, signs, tags, door letters, writing the file). `staffonly.py` builds the test floor from whatever exists. |
 | `SPEC.md` | The reference: file formats, conventions, and how to add a monster, a tile, a door, a prop, a kit, a level or a generator. |
 
 ## The level

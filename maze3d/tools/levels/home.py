@@ -7,13 +7,10 @@ decorating, the lift out) is engine/home.gd; this file only says where things st
 
     python3 tools/levels/home.py
 """
-import json, os
+import os
+import levelkit as lk
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.join(HERE, '..', '..')
-META = {}
-for _k in ('hightech', 'loot', 'robots', 'home'):
-    META.update(json.load(open(os.path.join(ROOT, 'kits', _k, 'generated.json')))['models'])
+META = lk.models('hightech', 'loot', 'robots', 'home')
 
 MAP = [
     "################",
@@ -31,9 +28,8 @@ assert all(len(r) == W for r in MAP)
 
 
 def room(name, x, y, w, h, style, lamps):
-    """lamps: the cell that gets the ceiling lamp. The engine lights (x + ox) % every == 0, so one room = one rule."""
-    ev = 50
-    return dict(name=name, rect=[x, y, w, h], style=style, height=1, lights=dict(every=ev, ox=ev - lamps[0], oy=ev - lamps[1]))
+    """lamps: the cell that gets the ceiling lamp."""
+    return lk.room(name, x, y, w, h, style, lights=lk.lights_for(x, y, w, h, lamps))
 
 
 # Rooms are two cells (8 m) square, the living room and the robot room three by two: big enough to furnish, small enough to be a home.
@@ -48,31 +44,8 @@ ROOMS = [
     room('Robot Room', 8, 6, 3, 2, 'hm_robot', (9, 6)),
     room('Security', 12, 3, 3, 3, 'hm_security', (13, 4)),
 ]
-SIDE = {'n': (0, -1), 'e': (1, 0), 's': (0, 1), 'w': (-1, 0)}
-FACE = {'n': 's', 's': 'n', 'e': 'w', 'w': 'e'}
-things = []
-
-
-def put(model, at, wall=None, along=0.0, out=0.0, **kw):
-    """Stand `model` in cell `at`. With `wall`, its back goes against that wall (a hand's width off the panelling),
-    `along` metres sideways (east or south is +) and `out` metres further into the room."""
-    e = dict(prop=model, at=list(at), blocks=False)
-    m = META[model]
-    if wall:
-        e['face'] = FACE[wall]
-        if m.get('mount') != 'wall':
-            depth = m.get('solid', [1, 1, 1])[2]
-            d = 2.0 - depth / 2 - 0.38 - out
-            dx, dz = SIDE[wall]
-            ax, az = (0, 1) if dx else (1, 0)
-            e['offset'] = [round(dx * d + ax * along, 2), 0, round(dz * d + az * along, 2)]
-        elif along:
-            dx, dz = SIDE[wall]
-            ax, az = (0, 1) if dx else (1, 0)
-            e['offset'] = [ax * along, 0, az * along]
-    e.update(kw)
-    things.append(e)
-    return e
+things = lk.Things(META, gap=0.38)      # a piece against a wall stands a hand's width (0.38 m) off the panelling
+put = things.put                        # put(model, at, wall=None, along=0.0, out=0.0, **kw): see levelkit.Things.put
 
 
 def use(what, prompt):
@@ -138,6 +111,5 @@ level = dict(
     legend={'g': {'door': 'door_hm_gear'}, 'V': {'door': 'door_hm_vault'}},
     map=MAP, rooms=ROOMS, things=things,
     objectives=[dict(text='Home. The lift out is behind the vault door, at the east end of the hall.')], triggers=[])
-out = os.path.join(ROOT, 'games', 'havenot', 'levels', 'home.json')
-json.dump(level, open(out, 'w'), indent=1)
+out = lk.write(level)
 print('wrote', os.path.normpath(out), '%d things' % len(things))

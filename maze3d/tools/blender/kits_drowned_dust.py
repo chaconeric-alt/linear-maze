@@ -17,7 +17,7 @@ while furniture borrowed from the Kaveros kit keeps its own. glow_a is each kit'
 import math, random
 from mz import Mesh, T, R, S
 from tiles import C, H, plates, cable, dangle, face, down
-from kits3 import _frame, DW, DH, DT
+from kits_works_bunker_crypt import _frame, DW, DH, DT
 
 DROWNED_MATS = {
     'hull':        dict(color=(0.30, 0.47, 0.42), metal=0.1, rough=0.5, shader='worn', grime=0.8),       # sea-green paint

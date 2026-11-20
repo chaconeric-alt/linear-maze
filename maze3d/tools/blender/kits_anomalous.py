@@ -13,7 +13,7 @@ the dart plate, the quest items and the arc carbine. And two machines (ACTORS3):
 import math, random
 from mz import Mesh, T, R, S
 from tiles import C, H, cable
-from kits3 import _frame, DW, DH, DT
+from kits_works_bunker_crypt import _frame, DW, DH, DT
 from actors2 import Build, K
 from actors import cyc, sn
 

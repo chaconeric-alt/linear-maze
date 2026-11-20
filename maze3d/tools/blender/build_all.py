@@ -98,13 +98,13 @@ def main():
     import agency
     mz.define_materials(palette.MATERIALS)
     mz.define_materials(agency.MATERIALS)
-    import kits3, kits4, kits5, kits6, kits7, kits8, actors2
-    later = dict(kits3.KITS)
-    later.update(kits4.KITS)
-    later.update(kits5.KITS)
-    later.update(kits6.KITS)
-    later.update(kits7.KITS)
-    later.update(kits8.KITS)
+    import kits_works_bunker_crypt, kits_executive_megaplex_hospital_basilica, kits_robots_loot, kits_drowned_dust, kits_home, kits_anomalous, actors2
+    later = dict(kits_works_bunker_crypt.KITS)
+    later.update(kits_executive_megaplex_hospital_basilica.KITS)
+    later.update(kits_robots_loot.KITS)
+    later.update(kits_drowned_dust.KITS)
+    later.update(kits_home.KITS)
+    later.update(kits_anomalous.KITS)
     just = [k for k in os.environ.get('MZ_KITS', '').split(',') if k]        # MZ_KITS=hospital,basilica: only those kits, no actors
     acts = [k for k in os.environ.get('MZ_ACTORS', '').split(',') if k]     # MZ_ACTORS=heavy,emitter: only those actors, no kits
     if acts:
@@ -121,7 +121,7 @@ def main():
         print('done')
         return
     actors.ACTORS.update(actors2.ACTORS2)
-    actors.ACTORS.update(kits8.ACTORS3)
+    actors.ACTORS.update(kits_anomalous.ACTORS3)
     os.makedirs(os.path.join(ROOT, 'actors'), exist_ok=True)
     for name, fn in actors.ACTORS.items():
         if only and name not in only:

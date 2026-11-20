@@ -2,13 +2,11 @@
 """atrium.py - writes games/havenot/levels/atrium.json: the level that shows what the level format can now do.
 A room with a thin wall and a window, opening straight into an eight-sided hall three storeys high with a balcony round
 it at the first storey, another along one side at the second, ramps between them, and windows through to a control room."""
-import json, os
+import levelkit as lk
 W, Hh = 25, 17
-g = [['#'] * W for _ in range(Hh)]
+g = lk.grid(W, Hh)
 def carve(x0, y0, w, h):
-    for y in range(y0, y0 + h):
-        for x in range(x0, x0 + w):
-            g[y][x] = '.'
+    lk.carve(g, x0, y0, w, h)
 carve(1, 6, 5, 5)                                    # the annexe
 AX, AY, AN = 6, 2, 13                                # the atrium's box
 carve(AX, AY, AN, AN)
@@ -53,11 +51,10 @@ T = [{"start": True, "face": "e", "at": [2, 8]},
      {"prop": "holo_table", "at": [22, 8], "blocks": False, "use": {"type": "effects", "prompt": "Shut the place down", "effects": [{"type": "end", "title": "Lights out", "text": "Three storeys, all of them quiet."}]}}]
 L = {"id": "atrium", "name": "The Atrium (shapes, storeys, ramps, balconies, thin walls, windows)", "kit": "omni", "style": "corridor",
      "intro": "A window on to a hall three storeys high. Things you have seen show red on the map.", "ambient_energy": 0.7,
-     "legend": {"+": {"door": "door_split"}}, "map": [''.join(r) for r in g],
+     "legend": {"+": {"door": "door_split"}}, "map": lk.rows(g),
      "rooms": [{"name": "Annexe", "rect": [1, 6, 5, 5], "style": "white_hall", "height": 1}, {"name": "The Atrium", "rect": [AX, AY, AN, AN], "style": "lab", "height": 3},
                {"name": "Control", "rect": [20, 6, 4, 5], "style": "bunker_ops", "height": 1}],
      "diags": diags, "decks": decks, "ramps": ramps, "windows": windows, "walls": walls,
      "things": T, "objectives": [{"text": "Cross the Atrium to Control. The balconies have things worth the climb."}], "triggers": []}
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'games', 'havenot', 'levels', 'atrium.json')
-json.dump(L, open(out, 'w'), indent=1)
+lk.write(L)
 print('\n'.join(L['map']))

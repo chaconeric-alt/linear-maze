@@ -18,32 +18,25 @@ An Age of War advertising agency in three floors, one above the other in one lev
 
     python3 tools/levels/anomalous.py
 """
-import json, os
+import os
+import levelkit as lk
+from levelkit import SIDE, FACE
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.join(HERE, '..', '..')
-META = {}
-for _k in ('hightech', 'agency', 'executive', 'megaplex', 'bunker', 'loot', 'robots', 'anomalous'):
-    META.update(json.load(open(os.path.join(ROOT, 'kits', _k, 'generated.json')))['models'])
+ROOT = lk.ROOT
+META = lk.models('hightech', 'agency', 'executive', 'megaplex', 'bunker', 'loot', 'robots', 'anomalous')
 
 W, Hh = 23, 19
-G = {f: [['#'] * W for _ in range(Hh)] for f in (0, 1, 2)}
+G = {f: lk.grid(W, Hh) for f in (0, 1, 2)}
 ROOMS = {0: [], 1: [], 2: []}
-T = []                      # things
+T = lk.Things(META, gap=0.3)        # things; a piece against a wall stands 0.3 m off it
 TAGS = {}
-SIDE = {'n': (0, -1), 'e': (1, 0), 's': (0, 1), 'w': (-1, 0)}
-FACE = {'n': 's', 's': 'n', 'e': 'w', 'w': 'e'}
 
 
 def room(f, name, x, y, w, h, style, lamps=None, every=2, **kw):
-    for j in range(y, y + h):
-        for i in range(x, x + w):
-            G[f][j][i] = '.'
-    r = dict(name=name, rect=[x, y, w, h], style=style, height=1)
-    if lamps:                                        # one lamp, in that cell
-        r['lights'] = dict(every=50, ox=50 - lamps[0], oy=50 - lamps[1])
-    else:
-        r['lights'] = dict(every=every, ox=(every - (x + (w - 1) // 2) % every) % every, oy=(every - (y + (h - 1) // 2) % every) % every)
+    """A room on floor f: carved, with its lamps (one in the cell `lamps`, or every `every` cells)."""
+    lk.carve(G[f], x, y, w, h)
+    r = lk.room(name, x, y, w, h, style)
+    r['lights'] = lk.lights_for(x, y, w, h, lamps, every)
     r.update(kw)
     ROOMS[f].append(r)
 
@@ -59,62 +52,30 @@ def door(f, x, y, ch='+'):
 
 
 def tag(name, *cells):
-    TAGS.setdefault(name, []).extend([list(c) for c in cells])
+    lk.tag(TAGS, name, *cells)
 
 
+# The level's things, on floor f (the level scripts' common helpers, levelkit.Things, take the floor last).
 def put(f, model, at, wall=None, along=0.0, out=0.0, **kw):
     """Stand `model` in cell `at` on floor `f`. With `wall`, its back goes against that wall; `along` metres sideways
     (east or south is +), `out` metres further into the room."""
-    e = dict(prop=model, at=list(at), blocks=False)
-    if f:
-        e['level'] = f
-    m = META[model]
-    if wall:
-        e['face'] = FACE[wall]
-        dx, dz = SIDE[wall]
-        ax, az = (0, 1) if dx else (1, 0)
-        if m.get('mount') != 'wall':
-            depth = m.get('solid', [1, 1, 1])[2]
-            d = 2.0 - depth / 2 - 0.3 - out
-            e['offset'] = [round(dx * d + ax * along, 2), 0, round(dz * d + az * along, 2)]
-        elif along:
-            e['offset'] = [ax * along, 0, az * along]
-    e.update(kw)
-    T.append(e)
-    return e
+    return T.put(model, at, wall, along, out, floor=f, **kw)
 
 
 def actor(f, kind, at, **kw):
-    e = dict(actor=kind, at=list(at))
-    if f:
-        e['level'] = f
-    e.update(kw)
-    T.append(e)
-    return e
+    return T.actor(kind, at, floor=f, **kw)
 
 
 def item(f, kind, at, **kw):
-    e = dict(item=kind, at=list(at))
-    if f:
-        e['level'] = f
-    e.update(kw)
-    T.append(e)
+    T.item(kind, at, floor=f, **kw)
 
 
 def trap(f, kind, at, **kw):
-    e = dict(trap=kind, at=list(at))
-    if f:
-        e['level'] = f
-    e.update(kw)
-    T.append(e)
+    T.trap(kind, at, floor=f, **kw)
 
 
 def sign(f, text, at, face, size=60, y=3.2, color=(1.0, 0.3, 0.85), **kw):
-    e = dict(sign=text, at=list(at), face=face, size=size, y=y, color=list(color))
-    if f:
-        e['level'] = f
-    e.update(kw)
-    T.append(e)
+    T.sign(text, at, face, size, y, color, floor=f, **kw)
 
 
 def poster(f, at, wall, title, text, model='an_poster_a', along=0.0, ink=(0.95, 0.92, 0.85)):
@@ -653,7 +614,7 @@ OBJECTIVES = [
 
 
 def rows(f):
-    return [''.join(r) for r in G[f]]
+    return lk.rows(G[f])
 
 
 level = dict(
@@ -664,8 +625,7 @@ level = dict(
     legend=LEGEND, map=rows(0), rooms=ROOMS[0],
     floors=[dict(level=1, map=rows(1), rooms=ROOMS[1], style='an_lab'), dict(level=2, map=rows(2), rooms=ROOMS[2], style='bunker_hall')],
     tags=TAGS, things=T, objectives=OBJECTIVES, triggers=TRIGGERS)
-out = os.path.join(ROOT, 'games', 'havenot', 'levels', 'anomalous.json')
-json.dump(level, open(out, 'w'), indent=1, ensure_ascii=False)
+out = lk.write(level, ensure_ascii=False)
 for f in (0, 1, 2):
     print('floor', f + 1)
     print('\n'.join(rows(f)))

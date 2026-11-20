@@ -17,11 +17,9 @@ if anything is left out, and the engine's self-test checks the same thing (--lev
     python3 tools/levels/staffonly.py
 """
 import json, os, sys
+import levelkit as lk
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.join(HERE, '..', '..')
-GAME = os.path.join(ROOT, 'games', 'havenot')
-load = lambda *p: json.load(open(os.path.join(*p)))
+ROOT, GAME, load = lk.ROOT, lk.GAME, lk.load
 
 game = load(GAME, 'game.json')
 actors = load(GAME, 'defs', 'actors.json')
@@ -87,20 +85,12 @@ if len(order) % 2:
     order.append('SPARE')
 NB = len(order) // 2
 W, Hh = SX + 3 + RW + 1, NB * BAND + 1
-g0 = [['#'] * W for _ in range(Hh)]
-g1 = [['#'] * W for _ in range(Hh)]
-gb = [['#'] * W for _ in range(Hh)]
-rooms, rooms1, roomsb, T, legend = [], [], [], [], {'~': {'fluid': True}}
+g0, g1, gb = lk.grid(W, Hh), lk.grid(W, Hh), lk.grid(W, Hh)
+rooms, rooms1, roomsb, T, legend = [], [], [], lk.Things(), lk.Legend({'~': {'fluid': True}})
 decks, ramps, diags, windows, walls = [], [], [], [], []
 placed, styles_used, doors_used, actors_used, items_used = set(), set(), set(), set(), set()
 door_i = [0]
-letters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789')
-
-
-def carve(g, x0, y0, w, h, ch='.'):
-    for y in range(y0, y0 + h):
-        for x in range(x0, x0 + w):
-            g[y][x] = ch
+carve = lk.carve
 
 
 def door(x, y, model=None, g=None, **more):
@@ -108,26 +98,20 @@ def door(x, y, model=None, g=None, **more):
     if model is None:
         model = ALL_DOORS[door_i[0] % len(ALL_DOORS)]
         door_i[0] += 1
-    spec = dict(door=model, **more)
-    ch = next((c for c, v in legend.items() if v == spec), None)
-    if ch is None:
-        ch = letters.pop(0)
-        legend[ch] = spec
-    (g or g0)[y][x] = ch
+    (g or g0)[y][x] = legend.letter(dict(door=model, **more))
     doors_used.add(model)
 
 
 def room(name, x0, y0, w, h, style, height=1, into=None):
-    (rooms if into is None else into).append({"name": name, "rect": [x0, y0, w, h], "style": style, "height": height})
+    (rooms if into is None else into).append(lk.room(name, x0, y0, w, h, style, height))
     styles_used.add(style)
 
 
 def sign(text, x, y, face='s', color=(0.4, 0.9, 1.0), size=44, yy=3.0, **more):
-    T.append(dict(sign=text, face=face, color=list(color), size=size, y=yy, at=[x, y], **more))
+    T.add(dict(sign=text, face=face, color=list(color), size=size, y=yy, at=[x, y]), **more)
 
 
-FACE = {'n': 's', 's': 'n', 'w': 'e', 'e': 'w'}
-VEC = {'n': (0, -1), 's': (0, 1), 'w': (-1, 0), 'e': (1, 0)}
+FACE, VEC = lk.FACE, lk.SIDE
 
 
 def prop(pid, x, y, wall=None, **more):
@@ -161,17 +145,17 @@ def prop(pid, x, y, wall=None, **more):
 
 
 def actor(aid, x, y, **more):
-    T.append(dict(actor=aid, at=[x, y], **more))
+    T.actor(aid, (x, y), **more)
     actors_used.add(aid)
 
 
 def item(iid, x, y, **more):
-    T.append(dict(item=iid, at=[x, y], **more))
+    T.item(iid, (x, y), **more)
     items_used.add(iid)
 
 
 def target(x, y, face, tag='spot'):
-    T.append({"target": tag, "at": [x, y], "face": face})
+    T.add({"target": tag, "at": [x, y], "face": face})
 
 
 def slots(x0, y0, w, h, door_xs):
@@ -478,7 +462,7 @@ missing += ["station for %s" % a for a in STATIONS if STATIONS[a] not in placed]
 if missing:
     sys.exit("staffonly.py: no place found for: " + ", ".join(missing))
 
-rows = lambda g: [''.join(r) for r in g]
+rows = lk.rows
 L = {"id": "staffonly", "name": "Staff Only (the test floor: every room, every thing, every monster, off duty)", "kit": "omni", "style": "corridor",
      "intro": "Everything on this floor is on its break. It will talk. It will show you what it does, on a target. It will not do it to you.",
      "ambient_energy": 0.75, "off_duty": True, "covers_all": True,
@@ -490,8 +474,7 @@ L = {"id": "staffonly", "name": "Staff Only (the test floor: every room, every t
                     {"text": "Red card: the cache in the Vault, behind the blue door (high-tech wing)", "done": "key_red"},
                     {"text": "Clock out: behind the red door (Way Out, north-east)"}],
      "triggers": []}
-out = os.path.join(GAME, 'levels', 'staffonly.json')
-json.dump(L, open(out, 'w'), indent=1, ensure_ascii=False)
+lk.write(L, ensure_ascii=False)
 print('\n'.join(rows(g0)))
 print("%d x %d cells, %d rooms, %d things: %d props, %d monsters (%d kinds), %d doors (%d kinds), %d styles" % (
     W, Hh, len(rooms) + len(rooms1) + len(roomsb), len(T), sum(1 for t in T if 'prop' in t or 'station' in t), sum(1 for t in T if 'actor' in t), len(actors_used),

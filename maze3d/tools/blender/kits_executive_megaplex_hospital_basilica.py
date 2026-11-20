@@ -12,7 +12,7 @@ Eric's own models replace the furniture piece by piece (same ids, or new ones li
 import math, random
 from mz import Mesh, T, R, S
 from tiles import C, H, bsp
-from kits3 import courses, gothic, _frame, DW, DH, DT
+from kits_works_bunker_crypt import courses, gothic, _frame, DW, DH, DT
 
 EXEC_MATS = {       # deep and quiet: dark woods, black and jade marble, burnished gold, candle amber. No red.
     'ebony':      dict(color=(0.13, 0.085, 0.055), metal=0.0, rough=0.42, shader='worn', grime=0.15),      # near-black walnut

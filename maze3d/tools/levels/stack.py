@@ -6,16 +6,14 @@ Storey 1: a door high in the wall between the halls, from one balcony to the oth
 Storey -1: a sump and a vault under Hall B and the lobby. A pit in Hall B's floor drops into the sump; a lift in the
           lobby goes down to the vault and back.
 Hall A also has a pool, sunk in the floor."""
-import json, os
+import levelkit as lk
 W, Hh = 17, 14
 
 
 def grid(rects, doors=()):
-    g = [['#'] * W for _ in range(Hh)]
+    g = lk.grid(W, Hh)
     for (x0, y0, w, h) in rects:
-        for y in range(y0, y0 + h):
-            for x in range(x0, x0 + w):
-                g[y][x] = '.'
+        lk.carve(g, x0, y0, w, h)
     for (x, y) in doors:
         g[y][x] = '+'
     return g
@@ -27,7 +25,7 @@ for y in (3, 4, 5):
         g0[y][x] = '~'
 g1 = grid([(1, 9, 7, 4)], [(8, 2), (6, 8)])
 gb = grid([(9, 1, 7, 4), (9, 6, 7, 7)], [(12, 5)])
-rows = lambda g: [''.join(r) for r in g]
+rows = lk.rows
 T = [{"start": True, "face": "e", "at": [1, 1]},
      {"sign": "THE STACK\nup, across, down", "face": "s", "color": [0.4, 0.9, 1.0], "size": 56, "y": 3.0, "at": [4, 1]},
      {"item": "scattergun", "at": [2, 1]}, {"item": "shells", "at": [3, 1]},
@@ -58,8 +56,7 @@ L = {"id": "stack", "name": "The Stack (floors over floors, upper doors, a pit, 
      "floors": [{"level": 1, "map": rows(g1), "rooms": [{"name": "The Loft", "rect": [1, 9, 7, 4], "style": "bunker_ops"}]},
                 {"level": -1, "map": rows(gb), "rooms": [{"name": "The Sump", "rect": [9, 1, 7, 4], "style": "ruin"}, {"name": "The Vault", "rect": [9, 6, 7, 7], "style": "storage"}]}],
      "things": T, "objectives": [{"text": "Find the way up to the Loft, across to Hall B's balcony, and down to the Vault."}], "triggers": []}
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'games', 'havenot', 'levels', 'stack.json')
-json.dump(L, open(out, 'w'), indent=1)
+lk.write(L)
 for nm, g in (('storey 1', g1), ('storey 0', g0), ('storey -1', gb)):
     print(nm)
     print('\n'.join(rows(g)))

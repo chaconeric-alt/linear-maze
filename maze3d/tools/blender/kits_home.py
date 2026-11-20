@@ -10,7 +10,7 @@ The second half of the furniture is the CATALOGUE: things the player buys and se
 import math, random
 from mz import Mesh, T, R, S
 from tiles import C, H, cable
-from kits3 import _frame, DW, DH, DT
+from kits_works_bunker_crypt import _frame, DW, DH, DT
 
 HOME_MATS = {
     'hm_wood':      dict(color=(0.30, 0.16, 0.08), metal=0.0, rough=0.55, shader='worn', grime=0.25),     # walnut

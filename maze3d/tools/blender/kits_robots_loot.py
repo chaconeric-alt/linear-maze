@@ -7,7 +7,7 @@ Every other kit "uses" these two. A station's model is built SHUT; its "shutter"
 A container's "slots" are where the things it holds sit, in the engine's axes (x, up, toward the front)."""
 import math
 from mz import Mesh, T, R
-import palette, agency, kits3, kits4
+import palette, agency, kits_works_bunker_crypt, kits_executive_megaplex_hospital_basilica
 
 ROBOT_MATS = {
     'rb_plate':  dict(color=(0.10, 0.11, 0.13), metal=0.7, rough=0.45, shader='worn', grime=0.5),      # the station's own floor
@@ -206,8 +206,8 @@ LOOKS = {
     'bb': ('lime', 'gold', 'pew', 'halo'),
 }
 LOOT_MATS = {}
-for _src in (agency.MATERIALS, kits3.KITS['works']['mats'], kits3.KITS['bunker']['mats'], kits3.KITS['crypt']['mats'], kits4.EXEC_MATS, kits4.MEGA_MATS,
-             kits4.HOSP_MATS, kits4.BASIL_MATS):
+for _src in (agency.MATERIALS, kits_works_bunker_crypt.KITS['works']['mats'], kits_works_bunker_crypt.KITS['bunker']['mats'], kits_works_bunker_crypt.KITS['crypt']['mats'], kits_executive_megaplex_hospital_basilica.EXEC_MATS, kits_executive_megaplex_hospital_basilica.MEGA_MATS,
+             kits_executive_megaplex_hospital_basilica.HOSP_MATS, kits_executive_megaplex_hospital_basilica.BASIL_MATS):
     for _look in LOOKS.values():
         for _n in _look:
             if _n in _src and _n not in palette.MATERIALS:
@@ -314,8 +314,8 @@ for _tag in LOOKS:
     _loot_props['lt_trophy_' + _tag] = (lambda t=_tag: lt_trophy(t))
     _loot_props['lt_box_' + _tag] = (lambda t=_tag: lt_box(t))
 for _n in ('lime', 'gold', 'halo'):
-    if _n in kits4.BASIL_MATS:
-        LOOT_MATS[_n] = kits4.BASIL_MATS[_n]
+    if _n in kits_executive_megaplex_hospital_basilica.BASIL_MATS:
+        LOOT_MATS[_n] = kits_executive_megaplex_hospital_basilica.BASIL_MATS[_n]
 LOOT_MATS['rb_frame'] = ROBOT_MATS['rb_frame']
 LOOT_MATS['rb_plate'] = ROBOT_MATS['rb_plate']
 LOOT_MATS['rb_charge'] = ROBOT_MATS['rb_charge']

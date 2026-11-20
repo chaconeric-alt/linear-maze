@@ -1,10 +1,10 @@
 """Writes games/havenot/levels/deepworks.json: Kaveros Deepworks, Sublevel 1.
 Laying a level out in a script keeps the map and the things on it in step; the output is an
 ordinary level file and can be edited by hand afterwards.   python3 tools/levels/deepworks.py"""
-import json, os
+import levelkit as lk
 
 W, Hh = 31, 37
-g = [['#'] * W for _ in range(Hh)]
+g = lk.grid(W, Hh)
 rooms, things, tags = [], [], {}
 legend = {
     'A': {'door': 'door_rise'}, 'S': {'door': 'door_split'}, 'J': {'door': 'door_jaw', 'jammed': True}, 'X': {'door': 'door_shear'},
@@ -16,10 +16,8 @@ legend = {
 
 
 def room(name, x, y, w, h, style, height=1, **kw):
-    for j in range(y, y + h):
-        for i in range(x, x + w):
-            g[j][i] = '.'
-    rooms.append(dict(name=name, rect=[x, y, w, h], style=style, height=height, **kw))
+    lk.carve(g, x, y, w, h)
+    rooms.append(lk.room(name, x, y, w, h, style, height, **kw))
 
 
 def hall(cells):
@@ -219,7 +217,7 @@ level = dict(
     id='deepworks', name='Kaveros Deepworks · Sublevel 1', kit='agency', style='corridor',
     intro='Kaveros Deepworks. Nobody has signed the visitor book in three hundred years.',
     ambient=[0.22, 0.28, 0.36], ambient_energy=0.6, fog=dict(color=[0.08, 0.12, 0.15], density=0.014),
-    legend=legend, map=[''.join(r) for r in g], rooms=rooms, tags=tags, things=things,
+    legend=legend, map=lk.rows(g), rooms=rooms, tags=tags, things=things,
     objectives=[
         dict(text='Look round. The front desk in the Concourse may know something.', done=['knows_blue', 'key_blue']),
         dict(text='Find the BLUE card. Dr. Kaveros took it to the Specimen Garden, west.', done='key_blue'),
@@ -238,7 +236,6 @@ level = dict(
         dict(on=dict(type='room', name='Prototype Vault'), do=[dict(type='message', text='Something in here has been waiting a long time to protect an executive.', kind='warn')]),
     ],
 )
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'games', 'havenot', 'levels', 'deepworks.json')
-json.dump(level, open(out, 'w'), indent=1)
+lk.write(level)
 print('\n'.join(level['map']))
 print(len(things), 'things')
