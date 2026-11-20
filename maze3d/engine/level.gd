@@ -55,6 +55,7 @@ var _last_floor := 0
 var _last_room := ""
 var _t := 0.0
 var bad_doors := 0
+var _effects: LevelEffects           # this place's handlers in the EffectRegistry
 
 
 func build(level_data: Dictionary) -> void:
@@ -64,6 +65,8 @@ func build(level_data: Dictionary) -> void:
 	C = kit.get("cell", 4.0)
 	H = kit.get("height", 4.0)
 	_rng.seed = hash(data.get("id", "level")) + int(data.get("seed", 0))
+	_effects = LevelEffects.new(self)
+	_effects.register(Game.effects)
 	_parse()
 	_solid = StaticBody3D.new()
 	_solid.name = "Solid"
@@ -1577,100 +1580,6 @@ func actor_died(a: Node) -> void:
 	_fire("clear", tag)
 
 
-## Effects that belong to the place: doors, lights, spawns, alarms.
+## Effects that belong to the place: doors, lights, spawns, alarms (engine/level_effects.gd, registered at build).
 func run_effect(ef: Dictionary, ctx: Dictionary) -> void:
-	var tag: String = ef.get("tag", "")
-	match ef.get("type", ""):
-		"drill":                                         # an off-duty monster of that kind (the nearest to the target) shows what it does
-			var want: String = ef.get("actor", "")
-			var tgt: Node3D = null
-			for t in targets:
-				if is_instance_valid(t) and t.busy == null and (tag == "" or t.tag == tag):
-					tgt = t
-					break
-			var best: Enemy = null
-			for a in actors:
-				if is_instance_valid(a) and not a.dead and a.off_duty and a._foe == null and a._od == "" and (want == "" or LM.defs["actors"].find_key(a.d) == want):
-					if tgt != null and (best == null or a.global_position.distance_to(tgt.global_position) < best.global_position.distance_to(tgt.global_position)):
-						best = a
-			if best == null or tgt == null or not best.drill(tgt):
-				Game.say("Range: nobody free to shoot." if tgt != null else "Range: every lane is in use.", "warn")
-			else:
-				Game.say("Range: %s to the line." % best.d.get("name", "shooter"), "info")
-		"drill_stop":
-			for a in actors:
-				if is_instance_valid(a) and a.off_duty and a._foe != null:
-					a.drill_end()
-		"unlock", "open", "seal", "close":
-			for d in things_by_tag.get(tag, []):
-				if d is Door:
-					d.command(ef["type"])
-		"lights":                                        # "room": "*" is every room; "floor": n keeps it to one storey
-			var on: bool = ef.get("on", true)
-			var which: Array = lights_by_room.keys() if ef.get("room", "") == "*" else [ef.get("room", "")]
-			for rn in which:
-				for l in lights_by_room.get(rn, []):
-					if not is_instance_valid(l) or (ef.has("floor") and floori((l.global_position.y - 0.1) / H) != int(ef["floor"])):
-						continue
-					l.set_meta("off", not on)
-					l.light_energy = l.get_meta("base") * float(ef.get("energy", 1.0)) if on else 0.0
-					if ef.has("color"):
-						l.light_color = LM.col(ef["color"])
-		"anger", "pacify":                               # off-duty things with that tag turn on you; or things stand down for good
-			for a in things_by_tag.get(tag, []):
-				if a is Enemy and is_instance_valid(a) and not a.dead:
-					if ef["type"] == "anger":
-						a.anger()
-					else:
-						a.stand_down()
-		"show", "hide":                                  # props placed with "hidden": true, and props that should go
-			for t in things_by_tag.get(tag, []):
-				if is_instance_valid(t) and t.has_method("show_up"):
-					t.show_up(ef["type"] == "show")
-		"drop":                                          # things to pick up, where the thing that ran the effect is (or at the player's feet)
-			var base: Vector3 = Game.player.global_position + Vector3(0, 0.2, 0)
-			if ctx.has("prop") and is_instance_valid(ctx["prop"]):
-				var pr: Node3D = ctx["prop"]
-				var toward: Vector3 = Game.player.global_position - pr.global_position
-				toward.y = 0
-				base = pr.global_position + toward.normalized() * minf(1.5, toward.length() * 0.6)
-				var st: int = floor_of(Game.player.global_position)
-				var bc := cell_of(base)
-				if not open_s(bc.x, bc.y, st):               # that is inside a wall: in front of the thing, then, or at their feet
-					base = pr.global_position + pr.global_transform.basis.z * 1.3
-					bc = cell_of(base)
-					if not open_s(bc.x, bc.y, st):
-						base = Game.player.global_position
-				base.y = floor_y(Game.player.global_position) + 0.2
-			var items: Array = ef.get("items", [])
-			for i in items.size():
-				var pk := Pickup.new()
-				add_child(pk)
-				var a2: float = TAU * i / maxf(1.0, items.size())
-				pk.global_position = base + Vector3(cos(a2), 0, sin(a2)) * (0.5 if items.size() > 1 else 0.0) + Vector3(0, 0.9, 0)
-				pk.setup(self, items[i] if items[i] is Dictionary else {"item": items[i]}, kit_id)
-		"spawn":
-			var spots: Array = tags.get(tag, [])
-			var storey: int = int(ef.get("level", 0))        # "level": the storey its tagged cells are on
-			if ef.get("here", false) and ctx.has("at"):        # where the thing that ran the effect stands
-				spots = [cell_of(ctx["at"])]
-				storey = floor_of(ctx["at"])
-			for i in int(ef.get("count", 1)):
-				if spots.is_empty():
-					break
-				var p: Vector2i = spots[i % spots.size()]
-				var e := {"actor": ef.get("actor", ""), "tag": ef.get("as", ""), "alert": ef.get("alert", true), "level": storey,
-					"offset": [randf_range(-1.0, 1.0), 0, randf_range(-1.0, 1.0)]}
-				spawn_thing(e, p)
-		"alarm":
-			LM.sound("alarm")
-			for a in actors:
-				if is_instance_valid(a) and not a.dead:
-					if not ef.has("radius") or (a.global_position.distance_to(Game.player.global_position) < ef["radius"] and floor_of(a.global_position) == floor_of(Game.player.global_position)):
-						a.alert()                                # an alarm with a radius is heard on its own floor
-		"enable", "disable":
-			for t in things_by_tag.get(tag, []):
-				if t.has_method("set_enabled"):
-					t.set_enabled(ef["type"] == "enable")
-		_:
-			push_warning("Unknown effect: " + str(ef.get("type")))
+	Game.effects.run(ef, ctx)

@@ -1726,6 +1726,16 @@ func drill(target: Node3D = null) -> bool:
 	return true
 
 
+## Off duty, at its post, and not already showing anybody anything: free to be sent to the range.
+func free_for_drill() -> bool:
+	return off_duty and _foe == null and _od == ""
+
+
+## Showing what it does on a target just now.
+func drilling() -> bool:
+	return _foe != null
+
+
 func drill_end() -> void:
 	if _foe != null and is_instance_valid(_foe) and _foe.busy == self:
 		_foe.busy = null

@@ -256,76 +256,15 @@ func use(_player: Node) -> void:
 		Game.say(u.get("locked", "Nothing happens."), "warn")
 		LM.sound("denied", global_position)
 		return
-	match u.get("type", "effects"):
-		"terminal", "read":
-			Game.hud.open_panel(self, u)
-		"cache":
-			used += 1
-			_open_target = 1.0
-			LM.sound("cache", global_position)
-			if u.has("text"):
-				Game.say(u["text"], u.get("text_kind", "info"))
-			var i := 0
-			for it in u.get("loot", []):
-				var p := Pickup.new()
-				level.add_child(p)
-				p.global_position = global_position + Vector3(0, 0.9, 0)
-				p.setup(level, it, kit_id)
-				var a: float = TAU * i / maxf(1.0, u["loot"].size()) + global_rotation.y
-				var to := global_position + Vector3(cos(a) * 1.5, 1.0, sin(a) * 1.5 + 0.2)
-				var tc := level.cell_of(to)
-				if not level.open_s(tc.x, tc.y, level.floor_of(global_position + global_transform.basis.z * 0.8 + Vector3(0, 0.5, 0))):      # against a wall: it all comes out the front
-					to = global_position + global_transform.basis.z * 1.3 + global_transform.basis.x * (i - (u["loot"].size() - 1) / 2.0) * 0.6 + Vector3(0, 1.0, 0)
-				var tw := p.create_tween()
-				tw.tween_property(p, "global_position", (p.global_position + to) / 2 + Vector3(0, 1.0, 0), 0.25)
-				tw.tween_property(p, "global_position", to, 0.25)
-				i += 1
-			Game.run_effects(u.get("effects"), {"at": global_position, "prop": self})
-		"locker":
-			# what is in it comes out: things to take, things that bite, or things that go off
-			used += 1
-			_open_target = 1.0
-			LM.sound("locker", global_position)
-			var front: Vector3 = global_position + global_transform.basis.z * 1.3
-			var k := 0
-			for it in u.get("loot", []):
-				var p := Pickup.new()
-				level.add_child(p)
-				p.global_position = global_position + global_transform.basis.z * 0.4 + Vector3(0, 1.1, 0)
-				p.setup(level, it, kit_id)
-				var to: Vector3 = front + global_transform.basis.x * (k - (u["loot"].size() - 1) / 2.0) * 0.7 + Vector3(0, 1.0, 0)
-				p.create_tween().tween_property(p, "global_position", to, 0.3)
-				k += 1
-			if u.has("actor"):
-				Game.say(u.get("text", "It was not empty."), "warn")
-				for i in int(u.get("count", 1)):
-					var a := level.spawn_thing({"actor": u["actor"], "alert": true, "level": roundi(level.floor_y(front) / level.H)}, level.cell_of(front))
-					if a:
-						a.global_position = Vector3(front.x, a.global_position.y, front.z) + global_transform.basis.x * (i - (u.get("count", 1) - 1) / 2.0) * 0.9
-			elif u.get("loot", []).is_empty() and not u.has("effects"):
-				Game.say(u.get("text", "Empty. Somebody got here first, three hundred years ago."), "info")
-			Game.run_effects(u.get("effects"), {"at": front, "prop": self})
-		"home":                                      # the bunker's furniture: engine/home.gd knows what each piece does
-			if level.home:
-				level.home.use_prop(self, u.get("what", ""))
-		"heal":
-			var left: int = int(u.get("charges", 3)) - used
-			if left <= 0:
-				Game.say("The dispenser is empty. It apologises.", "warn")
-				return
-			if _player.hp >= _player.max_hp:
-				Game.say("You are in acceptable condition.", "info")
-				return
-			used += 1
-			_player.heal(u.get("amount", 35))
-			LM.sound("heal", global_position)
-			Game.say("Health +%d  (%d left)" % [u.get("amount", 35), left - 1], "good")
-		_:
-			used += 1
-			LM.sound(u.get("sound", "use"), global_position)
-			Game.run_effects(u.get("effects"))
+	if not Game.effects.use(u.get("type", "effects"), u, {"prop": self, "player": _player}):      # engine/prop_uses.gd
+		return
 	if tag != "":
 		level.notify("use", tag)
+
+
+## Open its lid or door (a cache, a locker).
+func open_up() -> void:
+	_open_target = 1.0
 
 
 func set_screen(text: String) -> void:

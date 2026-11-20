@@ -31,6 +31,7 @@ var _overlay: ColorRect
 var _overlay_box: VBoxContainer
 var _panel_prop: Node = null
 var _panel_spec: Dictionary = {}
+var _choosing := -1                  # the option being worked through: its "used" mark is undone if it goes wrong
 var _big_map := false
 var _state := "title"
 var _font_mono: SystemFont
@@ -445,54 +446,25 @@ func _fill_panel(text: String, working := "", final := false) -> void:
 
 func _choose(i: int) -> void:
 	var o: Dictionary = _panel_spec["options"][i]
-	var cost: int = int(o.get("cost", 0))            # "cost": credits. Not enough: it says so and nothing happens.
-	if cost > Game.credits:
-		LM.sound("denied")
-		_fill_panel("%s\n\nThat is %d cr. You have %d." % [_panel_spec.get("text", ""), cost, Game.credits])
-		return
-	# "hack": a job the hacker may fail. The chance is Game.hack_chance(o["hard"]): 10% + 5% a level, less what the job takes off.
-	# Failing runs "fail" (if any) and says "fail_result"; it can be tried again, at the same price.
-	if o.has("hack"):
-		_fill_panel(_panel_spec.get("text", ""), o.get("working", "Bypassing…"))
-		LM.sound("hack")
-		var testing: bool = OS.get_cmdline_user_args().has("--selftest")      # a self-test's hacks are instant and always come off
-		await get_tree().create_timer(0.02 if testing else 1.2, true).timeout
-		if _state != "panel":
-			return
-		if not testing and randf() >= Game.hack_chance(float(o.get("hard", 0.0))):
-			LM.sound("denied")
-			var fctx := {}
-			if _panel_prop is Node3D and is_instance_valid(_panel_prop):
-				fctx = {"at": (_panel_prop as Node3D).global_position, "prop": _panel_prop}
-			Game.run_effects(o.get("fail"), fctx)
-			if o.has("fail") and o.get("fail_close", true):
-				close_panel()
-				Game.say(o.get("fail_result", "The hack failed."), "warn")
-			else:
-				_fill_panel("%s\n\n%s" % [_panel_spec.get("text", ""), o.get("fail_result", "The hack failed. It can be tried again.")])
-			return
+	_choosing = i
+	var reg: EffectRegistry = Game.effects
+	for key in reg.gates():                          # "cost", "hack": what has to be got past first (engine/option_gates.gd)
+		var check: Callable = reg.gate(key)["check"]
+		if o.has(key) and check.is_valid():
+			var ok: bool = await check.call(o, self)
+			if not ok:
+				return
 	if _panel_prop and is_instance_valid(_panel_prop):
 		if not _panel_prop.e.has("_used"):
 			_panel_prop.e["_used"] = {}
 		_panel_prop.e["_used"][i] = true
 		if o.has("screen"):
 			_panel_prop.set_screen(o["screen"])
-	var ctx := {}
-	if _panel_prop is Node3D and is_instance_valid(_panel_prop):
-		ctx = {"at": (_panel_prop as Node3D).global_position, "prop": _panel_prop}
-	if cost > 0:
-		Game.add_credits(-cost)
-	if o.has("risk") and randf() < float(o["risk"]) and not OS.get_cmdline_user_args().has("--selftest"):  # "risk": 0..1. It goes wrong: "fail" effects, "fail_result" words, and it can be tried again
-		LM.sound("denied")
-		if _panel_prop and is_instance_valid(_panel_prop):
-			_panel_prop.e["_used"].erase(i)
-		Game.run_effects(o.get("fail"), ctx)
-		if o.get("fail_close", true):
-			close_panel()
-			Game.say(o.get("fail_result", "It did not work."), "warn")
-		else:
-			_fill_panel(o.get("fail_result", "It did not work."))
-		return
+	var ctx := panel_ctx()
+	for key in reg.gates():                          # ... and what is settled once it goes ahead ("cost" is paid; "risk" can still undo it)
+		var settle: Callable = reg.gate(key)["settle"]
+		if o.has(key) and settle.is_valid() and not settle.call(o, self):
+			return
 	LM.sound("confirm")
 	Game.run_effects(o.get("effects"), ctx)
 	if o.has("do"):                                  # the panel's owner does something, and may put up another panel or close this one
@@ -510,6 +482,27 @@ func _choose(i: int) -> void:
 		_fill_panel(result, "", o.get("final", false))
 	if o.has("call") and who != null and is_instance_valid(who) and who.has_method(o["call"]):      # something the thing itself does
 		who.call(o["call"])
+
+
+## The panel session, for the option gates (engine/option_gates.gd).
+func panel_text() -> String:
+	return _panel_spec.get("text", "")
+
+
+func show_panel(text: String, working := "") -> void:
+	_fill_panel(text, working)
+
+
+## Where the effects of an option happen: at the thing the panel belongs to.
+func panel_ctx() -> Dictionary:
+	if _panel_prop is Node3D and is_instance_valid(_panel_prop):
+		return {"at": (_panel_prop as Node3D).global_position, "prop": _panel_prop}
+	return {}
+
+
+func unmark_used() -> void:
+	if _panel_prop and is_instance_valid(_panel_prop):
+		_panel_prop.e["_used"].erase(_choosing)
 
 
 func close_panel() -> void:
