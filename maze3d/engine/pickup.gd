@@ -38,7 +38,7 @@ func setup(lv: Level, entry: Dictionary, kit_id: String) -> void:
 	add_child(_vis)
 	if _rest:                                        # it sits on what it is on
 		var acc: Array = [null]
-		_bounds(_vis, Transform3D.IDENTITY, acc)
+		bounds(_vis, Transform3D.IDENTITY, acc)
 		if acc[0] != null:
 			_vis.position.y -= (acc[0] as AABB).position.y
 		_vis.rotation.y = randf_range(-0.5, 0.5)
@@ -55,14 +55,14 @@ func setup(lv: Level, entry: Dictionary, kit_id: String) -> void:
 	_t = randf() * 6.0
 
 
-static func _bounds(n: Node, xf: Transform3D, acc: Array) -> void:
+static func bounds(n: Node, xf: Transform3D, acc: Array) -> void:
 	if n is Node3D:
 		xf = xf * (n as Node3D).transform
 	if n is MeshInstance3D and (n as MeshInstance3D).mesh != null:
 		var b: AABB = xf * (n as MeshInstance3D).mesh.get_aabb()
 		acc[0] = b if acc[0] == null else (acc[0] as AABB).merge(b)
 	for c in n.get_children():
-		_bounds(c, xf, acc)
+		bounds(c, xf, acc)
 
 
 func _ready() -> void:

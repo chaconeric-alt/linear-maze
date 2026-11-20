@@ -213,7 +213,7 @@ func make_light(spec: Dictionary, xf: Transform3D, room: String, flicker := 0.0,
 
 ## A Target for an off-duty monster to show its attacks on. What cannot move needs one it can see from where it is;
 ## what can goes to the gun range (targets tagged "range"), or failing that to the nearest.
-func drill_target_for(a: Enemy) -> Node3D:
+func drill_target_for(a: Actor) -> Node3D:
 	var rooted: bool = a.cannot_walk()
 	var best: Node3D = null
 	var best_d := 1e9

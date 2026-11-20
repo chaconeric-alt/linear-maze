@@ -29,7 +29,7 @@ const PROGRAMMES := ["An advertisement for a kettle. The kettle company outlived
 
 var level: Level
 var decorating := false
-var robot: Node3D = null                 # the repaired robot (an Enemy, off duty), or the wreck in the cradle
+var robot: Node3D = null                 # the repaired robot (an Actor, off duty), or the wreck in the cradle
 var _shown: Array = []                   # what is on the rack, the stand and in the trophy case
 var _placed: Array = []                  # Props, one for each of Profile.d["decor"], in step with it
 var _ghost: Node3D = null
@@ -120,7 +120,7 @@ func show_off() -> void:
 			case.add_child(t)
 			t.scale = Vector3.ONE * float(it.get("scale", 1.6)) * 0.6
 			var acc: Array = [null]
-			Pickup._bounds(t, Transform3D.IDENTITY, acc)
+			Pickup.bounds(t, Transform3D.IDENTITY, acc)
 			t.position = Vector3(cs[k][0], cs[k][1] - ((acc[0] as AABB).position.y if acc[0] != null else 0.0), cs[k][2])
 			_shown.append(t)
 			k += 1

@@ -123,7 +123,7 @@ func run(m: Node) -> void:
 	var unreachable := 0
 	var start := level.center(level.start_cell, level.start_level * level.H)
 	for n in level.get_children():
-		if n is Prop or n is Pickup or n is Enemy or n is Trap:
+		if n is Prop or n is Pickup or n is Actor or n is Trap:
 			var c := level.cell_of(n.global_position)
 			var ns := _storey(n.global_position)
 			var ok := false
@@ -138,7 +138,7 @@ func run(m: Node) -> void:
 	var upstairs := 0                                # things on balconies: there has to be a way up that can be walked
 	var stranded := 0
 	for n in level.get_children():
-		if (n is Prop or n is Pickup or n is Enemy) and absf(n.global_position.y) > 2.0 and not (n is Enemy and (n._surf != 0 or n.d.get("mount", "") == "ceiling" or n._fly)):
+		if (n is Prop or n is Pickup or n is Actor) and absf(n.global_position.y) > 2.0 and not (n is Actor and (n.surf != 0 or n.d.get("mount", "") == "ceiling" or n.move.fly)):
 			upstairs += 1
 			var got: bool = level.reach(start, n.global_position)
 			if not got and n is Prop:                # on a wall: it is reached from in front of it
@@ -179,9 +179,9 @@ func run(m: Node) -> void:
 	var misnamed := 0
 	var unseen := 0
 	for n in level.get_children():
-		if not is_instance_valid(n) or not (n is Prop or n is Pickup or n is Door or n is Trap or (n is Enemy and n._surf == 0 and not n.dead)):
+		if not is_instance_valid(n) or not (n is Prop or n is Pickup or n is Door or n is Trap or (n is Actor and n.surf == 0 and not n.dead)):
 			continue
-		if (n is Pickup and n._rest and n.position.y - level.floor_y(n.position) > 0.4) or (n is Enemy and n.dock != null and n.dock._open < 0.5):
+		if (n is Pickup and n._rest and n.position.y - level.floor_y(n.position) > 0.4) or (n is Actor and n.dock != null and n.dock.open_amount() < 0.5):
 			continue                                 # in a container (E names the container, and what it holds), or behind a shutter
 		if n is Prop and not n.visible:
 			continue                                 # hidden until something shows it
@@ -207,7 +207,7 @@ func run(m: Node) -> void:
 			want = "trap \"%s\"" % n.kind
 		else:
 			want = "monster \"%s\"" % str(LM.defs["actors"].find_key(n.d))
-		var mid: Vector3 = Identify._middle(n) if not n is Enemy else n.global_position + Vector3(0, n.d.get("center", n.d.get("height", 1.6) / 2.0), 0)
+		var mid: Vector3 = Identify._middle(n) if not n is Actor else n.global_position + Vector3(0, n.d.get("center", n.d.get("height", 1.6) / 2.0), 0)
 		var got_it := false
 		var could := false
 		for dv in [Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 0, -1), Vector3(-1, 0, 0), Vector3(0.7, 0, 0.7), Vector3(-0.7, 0, 0.7), Vector3(0.7, 0, -0.7), Vector3(-0.7, 0, -0.7)]:
@@ -293,8 +293,8 @@ func run(m: Node) -> void:
 			for _i in 110:
 				await get_tree().physics_frame
 			Game.calm = was_calm
-		if a._surf != 0:                             # bring it down off the wall to be fought
-			a._drop()
+		if a.surf != 0:                              # bring it down off the wall to be fought
+			a.knock_off()
 			for _i in 50:
 				await get_tree().physics_frame
 		if not is_instance_valid(a) or a.dead:
@@ -473,7 +473,7 @@ func _off_duty() -> void:
 	if OS.has_environment("LM_RANGE_ONLY"):          # (for chasing one thing down)
 		kinds = {}
 	for id in kinds:
-		var a: Enemy = kinds[id]
+		var a: Actor = kinds[id]
 		var nm: String = a.d.get("name", id)
 		# ---- talking
 		var c := level.cell_of(a.global_position)
@@ -509,7 +509,7 @@ func _off_duty() -> void:
 		# ---- showing what it does
 		if a.d.get("attacks", []).is_empty():
 			continue
-		var rooted: bool = a._fixed or a.d.get("mount", "") == "ceiling" or a.d.get("still", false)
+		var rooted: bool = a.cannot_walk()
 		var tgt: Node3D = level.drill_target_for(a)
 		if tgt == null:
 			_say(false, "%s has a target to show its attack on" % nm)
@@ -526,12 +526,12 @@ func _off_duty() -> void:
 		while ok and t < 900 and tgt.hits == hits0:
 			await _frames(5)
 			t += 5
-			struck = struck or a._atk != null
+			struck = struck or a.attacking()
 		_say(ok and tgt.hits > hits0, "%s shows its attack on a target (%d frames%s)" % [nm, t, "" if tgt.hits > hits0 else (", it attacked but nothing landed" if struck else ", it never attacked")])
 		a.drill_end()
 		if not rooted:
 			a.global_position = was
-			a._od = ""
+			a.arrived_home()
 			a.velocity = Vector3.ZERO
 		await _frames(5)
 	_say(silent == 0, "everything off duty has something to say (%d kinds do not)" % silent)
@@ -541,11 +541,11 @@ func _off_duty() -> void:
 		if n is Station and n.e.get("shut", false) and n.bot != null and is_instance_valid(n.bot) and not n.bot.dead and n.bot.dock == n:
 			pl.global_position = n.global_position + n.global_transform.basis.z * 4.5 + Vector3(0, 0.05, 0)
 			await _frames(140)
-			var opened2: bool = n._open > 0.9
-			var roused: bool = n.bot._roused
+			var opened2: bool = n.open_amount() > 0.9
+			var roused: bool = n.bot.roused
 			pl.global_position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
 			await _frames(520)
-			_say(opened2 and roused and n._open < 0.1 and not n.bot._roused, "a shut station opens when you come up to it, and shuts over its robot when you leave (opened %s, robot roused %s, now open %.1f)" % [opened2, roused, n._open])
+			_say(opened2 and roused and n.open_amount() < 0.1 and not n.bot.roused, "a shut station opens when you come up to it, and shuts over its robot when you leave (opened %s, robot roused %s, now open %.1f)" % [opened2, roused, n.open_amount()])
 			break
 	# ---- called from the range, one walks there from wherever it was, shoots, and walks back
 	var range_t: Node3D = null
@@ -558,21 +558,21 @@ func _off_duty() -> void:
 		pl.global_position = range_t.global_position + Vector3(0, 0.05, 0) - range_t.global_transform.basis.z * 3.0
 		var who_id: String = OS.get_environment("LM_RANGE_ACTOR") if OS.has_environment("LM_RANGE_ACTOR") else "monoid"
 		level.run_effect({"type": "drill", "tag": "range", "actor": who_id}, {})
-		var walker: Enemy = range_t.busy as Enemy
+		var walker: Actor = range_t.busy as Actor
 		var far := 0.0
 		var t2 := 0
 		if walker != null:
 			far = walker.global_position.distance_to(range_t.global_position)
-			while t2 < 12000 and range_t.hits == h0 and walker._foe != null:
+			while t2 < 12000 and range_t.hits == h0 and walker.drilling():
 				await _frames(10)
 				t2 += 10
 		_say(walker != null and range_t.hits > h0, "called to the range, %s walks %d m to it and hits the target (%d frames)" % [walker.d.get("name", "?") if walker else "nobody", roundi(far), t2])
 		if walker != null:
 			var t3 := 0
-			while t3 < 12000 and (walker._foe != null or walker._od != ""):
+			while t3 < 12000 and not walker.at_post():
 				await _frames(10)
 				t3 += 10
-			_say(walker._od == "" and walker.global_position.distance_to(walker._post) < 2.0, "  and goes back to where it was (%d frames, %.1f m off)" % [t3, walker.global_position.distance_to(walker._post)])
+			_say(not walker.od.heading_home() and walker.global_position.distance_to(walker.post()) < 2.0, "  and goes back to where it was (%d frames, %.1f m off)" % [t3, walker.global_position.distance_to(walker.post())])
 	pl.hp = pl.max_hp
 	pl.global_position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
 
@@ -675,15 +675,15 @@ func _home() -> void:
 	# --- coming home
 	_say(hm._shown.is_empty(), "an empty bunker shows nothing on the rack, the stand or in the case")
 	_say(not hm.can_repair() and not hm.repair(), "the robot cannot be repaired without the parts")
-	_say(not (hm.robot is Enemy) and hm.robot != null, "  and is a wreck in the cradle")
+	_say(not (hm.robot is Actor) and hm.robot != null, "  and is a wreck in the cradle")
 	Profile.bank(500, ["handgun", "scattergun", "plasma"], 50.0, {"circuit": 3, "fuel_cell": 2, "crystal": 2, "statuette": 1, "chips": 4})
 	hm.show_off()
 	await _frames(2)
 	_say(hm._shown.size() == 3 + 1 + 3, "what is brought home goes on show: 3 weapons, a vest, 3 trophies (%d things)" % hm._shown.size())
 	_say(hm.can_repair() and hm.repair(), "with 3 circuit boards and 2 fuel cells the robot is repaired")
 	await _frames(5)
-	_say(hm.robot is Enemy and (hm.robot as Enemy).off_duty and Profile.count("circuit") == 0, "  it is up, it is off duty, and the parts are used")
-	if hm.robot is Enemy:
+	_say(hm.robot is Actor and (hm.robot as Actor).off_duty and Profile.count("circuit") == 0, "  it is up, it is off duty, and the parts are used")
+	if hm.robot is Actor:
 		_stand_near(hm.robot.global_position + Vector3(0, 1.0, 0), 3.0)
 		_look_at(hm.robot.global_position + Vector3(0, 1.0, 0))
 		hm.robot.use(pl)
@@ -761,7 +761,7 @@ func _home() -> void:
 	level = main.level
 	pl = main.player
 	hm = level.home
-	_say(hm != null and hm._placed.size() == saved.size() and hm.robot is Enemy and hm._shown.size() == 7 and Game.credits == int(Profile.d["credits"]),
+	_say(hm != null and hm._placed.size() == saved.size() and hm.robot is Actor and hm._shown.size() == 7 and Game.credits == int(Profile.d["credits"]),
 		"after coming back in: the furnishings, the robot, the rack and the credits are as they were left")
 
 
@@ -846,8 +846,8 @@ func _anomalous() -> void:
 			"Operations floor", "Security Station", "Robot Repair Bay", "Armory", "The inner core"]:
 		if level.rooms.filter(func(r): return r.get("name", "") == nm).is_empty():
 			_say(false, "there is a room called %s" % nm)
-	var sphinx: Enemy = _thing("sphinx")
-	var monoid: Enemy = _thing("monoid")
+	var sphinx: Actor = _thing("sphinx")
+	var monoid: Actor = _thing("monoid")
 	_say(sphinx != null and sphinx.off_duty and monoid != null and monoid.off_duty, "the Sphinx Gun and the Monoid wait to be spoken to")
 	# --- A: the rude way. Walk past the Sphinx; take the Monoid's badge off it.
 	_go(Vector2i(11, 13))
@@ -978,7 +978,7 @@ func _anomalous() -> void:
 	_say(not await _pick(con, "ARCHIVE"), "  one mode only: the console is locked")
 	# --- floor 3
 	_say(level.reach(level.center(Vector2i(10, 2), level.H), level.center(Vector2i(17, 2), 2 * level.H)), "the second lift goes up to the Security Complex")
-	var heavy: Enemy = _thing("heavy")
+	var heavy: Actor = _thing("heavy")
 	_say(heavy != null and not heavy.awake, "the Heavy Security Drone is on its station, dormant")
 	var trip: Trap = _thing("tripwire")
 	var n3: int = _kinds("drone", 2).size()

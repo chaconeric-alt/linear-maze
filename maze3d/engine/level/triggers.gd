@@ -45,7 +45,7 @@ func actor_died(a: Node) -> void:
 	if tag == "":
 		return
 	for o in level.things_by_tag.get(tag, []):
-		if is_instance_valid(o) and o is Enemy and not o.dead:
+		if is_instance_valid(o) and o is Actor and not o.dead:
 			return
 	fire("clear", tag)
 

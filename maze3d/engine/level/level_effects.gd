@@ -41,7 +41,7 @@ func drill(ef: Dictionary, _ctx: Dictionary) -> void:
 		if is_instance_valid(t) and t.busy == null and (tag == "" or t.tag == tag):
 			tgt = t
 			break
-	var best: Enemy = null
+	var best: Actor = null
 	for a in level.actors:
 		if is_instance_valid(a) and not a.dead and a.free_for_drill() and (want == "" or LM.defs["actors"].find_key(a.d) == want):
 			if tgt != null and (best == null or a.global_position.distance_to(tgt.global_position) < best.global_position.distance_to(tgt.global_position)):
@@ -81,7 +81,7 @@ func lights(ef: Dictionary, _ctx: Dictionary) -> void:
 ## "anger": off-duty things with that tag turn on you; "pacify": things stand down for good.
 func temper(ef: Dictionary, _ctx: Dictionary) -> void:
 	for a in _tagged(ef):
-		if a is Enemy and is_instance_valid(a) and not a.dead:
+		if a is Actor and is_instance_valid(a) and not a.dead:
 			if ef["type"] == "anger":
 				a.anger()
 			else:

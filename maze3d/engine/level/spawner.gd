@@ -193,12 +193,12 @@ func _station(e: Dictionary, p: Vector2i, s: int, pos: Vector3) -> Node3D:
 				be[k] = e[k]
 		if s != 0:
 			be["level"] = s
-		stn.hold(spawn_thing(be, p) as Enemy)
+		stn.hold(spawn_thing(be, p) as Actor)
 	return stn
 
 
 func _actor(e: Dictionary, _p: Vector2i, _s: int, pos: Vector3) -> Node3D:
-	var a := Enemy.new()
+	var a := Actor.new()
 	level.add_child(a)
 	a.position = pos
 	a.rotation.y = ld.face_yaw(e.get("face", "s"))

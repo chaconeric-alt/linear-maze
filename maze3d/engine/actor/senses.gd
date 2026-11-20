@@ -1,0 +1,58 @@
+extends Node
+## ActorSenses - seeing and hearing. Every actor has them; the def tunes them:
+##   "sight": 24 (awake), "wake_sight": sight * 0.75 (asleep), "hearing": 18 (gunfire, not through a floor).
+## Five times a second it looks: can it see the target (glass does not stop sight), could it shoot it (glass does),
+## has the player seen it (then it shows on the map), and if it was asleep, does what it sees wake it.
+class_name ActorSenses
+
+var a: Actor
+var d: Dictionary
+var see := false                  # the target is in sight
+var shot := true                  # nothing solid, glass included, between it and the target
+var _see_t := 0.0
+
+
+func setup(actor: Actor) -> void:
+	a = actor
+	d = actor.d
+
+
+func look(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
+	_see_t -= dt
+	if _see_t > 0.0:
+		return
+	_see_t = 0.2
+	var clear: bool = a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0))
+	if clear and not a.seen and dist < 46.0:
+		var pf := Vector3(-sin(pl.rotation.y), 0, -cos(pl.rotation.y))
+		if dist < 3.0 or pf.dot(-flat.normalized()) > 0.45:
+			a.seen = true
+	shot = clear and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0), true)
+	see = not Game.calm and dist < (d.get("sight", 24.0) if a.awake else d.get("wake_sight", d.get("sight", 24.0) * 0.75)) and clear
+	if see and not a.awake:
+		var fwd := a.global_transform.basis.z
+		if dist < 7.0 or a.surf != 0 or d.has("dormant_clip") or fwd.dot(flat.normalized()) > 0.2:      # from a wall they see the whole room
+			a.alert()
+
+
+## Off duty: is somebody here to talk to? (within reach, on about the same level, out of its station, in sight)
+func look_off_duty(dt: float, pl: Node3D, dist: float, reach: float) -> void:
+	_see_t -= dt
+	if _see_t > 0.0:
+		return
+	_see_t = 0.25
+	see = dist < reach and absf(pl.global_position.y - a.global_position.y) < 5.0 and (a.dock == null or a.dock.open_amount() > 0.9) \
+			and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0))
+	if see and not a.seen:
+		a.seen = true
+
+
+## Look again at once (the next tick), and forget what was seen.
+func reset() -> void:
+	see = false
+	_see_t = 0.0
+
+
+func hear(from: Vector3) -> void:
+	if not a.awake and from.distance_to(a.global_position) < d.get("hearing", 18.0) and a.level.floor_of(from) == a.level.floor_of(a.global_position):      # not through a floor
+		a.alert()

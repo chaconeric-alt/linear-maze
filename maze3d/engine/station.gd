@@ -7,7 +7,7 @@ extends Prop
 ##   level thing: {"station": "rb_station_custodian", "actor": "custodian", "at": [x, y], "face": "s", "shut": true}
 class_name Station
 
-var bot: Enemy
+var bot: Actor
 var released := false
 var _shut_cs: CollisionShape3D
 var _poll := 0.0
@@ -36,7 +36,7 @@ func setup(lv: Level, entry: Dictionary, kit: String) -> void:
 
 
 ## The robot that waits here. It stands still, switched off, until release().
-func hold(a: Enemy) -> void:
+func hold(a: Actor) -> void:
 	bot = a
 	if a == null:
 		return
@@ -44,7 +44,7 @@ func hold(a: Enemy) -> void:
 	var st: Vector3 = LM.vec(meta.get("stand"), Vector3.ZERO)
 	a.position = position + basis * st
 	a.rotation.y = rotation.y
-	a._home = a.position
+	a.set_home(a.position)
 
 
 func _process(dt: float) -> void:
@@ -90,15 +90,15 @@ func _let_out() -> void:
 	if bot == null or not is_instance_valid(bot) or bot.dead:
 		return
 	bot.dock = null
-	bot._leaving = self
+	bot.leave_station(self)
 	bot.e["still"] = false
 	bot.alert()
 
 
-## Off duty (see Enemy): the station opens when the player comes up to it and shuts again when they have gone, if it
+## Off duty (see Actor): the station opens when the player comes up to it and shuts again when they have gone, if it
 ## was a shut one and its robot is in it. The robot does not come out unless it is sent to show what it does.
 func _off_duty(dt: float) -> void:
-	var home: bool = bot.dock == self and bot._foe == null and bot._od == ""
+	var home: bool = bot.dock == self and bot.at_post()
 	if _shut_cs:
 		_shut_cs.disabled = _open > 0.5 or not home
 	_poll -= dt
@@ -117,9 +117,19 @@ func _off_duty(dt: float) -> void:
 			LM.sound("locker", global_position)
 	elif e.get("shut", false):
 		_away_t += 0.25
-		if _away_t > 4.0 and _open_target > 0.0 and not bot._roused:
+		if _away_t > 4.0 and _open_target > 0.0 and not bot.roused:
 			_open_target = 0.0
 			LM.sound("locker", global_position, -4.0)
+
+
+## How far its shutter is up: 0 shut .. 1 open.
+func open_amount() -> float:
+	return _open
+
+
+## How far in front of it a robot is out of it (metres along its facing).
+func front() -> float:
+	return _front
 
 
 ## Open up for a robot that is being sent out and will come back.

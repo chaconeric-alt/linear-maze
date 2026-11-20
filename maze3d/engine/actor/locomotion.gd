@@ -1,0 +1,397 @@
+extends Node
+## ActorLocomotion - getting about: on foot after its target (chase, flee, skirmish, follow a path), wandering near
+## home, dancing, walking a route (off duty), flying ("fly", "bob"), swimming ("swim"), scuttling ("gait"), and
+## coming down when it dies. Every actor has it; walls and ceilings are ActorClimb.
+##   "speed": 4, "accel": 30, "walk_rate": 1, "behavior": "chaser" | "skirmisher" | "turret", "keep": [6, 12],
+##   "flee_below": 0.3, "flee_text": "...", "turn": 4 (a turret), "mass": 1
+class_name ActorLocomotion
+
+var a: Actor
+var d: Dictionary
+var fly := false
+var wet := false                  # in fluid
+var leaving: Node3D = null        # the station it is on its way out of: out through the front first
+var path: PackedVector3Array = PackedVector3Array()      # hunting: the way to the target
+var path_t := 0.0
+var roam: PackedVector3Array = PackedVector3Array()      # a route it is walking (off duty)
+var _fled := false
+var _strafe := 1.0
+var _strafe_t := 0.0
+var _wander_t := 0.0
+var _wander := Vector3.ZERO
+var _vis_bot := 0.0               # how far the model's underside is below its origin (negative)
+var _vis_top := -1.0              # how far the model's top is above its origin (measured once; flyers duck under low ceilings)
+var _gait_t := 0.0
+var _gait_go := true
+var _gait_ph := 0.0
+var _partner: Node3D = null
+var _partner_t := 0.0
+var _at_rest := false             # dead, and down: nothing more to do
+var _air_t := 0.0
+
+
+func setup(actor: Actor) -> void:
+	a = actor
+	d = actor.d
+	fly = d.get("fly", false)
+
+
+func fall(dt: float) -> void:
+	if fly or d.get("mount", "") == "ceiling":
+		a.velocity.y = 0.0
+	elif not a.is_on_floor():
+		a.velocity.y -= 22.0 * dt
+	else:
+		a.velocity.y = 0.0
+
+
+func turn_to(dir: Vector3, dt: float, rate: float) -> void:
+	if dir.length() < 0.01:
+		return
+	if a.aim and a.aim.active():                     # the head does the looking; the body follows when it gets round to it
+		rate *= d["aim"].get("body_turn", 0.25)
+	a.rotation.y = lerp_angle(a.rotation.y, atan2(dir.x, dir.z), clamp(rate * dt, 0.0, 1.0))
+
+
+## Walking: the walk clip at the pace it is going, and its feet if they are heavy.
+func _walk_anim(hv: Vector3) -> void:
+	a.play("walk", clamp(hv.length() / max(0.1, d.get("speed", 4.0)), 0.5, 1.5) * d.get("walk_rate", 1.0))
+	if a.looks:
+		a.looks.footfall()
+
+
+## The storey it is in. Taken from where it last had its feet on the ground: on a wall or a ceiling its height cannot say.
+func storey() -> int:
+	if a.surf == 0 and d.get("mount", "") != "ceiling" and (a.is_on_floor() or fly):
+		a.base_y = a.global_position.y
+	return floori((a.base_y + 0.9) / a.level.H)
+
+
+## The sides of cell c that are wall, as directions out of the cell (a cut corner has no square wall to stand against).
+func walls_at(c: Vector2i) -> Array:
+	var out: Array = []
+	if a.level.air(c.x, c.y, storey())["diag"] != "":
+		return out
+	for i in 4:
+		var n: Vector2i = c + Level.DIRS[i]
+		if a.level.air(n.x, n.y, storey())["solid"]:
+			out.append(Vector3(Level.DIRS[i].x, 0, Level.DIRS[i].y))
+	return out
+
+
+# ------------------------------------------------------------------ every tick, whatever it is doing
+## A flyer that will not hold its height bobs; under a room the ceiling is lower (the slab between storeys), and a
+## flyer keeps its head out of it.
+func fly_tick() -> void:
+	if fly and d.has("bob"):
+		a.vis.position.y = d.get("model_y", 0.0) + sin(Time.get_ticks_msec() * 0.001 * d["bob"].get("rate", 5.0) + a.get_index()) * d["bob"].get("height", 0.2) * (1.0 if a.awake else (0.0 if a.dock != null else 0.35))
+	if fly and not a.dead:
+		if _vis_top < 0.0:
+			var acc: Array = [null]
+			Pickup.bounds(a.vis, Transform3D.IDENTITY, acc)
+			_vis_top = ((acc[0] as AABB).end.y - a.vis.position.y) if acc[0] != null else d.get("height", 1.6)
+			_vis_bot = ((acc[0] as AABB).position.y - a.vis.position.y) if acc[0] != null else 0.0
+		var fc := a.level.cell_of(a.global_position)
+		var room_top: float = a.level.ceiling_y(fc.x, fc.y, floori((a.global_position.y + 0.9) / a.level.H)) - a.global_position.y - 0.12
+		a.vis.position.y = minf(a.vis.position.y, maxf(0.0, room_top - _vis_top))
+
+
+## A swimmer rides low in it.
+func swim_tick(dt: float) -> void:
+	if d.has("swim"):
+		a.vis.position.y = move_toward(a.vis.position.y, d.get("model_y", 0.0) - (d["swim"].get("sink", 0.0) if wet else 0.0), dt * 1.5)
+
+
+# ------------------------------------------------------------------ hunting
+func hunt(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
+	var speed: float = d.get("speed", 4.0)
+	if a.fixed:
+		if a.senses.see:
+			turn_to(flat, dt, d.get("turn", 4.0))
+		a.play("walk" if a.senses.see else "idle")
+		return
+	var want := _want(dt, pl, flat, dist)
+	if d.has("flee_below") and a.hp < a.max_hp * d["flee_below"]:
+		speed *= 1.4
+	want = _out_of_station(want).normalized()
+	if wet:
+		speed = d["swim"].get("speed", speed) if d.has("swim") else speed * 0.6
+	if d.has("gait"):
+		speed *= _gait(dt)
+		var wv: float = d["gait"].get("weave", 0.0)
+		if wv > 0.0 and dist > 3.0:
+			want = want.rotated(Vector3.UP, sin(_gait_ph * d["gait"].get("weave_rate", 9.0)) * wv)
+	a.velocity.x = move_toward(a.velocity.x, want.x * speed, d.get("accel", 30.0) * dt)
+	a.velocity.z = move_toward(a.velocity.z, want.z * speed, d.get("accel", 30.0) * dt)
+	fall(dt)
+	a.move_and_slide()
+	var hv := Vector3(a.velocity.x, 0, a.velocity.z)
+	if a.senses.see and (d.get("behavior", "") == "skirmisher" or dist < 5.0):
+		turn_to(flat, dt, 8.0)
+	elif hv.length() > 0.4:
+		turn_to(hv, dt, 8.0)
+	if not a.attacking():
+		if hv.length() > 0.5:
+			_walk_anim(hv)
+		else:
+			a.play("idle")
+
+
+## Which way it wants to go: away (hurt enough to flee), round them at a distance (a skirmisher), straight at them
+## (close and in sight), or along the route the level's nav finds.
+func _want(dt: float, pl: Node3D, flat: Vector3, dist: float) -> Vector3:
+	var see: bool = a.senses.see
+	if d.has("flee_below") and a.hp < a.max_hp * d["flee_below"]:
+		if not _fled:
+			_fled = true
+			if d.has("flee_text"):
+				Game.say(d["flee_text"], "warn")
+		return -flat.normalized() if see else Vector3.ZERO
+	if d.get("behavior", "chaser") == "skirmisher" and see:
+		var keep: Array = d.get("keep", [6.0, 12.0])
+		_strafe_t -= dt
+		if _strafe_t <= 0.0:
+			_strafe_t = randf_range(1.0, 2.6)
+			_strafe = -_strafe if randf() < 0.6 else _strafe
+		var side := flat.normalized().cross(Vector3.UP) * _strafe
+		if dist < keep[0]:
+			return -flat.normalized() + side * 0.5
+		elif dist > keep[1]:
+			return flat.normalized() + side * 0.3
+		return side
+	if see and dist < 7.0:
+		return flat.normalized() if dist > d.get("radius", 0.5) + 0.9 else Vector3.ZERO
+	path_t -= dt
+	if path_t <= 0.0:
+		path_t = 0.45
+		path = a.level.path(a.global_position, pl.global_position)
+	if path.size() > 1:
+		var next := path[1]
+		if Vector2(next.x - a.global_position.x, next.z - a.global_position.z).length() < 1.0 and path.size() > 2:
+			path.remove_at(1)
+			next = path[1]
+		return Vector3(next.x - a.global_position.x, 0, next.z - a.global_position.z).normalized()
+	elif see:
+		return flat.normalized()
+	return Vector3.ZERO
+
+
+## A station has walls: the way out is the front, wherever it is going.
+func _out_of_station(want: Vector3) -> Vector3:
+	if leaving == null:
+		return want
+	if not is_instance_valid(leaving):
+		leaving = null
+		return want
+	var out_dir: Vector3 = leaving.global_transform.basis.z
+	var rel: Vector3 = a.global_position - leaving.global_position
+	if rel.dot(out_dir) < leaving.front() + 0.5 and Vector2(rel.x, rel.z).length() < 3.2:
+		return Vector3(out_dir.x, 0, out_dir.z) - Vector3(rel.x, 0, rel.z).slide(out_dir) * 0.5
+	leaving = null
+	return want
+
+
+## "gait": {"burst": [0.25, 0.7], "pause": [0.04, 0.16], "fast": 1.3, "weave": 0.35, "weave_rate": 9}
+## Scuttling: it goes in darts with dead stops between, and does not come straight at you.
+func _gait(dt: float) -> float:
+	var g: Dictionary = d["gait"]
+	_gait_ph += dt
+	_gait_t -= dt
+	if _gait_t <= 0.0:
+		_gait_go = not _gait_go
+		var r: Array = g.get("burst", [0.25, 0.7]) if _gait_go else g.get("pause", [0.04, 0.16])
+		_gait_t = randf_range(r[0], r[1])
+	return g.get("fast", 1.3) if _gait_go else 0.0
+
+
+func gait_factor(dt: float) -> float:
+	return _gait(dt) if d.has("gait") else 1.0
+
+
+# ------------------------------------------------------------------ not awake
+## Not awake: lounging, standing (a turret, on a wall, told to keep still), dancing, or wandering near home.
+func idle_tick(dt: float) -> void:
+	if a.lounge and a.lounge.active():
+		a.lounge.tick(dt)
+		return
+	if a.fixed or a.surf != 0 or d.get("still", false) or a.e.get("still", false):
+		a.play("idle")
+		return
+	if d.has("dance"):
+		dance_tick(dt)
+		return
+	wander_tick(dt)
+
+
+## Startled, or picking itself up after a leap.
+func stunned_tick(dt: float) -> void:
+	a.stun -= dt
+	a.velocity.x = move_toward(a.velocity.x, 0, 30 * dt)
+	a.velocity.z = move_toward(a.velocity.z, 0, 30 * dt)
+	fall(dt)
+	a.move_and_slide()
+
+
+## Pottering about near home: a slow step now and then, back toward home if it has strayed.
+func wander_tick(dt: float) -> void:
+	_wander_t -= dt
+	if _wander_t <= 0.0:
+		_wander_t = randf_range(2.0, 5.0)
+		var ang := randf() * TAU
+		_wander = Vector3(cos(ang), 0, sin(ang)) if randf() < 0.5 else Vector3.ZERO
+		if a.global_position.distance_to(a.home) > 5.0:
+			_wander = (a.home - a.global_position).normalized()
+			_wander.y = 0
+	var sp: float = d.get("speed", 4.0) * 0.25
+	a.velocity.x = move_toward(a.velocity.x, _wander.x * sp, 10 * dt)
+	a.velocity.z = move_toward(a.velocity.z, _wander.z * sp, 10 * dt)
+	fall(dt)
+	a.move_and_slide()
+	if _wander != Vector3.ZERO:
+		turn_to(_wander, dt, 3.0)
+		a.play("walk", 0.5)
+	else:
+		a.play("idle")
+
+
+## "dance": {"reach": 9, "speed": 1.6, "radius": 1.6}
+## Before it has noticed anybody it dances: round and round the spot it started on, or, if another of its kind is within
+## reach, the two of them round the point between them, always opposite each other. The idle clip is the dance step.
+func dance_tick(dt: float) -> void:
+	var dn: Dictionary = d["dance"]
+	_partner_t -= dt
+	if _partner_t <= 0.0:
+		_partner_t = 1.5
+		_partner = null
+		var best: float = dn.get("reach", 9.0)
+		for o in a.level.actors:
+			if o == a or not is_instance_valid(o) or o.dead or o.awake or o.d.get("name", "") != d.get("name", "") or absf(o.home.y - a.home.y) > 2.0:
+				continue
+			var dd: float = o.home.distance_to(a.home)
+			if dd < best:
+				best = dd
+				_partner = o
+	var mid := a.home
+	var rad: float = dn.get("radius", 1.6) * 0.55
+	var phase := 0.0
+	if _partner != null and is_instance_valid(_partner):
+		mid = (a.home + _partner.home) / 2
+		rad = clampf(a.home.distance_to(_partner.home) / 2, 1.2, dn.get("radius", 1.6) * 1.5)
+		phase = 0.0 if a.get_instance_id() < _partner.get_instance_id() else PI
+	var ang: float = Time.get_ticks_msec() * 0.001 * dn.get("speed", 1.6) / rad + phase
+	var spot := mid + Vector3(cos(ang), 0, sin(ang)) * rad
+	var go := Vector3(spot.x - a.global_position.x, 0, spot.z - a.global_position.z) * 3.0
+	if go.length() > 3.5:
+		go = go.normalized() * 3.5
+	a.velocity.x = move_toward(a.velocity.x, go.x, 12 * dt)
+	a.velocity.z = move_toward(a.velocity.z, go.z, 12 * dt)
+	fall(dt)
+	a.move_and_slide()
+	turn_to(Vector3(mid.x - a.global_position.x, 0, mid.z - a.global_position.z), dt, 4.0)      # facing its partner, or the middle of its own circle
+	a.play("idle")
+
+
+## Stopping where it is, and standing.
+func stand(dt: float, move := true) -> void:
+	a.velocity.x = move_toward(a.velocity.x, 0, 30 * dt)
+	a.velocity.z = move_toward(a.velocity.z, 0, 30 * dt)
+	if move:
+		fall(dt)
+		a.move_and_slide()
+	a.play("idle")
+
+
+# ------------------------------------------------------------------ walking a route (off duty)
+func roaming() -> bool:
+	return roam.size() > 1
+
+
+## Walk along roam at `pace` of its speed. True when it has got to the end.
+func follow(dt: float, pace: float) -> bool:
+	var next := roam[1]
+	if Vector2(next.x - a.global_position.x, next.z - a.global_position.z).length() < 0.9:
+		if roam.size() <= 2:
+			return true
+		roam.remove_at(1)
+		next = roam[1]
+	var want := Vector3(next.x - a.global_position.x, 0, next.z - a.global_position.z).normalized()
+	var speed: float = d.get("speed", 4.0) * pace
+	if wet:
+		speed = d["swim"].get("speed", speed) * pace if d.has("swim") else speed * 0.6
+	a.velocity.x = move_toward(a.velocity.x, want.x * speed, d.get("accel", 30.0) * dt)
+	a.velocity.z = move_toward(a.velocity.z, want.z * speed, d.get("accel", 30.0) * dt)
+	fall(dt)
+	a.move_and_slide()
+	var hv := Vector3(a.velocity.x, 0, a.velocity.z)
+	if hv.length() > 0.3:
+		turn_to(hv, dt, 6.0)
+		_walk_anim(hv)
+	else:
+		a.play("idle")
+	return false
+
+
+## Go to dest at `pace`: by the nav's route, and the last step (or all of it, `direct`) straight at it.
+func go(dt: float, dest: Vector3, pace: float, direct := false) -> void:
+	var left := Vector3(dest.x - a.global_position.x, 0, dest.z - a.global_position.z)
+	if left.length() < 1.6 or direct or a.level.cell_of(dest) == a.level.cell_of(a.global_position):                          # the last step, off the cell's middle: straight at it
+		var speed: float = d.get("speed", 4.0) * pace * clampf(left.length() / 1.0, 0.35, 1.0)
+		a.velocity.x = move_toward(a.velocity.x, left.normalized().x * speed, d.get("accel", 30.0) * dt)
+		a.velocity.z = move_toward(a.velocity.z, left.normalized().z * speed, d.get("accel", 30.0) * dt)
+		fall(dt)
+		a.move_and_slide()
+		turn_to(left, dt, 6.0)
+		a.play("walk", 0.6 * d.get("walk_rate", 1.0))
+		return
+	path_t -= dt
+	if path_t <= 0.0 or roam.size() < 2:
+		path_t = 0.7
+		roam = a.level.path(a.global_position, dest)
+	if roam.size() > 1:
+		if follow(dt, pace):
+			roam = PackedVector3Array()
+	else:
+		stand(dt)
+
+
+# ------------------------------------------------------------------ dead
+func died() -> void:
+	_at_rest = d.get("mount", "") == "ceiling"       # what is bolted to the ceiling stays there
+	_air_t = 0.0
+
+
+## Killed in the air (flying, mid-leap, thrown, over a drop), it always comes down; down and still, a floor can still
+## go from under it (a lift, a trapdoor).
+func dead_tick(dt: float) -> void:
+	if _at_rest:
+		_air_t += dt
+		if _air_t > 0.5:
+			_air_t = 0.0
+			if d.get("mount", "") != "ceiling" and not a.test_move(a.global_transform, Vector3(0, -0.12, 0)):
+				_at_rest = false
+		return
+	a.velocity.y -= Actor.G * dt
+	a.velocity.x = move_toward(a.velocity.x, 0, 6 * dt)
+	a.velocity.z = move_toward(a.velocity.z, 0, 6 * dt)
+	var vy := a.velocity.y
+	a.move_and_slide()
+	a.vis.rotation.x = move_toward(a.vis.rotation.x, 0.0, 3.0 * dt)
+	if not (a.is_on_floor() or a.position.y <= a.level.f_min * a.level.H + 0.02):
+		_air_t = 0.0
+		return
+	_air_t = 0.0 if absf(a.velocity.x) + absf(a.velocity.z) > 0.2 else _air_t + dt
+	if vy < -6.0:                            # it landed hard
+		Fx.sparks(a.level, a.global_position + Vector3(0, 0.1, 0), Color(0.5, 0.5, 0.45), 8, 3.0, 0.3, 0.04)
+		LM.sound("step", a.global_position, 0.0, 0.6)
+	var on_lift := false                         # on a lift it never settles for good: it rides, and falls if the lift leaves
+	for ci in a.get_slide_collision_count():
+		if a.get_slide_collision(ci).get_collider() is AnimatableBody3D:
+			on_lift = true
+	if _air_t > 0.4 and not on_lift:
+		_at_rest = true
+		a.velocity = Vector3.ZERO
+		if fly and _vis_top >= 0.0:             # what can be shot of a flyer is up where it flew, so its body comes to rest with the model partly under the floor: lift the model onto it
+			var foot: float = a.cs.position.y - d.get("height", 1.6) / 2.0
+			var want_y: float = foot - _vis_bot + 0.03
+			if want_y > a.vis.position.y:
+				a.create_tween().tween_property(a.vis, "position:y", want_y, 0.25)

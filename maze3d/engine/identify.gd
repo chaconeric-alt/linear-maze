@@ -49,7 +49,7 @@ static func look(pl: Player) -> Dictionary:
 static func _owner_of(col: Object, lv: Level) -> Node:
 	var n := col as Node
 	while n != null and n != lv:
-		if n is Prop or n is Door or n is Enemy or n is Pickup or n is Lift or n is Pit or n is Trap or n is Target:
+		if n is Prop or n is Door or n is Actor or n is Pickup or n is Lift or n is Pit or n is Trap or n is Target:
 			return n
 		n = n.get_parent()
 	return null
@@ -63,7 +63,7 @@ static func _soft_radius(n: Node) -> float:
 		return 1.3
 	if n is Label3D:
 		return 0.9
-	if n is Enemy:
+	if n is Actor:
 		return n.d.get("radius", 0.5) + 0.2 if n.dead else 0.0      # what is left of one
 	if n is Door:
 		return 1.5 if n._shape.disabled else 0.0     # open: the ray goes through the doorway
@@ -85,7 +85,7 @@ static func _middle(n: Node) -> Vector3:
 		return p + Vector3(0, 1.4 if n.meta.get("mount", "") == "wall" or n.meta.get("arch", false) else 0.8, 0)
 	if n is Trap:
 		return p + Vector3(0, 1.0, 0)
-	if n is Enemy:
+	if n is Actor:
 		return p + Vector3(0, 0.4, 0)
 	return p
 
@@ -112,7 +112,7 @@ static func _nice(id: String) -> String:
 static func _describe(n: Node, lv: Level) -> Dictionary:
 	var bits: Array = []
 	var title := ""
-	if n is Enemy:
+	if n is Actor:
 		var id: Variant = LM.defs.get("actors", {}).find_key(n.d)
 		title = n.d.get("name", str(id))
 		bits.append("monster \"%s\"" % str(id))
@@ -122,7 +122,7 @@ static func _describe(n: Node, lv: Level) -> Dictionary:
 		if n.tag != "":
 			bits.append("tag %s" % n.tag)
 		if n.off_duty:
-			bits.append("off duty%s" % (" (showing its attacks)" if n._foe != null else (", in its station" if n.dock != null else "")))
+			bits.append("off duty%s" % (" (showing its attacks)" if n.drilling() else (", in its station" if n.dock != null else "")))
 	elif n is Target:
 		title = "Target"
 		bits.append("target \"%s\"" % n.tag)
