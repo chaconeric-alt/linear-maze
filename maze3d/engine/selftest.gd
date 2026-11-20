@@ -35,8 +35,8 @@ func _frames(n: int) -> void:
 func _look_at(target: Vector3) -> void:
 	var d := target - pl.cam.global_position
 	pl.rotation.y = atan2(-d.x, -d.z)
-	pl._pitch = asin(clamp(d.y / max(0.01, d.length()), -1.0, 1.0))
-	pl.head.rotation.x = pl._pitch
+	pl.pitch = asin(clamp(d.y / max(0.01, d.length()), -1.0, 1.0))
+	pl.head.rotation.x = pl.pitch
 
 
 ## The storey something is in: the one its height says, or the nearest one below that has air there (it may be on a ceiling).
@@ -284,7 +284,7 @@ func run(m: Node) -> void:
 	for a in level.actors.duplicate():
 		if not is_instance_valid(a) or a.dead or a.off_duty:
 			continue
-		pl._equip(wi % pl.weapons.size())
+		pl.equip(wi % pl.weapons.size())
 		wi += 1
 		var nm: String = a.d.get("name", "?")
 		if a.dock != null:                           # switch it on and let it out of its station
@@ -307,8 +307,8 @@ func run(m: Node) -> void:
 		while is_instance_valid(a) and not a.dead and t < 900:
 			var aim: Vector3 = a.global_position + Vector3(0, a.d.get("center", a.d.get("height", 1.6) / 2.0), 0)
 			_look_at(aim)
-			if pl._cool <= 0.0:
-				pl._fire(pl.weapon())
+			if pl.ready_to_fire():
+				pl.fire()
 			if t % 60 == 59 and not level.los(pl.cam.global_position, aim):
 				_stand_near(a.eye())
 			if OS.get_cmdline_user_args().has("--verbose") and t % 150 == 149:
@@ -701,7 +701,7 @@ func _home() -> void:
 	_say(bought == 3 and int(Profile.d["credits"]) == 500 - 40 - 45 - 60 and hm.available().size() == 3, "three things bought, paid for, and waiting (%d cr left)" % int(Profile.d["credits"]))
 	pl.global_position = level.center(Vector2i(7, 4), 0.05)
 	pl.rotation.y = -PI / 2                             # looking east along the hall
-	pl._pitch = -0.5
+	pl.pitch = -0.5
 	hm.toggle()
 	var lights0 := level.get_children().filter(func(n): return n is OmniLight3D).size()
 	var put := 0
@@ -712,10 +712,10 @@ func _home() -> void:
 		hm._sel = 0
 		if av[0][0] == "hm_painting":                # a wall thing: look at the wall
 			pl.rotation.y = 0.0
-			pl._pitch = 0.1
+			pl.pitch = 0.1
 		else:
 			pl.rotation.y = -PI / 2
-			pl._pitch = -0.5 - 0.1 * k
+			pl.pitch = -0.5 - 0.1 * k
 		await _frames(4)
 		if hm.place():
 			put += 1

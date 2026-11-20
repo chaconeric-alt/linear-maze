@@ -171,7 +171,7 @@ func _process(_dt: float) -> void:
 		if _args.has("yaw"):
 			player.rotation.y = deg_to_rad(float(_args["yaw"]))
 		if _args.has("pitch"):
-			player._pitch = deg_to_rad(float(_args["pitch"]))
+			player.pitch = deg_to_rad(float(_args["pitch"]))
 		if _args.has("nohud"):
 			hud.visible = false
 	if _args.has("trace") and level:                  # --trace: print whenever an actor changes what it is doing
