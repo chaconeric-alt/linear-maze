@@ -68,7 +68,7 @@ func setup(lv: Level, entry: Dictionary, kit: String) -> void:
 			b.size.y = 2.4
 		add_child(cs)
 	if meta.has("light") and e.get("lit", true):
-		var l := level._make_light(meta["light"], global_transform, level.room_at(level.cell_of(global_position)), 0.0, false)
+		var l := level.make_light(meta["light"], global_transform, level.room_at(level.cell_of(global_position)), 0.0, false)
 		l.set_meta("prop", true)
 	for name in meta.get("spin", {}):
 		var n := LM.find_node(inst, name)

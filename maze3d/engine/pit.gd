@@ -24,7 +24,7 @@ func setup(lv: Level, e: Dictionary, p: Vector2i, s: int) -> void:
 	damage = e.get("damage", 6.0)
 	var c := lv.cell(p.x, p.y, s)
 	var st: Dictionary = lv.kit["styles"].get(c["style"], lv.kit["styles"].values()[0])
-	var mesh := LM.tile_mesh(lv.kit_id, lv._pick(st.get("floor")))
+	var mesh := LM.tile_mesh(lv.kit_id, lv.pick(st.get("floor")))
 	for side in [-1, 1]:                              # two leaves, hinged at the edges, meeting in the middle
 		var hinge := Node3D.new()
 		hinge.position.x = side * lv.C / 2

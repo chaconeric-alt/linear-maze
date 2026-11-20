@@ -391,7 +391,7 @@ func aim(model: String) -> void:
 	if LM.model_meta(level.kit_id, model).get("mount", "") == "wall":
 		var q := PhysicsRayQueryParameters3D.create(from, from + dir * 7.0, 1)
 		var hit := level.get_world_3d().direct_space_state.intersect_ray(q)
-		if not hit.is_empty() and absf(hit["normal"].y) < 0.3 and hit["collider"] == level._solid:
+		if not hit.is_empty() and absf(hit["normal"].y) < 0.3 and hit["collider"] == level.solid_body():
 			_spot = Vector3(hit["position"].x, 0, hit["position"].z) + hit["normal"] * 0.012
 			_spot.y = 0
 			_yaw = atan2(hit["normal"].x, hit["normal"].z)

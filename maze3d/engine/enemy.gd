@@ -1726,6 +1726,11 @@ func drill(target: Node3D = null) -> bool:
 	return true
 
 
+## A turret, a thing on the ceiling, or one told to stand still: it cannot walk to a target.
+func cannot_walk() -> bool:
+	return _fixed or d.get("mount", "") == "ceiling" or d.get("still", false)
+
+
 ## Off duty, at its post, and not already showing anybody anything: free to be sent to the range.
 func free_for_drill() -> bool:
 	return off_duty and _foe == null and _od == ""

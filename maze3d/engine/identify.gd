@@ -40,7 +40,7 @@ static func look(pl: Player) -> Dictionary:
 		return _describe(hit_thing, lv)
 	if hit.is_empty():
 		return {}
-	if hit["collider"] == lv._glass:
+	if hit["collider"] == lv.glass_body():
 		return _window(lv, hit["position"], hit["normal"])
 	return _tile(lv, hit["position"], hit["normal"])
 
