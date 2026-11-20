@@ -27,7 +27,7 @@ static func look(pl: Player) -> Dictionary:
 		var r := _soft_radius(n)
 		if r <= 0.0 or n == hit_thing:
 			continue
-		var c: Vector3 = _middle(n)
+		var c: Vector3 = middle(n)
 		var t := (c - from).dot(fwd)
 		if t < 0.2 or t > hit_t + 0.7 or t >= best_t:
 			continue
@@ -77,7 +77,7 @@ static func _soft_radius(n: Node) -> float:
 	return 0.0
 
 
-static func _middle(n: Node) -> Vector3:
+static func middle(n: Node) -> Vector3:
 	var p: Vector3 = n.global_position
 	if n is Door:
 		return p + Vector3(0, 1.5, 0)

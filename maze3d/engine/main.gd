@@ -33,7 +33,7 @@ func _ready() -> void:
 	if _args.has("level"):
 		hud.begin_play()
 		if _args.has("selftest"):
-			var st: Node = load("res://engine/selftest.gd").new()
+			var st: Node = load("res://tests/selftest.gd").new()
 			add_child(st)
 			st.run(self)
 	else:
@@ -45,7 +45,7 @@ func _ready() -> void:
 ## the command line; the self-test sets its own.
 func _debug_switches() -> void:
 	if _args.has("selftest"):
-		load("res://engine/selftest.gd").configure()
+		load("res://tests/selftest.gd").configure()
 	Debug.hold_zoom = Debug.hold_zoom or _args.has("zoom")
 	Debug.memory_profile = Debug.memory_profile or _args.has("noprofile")
 	Debug.no_ao = _args.has("noao")
@@ -70,6 +70,11 @@ func _inputs() -> void:
 	var mb := InputEventMouseButton.new()
 	mb.button_index = MOUSE_BUTTON_LEFT
 	InputMap.action_add_event("fire", mb)
+
+
+## Start (or restart) a level by id, as the title screen does.
+func start_level(id: String) -> void:
+	_on_start(id)
 
 
 func _on_start(id: String) -> void:

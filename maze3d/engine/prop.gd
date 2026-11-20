@@ -141,6 +141,11 @@ func _pose() -> void:
 		p["n"].transform = xf
 
 
+
+## What happens when it is walked through (a scanner arch's "walk"), or {} if it is not an arch.
+func walk_spec() -> Dictionary:
+	return _walk
+
 # ------------------------------------------------------------------ walking through it (arches)
 func _walk_tick(dt: float) -> void:
 	_walk_cool -= dt

@@ -68,6 +68,11 @@ func setup(lv: Level, p: Vector2i, entry: Dictionary, kit_id: String) -> void:
 	_refresh()
 
 
+
+## Open far enough to walk through: its blocking shape is off.
+func is_passable() -> bool:
+	return _shape.disabled
+
 func is_locked() -> bool:
 	return sealed or lock != "" or (flag != null and not Game.has_flag(flag))
 

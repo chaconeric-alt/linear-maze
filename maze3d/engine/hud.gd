@@ -399,6 +399,17 @@ func repanel(prop: Node, spec: Dictionary) -> void:
 	_fill_panel(spec.get("text", ""))
 
 
+## The objective line as it reads now.
+func objective_text() -> String:
+	return _objective.text
+
+
+## Keep the end screen from coming up when the level ends (the self-test ends levels on purpose).
+func mute_end_screen() -> void:
+	if Game.ended.is_connected(_on_end):
+		Game.ended.disconnect(_on_end)
+
+
 func in_panel() -> bool:
 	return _state == "panel"
 

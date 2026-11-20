@@ -72,6 +72,20 @@ func robot_id() -> String:
 	return str(cfg.get("robot", ""))
 
 
+## How many things are on show (rack, stand, trophy case), and how many furnishings stand in the bunker.
+func shown_count() -> int:
+	return _shown.size()
+
+
+func placed_count() -> int:
+	return _placed.size()
+
+
+## Decorating: carry the i-th of what is waiting to be put down.
+func select(i: int) -> void:
+	_sel = i
+
+
 func thing(tag: String) -> Node3D:
 	var l: Array = level.things_by_tag.get(tag, [])
 	return l[0] if not l.is_empty() else null

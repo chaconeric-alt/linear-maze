@@ -1,7 +1,7 @@
 extends RefCounted
 ## Debug - the switches for testing and for looking at things. Game code asks here and never reads the command line:
 ## Main sets these from its arguments (--zoom, --noprofile, --noao ...), and the self-test sets what it needs itself
-## (SelfTest.configure, in engine/selftest.gd) before the first level is loaded. Never instanced: everything is static.
+## (SelfTest.configure, in tests/selftest.gd) before the first level is loaded. Never instanced: everything is static.
 class_name Debug
 
 static var sure_rolls := false          # every hack comes off and nothing risky goes wrong (the self-test measures the content, not luck)

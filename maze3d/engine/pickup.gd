@@ -65,6 +65,11 @@ static func bounds(n: Node, xf: Transform3D, acc: Array) -> void:
 		bounds(c, xf, acc)
 
 
+
+## It lies still on a shelf, in a case or on the floor (not hovering).
+func resting() -> bool:
+	return _rest
+
 func _ready() -> void:
 	_base_y = position.y
 
