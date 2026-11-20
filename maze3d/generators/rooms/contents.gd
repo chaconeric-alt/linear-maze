@@ -194,11 +194,20 @@ static func _dress(ctx: GenContext, e: Dictionary, pid: String) -> void:
 		e["use"] = {"type": "cache", "prompt": "Lift the dome", "loot": [{"item": treasure[rng.randi() % treasure.size()]}]}
 
 
-## Lockers on the walls: mostly useful, sometimes not.
+## Lockers on the walls: mostly useful, sometimes not (params "lockers"; without it, no lockers):
+##   {"per_room": [min, max], "prop": model, "prompt": text, "outcomes": [outcome, ..]}
+## One roll per locker picks the first outcome whose "below" is over it (the last needs none). An outcome may name a
+## different "prop", make it "rattle", fill it with "loot": [min, max] things from params "locker_loot", or put in
+## its "use" an "actor" (with "count": [min, max]), a "text" and "effects".
 static func _lockers(ctx: GenContext, floor_cells: Array) -> void:
 	var rng := ctx.rng
 	var loot := ctx.loot
-	for k in rng.randi_range(0, 2):
+	var spec: Dictionary = ctx.p.get("lockers", {})
+	var outcomes: Array = spec.get("outcomes", [])
+	if outcomes.is_empty():
+		return
+	var per: Array = spec.get("per_room", [0, 2])
+	for k in rng.randi_range(int(per[0]), int(per[1])):
 		var c4: Vector2i = _free(ctx, floor_cells)
 		var wall := -1
 		for d in 4:
@@ -210,24 +219,35 @@ static func _lockers(ctx: GenContext, floor_cells: Array) -> void:
 			continue
 		ctx.used[c4] = true
 		var roll := rng.randf()
-		var lk := {"at": [c4.x, c4.y], "prop": "locker", "face": NAMES[(wall + 2) % 4], "use": {"type": "locker", "prompt": "Open the locker"}}
-		if roll < 0.55:
-			var items: Array = []
-			for n3 in rng.randi_range(1, 2):
-				items.append({"item": loot[rng.randi() % loot.size()]})
-			lk["use"]["loot"] = items
-		elif roll < 0.7:
-			pass                                   # empty
-		elif roll < 0.9:
-			lk["prop"] = "locker_bad"              # dented, leaking, and it rattles: something lives in it
-			lk["rattle"] = true
-			lk["use"]["actor"] = "roach"
-			lk["use"]["count"] = rng.randi_range(1, 3)
-		else:
-			lk["prop"] = "locker_bad"              # dented and quiet: wired
-			lk["use"]["text"] = "Somebody wired it."
-			lk["use"]["effects"] = [{"type": "explode", "radius": 4.0, "damage": 30}]
+		var lk := {"at": [c4.x, c4.y], "prop": spec.get("prop", "locker"), "face": NAMES[(wall + 2) % 4], "use": {"type": "locker", "prompt": spec.get("prompt", "Open the locker")}}
+		var out: Dictionary = outcomes[-1]
+		for o in outcomes:
+			if roll < float(o.get("below", INF)):
+				out = o
+				break
+		_locker_outcome(ctx, lk, out)
 		ctx.things.append(lk)
+
+
+static func _locker_outcome(ctx: GenContext, lk: Dictionary, out: Dictionary) -> void:
+	var rng := ctx.rng
+	if out.has("prop"):
+		lk["prop"] = out["prop"]
+	if out.get("rattle", false):
+		lk["rattle"] = true                    # it rattles: something lives in it
+	if out.has("loot"):
+		var items: Array = []
+		for n3 in rng.randi_range(int(out["loot"][0]), int(out["loot"][1])):
+			items.append({"item": ctx.loot[rng.randi() % ctx.loot.size()]})
+		lk["use"]["loot"] = items
+	if out.has("actor"):
+		lk["use"]["actor"] = out["actor"]
+		if out.has("count"):
+			lk["use"]["count"] = rng.randi_range(int(out["count"][0]), int(out["count"][1]))
+	if out.has("text"):
+		lk["use"]["text"] = out["text"]
+	if out.has("effects"):
+		lk["use"]["effects"] = out["effects"].duplicate(true)
 
 
 ## Upstairs: the climb should be worth it, and sometimes somebody is already up there. At most five per room.

@@ -1,0 +1,40 @@
+{
+ "home": {
+  "home": {
+   "robot": "custodian",
+   "repair": {
+    "circuit": 3,
+    "fuel_cell": 2
+   },
+   "catalogue": [
+    ["hm_plant", 40],
+    ["hm_painting", 45],
+    ["hm_rug", 50],
+    ["hm_lamp", 60],
+    ["hm_table", 60],
+    ["hm_clock", 70],
+    ["hm_globe", 90],
+    ["hm_armchair", 110],
+    ["hm_gramophone", 120],
+    ["hm_bookcase", 130],
+    ["hm_aquarium", 200]
+   ],
+   "broadcasts": [
+    "OUT-RIDER OUTPOST: “Hesketh here. Shells, cells, a medic, rumours, and we buy fuel cells. Our power is failing, if you come across anything that holds a charge.”",
+    "BOOM-TOWN AUTOMATED GREETER: “Welcome to Boom-Town, where opportunity is mandatory! Entry requires a 100-credit visitor pass.”",
+    "STATIC, then a jingle: “DYNAMO-FIZZ! Feel the buzz!” It comes from the direction of the Anomalous Structure."
+   ],
+   "broadcasts_sometimes": [
+    "A slow voice, a long way down: “Come and see me, little one. Bring something sweet.” Mother Long-Legs, people say.",
+    "WEATHER, read by a machine that has not looked outside in three hundred years: “Fine. Fine. Fine.”"
+   ],
+   "programmes": [
+    "An advertisement for a kettle. The kettle company outlived the country by a week.",
+    "A cookery programme. The host is a Custodian. Nothing is cooked; the counter is very clean.",
+    "KAVEROS QUARTERLY RESULTS. A line goes up for eleven minutes and then the tape ends.",
+    "A western. Somebody has recorded a sales meeting over the last reel.",
+    "Test card. A girl, a clown, a noughts-and-crosses board. You watch it for longer than you meant to."
+   ]
+  }
+ }
+}

@@ -692,11 +692,11 @@ func _home() -> void:
 		Game.hud.close_panel()
 	# --- furnishing
 	Profile.d["credits"] = 30
-	_say(not hm.buy(0), "the catalogue wants paying (30 cr does not buy a %d cr fern)" % Home.CATALOGUE[0][1])
+	_say(not hm.buy(0), "the catalogue wants paying (30 cr does not buy a %d cr fern)" % int(hm.catalogue()[0][1]))
 	Profile.d["credits"] = 500
 	var bought := 0
-	for i in Home.CATALOGUE.size():
-		if Home.CATALOGUE[i][0] in ["hm_plant", "hm_painting", "hm_lamp"] and hm.buy(i):
+	for i in hm.catalogue().size():
+		if hm.catalogue()[i][0] in ["hm_plant", "hm_painting", "hm_lamp"] and hm.buy(i):
 			bought += 1
 	_say(bought == 3 and int(Profile.d["credits"]) == 500 - 40 - 45 - 60 and hm.available().size() == 3, "three things bought, paid for, and waiting (%d cr left)" % int(Profile.d["credits"]))
 	pl.global_position = level.center(Vector2i(7, 4), 0.05)

@@ -32,7 +32,8 @@
   "defs/arsenal.json",
   "defs/actors.json",
   "defs/items.json",
-  "defs/sounds.json"
+  "defs/sounds.json",
+  "defs/home.json"
  ],
  "levels": [
   "levels/home.json",
@@ -140,6 +141,17 @@
     2
    ]
   ],
+  "lockers": {
+   "per_room": [0, 2],
+   "prop": "locker",
+   "prompt": "Open the locker",
+   "outcomes": [
+    {"below": 0.55, "loot": [1, 2]},
+    {"below": 0.7},
+    {"below": 0.9, "prop": "locker_bad", "rattle": true, "actor": "roach", "count": [1, 3]},
+    {"prop": "locker_bad", "text": "Somebody wired it.", "effects": [{"type": "explode", "radius": 4.0, "damage": 30}]}
+   ]
+  },
   "locker_loot": [
    "chips",
    "circuit",

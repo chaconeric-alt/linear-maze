@@ -10,24 +10,14 @@ extends Node3D
 ##   click  put it down        R  turn it        Z or wheel  the next thing        X  take back what is in front of you
 class_name Home
 
-# model (kits/home), price in credits. The names come from the models.
-const CATALOGUE := [["hm_plant", 40], ["hm_painting", 45], ["hm_rug", 50], ["hm_lamp", 60], ["hm_table", 60], ["hm_clock", 70],
-	["hm_globe", 90], ["hm_armchair", 110], ["hm_gramophone", 120], ["hm_bookcase", 130], ["hm_aquarium", 200]]
-const REPAIR := {"circuit": 3, "fuel_cell": 2}       # what the robot in the cradle needs, out of the salvage brought home
-const ROBOT := "custodian"
-const BROADCASTS := [
-	"OUT-RIDER OUTPOST: “Hesketh here. Shells, cells, a medic, rumours, and we buy fuel cells. Our power is failing, if you come across anything that holds a charge.”",
-	"BOOM-TOWN AUTOMATED GREETER: “Welcome to Boom-Town, where opportunity is mandatory! Entry requires a 100-credit visitor pass.”",
-	"STATIC, then a jingle: “DYNAMO-FIZZ! Feel the buzz!” It comes from the direction of the Anomalous Structure.",
-	"A slow voice, a long way down: “Come and see me, little one. Bring something sweet.” Mother Long-Legs, people say.",
-	"WEATHER, read by a machine that has not looked outside in three hundred years: “Fine. Fine. Fine.”"]
-const PROGRAMMES := ["An advertisement for a kettle. The kettle company outlived the country by a week.",
-	"A cookery programme. The host is a Custodian. Nothing is cooked; the counter is very clean.",
-	"KAVEROS QUARTERLY RESULTS. A line goes up for eleven minutes and then the tape ends.",
-	"A western. Somebody has recorded a sales meeting over the last reel.",
-	"Test card. A girl, a clown, a noughts-and-crosses board. You watch it for longer than you meant to."]
-
+## What this bunker offers comes from the game's defs (games/<game>/defs/home.json, "home": {<level id>: {...}}):
+##   "robot"      the actor that lies broken in the cradle until it is repaired
+##   "repair"     item -> how many of it, out of the salvage brought home, the repair takes
+##   "catalogue"  [[model (kits/home), price in credits], ..]; the names come from the models
+##   "broadcasts" what the video radio always has on; "broadcasts_sometimes": one of these as well
+##   "programmes" what is on the television by the sofa, one at a time
 var level: Level
+var cfg: Dictionary = {}                 # this bunker's entry in defs "home"
 var decorating := false
 var robot: Node3D = null                 # the repaired robot (an Actor, off duty), or the wreck in the cradle
 var _shown: Array = []                   # what is on the rack, the stand and in the trophy case
@@ -44,6 +34,8 @@ var _bar: Label
 
 func setup(lv: Level) -> void:
 	level = lv
+	var all: Dictionary = LM.defs.get("home", {})
+	cfg = all.get(lv.data.get("id", "home"), all.values()[0] if not all.is_empty() else {})
 	Game.credits = int(Profile.d["credits"])
 	for dec in Profile.d["decor"]:
 		_placed.append(_stand(dec))
@@ -64,6 +56,20 @@ func setup(lv: Level) -> void:
 	_bar.visible = false
 	layer.add_child(_bar)
 	Game.changed.emit()
+
+
+## [[model, price], ..]: what can be ordered from the ledger.
+func catalogue() -> Array:
+	return cfg.get("catalogue", [])
+
+
+## item -> how many: what the robot in the cradle needs.
+func repair_needs() -> Dictionary:
+	return cfg.get("repair", {})
+
+
+func robot_id() -> String:
+	return str(cfg.get("robot", ""))
 
 
 func thing(tag: String) -> Node3D:
@@ -136,9 +142,9 @@ func _robot() -> void:
 	if Profile.d["robot"]:
 		var at: Vector3 = cradle.global_position + cradle.global_transform.basis.z * 3.0
 		var c := level.cell_of(at)
-		robot = level.spawn_thing({"actor": ROBOT, "at": [c.x, c.y], "face": "n", "tag": "housebot"}, c)
+		robot = level.spawn_thing({"actor": robot_id(), "at": [c.x, c.y], "face": "n", "tag": "housebot"}, c)
 		return
-	var def := LM.get_def("actors", ROBOT)          # the wreck: the same model, slumped in the clamps, and nobody home
+	var def := LM.get_def("actors", robot_id())          # the wreck: the same model, slumped in the clamps, and nobody home
 	var path: String = def.get("model", "")
 	robot = LM.spawn_scene(path if path.begins_with("res://") else "res://" + path, "" if def.get("own_materials", false) else def.get("kit", level.kit_id))
 	robot.scale = Vector3.ONE * float(def.get("scale", 1.0)) * 0.9
@@ -168,7 +174,9 @@ func use_prop(_prop: Node, what: String) -> void:
 	var p: Dictionary = Profile.d
 	match what:
 		"comms":
-			_panel("Home · video radio", "Who is on the air", "\n\n".join(BROADCASTS.slice(0, 3)) + "\n\n" + BROADCASTS[3 + randi() % 2],
+			var always: Array = cfg.get("broadcasts", [])
+			var sometimes: Array = cfg.get("broadcasts_sometimes", [])
+			_panel("Home · video radio", "Who is on the air", "\n\n".join(always) + ("\n\n" + sometimes[randi() % sometimes.size()] if not sometimes.is_empty() else ""),
 				[{"label": "Listen a while longer", "do": func(): use_prop(null, "comms")}])
 		"ledger":
 			_ledger()
@@ -192,7 +200,9 @@ func use_prop(_prop: Node, what: String) -> void:
 			Game.say("You sleep. Nothing comes through the door.", "good")
 			LM.sound("heal")
 		"sofa":
-			Game.say(PROGRAMMES[randi() % PROGRAMMES.size()], "info")
+			var progs: Array = cfg.get("programmes", [])
+			if not progs.is_empty():
+				Game.say(progs[randi() % progs.size()], "info")
 		"security":
 			_panel("Home · security", "Cameras", "CAM 1  the hatch: sand, and the wind moving it.\nCAM 2  the road: nothing on it.\nCAM 3  the horizon: the Anomalous Structure, with its screens lit.\n\nThe near-area map is not wired to this desk yet. For now the lift goes straight to an installation.")
 		"diagnostic", "cradle":
@@ -229,8 +239,9 @@ func _waiting() -> int:
 
 func _catalogue() -> void:
 	var opts: Array = []
-	for i in CATALOGUE.size():
-		var c: Array = CATALOGUE[i]
+	var cat := catalogue()
+	for i in cat.size():
+		var c: Array = cat[i]
 		var own := int(Profile.d["owned"].get(c[0], 0))
 		opts.append({"label": "%s   %d cr%s" % [_name(c[0]), c[1], ("   (you have %d)" % own) if own > 0 else ""], "do": buy.bind(i)})
 	opts.append({"label": "Back to the ledger", "do": _ledger})
@@ -238,7 +249,7 @@ func _catalogue() -> void:
 
 
 func buy(i: int) -> bool:
-	var c: Array = CATALOGUE[i]
+	var c: Array = catalogue()[i]
 	if int(Profile.d["credits"]) < int(c[1]):
 		Game.say("%s costs %d cr. You have %d banked." % [_name(c[0]), c[1], int(Profile.d["credits"])], "warn")
 		LM.sound("denied")
@@ -255,8 +266,9 @@ func buy(i: int) -> bool:
 
 
 func can_repair() -> bool:
-	for id in REPAIR:
-		if Profile.count(id) < int(REPAIR[id]):
+	var need := repair_needs()
+	for id in need:
+		if Profile.count(id) < int(need[id]):
 			return false
 	return true
 
@@ -266,8 +278,9 @@ func _cradle() -> void:
 		_panel("Home · robot room", "Repair cradle", "Empty. He is about the place somewhere, seeing to the floors. Talk to him; he has opinions.")
 		return
 	var need: Array = []
-	for id in REPAIR:
-		need.append("%d × %s (you have brought home %d)" % [int(REPAIR[id]), _item(id), Profile.count(id)])
+	var recipe := repair_needs()
+	for id in recipe:
+		need.append("%d × %s (you have brought home %d)" % [int(recipe[id]), _item(id), Profile.count(id)])
 	var opts: Array = []
 	if can_repair():
 		opts.append({"label": "Repair it", "do": repair})
@@ -277,8 +290,9 @@ func _cradle() -> void:
 func repair() -> bool:
 	if Profile.d["robot"] or not can_repair():
 		return false
-	for id in REPAIR:
-		Profile.d["salvage"][id] = Profile.count(id) - int(REPAIR[id])
+	var recipe := repair_needs()
+	for id in recipe:
+		Profile.d["salvage"][id] = Profile.count(id) - int(recipe[id])
 	Profile.d["robot"] = true
 	Profile.save()
 	if Game.hud and Game.hud.in_panel():
@@ -331,7 +345,7 @@ func available() -> Array:
 	for dec in Profile.d["decor"]:
 		down[dec["m"]] = int(down.get(dec["m"], 0)) + 1
 	var out: Array = []
-	for c in CATALOGUE:
+	for c in catalogue():
 		var n := int(Profile.d["owned"].get(c[0], 0)) - int(down.get(c[0], 0))
 		if n > 0:
 			out.append([c[0], n])
