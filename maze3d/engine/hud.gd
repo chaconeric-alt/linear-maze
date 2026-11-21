@@ -28,6 +28,7 @@ var _vignette: ColorRect
 var _cross: HudCrosshair
 var _map: HudMap
 var _panel: PanelContainer
+var _panel_fit: HudFit       # the panel in the middle of the window, scrolled when it has more than the window holds
 var _panel_body: VBoxContainer
 var _screens: HudScreens
 var _style: HudStyle
@@ -147,9 +148,7 @@ func _build_messages() -> void:
 ## The terminal panel (hidden until a panel opens).
 func _build_panel() -> void:
 	_panel = PanelContainer.new()
-	_panel.set_anchors_preset(Control.PRESET_CENTER)
 	_panel.custom_minimum_size = Vector2(680, 0)
-	_panel.position = Vector2(-340, -240)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.02, 0.05, 0.055, 0.95)
 	sb.border_color = Color(0.2, 0.9, 0.8)
@@ -159,8 +158,9 @@ func _build_panel() -> void:
 	_panel_body = VBoxContainer.new()
 	_panel_body.add_theme_constant_override("separation", 12)
 	_panel.add_child(_panel_body)
-	_panel.visible = false
-	add_child(_panel)
+	_panel_fit = HudFit.new(_panel)
+	_panel_fit.visible = false
+	add_child(_panel_fit)
 
 
 func _label(text: String, size: int, c: Color) -> Label:
@@ -255,7 +255,8 @@ func open_panel(prop: Node, spec: Dictionary) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	LM.sound("terminal")
 	_fill_panel(spec.get("text", ""))
-	_panel.visible = true
+	_panel_fit.to_top()
+	_panel_fit.visible = true
 
 
 ## A panel whose options carry "do": a Callable. Opens it, or swaps what an open panel shows (engine/home.gd).
@@ -263,8 +264,11 @@ func repanel(prop: Node, spec: Dictionary) -> void:
 	if _state != "panel":
 		open_panel(prop, spec)
 		return
+	var same: bool = Game.interaction.spec.get("title", "") == spec.get("title", "")
 	Game.interaction.open(prop, spec)
 	_fill_panel(spec.get("text", ""))
+	if not same:                                    # a new page starts at the top; the same page (after buying) stays put
+		_panel_fit.to_top()
 
 
 ## The objective line as it reads now.
@@ -315,7 +319,7 @@ func _fill_panel(text: String, working := "", final := false) -> void:
 func close_panel() -> void:
 	if _state != "panel":
 		return
-	_panel.visible = false
+	_panel_fit.visible = false
 	_state = "play"
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -337,7 +341,7 @@ func begin_play() -> void:
 	refresh()
 
 
-func _pause() -> void:
+func show_pause() -> void:
 	_state = "pause"
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -346,10 +350,22 @@ func _pause() -> void:
 
 func _on_end(info: Dictionary) -> void:
 	await get_tree().create_timer(1.4 if info.get("dead", false) else 0.6, true).timeout
+	show_end(info)
+
+
+## The end screen now: dead (info "dead") or out (its "title" and "text").
+func show_end(info: Dictionary) -> void:
 	_state = "end"
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_screens.end(info)
+
+
+## The frame of the menu showing now (the open panel, or the title, pause or end screen); null in play.
+func menu_fit() -> HudFit:
+	if _state == "panel":
+		return _panel_fit
+	return _screens.fit if _screens.overlay.visible else null
 
 
 func _unhandled_key_input(ev: InputEvent) -> void:
@@ -359,7 +375,7 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 	match _state:
 		"play":
 			if ev.keycode == KEY_ESCAPE:
-				_pause()
+				show_pause()
 				used = true
 			elif ev.is_action("map"):
 				_map.set_big(not _map.big)

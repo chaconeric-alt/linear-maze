@@ -2,6 +2,10 @@
 
 What changed and when, newest first. The reference for how things are now is `SPEC.md`; how to work on the code is `CLAUDE.md`.
 
+## 2026-11-20 (evening): menus that fit, image prompts, repeatable tests
+
+- **Menus fit the window.** The title, pause and end screens and the terminal panels sit in the middle of the window in a frame (`HudFit`, `engine/hud/fit.gd`) that scrolls, with a scroll bar, when what they hold is taller or wider than the window; the keyboard focus is followed, and a panel that changes page starts at the top again. The title screen used to run off the bottom of the window once the list of levels grew. The self-test's new `menus` part opens each one, and a panel with 24 options, on a 1280 × 720 window and checks that every button is on screen or can be scrolled to. (`Hud._pause` is now `show_pause`, and `show_end` shows the end screen at once.)
+
 ## 2026-11-20: after the refactor
 
 - **Repeatable runs, built in.** `--repeatable[=seed]` (`Debug.repeatable`) seeds the random numbers before the level is built and counts the clock in physics frames (`Debug.now_msec()`, which every bob, pulse and grind now reads instead of `Time.get_ticks_msec()`). With Godot's `--fixed-fps 60` a self-test run is the same line for line every time, so two versions of the code can be compared without patching throwaway copies.

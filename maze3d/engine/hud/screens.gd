@@ -8,6 +8,7 @@ var hud: Hud
 var style: HudStyle
 var overlay: ColorRect
 var box: VBoxContainer
+var fit: HudFit             # centres the box in the window, and scrolls it when it is taller or wider than the window
 
 
 func _init(h: Hud, s: HudStyle) -> void:
@@ -17,17 +18,17 @@ func _init(h: Hud, s: HudStyle) -> void:
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0, 0, 0, 0.72)
 	box = VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_CENTER)
 	box.custom_minimum_size = Vector2(760, 0)
-	box.position = Vector2(-380, -230)
 	box.add_theme_constant_override("separation", 14)
-	overlay.add_child(box)
+	fit = HudFit.new(box)
+	overlay.add_child(fit)
 
 
 func clear() -> void:
 	for c in box.get_children():
 		box.remove_child(c)
 		c.queue_free()
+	fit.to_top()
 
 
 func title() -> void:
