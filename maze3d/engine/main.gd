@@ -273,8 +273,9 @@ func level_key() -> String:
 
 
 ## An expedition is over. Out alive: what was carried is banked in the bunker, and what changed in the level is saved
-## with it. Dead: nothing is banked, and the save is at once the world as the death leaves it (State.after_death), so
-## neither F10 nor quitting brings back what the death took; the world in memory goes back as the level goes (_settle).
+## with it. Dead: nothing is banked; the save is left as it was, so F10 (or the death screen's button) comes back to
+## it; the world in memory goes back to how the expedition found it as the level goes (_settle), which the next save
+## (arriving in the bunker) makes the save.
 ## Either way the save no longer has a place in a level: between levels, Restore from save comes back to the bunker.
 func _on_ended(info: Dictionary) -> void:
 	if level == null:
@@ -286,9 +287,7 @@ func _on_ended(info: Dictionary) -> void:
 	var was_run := _in_run
 	_in_run = false
 	State.run().erase("where")
-	if dead:
-		State.save_as(State.after_death(false))
-	else:
+	if not dead:
 		_settle()
 		if player:
 			Profile.bank(Game.credits, player.weapons, player.armor, Game.haul)

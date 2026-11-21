@@ -142,7 +142,8 @@ func pause() -> void:
 		hud.get_tree().quit()))
 
 
-## The end of a level: dead, or out with the level's own title and text; the stats; home, again, or the title.
+## The end of a level: dead, or out with the level's own title and text; the stats; home, the last save (dead), again,
+## or the title.
 func end(info: Dictionary) -> void:
 	clear()
 	var dead: bool = info.get("dead", false)
@@ -164,5 +165,7 @@ func end(info: Dictionary) -> void:
 	if home_id != "" and not at_home:
 		var s2: String = "Wake up in the bunker (nothing from the trip is kept)" if dead else "Home to the bunker (%d cr banked)" % Game.credits
 		box.add_child(style.button(s2, func(): hud.start_requested.emit(home_id), not dead))
+	if dead and not State.saved().is_empty():         # a death is not final until the player goes on from it
+		box.add_child(style.button("Back to your last save (F10)", func(): hud.restore_requested.emit()))
 	box.add_child(style.button("Go again", func(): hud.restart_requested.emit(), home_id == "" or dead))
 	box.add_child(style.button("Back to the title", func(): hud.start_requested.emit("")))

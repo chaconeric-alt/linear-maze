@@ -63,7 +63,7 @@
     "security_text": "CAM 1  the hatch: sand, and the wind moving it.\nCAM 2  the road: nothing on it.\nCAM 3  the horizon: the Anomalous Structure, with its screens lit.\n\nThe near-area map is not wired to this desk yet. For now the lift goes straight to an installation.",
     "ledger_kicker": "Home · den",
     "ledger_title": "Expedition Ledger",
-    "ledger_text": "Banked  %d cr        Expeditions home  %d        Lost  %d        Best haul  %d cr\n\nBrought home: %s.\n\nFurnishings waiting to be put down: %d.  (B, anywhere in the bunker.)",
+    "ledger_text": "Banked  %d cr        Expeditions home  %d        Best haul  %d cr\n\nBrought home: %s.\n\nFurnishings waiting to be put down: %d.  (B, anywhere in the bunker.)",
     "ledger_order": "Order furnishings",
     "ledger_decorate": "Decorate now",
     "ledger_retire": "Retire (hand the bunker on to the next scavenger)",

@@ -197,13 +197,7 @@ static func blank_memory() -> Dictionary:
 
 # ------------------------------------------------------------------ on disk
 func save() -> void:
-	save_as(data)
-
-
-## Save that world in place of the saved one, without making it the world in memory (Main, at a death: the save is
-## the world as the death leaves it at once, while the level lingers on the end screen).
-func save_as(w: Dictionary) -> void:
-	var text := JSON.stringify(w, " ")
+	var text := to_json()
 	if memory_only:
 		kept = text
 		return

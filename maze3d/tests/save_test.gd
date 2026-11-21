@@ -4,9 +4,8 @@ extends SelfTestPart
 ## come back to (Main.restore_game, as F10 and Restore from save do): the same level, not counted as a visit; the
 ## player back where they stood, as they were; the run, the level's flags, key cards and used panel options as they
 ## were at the save, and the flag set since gone; and the level as it was at the save. Then the player dies: the save
-## is at once the world as the expedition found it (nothing of the run, no place in a level), while the world in
-## memory waits for the level to go; and the level is carried on with, as the traps part does. Runs after memory,
-## before finish, which then plays the level as it was come back to (the runner is pointed at the new level).
+## is left as it was, and F10 comes back to it from the death screen. Runs after memory, before finish, which then plays
+## the level as it was come back to (the runner is pointed at the new level).
 
 const AFTER := "save_test_set_after_saving"
 
@@ -37,21 +36,25 @@ func run() -> void:
 	var differ := memory_differs(before, level.remember())
 	var wrong: Array = differ["gone"] + differ["extra"] + differ["things"]
 	say(wrong.is_empty(), "the level is as it was at the save (%d gone, %d made while playing, %d things%s)" % [before["gone"].size(), before["extra"].size(), before["things"].size(), "" if wrong.is_empty() else "; not: %s" % "; ".join(wrong.slice(0, 3))])
-	_death()
+	await _death()
 
 
-## A death in play (Game.finish, as the player's own death calls it).
+## A death in play (Game.finish, as the player's own death calls it), and F10 from the death screen.
 func _death() -> void:
-	var copy: Dictionary = State.run().get("departure", {})
-	var now := _plain([State.data["world"], State.data["levels"]])
+	var was := _plain(State.saved())
+	var key: String = State.level_key
+	var at := _at(State.saved().get("run", {}).get("where", {}).get("player", {"at": [0, 0, 0]}))
 	Game.finish({"dead": true, "by": "the save test"})
-	var s: Dictionary = State.saved()
-	say(not copy.is_empty() and not s.get("run", {}).has("where") and int(s.get("run", {}).get("credits", -1)) == 0
-		and _plain([s.get("world"), s.get("levels")]) == _plain([copy.get("world"), copy.get("levels")]) and _plain([State.data["world"], State.data["levels"]]) == now,
-		"a death saves the world as the expedition found it, at once (%d levels remembered then); the world in memory waits for the level to go" % copy.get("levels", {}).size())
-	pl.dead = false
-	Game.over = false
-	main.carry_on()
+	say(_plain(State.saved()) == was, "a death leaves the last save as it was")
+	var back: bool = main.restore_game()
+	level = main.level
+	pl = main.player
+	var off := _at(SavePoint.player_of(pl)).distance_to(at)
+	say(back and Game.playing and not Game.over and not pl.dead and State.level_key == key and off < 0.01,
+		"F10 after a death comes back to the last save (%s, %.2f m from where they stood)" % [State.level_key, off])
+	await frames(3)
+	level = main.level
+	pl = main.player
 
 
 ## Play goes on after the save, changing what a save keeps.
