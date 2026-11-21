@@ -4,21 +4,27 @@ extends RefCounted
 ## and callbacks. One per run (Game.interaction). The HUD only draws: it shows what offered() lists and hands the
 ## choice to choose(). SPEC.md, "Terminals".
 ##
-## What has been used is kept here, keyed by the thing's id (key_of), not written into the level's dictionaries, so
-## level data stays as it was loaded. The marks last as long as the run (Game.reset clears them).
+## What has been used is kept here, by the thing's key (key_of: the same on every load of its level), not written into
+## the level's dictionaries, so level data stays as it was loaded. The marks last as long as the level is played
+## (Game.reset clears them).
 class_name Interaction
 
 var view: Object = null          # what draws the panel (the HUD): draw_panel(text, working, final), close_panel(), in_panel()
 var thing: Node = null           # what the open panel belongs to
 var spec: Dictionary = {}        # what it says and offers: {"kicker", "title", "text", "options": [...]}
 var _choosing := -1              # the option being worked through
-var _used: Dictionary = {}       # thing id -> {option index: true}
-var _marks: Dictionary = {}      # thing id -> {name: true}: anything else a thing has done once ("prize": a riddle was paid)
+var _used: Dictionary = {}       # thing key -> {option index: true}
+var _marks: Dictionary = {}      # thing key -> {name: true}: anything else a thing has done once ("prize": a riddle was paid)
 
 
-## The id that marks are kept under. For now the node's own id: a thing lives as long as the level does.
-func key_of(t: Object) -> int:
-	return t.get_instance_id() if t != null else 0
+## The key marks are kept under: the thing's own key (Level.key_of), which is the same on every load of its level, so
+## they can be saved. Something the level did not make (built by hand in a test) falls back to its node id.
+func key_of(t: Object) -> String:
+	if t == null:
+		return ""
+	if t.has_meta("key"):
+		return str(t.get_meta("key"))
+	return "id:%d" % t.get_instance_id()
 
 
 func reset() -> void:

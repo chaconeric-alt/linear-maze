@@ -47,6 +47,7 @@ var doors: Dictionary = {}       # Vector2i -> Door
 var doors_up: Dictionary = {}    # Vector3i(x, y, storey) -> Door, for doors that are not on storey 0
 var lifts: Array = []
 var things_by_tag: Dictionary = {}
+var things: Dictionary = {}      # key -> node: every thing by the key its place in the level's data gives it (Spawner.plan)
 var actors: Array = []
 var targets: Array = []          # Targets (engine/target.gd)
 var traps: Array = []            # Traps (engine/trap.gd), for hazard()
@@ -206,6 +207,18 @@ func glass_body() -> StaticBody3D:
 # ------------------------------------------------------------------ things in it (Spawner, LevelLights)
 func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 	return spawner.spawn_thing(e, p)
+
+
+## The key a thing is known by, the same on every load of this level ("door:12,7,0", "thing:41", "obj:3,9",
+## "extra:2" for one made while playing), or "" for something the Spawner did not make.
+func key_of(n: Object) -> String:
+	return str(n.get_meta("key")) if n != null and is_instance_valid(n) and n.has_meta("key") else ""
+
+
+## The thing with that key, if it is still there.
+func thing(key: String) -> Node:
+	var n: Variant = things.get(key)
+	return n if n != null and is_instance_valid(n) else null
 
 
 func make_light(spec: Dictionary, xf: Transform3D, room: String, flicker := 0.0, shadows := false, scale := 1.0) -> OmniLight3D:

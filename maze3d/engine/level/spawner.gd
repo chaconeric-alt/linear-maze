@@ -6,11 +6,17 @@ extends RefCounted
 ## first kind whose test matches the entry makes it. The order is the precedence: {"station": .., "actor": ..} is a
 ## station (with its robot in it), not a loose actor; {"trap": "pit"} is a pit, any other "trap" a trap. A new kind of
 ## thing is a new factory, registered; spawn_thing does not change. SPEC.md, "Levels".
+##
+## Every thing gets a key (plan(), Level.key_of) from where it comes from in the level's data, the same on every load
+## of the same data, so what is remembered about it (Interaction's used marks; later the level's memory) can be kept
+## by key and saved.
 class_name Spawner
 
 var level: Level
 var ld: LevelData
 var _kinds: Array = []           # [[name, test: Callable(e) -> bool, make: Callable(e, p, s, pos) -> Node3D], ...]
+var _making := ""                # the key of the thing being made: its parts (a station's robot, a desk's chair) take theirs from it
+var _extra := 0                  # how many things have been made while playing: they are "extra:0", "extra:1", ...
 
 
 func _init(lv: Level, data: LevelData) -> void:
@@ -49,15 +55,23 @@ func kind_of(e: Dictionary) -> String:
 
 
 # ------------------------------------------------------------------ the level's own things
-func build_things() -> void:
+## What the level's data places, in the order it is built, each with the key it is known by. The key comes from
+## where the entry is in the data, so it is the same on every load of the same data (a generated level is the same
+## data again from its seed): a door by its cell and storey ("door:x,y,f"), the objects grid by its cell ("obj:x,y";
+## "obj:x,y.1" for a second entry under one symbol), the "things" list by its place in it ("thing:n"; "thing:n@x,y"
+## for each cell of a tag). The parts of a thing take its key and a suffix ("/robot", "/seat", "/holds.0"); things made
+## while playing are "extra:n". Each step is {"key", "p"} and one of "door" (the cell), "window" (the cell), "start",
+## "warn" (a message) or "e" (the entry). Builds nothing.
+func plan() -> Array:
+	var out: Array = []
 	for f in ld.floors:
 		for y in ld.h:
 			for x in ld.w:
 				var c := ld.cell(x, y, f)
 				if c["door"] != "":
-					_door(Vector2i(x, y), c)
+					out.append({"key": "door:%d,%d,%d" % [x, y, f], "p": Vector2i(x, y), "door": c})
 				if c["window"] != "":
-					_window(Vector2i(x, y), c)
+					out.append({"key": "", "p": Vector2i(x, y), "window": c})
 	var ol: Dictionary = ld.data.get("objectLegend", {})
 	var rows: Array = ld.data.get("objects", [])
 	for y in rows.size():
@@ -67,23 +81,50 @@ func build_things() -> void:
 			if ch == " " or ch == ".":
 				continue
 			if ch == "@" and not ol.has("@"):
-				ld.start_cell = Vector2i(x, y)
-				continue
-			if ol.has(ch):
-				var e: Variant = ol[ch]
-				for one in (e if e is Array else [e]):
-					spawn_thing(one, Vector2i(x, y))
+				out.append({"key": "", "p": Vector2i(x, y), "start": true})
+			elif ol.has(ch):
+				var list: Array = ol[ch] if ol[ch] is Array else [ol[ch]]
+				for i in list.size():
+					out.append({"key": "obj:%d,%d" % [x, y] + ("" if i == 0 else ".%d" % i), "p": Vector2i(x, y), "e": list[i]})
 			else:
-				push_warning("Level %s: no objectLegend entry for '%s'" % [ld.data.get("id"), ch])
-	for e in ld.data.get("things", []):
+				out.append({"key": "", "p": Vector2i(x, y), "warn": "no objectLegend entry for '%s'" % ch})
+	var things: Array = ld.data.get("things", [])
+	for n in things.size():
+		var e: Dictionary = things[n]
 		if e.has("at"):
-			spawn_thing(e, Vector2i(int(e["at"][0]), int(e["at"][1])))
+			out.append({"key": "thing:%d" % n, "p": Vector2i(int(e["at"][0]), int(e["at"][1])), "e": e})
 		elif e.has("tag"):
 			for p in ld.tags.get(e["tag"], []):
-				spawn_thing(e, p)
+				out.append({"key": "thing:%d@%d,%d" % [n, p.x, p.y], "p": p, "e": e})
+	return out
 
 
-func _door(p: Vector2i, c: Dictionary) -> void:
+func build_things() -> void:
+	for step in plan():
+		if step.has("door"):
+			var d := _door(step["p"], step["door"])
+			if d != null:
+				_key(d, step["key"])
+		elif step.has("window"):
+			_window(step["p"], step["window"])
+		elif step.has("start"):
+			ld.start_cell = step["p"]
+		elif step.has("warn"):
+			push_warning("Level %s: %s" % [ld.data.get("id"), step["warn"]])
+		else:
+			spawn_thing(step["e"], step["p"], step["key"])
+
+
+## The thing is known by this key from now on (Level.key_of, Level.thing).
+func _key(n: Node, key: String) -> void:
+	if level.things.has(key):
+		push_warning("Level %s: a second thing with the key %s" % [ld.data.get("id"), key])
+		return
+	level.things[key] = n
+	n.set_meta("key", key)
+
+
+func _door(p: Vector2i, c: Dictionary) -> Door:
 	var f: int = c["f"]
 	var across: bool = ld.wallish(p.x - 1, p.y, f) and ld.wallish(p.x + 1, p.y, f)
 	var along: bool = ld.wallish(p.x, p.y - 1, f) and ld.wallish(p.x, p.y + 1, f)
@@ -92,7 +133,7 @@ func _door(p: Vector2i, c: Dictionary) -> void:
 		push_warning("Level %s: door at %s (storey %d) has no wall on both sides; left out" % [ld.data.get("id"), p, f])
 		c["door"] = ""
 		level.bad_doors += 1
-		return
+		return null
 	var d := Door.new()
 	level.add_child(d)
 	d.position = ld.center(p, f * ld.H)
@@ -104,6 +145,7 @@ func _door(p: Vector2i, c: Dictionary) -> void:
 	else:
 		level.doors_up[Vector3i(p.x, p.y, f)] = d
 	_register(d, c["entry"].get("tag", ""))
+	return d
 
 
 ## A wall cell that is a window: it stands across the cell like a door, and never opens.
@@ -128,14 +170,23 @@ func _register(n: Node, tag: String) -> void:
 
 
 # ------------------------------------------------------------------ one thing
-func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
+## Make what entry `e` describes at cell `p`, known by `key`; with no key it is something made while playing, and
+## gets the next "extra:n".
+func spawn_thing(e: Dictionary, p: Vector2i, key := "") -> Node3D:
+	if key == "":
+		key = "extra:%d" % _extra
+		_extra += 1
 	var s := int(e.get("level", 0))                    # "level": 1 puts it a storey up: on the balcony there, or on that floor
 	var pos := ld.center(p, s * ld.H) + LM.vec(e.get("offset"), Vector3.ZERO)
 	for k in _kinds:
 		if (k[1] as Callable).call(e):
+			var outer := _making
+			_making = key
 			var n: Node3D = (k[2] as Callable).call(e, p, s, pos)
+			_making = outer
 			if n != null:
 				_register(n, e.get("tag", ""))
+				_key(n, key)
 			return n
 	return null
 
@@ -193,7 +244,7 @@ func _station(e: Dictionary, p: Vector2i, s: int, pos: Vector3) -> Node3D:
 				be[k] = e[k]
 		if s != 0:
 			be["level"] = s
-		stn.hold(spawn_thing(be, p) as Actor)
+		stn.hold(spawn_thing(be, p, _making + "/robot") as Actor)
 	return stn
 
 
@@ -238,6 +289,7 @@ func _seat(e: Dictionary, pr: Prop, meta: Dictionary) -> void:
 	ch.position = pr.position + front * (d0 + e.get("seat_gap", 0.25) + d1)
 	ch.rotation.y = pr.rotation.y + PI + deg_to_rad(e.get("seat_turn", 0.0))
 	ch.setup(level, {"prop": e["seat"], "at": e["at"]}, ld.kit_id)
+	_key(ch, _making + "/seat")
 
 
 ## A container: what it holds sits in its places, to be taken.
@@ -253,6 +305,7 @@ func _holds(e: Dictionary, pr: Prop, meta: Dictionary) -> void:
 		level.add_child(pk)
 		pk.position = pr.transform * LM.vec(slots[hi])
 		pk.setup(level, ie, ld.kit_id)
+		_key(pk, _making + "/holds.%d" % hi)
 		hi += 1
 
 
