@@ -1,11 +1,15 @@
 extends Node
-## ActorLocomotion - getting about: on foot after its target (chase, flee, skirmish, follow a path), wandering near
-## home, dancing, walking a route (off duty), flying ("fly", "bob"), swimming ("swim"), scuttling ("gait"), and
-## coming down when it dies. Every actor has it; walls and ceilings are ActorClimb.
+## ActorLocomotion - getting about: on foot after its target (chase, flee, skirmish, follow a path, and the way down
+## or up when it is on another level), wandering near home, dancing, walking a route (off duty), flying ("fly", "bob",
+## keeping over the floor under it), swimming ("swim"), scuttling ("gait"). Every actor has it; walls and ceilings
+## are ActorClimb; what is left when it dies is ActorRemains.
 ##   "speed": 4, "accel": 30, "walk_rate": 1, "behavior": "chaser" | "skirmisher" | "turret", "keep": [6, 12],
 ##   "flee_below": 0.3, "flee_text": "...", "turn": 4 (a turret), "mass": 1
 class_name ActorLocomotion
 
+
+const LEVEL_GAP := 1.5        # more height than this between it and its target, and they are not on the same level
+const HOVER_RATE := 3.0       # metres a second a hunting flyer rises or sinks to keep over the floor under it
 var a: Actor
 var d: Dictionary
 var fly := false
@@ -26,8 +30,6 @@ var _gait_go := true
 var _gait_ph := 0.0
 var _partner: Node3D = null
 var _partner_t := 0.0
-var _at_rest := false             # dead, and down: nothing more to do
-var _air_t := 0.0
 
 
 func setup(actor: Actor) -> void:
@@ -96,6 +98,17 @@ func fly_tick() -> void:
 		a.vis.position.y = minf(a.vis.position.y, maxf(0.0, room_top - _vis_top))
 
 
+## A hunting flyer keeps its hover over whatever floor is under it: off a balcony's edge it sinks to the floor below,
+## up a ramp it rises with it, at no more than HOVER_RATE metres a second. (Its body rides at "center" above its
+## origin, so the origin is where its floor is.)
+func _hover_vy() -> float:
+	var ground: float = a.level.floor_y(a.global_position)
+	var gap: float = ground - a.global_position.y
+	if absf(gap) < 0.02:
+		return 0.0
+	return clampf(gap * 4.0, -HOVER_RATE, HOVER_RATE)
+
+
 ## A swimmer rides low in it.
 func swim_tick(dt: float) -> void:
 	if d.has("swim"):
@@ -124,6 +137,8 @@ func hunt(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 	a.velocity.x = move_toward(a.velocity.x, want.x * speed, d.get("accel", 30.0) * dt)
 	a.velocity.z = move_toward(a.velocity.z, want.z * speed, d.get("accel", 30.0) * dt)
 	fall(dt)
+	if fly:
+		a.velocity.y = _hover_vy()
 	a.move_and_slide()
 	var hv := Vector3(a.velocity.x, 0, a.velocity.z)
 	if a.senses.see and (d.get("behavior", "") == "skirmisher" or dist < 5.0):
@@ -159,7 +174,9 @@ func _want(dt: float, pl: Node3D, flat: Vector3, dist: float) -> Vector3:
 		elif dist > keep[1]:
 			return flat.normalized() + side * 0.3
 		return side
-	if see and dist < 7.0:
+	# Close, in sight and on its level: straight at them. Above or below them (a balcony over their head), straight
+	# at them is nowhere: it takes the route down (or up) like anything out of sight.
+	if see and dist < 7.0 and absf(pl.global_position.y - a.global_position.y) < LEVEL_GAP:
 		return flat.normalized() if dist > d.get("radius", 0.5) + 0.9 else Vector3.ZERO
 	path_t -= dt
 	if path_t <= 0.0:
@@ -321,6 +338,8 @@ func follow(dt: float, pace: float) -> bool:
 	a.velocity.x = move_toward(a.velocity.x, want.x * speed, d.get("accel", 30.0) * dt)
 	a.velocity.z = move_toward(a.velocity.z, want.z * speed, d.get("accel", 30.0) * dt)
 	fall(dt)
+	if fly:
+		a.velocity.y = _hover_vy()
 	a.move_and_slide()
 	var hv := Vector3(a.velocity.x, 0, a.velocity.z)
 	if hv.length() > 0.3:
@@ -352,46 +371,3 @@ func go(dt: float, dest: Vector3, pace: float, direct := false) -> void:
 			roam = PackedVector3Array()
 	else:
 		stand(dt)
-
-
-# ------------------------------------------------------------------ dead
-func died() -> void:
-	_at_rest = d.get("mount", "") == "ceiling"       # what is bolted to the ceiling stays there
-	_air_t = 0.0
-
-
-## Killed in the air (flying, mid-leap, thrown, over a drop), it always comes down; down and still, a floor can still
-## go from under it (a lift, a trapdoor).
-func dead_tick(dt: float) -> void:
-	if _at_rest:
-		_air_t += dt
-		if _air_t > 0.5:
-			_air_t = 0.0
-			if d.get("mount", "") != "ceiling" and not a.test_move(a.global_transform, Vector3(0, -0.12, 0)):
-				_at_rest = false
-		return
-	a.velocity.y -= Actor.G * dt
-	a.velocity.x = move_toward(a.velocity.x, 0, 6 * dt)
-	a.velocity.z = move_toward(a.velocity.z, 0, 6 * dt)
-	var vy := a.velocity.y
-	a.move_and_slide()
-	a.vis.rotation.x = move_toward(a.vis.rotation.x, 0.0, 3.0 * dt)
-	if not (a.is_on_floor() or a.position.y <= a.level.f_min * a.level.H + 0.02):
-		_air_t = 0.0
-		return
-	_air_t = 0.0 if absf(a.velocity.x) + absf(a.velocity.z) > 0.2 else _air_t + dt
-	if vy < -6.0:                            # it landed hard
-		Fx.sparks(a.level, a.global_position + Vector3(0, 0.1, 0), Color(0.5, 0.5, 0.45), 8, 3.0, 0.3, 0.04)
-		LM.sound("step", a.global_position, 0.0, 0.6)
-	var on_lift := false                         # on a lift it never settles for good: it rides, and falls if the lift leaves
-	for ci in a.get_slide_collision_count():
-		if a.get_slide_collision(ci).get_collider() is AnimatableBody3D:
-			on_lift = true
-	if _air_t > 0.4 and not on_lift:
-		_at_rest = true
-		a.velocity = Vector3.ZERO
-		if fly and _vis_top >= 0.0:             # what can be shot of a flyer is up where it flew, so its body comes to rest with the model partly under the floor: lift the model onto it
-			var foot: float = a.cs.position.y - d.get("height", 1.6) / 2.0
-			var want_y: float = foot - _vis_bot + 0.03
-			if want_y > a.vis.position.y:
-				a.create_tween().tween_property(a.vis, "position:y", want_y, 0.25)

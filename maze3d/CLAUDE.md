@@ -12,7 +12,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 | Effects | `engine/effects.gd` | `EffectRegistry`: effect type to handler. Run-wide types in `game.gd`, the place's in `engine/level/level_effects.gd`, a prop's `use` in `engine/prop_uses.gd`. |
 | Panels | `engine/interaction.gd`, `engine/option_gates.gd` | What a panel offers and what choosing does (conditions, cost, hack, risk, used marks, effects). `hud.gd` only draws. |
 | Level | `engine/level.gd` + `engine/level/` | A thin `Level` node owning `LevelData` (cells and queries), `LevelBuilder` (shell, collision, nav, fluid, environment), `LevelLights`, `Spawner` (things, by kind), `LevelSigns`, `Triggers`, `LightingDebug`. |
-| Actors | `engine/actor/` | `Actor` on `ActorCore` (body, state machine, damage) plus components added only when their def key is present. |
+| Actors | `engine/actor/` | `Actor` on `ActorCore` (body, state machine, damage) plus components added only when their def key is present; `ActorRemains` is added when it dies (the fall, the model laid on the floor). |
 | Player | `engine/player.gd` + `engine/player/` | The body, health and use; `PlayerControls`, `PlayerMovement`, `PlayerCamera`, `PlayerWeapons`. |
 | World things | `engine/prop.gd`, `station.gd`, `door.gd`, `pickup.gd`, `trap.gd`, `pit.gd`, `lift.gd`, `target.gd`, `rebuilder.gd`, `projectile.gd`, `puddle.gd`, `fx.gd` | One class each. |
 | HUD | `engine/hud.gd` + `engine/hud/` | Status, messages, panels (drawing); `HudStyle`, `HudCrosshair`, `HudMap`, `HudScreens` (title, pause and end). |
@@ -39,7 +39,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 ## Budgets
 
 - No file over about 400 lines; no function over about 60 lines. Cut by job, not by line count: a new file for a new job, a function per step.
-- Still over (to be cut when next touched): `engine/actor/actor_core.gd` (416 lines); `tools/levels/staffonly.py` (`kit_wing` 274) and `anomalous.py` (633 lines of layout); the Blender kit scripts (one model per function, many files over 400 lines).
+- Still over (to be cut when next touched): `engine/actor/actor_core.gd` (417 lines); `tools/levels/staffonly.py` (`kit_wing` 274) and `anomalous.py` (633 lines of layout); the Blender kit scripts (one model per function, many files over 400 lines).
 
 ## Running the tests
 

@@ -36,6 +36,7 @@ var anim: AnimationPlayer
 # components; null when the def does not ask for them
 var senses: ActorSenses
 var move: ActorLocomotion
+var remains: ActorRemains          # added when it dies
 var climb: ActorClimb
 var attacks: ActorAttacks
 var aim: ActorAimRig
@@ -299,7 +300,7 @@ func _dead_tick(dt: float) -> void:
 	if surf != 0:                                    # shot off the wall: what is left comes down
 		climb.fall_tick(dt, Vector3.ZERO)
 	else:
-		move.dead_tick(dt)
+		remains.tick(dt)
 
 
 ## What goes on whatever it is doing: wading, its lights, its burning skin, flying, its face, swimming.
@@ -396,7 +397,8 @@ func _die(info: Dictionary) -> void:
 		velocity = Vector3.ZERO
 	else:
 		velocity = Vector3(velocity.x * 0.5, minf(velocity.y, 0.0), velocity.z * 0.5)      # in the air: it keeps some of its way and falls
-	move.died()
+	remains = _add(ActorRemains.new())
+	remains.died()
 	_play("die")
 	LM.sound(d.get("sounds", {}).get("die", "die"), global_position)
 	Game.stats["kills"] += 1
