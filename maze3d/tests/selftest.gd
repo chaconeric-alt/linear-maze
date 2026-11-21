@@ -8,8 +8,8 @@ extends Node
 ## The checks are in parts, one script per feature in tests/ (each a SelfTestPart, run in the order of STANDARD). A
 ## level can bring a test of its own, beside its level file: games/<game>/levels/<id>_test.gd. If that test's
 ## replaces_standard() says so, it runs instead of the standard parts (the bunker always; the Anomalous Structure with
-## --story); the schema and keys parts run first either way. Parts use public methods only, of the game and of this
-## runner.
+## --story); the schema and keys parts run first either way, and the events part last. Parts use public methods only,
+## of the game and of this runner.
 class_name SelfTest
 
 const STANDARD := ["movement", "reach", "traps", "identify", "arches", "actors", "balcony", "trap_victims", "remains", "use_key", "containers", "pickups", "doors", "menus", "finish"]
@@ -28,6 +28,7 @@ static func configure() -> void:
 	Debug.quick_hacks = true
 	Debug.memory_profile = true
 	Debug.fixed_settings = true
+	Debug.record_events = true                       # the events part holds the run's events up against the level
 
 
 func run(m: Node) -> void:
@@ -46,6 +47,7 @@ func run(m: Node) -> void:
 	else:
 		for p in STANDARD:
 			await part(p).run()
+	await part("events").run()
 	print("RESULT  %d failures" % fails)
 	get_tree().paused = false
 	get_tree().quit(fails)

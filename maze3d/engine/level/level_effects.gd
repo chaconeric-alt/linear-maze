@@ -119,6 +119,7 @@ func drop(ef: Dictionary, ctx: Dictionary) -> void:
 		var a2: float = TAU * i / maxf(1.0, items.size())
 		pk.global_position = base + Vector3(cos(a2), 0, sin(a2)) * (0.5 if items.size() > 1 else 0.0) + Vector3(0, 0.9, 0)
 		pk.setup(level, items[i] if items[i] is Dictionary else {"item": items[i]}, level.kit_id)
+		level.spawner.keep(pk)
 
 
 func spawn(ef: Dictionary, ctx: Dictionary) -> void:

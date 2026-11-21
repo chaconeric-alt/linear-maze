@@ -124,5 +124,6 @@ func _on_body(b: Node) -> void:
 		Game.set_flag(d["flag"])
 	if d.has("tag"):
 		level.notify("pickup", d["tag"])
+	Events.emit("item.taken", {"key": level.key_of(self), "item": str(d.get("item", d.get("weapon", d.get("id", "")))), "kind": str(d.get("kind", "treasure")), "count": 1})
 	Game.changed.emit()
 	queue_free()

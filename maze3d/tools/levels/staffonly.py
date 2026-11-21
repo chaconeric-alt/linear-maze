@@ -473,7 +473,8 @@ L = {"id": "staffonly", "name": "Staff Only (the test floor: every room, every t
      "objectives": [{"text": "Blue card: locker 1, in the Locker Room (west of here)", "done": "key_blue"},
                     {"text": "Red card: the cache in the Vault, behind the blue door (high-tech wing)", "done": "key_red"},
                     {"text": "Clock out: behind the red door (Way Out, north-east)"}],
-     "triggers": []}
+     "triggers": [{"on": {"type": "event", "name": "actor.died", "kind": "drone"}, "once": True,      # the bus, heard by level data
+                   "do": [{"type": "flag", "name": "heard_a_knife_fighter_die"}]}]}
 lk.write(L, ensure_ascii=False)
 print('\n'.join(rows(g0)))
 print("%d x %d cells, %d rooms, %d things: %d props, %d monsters (%d kinds), %d doors (%d kinds), %d styles" % (

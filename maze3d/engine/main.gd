@@ -8,6 +8,9 @@ var hud: Hud
 var level: Level = null
 var player: Player = null
 var _level_id := ""
+var _seed := 0                   # what a generated level was made from: its key is "<id>#<seed>" (level_key)
+var _left := true                # the level being played has been reported left (level.left)
+var _in_run := false             # an expedition is under way (run.started ... run.ended)
 var _args: Dictionary = {}
 var _frame := 0
 
@@ -65,6 +68,7 @@ func _debug_switches() -> void:
 	Debug.ssil = _args.has("ssil")
 	Debug.no_vfog = _args.has("novfog")
 	Debug.print_prompts = _args.has("prompts")
+	Debug.trace_events = _args.get("trace", "") == "events"
 	if Debug.memory_profile:
 		Profile.keep_in_memory()
 
@@ -119,6 +123,9 @@ func _on_start(id: String) -> void:
 ## Build the level with that id (or generate it: gen:<generator>[:<theme>]) and put the player in it. False if there is no
 ## such level, or the generator could make nothing with its settings.
 func _load(id: String, _attract: bool) -> bool:
+	if level and not _left:
+		_left = true
+		Events.emit("level.left", {"level": level_key(), "how": "away"})
 	_level_id = id
 	if level:
 		level.queue_free()
@@ -137,7 +144,8 @@ func _load(id: String, _attract: bool) -> bool:
 		var params: Dictionary = LM.game.get("generator_params", {}).duplicate(true)
 		if bits.size() > 1:
 			params.merge(LM.game.get("generator_themes", {}).get(bits[1], {}), true)
-		data = g.generate(int(_args.get("seed", randi())), params)
+		_seed = int(_args.get("seed", randi()))
+		data = g.generate(_seed, params)
 		if _args.has("dump"):                        # --dump=file.json: keep the level that was generated
 			var f := FileAccess.open(_args["dump"], FileAccess.WRITE)
 			if f:
@@ -159,6 +167,7 @@ func _load(id: String, _attract: bool) -> bool:
 	var cfg: Dictionary = LM.game.get("player", {}).duplicate(true)
 	for k in data.get("player", {}):
 		cfg[k] = data["player"][k]
+	var sortie: bool = Profile.sortie
 	if Profile.sortie and not data.get("home", false):      # they came by the bunker's lift: the armoury comes too
 		Profile.outfit(cfg)
 	Profile.sortie = false
@@ -168,17 +177,37 @@ func _load(id: String, _attract: bool) -> bool:
 	if data.has("intro"):
 		Game.say(data["intro"], "info")
 	hud.refresh()
+	_left = false
+	if not data.get("home", false) and not _in_run:
+		_in_run = true
+		Events.emit("run.started", {"level": level_key(), "from": "home" if sortie else "title"})
+	Events.emit("level.entered", {"level": level_key(), "how": "home" if data.get("home", false) else ("sortie" if sortie else "start")})
 	return true
+
+
+## The key the level being played is known by: its id, or for a generated one the whole recipe with its seed
+## ("gen:rooms:crypt#5"), so the same seed comes back to the same place.
+func level_key() -> String:
+	return "%s#%d" % [_level_id, _seed] if _level_id.begins_with("gen:") else _level_id
 
 
 ## An expedition is over. Out alive: what was carried is banked in the bunker. Dead: it is not.
 func _on_ended(info: Dictionary) -> void:
-	if level == null or level.data.get("home", false):
+	if level == null:
 		return
-	if info.get("dead", false):
+	var dead: bool = info.get("dead", false)
+	if not _left:
+		_left = true
+		Events.emit("level.left", {"level": level_key(), "how": "died" if dead else "out"})
+	if level.data.get("home", false):
+		return
+	if dead:
 		Profile.died()
 	elif player:
 		Profile.bank(Game.credits, player.weapons, player.armor, Game.haul)
+	if _in_run:
+		_in_run = false
+		Events.emit("run.ended", {"alive": not dead, "banked": 0 if dead else Game.credits})
 
 
 func _process(_dt: float) -> void:
@@ -216,7 +245,7 @@ func _process(_dt: float) -> void:
 			player.pitch = deg_to_rad(float(_args["pitch"]))
 		if _args.has("nohud"):
 			hud.visible = false
-	if _args.has("trace") and level:                  # --trace: print whenever an actor changes what it is doing
+	if _args.has("trace") and _args["trace"] != "events" and level:      # --trace: print whenever an actor changes what it is doing
 		for a in level.actors:
 			if is_instance_valid(a):
 				var st: String = a.trace_text()

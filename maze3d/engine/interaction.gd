@@ -96,6 +96,7 @@ func choose(i: int) -> void:
 				return
 	if _live():
 		_mark_used(i)
+		Events.emit("thing.used", {"key": key_of(thing), "prop": str(thing.e.get("prop", "")) if thing is Prop else "", "use": "option", "option": i})
 		if o.has("screen"):
 			thing.set_screen(o["screen"])
 	var ctx := panel_ctx()

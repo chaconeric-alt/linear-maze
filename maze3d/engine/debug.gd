@@ -14,6 +14,8 @@ static var ssil := false                # --ssil: screen-space indirect light, w
 static var no_vfog := false             # --novfog: no volumetric fog
 static var print_prompts := false       # --prompts: the self-test prints every image prompt it writes (easy mode's P)
 static var repeatable := false          # --repeatable: random numbers from a fixed seed and the clock counted in physics frames
+static var trace_events := false        # --trace=events: print every event as it is emitted (engine/events.gd)
+static var record_events := false       # keep every event emitted (Events.recorded): the self-test's events part reads them
 
 
 ## Milliseconds since the game started, for things that bob, pulse or grind with time. With --repeatable it counts

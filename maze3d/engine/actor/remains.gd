@@ -6,7 +6,8 @@ extends Node
 ## rest (or lies still on a lift) the model is moved until the underside of what is drawn, as posed now, touches the
 ## floor: measured from the skinned mesh itself (a sample of its vertices through the current bone poses), not from
 ## bones, which can sit well outside the surface. Its body shrinks to a small ball as it dies, so it cannot wedge above
-## the floor. A robot killed in its station is laid in it and stays. Added by ActorCore when it dies.
+## the floor. A robot killed in its station is laid in it and stays. Added by ActorCore when it dies, which then has it
+## leave() what a death leaves behind: the kill counted, a blast, drops, on_death effects, the actor.died event.
 class_name ActorRemains
 
 const SETTLE := 3.0          # seconds after coming to rest that the death pose is checked (a death clip is shorter)
@@ -113,6 +114,33 @@ func _come_to_rest() -> void:
 	a.velocity = Vector3.ZERO
 	_settle_t = 0.0
 	_look_t = 0.0
+
+
+## What a death leaves behind, once, as it dies: the kill counted; the blast of one that explodes; what it drops (each
+## a thing made while playing, with its own key); its on_death effects; and the news, to the level's triggers ("clear")
+## and as the event actor.died: its key, its kind (the actor id), whether it is a robot, what killed it ("player", the
+## key of the monster or thing that did, or "") and how (the damage type).
+func leave(info: Dictionary) -> void:
+	Game.stats["kills"] += 1
+	var pos := a.global_position + Vector3(0, 0.3 if d.get("mount", "") != "ceiling" else -1.0, 0)
+	if d.has("explode"):
+		Fx.explode(a.level, a.eye(), d["explode"].get("radius", 3.0), d["explode"].get("damage", 20.0), Color(1.0, 0.5, 0.15), a)
+	for dr in d.get("drops", []):
+		if randf() < dr.get("chance", 1.0):
+			var p := Pickup.new()
+			a.level.add_child(p)
+			p.global_position = Vector3(pos.x + randf_range(-0.4, 0.4), a.level.floor_y(pos) + 1.0, pos.z + randf_range(-0.4, 0.4))      # on whatever floor it died on
+			p.setup(a.level, dr, a.level.kit_id)
+			a.level.spawner.keep(p)
+	Game.run_effects(a.e.get("on_death"))
+	a.level.actor_died(a)
+	var by: Variant = info.get("by")
+	var killer := ""
+	if by is Node and is_instance_valid(by):
+		killer = "player" if by == Game.player else a.level.key_of(by)
+	Events.emit("actor.died", {"key": a.level.key_of(a), "kind": str(LM.defs["actors"].find_key(d)), "robot": a.is_robot(), "by": killer, "how": str(info.get("type", ""))})
+	if info.get("type", "") == "blast" and d.get("gib", true):
+		Fx.sparks(a.level, a.eye(), LM.col(d.get("blood"), Color(1, 0.5, 0.2)), 30, 8.0, 0.8, 0.12)
 
 
 ## Done falling, and its death pose has been laid on the floor (for the self-test).

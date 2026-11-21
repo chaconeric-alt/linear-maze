@@ -6021,5 +6021,20 @@
    "text": "Clock out: behind the red door (Way Out, north-east)"
   }
  ],
- "triggers": []
+ "triggers": [
+  {
+   "on": {
+    "type": "event",
+    "name": "actor.died",
+    "kind": "drone"
+   },
+   "once": true,
+   "do": [
+    {
+     "type": "flag",
+     "name": "heard_a_knife_fighter_die"
+    }
+   ]
+  }
+ ]
 }

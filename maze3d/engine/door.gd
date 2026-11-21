@@ -107,6 +107,12 @@ func command(what: String) -> void:
 		"close":
 			held = false
 	_refresh()
+	_changed(what)
+
+
+## Tell the world its lock or its seal changed (not each time it swings open for someone).
+func _changed(by: String) -> void:
+	Events.emit("door.changed", {"key": level.key_of(self), "by": by, "locked": is_locked(), "sealed": sealed, "held": held})
 
 
 func _someone_near() -> bool:
@@ -139,9 +145,11 @@ func _try_player(d: float) -> void:
 		LM.sound("unlock", global_position)
 		lock = ""
 		_refresh()
+		_changed("card")
 	elif flag != null and Game.has_flag(flag):
 		flag = null
 		_refresh()
+		_changed("flag")
 	elif not _told:
 		_told = true
 		LM.sound("denied", global_position)

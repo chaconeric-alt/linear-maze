@@ -1,7 +1,9 @@
 extends RefCounted
 ## Triggers - a level's "triggers": [{"on": {"type": "enter", "tag": "hall"}, "do": [effects], "once": true,
 ## "when": flag, "unless": flag}], and what sets them off: the player entering a tagged cell or a room, a flag being
-## set, a thing being used or walked through or picked up (Level.notify), the last of a tagged group dying ("clear").
+## set, a thing being used or walked through or picked up (Level.notify), the last of a tagged group dying ("clear"),
+## or an event on the bus ("event": {"type": "event", "name": "actor.died", "kind": "drone"} goes off when that event
+## is emitted with every other key of "on" in its payload, at the same value).
 ## It also keeps the map's record of where the player has been, and names each room the first time it is entered.
 class_name Triggers
 
@@ -18,24 +20,48 @@ var _last_room := ""
 func _init(lv: Level, data: LevelData) -> void:
 	level = lv
 	ld = data
+	var heard := {}
 	for t in ld.data.get("triggers", []):
 		_list.append({"t": t, "fired": false})
+		var on: Dictionary = t.get("on", {})
+		if on.get("type", "") == "event" and not heard.has(on.get("name", "")):
+			heard[on.get("name", "")] = true
+			Events.on(on.get("name", ""), _heard.bind(on.get("name", "")))      # let go when the level is: the callable dies with this
 
 
 func fire(kind: String, what: String) -> void:
 	for tr in _list:
-		var t: Dictionary = tr["t"]
-		var on: Dictionary = t.get("on", {})
-		if on.get("type", "") != kind or on.get("name", on.get("tag", "")) != what:
+		var on: Dictionary = tr["t"].get("on", {})
+		if on.get("type", "") == kind and on.get("name", on.get("tag", "")) == what:
+			_go(tr)
+
+
+## An event this level's triggers listen for was emitted. A trigger whose other keys all match the payload goes off on
+## the next frame: an event is a fact, and the level is not changed in the middle of whoever emitted it.
+func _heard(payload: Dictionary, name: String) -> void:
+	for tr in _list:
+		var on: Dictionary = tr["t"].get("on", {})
+		if on.get("type", "") != "event" or on.get("name", "") != name:
 			continue
-		if tr["fired"] and t.get("once", true):
-			continue
-		if t.has("when") and not Game.has_flag(t["when"]):
-			continue
-		if t.has("unless") and Game.has_flag(t["unless"]):
-			continue
-		tr["fired"] = true
-		Game.run_effects(t.get("do", []), {})
+		var fits := true
+		for k in on:
+			if k != "type" and k != "name" and payload.get(k) != on[k]:
+				fits = false
+		if fits:
+			_go.call_deferred(tr)
+
+
+## Set one trigger off, if it may go off now (once, when, unless).
+func _go(tr: Dictionary) -> void:
+	var t: Dictionary = tr["t"]
+	if tr["fired"] and t.get("once", true):
+		return
+	if t.has("when") and not Game.has_flag(t["when"]):
+		return
+	if t.has("unless") and Game.has_flag(t["unless"]):
+		return
+	tr["fired"] = true
+	Game.run_effects(t.get("do", []), {})
 
 
 ## Something died: remember it (the repair bay reads level.died), and if it was the last of its tag, "clear".

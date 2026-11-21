@@ -404,17 +404,4 @@ func _die(info: Dictionary) -> void:
 	remains.died()
 	_play("die")
 	LM.sound(d.get("sounds", {}).get("die", "die"), global_position)
-	Game.stats["kills"] += 1
-	var pos := global_position + Vector3(0, 0.3 if d.get("mount", "") != "ceiling" else -1.0, 0)
-	if d.has("explode"):
-		Fx.explode(level, eye(), d["explode"].get("radius", 3.0), d["explode"].get("damage", 20.0), Color(1.0, 0.5, 0.15), self)
-	for dr in d.get("drops", []):
-		if randf() < dr.get("chance", 1.0):
-			var p := Pickup.new()
-			level.add_child(p)
-			p.global_position = Vector3(pos.x + randf_range(-0.4, 0.4), level.floor_y(pos) + 1.0, pos.z + randf_range(-0.4, 0.4))      # on whatever floor it died on
-			p.setup(level, dr, level.kit_id)
-	Game.run_effects(e.get("on_death"))
-	level.actor_died(self)
-	if info.get("type", "") == "blast" and d.get("gib", true):
-		Fx.sparks(level, eye(), LM.col(d.get("blood"), Color(1, 0.5, 0.2)), 30, 8.0, 0.8, 0.12)
+	remains.leave(info)

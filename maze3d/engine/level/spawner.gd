@@ -115,6 +115,18 @@ func build_things() -> void:
 			spawn_thing(step["e"], step["p"], step["key"])
 
 
+## A thing made while playing without spawn_thing. Made by another thing that has a key (a cache's loot), it is that
+## thing's key and `part` ("/loot.0"), as fixed as its maker's; otherwise (what a monster drops, a drop effect, a
+## piece of furniture placed in the bunker) it gets the next "extra:n".
+func keep(n: Node, maker: Node = null, part := "") -> void:
+	var mk := level.key_of(maker) if maker != null else ""
+	if mk != "" and part != "":
+		_key(n, mk + "/" + part)
+	else:
+		_key(n, "extra:%d" % _extra)
+		_extra += 1
+
+
 ## The thing is known by this key from now on (Level.key_of, Level.thing).
 func _key(n: Node, key: String) -> void:
 	if level.things.has(key):

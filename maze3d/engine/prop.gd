@@ -284,6 +284,7 @@ func use(_player: Node) -> void:
 		return
 	if not Game.effects.use(u.get("type", "effects"), u, {"prop": self, "player": _player}):      # engine/prop_uses.gd
 		return
+	Events.emit("thing.used", {"key": level.key_of(self), "prop": str(e.get("prop", "")), "use": str(u.get("type", "effects")), "option": -1})
 	if tag != "":
 		level.notify("use", tag)
 
@@ -315,9 +316,12 @@ func hurt(amount: float, _info: Dictionary = {}) -> void:
 	else:
 		Fx.sparks(level, pos, Color(0.8, 0.8, 0.7), 16, 5.0, 0.6, 0.1)
 		LM.sound("break", pos)
+		var li := 0
 		for it in e.get("loot", []):
 			var p := Pickup.new()
 			level.add_child(p)
 			p.global_position = pos + Vector3(randf_range(-0.4, 0.4), 0.2, randf_range(-0.4, 0.4))
 			p.setup(level, it, kit_id)
+			level.spawner.keep(p, self, "loot.%d" % li)
+			li += 1
 		queue_free()

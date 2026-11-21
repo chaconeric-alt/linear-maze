@@ -9,6 +9,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 | Registry | `engine/lm.gd` (autoload `LM`) | Boots a game: reads `game.json`, kits, defs, levels, generators; checks the schema. Model and def lookups, sounds. |
 | Run state | `engine/game.gd` (autoload `Game`) | One run: player, level, flags, keys, credits, haul, stats; `run_effects`; `Game.interaction`. |
 | Saved state | `engine/profile.gd` (autoload `Profile`) | The bunker: banked credits, weapons, armour, salvage, trophies, furnishings, the robot. |
+| Event bus | `engine/events.gd` (autoload `Events`) | Game facts (`actor.died`, `item.taken`, `door.changed`, `flag.set`, ...) from whoever caused them to whoever listens; plain-data payloads; `--trace=events`; event triggers in level data. |
 | Effects | `engine/effects.gd` | `EffectRegistry`: effect type to handler. Run-wide types in `game.gd`, the place's in `engine/level/level_effects.gd`, a prop's `use` in `engine/prop_uses.gd`. |
 | Panels | `engine/interaction.gd`, `engine/option_gates.gd` | What a panel offers and what choosing does (conditions, cost, hack, risk, used marks, effects). `hud.gd` only draws. |
 | Level | `engine/level.gd` + `engine/level/` | A thin `Level` node owning `LevelData` (cells and queries), `LevelBuilder` (shell, collision, nav, fluid, environment), `LevelLights`, `Spawner` (things, by kind), `LevelSigns`, `Triggers`, `LightingDebug`. |
@@ -39,7 +40,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 ## Budgets
 
 - No file over about 400 lines; no function over about 60 lines. Cut by job, not by line count: a new file for a new job, a function per step.
-- Still over (to be cut when next touched): `engine/actor/actor_core.gd` (420 lines); `tools/levels/staffonly.py` (`kit_wing` 274) and `anomalous.py` (633 lines of layout); the Blender kit scripts (one model per function, many files over 400 lines).
+- Still over (to be cut when next touched): `engine/actor/actor_core.gd` (407 lines); `tools/levels/staffonly.py` (`kit_wing` 274) and `anomalous.py` (633 lines of layout); the Blender kit scripts (one model per function, many files over 400 lines).
 
 ## Running the tests
 

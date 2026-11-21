@@ -37,6 +37,7 @@ func cache(u: Dictionary, ctx: Dictionary) -> bool:
 		level.add_child(p)
 		p.global_position = pr.global_position + Vector3(0, 0.9, 0)
 		p.setup(level, it, pr.kit_id)
+		level.spawner.keep(p, pr, "loot.%d" % i)
 		var a: float = TAU * i / maxf(1.0, u["loot"].size()) + pr.global_rotation.y
 		var to := pr.global_position + Vector3(cos(a) * 1.5, 1.0, sin(a) * 1.5 + 0.2)
 		var tc := level.cell_of(to)
@@ -65,6 +66,7 @@ func locker(u: Dictionary, ctx: Dictionary) -> bool:
 		level.add_child(p)
 		p.global_position = pr.global_position + basis.z * 0.4 + Vector3(0, 1.1, 0)
 		p.setup(level, it, pr.kit_id)
+		level.spawner.keep(p, pr, "loot.%d" % k)
 		var to: Vector3 = front + basis.x * (k - (u["loot"].size() - 1) / 2.0) * 0.7 + Vector3(0, 1.0, 0)
 		p.create_tween().tween_property(p, "global_position", to, 0.3)
 		k += 1

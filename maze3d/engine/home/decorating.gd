@@ -89,6 +89,7 @@ func _stand(dec: Dictionary) -> Prop:
 	pr.rotation.y = dec["yaw"]
 	var c := level.cell_of(pr.position)
 	pr.setup(level, {"prop": dec["m"], "at": [c.x, c.y], "decor": true}, level.kit_id)
+	level.spawner.keep(pr)
 	var extras: Array = []                           # its lamp, if it has one, belongs to the level: remember it, to take it away again
 	for i in range(before, level.get_child_count()):
 		if level.get_child(i) != pr:

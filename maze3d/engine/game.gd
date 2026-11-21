@@ -75,6 +75,7 @@ func set_flag(name: String) -> void:
 		return
 	flags[name] = true
 	flag_set.emit(name)
+	Events.emit("flag.set", {"name": name, "scope": "world" if name.begins_with("world:") else "level"})
 	changed.emit()
 
 
@@ -109,6 +110,7 @@ func give_key(color: String) -> void:
 
 func add_credits(n: int) -> void:
 	credits += n
+	Events.emit("credits.changed", {"amount": n, "total": credits})
 	changed.emit()
 
 
