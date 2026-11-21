@@ -19,6 +19,8 @@ var max_armor := 100.0
 var gear: Array = []             # item ids worn (a backpack, a sling): more hands and a bigger pack (Carrying)
 var dead := false
 var held_by: Node = null         # the monster that has grabbed you, if one has
+var shape: CollisionShape3D      # the body (PlayerUnstick asks whether it fits somewhere)
+var unstick: PlayerUnstick       # gets them out of a place they cannot move out of
 var frozen := false
 var focus: Node = null           # the usable thing in front of you: E works it
 var last_seen: Dictionary = {}    # easy mode: what E last named (Identify.look), for P's image prompt
@@ -76,6 +78,7 @@ func setup(lv: Level, config: Dictionary) -> void:
 	cs.shape = cap
 	cs.position.y = 0.9
 	add_child(cs)
+	shape = cs
 	eye = PlayerCamera.new()
 	eye.name = "Head"
 	add_child(eye)
@@ -96,6 +99,10 @@ func setup(lv: Level, config: Dictionary) -> void:
 	controls.name = "Controls"
 	add_child(controls)
 	controls.setup(self)
+	unstick = PlayerUnstick.new()
+	unstick.name = "Unstick"
+	add_child(unstick)
+	unstick.setup(self)
 
 
 func weapon() -> Dictionary:
@@ -193,6 +200,7 @@ func _physics_process(dt: float) -> void:
 	var inp := controls.move_vector() if free else Vector2.ZERO
 	eye.update_zoom(dt, free and controls.zoom_held() and not movement.dashing())
 	movement.step(dt, inp, free, held)
+	unstick.step(dt, free)
 	eye.settle(dt)
 	arms.settle(dt)
 	hurt_flash = move_toward(hurt_flash, 0.0, dt * 1.4)
