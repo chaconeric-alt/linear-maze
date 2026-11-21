@@ -290,7 +290,7 @@ func _on_ended(info: Dictionary) -> void:
 	if not dead:
 		_settle()
 		if player:
-			Profile.bank(Game.credits, player.weapons, player.armor, Game.haul)
+			Profile.bank(Game.credits, player.weapons, player.armor, Game.haul, player.gear)
 	if was_run:
 		Events.emit("run.ended", {"alive": not dead, "banked": 0 if dead else Game.credits})
 

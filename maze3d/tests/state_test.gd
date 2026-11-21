@@ -19,6 +19,8 @@ func run() -> void:
 	say(int(w.get("v", 0)) == State.VERSION and same_home and w["characters"]["active"] == who.get("id", "?")
 		and int(who.get("runs", 0)) == 7 and int(who.get("deaths", 0)) == 2 and int(who.get("best", 0)) == 900,
 		"an old bunker file becomes a world: its bunker the home, its record the one character's (version %d)" % int(w.get("v", 0)))
+	say(w["world"]["home"].get("gear") == [] and _same(who.get("load", {}).get("weapons"), old["weapons"]),
+		"  with an empty gear store, and the rack as the character's load (every weapon on it went along before)")
 	var scratch := WorldState.new()
 	scratch.memory_only = true
 	scratch.data = w

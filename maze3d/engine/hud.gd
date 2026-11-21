@@ -183,7 +183,7 @@ func refresh() -> void:
 	var w: Dictionary = pl.weapon()
 	_weapon.text = str(w.get("name", "")).to_upper()
 	_ammo.text = "" if w.is_empty() else ("∞" if w.get("ammo") == null else str(pl.ammo.get(w["ammo"], 0)))
-	_credits.text = "%d cr" % Game.credits
+	_credits.text = "%d cr" % Game.credits + Carrying.readout(pl.gear)
 	for c in _keys.get_children():
 		c.queue_free()
 	for k in Game.keys:

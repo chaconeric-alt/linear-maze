@@ -2,7 +2,7 @@ extends RefCounted
 ## SavePoint - the place a save comes back to, and putting the player back there. A save is the whole world (State);
 ## this is the part of it that says where, kept in the run as "where": the level being played (its id, and the seed a
 ## generated one was made from), whether an expedition was under way, and the player as they stood (place, facing,
-## health, armour, the weapons and ammo carried, the one in hand). The level itself comes back from its memory
+## health, armour, the weapons and ammo carried, the one in hand, the gear worn). The level itself comes back from its memory
 ## (LevelMemory), which Main takes into the world before saving. Main saves (F9, the pause screen's Save, arriving in
 ## a level, leaving for the title, quitting) and comes back (F10, the title screen's Restore from save). SPEC.md 5.15.
 class_name SavePoint
@@ -17,7 +17,8 @@ static func where(id: String, level_seed: int, key: String, in_run: bool, pl: Pl
 static func player_of(pl: Player) -> Dictionary:
 	var p := pl.global_position
 	return {"at": [p.x, p.y, p.z], "yaw": pl.rotation.y, "pitch": pl.pitch, "hp": pl.hp, "max_hp": pl.max_hp,
-		"armor": pl.armor, "weapons": pl.weapons.duplicate(), "ammo": pl.ammo.duplicate(), "current": pl.current}
+		"armor": pl.armor, "weapons": pl.weapons.duplicate(), "ammo": pl.ammo.duplicate(), "current": pl.current,
+		"gear": pl.gear.duplicate()}
 
 
 ## What they carried, into the settings the player is made from (in place of the armoury's outfit, which is for
@@ -27,6 +28,7 @@ static func fit(cfg: Dictionary, p: Dictionary) -> void:
 	cfg["armor"] = float(p.get("armor", 0.0))
 	cfg["weapons"] = p.get("weapons", []).duplicate()
 	cfg["ammo"] = p.get("ammo", {}).duplicate()
+	cfg["gear"] = p.get("gear", []).duplicate()
 
 
 ## Put the player, once made, back where they stood and as they were.

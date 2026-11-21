@@ -2,8 +2,11 @@ extends Node
 ## State - the one record of the player's world, and the one thing that is saved (autoload "State"). Plain JSON: a
 ## world, with the characters who live in it, in four parts:
 ##   world       the day, world flags, and "home": the bunker and everything stored in it (banked credits, the
-##               weapons and armour in the armoury, salvage, trophies, what was bought and where it was put, the robot)
-##   characters  the roster: each character ({"id", "name", "runs", "deaths", "best"}) and which one is "active"
+##               weapons and armour in the armoury, the gear, salvage, trophies, what was bought and where it was put,
+##               the robot)
+##   characters  the roster: each character ({"id", "name", "runs", "deaths", "best", "load"}) and which one is
+##               "active"; "load" is what they take when they leave the bunker ({"weapons", "gear"}: what they came
+##               home with, or chose at the rack; Profile.outfit)
 ##   run         the expedition under way: credits, haul, stats (Game reads and writes these through Game.credits and
 ##               the rest); cleared as a level is loaded (Game.reset); "where", the place a save comes back to
 ##               (SavePoint: the level, the player as they stood), gone between levels; and "departure", a copy of
@@ -28,7 +31,7 @@ extends Node
 ## SPEC.md 5.10.
 class_name WorldState
 
-const VERSION := 3
+const VERSION := 4
 const DIR := "user://saves/"
 const OLD_HOME := "user://havenot_home.json"
 var data: Dictionary = {}
@@ -164,7 +167,7 @@ func retire() -> void:
 static func join(w: Dictionary, name := "") -> Dictionary:
 	var chars: Dictionary = w["characters"]
 	var n := int(chars.get("next", 1))
-	var c := {"id": "c%d" % n, "name": name, "runs": 0, "deaths": 0, "best": 0}
+	var c := {"id": "c%d" % n, "name": name, "runs": 0, "deaths": 0, "best": 0, "load": {"weapons": [], "gear": []}}
 	chars["next"] = n + 1
 	chars["roster"].append(c)
 	chars["active"] = c["id"]
@@ -180,7 +183,7 @@ static func blank() -> Dictionary:
 
 
 static func blank_home() -> Dictionary:
-	return {"credits": 0, "weapons": [], "armor": 0, "salvage": {}, "trophies": [], "owned": {}, "decor": [], "robot": false}
+	return {"credits": 0, "weapons": [], "armor": 0, "gear": [], "salvage": {}, "trophies": [], "owned": {}, "decor": [], "robot": false}
 
 
 static func blank_run() -> Dictionary:

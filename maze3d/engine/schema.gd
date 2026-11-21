@@ -14,7 +14,7 @@ const ACTOR := ["name", "model", "kit", "scale", "robot", "hp", "armor", "takes"
 	"footfall", "dormant_clip", "startle_time", "startle_text", "lounge", "climb", "aim", "screen", "gait", "bob", "swim",
 	"own_materials", "model_yaw", "model_y", "jelly", "touch", "equalizer", "dance", "trail", "talk"]
 const ITEM := ["name", "kind", "value", "amount", "ammo", "color", "weapon", "model", "kit", "scale", "glow", "sound",
-	"effects", "flag", "text", "trophy"]
+	"effects", "flag", "text", "trophy", "bulk", "wear", "capacity", "slots"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
 const THING := ["at", "tag", "offset", "face", "level"]

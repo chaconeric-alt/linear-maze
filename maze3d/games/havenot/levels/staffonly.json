@@ -2587,107 +2587,128 @@
    ]
   },
   {
-   "item": "badge",
+   "item": "backpack",
    "at": [
     5,
+    31
+   ]
+  },
+  {
+   "item": "badge",
+   "at": [
+    6,
     31
    ]
   },
   {
    "item": "cells",
    "at": [
-    6,
+    7,
     31
    ]
   },
   {
    "item": "chips",
    "at": [
-    7,
+    8,
     31
    ]
   },
   {
    "item": "circuit",
    "at": [
-    8,
+    9,
     31
    ]
   },
   {
    "item": "cookies",
    "at": [
-    9,
+    10,
     31
    ]
   },
   {
    "item": "crystal",
    "at": [
-    10,
+    11,
     31
    ]
   },
   {
    "item": "fuel_cell",
    "at": [
-    11,
+    12,
     31
    ]
   },
   {
    "item": "fuel_cell_big",
    "at": [
-    12,
+    13,
+    31
+   ]
+  },
+  {
+   "item": "hauler",
+   "at": [
+    14,
     31
    ]
   },
   {
    "item": "health",
    "at": [
-    13,
+    15,
     31
    ]
   },
   {
    "item": "lucky_chip",
    "at": [
-    15,
-    31
-   ]
-  },
-  {
-   "item": "order",
-   "at": [
-    2,
-    32
-   ]
-  },
-  {
-   "item": "plasma",
-   "at": [
     3,
     32
    ]
   },
   {
-   "item": "scattergun",
+   "item": "order",
    "at": [
     4,
     32
    ]
   },
   {
-   "item": "shells",
+   "item": "plasma",
    "at": [
     5,
     32
    ]
   },
   {
-   "item": "statuette",
+   "item": "scattergun",
    "at": [
     6,
+    32
+   ]
+  },
+  {
+   "item": "shells",
+   "at": [
+    7,
+    32
+   ]
+  },
+  {
+   "item": "sling",
+   "at": [
+    8,
+    32
+   ]
+  },
+  {
+   "item": "statuette",
+   "at": [
+    9,
     32
    ]
   },

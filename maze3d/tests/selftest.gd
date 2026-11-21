@@ -12,7 +12,7 @@ extends Node
 ## of the game and of this runner.
 class_name SelfTest
 
-const STANDARD := ["movement", "reach", "traps", "identify", "arches", "actors", "balcony", "trap_victims", "remains", "use_key", "containers", "pickups", "doors", "menus", "memory", "save", "finish"]
+const STANDARD := ["movement", "reach", "traps", "identify", "arches", "actors", "balcony", "trap_victims", "remains", "use_key", "containers", "carrying", "pickups", "doors", "menus", "memory", "save", "finish"]
 
 var main: Node
 var level: Level
@@ -29,6 +29,7 @@ static func configure() -> void:
 	Debug.memory_profile = true
 	Debug.fixed_settings = true
 	Debug.record_events = true                       # the events part holds the run's events up against the level
+	Debug.carry_anything = true                      # every part takes what it finds; the carrying part tests the limits
 
 
 func run(m: Node) -> void:

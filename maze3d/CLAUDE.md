@@ -19,7 +19,8 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 | World things | `engine/prop.gd`, `station.gd`, `door.gd`, `pickup.gd`, `trap.gd`, `pit.gd`, `lift.gd`, `target.gd`, `rebuilder.gd`, `projectile.gd`, `puddle.gd`, `fx.gd` | One class each. |
 | HUD | `engine/hud.gd` + `engine/hud/` | Status, messages, panels (drawing); `HudStyle`, `HudCrosshair`, `HudMap`, `HudScreens` (title, pause and end). |
 | Easy mode | `engine/identify.gd`, `engine/imageprompt.gd` + `engine/imageprompt/` | E names what you look at; P writes an image-generator prompt for it (wording in `prompts.json` and each kit's `prompt.json`). |
-| Bunker | `engine/home.gd` + `engine/home/decorating.gd` | What the home level's furniture does, and decorating; its content and words are `games/<game>/defs/home.json`. |
+| Bunker | `engine/home.gd` + `engine/home/decorating.gd`, `engine/home/armoury.gd` | What the home level's furniture does, decorating, and the armoury rack as the loadout (with the outfitter); its content and words are `games/<game>/defs/home.json`. |
+| Carrying | `engine/carrying.gd` | `Carrying`: weapons in hand, the pack's bulk, worn gear (the game's `carrying`); where a pickup goes; the HUD's pack readout. `Debug.carry_anything` lifts it for the self-test. |
 | Switches | `engine/debug.gd`, `engine/main/command_line.gd` | Test and look switches; `main.gd` sets them from the command line, and `CommandLine` runs the ones that act while the game runs (`--shot`, `--frames`, `--trace`, `--at` ...). Game code never reads the command line. |
 | Schema | `engine/schema.gd` | The valid keys of actors, items, weapons and level things (mirrors `SPEC.md`). |
 | Generators | `generators/rooms.gd` + `generators/rooms/` | A pipeline of named stages over a `GenContext`. |

@@ -16,6 +16,7 @@ var hp := 100.0
 var max_hp := 100.0
 var armor := 0.0
 var max_armor := 100.0
+var gear: Array = []             # item ids worn (a backpack, a sling): more hands and a bigger pack (Carrying)
 var dead := false
 var held_by: Node = null         # the monster that has grabbed you, if one has
 var frozen := false
@@ -65,6 +66,7 @@ func setup(lv: Level, config: Dictionary) -> void:
 	max_hp = cfg.get("hp", 100.0)
 	hp = max_hp
 	armor = cfg.get("armor", 0.0)
+	gear = cfg.get("gear", []).duplicate()
 	collision_layer = 2
 	collision_mask = 1 | 4 | Level.GLASS
 	var cs := CollisionShape3D.new()

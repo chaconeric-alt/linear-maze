@@ -5,7 +5,7 @@ extends RefCounted
 ## which will change with later versions. A save newer than this game is left as it is (and warned about).
 class_name StateMigrations
 
-const CURRENT := 3
+const CURRENT := 4
 
 
 static func up(d: Dictionary) -> Dictionary:
@@ -20,6 +20,8 @@ static func up(d: Dictionary) -> Dictionary:
 				d = v1_to_v2(d)
 			2:
 				d = v2_to_v3(d)
+			3:
+				d = v3_to_v4(d)
 		v = int(d.get("v", v + 1))
 	return d
 
@@ -71,4 +73,18 @@ static func v2_to_v3(d: Dictionary) -> Dictionary:
 		if not m.has("visits"):
 			m["visits"] = 0
 	d["v"] = 3
+	return d
+
+
+## Version 4: carrying (SPEC.md 5.17). The bunker gains "gear" (backpacks, slings: worn to carry more), and each
+## character a "load", what they take when they leave: before, every weapon on the rack went along, so the load is the
+## rack (the first that their hands hold go; Profile.outfit).
+static func v3_to_v4(d: Dictionary) -> Dictionary:
+	var home: Dictionary = d["world"]["home"]
+	if not home.has("gear"):
+		home["gear"] = []
+	for c in d["characters"]["roster"]:
+		if not c.has("load"):
+			c["load"] = {"weapons": home.get("weapons", []).duplicate(), "gear": []}
+	d["v"] = 4
 	return d

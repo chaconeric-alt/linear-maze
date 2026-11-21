@@ -1,6 +1,7 @@
 extends Area3D
-## Pickup - anything you take by walking into it: treasure, health, armour, ammunition, key cards,
-## weapons. Defined in a game's defs (items) and placed by a level.
+## Pickup - anything you take by walking into it: treasure, health, armour, ammunition, key cards, weapons, gear.
+## Defined in a game's defs (items) and placed by a level. What goes in the pack (treasure, a weapon found with both
+## hands full, gear for a place already worn) must fit, or it is left where it lies (Carrying, SPEC.md 5.17).
 class_name Pickup
 
 var level: Level
@@ -10,6 +11,7 @@ var _t := 0.0
 var _base_y := 0.0
 var _armed := 0.5
 var _rest := false          # lying on a shelf, in a case or on the floor: it does not hover or turn
+var _refused := false       # too much to carry, and said so: not said again until the player steps off it
 
 
 func setup(lv: Level, entry: Dictionary, kit_id: String) -> void:
@@ -86,8 +88,11 @@ func _process(dt: float) -> void:
 		_vis.rotation.y = _t * 1.6
 		_vis.position.y = sin(_t * 2.2) * 0.08
 	var pl := Game.player
-	if pl and _armed <= 0.0 and overlaps_body(pl):
-		_on_body(pl)
+	if pl and _armed <= 0.0:
+		if overlaps_body(pl):
+			_on_body(pl)
+		else:
+			_refused = false
 
 
 func _on_body(b: Node) -> void:
@@ -95,6 +100,12 @@ func _on_body(b: Node) -> void:
 		return
 	var pl := Game.player
 	var name: String = d.get("name", d.get("id", "something"))
+	var goes := ""                                   # where it goes, for what the pack holds: Carrying.place_for
+	if d.get("kind", "treasure") in ["treasure", "gear"] or (d.get("kind") == "weapon" and not pl.weapons.has(d.get("weapon", ""))):
+		goes = Carrying.place_for(pl, d)
+		if goes == "":
+			_too_much(name)
+			return
 	match d.get("kind", "treasure"):
 		"treasure":
 			Game.add_credits(int(d.get("value", 10)))
@@ -121,8 +132,19 @@ func _on_body(b: Node) -> void:
 			Game.give_key(d.get("color", "red"))
 			Game.say("%s card. Somebody's whole career, once." % str(d.get("color", "red")).capitalize(), "key")
 		"weapon":
-			pl.give_weapon(d.get("weapon", ""))
-			Game.say(name, "key")
+			if goes == "pack":
+				_stow()
+				Game.say(_words("stowed", "%s: in the pack.") % name, "key")
+			else:
+				pl.give_weapon(d.get("weapon", ""))
+				Game.say(name, "key")
+		"gear":
+			if goes == "worn":
+				pl.gear.append(str(d.get("item", "")))
+				Game.say(_words("worn", "%s: worn.") % name, "key")
+			else:
+				_stow()
+				Game.say(_words("stowed", "%s: in the pack.") % name, "key")
 	LM.sound(d.get("sound", "pickup"))
 	Game.run_effects(d.get("effects"))
 	if d.has("flag"):
@@ -132,3 +154,22 @@ func _on_body(b: Node) -> void:
 	Events.emit("item.taken", {"key": level.key_of(self), "item": str(d.get("item", d.get("weapon", d.get("id", "")))), "kind": str(d.get("kind", "treasure")), "count": 1})
 	Game.changed.emit()
 	queue_free()
+
+
+## Into the pack: the run's haul, banked in the bunker if the player gets out (a weapon to the rack, gear to the store).
+func _stow() -> void:
+	var id := str(d.get("item", ""))
+	Game.haul[id] = int(Game.haul.get(id, 0)) + 1
+
+
+## Too much to carry: said once, until the player steps off it.
+func _too_much(name: String) -> void:
+	if not _refused:
+		Game.say(_words("too_much", "Too much to carry: %s.") % name, "warn")
+		LM.sound("denied")
+	_refused = true
+
+
+## A line in the game's words (game.json "words"), or the plain one.
+func _words(key: String, plain: String) -> String:
+	return str(LM.game.get("words", {}).get(key, plain))

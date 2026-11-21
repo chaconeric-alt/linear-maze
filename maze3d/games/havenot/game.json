@@ -458,7 +458,11 @@
   "lamp": true,
   "level": 1
  },
+ "carrying": {"slots": 2, "pack": 12},
  "words": {
+  "too_much": "Too much to carry: %s. Your pack is full.",
+  "stowed": "%s: your hands are full, so it goes in the pack.",
+  "worn": "%s: you put it on.",
   "death_title": "YOU BECAME SALVAGE",
   "death_text": "Somebody will find your boots useful.",
   "end_title": "The road goes on"

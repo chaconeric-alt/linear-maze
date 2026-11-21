@@ -1,23 +1,26 @@
 {
  "items": {
-  "chips": {"name": "Lucky credit chips", "kind": "treasure", "model": "item_chips", "value": 15, "glow": [1.0, 0.3, 0.6]},
-  "circuit": {"name": "Gold-trace circuit board", "kind": "treasure", "model": "item_circuit", "value": 25, "glow": [1.0, 0.8, 0.3]},
-  "fuel_cell": {"name": "Fuel cell", "kind": "treasure", "model": "item_fuel_cell", "value": 20, "glow": [1.0, 0.6, 0.15]},
-  "fuel_cell_big": {"trophy": true, "name": "Heavy fuel cell", "kind": "treasure", "model": "item_fuel_cell_big", "value": 60, "glow": [0.6, 0.3, 1.0]},
-  "crystal": {"trophy": true, "name": "Data crystal", "kind": "treasure", "model": "item_crystal", "value": 80, "glow": [0.6, 0.3, 1.0]},
-  "statuette": {"trophy": true, "name": "Employee of the Century", "kind": "treasure", "model": "item_statuette", "value": 150, "glow": [1.0, 0.8, 0.3], "scale": 2.0},
-  "cookies": {"name": "Good Job Cookies", "kind": "treasure", "model": "item_cookies", "value": 10, "glow": [1.0, 0.3, 0.6]},
+  "chips": {"bulk": 1, "name": "Lucky credit chips", "kind": "treasure", "model": "item_chips", "value": 15, "glow": [1.0, 0.3, 0.6]},
+  "circuit": {"bulk": 1, "name": "Gold-trace circuit board", "kind": "treasure", "model": "item_circuit", "value": 25, "glow": [1.0, 0.8, 0.3]},
+  "fuel_cell": {"bulk": 2, "name": "Fuel cell", "kind": "treasure", "model": "item_fuel_cell", "value": 20, "glow": [1.0, 0.6, 0.15]},
+  "fuel_cell_big": {"bulk": 4, "trophy": true, "name": "Heavy fuel cell", "kind": "treasure", "model": "item_fuel_cell_big", "value": 60, "glow": [0.6, 0.3, 1.0]},
+  "crystal": {"bulk": 1, "trophy": true, "name": "Data crystal", "kind": "treasure", "model": "item_crystal", "value": 80, "glow": [0.6, 0.3, 1.0]},
+  "statuette": {"bulk": 3, "trophy": true, "name": "Employee of the Century", "kind": "treasure", "model": "item_statuette", "value": 150, "glow": [1.0, 0.8, 0.3], "scale": 2.0},
+  "cookies": {"bulk": 1, "name": "Good Job Cookies", "kind": "treasure", "model": "item_cookies", "value": 10, "glow": [1.0, 0.3, 0.6]},
   "health": {"name": "Health Pak", "kind": "health", "model": "item_health", "amount": 30, "glow": [0.3, 1.0, 0.4], "sound": "heal"},
   "armor": {"name": "Light Ballistic Vest", "kind": "armor", "model": "item_armor", "amount": 50, "glow": [0.2, 0.9, 1.0]},
   "shells": {"name": "Shells", "kind": "ammo", "ammo": "shells", "amount": 8, "model": "item_ammo_shells", "glow": [1.0, 0.4, 0.2]},
   "cells": {"name": "Energy cells", "kind": "ammo", "ammo": "cells", "amount": 12, "model": "item_ammo_cells", "glow": [0.2, 0.9, 1.0]},
   "keycard": {"name": "Key card", "kind": "key", "model": "item_keycard", "color": "red", "scale": 2.0},
-  "scattergun": {"name": "Pump Scattergun", "kind": "weapon", "weapon": "scattergun", "model": "weapon_scattergun", "glow": [1.0, 0.6, 0.3], "scale": 1.3},
+  "scattergun": {"bulk": 4, "name": "Pump Scattergun", "kind": "weapon", "weapon": "scattergun", "model": "weapon_scattergun", "glow": [1.0, 0.6, 0.3], "scale": 1.3},
   "lucky_chip": {"name": "Lucky chip", "kind": "quest", "model": "item_chip", "kit": "anomalous", "flag": "lucky_chip", "text": "A worn gambler's chip. Somebody wants this more than you do.", "glow": [1.0, 0.8, 0.3], "scale": 2.2},
   "badge": {"name": "Agency ID badge", "kind": "quest", "model": "item_badge", "kit": "anomalous", "flag": "badge", "text": "Agency ID badge: a smiling face that isn't yours. Staff doors accept it.", "glow": [0.35, 0.72, 0.91], "scale": 2.2},
   "order": {"name": "Termination Order 77-B", "kind": "quest", "model": "item_order", "kit": "anomalous", "flag": "order", "text": "Termination Order 77-B: the order to close the agency, signed, never filed.", "glow": [1.0, 0.3, 0.2], "scale": 2.2},
-  "ad_core": {"trophy": true, "name": "The agency's inner core", "kind": "treasure", "model": "item_core", "kit": "anomalous", "value": 2500, "glow": [1.0, 0.3, 0.85], "scale": 2.4},
-  "arc": {"name": "Arc Carbine", "kind": "weapon", "weapon": "arc", "model": "weapon_arc", "kit": "anomalous", "glow": [0.4, 0.92, 1.0], "scale": 1.3},
-  "plasma": {"name": "Plasma Musket", "kind": "weapon", "weapon": "plasma", "model": "weapon_plasma", "glow": [0.3, 0.9, 1.0], "scale": 1.3}
+  "ad_core": {"bulk": 4, "trophy": true, "name": "The agency's inner core", "kind": "treasure", "model": "item_core", "kit": "anomalous", "value": 2500, "glow": [1.0, 0.3, 0.85], "scale": 2.4},
+  "arc": {"bulk": 4, "name": "Arc Carbine", "kind": "weapon", "weapon": "arc", "model": "weapon_arc", "kit": "anomalous", "glow": [0.4, 0.92, 1.0], "scale": 1.3},
+  "plasma": {"bulk": 5, "name": "Plasma Musket", "kind": "weapon", "weapon": "plasma", "model": "weapon_plasma", "glow": [0.3, 0.9, 1.0], "scale": 1.3},
+  "backpack": {"name": "Scavenger's backpack", "kind": "gear", "wear": "back", "capacity": 6, "bulk": 2, "model": "item_armor", "scale": 1.3, "glow": [0.9, 0.75, 0.35]},
+  "hauler": {"name": "Hauler frame", "kind": "gear", "wear": "back", "capacity": 10, "bulk": 3, "model": "item_armor", "scale": 1.6, "glow": [0.9, 0.75, 0.35]},
+  "sling": {"name": "Gun sling", "kind": "gear", "wear": "sling", "slots": 1, "bulk": 1, "model": "item_armor", "scale": 0.9, "glow": [0.9, 0.75, 0.35]}
  }
 }

@@ -21,6 +21,7 @@ var level: Level
 var cfg: Dictionary = {}                 # this bunker's entry in defs "home"
 var robot: Node3D = null                 # the repaired robot (an Actor, off duty), or the wreck in the cradle
 var decor: HomeDecorating
+var armoury: HomeArmoury                 # the rack as the loadout, and the outfitter (engine/home/armoury.gd)
 var _shown: Array = []                   # what is on the rack, the stand and in the trophy case
 var decorating: bool:
 	get:
@@ -36,6 +37,7 @@ func setup(lv: Level) -> void:
 	decor.name = "Decorating"
 	add_child(decor)
 	decor.setup(self)
+	armoury = HomeArmoury.new(self)
 	show_off()
 	_robot()
 	Game.changed.emit()
@@ -183,13 +185,14 @@ func _robot() -> void:
 
 
 # ------------------------------------------------------------------ using the furniture
-func _panel(kicker: String, title: String, text: String, options: Array = []) -> void:
+## A panel at this furniture (HomeArmoury uses it too).
+func panel(kicker: String, title: String, text: String, options: Array = []) -> void:
 	Game.hud.repanel(self, {"kicker": kicker, "title": title, "text": text, "options": options})
 
 
 ## A panel in the words' own terms: <key>_kicker, <key>_title and the text given.
-func _say_panel(key: String, text: String, options: Array = []) -> void:
-	_panel(word(key + "_kicker"), word(key + "_title"), text, options)
+func say_panel(key: String, text: String, options: Array = []) -> void:
+	panel(word(key + "_kicker"), word(key + "_title"), text, options)
 
 
 func set_screen(_t: String) -> void:
@@ -215,16 +218,13 @@ func use_prop(_prop: Node, what: String) -> void:
 			var counts := {}
 			for id in p["trophies"]:
 				counts[id] = int(counts.get(id, 0)) + 1
-			_say_panel("trophy", word("trophy_text") % _list(counts))
+			say_panel("trophy", word("trophy_text") % _list(counts))
 		"rack":
-			var names: Array = []
-			for w in p["weapons"]:
-				names.append(LM.get_def("weapons", w).get("name", w))
-			_say_panel("rack", word("rack_text") % (", ".join(names) if not names.is_empty() else word("list_none")))
+			armoury.rack()
 		"armor":
-			_say_panel("armor", (word("armor_text") % int(p["armor"])) if int(p["armor"]) > 0 else word("armor_bare"))
+			say_panel("armor", (word("armor_text") % int(p["armor"])) if int(p["armor"]) > 0 else word("armor_bare"))
 		"locker", "medic", "security":
-			_say_panel(what, word(what + "_text"))
+			say_panel(what, word(what + "_text"))
 		"bed":
 			Game.say(word("bed_say"), "good")
 			LM.sound("heal")
@@ -242,7 +242,7 @@ func use_prop(_prop: Node, what: String) -> void:
 func _comms() -> void:
 	var always: Array = cfg.get("broadcasts", [])
 	var sometimes: Array = cfg.get("broadcasts_sometimes", [])
-	_say_panel("comms", "\n\n".join(always) + ("\n\n" + sometimes[randi() % sometimes.size()] if not sometimes.is_empty() else ""),
+	say_panel("comms", "\n\n".join(always) + ("\n\n" + sometimes[randi() % sometimes.size()] if not sometimes.is_empty() else ""),
 		[{"label": word("comms_more"), "do": func(): use_prop(null, "comms")}])
 
 
@@ -250,7 +250,7 @@ func _ledger() -> void:
 	var p: Dictionary = Profile.d
 	var r: Dictionary = Profile.record()
 	var text := word("ledger_text") % [int(p["credits"]), int(r.get("runs", 0)), int(r.get("best", 0)), _list(p["salvage"]), _waiting()]      # (no deaths: a death takes itself back, SPEC 5.16)
-	_say_panel("ledger", text, [
+	say_panel("ledger", text, [
 		{"label": word("ledger_order"), "do": _catalogue},
 		{"label": word("ledger_decorate"), "do": func():
 			Game.hud.close_panel()
@@ -260,7 +260,7 @@ func _ledger() -> void:
 
 
 func _retire() -> void:
-	_panel(word("ledger_kicker"), word("retire_title"), word("retire_text"), [
+	panel(word("ledger_kicker"), word("retire_title"), word("retire_text"), [
 		{"label": word("retire_no"), "do": _ledger},
 		{"label": word("retire_yes"), "do": func():
 			Profile.retire()
@@ -283,7 +283,7 @@ func _catalogue() -> void:
 		var own := int(Profile.d["owned"].get(c[0], 0))
 		opts.append({"label": word("catalogue_item") % [model_name(c[0]), c[1], (word("catalogue_own") % own) if own > 0 else ""], "do": buy.bind(i)})
 	opts.append({"label": word("catalogue_back"), "do": _ledger})
-	_panel(word("ledger_kicker"), word("catalogue_title"), word("catalogue_text") % [int(Profile.d["credits"]), _waiting()], opts)
+	panel(word("ledger_kicker"), word("catalogue_title"), word("catalogue_text") % [int(Profile.d["credits"]), _waiting()], opts)
 
 
 func buy(i: int) -> bool:
@@ -313,7 +313,7 @@ func can_repair() -> bool:
 
 func _cradle() -> void:
 	if Profile.d["robot"]:
-		_panel(word("cradle_kicker"), word("cradle_empty_title"), word("cradle_empty_text"))
+		panel(word("cradle_kicker"), word("cradle_empty_title"), word("cradle_empty_text"))
 		return
 	var need: Array = []
 	var recipe := repair_needs()
@@ -322,7 +322,7 @@ func _cradle() -> void:
 	var opts: Array = []
 	if can_repair():
 		opts.append({"label": word("cradle_repair"), "do": repair})
-	_say_panel("cradle", word("cradle_text") % ["\n   ".join(need), word("cradle_ready") if can_repair() else word("cradle_not_ready")], opts)
+	say_panel("cradle", word("cradle_text") % ["\n   ".join(need), word("cradle_ready") if can_repair() else word("cradle_not_ready")], opts)
 
 
 func repair() -> bool:
@@ -363,8 +363,8 @@ func _lift() -> void:
 		for it in list:
 			opts.append({"label": it[0], "do": go.bind(it[1])})
 		opts.append({"label": word("lift_back"), "do": _lift})
-		_panel(word("lift_kicker"), title, word("lift_waiting"), opts)
-	_say_panel("lift", word("lift_text"), [
+		panel(word("lift_kicker"), title, word("lift_waiting"), opts)
+	say_panel("lift", word("lift_text"), [
 		{"label": word("lift_built"), "do": sub.bind(word("lift_built_title"), d["built"])},
 		{"label": word("lift_wild"), "do": sub.bind(word("lift_wild_title"), d["wild"])}])
 

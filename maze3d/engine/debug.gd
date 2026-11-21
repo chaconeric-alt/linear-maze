@@ -16,6 +16,7 @@ static var print_prompts := false       # --prompts: the self-test prints every 
 static var repeatable := false          # --repeatable: random numbers from a fixed seed and the clock counted in physics frames
 static var trace_events := false        # --trace=events: print every event as it is emitted (engine/events.gd)
 static var record_events := false       # keep every event emitted (Events.recorded): the self-test's events part reads them
+static var carry_anything := false      # no carrying limits (Carrying): the self-test takes everything, as before them, but in its carrying part
 
 
 ## Milliseconds since the game started, for things that bob, pulse or grind with time. With --repeatable it counts

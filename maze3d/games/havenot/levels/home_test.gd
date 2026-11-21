@@ -1,8 +1,10 @@
 extends SelfTestPart
 ## The bunker's own test (it runs instead of the standard parts): every piece of furniture that does something does it,
 ## what is brought home is banked and put on show, the robot is repaired only with the parts, furnishings can be bought,
-## put down, taken back, and are there after a reload, the vault door opens, and the lift has somewhere to go and takes
-## the armoury along. (Profile is memory-only in a self-test.)
+## put down, taken back, and are there after a reload, the vault door opens, the lift has somewhere to go, and the rack
+## is the loadout: the lift takes what the character chose, as far as two hands hold it, and a sling from the outfitter
+## makes three. (Profile is memory-only in a self-test; the carrying limits, lifted for the rest of the self-test, are
+## on for the armoury.)
 
 
 func replaces_standard() -> bool:
@@ -146,7 +148,7 @@ func _furnishing() -> Array:
 	return saved
 
 
-## The vault door rolls open; the lift has somewhere to go and takes the armoury along.
+## The vault door rolls open; the lift has somewhere to go and takes what was brought home, as far as two hands hold it.
 func _vault_and_lift() -> void:
 	var hm: Home = level.home
 	var vault := Vector2i(-1, -1)
@@ -161,9 +163,48 @@ func _vault_and_lift() -> void:
 		say(false, "there is a vault door")
 	var dest := hm.destinations()
 	say(dest["built"].size() >= 3 and dest["wild"].size() >= 3, "the lift has somewhere to go (%d on record, %d unsurveyed)" % [dest["built"].size(), dest["wild"].size()])
+	Debug.carry_anything = false                     # the game's own limits, for the armoury
+	var cfg := _outfit()
+	say(cfg["weapons"] == ["handgun", "scattergun"] and cfg["armor"] == 50.0 and cfg["ammo"]["shells"] > 0,
+		"leaving by the lift takes what was brought home, as far as two hands hold it: %s, armour %d, %s" % [cfg["weapons"], cfg["armor"], cfg["ammo"]])
+	await _loadout()
+	Debug.carry_anything = true
+
+
+## The rack is the loadout: choose within two hands; a sling bought from the outfitter makes three; come home with that
+## load and it is the load next time.
+func _loadout() -> void:
+	var hm: Home = level.home
+	Profile.leave("scattergun")
+	say(Profile.carry("plasma") and not Profile.carry("scattergun"), "at the rack: the scattergun left, the plasma musket taken; a third gun does not fit two hands")
+	var cfg := _outfit()
+	say(cfg["weapons"] == ["handgun", "plasma"] and cfg["ammo"]["cells"] > 0 and cfg["ammo"]["shells"] == 0, "  and the lift takes that: %s, %s" % [cfg["weapons"], cfg["ammo"]])
+	hm.use_prop(null, "rack")
+	await frames(2)
+	say(Game.hud.in_panel(), "  the rack shows it, with a line to change each")
+	Game.hud.close_panel()
+	var sling := -1
+	for i in hm.armoury.goods().size():
+		if hm.armoury.goods()[i][0] == "sling":
+			sling = i
+	Profile.d["credits"] = 1000
+	say(sling >= 0 and hm.armoury.buy(sling) and not hm.armoury.buy(sling) and Profile.d["gear"].has("sling"), "the outfitter sells a sling, once (%d cr left)" % int(Profile.d["credits"]))
+	Profile.wear("sling")
+	say(Profile.carry("scattergun"), "  worn, it holds a third gun")
+	cfg = _outfit()
+	say(cfg["weapons"].size() == 3 and cfg["gear"] == ["sling"], "  and the lift takes all three and the sling: %s" % [cfg["weapons"]])
+	Profile.bank(0, cfg["weapons"], 50.0, {}, cfg["gear"])
+	var again := _outfit()
+	say(again["weapons"] == cfg["weapons"] and again["gear"] == ["sling"], "coming home with that load, it is the load next time")
+	Profile.take_off("sling")
+	say(Profile.load_of()["weapons"] == ["handgun", "plasma"], "  without the sling, the gun chosen last stays behind")
+
+
+## What the lift would set out with now.
+func _outfit() -> Dictionary:
 	var cfg := {"weapons": ["handgun"], "ammo": {"shells": 0, "cells": 0}}
 	Profile.outfit(cfg)
-	say(cfg["weapons"].size() == 3 and cfg["armor"] == 50.0 and cfg["ammo"]["shells"] > 0 and cfg["ammo"]["cells"] > 0, "leaving by the lift takes the armoury along: %s, armour %d, %s" % [cfg["weapons"], cfg["armor"], cfg["ammo"]])
+	return cfg
 
 
 ## And it is all still there next time.
