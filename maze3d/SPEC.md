@@ -768,7 +768,7 @@ python tests/run_baseline.py --out before         # keep this run in tests/out/b
 python tests/run_baseline.py --compare before     # ... and after a change, list every check that differs from it
 ```
 
-It finds Godot as `godot` on the PATH, or give `--godot <path>` or set `GODOT`. It exits with the number of runs that failed a check, hit a script error or printed no result. One run by hand:
+It finds Godot as `godot` on the PATH, or give `--godot <path>` or set `GODOT`. GitHub runs it on every push and pull request that touches `maze3d/` (`.github/workflows/maze3d-selftest.yml`: Godot 4.7.2 downloaded and cached, the import cached, `--jobs 3`, the summary on the run's page and the logs as its `selftest-logs` artifact). It exits with the number of runs that failed a check, hit a script error or printed no result. One run by hand:
 
 ```
 godot --headless --fixed-fps 60 --path maze3d -- --level=<id> --selftest

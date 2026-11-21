@@ -54,6 +54,7 @@ The baseline is `tests/baseline.txt`: `staffonly`, `deepworks`, `menagerie`, `an
 
 - The self-test is repeatable by default (a fixed seed, the clock counted in physics frames); with Godot's `--fixed-fps 60`, which the runner passes, a run prints the same lines every time, so a difference between two runs is a difference in the code. `--realtime` makes physics follow real time as in the game: use it to hunt checks that fail only now and then (`SPEC.md` section 9 lists the known ones). `--repeatable` does the same for runs that are not self-tests.
 - A change that only moves things about should leave the baseline line for line the same (`--compare`). A change that moves the player or a monster, or adds frames to a test (a key press waits three), shifts every fight after it: compare the checks, not the lines, and look at any fight that now fails.
+- GitHub runs the same baseline on every push and pull request that touches `maze3d/` (`.github/workflows/maze3d-selftest.yml`, headless Godot 4.7.2, three runs at a time); a red check means a run failed a check, hit a script error or printed no result, and the logs are kept as the run's `selftest-logs` artifact.
 - Never read `Time.get_ticks_msec()` in game or test code; use `Debug.now_msec()`, or the runs stop being repeatable.
 - Staff Only peaks near 3 GB: do not run two at once on a small machine.
 - `--dump=file.json` with `--frames=2` writes a generated level and quits; compare before and after a generator change.
