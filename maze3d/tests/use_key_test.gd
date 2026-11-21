@@ -1,5 +1,6 @@
 extends SelfTestPart
-## The E key really reaches the player (a key event, not a direct call), and F switches the lamp.
+## The E key really reaches the player (a key event, not a direct call), easy mode's P after it writes an image prompt,
+## and F switches the lamp.
 
 
 func run() -> void:
@@ -14,7 +15,7 @@ func run() -> void:
 			var told: Array = []
 			var hear := func(title: String, _detail: String): told.append(title)
 			Game.identified.connect(hear)
-			for k in [KEY_F, KEY_E]:
+			for k in [KEY_F, KEY_E, KEY_P]:
 				var ev := InputEventKey.new()
 				ev.keycode = k
 				ev.physical_keycode = k
@@ -23,6 +24,7 @@ func run() -> void:
 				await frames(3)
 			say(n.used > 0, "pressing E opens it")
 			say(not told.is_empty(), "  and in easy mode says what it is (%s)" % (told[0] if not told.is_empty() else "nothing"))
+			say(told.size() > 1 and str(told[-1]).begins_with("Image prompt: "), "  and P then writes an image prompt for it (%s)" % (told[-1] if told.size() > 1 else "nothing"))
 			Game.identified.disconnect(hear)
 			Game.easy = was_easy
 			say(not pl.lamp.visible, "pressing F switches the lamp")

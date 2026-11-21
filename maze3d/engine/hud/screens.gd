@@ -48,7 +48,7 @@ func title() -> void:
 	for gid in LM.generators:
 		_generator_grid(g, gid)
 	box.add_child(style.label("", 8, Color.WHITE))
-	box.add_child(style.label("WASD move · mouse look · click fire · Shift dash · Space jump\nE use · right mouse zoom · 1-9 / wheel weapons · F lamp · Tab map · Esc pause", 15, Color(0.7, 0.75, 0.75)))
+	box.add_child(style.label("WASD move · mouse look · click fire · Shift dash · Space jump\nE use · right mouse zoom · 1-9 / wheel weapons · F lamp · Tab map · Esc pause\nEasy mode: E also names what you look at · P then writes an image prompt for it (console and clipboard)", 15, Color(0.7, 0.75, 0.75)))
 
 
 ## The easy-mode switch, which says what it does to the numbers.

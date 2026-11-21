@@ -1,0 +1,145 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "ht",
+ "tail": "ruined far-future industrial sci-fi, off-white chamfered composite panels on a near-black frame, gunmetal trim, burnt orange and teal accents, hazard-yellow chevrons, thin cyan and amber light strips, exposed cables and copper pipe, grimy and scuffed, a few rust streaks",
+ "looks": {
+  "ht_chair_ops": {
+   "name": "Operator's Chair",
+   "look": "high-backed, on a floor rail, with harness straps and one armrest console",
+   "class": "floor"
+  },
+  "ht_chair_command": {
+   "name": "Command Chair",
+   "class": "floor"
+  },
+  "ht_chair_cockpit": {
+   "name": "Cockpit Chair",
+   "class": "floor"
+  },
+  "ht_chair_throne": {
+   "name": "Throne Chair",
+   "class": "floor"
+  },
+  "terminal_wall": {
+   "name": "Wall Terminal",
+   "look": "a console against the wall with a tilted screen over an angled keyboard slab, a cable running down to the floor and a small red beacon on a mast",
+   "class": "wall"
+  },
+  "terminal_desk": {
+   "name": "Terminal Desk",
+   "look": "a console on a single pedestal with an angled key deck and a curved bank of three screens, one of them dead",
+   "class": "floor"
+  },
+  "reactor": {
+   "name": "Reactor Column",
+   "look": "a floor-to-ceiling column with a glowing violet core in a glass cylinder, copper and steel rods round it and three chrome rings turning round the core",
+   "class": "centrepiece"
+  },
+  "fabricator": {
+   "name": "Fabricator",
+   "look": "a boxy industrial 3D printer with a glowing cyan print bed, a print head on a chrome gantry and something gold half-printed on the bed",
+   "class": "wall"
+  },
+  "health_station": {
+   "name": "Health Station",
+   "look": "a wall unit with a glowing green cross and a tray of three green vials",
+   "class": "mounted"
+  },
+  "cache": {
+   "name": "Supply Cache",
+   "look": "a low armoured chest with orange end bands, a lock plate, amber light inside and a hinged lid",
+   "class": "floor"
+  },
+  "crate": {
+   "name": "Cargo Crate",
+   "look": "a one-metre cube with metal corner posts, a teal band round the middle and a hazard label plate",
+   "class": "floor"
+  },
+  "barrel": {
+   "name": "Barrel",
+   "look": "a ribbed orange drum with a glowing red band and a hazard label",
+   "class": "corner"
+  },
+  "server_rack": {
+   "name": "Server Rack",
+   "look": "a tall black cabinet of server blades with rows of tiny status lights, a teal cap and a cable running up to the ceiling",
+   "class": "wall"
+  },
+  "cryo_pod": {
+   "name": "Cryo Pod",
+   "look": "a tall glass cylinder between heavy black caps, a pale fleshy specimen with trailing tendrils floating inside, a green-lit base",
+   "class": "corner"
+  },
+  "cryo_pod_broken": {
+   "name": "Broken Cryo Pod",
+   "look": "the base of a cryo pod with jagged glass shards standing round it and slime spilled across the floor",
+   "class": "corner"
+  },
+  "holo_table": {
+   "name": "Holo Table",
+   "look": "a round console table on a pedestal with a glowing cyan top projecting a slowly turning glass hologram ringed with cyan and pink light",
+   "class": "centrepiece"
+  },
+  "debris": {
+   "name": "Debris",
+   "look": "a low heap of fallen panels, rusted plates, cables and copper pipe you can step over",
+   "class": "floor"
+  },
+  "nest": {
+   "name": "Nest",
+   "look": "an organic nest: a low mound of flesh with pale egg sacs and slime, tendrils spreading across the floor",
+   "class": "floor"
+  },
+  "pillar": {
+   "name": "Pillar",
+   "look": "a turned structural column with a glowing cyan core behind metal ribs and copper rings",
+   "class": "floor"
+  },
+  "locker": {
+   "name": "Supply Locker",
+   "look": "a tall metal locker with a louvred door, a teal cap and a lock light",
+   "class": "wall"
+  },
+  "locker_bad": {
+   "name": "Rusted Locker",
+   "look": "a tall rusted metal locker with a dented, louvred door pushed out from inside and something leaking from under it",
+   "class": "wall"
+  },
+  "arch_medical": {
+   "name": "Medical Scanner Arch",
+   "look": "a free-standing walk-through scanner arch with a light bar across the opening and a green light",
+   "class": "floor"
+  },
+  "arch_security": {
+   "name": "Security Scanner Arch",
+   "look": "a free-standing walk-through scanner arch with a light bar across the opening and a red light",
+   "class": "floor"
+  },
+  "arch_supply": {
+   "name": "Supply Scanner Arch",
+   "look": "a free-standing walk-through scanner arch with a light bar across the opening and a cyan light",
+   "class": "floor"
+  },
+  "arch_toll": {
+   "name": "Toll Scanner Arch",
+   "look": "a free-standing walk-through scanner arch with a light bar across the opening",
+   "class": "floor"
+  },
+  "trap_laser": {
+   "name": "Laser Tripwire Emitter",
+   "look": "a small dark box with a lens that shines a red beam, a hazard stripe across it"
+  },
+  "trap_shock": {
+   "name": "Shock Floor",
+   "look": "a square floor plate of copper tiles with glowing cyan studs, edged in hazard yellow"
+  },
+  "trap_vent": {
+   "name": "Gas Vent",
+   "look": "a round floor vent with a hazard-yellow ring, radial slats and a copper nozzle"
+  },
+  "window_obs": {
+   "name": "Observation Window",
+   "look": "a wide pane at eye height in a heavy frame; it does not open"
+  }
+ }
+}

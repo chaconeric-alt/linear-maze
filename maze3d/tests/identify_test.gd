@@ -1,5 +1,8 @@
 extends SelfTestPart
-## Easy mode's E: looking at a thing names that thing (Identify), and floor, ceiling and wall tiles are named too.
+## Easy mode's E: looking at a thing names that thing (Identify), and floor, ceiling and wall tiles are named too. Then
+## easy mode's P: an image prompt (ImagePrompt) for each kind of thing E named.
+
+var _seen: Array = []          # what E said, for P's image prompts
 
 
 func run() -> void:
@@ -28,6 +31,35 @@ func run() -> void:
 		if Identify.look(pl).get("detail", "").contains(look[1]):
 			tiles_ok += 1
 	say(tiles_ok >= 3, "  and names floor, ceiling and wall tiles (%d of 4 looks; a door or a thing may stand in one)" % tiles_ok)
+	_prompts()
+
+
+## P: one prompt for each kind of thing E named (and the floor, ceiling and a wall), each with the low-poly line, a
+## colour with its hex, and notes. --prompts prints them all (Debug.print_prompts).
+func _prompts() -> void:
+	for look in [Vector3(0.3, -1, 0.2), Vector3(0.2, 1, 0.3), Vector3(1, 0.05, 0.3)]:
+		look_at(pl.cam.global_position + look.normalized() * 3.0)
+		pl.head.force_update_transform()
+		_seen.append(Identify.look(pl))
+	var done := {}
+	var wrote := 0
+	var bad: Array = []
+	var t0 := Debug.now_msec()
+	for seen in _seen:
+		var ref: Dictionary = seen.get("ref", {})
+		var key := "%s/%s" % [ref.get("kind", ""), ref.get("id", "")]
+		if done.has(key) or ref.get("kind", "") in ["", "structure", "sign", "puddle"]:
+			continue
+		done[key] = true
+		var ip := ImagePrompt.make(seen, level)
+		var txt: String = ip.get("prompt", "")
+		if ip.get("ok", false) and txt.contains("ow-poly") and txt.contains("#") and (txt.contains("Colour scheme") or txt.contains("Glowing")) and ip.get("notes", "") != "":
+			wrote += 1
+		else:
+			bad.append(key)
+		if Debug.print_prompts:
+			print("PROMPT  %s\n%s\n%s\n" % [ip.get("title", key), txt if ip.get("ok", false) else ip.get("why", ""), ip.get("notes", "")])
+	say(wrote > 0 and bad.is_empty(), "  and P writes an image prompt for each kind of thing it names (%d written in %d ms%s)" % [wrote, Debug.now_msec() - t0, "; none for " + ", ".join(PackedStringArray(bad)) if not bad.is_empty() else ""])
 
 
 ## Things E is not expected to name: not there, in a container or behind a shutter, hidden, or standing in or on a
@@ -92,6 +124,7 @@ func _name_from_round(n: Node, want: String, want2: String) -> int:
 		var seen: Dictionary = Identify.look(pl)
 		if seen.get("detail", "").contains(want) or seen.get("detail", "").contains(want2):
 			got_it = true
+			_seen.append(seen)
 			break
 	if got_it:
 		return 0

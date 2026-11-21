@@ -1,0 +1,6 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "rb",
+ "tail": "far-future robot maintenance and charging bay, heavy gunmetal steel frame, riveted armour plates, glowing charging contacts, folded tool arms, hazard striping, scuffed and oily",
+ "looks": {}
+}

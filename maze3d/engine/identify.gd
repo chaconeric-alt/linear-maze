@@ -10,7 +10,8 @@ class_name Identify
 const REACH := 60.0
 
 
-## {"title": the name, "detail": the line of ids and state}; empty if the player is looking at nothing.
+## {"title": the name, "detail": the line of ids and state, "ref": what it is, for P's image prompt (engine/imageprompt.gd)};
+## empty if the player is looking at nothing.
 static func look(pl: Player) -> Dictionary:
 	var lv: Level = pl.level
 	var from: Vector3 = pl.cam.global_position
@@ -105,6 +106,12 @@ static func _where(lv: Level, pos: Vector3) -> String:
 	return s
 
 
+## The name a kit's prompt.json gives a model (kits/<kit>/prompt.json "looks"), or the fallback.
+static func _kit_name(kit_id: String, id: String, fallback: String) -> String:
+	var l: Variant = LM.kits.get(LM.home_kit(kit_id, id), {}).get("prompt", {}).get("looks", {}).get(id)
+	return str(l.get("name", fallback)) if l is Dictionary else fallback
+
+
 static func _nice(id: String) -> String:
 	return id.replace("_", " ").capitalize()
 
@@ -113,32 +120,35 @@ static func _nice(id: String) -> String:
 static func _describe(n: Node, lv: Level) -> Dictionary:
 	var bits: Array = []
 	var title := ""
+	var ref := {"node": n, "pos": n.global_position}      # for P: what kind of thing, its id and kit (each describer adds them)
 	if n is Actor:
-		title = _about_actor(n, lv, bits)
+		title = _about_actor(n, lv, bits, ref)
 	elif n is Target:
-		title = _about_target(n, lv, bits)
+		title = _about_target(n, lv, bits, ref)
 	elif n is Prop:
-		title = _about_prop(n, lv, bits)
+		title = _about_prop(n, lv, bits, ref)
 	elif n is Door:
-		title = _about_door(n, lv, bits)
+		title = _about_door(n, lv, bits, ref)
 	elif n is Pickup:
-		title = _about_pickup(n, lv, bits)
+		title = _about_pickup(n, lv, bits, ref)
 	elif n is Trap:
-		title = _about_trap(n, lv, bits)
+		title = _about_trap(n, lv, bits, ref)
 	elif n is Pit:
-		title = _about_pit(n, lv, bits)
+		title = _about_pit(n, lv, bits, ref)
 	elif n is Lift:
-		title = _about_lift(n, lv, bits)
+		title = _about_lift(n, lv, bits, ref)
 	elif n is Puddle:
-		title = _about_puddle(n, lv, bits)
+		title = _about_puddle(n, lv, bits, ref)
 	elif n is Label3D:
-		title = _about_sign(n, lv, bits)
-	bits.append(_where(lv, n.global_position))
-	return {"title": title, "detail": " · ".join(bits)}
+		title = _about_sign(n, lv, bits, ref)
+	ref["where"] = _where(lv, n.global_position)
+	bits.append(ref["where"])
+	return {"title": title, "detail": " · ".join(bits), "ref": ref}
 
 
-static func _about_actor(n: Node, lv: Level, bits: Array) -> String:
+static func _about_actor(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var id: Variant = LM.defs.get("actors", {}).find_key(n.d)
+	ref.merge({"kind": "actor", "id": str(id)})
 	var title: String = n.d.get("name", str(id))
 	bits.append("monster \"%s\"" % str(id))
 	bits.append("model %s" % str(n.d.get("model", "?")).get_file())
@@ -151,16 +161,18 @@ static func _about_actor(n: Node, lv: Level, bits: Array) -> String:
 	return title
 
 
-static func _about_target(n: Node, lv: Level, bits: Array) -> String:
+static func _about_target(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var title: String = "Target"
+	ref["kind"] = "target"
 	bits.append("target \"%s\"" % n.tag)
 	bits.append("%d hits, %d damage%s" % [n.hits, roundi(n.total), ", in use" if n.busy != null else ""])
 	return title
 
 
-static func _about_prop(n: Node, lv: Level, bits: Array) -> String:
+static func _about_prop(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var pid: String = n.e["prop"]
-	var title: String = n.e.get("name", n.meta.get("name", _nice(pid)))
+	ref.merge({"kind": "prop", "id": pid, "kit": n.kit_id})
+	var title: String = n.e.get("name", n.meta.get("name", _kit_name(n.kit_id, pid, _nice(pid))))
 	bits.append("prop \"%s\"" % pid)
 	bits.append("kit %s" % LM.home_kit(n.kit_id, pid))
 	if n is Station:
@@ -188,10 +200,11 @@ static func _about_prop(n: Node, lv: Level, bits: Array) -> String:
 	return title
 
 
-static func _about_door(n: Node, lv: Level, bits: Array) -> String:
+static func _about_door(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var entry: Dictionary = lv.cell(n.cell_pos.x, n.cell_pos.y, n.storey).get("entry", {})
 	var did: String = entry.get("door", "?")
-	var title: String = _nice(did)
+	ref.merge({"kind": "door", "id": did, "kit": lv.kit_id})
+	var title: String = _kit_name(lv.kit_id, did, _nice(did))
 	bits.append("door \"%s\"" % did)
 	bits.append("kit %s" % LM.home_kit(lv.kit_id, did))
 	var st := "open" if n.target > 0.5 else "shut"
@@ -209,16 +222,18 @@ static func _about_door(n: Node, lv: Level, bits: Array) -> String:
 	return title
 
 
-static func _about_pickup(n: Node, lv: Level, bits: Array) -> String:
+static func _about_pickup(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var title: String = n.d.get("name", _nice(str(n.d.get("item", "item"))))
+	ref.merge({"kind": "item", "id": str(n.d.get("item", "?")), "model": str(n.d.get("model", "")), "kit": n.d.get("kit", lv.kit_id)})
 	bits.append("item \"%s\"" % n.d.get("item", "?"))
 	bits.append("kind %s" % n.d.get("kind", "?"))
 	bits.append("model %s" % n.d.get("model", "?"))
 	return title
 
 
-static func _about_trap(n: Node, lv: Level, bits: Array) -> String:
+static func _about_trap(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var title: String = "%s trap" % _nice(n.kind)
+	ref.merge({"kind": "trap", "id": n.kind})
 	bits.append("trap \"%s\"" % n.kind)
 	bits.append("on" if n.enabled else "switched off")
 	if n.e.get("tag", "") != "":
@@ -226,28 +241,32 @@ static func _about_trap(n: Node, lv: Level, bits: Array) -> String:
 	return title
 
 
-static func _about_pit(n: Node, lv: Level, bits: Array) -> String:
+static func _about_pit(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var title: String = "Pit trap"
+	ref.merge({"kind": "trap", "id": "pit"})
 	bits.append("trap \"pit\"")
 	bits.append("sprung" if n.is_sprung() else "set")
 	return title
 
 
-static func _about_lift(n: Node, lv: Level, bits: Array) -> String:
+static func _about_lift(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var title: String = "Lift"
+	ref["kind"] = "lift"
 	bits.append("lift")
 	bits.append("stops at floors %s" % ", ".join(n.stops.map(func(y): return str(int(round(y / lv.H))))))
 	return title
 
 
-static func _about_puddle(n: Node, lv: Level, bits: Array) -> String:
+static func _about_puddle(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var title: String = "%s puddle" % _nice(n.kind)
+	ref["kind"] = "puddle"
 	bits.append("puddle left by a monster")
 	return title
 
 
-static func _about_sign(n: Node, lv: Level, bits: Array) -> String:
+static func _about_sign(n: Node, lv: Level, bits: Array, ref: Dictionary) -> String:
 	var title: String = "Sign"
+	ref["kind"] = "sign"
 	bits.append("sign \"%s\"" % n.text.replace("\n", " "))
 	return title
 
@@ -269,9 +288,11 @@ static func _tile(lv: Level, pos: Vector3, normal: Vector3) -> Dictionary:
 					best_d = d
 					best = t[0]
 	var here := _where(lv, pos + normal * 0.2)
+	var ref := {"kind": "structure", "surface": kind, "pos": pos + normal * 0.2, "where": here}
 	if best == "":
-		return {"title": "Structure", "detail": "plain %s built by the engine (a deck, slab, ramp side or rail; no tile) · %s" % [kind, here]}
-	return {"title": "%s: %s" % [kind.capitalize(), _nice(best)], "detail": "%s tile \"%s\" · kit %s · %s" % [kind, best, LM.home_kit(lv.kit_id, best), here]}
+		return {"title": "Structure", "detail": "plain %s built by the engine (a deck, slab, ramp side or rail; no tile) · %s" % [kind, here], "ref": ref}
+	ref.merge({"kind": "tile", "id": best, "kit": lv.kit_id}, true)
+	return {"title": "%s: %s" % [kind.capitalize(), _nice(best)], "detail": "%s tile \"%s\" · kit %s · %s" % [kind, best, LM.home_kit(lv.kit_id, best), here], "ref": ref}
 
 
 static func _window(lv: Level, pos: Vector3, normal: Vector3) -> Dictionary:
@@ -279,5 +300,7 @@ static func _window(lv: Level, pos: Vector3, normal: Vector3) -> Dictionary:
 	var f := lv.floor_of(pos)
 	var id: String = lv.cell(c.x, c.y, f).get("window", "")
 	if id == "":
-		return {"title": "Window", "detail": "glass in a thin wall (\"walls\" entry, kind window) · %s" % _where(lv, pos + normal * 0.2)}
-	return {"title": "Window: %s" % _nice(id), "detail": "window \"%s\" · kit %s · %s" % [id, LM.home_kit(lv.kit_id, id), _where(lv, pos - normal * 0.2)]}
+		return {"title": "Window", "detail": "glass in a thin wall (\"walls\" entry, kind window) · %s" % _where(lv, pos + normal * 0.2),
+			"ref": {"kind": "structure", "surface": "window", "pos": pos, "where": _where(lv, pos + normal * 0.2)}}
+	return {"title": "Window: %s" % _nice(id), "detail": "window \"%s\" · kit %s · %s" % [id, LM.home_kit(lv.kit_id, id), _where(lv, pos - normal * 0.2)],
+		"ref": {"kind": "window", "id": id, "kit": lv.kit_id, "pos": pos - normal * 0.2, "where": _where(lv, pos - normal * 0.2)}}

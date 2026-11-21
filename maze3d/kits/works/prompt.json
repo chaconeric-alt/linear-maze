@@ -1,0 +1,32 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "wk",
+ "tail": "grimy Victorian-industrial robot foundry, riveted black iron, sooty brick, brass gears, chains, furnace-orange glow, thick grease and soot",
+ "looks": {
+  "wk_forge": {
+   "name": "Forge",
+   "look": "a brick-and-iron hearth with a glowing mouth and a hood",
+   "class": "centrepiece"
+  },
+  "wk_vat": {
+   "name": "Grease Vat",
+   "look": "an open iron tub of glowing green grease with a ladle",
+   "class": "floor"
+  },
+  "wk_press": {
+   "name": "Stamping Press",
+   "look": "a tall frame with a heavy ram and a die table",
+   "class": "floor"
+  },
+  "wk_bench": {
+   "name": "Workbench",
+   "look": "iron-topped, with a vice, tools and half an egg-shaped robot on it",
+   "class": "wall"
+  },
+  "wk_drums": {
+   "name": "Oil Drums",
+   "look": "three dented drums, one leaking",
+   "class": "corner"
+  }
+ }
+}

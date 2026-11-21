@@ -17,6 +17,7 @@ var kits: Dictionary = {}        # id -> { cell, height, tiles, models, styles, 
 var defs: Dictionary = {}        # kind -> { id -> def }   (weapons, actors, items, sounds ...)
 var levels: Dictionary = {}      # id -> level dictionary
 var generators: Dictionary = {}  # id -> script with generate(seed, params) -> level dictionary
+var prompts: Dictionary = {}     # the game's prompts.json: wording for easy mode's image prompts (engine/imageprompt.gd)
 var _mat_cache: Dictionary = {}
 var _mesh_cache: Dictionary = {}
 var _sounds: Dictionary = {}
@@ -58,6 +59,8 @@ func boot(game_id: String) -> void:
 		var s: Variant = load("res://generators/%s.gd" % g)
 		if s != null:
 			generators[g] = s.new()
+	var pr: Variant = read_json(root + "prompts.json")
+	prompts = pr if pr is Dictionary else {}
 	_build_sounds()
 	_check_schema()
 
@@ -89,6 +92,8 @@ func load_kit(id: String) -> void:
 	var m: Variant = read_json(root + "materials.json")
 	if m != null:
 		kit["materials"] = m
+	var pj: Variant = read_json(root + "prompt.json")       # how to describe this kit's look to an image generator (its own; never borrowed)
+	kit["prompt"] = pj if pj is Dictionary else {}
 	kits[id] = kit
 	for other in kit.get("uses", []):          # a kit can borrow another's models and materials
 		load_kit(other)

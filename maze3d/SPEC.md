@@ -17,11 +17,12 @@ engine/              no game content. Autoloads: lm.gd (LM, the registry), game.
   actor/             Actor (actor.gd) on ActorCore (actor_core.gd), and its components
   player.gd          Player, and player/: controls, movement, camera_rig, weapons
   door.gd prop.gd station.gd pickup.gd trap.gd pit.gd lift.gd target.gd rebuilder.gd projectile.gd puddle.gd fx.gd
-  hud.gd (and hud/: style, crosshair, map_view, screens, fit) identify.gd home.gd (and home/decorating.gd)
+  hud.gd (and hud/: style, crosshair, map_view, screens, fit) identify.gd imageprompt.gd (and imageprompt/: measure,
+  writer) home.gd (and home/decorating.gd)
   debug.gd schema.gd shaders/
-kits/<kit>/          kit.json, generated.json, materials.json, models/*.glb
+kits/<kit>/          kit.json, generated.json, materials.json, prompt.json (image prompts), models/*.glb
 actors/              rigged monsters (*.glb); actors/source/ what came from elsewhere
-games/<game>/        game.json, defs/*.json, levels/*.json (and a level's own test, <id>_test.gd)
+games/<game>/        game.json, defs/*.json, prompts.json, levels/*.json (and a level's own test, <id>_test.gd)
 generators/          <name>.gd; rooms.gd with its stages in generators/rooms/
 tests/               the self-test: selftest.gd (runner), part.gd, one <feature>_test.gd per feature
 tools/               blender/ (model scripts), levels/ (level scripts, levelkit.py), inspect_model.py, gen_check.gd
@@ -569,11 +570,25 @@ The player's lamp (F) casts no shadows: a light at the eye throws slivers of sha
 
 Status, messages, the objective, the map (the floor you are on; any enemy the player has had in view shows as a red signal that follows it: a diamond with a ring that pulses, faster and wider once it is hunting), panels (drawing only: 5.3), the title, pause and end screens. `Hud` keeps the state (title, play, panel, pause, end) and builds the status, messages and panel; its parts are `HudStyle` (`hud/style.gd`: the accent colour, the font, how labels, bars and buttons look), `HudCrosshair` (`hud/crosshair.gd`: the cross hairs, and the scope when zoomed), `HudMap` (`hud/map_view.gd`: the map, small or big with Tab) and `HudScreens` (`hud/screens.gd`: the title, pause and end overlays). Every menu (the title, pause and end screens and the terminal panel) sits in a `HudFit` (`hud/fit.gd`): in the middle of the window when it fits, with scroll bars when it is taller or wider than the window (24 px kept clear round the edge), following the keyboard focus. The HUD is drawn on a canvas at least 1600 × 900 scaled to the window (stretch mode `canvas_items`, aspect `expand`), so a 16:9 window is the least room a menu gets; the self-test's `menus` part opens each menu, and a panel with 24 options, on a 1280 × 720 window and checks that every button is on screen or can be scrolled to.
 
-### 5.9 Easy mode and Identify (`engine/identify.gd`)
+### 5.9 Easy mode, Identify and image prompts (`engine/identify.gd`, `engine/imageprompt.gd`)
 
 For play-testing. `game.json` `"easy": {"deal": 3, "take": 3}`: with easy mode on, everything the player's weapons deal (bullets, projectiles, their blasts) is multiplied by `deal`, and everything the player takes is divided by `take` before armour. Switched by the button on the title screen, which is remembered between sessions (`user://maze3d.cfg`), or for one run with `--easy` (`--easy=0` forces it off). The health readout shows EASY while it is on. Monsters' health, pickups and the self-test are untouched.
 
 **What is that? (E).** With easy mode on, E first names whatever is under the crosshair (at any distance), then does what E always does. The HUD shows it for a few seconds, bottom centre, and the log gets a line starting `IDENT`: the name, then the id it goes by in the files, the kit it comes from, its state, and the cell, room and style it is in. For example `Fabricator` / `prop "fabricator" · kit hightech · furniture (does nothing) · cell 12,7 · room "lab" · style lab`. It knows monsters (living or dead), props, doors, windows, pickups, traps, pits, lifts, puddles, signs, and every wall, floor and ceiling tile. Plain engine-built surfaces (decks, slabs, rails) say so. Easy mode's E on a container names it and what is left in it; on a station, whether it is open and who is in it.
+
+**Image prompts (P).** With easy mode on, P writes a prompt for an image generator to draw a new version of whatever E last named (or, if E has named nothing yet, what is under the crosshair). It is printed to the console between `====` rules, put on the clipboard, and added to `user://image_prompts.txt` (on Windows, `%APPDATA%\Godot\app_userdata\HaveNot 3D\image_prompts.txt`); the HUD says so. The prompt is one paragraph, in the order of the furniture style guide:
+
+1. *Lead:* "Low-poly 3D game asset: <name>, <what it is>." (monsters: "Low-poly 3D game character").
+2. *Footprint class* (furniture): wall piece, wall-mounted, floor piece, centrepiece or corner dressing. Taken from the kit's `prompt.json` if it says; otherwise worked out from how the model is mounted, its size and how near the walls it stands.
+3. *Proportions* in metres, measured from the model in the game (monsters: height and length; items: their own size, not the size they are shown at).
+4. *Colour scheme*, measured: every surface's material colour (a kit material from `materials.json`; a textured model's texture, sampled from a small mipmap), weighted by the surface area it covers, named in words an image generator knows, with the hex: "mostly …; with …; small touches of …". Greys are named by lightness; a material whose name says what it is (leather, brass, marble, porcelain…) is called that.
+5. *Glowing parts* and their colours; *moving parts* (from `parts` and `spin` in the model's metadata).
+6. *Style:* the kit's style line (`kits/<kit>/prompt.json` `tail`). Loot containers take the line of the kit their id ends with (`lt_box_ex`: the Executive Floor). Monsters and items get the game's world line instead.
+7. The low-poly line and the "single object, plain background" line (one per kind: furniture, wall-mounted, door, wall, floor, ceiling, window, item, weapon, creature, humanoid, machine, blob).
+
+Below it, notes that are not part of the prompt: the export settings for Tripo or Meshy, the footprint class in full, the model's size and triangle count now, its moving parts, the hand-over line ("The Executive Floor, replaces ex_desk, centrepiece."), a second Style sentence when it stands in a room of another kit or a room style with a look of its own, and where it was seen. Engine-built surfaces, signs and puddles have no model, so P says there is nothing to describe.
+
+All the wording is data. `games/<game>/prompts.json`: the leads, the low-poly lines, the shot lines, the footprint classes, the export notes, rig advice, the world line, what each monster (`actors`: `look`, `body`) and item (`items`) is, and what kit material names mean (`materials`: `{"leather": "{c} leather", ...}`, `{c}` being the measured colour; `material_prefixes`, kit prefixes to look past, as in `an_steel`). `kits/<kit>/prompt.json`: `tail` (the style line), `styles` (a line for a room style), `looks` (`{"<model id>": {"name", "look", "class"}}`; the name is also what E shows) and `tag` (the kit's id prefix, left off names). A kit without a `tail` (`loot`) takes the look of the room; the game's first kit is the look of last resort. Code: `ImagePrompt` (`engine/imageprompt.gd`: what a thing is), `PromptMeasure` (`engine/imageprompt/measure.gd`: size and colours from the model) and `PromptWriter` (`engine/imageprompt/writer.gd`: the words). Identify's answer carries a `ref` (kind, id, kit, the node, where) for it. The self-test writes a prompt for each kind of thing it names (`--prompts` prints them all).
 
 ### 5.10 Home and Profile (`engine/home.gd`, `engine/profile.gd`)
 
@@ -596,7 +611,7 @@ Ambient occlusion is on, gentle (intensity 1.2, radius 0.8) and at full resoluti
 
 ### 5.12 Debug switches and the command line (`engine/debug.gd`, `engine/main.gd`)
 
-Game code never reads the command line: `Main` sets the static switches in `Debug` (`sure_rolls`, `quick_hacks`, `hold_zoom`, `memory_profile`, `fixed_settings`, `no_ao`, `ssil`, `no_vfog`, `repeatable`) from its arguments, and the self-test sets what it needs (`SelfTest.configure`). Arguments (after `--`): `--level=<id>` or `--level=gen:<generator>[:<theme>]` with `--seed=N` and `--dump=file.json`; `--selftest` (and `--story`, `--verbose`); `--easy`, `--calm` (nothing notices the player), `--god`, `--alert`, `--at=x,y[,dx,dz]`, `--up=1`, `--yaw`, `--pitch`, `--zoom`, `--noprofile`, `--noao`, `--ssil`, `--novfog`, `--lights`, `--trace` (every actor's change of state; `--trace=Name` follows one), `--shot=file.png` with `--frames=N`, `--nohud`, `--repeatable[=seed]` (section 9).
+Game code never reads the command line: `Main` sets the static switches in `Debug` (`sure_rolls`, `quick_hacks`, `hold_zoom`, `memory_profile`, `fixed_settings`, `no_ao`, `ssil`, `no_vfog`, `print_prompts`, `repeatable`) from its arguments, and the self-test sets what it needs (`SelfTest.configure`). Arguments (after `--`): `--level=<id>` or `--level=gen:<generator>[:<theme>]` with `--seed=N` and `--dump=file.json`; `--selftest` (and `--story`, `--verbose`); `--easy`, `--calm` (nothing notices the player), `--god`, `--alert`, `--at=x,y[,dx,dz]`, `--up=1`, `--yaw`, `--pitch`, `--zoom`, `--noprofile`, `--noao`, `--ssil`, `--novfog`, `--lights`, `--trace` (every actor's change of state; `--trace=Name` follows one), `--shot=file.png` with `--frames=N`, `--nohud`, `--repeatable[=seed]` (section 9), `--prompts` (the self-test prints every image prompt it writes).
 
 Code that moves with time (a bob, a pulse, a jammed door's grinding, the map's signal) reads `Debug.now_msec()`, never `Time.get_ticks_msec()`, so that `--repeatable` can stop the clock reading real time.
 

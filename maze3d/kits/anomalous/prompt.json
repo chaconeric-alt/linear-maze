@@ -1,0 +1,12 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "an",
+ "tail": "Age of War advertising agency offices, institutional beige wall panels, grey carpet tile, fluorescent drop-ceiling light, laminate and chrome office furniture, relentless corporate cheer gone stale, a little shabby",
+ "styles": {
+  "an_cafe": "corporate office coffee shop, warm wood counters, chrome, cream tile, menu boards, relentless corporate cheer gone stale, a little shabby",
+  "an_lab": "Sterile White prototype laboratory, seamless glossy white surfaces with rounded corners, a hairline of cyan light, pristine and clinical",
+  "an_chamber": "Sterile White prototype testing chamber, seamless glossy white surfaces with rounded corners, a hairline of cyan light, pristine and clinical",
+  "an_core": "the agency's core, black glass and dark metal with glowing hot pink circuit traces, humming and sinister"
+ },
+ "looks": {}
+}

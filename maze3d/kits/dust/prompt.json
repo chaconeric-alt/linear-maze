@@ -1,0 +1,6 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "du",
+ "tail": "ruined far-future installation the desert got into, sun-bleached ivory ceramic panels over umber frames, sandblasted steel, faded red oxide paint, slanted fins with slits of violet light, sand drifts, cracked and missing panels, hanging wiring, dry and dusty",
+ "looks": {}
+}

@@ -53,6 +53,7 @@ func _debug_switches() -> void:
 	Debug.no_ao = _args.has("noao")
 	Debug.ssil = _args.has("ssil")
 	Debug.no_vfog = _args.has("novfog")
+	Debug.print_prompts = _args.has("prompts")
 	if Debug.memory_profile:
 		Profile.keep_in_memory()
 
@@ -68,7 +69,8 @@ func _repeatable(n: int) -> void:
 
 func _inputs() -> void:
 	var keys := {"move_forward": [KEY_W, KEY_UP], "move_back": [KEY_S, KEY_DOWN], "move_left": [KEY_A], "move_right": [KEY_D],
-		"jump": [KEY_SPACE], "dash": [KEY_SHIFT], "use": [KEY_E], "flashlight": [KEY_F], "map": [KEY_TAB]}
+		"jump": [KEY_SPACE], "dash": [KEY_SHIFT], "use": [KEY_E], "flashlight": [KEY_F], "map": [KEY_TAB],
+		"image_prompt": [KEY_P]}
 	for a in keys:
 		if not InputMap.has_action(a):
 			InputMap.add_action(a)

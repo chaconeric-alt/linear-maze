@@ -1,0 +1,37 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "hs",
+ "tail": "sinister mid-century hospital equipment, white enamel and brushed steel, pale green and teal, castor wheels, leather straps, harsh clinical light, faint old stains",
+ "looks": {
+  "hs_bed": {
+   "name": "Ward Bed",
+   "look": "a steel bed with side rails, a drip stand and a turned-down sheet",
+   "class": "wall"
+  },
+  "hs_table": {
+   "name": "Operating Table",
+   "look": "a pedestal table with arm boards, straps and an instrument tray",
+   "class": "centrepiece"
+  },
+  "hs_cabinet": {
+   "name": "Medicine Cabinet",
+   "look": "glass-fronted shelves of bottles over two drawers, with a red cross",
+   "class": "wall"
+  },
+  "hs_gurney": {
+   "name": "Gurney",
+   "look": "a wheeled stretcher with a sheet over a shape",
+   "class": "floor"
+  },
+  "hs_monitor": {
+   "name": "Vitals Monitor",
+   "look": "a screen on a five-star wheeled stand",
+   "class": "corner"
+  },
+  "hs_screen": {
+   "name": "Folding Privacy Screen",
+   "look": "three curtain panels on castors",
+   "class": "corner"
+  }
+ }
+}

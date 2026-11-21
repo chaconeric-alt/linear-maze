@@ -1,0 +1,37 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "bb",
+ "tail": "Gothic cathedral furniture as corporate brand worship, cream limestone and gold, purple velvet, neon pink halo ring, magenta cyan and yellow logo glass, reverent and tacky",
+ "looks": {
+  "bb_altar": {
+   "name": "Checkout Altar",
+   "look": "a stone altar with a velvet front, a till, candles and a neon halo",
+   "class": "centrepiece"
+  },
+  "bb_pew": {
+   "name": "Pew",
+   "look": "a dark wooden bench with a catalogue shelf on the back",
+   "class": "floor"
+  },
+  "bb_font": {
+   "name": "Sample Font",
+   "look": "a stone basin of glowing cyan liquid with a gold dispenser",
+   "class": "centrepiece"
+  },
+  "bb_pulpit": {
+   "name": "Pulpit",
+   "look": "an octagonal raised pulpit with a sounding board, a screen and a microphone",
+   "class": "centrepiece"
+  },
+  "bb_censer": {
+   "name": "Censer on a Stand",
+   "look": "a gold tripod with a hanging burner",
+   "class": "corner"
+  },
+  "bb_reliquary": {
+   "name": "Reliquary",
+   "look": "a gilded glass case on a stone plinth holding a product",
+   "class": "floor"
+  }
+ }
+}

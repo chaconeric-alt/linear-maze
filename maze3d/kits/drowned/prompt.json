@@ -1,0 +1,6 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "dr",
+ "tail": "ruined far-future research installation that has leaked for three hundred years, sea-green painted panels over black hull, tarnished bronze and verdigris, signal-yellow markings, round collared bulkhead ribs, pale green lamp light, algae, slime trails, salt crust and barnacles, rust, wet and dripping",
+ "looks": {}
+}

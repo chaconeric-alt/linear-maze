@@ -20,6 +20,7 @@ var dead := false
 var held_by: Node = null         # the monster that has grabbed you, if one has
 var frozen := false
 var focus: Node = null           # the usable thing in front of you: E works it
+var last_seen: Dictionary = {}    # easy mode: what E last named (Identify.look), for P's image prompt
 var last_hit_dir := Vector3.ZERO
 var hurt_flash := 0.0
 var controls: PlayerControls
@@ -164,9 +165,18 @@ func use_focus() -> void:
 		var seen := Identify.look(self)
 		if not seen.is_empty():
 			print("IDENT  %s  |  %s" % [seen["title"], seen["detail"]])
-			Game.identified.emit(seen["title"], seen["detail"])
+			Game.identified.emit(seen["title"], seen["detail"] + ("\nP: image prompt for this" if seen.has("ref") else ""))
+			last_seen = seen
 	if focus and is_instance_valid(focus):
 		focus.use(self)
+
+
+## P, in easy mode: an image prompt for what E last named, or for what is under the crosshair if E has named nothing.
+func image_prompt() -> void:
+	if last_seen.is_empty():
+		last_seen = Identify.look(self)
+	var p := ImagePrompt.make(last_seen, level)
+	Game.identified.emit("Image prompt: %s" % p.get("title", "?"), ImagePrompt.deliver(p))
 
 
 func _physics_process(dt: float) -> void:

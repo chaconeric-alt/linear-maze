@@ -1,0 +1,37 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "bk",
+ "tail": "cold-war survival bunker, olive drab painted steel, raw concrete, canvas, stencil markings, caged warm bulb, utilitarian, dusty and chipped",
+ "looks": {
+  "bk_bunk": {
+   "name": "Bunk Bed",
+   "look": "a steel-frame two-tier bunk with rolled blankets",
+   "class": "wall"
+  },
+  "bk_table": {
+   "name": "Mess Table with Benches",
+   "look": "a tin top, fixed benches and mugs",
+   "class": "floor"
+  },
+  "bk_console": {
+   "name": "Radio Console",
+   "look": "dials, a headset and a map lamp",
+   "class": "wall"
+  },
+  "bk_generator": {
+   "name": "Generator",
+   "look": "a diesel set on skids with an exhaust pipe",
+   "class": "centrepiece"
+  },
+  "bk_shower": {
+   "name": "Decontamination Shower",
+   "look": "a frame, a rose head, a drain tray and a curtain",
+   "class": "wall"
+  },
+  "bk_crates": {
+   "name": "Supply Crates",
+   "look": "stencilled wooden crates, one prised open",
+   "class": "corner"
+  }
+ }
+}

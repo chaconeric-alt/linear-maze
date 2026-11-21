@@ -1,0 +1,36 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "cr",
+ "tail": "Gothic stone crypt, dark coursed masonry, black marble with gold inlay, bones, dripping candles, cobwebs, solemn",
+ "looks": {
+  "cr_coffin": {
+   "name": "Sarcophagus",
+   "look": "a stone chest with a ridged lid, the lid a separate piece",
+   "class": "floor"
+  },
+  "cr_statue": {
+   "name": "Hooded Statue with a Bowl of Flame",
+   "class": "centrepiece"
+  },
+  "cr_plinth": {
+   "name": "Relic Plinth",
+   "look": "a short carved pillar with a marble top",
+   "class": "floor"
+  },
+  "cr_brazier": {
+   "name": "Brazier",
+   "look": "an iron tripod with a fire bowl",
+   "class": "corner"
+  },
+  "cr_candles": {
+   "name": "Candle Cluster",
+   "look": "a puddle of wax and many candles",
+   "class": "corner"
+  },
+  "cr_bones": {
+   "name": "Bone Pile",
+   "look": "long bones and three skulls",
+   "class": "corner"
+  }
+ }
+}

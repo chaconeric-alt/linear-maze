@@ -1,0 +1,16 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "lt",
+ "tail": "",
+ "about_tail": "No style line of its own: each container is made in one place's materials (its id ends with that kit's tag), so the prompt takes that kit's line.",
+ "looks": {
+  "lt_charge_rack": {
+   "name": "Power Cell Charging Rack",
+   "class": "wall"
+  },
+  "lt_reliquary": {
+   "name": "Reliquary",
+   "class": "floor"
+  }
+ }
+}

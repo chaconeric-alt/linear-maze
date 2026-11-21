@@ -1,0 +1,6 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "hm",
+ "tail": "cozy brass steampunk bunker that is still high technology, walnut wood panelling, cream plaster, polished brass and copper pipe, working gear trains, oxblood leather, amber video screens in wood-and-brass cabinets, warm lamplight, lived-in and well cared for",
+ "looks": {}
+}

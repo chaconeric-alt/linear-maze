@@ -1,0 +1,189 @@
+{
+ "about": "Wording for easy mode's P key (engine/imageprompt.gd): the fixed lines of every image prompt, the monsters, the items, and what kit material names mean (materials; {c} is the colour). Each kit's look is in kits/<kit>/prompt.json. Change anything here; the game reads it at start-up.",
+ "lead": "Low-poly 3D game asset",
+ "lead_actor": "Low-poly 3D game character",
+ "scale_note": "(real-world scale; a person is 1.8 m tall)",
+ "glow": "Glowing parts, each a flat, clearly bounded area of one saturated colour",
+ "moving": "Visibly separate moving parts",
+ "lowpoly": "Stylised low-poly look: bold, simple shapes with chamfered edges and flat panels, fine detail painted into the textures rather than modelled, more detailed than a blockout but not fussy, so it sits comfortably beside simple modular wall and floor tiles.",
+ "lowpoly_actor": "Stylised low-poly look: a strong, readable silhouette, bold simple forms, fine detail painted into the textures rather than modelled.",
+ "world": "From HaveNot: the far future, three hundred years after the Age of War, in ruined super-high-tech installations that are still running.",
+ "leads": {
+  "wall": "a modular wall section for a game level, exactly 4 m wide and 4 m high, made to stand side by side with copies of itself",
+  "floor": "a square floor panel for a game level, 4 m by 4 m, made to tile with copies of itself",
+  "ceiling": "a square ceiling panel for a game level, 4 m by 4 m, made to tile with copies of itself",
+  "window": "a modular wall section 4 m wide and 4 m high with a window in it",
+  "door": "a door in its frame, filling a doorway about 2.6 m wide and 3.2 m high in a 4 m wall"
+ },
+ "classes": {
+  "wall": [
+   "A wall piece: it stands against a wall, so its back is flat and plain.",
+   "wall piece (stands against a wall: up to 3.6 m wide, no more than 1.2 m deep, flat or plain at the back)"
+  ],
+  "mounted": [
+   "Wall-mounted: it hangs on a wall, flat at the back, sticking out only a little.",
+   "wall-mounted (hangs on the wall, sticks out no more than 0.4 m, bottom edge at least 1 m up unless it is a low shelf)"
+  ],
+  "floor": [
+   "A free-standing floor piece, finished on every side.",
+   "floor piece (stands in the open; fits inside 2.8 × 2.8 m, so there is a walkway each side inside its 4 m cell)"
+  ],
+  "centrepiece": [
+   "A centrepiece that stands in the middle of a room and is seen from every side.",
+   "centrepiece (one per room: up to 3.4 × 3.4 m; the game keeps a clear lap all round it)"
+  ],
+  "corner": [
+   "A corner piece, finished on the sides that show.",
+   "corner dressing (up to 1.6 × 1.6 m, any height)"
+  ]
+ },
+ "shots": {
+  "object": "Game asset, single object, centred, whole object in frame, three-quarter view from slightly above, upright and standing flat on the ground, front facing the viewer, neutral studio lighting, plain light grey background, no floor, no backdrop, no people, no text, no lettering, no logos.",
+  "mounted": "Game asset, single object, centred, whole object in frame, seen from the front and a little to one side, flat back as if hung on a wall, neutral studio lighting, plain light grey background, no wall, no people, no text, no lettering, no logos.",
+  "door": "Game asset, a single closed door in its frame, centred, whole frame in view, seen from the front and a little to one side, neutral studio lighting, plain light grey background, no wall round it, no people, no text, no lettering.",
+  "wall": "One flat modular wall section seen straight on, filling the frame edge to edge, even flat lighting, no perspective, no people, no text, no lettering.",
+  "floor": "One square floor panel seen from directly above, filling the frame edge to edge, edges that tile seamlessly, even flat lighting, no shadows, nothing standing on it, no text.",
+  "ceiling": "One square ceiling panel seen from directly below, filling the frame edge to edge, edges that tile seamlessly, even flat lighting, no text.",
+  "window": "One modular wall section with a window, seen straight on, filling the frame, even flat lighting, nothing visible through the glass, no people, no text.",
+  "item": "Game pickup, single small object, centred, whole object in frame, three-quarter view, neutral studio lighting, plain light grey background, no hands, no people, no text, no lettering, no logos.",
+  "weapon": "Game asset, a single hand-held weapon seen from the side, whole weapon in frame, centred, neutral studio lighting, plain light grey background, no hands, no people, no text, no lettering, no logos.",
+  "creature": "Model sheet for a 3D model: one creature, full body in frame, standing in a neutral pose with legs apart and claws, blades and feelers held clear of the body, three-quarter front view, neutral studio lighting, plain light grey background, no scenery, no people, no text.",
+  "humanoid": "Model sheet for a 3D model: one figure, full body in frame, standing in a neutral A-pose with arms held away from the body and feet apart, front view, neutral studio lighting, plain light grey background, no scenery, no text.",
+  "machine": "Concept art for a 3D model: one machine, whole body in frame, in a neutral resting pose with its moving parts (turrets, arms, legs, wheels, blades) as visibly separate pieces, three-quarter front view, neutral studio lighting, plain light grey background, no scenery, no people, no text.",
+  "blob": "Concept art for a 3D model: one creature, whole body in frame, three-quarter front view, neutral studio lighting, plain light grey background, no scenery, no people, no text."
+ },
+ "export": {
+  "furniture": "Export from the 3D generator: GLB, textures embedded, low-poly/retopologised, 5–15k triangles, 2K textures. Upright, sitting flat on the ground, front facing the viewer, one object per file, no floor or backdrop. Keep it under 2.6 m tall unless it is meant for a two-storey hall.",
+  "door": "Export: GLB, textures embedded, low-poly/retopologised, 5–15k triangles, 2K textures. The parts that open (leaves, shutters, iris blades) as separate pieces; the frame in one piece.",
+  "tile": "Tiles are built in code (tools/blender/); a tile made in a 3D generator must be exactly 4 m wide by 4 m high (walls) or 4 × 4 m (floors and ceilings) and meet its neighbours at the edges. A floor or wall image also works as a source for Texture Craft.",
+  "actor": "Export: GLB, textures embedded, neutral pose, low-poly/retopologised 15–25k triangles, 2K textures. Hand it over with a note on how it moves, attacks and idles.",
+  "item": "Export: GLB, textures embedded, low-poly/retopologised (a few thousand triangles is plenty for a pickup), 1–2K textures, centred on its own middle."
+ },
+ "rigs": {
+  "creature": "pick the rig type that matches the body (hexapod, quadruped and so on).",
+  "humanoid": "a humanoid auto-rig works; Mixamo-style bone names are best, so library animations can be used.",
+  "machine": "an unrigged GLB is fine, provided the moving parts are visibly separate pieces; say which parts turn, spin, slide or fold.",
+  "blob": "an unrigged GLB is fine; it gets a soft rig made for it."
+ },
+ "actors": {
+  "roach": {
+   "body": "creature",
+   "look": "an armoured steampunk insect the size of a large dog, like a lobster crossed with a cockroach: two jointed blade arms raised in front, five walking legs, a short segmented tail, gun barrels along its back and long antennae"
+  },
+  "custodian": {
+   "body": "machine",
+   "look": "a steampunk maintenance robot on four legs with many arms: tool arms, heavy manipulator arms and a spinning saw blade, every part moving on its own rhythm"
+  },
+  "monoid": {
+   "body": "humanoid",
+   "look": "a lean humanoid combat robot with one large eye in its head and armour plates over a mechanical body"
+  },
+  "glorexx": {
+   "body": "creature",
+   "look": "a bio-weapon like a giant scorpion: a segmented body on many legs, six feelers and palps at the front and a long segmented tail curled up over its back"
+  },
+  "turret": {
+   "body": "machine",
+   "look": "a security turret that hangs upside down from the ceiling: a dark mounting disc studded with hazard-yellow bolts, a ball-shaped turret body with an orange band and twin gun barrels underneath"
+  },
+  "eggbot": {
+   "body": "machine",
+   "look": "a robot shaped like a big egg, its shell in three bands, rolling on tread pods, with aerials on top and one eye that fires yolk-yellow bolts"
+  },
+  "grease_monkey": {
+   "body": "creature",
+   "look": "a heavy beast that knuckle-walks on huge armoured gauntlet fists, with a broad hammer-shaped head, thick hind legs and a long swinging tail"
+  },
+  "dancer": {
+   "body": "machine",
+   "look": "a blade-dancer machine balanced on the point of a long needle: a dagger-shaped body, a toothed ring round its waist that spins fast, and a head with one eye on top"
+  },
+  "snapper": {
+   "body": "creature",
+   "look": "a carnivorous plant rooted to the floor: a bulb of spiky leaves with roots spreading out, a tall curving thorny stalk and a snapping jaw head at the top"
+  },
+  "deadbot": {
+   "body": "humanoid",
+   "look": "a rusted, gutted man-shaped robot with a bulb head, long arms ending in clawed hands and big heavy boots: a heavy-footed, lumbering stalker"
+  },
+  "defender": {
+   "body": "machine",
+   "look": "a small, flat, boxy desk-top machine with a hinged snapping jaw lined with small chrome teeth and an orange bumper; they come in swarms"
+  },
+  "sphinx": {
+   "body": "machine",
+   "look": "a stepped pyramid sentry gun in three sections: a fixed base, a middle section that rises on struts and swings a dish emitter round, and a cap that looks about"
+  },
+  "plodder": {
+   "body": "machine",
+   "look": "a heavy walking gun platform on four two-part legs, with a turret on top carrying a big cannon and a red sensor eye"
+  },
+  "drone": {
+   "body": "machine",
+   "look": "a hovering combat drone with a knife blade on each side, a three-link arm with a claw dangling underneath and a small screen for a face"
+  },
+  "fouler": {
+   "body": "blob",
+   "look": "a slime pillar: a tall wet column of glowing purple jelly with two lips at the top, a ring of stubby toes at the base and long feelers"
+  },
+  "princess": {
+   "body": "humanoid",
+   "look": "a towering boss figure in a floor-length enamel-white gown with gold panels and pink glowing inlays, puffed gold sleeves, a glowing pink brooch and an egg-shaped head"
+  },
+  "mourner": {
+   "body": "creature",
+   "look": "a floating machine-wraith in a tattered shroud: a glowing core in its chest, two long arms in shroud sleeves and hanging tatters instead of legs"
+  },
+  "heavy": {
+   "body": "machine",
+   "look": "an armoured slab the size of a desk hovering on four ducted fans, a gun pod under each shoulder and a long red visor"
+  },
+  "emitter": {
+   "body": "machine",
+   "look": "a field emitter: a tripod of dark legs carrying a coil column wound with brass rings, a glowing pink ball on top and a ring that turns round it"
+  }
+ },
+ "items": {
+  "chips": "a small stack of lucky credit chips",
+  "circuit": "a gold-trace circuit board",
+  "fuel_cell": "a cylindrical fuel cell with a glowing band",
+  "fuel_cell_big": "a heavy fuel cell canister with glowing bands",
+  "crystal": "a glowing data crystal",
+  "statuette": "a gold statuette of a beaming worker on a plinth",
+  "cookies": "a cheerful box of reward cookies",
+  "health": "a first-aid pack",
+  "armor": "a light ballistic vest",
+  "shells": "a box of shotgun shells",
+  "cells": "a pack of energy cells",
+  "keycard": "a key card",
+  "scattergun": "a pump-action scattergun",
+  "handgun": "a frontier-style handgun",
+  "plasma": "a plasma musket: a long old-fashioned musket rebuilt as a plasma gun",
+  "arc": "an arc carbine: a compact energy rifle with a coil at the muzzle",
+  "lucky_chip": "a worn gambler's chip",
+  "badge": "an agency ID badge with a smiling face",
+  "order": "a signed official document in a folder",
+  "ad_core": "a glowing core device torn out of a machine"
+ },
+ "material_prefixes": ["an_", "hm_", "rb_"],
+ "materials": {
+  "brass": "brass", "chrome": "chrome", "copper": "copper", "gold": "gold", "gold_burn": "burnished gold", "rose_gold": "rose gold",
+  "iron": "{c} iron", "steel": "{c} steel", "steel_dark": "dark steel", "tin": "tin", "mirror": "mirror glass", "rb_frame": "{c} steel frame",
+  "rb_plate": "{c} armour plate", "rb_heavy": "{c} heavy plate", "rb_shut": "{c} shutter", "rb_rust": "{c} rust", "leather": "{c} leather", "leather2": "{c} leather",
+  "velvet": "{c} velvet", "canvas": "{c} canvas", "linen": "{c} linen", "wool": "{c} wool", "cloth": "{c} cloth", "curtain": "{c} curtain fabric",
+  "sheet": "{c} sheets", "mattress": "{c} vinyl mattress", "carpet": "{c} carpet", "carpet_jade": "{c} carpet", "carpet_cine": "{c} carpet", "runner": "{c} carpet runner",
+  "seat": "{c} velvet upholstery", "wood": "{c} wood", "wood_dark": "{c} dark wood", "wood_pale": "{c} pale wood", "ebony": "{c} wood", "rosewood": "{c} rosewood",
+  "pew": "{c} wood", "marble": "{c} marble", "marble_blk": "polished black marble", "jade": "polished jade", "onyx": "black onyx", "porcelain": "glossy {c} porcelain",
+  "porcelain_grey": "{c} porcelain", "stone": "{c} stone", "stone_light": "{c} dressed stone", "lime": "{c} limestone", "lime_dark": "{c} limestone", "concrete": "{c} concrete",
+  "concrete_dark": "{c} concrete", "brick": "{c} brick", "mortar": "{c} mortar", "plaster": "{c} plaster", "tile": "glossy {c}", "tile_white": "glossy {c}",
+  "tile_teal": "glossy {c}", "grout": "matte {c}", "lino": "{c} linoleum", "lino_dark": "{c} linoleum", "acoustic": "{c} acoustic panels", "glass": "{c} glass",
+  "pane": "{c} glass", "frost": "frosted glass", "coreglass": "{c} glass", "rubber": "{c} rubber", "plastic_red": "{c} plastic", "plastic_yel": "{c} plastic",
+  "plastic": "{c} plastic", "cable": "{c} cables", "bone": "{c} bone", "wax": "{c} candle wax", "paper": "{c} paper", "card": "{c} card",
+  "book": "{c} book bindings", "rust": "{c} rust", "soot": "{c} soot", "grease": "{c} grease", "slime": "{c} slime", "flesh": "{c} flesh",
+  "flesh_pale": "{c} flesh", "chitin": "{c} chitin", "chitin_red": "{c} chitin", "leaf": "{c} leaves", "petal": "{c} petals", "root": "{c} roots",
+  "egg": "{c} enamel", "olive": "{c} painted steel", "hazard": "{c} hazard paint", "stencil": "{c} stencil paint", "shroud": "{c} shroud cloth", "water": "{c} water",
+  "stain": "{c} stains", "picture": "{c} painting", "portrait": "{c} portrait", "hull": "{c} panels", "hull_dark": "{c} frame", "trim": "{c} metal trim",
+  "accent": "{c} paint", "accent2": "{c} paint", "floor": "{c} floor plating", "tank": "{c} glass", "rot": "{c} grime", "skin": "{c} skin",
+  "lock": ""
+ }
+}

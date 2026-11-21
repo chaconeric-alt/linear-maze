@@ -1,0 +1,37 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "ex",
+ "tail": "decadent corporate boardroom luxury, dark walnut wood with visible grain, polished black marble and jade marble, burnished gold trim, rich brown buttoned leather, soft candle-amber lamp glow, one thin deep-green accent light line, immaculate, no red, no chrome, no blue",
+ "looks": {
+  "ex_desk": {
+   "name": "Executive Desk",
+   "look": "a pedestal desk with a leather top, a gold lamp and a display of light",
+   "class": "centrepiece"
+  },
+  "ex_table": {
+   "name": "Boardroom Table Section",
+   "look": "a long dark walnut table with a black marble inlay and a projector well",
+   "class": "centrepiece"
+  },
+  "ex_chair": {
+   "name": "Club Armchair",
+   "look": "deep buttoned brown leather on gold feet",
+   "class": "floor"
+  },
+  "ex_bar": {
+   "name": "Drinks Cabinet",
+   "look": "a bar with a mirrored back, decanters and a marble top",
+   "class": "wall"
+  },
+  "ex_globe": {
+   "name": "Globe of Light",
+   "look": "a gold stand and rings round a globe of deep green light",
+   "class": "corner"
+  },
+  "ex_case": {
+   "name": "Display Case",
+   "look": "a walnut plinth with a glass box and a lit pad",
+   "class": "floor"
+  }
+ }
+}

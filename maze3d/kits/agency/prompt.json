@@ -1,0 +1,37 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "ag",
+ "tail": "luxury retro-futurist showroom, glossy white porcelain, black onyx, rose gold trim, hot pink neon accent, smooth curved seamless forms, pristine",
+ "looks": {
+  "ag_desk": {
+   "name": "Reception Desk",
+   "look": "a white crescent with a rose-gold kick band and a pink under-glow",
+   "class": "centrepiece"
+  },
+  "ag_pedestal": {
+   "name": "Product Pedestal with Dome",
+   "look": "a glass dome on a fluted white column",
+   "class": "floor"
+  },
+  "ag_pod": {
+   "name": "Relaxation Pod",
+   "look": "an open egg on a stem with a velvet seat",
+   "class": "floor"
+  },
+  "ag_sofa": {
+   "name": "Curved Sofa",
+   "look": "a low arc of rose velvet on a gold plinth",
+   "class": "wall"
+  },
+  "ag_kiosk": {
+   "name": "Ad Kiosk",
+   "look": "a slim white totem with a tall portrait screen",
+   "class": "floor"
+  },
+  "ag_planter": {
+   "name": "Planter",
+   "look": "a white bowl with one sculptural plant",
+   "class": "corner"
+  }
+ }
+}

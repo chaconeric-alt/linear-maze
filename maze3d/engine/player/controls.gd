@@ -1,5 +1,6 @@
 extends Node
-## PlayerControls - the mouse and keys. Events (looking, the wheel and 1-9 for weapons, E, F for the lamp) are
+## PlayerControls - the mouse and keys. Events (looking, the wheel and 1-9 for weapons, E, F for the lamp, P in easy
+## mode) are
 ## handled as they come; what is held down (move keys, dash, jump, fire, right button to zoom) is read when the
 ## player's frame asks. The mouse only aims and fires while it is captured (not over a panel).
 class_name PlayerControls
@@ -28,6 +29,8 @@ func _unhandled_input(ev: InputEvent) -> void:
 			pl.arms.equip(ev.keycode - KEY_1)
 		elif ev.is_action("use"):
 			pl.use_focus()
+		elif ev.is_action("image_prompt") and Game.easy:    # easy mode: P writes an image prompt for what E last named
+			pl.image_prompt()
 		elif ev.is_action("flashlight"):
 			pl.eye.toggle_lamp()
 

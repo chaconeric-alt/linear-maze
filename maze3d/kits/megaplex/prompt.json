@@ -1,0 +1,37 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. styles: a different line for a room style. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "mp",
+ "tail": "abandoned-but-still-running 1980s shopping mall, glossy cream and teal tile, chrome tube frames, red and yellow plastic, neon signage, backlit ad panels, slightly grubby",
+ "looks": {
+  "mp_kiosk": {
+   "name": "Shopping Kiosk",
+   "look": "a counter booth with a striped awning and a till screen",
+   "class": "centrepiece"
+  },
+  "mp_vendor": {
+   "name": "Vending Machine",
+   "look": "a lit window of cans and a keypad",
+   "class": "wall"
+  },
+  "mp_seats": {
+   "name": "Cinema Seat Row",
+   "look": "four red velvet tip-up seats with cup holders",
+   "class": "floor"
+  },
+  "mp_table": {
+   "name": "Food-Court Table",
+   "look": "a round table with four fixed stools on arms",
+   "class": "floor"
+  },
+  "mp_bench": {
+   "name": "Lounge Bench with Planter",
+   "look": "two teal benches either side of a planter box",
+   "class": "floor"
+  },
+  "mp_autochef": {
+   "name": "Auto-Chef Counter",
+   "look": "a steel serving counter with three hatches and a lit menu",
+   "class": "wall"
+  }
+ }
+}

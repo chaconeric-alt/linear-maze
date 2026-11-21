@@ -12,6 +12,7 @@ static var fixed_settings := false      # remembered settings (easy mode) are no
 static var no_ao := false               # --noao: no screen-space ambient occlusion
 static var ssil := false                # --ssil: screen-space indirect light, which is off unless asked for
 static var no_vfog := false             # --novfog: no volumetric fog
+static var print_prompts := false       # --prompts: the self-test prints every image prompt it writes (easy mode's P)
 static var repeatable := false          # --repeatable: random numbers from a fixed seed and the clock counted in physics frames
 
 
