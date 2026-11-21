@@ -145,6 +145,16 @@ func _build_vent(kit_id: String) -> void:
 	add_child(_parts)
 
 
+## Switched off (by a flag or an effect): the level's memory keeps it off (LevelMemory).
+func remember() -> Dictionary:
+	return {} if enabled else {"off": true}
+
+
+func recall(r: Dictionary) -> void:
+	if r.get("off", false):
+		set_enabled(false)
+
+
 func set_enabled(on: bool) -> void:
 	enabled = on
 	if not on:

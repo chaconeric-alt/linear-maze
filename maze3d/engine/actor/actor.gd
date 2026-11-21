@@ -31,6 +31,48 @@ func is_robot() -> bool:
 	return d.get("robot", false)
 
 
+# ------------------------------------------------------------------ the level's memory (LevelMemory)
+## What it was made from, to be made again (a monster made while playing, by an effect or a repair bay): calm, so
+## without the "alert" it may have been made with.
+func entry() -> Dictionary:
+	var en: Dictionary = e.duplicate(true)
+	en.erase("alert")
+	return en
+
+
+## What has changed since it was placed: health lost, where it stands (off its spot, on the floor, out of any station;
+## not one off duty, which goes back to its post), and that it was angered on an off-duty floor. Dead, it is not
+## remembered: it is gone (LevelMemory.take).
+func remember() -> Dictionary:
+	var r := {}
+	if hp < max_hp:
+		r["hp"] = hp
+	if surf == 0 and dock == null and not off_duty and global_position.distance_to(home) > 0.75:
+		r["at"] = [global_position.x, global_position.y, global_position.z]
+		r["yaw"] = rotation.y
+	if not off_duty and bool(e.get("off_duty", level.data.get("off_duty", false))):
+		r["angry"] = true
+	return r
+
+
+## Laid back as it was, but calm: it was asleep or off duty again while the player was away. Where it stood is used
+## only if there is still open air there; otherwise it stays on its own spot. Its home stays where the level put it
+## (an off-duty one wanders back to its post in its own time).
+func recall(r: Dictionary) -> void:
+	if r.has("hp"):
+		hp = minf(float(r["hp"]), max_hp)
+	if r.has("at"):
+		var p := Vector3(float(r["at"][0]), float(r["at"][1]), float(r["at"][2]))
+		var c := level.cell_of(p)
+		if level.open_s(c.x, c.y, floori((p.y + 1.0) / level.H)):
+			global_position = p
+			rotation.y = float(r.get("yaw", rotation.y))
+	if r.get("angry", false) and off_duty:
+		off_duty = false
+		od.stop()
+		remove_from_group("usable")
+
+
 ## On a wall or the ceiling.
 func clinging() -> bool:
 	return surf == 1 or surf == 2

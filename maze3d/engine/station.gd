@@ -127,6 +127,28 @@ func open_amount() -> float:
 	return _open
 
 
+## A station remembers whether its robot was let out (a station that starts open is open anyway).
+func remember() -> Dictionary:
+	var r := super.remember()
+	r.erase("open")
+	if released:
+		r["released"] = true
+	return r
+
+
+## Let out on an earlier visit: it stands open, and its robot (remembered on its own, calm, where it was) is no longer
+## docked in it.
+func recall(r: Dictionary) -> void:
+	super.recall(r)
+	if r.get("released", false):
+		released = true
+		_open = 0.999
+		_open_target = 1.0
+		if bot != null and is_instance_valid(bot) and not bot.dead:
+			bot.dock = null
+			bot.e["still"] = false
+
+
 ## How far in front of it a robot is out of it (metres along its facing).
 func front() -> float:
 	return _front

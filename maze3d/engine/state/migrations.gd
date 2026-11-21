@@ -5,7 +5,7 @@ extends RefCounted
 ## which will change with later versions. A save newer than this game is left as it is (and warned about).
 class_name StateMigrations
 
-const CURRENT := 2
+const CURRENT := 3
 
 
 static func up(d: Dictionary) -> Dictionary:
@@ -18,6 +18,8 @@ static func up(d: Dictionary) -> Dictionary:
 				d = v0_to_v1(d)
 			1:
 				d = v1_to_v2(d)
+			2:
+				d = v2_to_v3(d)
 		v = int(d.get("v", v + 1))
 	return d
 
@@ -47,4 +49,26 @@ static func v1_to_v2(d: Dictionary) -> Dictionary:
 		if not m.has("keys"):
 			m["keys"] = {}
 	d["v"] = 2
+	return d
+
+
+## Version 3: levels remember. A level's memory gains the panel options used and its marks, the level's signature,
+## what changed in its things, what is gone, what was made while playing, its triggers and its visits; a version-2
+## memory had only flags and keys.
+static func v2_to_v3(d: Dictionary) -> Dictionary:
+	for k in d["levels"]:
+		var m: Dictionary = d["levels"][k]
+		for f in ["used", "marks", "things", "extra", "triggers"]:
+			if not m.has(f):
+				m[f] = {}
+		for f in ["gone"]:
+			if not m.has(f):
+				m[f] = []
+		if not m.has("sig"):
+			m["sig"] = ""
+		if not m.has("extra_n"):
+			m["extra_n"] = 0
+		if not m.has("visits"):
+			m["visits"] = 0
+	d["v"] = 3
 	return d

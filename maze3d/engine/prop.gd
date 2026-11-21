@@ -26,6 +26,8 @@ var _bar_rest := Vector3.ZERO
 var _rattle := 0.0
 var _layer_was := 0
 var _lights: Array = []
+var _hp0 := 0.0                 # its health as placed, and its arch's charges: the memory keeps what it has lost
+var _charges0 := -1
 
 
 func setup(lv: Level, entry: Dictionary, kit: String) -> void:
@@ -59,6 +61,7 @@ func setup(lv: Level, entry: Dictionary, kit: String) -> void:
 			_parts.append({"n": n2, "rest": n2.transform, "spec": meta["parts"][name]})
 	if e.has("hp"):
 		hp = e["hp"]
+		_hp0 = hp
 		add_to_group("breakable")
 	if e.has("use"):
 		add_to_group("usable")
@@ -111,6 +114,7 @@ func _setup_arch() -> void:
 	for k in e.get("walk", {}):
 		_walk[k] = e["walk"][k]
 	_walk_left = int(_walk.get("charges", -1))
+	_charges0 = _walk_left
 	_glow(LM.col(_walk.get("color"), Door.OPEN_COLOR))
 	_bar = LM.find_node(inst, "scanbar")
 	if _bar:
@@ -243,13 +247,7 @@ func show_up(on: bool) -> void:
 	if not on:
 		_hide_now()
 		return
-	visible = true
-	collision_layer = _layer_was if _layer_was != 0 else 1
-	if e.has("use"):
-		add_to_group("usable")
-	for l in _lights:
-		if is_instance_valid(l):
-			l.visible = true
+	_show_now()
 	var y := position.y
 	position.y = y - 2.2
 	create_tween().tween_property(self, "position:y", y, 1.2).set_trans(Tween.TRANS_SINE)
@@ -287,6 +285,50 @@ func use(_player: Node) -> void:
 	Events.emit("thing.used", {"key": level.key_of(self), "prop": str(e.get("prop", "")), "use": str(u.get("type", "effects")), "option": -1})
 	if tag != "":
 		level.notify("use", tag)
+
+
+func _show_now() -> void:
+	visible = true
+	collision_layer = _layer_was if _layer_was != 0 else 1
+	if e.has("use"):
+		add_to_group("usable")
+	for l in _lights:
+		if is_instance_valid(l):
+			l.visible = true
+
+
+# ------------------------------------------------------------------ the level's memory (LevelMemory)
+## What has changed since the level placed it: how often it was used, its lid open, shown or hidden against its
+## entry, health lost, an arch's charges.
+func remember() -> Dictionary:
+	var r := {}
+	if used > 0:
+		r["used"] = used
+	if _open_target > 0.5:
+		r["open"] = true
+	if visible == bool(e.get("hidden", false)):
+		r["shown"] = visible
+	if e.has("hp") and hp != _hp0:
+		r["hp"] = hp
+	if not _walk.is_empty() and _walk_left != _charges0:
+		r["charges"] = _walk_left
+	return r
+
+
+func recall(r: Dictionary) -> void:
+	used = int(r.get("used", used))
+	if r.get("open", false):
+		_open = 0.999                                # all but there: it settles open on its next frame, without a sound
+		_open_target = 1.0
+		set_process(true)
+	if r.has("shown"):
+		(_show_now if r["shown"] else _hide_now).call_deferred()      # after its own hiding, queued as it was placed
+	if r.has("hp"):
+		hp = float(r["hp"])
+	if r.has("charges"):
+		_walk_left = int(r["charges"])
+		if _walk_left == 0:
+			set_enabled(false)
 
 
 ## Open its lid or door (a cache, a locker).

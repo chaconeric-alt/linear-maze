@@ -23,3 +23,4 @@ func run() -> void:
 	pl.head.position.y = Player.EYE
 	pl.cam.rotation.z = 0.0
 	Game.over = false
+	main.carry_on()                                  # if a trap killed the player, the level was not left after all

@@ -51,6 +51,29 @@ func _heard(payload: Dictionary, name: String) -> void:
 			_go.call_deferred(tr)
 
 
+## For the level's memory (LevelMemory): which triggers have gone off, what of the map was explored, which rooms were
+## named.
+func remember() -> Dictionary:
+	var fired: Array = []
+	for i in _list.size():
+		if _list[i]["fired"]:
+			fired.append(i)
+	var seen: Array = []
+	for v in explored:
+		seen.append([v.x, v.y, v.z])
+	return {"fired": fired, "explored": seen, "rooms_seen": _rooms_seen.keys()}
+
+
+func recall(r: Dictionary) -> void:
+	for i in r.get("fired", []):
+		if int(i) < _list.size():
+			_list[int(i)]["fired"] = true
+	for v in r.get("explored", []):
+		explored[Vector3i(int(v[0]), int(v[1]), int(v[2]))] = true
+	for i in r.get("rooms_seen", []):
+		_rooms_seen[int(i)] = true
+
+
 ## Set one trigger off, if it may go off now (once, when, unless).
 func _go(tr: Dictionary) -> void:
 	var t: Dictionary = tr["t"]

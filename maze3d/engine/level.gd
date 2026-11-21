@@ -68,7 +68,9 @@ var start_yaw: float:
 		return ld.start_yaw
 
 
-func build(level_data: Dictionary) -> void:
+## Build the level from its data. `memory`: what it remembers from an earlier visit (State's memory of it, LevelMemory),
+## laid over it as it is built; empty for a level seen for the first time, or one that keeps no memory (the bunker).
+func build(level_data: Dictionary, memory: Dictionary = {}) -> void:
 	ld = LevelData.new(level_data)
 	data = ld.data
 	kit = ld.kit
@@ -97,6 +99,7 @@ func build(level_data: Dictionary) -> void:
 	nav_graph = builder.build_nav()
 	nav = nav_graph.astar
 	spawner = Spawner.new(self, ld)
+	LevelMemory.prepare(self, memory)
 	spawner.build_things()
 	builder.build_fluid()
 	builder.build_environment()
@@ -106,6 +109,7 @@ func build(level_data: Dictionary) -> void:
 	add_child(ldb)
 	triggers = Triggers.new(self, ld)
 	explored = triggers.explored
+	LevelMemory.lay(self, memory)
 	Game.flag_set.connect(_on_flag)
 	if data.get("home", false):
 		home = Home.new()
@@ -213,6 +217,11 @@ func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 ## "extra:2" for one made while playing), or "" for something the Spawner did not make.
 func key_of(n: Object) -> String:
 	return str(n.get_meta("key")) if n != null and is_instance_valid(n) and n.has_meta("key") else ""
+
+
+## What to keep of the level as it is now, for its memory (LevelMemory.take): Main asks as the player leaves.
+func remember() -> Dictionary:
+	return LevelMemory.take(self)
 
 
 ## The thing with that key, if it is still there.

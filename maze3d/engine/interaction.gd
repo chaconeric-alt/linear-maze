@@ -4,17 +4,21 @@ extends RefCounted
 ## and callbacks. One per run (Game.interaction). The HUD only draws: it shows what offered() lists and hands the
 ## choice to choose(). SPEC.md, "Terminals".
 ##
-## What has been used is kept here, by the thing's key (key_of: the same on every load of its level), not written into
-## the level's dictionaries, so level data stays as it was loaded. The marks last as long as the level is played
-## (Game.reset clears them).
+## What has been used is kept by the thing's key (key_of: the same on every load of its level) in the level's memory
+## (State), not written into the level's dictionaries, so level data stays as it was loaded, and a terminal used on an
+## earlier visit is still used on the next.
 class_name Interaction
 
 var view: Object = null          # what draws the panel (the HUD): draw_panel(text, working, final), close_panel(), in_panel()
 var thing: Node = null           # what the open panel belongs to
 var spec: Dictionary = {}        # what it says and offers: {"kicker", "title", "text", "options": [...]}
 var _choosing := -1              # the option being worked through
-var _used: Dictionary = {}       # thing key -> {option index: true}
-var _marks: Dictionary = {}      # thing key -> {name: true}: anything else a thing has done once ("prize": a riddle was paid)
+var _used: Dictionary:          # thing key -> {option index (as a string, as JSON keeps it): true}; in the level's memory
+	get:
+		return State.memory()["used"]
+var _marks: Dictionary:         # thing key -> {name: true}: anything else a thing has done once ("prize": a riddle was paid)
+	get:
+		return State.memory()["marks"]
 
 
 ## The key marks are kept under: the thing's own key (Level.key_of), which is the same on every load of its level, so
@@ -28,8 +32,6 @@ func key_of(t: Object) -> String:
 
 
 func reset() -> void:
-	_used.clear()
-	_marks.clear()
 	thing = null
 	spec = {}
 
@@ -42,7 +44,7 @@ func open(t: Node, s: Dictionary) -> void:
 
 # ------------------------------------------------------------------ marks
 func is_used(t: Object, i: int) -> bool:
-	return _used.get(key_of(t), {}).has(i)
+	return _used.get(key_of(t), {}).has(str(i))
 
 
 func forget_used(t: Object) -> void:
@@ -131,7 +133,7 @@ func _mark_used(i: int) -> void:
 	var k := key_of(thing)
 	if not _used.has(k):
 		_used[k] = {}
-	_used[k][i] = true
+	_used[k][str(i)] = true
 
 
 # ------------------------------------------------------------------ the session, as the option gates see it
@@ -161,4 +163,4 @@ func panel_ctx() -> Dictionary:
 ## The option being chosen went wrong: it can be chosen again.
 func unmark_used() -> void:
 	if _live():
-		_used.get(key_of(thing), {}).erase(_choosing)
+		_used.get(key_of(thing), {}).erase(str(_choosing))

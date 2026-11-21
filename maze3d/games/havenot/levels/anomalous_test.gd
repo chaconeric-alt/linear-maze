@@ -53,7 +53,7 @@ func _rude_way(sphinx: Actor, monoid: Actor) -> void:
 
 ## B: the polite way, from the start. Returns the new Monoid.
 func _polite_way() -> Actor:
-	main.start_level("anomalous")
+	main.restart_level()                             # starting again, as it was made (coming back would find it remembered)
 	await frames(10)
 	level = main.level
 	pl = main.player

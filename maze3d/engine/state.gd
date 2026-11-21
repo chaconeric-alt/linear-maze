@@ -6,7 +6,10 @@ extends Node
 ##   characters  the roster: each character ({"id", "name", "runs", "deaths", "best"}) and which one is "active"
 ##   run         the expedition under way: credits, haul, stats (Game reads and writes these through Game.credits and
 ##               the rest); cleared as a level is loaded (Game.reset)
-##   levels      what each level remembers, by its key: its own flags and the key cards found in it (enter_level)
+##   levels      what each level remembers, by its key (LevelMemory): its own flags, the key cards found in it, the
+##               panel options used, and what changed in it (taken, killed, opened, moved). Kept for as long as the
+##               world, except a generated level's, which goes when the run that made it ends, and any level's on a
+##               death there.
 ## Flags have a scope: a flag whose name starts "world:" is the world's and is seen everywhere; any other belongs to
 ## the level it was set in. Old levels' flags (a trap's "off", a door's "flag", a puzzle's) are level flags, as
 ## before: nothing is renamed.
@@ -21,7 +24,7 @@ extends Node
 ## SPEC.md 5.10.
 class_name WorldState
 
-const VERSION := 2
+const VERSION := 3
 const DIR := "user://saves/"
 const OLD_HOME := "user://havenot_home.json"
 var data: Dictionary = {}
@@ -62,11 +65,19 @@ func reset_run() -> void:
 	data["run"] = WorldState.blank_run()
 
 
-## A level is about to be played: its memory, under its key. For now it starts empty every time, as a level always
-## has; once levels remember, coming back will find what was left.
-func enter_level(key: String) -> void:
+## A level is about to be played: its memory, under its key: what was left there last time, or a new one. `fresh`:
+## start it afresh whatever was left (the bunker, which keeps its own record in the home).
+func enter_level(key: String, fresh := false) -> void:
 	level_key = key
-	data["levels"][key] = WorldState.blank_memory()
+	if fresh or not data["levels"].has(key):
+		data["levels"][key] = WorldState.blank_memory()
+	var m: Dictionary = data["levels"][key]
+	m["visits"] = int(m.get("visits", 0)) + 1
+
+
+## Forget what a level remembers: the next visit finds it as it was made.
+func forget_level(key: String) -> void:
+	data["levels"].erase(key)
 
 
 ## What the level being played remembers.
@@ -137,8 +148,12 @@ static func blank_run() -> Dictionary:
 	return {"credits": 0, "haul": {}, "stats": {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}}
 
 
+## What a level remembers (LevelMemory): its flags and key cards; the panel options used ("used": thing key -> {option:
+## true}) and other marks; "sig", the shape of the level it was taken from; "things" (key -> what that thing says
+## changed), "gone" (keys not to make again), "extra" (things made while playing, to make again: key -> {"e", "at",
+## "yaw"}) and "extra_n"; "triggers" (which have gone off, the map explored, the rooms named); "visits".
 static func blank_memory() -> Dictionary:
-	return {"flags": {}, "keys": {}}
+	return {"flags": {}, "keys": {}, "used": {}, "marks": {}, "sig": "", "things": {}, "gone": [], "extra": {}, "extra_n": 0, "triggers": {}, "visits": 0}
 
 
 # ------------------------------------------------------------------ on disk

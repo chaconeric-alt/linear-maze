@@ -10,6 +10,7 @@ var player: Player = null
 var _level_id := ""
 var _seed := 0                   # what a generated level was made from: its key is "<id>#<seed>" (level_key)
 var _left := true                # the level being played has been reported left (level.left)
+var _how_left := ""              # how: "out", "died", "away" (what becomes of its memory is settled as it is unloaded)
 var _in_run := false             # an expedition is under way (run.started ... run.ended)
 var _args: Dictionary = {}
 var _frame := 0
@@ -29,7 +30,7 @@ func _ready() -> void:
 	add_child(hud)
 	Game.hud = hud
 	hud.start_requested.connect(_on_start)
-	hud.restart_requested.connect(func(): _on_start(_level_id))
+	hud.restart_requested.connect(restart_level)
 	Game.ended.connect(_on_ended)
 	var first: String = _args.get("level", LM.game.get("start", ""))
 	if not _load(first, true):
@@ -105,6 +106,14 @@ func start_level(id: String) -> void:
 	_on_start(id)
 
 
+## Start the level being played again, as it was made: what it remembers is forgotten first (the pause screen's
+## "Start the level again", the end screen's "Go again"). Coming back to a level (start_level) finds it remembered.
+func restart_level() -> void:
+	_leave("away")
+	_how_left = "died"                               # settled as a death is: its memory forgotten as it is unloaded
+	_on_start(_level_id)
+
+
 func _on_start(id: String) -> void:
 	if id == "":
 		_load(LM.game.get("start", ""), true)
@@ -123,9 +132,7 @@ func _on_start(id: String) -> void:
 ## Build the level with that id (or generate it: gen:<generator>[:<theme>]) and put the player in it. False if there is no
 ## such level, or the generator could make nothing with its settings.
 func _load(id: String, _attract: bool) -> bool:
-	if level and not _left:
-		_left = true
-		Events.emit("level.left", {"level": level_key(), "how": "away"})
+	_unload()
 	_level_id = id
 	if level:
 		level.queue_free()
@@ -154,13 +161,14 @@ func _load(id: String, _attract: bool) -> bool:
 		data = LM.levels.get(id, {}).duplicate(true)
 	if data.is_empty():
 		return false
-	State.enter_level(level_key())
+	var home: bool = data.get("home", false)
+	State.enter_level(level_key(), home)             # the bunker keeps its own record (the home), not a level's memory
 	level = Level.new()
 	level.name = "Level"
 	level.process_mode = Node.PROCESS_MODE_PAUSABLE      # Main keeps running while paused; the world must not
 	add_child(level)
 	Game.level = level
-	level.build(data)
+	level.build(data, {} if home else State.memory())
 	player = Player.new()
 	level.add_child(player)
 	player.position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
@@ -186,6 +194,43 @@ func _load(id: String, _attract: bool) -> bool:
 	return true
 
 
+## The level being played, by the id it was started with ("gen:rooms:crypt" for a generated one).
+func level_id() -> String:
+	return _level_id
+
+
+## The player is leaving the level: it ended (alive or dead), or another is being loaded. It is said (level.left).
+func _leave(how: String) -> void:
+	if level == null or _left:
+		return
+	_left = true
+	_how_left = how
+	Events.emit("level.left", {"level": level_key(), "how": how})
+
+
+## The level is about to be freed: what changed in it is kept in its memory (LevelMemory), unless the player died there,
+## which forgets it (it is as it was made on the next visit), or it was a generated one whose run is over (a one-off),
+## or it is the bunker, which keeps its own record (the home).
+func _unload() -> void:
+	if level == null:
+		return
+	_leave("away")
+	if level.data.get("home", false):
+		return
+	if _how_left == "died" or (_level_id.begins_with("gen:") and not _in_run):
+		State.forget_level(level_key())
+	else:
+		State.memory().merge(level.remember(), true)
+
+
+## The player was brought back to life where they fell (the self-test does, after standing in every trap): the level
+## has not been left after all, and the run goes on.
+func carry_on() -> void:
+	_left = false
+	_how_left = ""
+	_in_run = not level.data.get("home", false)
+
+
 ## The key the level being played is known by: its id, or for a generated one the whole recipe with its seed
 ## ("gen:rooms:crypt#5"), so the same seed comes back to the same place.
 func level_key() -> String:
@@ -197,9 +242,7 @@ func _on_ended(info: Dictionary) -> void:
 	if level == null:
 		return
 	var dead: bool = info.get("dead", false)
-	if not _left:
-		_left = true
-		Events.emit("level.left", {"level": level_key(), "how": "died" if dead else "out"})
+	_leave("died" if dead else "out")
 	if level.data.get("home", false):
 		return
 	if dead:

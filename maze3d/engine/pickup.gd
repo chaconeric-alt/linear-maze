@@ -67,6 +67,11 @@ static func bounds(n: Node, xf: Transform3D, acc: Array) -> void:
 
 
 ## It lies still on a shelf, in a case or on the floor (not hovering).
+## What it was made from, to be made again (the level's memory keeps a pickup made while playing: a cache's loot).
+func entry() -> Dictionary:
+	return d.duplicate(true)
+
+
 func resting() -> bool:
 	return _rest
 

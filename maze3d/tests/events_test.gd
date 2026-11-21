@@ -8,11 +8,14 @@ extends SelfTestPart
 
 func run() -> void:
 	var all: Array = Events.recorded()
-	var since := 0                                   # this level's events: from its own level.entered on (and the
-	for i in all.size():                             # run.started just before it, if a run began here)
+	var since := 0                                   # this level's events: from its first level.entered on, as the level
+	var entry := {}                                  # remembers its earlier visits (and the run.started just before it)
+	for i in range(all.size() - 1, -1, -1):
 		if all[i][0] == "level.entered":
-			since = i
-	var entry: Dictionary = all[since][1] if since < all.size() and all[since][0] == "level.entered" else {}
+			if entry.is_empty():
+				entry = all[i][1]
+			if all[i][1].get("level", "") == entry.get("level", ""):
+				since = i
 	if since > 0 and all[since - 1][0] == "run.started":
 		since -= 1
 	var log: Array = all.slice(since)

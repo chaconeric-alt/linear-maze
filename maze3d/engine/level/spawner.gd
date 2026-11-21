@@ -16,7 +16,9 @@ var level: Level
 var ld: LevelData
 var _kinds: Array = []           # [[name, test: Callable(e) -> bool, make: Callable(e, p, s, pos) -> Node3D], ...]
 var _making := ""                # the key of the thing being made: its parts (a station's robot, a desk's chair) take theirs from it
-var _extra := 0                  # how many things have been made while playing: they are "extra:0", "extra:1", ...
+var extra_n := 0                 # how many things have been made while playing: they are "extra:0", "extra:1", ...
+var gone: Dictionary = {}        # keys not to make: the level's memory says they were taken, killed or broken (LevelMemory)
+var made: Dictionary = {}        # keys of things made while playing (not by the level's data): the memory makes them again
 
 
 func _init(lv: Level, data: LevelData) -> void:
@@ -120,11 +122,18 @@ func build_things() -> void:
 ## piece of furniture placed in the bunker) it gets the next "extra:n".
 func keep(n: Node, maker: Node = null, part := "") -> void:
 	var mk := level.key_of(maker) if maker != null else ""
-	if mk != "" and part != "":
-		_key(n, mk + "/" + part)
-	else:
-		_key(n, "extra:%d" % _extra)
-		_extra += 1
+	var key := mk + "/" + part
+	if mk == "" or part == "":
+		key = "extra:%d" % extra_n
+		extra_n += 1
+	_key(n, key)
+	made[key] = true
+
+
+## The shape of the level its data makes, for the memory: a memory taken from a level of another shape (its file was
+## edited since) is not laid over this one.
+func signature() -> String:
+	return "%dx%d %08x" % [ld.w, ld.h, "|".join(plan().map(func(st: Dictionary) -> String: return st["key"])).hash() & 0xffffffff]
 
 
 ## The thing is known by this key from now on (Level.key_of, Level.thing).
@@ -186,8 +195,11 @@ func _register(n: Node, tag: String) -> void:
 ## gets the next "extra:n".
 func spawn_thing(e: Dictionary, p: Vector2i, key := "") -> Node3D:
 	if key == "":
-		key = "extra:%d" % _extra
-		_extra += 1
+		key = "extra:%d" % extra_n
+		extra_n += 1
+		made[key] = true
+	elif gone.has(key):
+		return null                                     # taken, killed or broken on an earlier visit
 	var s := int(e.get("level", 0))                    # "level": 1 puts it a storey up: on the balcony there, or on that floor
 	var pos := ld.center(p, s * ld.H) + LM.vec(e.get("offset"), Vector3.ZERO)
 	for k in _kinds:
@@ -302,6 +314,8 @@ func _seat(e: Dictionary, pr: Prop, meta: Dictionary) -> void:
 	ch.rotation.y = pr.rotation.y + PI + deg_to_rad(e.get("seat_turn", 0.0))
 	ch.setup(level, {"prop": e["seat"], "at": e["at"]}, ld.kit_id)
 	_key(ch, _making + "/seat")
+	if gone.has(_making + "/seat"):
+		ch.queue_free()                              # broken on an earlier visit
 
 
 ## A container: what it holds sits in its places, to be taken.
@@ -311,6 +325,9 @@ func _holds(e: Dictionary, pr: Prop, meta: Dictionary) -> void:
 	for held in e.get("holds", []):
 		if hi >= slots.size():
 			break
+		if gone.has(_making + "/holds.%d" % hi):          # taken on an earlier visit
+			hi += 1
+			continue
 		var ie: Dictionary = (held if held is Dictionary else {"item": held}).duplicate()
 		ie["rest"] = true
 		var pk := Pickup.new()

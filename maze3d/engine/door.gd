@@ -30,6 +30,7 @@ var _max_delay := 0.0
 
 
 var storey := 0                 # which floor it is on (set before setup)
+var _placed: Dictionary = {}    # lock, flag, sealed, jammed, held as the level placed it: the memory keeps what changed
 
 
 func setup(lv: Level, p: Vector2i, entry: Dictionary, kit_id: String) -> void:
@@ -65,6 +66,31 @@ func setup(lv: Level, p: Vector2i, entry: Dictionary, kit_id: String) -> void:
 	_light.light_energy = 0.7
 	_light.position = Vector3(0, 3.3, 0)
 	add_child(_light)
+	_refresh()
+	_placed = _state()
+
+
+# ------------------------------------------------------------------ the level's memory (LevelMemory)
+func _state() -> Dictionary:
+	return {"lock": lock, "flag": flag, "sealed": sealed, "jammed": jammed, "held": held}
+
+
+## Its lock, seal, jam and hold, where they differ from how the level placed it.
+func remember() -> Dictionary:
+	var r := {}
+	var now := _state()
+	for k in now:
+		if now[k] != _placed[k]:
+			r[k] = now[k]
+	return r
+
+
+func recall(r: Dictionary) -> void:
+	lock = str(r.get("lock", lock))
+	flag = r.get("flag", flag)
+	sealed = bool(r.get("sealed", sealed))
+	jammed = bool(r.get("jammed", jammed))
+	held = bool(r.get("held", held))
 	_refresh()
 
 
