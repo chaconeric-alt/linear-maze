@@ -30,7 +30,7 @@ jobs:
 
       - name: Godot (cached)
         id: godot-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ~/godot
           key: godot-${{ env.GODOT_VERSION }}-linux
@@ -44,9 +44,18 @@ jobs:
           mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
           chmod +x ~/godot/godot
 
+      - name: Keep Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
       # Godot's imported models: re-importing every model takes minutes, and only what changed needs doing again.
+      # Saved straight after the import, so a run whose tests fail still keeps it.
       - name: Imported files (cached)
-        uses: actions/cache@v4
+        id: import-cache
+        uses: actions/cache/restore@v4
         with:
           path: maze3d/.godot
           key: godot-import-${{ env.GODOT_VERSION }}-${{ hashFiles('maze3d/**/*.import', 'maze3d/project.godot') }}
@@ -55,6 +64,13 @@ jobs:
       - name: Import
         run: ~/godot/godot --headless --path maze3d --import || true
 
+      - name: Keep the imported files
+        if: steps.import-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: maze3d/.godot
+          key: godot-import-${{ env.GODOT_VERSION }}-${{ hashFiles('maze3d/**/*.import', 'maze3d/project.godot') }}
+
       - name: Self-test baseline
         run: |
           set -o pipefail
@@ -62,6 +78,17 @@ jobs:
           python3 maze3d/tests/run_baseline.py --jobs 3 --godot ~/godot/godot | tee baseline.txt || status=$?
           { echo '```'; cat baseline.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           exit $status
+
+      # Every run's check lines in the job's own log, so a failure can be read (and compared with a run elsewhere)
+      # without downloading the artifact.
+      - name: The runs' lines
+        if: always()
+        run: |
+          for f in maze3d/tests/out/*.log; do
+            echo "::group::$(basename "$f" .log)"
+            grep -E '^(PASS|FAIL|INFO|RESULT)|SCRIPT ERROR' "$f" || true
+            echo "::endgroup::"
+          done
 
       - name: Keep the logs
         if: always()
