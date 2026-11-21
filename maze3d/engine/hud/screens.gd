@@ -1,7 +1,7 @@
 extends RefCounted
-## HudScreens - the full-screen overlays: the title screen (the game's levels and generator themes, the easy-mode
-## button), the pause screen, and the end of a level (dead or out, the stats, the way home). It only builds them; the
-## HUD decides when (its state) and its signals start levels.
+## HudScreens - the full-screen overlays: the title screen (Restore from save and New game, the game's levels and
+## generator themes, the easy-mode button), the pause screen (with Save), and the end of a level (dead or out, the
+## stats, the way home). It only builds them; the HUD decides when (its state), and its signals start levels and save.
 class_name HudScreens
 
 var hud: Hud
@@ -40,6 +40,7 @@ func title() -> void:
 	var tag := style.label(g.get("tagline", ""), 20, Color(0.9, 0.9, 0.85))
 	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(tag)
+	box.add_child(_save_row())
 	box.add_child(_easy_button(g.get("easy", {})))
 	box.add_child(style.label("", 8, Color.WHITE))
 	for id in g.get("menu", LM.levels.keys()):
@@ -48,7 +49,46 @@ func title() -> void:
 	for gid in LM.generators:
 		_generator_grid(g, gid)
 	box.add_child(style.label("", 8, Color.WHITE))
-	box.add_child(style.label("WASD move · mouse look · click fire · Shift dash · Space jump\nE use · right mouse zoom · 1-9 / wheel weapons · F lamp · Tab map · Esc pause\nEasy mode: E also names what you look at · P then writes an image prompt for it (console and clipboard)", 15, Color(0.7, 0.75, 0.75)))
+	box.add_child(style.label("WASD move · mouse look · click fire · Shift dash · Space jump\nE use · right mouse zoom · 1-9 / wheel weapons · F lamp · Tab map · Esc pause · F9 save · F10 load\nEasy mode: E also names what you look at · P then writes an image prompt for it (console and clipboard)", 15, Color(0.7, 0.75, 0.75)))
+
+
+## Restore from save, saying where it comes back to, and New game. A new game replaces the saved world, so when there
+## is one it asks for a second press.
+func _save_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var w: Dictionary = State.saved()
+	var place := _saved_place(w)
+	var rb := style.button("Restore from save" + ("   (%s)" % place if place != "" else ""), func(): hud.restore_requested.emit(), place != "")
+	rb.disabled = place == ""
+	rb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(rb)
+	var nb := style.button("New game", func(): pass)
+	var asked := [w.is_empty()]                      # (an array, so the press below can change it)
+	nb.pressed.connect(func():
+		if asked[0]:
+			hud.new_game_requested.emit()
+		else:
+			asked[0] = true
+			nb.text = "New game: press again to replace the saved world")
+	row.add_child(nb)
+	return row
+
+
+## Where a saved world comes back to, in words: the level it was saved in, or the bunker; "" with nothing saved.
+func _saved_place(w: Dictionary) -> String:
+	if w.is_empty():
+		return ""
+	var at: Dictionary = w.get("run", {}).get("where", {})
+	var id: String = at.get("id", LM.home_level())
+	if id == "":
+		return ""
+	var name: String = LM.levels.get(id, {}).get("name", id)
+	if id.begins_with("gen:"):
+		var bits := id.split(":")
+		name = LM.game.get("generator_themes", {}).get(bits[2], {}).get("title", bits[2]) if bits.size() > 2 else "Mixed"
+		name = "a random installation: " + name
+	return "%s, day %d" % [name, int(w.get("world", {}).get("day", 0))]
 
 
 ## The easy-mode switch, which says what it does to the numbers.
@@ -90,9 +130,16 @@ func pause() -> void:
 	overlay.visible = true
 	box.add_child(style.label("PAUSED", 56, style.accent))
 	box.add_child(style.button("Resume", hud.begin_play, true))
+	var sv := style.button("Save", func(): pass)
+	sv.pressed.connect(func():
+		hud.save_requested.emit()
+		sv.text = "Saved")
+	box.add_child(sv)
 	box.add_child(style.button("Start the level again", func(): hud.restart_requested.emit()))
-	box.add_child(style.button("Back to the title", func(): hud.start_requested.emit("")))
-	box.add_child(style.button("Quit", func(): hud.get_tree().quit()))
+	box.add_child(style.button("Back to the title (saves first)", func(): hud.start_requested.emit("")))
+	box.add_child(style.button("Quit (saves first)", func():
+		hud.get_tree().root.propagate_notification(Node.NOTIFICATION_WM_CLOSE_REQUEST)      # Main saves, as when the window is closed
+		hud.get_tree().quit()))
 
 
 ## The end of a level: dead, or out with the level's own title and text; the stats; home, again, or the title.
@@ -112,10 +159,7 @@ func end(info: Dictionary) -> void:
 		box.add_child(t)
 	var s: Dictionary = Game.stats
 	box.add_child(style.label("Salvage  %d cr      Finds  %d / %d      Kills  %d      Time  %d:%02d" % [Game.credits, s["treasure"], s["treasure_total"], s["kills"], int(s["time"]) / 60, int(s["time"]) % 60], 17, Color(0.8, 0.85, 0.85)))
-	var home_id := ""
-	for id in LM.levels:
-		if LM.levels[id].get("home", false):
-			home_id = id
+	var home_id := LM.home_level()
 	var at_home: bool = Game.level != null and Game.level.data.get("home", false)
 	if home_id != "" and not at_home:
 		var s2: String = "Wake up in the bunker (what you were carrying is gone)" if dead else "Home to the bunker (%d cr banked)" % Game.credits

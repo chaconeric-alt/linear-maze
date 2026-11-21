@@ -7,6 +7,9 @@ class_name Hud
 
 signal start_requested(level_id: String)
 signal restart_requested
+signal save_requested            # the pause screen's Save
+signal restore_requested         # the title screen's Restore from save
+signal new_game_requested        # the title screen's New game
 
 var accent := Color("e8a23a")
 var root: Control
@@ -167,10 +170,6 @@ func _label(text: String, size: int, c: Color) -> Label:
 	return _style.label(text, size, c)
 
 
-func _button(text: String, cb: Callable, primary := false) -> Button:
-	return _style.button(text, cb, primary)
-
-
 # ------------------------------------------------------------------ status
 func refresh() -> void:
 	var pl: Node = Game.player
@@ -290,6 +289,10 @@ func playing() -> bool:
 	return _state == "play"
 
 
+func paused() -> bool:
+	return _state == "pause"
+
+
 ## Draw the open panel again: `text` as its body, then what it offers (or `working` while a hack runs).
 func draw_panel(text: String, working := "", final := false) -> void:
 	_fill_panel(text, working, final)
@@ -312,8 +315,8 @@ func _fill_panel(text: String, working := "", final := false) -> void:
 	var n := 0
 	for it in Game.interaction.offered(final):
 		n += 1
-		_panel_body.add_child(_button("%d   %s" % [n, it[1]], Game.interaction.choose.bind(it[0]), n == 1))
-	_panel_body.add_child(_button("Esc   Step away", close_panel))
+		_panel_body.add_child(_style.button("%d   %s" % [n, it[1]], Game.interaction.choose.bind(it[0]), n == 1))
+	_panel_body.add_child(_style.button("Esc   Step away", close_panel))
 
 
 func close_panel() -> void:

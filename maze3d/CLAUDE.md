@@ -8,7 +8,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 |---|---|---|
 | Registry | `engine/lm.gd` (autoload `LM`) | Boots a game: reads `game.json`, kits, defs, levels, generators; checks the schema. Model and def lookups, sounds. |
 | Run state | `engine/game.gd` (autoload `Game`) | One run: player, level, flags; keys, credits, haul, stats (kept in `State.run()`); `run_effects`; `Game.interaction`. |
-| Saved state | `engine/state.gd` (autoload `State`, class `WorldState`) + `engine/state/migrations.gd` | The one record of the world, and the one thing saved (`user://saves/<world>.json`, `.tmp` then rename, `.bak`): world (home = the bunker), characters, run, levels; versioned, migrated as read. |
+| Saved state | `engine/state.gd` (autoload `State`, class `WorldState`) + `engine/state/` | The one record of the world, and the one thing saved (`user://saves/<world>.json`, `.tmp` then rename, `.bak`): world (home = the bunker), characters, run, levels; versioned, migrated as read (`StateMigrations`). `SavePoint`: where a save comes back to (`run.where`); `Main.save_game` / `restore_game` (F9, F10, Save, Restore from save). |
 | Bunker record | `engine/profile.gd` (autoload `Profile`) | A front over `State.home()`: banked credits, weapons, armour, salvage, trophies, furnishings, the robot; `record()` = the character's runs, deaths, best. |
 | Event bus | `engine/events.gd` (autoload `Events`) | Game facts (`actor.died`, `item.taken`, `door.changed`, `flag.set`, ...) from whoever caused them to whoever listens; plain-data payloads; `--trace=events`; event triggers in level data. |
 | Effects | `engine/effects.gd` | `EffectRegistry`: effect type to handler. Run-wide types in `game.gd`, the place's in `engine/level/level_effects.gd`, a prop's `use` in `engine/prop_uses.gd`. |
@@ -20,7 +20,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 | HUD | `engine/hud.gd` + `engine/hud/` | Status, messages, panels (drawing); `HudStyle`, `HudCrosshair`, `HudMap`, `HudScreens` (title, pause and end). |
 | Easy mode | `engine/identify.gd`, `engine/imageprompt.gd` + `engine/imageprompt/` | E names what you look at; P writes an image-generator prompt for it (wording in `prompts.json` and each kit's `prompt.json`). |
 | Bunker | `engine/home.gd` + `engine/home/decorating.gd` | What the home level's furniture does, and decorating; its content and words are `games/<game>/defs/home.json`. |
-| Switches | `engine/debug.gd` | Test and look switches; `main.gd` sets them from the command line. Game code never reads the command line. |
+| Switches | `engine/debug.gd`, `engine/main/command_line.gd` | Test and look switches; `main.gd` sets them from the command line, and `CommandLine` runs the ones that act while the game runs (`--shot`, `--frames`, `--trace`, `--at` ...). Game code never reads the command line. |
 | Schema | `engine/schema.gd` | The valid keys of actors, items, weapons and level things (mirrors `SPEC.md`). |
 | Generators | `generators/rooms.gd` + `generators/rooms/` | A pipeline of named stages over a `GenContext`. |
 | Game data | `games/havenot/` | `game.json`, `defs/`, `levels/` (and a level's own test, `<id>_test.gd`). |

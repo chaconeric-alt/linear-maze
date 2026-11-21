@@ -83,3 +83,47 @@ func shut(d: Door) -> bool:
 
 func kinds(kind: String, on_storey := -99) -> Array:
 	return runner.kinds(kind, on_storey)
+
+
+## How the level now differs from what it remembered before (two Level.remember() records): "gone", what was gone and is
+## back; "extra", what was made while playing and is missing or not where it was; "things", what remembers otherwise.
+## A monster may have settled a little where it was laid (within half a metre; facing and health within 0.05), and a
+## climber made again makes for the nearest wall to perch, as when it was placed (within a cell of where it was).
+func memory_differs(before: Dictionary, after: Dictionary) -> Dictionary:
+	var out := {"gone": [], "extra": [], "things": []}
+	for k in before["gone"]:
+		if level.thing(k) != null:
+			out["gone"].append(k)
+	for k in before["extra"]:
+		var n: Node = level.thing(k)
+		var at: Array = before["extra"][k]["at"]
+		var off: Vector3 = (n as Node3D).global_position - Vector3(at[0], at[1], at[2]) if n != null else Vector3.INF
+		var near := 0.5
+		if n is Actor and (n as Actor).climb != null:
+			off.y = 0.0
+			near = level.C
+		if n == null or off.length() > near:
+			out["extra"].append(k)
+	for k in before["things"]:
+		var was: Dictionary = before["things"][k].duplicate()
+		if before["extra"].has(k):                   # made again where it was: its spot is in its "extra" record, so
+			was.erase("at")                          # it no longer reports having moved from it
+			was.erase("yaw")
+		if not _like(was, after["things"].get(k, {})):
+			out["things"].append("%s %s -> %s" % [k, JSON.stringify(before["things"][k]), JSON.stringify(after["things"].get(k, {}))])
+	return out
+
+
+func _like(a: Dictionary, b: Dictionary) -> bool:
+	for k in a:
+		if not b.has(k):
+			return false
+		if k == "at":
+			if Vector3(a[k][0], a[k][1], a[k][2]).distance_to(Vector3(b[k][0], b[k][1], b[k][2])) > 0.5:
+				return false
+		elif k == "yaw" or k == "hp":
+			if absf(float(a[k]) - float(b[k])) > 0.05:
+				return false
+		elif JSON.stringify(a[k]) != JSON.stringify(b[k]):
+			return false
+	return true

@@ -5,7 +5,8 @@ extends Node
 ##               weapons and armour in the armoury, salvage, trophies, what was bought and where it was put, the robot)
 ##   characters  the roster: each character ({"id", "name", "runs", "deaths", "best"}) and which one is "active"
 ##   run         the expedition under way: credits, haul, stats (Game reads and writes these through Game.credits and
-##               the rest); cleared as a level is loaded (Game.reset)
+##               the rest); cleared as a level is loaded (Game.reset); and "where", the place a save comes back to
+##               (SavePoint: the level, the player as they stood), gone between levels
 ##   levels      what each level remembers, by its key (LevelMemory): its own flags, the key cards found in it, the
 ##               panel options used, and what changed in it (taken, killed, opened, moved). Kept for as long as the
 ##               world, except a generated level's, which goes when the run that made it ends, and any level's on a
@@ -20,7 +21,8 @@ extends Node
 ## kept as <world>.bak, so a crash never leaves half a save. Every save carries "v"; StateMigrations brings an older
 ## one up to date, a step at a time, as it is read, and nothing reads an old shape directly. Version 0 is the bunker
 ## file from before worlds (user://havenot_home.json): with no world saved yet, it becomes the first world, and the
-## old file is left where it is. The self-test and --noprofile keep the state in memory and never touch the disk.
+## old file is left where it is. The self-test and --noprofile keep the state in memory and never touch the disk: a
+## save is kept as text in memory (kept), and saved() reads it back from there.
 ## SPEC.md 5.10.
 class_name WorldState
 
@@ -30,6 +32,7 @@ const OLD_HOME := "user://havenot_home.json"
 var data: Dictionary = {}
 var world_name := "world"        # the file it is saved as (one world for now; the title screen will offer several)
 var memory_only := false         # never read or write the disk (Debug.memory_profile: the self-test, --noprofile)
+var kept := ""                   # with memory_only, the last save (its text), in place of the file
 var level_key := ""              # the level being played, by its key (Main: enter_level)
 
 
@@ -66,13 +69,15 @@ func reset_run() -> void:
 
 
 ## A level is about to be played: its memory, under its key: what was left there last time, or a new one. `fresh`:
-## start it afresh whatever was left (the bunker, which keeps its own record in the home).
-func enter_level(key: String, fresh := false) -> void:
+## start it afresh whatever was left (the bunker, which keeps its own record in the home). `visit`: count it as a
+## visit (not when a save is being come back to: the player never left).
+func enter_level(key: String, fresh := false, visit := true) -> void:
 	level_key = key
 	if fresh or not data["levels"].has(key):
 		data["levels"][key] = WorldState.blank_memory()
 	var m: Dictionary = data["levels"][key]
-	m["visits"] = int(m.get("visits", 0)) + 1
+	if visit:
+		m["visits"] = int(m.get("visits", 0)) + 1
 
 
 ## Forget what a level remembers: the next visit finds it as it was made.
@@ -159,6 +164,7 @@ static func blank_memory() -> Dictionary:
 # ------------------------------------------------------------------ on disk
 func save() -> void:
 	if memory_only:
+		kept = to_json()
 		return
 	DirAccess.make_dir_recursive_absolute(DIR)
 	var path := DIR + world_name + ".json"
@@ -188,10 +194,31 @@ static func from_json(text: String) -> Dictionary:
 ## The world saved under that name; with none, the old bunker file made into one; with neither, a new world.
 func read_world(name: String) -> Dictionary:
 	for path in [DIR + name + ".json", DIR + name + ".bak", OLD_HOME]:
-		if FileAccess.file_exists(path):
-			var f := FileAccess.open(path, FileAccess.READ)
-			var got: Variant = JSON.parse_string(f.get_as_text()) if f else null
-			if got is Dictionary:
-				return StateMigrations.up(got)
-			push_warning("State: %s is not a saved world; trying the next" % path)
+		var got := _read(path)
+		if not got.is_empty():
+			return got
 	return WorldState.blank()
+
+
+## The world as it was last saved, brought up to date ({} if it never was): what Restore from save comes back to. It
+## is read again, not taken from `data`, which has gone on since (the level played on, the run cleared).
+func saved() -> Dictionary:
+	if memory_only:
+		return WorldState.from_json(kept) if kept != "" else {}
+	for path in [DIR + world_name + ".json", DIR + world_name + ".bak"]:
+		var got := _read(path)
+		if not got.is_empty():
+			return got
+	return {}
+
+
+## A saved world from that file, brought up to date; {} if there is no such file or it is not a world.
+func _read(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var f := FileAccess.open(path, FileAccess.READ)
+	var got: Variant = JSON.parse_string(f.get_as_text()) if f else null
+	if got is Dictionary:
+		return StateMigrations.up(got)
+	push_warning("State: %s is not a saved world; trying the next" % path)
+	return {}

@@ -108,6 +108,14 @@ func load_kit(id: String) -> void:
 					kit[key][k] = v
 
 
+## The game's bunker: its level with "home"; "" if it has none.
+func home_level() -> String:
+	for id in levels:
+		if levels[id].get("home", false):
+			return id
+	return ""
+
+
 func get_def(kind: String, id: String) -> Dictionary:
 	if defs.has(kind) and defs[kind].has(id):
 		return defs[kind][id]

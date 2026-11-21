@@ -69,8 +69,9 @@ func take_scale() -> float:
 	return 1.0 / maxf(0.01, float(LM.game.get("easy", {}).get("take", 3.0))) if easy else 1.0
 
 
-func reset() -> void:
-	State.reset_run()                 # (the level's flags and keys start afresh as Main enters it: State.enter_level)
+func reset(keep_run := false) -> void:
+	if not keep_run:                  # a save being come back to keeps the run it was saved with
+		State.reset_run()             # (the level's flags and keys start afresh as Main enters it: State.enter_level)
 	over = false
 	interaction.reset()
 

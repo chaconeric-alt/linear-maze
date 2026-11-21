@@ -1,6 +1,7 @@
 extends Node3D
 ## Main - boots the game named in Project Settings (maze3d/game), shows the title, and
-## builds and tears down levels.
+## builds and tears down levels. It saves the game and comes back to the save (F9 and F10, the pause screen's Save,
+## the title screen's Restore from save; SavePoint).
 ##
 ## For testing from a terminal:  godot --path maze3d -- --level=<id> [--shot=out.png] [--frames=N] [--god] [--at=x,y] [--yaw=deg]
 
@@ -13,7 +14,6 @@ var _left := true                # the level being played has been reported left
 var _how_left := ""              # how: "out", "died", "away" (what becomes of its memory is settled as it is unloaded)
 var _in_run := false             # an expedition is under way (run.started ... run.ended)
 var _args: Dictionary = {}
-var _frame := 0
 
 
 func _ready() -> void:
@@ -31,12 +31,17 @@ func _ready() -> void:
 	Game.hud = hud
 	hud.start_requested.connect(_on_start)
 	hud.restart_requested.connect(restart_level)
+	hud.save_requested.connect(func(): save_game())
+	hud.restore_requested.connect(func(): restore_game())
+	hud.new_game_requested.connect(new_game)
 	Game.ended.connect(_on_ended)
 	var first: String = _args.get("level", LM.game.get("start", ""))
 	if not _load(first, true):
 		push_error("no level %s" % first)
 		get_tree().quit(1)
 		return
+	if not _args.is_empty() and not _args.has("selftest"):
+		add_child(CommandLine.new(self, _args))    # the switches that act while it runs: --shot, --frames, --trace, --at ...
 	if _args.has("level"):
 		hud.begin_play()
 		if _args.has("selftest"):
@@ -116,6 +121,7 @@ func restart_level() -> void:
 
 func _on_start(id: String) -> void:
 	if id == "":
+		save_game(true)                              # from the pause screen: Restore from save comes back here
 		_load(LM.game.get("start", ""), true)
 		hud.show_title()
 		get_tree().paused = true
@@ -127,48 +133,72 @@ func _on_start(id: String) -> void:
 		Game.say("Could not make a level from %s. Try another." % id, "warn")
 		return
 	hud.begin_play()
+	save_game(true)                                  # saved on arrival: what Restore from save comes back to
 
 
 ## Build the level with that id (or generate it: gen:<generator>[:<theme>]) and put the player in it. False if there is no
-## such level, or the generator could make nothing with its settings.
-func _load(id: String, _attract: bool) -> bool:
+## such level, or the generator could make nothing with its settings. `back`: a save's place (SavePoint) being come
+## back to: the seed it was made from, the run kept as it was saved, the player put back where they stood.
+func _load(id: String, _attract: bool, back: Dictionary = {}) -> bool:
 	_unload()
 	_level_id = id
 	if level:
 		level.queue_free()
 		remove_child(level)
 		level = null
-	Game.reset()
+	Game.reset(not back.is_empty())
 	Game.calm = _args.has("calm")
 	if _args.has("easy"):                            # --easy / --easy=0: for this run only; the title screen button is the one that is remembered
 		Game.easy = _args["easy"] != "0"
-	var data: Dictionary
-	if id.begins_with("gen:"):
-		var bits := id.substr(4).split(":")        # gen:<generator>[:<theme>]
-		var g: Object = LM.generators.get(bits[0])
-		if g == null:
-			return false
-		var params: Dictionary = LM.game.get("generator_params", {}).duplicate(true)
-		if bits.size() > 1:
-			params.merge(LM.game.get("generator_themes", {}).get(bits[1], {}), true)
-		_seed = int(_args.get("seed", randi()))
-		data = g.generate(_seed, params)
-		if _args.has("dump"):                        # --dump=file.json: keep the level that was generated
-			var f := FileAccess.open(_args["dump"], FileAccess.WRITE)
-			if f:
-				f.store_string(JSON.stringify(data, " "))
-	else:
-		data = LM.levels.get(id, {}).duplicate(true)
+	var data := _level_data(id, back)
 	if data.is_empty():
 		return false
 	var home: bool = data.get("home", false)
-	State.enter_level(level_key(), home)             # the bunker keeps its own record (the home), not a level's memory
+	State.enter_level(level_key(), home, back.is_empty())      # the bunker keeps its own record (the home), not a level's memory
 	level = Level.new()
 	level.name = "Level"
 	level.process_mode = Node.PROCESS_MODE_PAUSABLE      # Main keeps running while paused; the world must not
 	add_child(level)
 	Game.level = level
 	level.build(data, {} if home else State.memory())
+	var sortie := _put_player(data, back)
+	Game.player = player
+	Game.playing = true
+	if data.has("intro") and back.is_empty():
+		Game.say(data["intro"], "info")
+	hud.refresh()
+	_left = false
+	if not home and not _in_run:
+		_in_run = true
+		Events.emit("run.started", {"level": level_key(), "from": "home" if sortie else "title"})
+	Events.emit("level.entered", {"level": level_key(), "how": "restore" if not back.is_empty() else ("home" if home else ("sortie" if sortie else "start"))})
+	return true
+
+
+## The level's data: from the game's levels, or generated (with the seed given, a save's, or a new one).
+func _level_data(id: String, back: Dictionary) -> Dictionary:
+	if not id.begins_with("gen:"):
+		return LM.levels.get(id, {}).duplicate(true)
+	var bits := id.substr(4).split(":")            # gen:<generator>[:<theme>]
+	var g: Object = LM.generators.get(bits[0])
+	if g == null:
+		return {}
+	var params: Dictionary = LM.game.get("generator_params", {}).duplicate(true)
+	if bits.size() > 1:
+		params.merge(LM.game.get("generator_themes", {}).get(bits[1], {}), true)
+	_seed = int(back.get("seed", _args.get("seed", randi())))      # (randi is drawn either way, as it always was)
+	var data: Dictionary = g.generate(_seed, params)
+	if _args.has("dump"):                            # --dump=file.json: keep the level that was generated
+		var f := FileAccess.open(_args["dump"], FileAccess.WRITE)
+		if f:
+			f.store_string(JSON.stringify(data, " "))
+	return data
+
+
+## Make the player: at the level's start, set up from the game's and the level's settings, with the armoury's outfit if
+## they came by the bunker's lift; or, coming back to a save, with what they carried, where they stood. True if they
+## came by the lift.
+func _put_player(data: Dictionary, back: Dictionary) -> bool:
 	player = Player.new()
 	level.add_child(player)
 	player.position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
@@ -177,21 +207,15 @@ func _load(id: String, _attract: bool) -> bool:
 	for k in data.get("player", {}):
 		cfg[k] = data["player"][k]
 	var sortie: bool = Profile.sortie
-	if Profile.sortie and not data.get("home", false):      # they came by the bunker's lift: the armoury comes too
+	if back.has("player"):
+		SavePoint.fit(cfg, back["player"])
+	elif Profile.sortie and not data.get("home", false):      # they came by the bunker's lift: the armoury comes too
 		Profile.outfit(cfg)
 	Profile.sortie = false
 	player.setup(level, cfg)
-	Game.player = player
-	Game.playing = true
-	if data.has("intro"):
-		Game.say(data["intro"], "info")
-	hud.refresh()
-	_left = false
-	if not data.get("home", false) and not _in_run:
-		_in_run = true
-		Events.emit("run.started", {"level": level_key(), "from": "home" if sortie else "title"})
-	Events.emit("level.entered", {"level": level_key(), "how": "home" if data.get("home", false) else ("sortie" if sortie else "start")})
-	return true
+	if back.has("player"):
+		SavePoint.put_back(player, back["player"])
+	return sortie
 
 
 ## The level being played, by the id it was started with ("gen:rooms:crypt" for a generated one).
@@ -208,13 +232,18 @@ func _leave(how: String) -> void:
 	Events.emit("level.left", {"level": level_key(), "how": how})
 
 
-## The level is about to be freed: what changed in it is kept in its memory (LevelMemory), unless the player died there,
-## which forgets it (it is as it was made on the next visit), or it was a generated one whose run is over (a one-off),
-## or it is the bunker, which keeps its own record (the home).
+## The level is about to be freed: what becomes of its memory is settled.
 func _unload() -> void:
 	if level == null:
 		return
 	_leave("away")
+	_settle()
+
+
+## What changed in the level is kept in its memory (LevelMemory), unless the player died there, which forgets it (it is
+## as it was made on the next visit), or it was a generated one whose run is over (a one-off), or it is the bunker,
+## which keeps its own record (the home).
+func _settle() -> void:
 	if level.data.get("home", false):
 		return
 	if _how_left == "died" or (_level_id.begins_with("gen:") and not _in_run):
@@ -237,7 +266,9 @@ func level_key() -> String:
 	return "%s#%d" % [_level_id, _seed] if _level_id.begins_with("gen:") else _level_id
 
 
-## An expedition is over. Out alive: what was carried is banked in the bunker. Dead: it is not.
+## An expedition is over. Out alive: what was carried is banked in the bunker, and what changed in the level is saved
+## with it (a death's is settled as the level goes). Dead: nothing is banked. Either way the save no longer has a place
+## in a level: between levels, Restore from save comes back to the bunker.
 func _on_ended(info: Dictionary) -> void:
 	if level == null:
 		return
@@ -245,64 +276,90 @@ func _on_ended(info: Dictionary) -> void:
 	_leave("died" if dead else "out")
 	if level.data.get("home", false):
 		return
+	var was_run := _in_run
+	_in_run = false
+	State.run().erase("where")
 	if dead:
 		Profile.died()
-	elif player:
-		Profile.bank(Game.credits, player.weapons, player.armor, Game.haul)
-	if _in_run:
-		_in_run = false
+	else:
+		_settle()
+		if player:
+			Profile.bank(Game.credits, player.weapons, player.armor, Game.haul)
+	if was_run:
 		Events.emit("run.ended", {"alive": not dead, "banked": 0 if dead else Game.credits})
 
 
-func _process(_dt: float) -> void:
-	if _args.is_empty() or _args.has("selftest"):
+# ------------------------------------------------------------------ saving any time (SavePoint; SPEC.md 5.15)
+## Save the game as it is now: the world, with what changed in the level and where the player stands in it. On F9 and
+## the pause screen's Save (said), and on arriving in a level, leaving for the title and quitting (quietly). The text
+## saved; "" when there is nothing to save: the title screen, a level that has ended, a dead player.
+func save_game(quiet := false) -> String:
+	if level == null or player == null or player.dead or _left or not (hud.playing() or hud.paused()):
+		return ""
+	if not level.data.get("home", false):
+		State.memory().merge(level.remember(), true)
+	State.run()["where"] = SavePoint.where(_level_id, _seed, level_key(), _in_run, player)
+	State.save()
+	if not quiet:
+		Game.say("Saved.", "info")
+	return State.to_json()
+
+
+## Come back to the save (F10, the title screen's Restore from save): the world as it was saved, the level it was saved
+## in built again from its memory, and the player put back where they stood. A save made between levels comes back to
+## the bunker. False, and said, when there is nothing to come back to.
+func restore_game() -> bool:
+	var w: Dictionary = State.saved()
+	var at: Dictionary = w.get("run", {}).get("where", {}) if not w.is_empty() else {}
+	var to: String = at.get("id", LM.home_level()) if not w.is_empty() else ""
+	if to == "":
+		Game.say("There is no saved game to come back to.", "warn")
+		return false
+	_drop("restore")
+	State.data = w
+	_in_run = bool(at.get("in_run", false))
+	Profile.sortie = false
+	if not _load(to, false, at):
+		_on_start("")
+		Game.say("The saved game could not be come back to.", "warn")
+		return false
+	hud.begin_play()
+	return true
+
+
+## A new world in place of the saved one (the title screen's New game): a new scavenger and an empty bunker, saved at
+## once; then the bunker, or in a game without one the title screen again.
+func new_game() -> void:
+	_drop("away")                                    # (the level being played belongs to the world being replaced)
+	_in_run = false
+	State.data = WorldState.blank()
+	State.save()
+	_on_start(LM.home_level())
+
+
+## Let the level go without settling its memory: the world it belongs to is being replaced (by a saved one, or a new one).
+func _drop(how: String) -> void:
+	_leave(how)
+	if level:
+		level.queue_free()
+		remove_child(level)
+		level = null
+
+
+## F9 saves, F10 comes back to the save, from play, the pause screen or the title. (An open panel keeps the keys.)
+func _unhandled_key_input(ev: InputEvent) -> void:
+	if not (ev is InputEventKey) or not ev.pressed or ev.echo:
 		return
-	_frame += 1
-	if _frame == 2:
-		if _args.has("lights"):                      # --lights: how many lights the level has, and the most the view could hold at once
-			var ls: Array = []
-			for n in level.get_children():
-				if n is OmniLight3D:
-					ls.append(n.global_position)
-			var worst := 0
-			for i in range(0, ls.size(), 7):
-				var c := 0
-				for q in ls:
-					if q.distance_to(ls[i]) < 48.0:
-						c += 1
-				worst = maxi(worst, c)
-			print("LIGHTS  %d omni lights in the level; up to %d within 48 m of one place (Forward+ holds %d in view)" % [ls.size(), worst, ProjectSettings.get_setting("rendering/limits/cluster_builder/max_clustered_elements")])
-		if _args.has("god"):
-			player.max_hp = 99999
-			player.hp = 99999
-		if _args.has("at"):
-			var p: PackedStringArray = _args["at"].split(",")
-			player.position = level.center(Vector2i(int(p[0]), int(p[1])), 0.05) + Vector3(float(p[2]) if p.size() > 2 else 0.0, 0, float(p[3]) if p.size() > 3 else 0.0)
-		if _args.has("alert"):                       # --alert: everything knows where the player is from the start
-			for a in level.actors:
-				a.alert.call_deferred()
-		if _args.has("up"):                          # --up=1: start on that storey (for looking at balconies)
-			player.position.y += float(_args["up"]) * level.H
-		if _args.has("yaw"):
-			player.rotation.y = deg_to_rad(float(_args["yaw"]))
-		if _args.has("pitch"):
-			player.pitch = deg_to_rad(float(_args["pitch"]))
-		if _args.has("nohud"):
-			hud.visible = false
-	if _args.has("trace") and _args["trace"] != "events" and level:      # --trace: print whenever an actor changes what it is doing
-		for a in level.actors:
-			if is_instance_valid(a):
-				var st: String = a.trace_text()
-				if a.get_meta("trace", "") != st:
-					a.set_meta("trace", st)
-					print("[%.2fs] %s#%d %s at (%.1f %.1f %.1f) player hp=%d" % [Game.stats["time"], a.d.get("name", "?"), a.get_index(), st, a.position.x, a.position.y, a.position.z, player.hp])
-				if _args.get("trace", "") == a.d.get("name", "") and _frame % 300 == 0:      # --trace=Name: where that one is, every so often
-					print("[%.1fs] %s at (%.1f %.1f %.1f)" % [Game.stats["time"], a.d.get("name", "?"), a.position.x, a.position.y, a.position.z])
-	if _args.has("shot") and _frame == int(_args.get("frames", "40")):
-		var img := get_viewport().get_texture().get_image()
-		img.save_png(_args["shot"])
-		print("shot saved ", _args["shot"])
-		get_tree().quit()
-	elif not _args.has("shot") and _args.has("frames") and _frame >= int(_args["frames"]):
-		print("ran ", _frame, " frames; actors=", level.actors.size(), " hp=", player.hp)
-		get_tree().quit()
+	if ev.keycode == KEY_F9:
+		save_game()
+	elif ev.keycode == KEY_F10:
+		restore_game()
+	else:
+		return
+	get_viewport().set_input_as_handled()
+
+
+## Closing the window (or the pause screen's Quit) saves first.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and hud != null:
+		save_game(true)
