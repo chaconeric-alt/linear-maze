@@ -161,6 +161,12 @@ func _pose() -> void:
 func walk_spec() -> Dictionary:
 	return _walk
 
+
+## An arch that would react to being walked through now: not cooling down from the last time, and not a used-up
+## "once" arch.
+func walk_ready() -> bool:
+	return not _walk.is_empty() and _walk_cool <= 0.0 and not (_walk.get("once", false) and used > 0)
+
 # ------------------------------------------------------------------ walking through it (arches)
 func _walk_tick(dt: float) -> void:
 	_walk_cool -= dt

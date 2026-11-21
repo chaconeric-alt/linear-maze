@@ -15,8 +15,17 @@ func run() -> void:
 			var actors1 := level.actors.size()
 			var was_calm := Game.calm
 			Game.calm = true                         # nothing turns on the player while it is tested: a bite mid-step is not the arch
-			for i in 9:                              # walk through it, a quarter of a metre a frame, from a metre in front to a metre behind
-				pl.global_position = n.global_position + n.global_transform.basis.z * (-1.0 + 0.25 * i) + Vector3(0, 0.05, 0)
+			# First on the near side, just out of the arch's reach (more than 1.5 m), so the arch learns which side the
+			# player is on without counting a crossing; then wait until it is ready (not cooling down from an earlier pass).
+			pl.global_position = n.global_position - n.global_transform.basis.z * 1.75 + Vector3(0, 0.05, 0)
+			pl.velocity = Vector3.ZERO
+			await frames(2)
+			for _w in 180:
+				if n.walk_ready():
+					break
+				await frames(1)
+			for i in 11:                             # walk through, a quarter of a metre a frame, 1.25 m in front to 1.25 m behind
+				pl.global_position = n.global_position + n.global_transform.basis.z * (-1.25 + 0.25 * i) + Vector3(0, 0.05, 0)
 				pl.velocity = Vector3.ZERO
 				await frames(1)
 			await frames(70)
