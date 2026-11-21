@@ -1,7 +1,8 @@
 extends Node
 ## Game - the state of one run: the player, the level being played, story flags, what's carried,
-## and the effect runner that levels script themselves with. The run's credits, haul, stats and keys are kept in State
-## (State.run(), so a save has them); Game.credits and the rest read and write them there.
+## and the effect runner that levels script themselves with. What lasts is kept in State, and Game reads and writes it
+## there: the run's credits, haul and stats (State.run()); the level's flags and key cards (its memory); flags named
+## "world:..." (the world's).
 
 signal flag_set(name: String)
 signal toast(text: String, kind: String)
@@ -14,10 +15,12 @@ var calm := false            # --calm: nothing notices the player (for looking a
 var player: Node3D = null
 var level: Node3D = null
 var hud: Node = null
-var flags: Dictionary = {}
-var keys: Dictionary:              # colour -> true
+var flags: Dictionary:             # the level's own flags (has_flag and set_flag also see "world:" flags, kept by the world)
 	get:
-		return State.run()["keys"]
+		return State.memory()["flags"]
+var keys: Dictionary:              # colour -> true: key cards, which belong to the level they were found in
+	get:
+		return State.keys()
 var credits: int:
 	get:
 		return int(State.run()["credits"])
@@ -67,8 +70,7 @@ func take_scale() -> float:
 
 
 func reset() -> void:
-	flags.clear()
-	State.reset_run()
+	State.reset_run()                 # (the level's flags and keys start afresh as Main enters it: State.enter_level)
 	over = false
 	interaction.reset()
 
@@ -79,9 +81,8 @@ func _process(dt: float) -> void:
 
 
 func set_flag(name: String) -> void:
-	if name == "" or flags.has(name):
+	if name == "" or not State.set_flag(name):
 		return
-	flags[name] = true
 	flag_set.emit(name)
 	Events.emit("flag.set", {"name": name, "scope": "world" if name.begins_with("world:") else "level"})
 	changed.emit()
@@ -100,10 +101,10 @@ func has_flag(f: Variant) -> bool:
 		return true
 	if f is Array:
 		for x in f:
-			if flags.has(x):
+			if State.has_flag(str(x)):
 				return true
 		return false
-	return flags.has(f)
+	return State.has_flag(str(f))
 
 
 func say(text: String, kind := "info") -> void:

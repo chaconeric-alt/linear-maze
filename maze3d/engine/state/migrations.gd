@@ -5,7 +5,7 @@ extends RefCounted
 ## which will change with later versions. A save newer than this game is left as it is (and warned about).
 class_name StateMigrations
 
-const CURRENT := 1
+const CURRENT := 2
 
 
 static func up(d: Dictionary) -> Dictionary:
@@ -16,6 +16,8 @@ static func up(d: Dictionary) -> Dictionary:
 		match v:
 			0:
 				d = v0_to_v1(d)
+			1:
+				d = v1_to_v2(d)
 		v = int(d.get("v", v + 1))
 	return d
 
@@ -32,3 +34,17 @@ static func v0_to_v1(old: Dictionary) -> Dictionary:
 		"characters": {"roster": [who], "active": "c1", "next": 2},
 		"run": {"credits": 0, "haul": {}, "stats": {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}, "keys": {}},
 		"levels": {}}
+
+
+## Version 2 keeps key cards in the memory of the level they were found in, not in the run; a level's memory holds its
+## flags and keys. A version-1 save was made between levels, so its run's keys were empty: they go.
+static func v1_to_v2(d: Dictionary) -> Dictionary:
+	d["run"].erase("keys")
+	for k in d["levels"]:
+		var m: Dictionary = d["levels"][k]
+		if not m.has("flags"):
+			m["flags"] = {}
+		if not m.has("keys"):
+			m["keys"] = {}
+	d["v"] = 2
+	return d

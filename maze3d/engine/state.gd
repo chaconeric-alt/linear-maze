@@ -4,9 +4,12 @@ extends Node
 ##   world       the day, world flags, and "home": the bunker and everything stored in it (banked credits, the
 ##               weapons and armour in the armoury, salvage, trophies, what was bought and where it was put, the robot)
 ##   characters  the roster: each character ({"id", "name", "runs", "deaths", "best"}) and which one is "active"
-##   run         the expedition under way: credits, haul, stats, keys (Game reads and writes these through Game.credits
-##               and the rest); cleared as a level is loaded (Game.reset)
-##   levels      what each level remembers, by its key (filled in later: the levels that remember)
+##   run         the expedition under way: credits, haul, stats (Game reads and writes these through Game.credits and
+##               the rest); cleared as a level is loaded (Game.reset)
+##   levels      what each level remembers, by its key: its own flags and the key cards found in it (enter_level)
+## Flags have a scope: a flag whose name starts "world:" is the world's and is seen everywhere; any other belongs to
+## the level it was set in. Old levels' flags (a trap's "off", a door's "flag", a puzzle's) are level flags, as
+## before: nothing is renamed.
 ## Every system reads and writes through here. Profile (the bunker) and Game (the run) are fronts over it, so no number
 ## is kept twice.
 ##
@@ -18,12 +21,13 @@ extends Node
 ## SPEC.md 5.10.
 class_name WorldState
 
-const VERSION := 1
+const VERSION := 2
 const DIR := "user://saves/"
 const OLD_HOME := "user://havenot_home.json"
 var data: Dictionary = {}
 var world_name := "world"        # the file it is saved as (one world for now; the title screen will offer several)
 var memory_only := false         # never read or write the disk (Debug.memory_profile: the self-test, --noprofile)
+var level_key := ""              # the level being played, by its key (Main: enter_level)
 
 
 func _ready() -> void:
@@ -53,9 +57,46 @@ func character() -> Dictionary:
 	return {}
 
 
-## A level is being loaded: the run's credits, haul, stats and keys start again (as Game.reset always did).
+## A level is being loaded: the run's credits, haul and stats start again (as Game.reset always did).
 func reset_run() -> void:
 	data["run"] = WorldState.blank_run()
+
+
+## A level is about to be played: its memory, under its key. For now it starts empty every time, as a level always
+## has; once levels remember, coming back will find what was left.
+func enter_level(key: String) -> void:
+	level_key = key
+	data["levels"][key] = WorldState.blank_memory()
+
+
+## What the level being played remembers.
+func memory() -> Dictionary:
+	if not data["levels"].has(level_key):
+		data["levels"][level_key] = WorldState.blank_memory()
+	return data["levels"][level_key]
+
+
+## Where a flag of that name is kept: the world's flags for "world:...", the level's own for any other.
+func flags_for(name: String) -> Dictionary:
+	return data["world"]["flags"] if name.begins_with("world:") else memory()["flags"]
+
+
+func has_flag(name: String) -> bool:
+	return flags_for(name).has(name)
+
+
+## Set it; false if it was set already.
+func set_flag(name: String) -> bool:
+	var f := flags_for(name)
+	if f.has(name):
+		return false
+	f[name] = true
+	return true
+
+
+## The key cards held: they belong to the level they were found in.
+func keys() -> Dictionary:
+	return memory()["keys"]
 
 
 ## The character being played retires: they leave the roster, and a new scavenger takes the bunker over. The world,
@@ -93,7 +134,11 @@ static func blank_home() -> Dictionary:
 
 
 static func blank_run() -> Dictionary:
-	return {"credits": 0, "haul": {}, "stats": {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}, "keys": {}}
+	return {"credits": 0, "haul": {}, "stats": {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}}
+
+
+static func blank_memory() -> Dictionary:
+	return {"flags": {}, "keys": {}}
 
 
 # ------------------------------------------------------------------ on disk

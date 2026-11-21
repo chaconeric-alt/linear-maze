@@ -30,9 +30,16 @@ func run() -> void:
 	var roster: Array = scratch.data["characters"]["roster"]
 	say(scratch.data["characters"]["active"] != first and roster.size() == 1 and JSON.stringify(scratch.home()) == home_was,
 		"retiring keeps the world: the bunker stays, a new scavenger (%s) takes it over" % scratch.data["characters"]["active"])
+	scratch.enter_level("a")
+	scratch.set_flag("here")
+	scratch.set_flag("world:everywhere")
+	scratch.keys()["red"] = true
+	scratch.enter_level("b")
+	say(not scratch.has_flag("here") and scratch.has_flag("world:everywhere") and scratch.keys().is_empty() and scratch.data["levels"]["a"]["flags"].has("here"),
+		"a flag and a key card belong to the level they were found in; a world: flag is seen everywhere")
 	scratch.free()
 	say(is_same(Profile.d, State.home()) and is_same(Game.haul, State.run()["haul"]) and is_same(Game.stats, State.run()["stats"])
-		and is_same(Game.keys, State.run()["keys"]) and Game.credits == int(State.run()["credits"]),
+		and is_same(Game.keys, State.memory()["keys"]) and is_same(Game.flags, State.memory()["flags"]) and Game.credits == int(State.run()["credits"]),
 		"the bunker (Profile) and the run (Game) are read from State: one copy of every number")
 	say(State.memory_only, "the self-test keeps the state in memory only")
 

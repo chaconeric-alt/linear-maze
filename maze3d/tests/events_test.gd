@@ -24,8 +24,9 @@ func run() -> void:
 	for ev in log:
 		if ev[0] == "flag.set":
 			flags[ev[1]["name"]] = true
-	var unsaid: Array = Game.flags.keys().filter(func(f: String) -> bool: return not flags.has(f))
-	say(unsaid.is_empty(), "every flag set was announced (%d flags%s)" % [Game.flags.size(), "" if unsaid.is_empty() else "; not: %s" % ", ".join(unsaid)])
+	var set_now: Array = Game.flags.keys() + State.flags_for("world:").keys()
+	var unsaid: Array = set_now.filter(func(f: String) -> bool: return not flags.has(f))
+	say(unsaid.is_empty(), "every flag set was announced (%d flags%s)" % [set_now.size(), "" if unsaid.is_empty() else "; not: %s" % ", ".join(unsaid)])
 	_listening_triggers(log)
 	var counts := {}
 	for ev in log:

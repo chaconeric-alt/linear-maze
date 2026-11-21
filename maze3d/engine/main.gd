@@ -154,6 +154,7 @@ func _load(id: String, _attract: bool) -> bool:
 		data = LM.levels.get(id, {}).duplicate(true)
 	if data.is_empty():
 		return false
+	State.enter_level(level_key())
 	level = Level.new()
 	level.name = "Level"
 	level.process_mode = Node.PROCESS_MODE_PAUSABLE      # Main keeps running while paused; the world must not
