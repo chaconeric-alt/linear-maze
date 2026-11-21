@@ -5,6 +5,7 @@ What changed and when, newest first. The reference for how things are now is `SP
 ## 2026-11-21
 
 - **The baseline runs on GitHub.** `.github/workflows/maze3d-selftest.yml` runs `tests/run_baseline.py` on every push and pull request that touches `maze3d/`, on headless Godot 4.7.2, and fails the check if any run fails.
+- **Fight and arch tests that win on any machine.** GitHub's runs parted from local ones within a few fights (same Godot build, same Ubuntu, a different processor), and three checks failed there: the Princess outlasted 900 frames (she has 650 health and armour), the Mourner sat behind a pew that hid its body but not its eye (the test chose spots by the eye and shot at the body), and the toll arch on generated seed 5 missed a player teleported through it. A fight now allows three times what the weapon needs if every shot hits (at least 900 frames), picks spots by the body, and moves after two seconds without a hit; an arch is walked through step by step with nothing noticing the player.
 
 ## 2026-11-20 (evening): menus that fit, image prompts, repeatable tests
 
