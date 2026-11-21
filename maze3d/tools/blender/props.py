@@ -527,6 +527,51 @@ def p_armor():
     return dict(objects=[m.to_object()], meta=dict(type='item'))
 
 
+def p_backpack():
+    """Gear: a scavenger's backpack (the pack holds 6 more). Olive canvas, a flap with two straps, a pocket, a bedroll."""
+    m = Mesh('backpack')
+    m.box((0.34, 0.2, 0.42), at=(0, 0, 0.23), mat='canvas', bevel=0.06)
+    m.box((0.36, 0.22, 0.12), at=(0, -0.005, 0.42), mat='canvas', bevel=0.04)          # the flap over its top
+    m.box((0.26, 0.08, 0.17), at=(0, -0.13, 0.16), mat='canvas', bevel=0.03)           # the front pocket
+    for s in (-1, 1):
+        m.box((0.04, 0.015, 0.2), at=(s * 0.09, -0.115, 0.37), mat='webbing')         # straps down over the flap
+        m.box((0.055, 0.02, 0.035), at=(s * 0.09, -0.122, 0.29), mat='brass', bevel=0.005)
+        m.box((0.05, 0.035, 0.42), at=(s * 0.1, 0.115, 0.24), mat='webbing', bevel=0.01)    # shoulder straps behind
+        m.ring(0.072, 0.008, at=(s * 0.12, 0.01, 0.55), rot=(0, 90, 0), mat='webbing', seg=16, tseg=6)
+    m.cyl(0.065, 0.38, at=(0, 0.01, 0.55), rot=(0, 90, 0), mat='rubber', seg=12)       # the bedroll on top
+    return dict(objects=[m.to_object()], meta=dict(type='item'))
+
+
+def p_hauler():
+    """Gear: a hauler frame (the pack holds 10 more). A steel frame with a big bag on it and a canister lashed under."""
+    m = Mesh('hauler')
+    for s in (-1, 1):
+        m.cyl(0.018, 0.8, at=(s * 0.18, 0.13, 0.4), mat='trim', seg=8)                 # the frame's uprights
+    for z in (0.06, 0.4, 0.76):
+        m.cyl(0.015, 0.38, at=(0, 0.13, z), rot=(0, 90, 0), mat='trim', seg=8)        # its rungs
+    m.box((0.38, 0.24, 0.44), at=(0, 0, 0.48), mat='canvas', bevel=0.06)             # the big bag
+    m.box((0.4, 0.26, 0.1), at=(0, -0.005, 0.69), mat='canvas', bevel=0.04)          # its flap
+    m.box((0.3, 0.08, 0.2), at=(0, -0.15, 0.42), mat='canvas', bevel=0.03)           # a pocket
+    m.cyl(0.085, 0.34, at=(0, -0.02, 0.12), rot=(0, 90, 0), mat='hazard', seg=14)     # a canister lashed under it
+    for s in (-1, 1):
+        m.ring(0.092, 0.008, at=(s * 0.1, -0.02, 0.12), rot=(0, 90, 0), mat='webbing', seg=16, tseg=6)
+        m.box((0.04, 0.015, 0.36), at=(s * 0.1, -0.128, 0.52), mat='webbing')       # compression straps
+        m.box((0.055, 0.02, 0.035), at=(s * 0.1, -0.136, 0.4), mat='brass', bevel=0.005)
+    return dict(objects=[m.to_object()], meta=dict(type='item'))
+
+
+def p_sling():
+    """Gear: a gun sling (a third gun in reach). A loop of webbing with a shoulder pad, two swivels and a buckle."""
+    m = Mesh('sling')
+    loop = [(0.26 * math.cos(2 * math.pi * i / 24), 0, 0.15 + 0.1 * math.sin(2 * math.pi * i / 24)) for i in range(25)]
+    m.tube(loop, 0.012, mat='webbing', seg=6, cap=False)
+    m.box((0.15, 0.045, 0.05), at=(0, 0, 0.25), mat='canvas', bevel=0.015)           # the shoulder pad
+    for s in (-1, 1):
+        m.ring(0.028, 0.007, at=(s * 0.26, 0, 0.15), rot=(90, 0, 0), mat='brass', seg=12, tseg=6)   # swivels
+    m.box((0.045, 0.028, 0.034), at=(0.15, 0, 0.068), mat='brass', bevel=0.005)        # the buckle
+    return dict(objects=[m.to_object()], meta=dict(type='item'))
+
+
 def p_ammo(kind):
     m = Mesh('ammo_' + kind)
     if kind == 'bullets':
@@ -664,6 +709,7 @@ PROPS = {'window_obs': window_obs,
     'item_statuette': t_statuette, 'item_fuel_cell': t_fuel_cell, 'item_fuel_cell_big': lambda: t_fuel_cell(True), 'item_circuit': t_circuit, 'item_crystal': t_crystal,
     'item_chips': t_chips, 'item_cookies': t_cookies, 'item_health': p_health, 'item_armor': p_armor,
     'item_ammo_bullets': lambda: p_ammo('bullets'), 'item_ammo_shells': lambda: p_ammo('shells'), 'item_ammo_cells': lambda: p_ammo('cells'), 'item_keycard': p_keycard,
+    'item_backpack': p_backpack, 'item_hauler': p_hauler, 'item_sling': p_sling,
     'trap_laser': trap_laser, 'trap_shock': trap_shock, 'trap_vent': trap_vent,
     'weapon_handgun': w_handgun, 'weapon_scattergun': w_scattergun, 'weapon_plasma': w_plasma,
 }

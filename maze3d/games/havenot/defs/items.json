@@ -19,8 +19,8 @@
   "ad_core": {"bulk": 4, "trophy": true, "name": "The agency's inner core", "kind": "treasure", "model": "item_core", "kit": "anomalous", "value": 2500, "glow": [1.0, 0.3, 0.85], "scale": 2.4},
   "arc": {"bulk": 4, "name": "Arc Carbine", "kind": "weapon", "weapon": "arc", "model": "weapon_arc", "kit": "anomalous", "glow": [0.4, 0.92, 1.0], "scale": 1.3},
   "plasma": {"bulk": 5, "name": "Plasma Musket", "kind": "weapon", "weapon": "plasma", "model": "weapon_plasma", "glow": [0.3, 0.9, 1.0], "scale": 1.3},
-  "backpack": {"name": "Scavenger's backpack", "kind": "gear", "wear": "back", "capacity": 6, "bulk": 2, "model": "item_armor", "scale": 1.3, "glow": [0.9, 0.75, 0.35]},
-  "hauler": {"name": "Hauler frame", "kind": "gear", "wear": "back", "capacity": 10, "bulk": 3, "model": "item_armor", "scale": 1.6, "glow": [0.9, 0.75, 0.35]},
-  "sling": {"name": "Gun sling", "kind": "gear", "wear": "sling", "slots": 1, "bulk": 1, "model": "item_armor", "scale": 0.9, "glow": [0.9, 0.75, 0.35]}
+  "backpack": {"name": "Scavenger's backpack", "kind": "gear", "wear": "back", "capacity": 6, "bulk": 2, "model": "item_backpack", "glow": [0.9, 0.75, 0.35]},
+  "hauler": {"name": "Hauler frame", "kind": "gear", "wear": "back", "capacity": 10, "bulk": 3, "model": "item_hauler", "glow": [0.9, 0.75, 0.35]},
+  "sling": {"name": "Gun sling", "kind": "gear", "wear": "sling", "slots": 1, "bulk": 1, "model": "item_sling", "glow": [0.9, 0.75, 0.35]}
  }
 }

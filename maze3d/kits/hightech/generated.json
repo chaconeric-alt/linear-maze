@@ -664,6 +664,10 @@
    "model": "models/item_armor.glb",
    "type": "item"
   },
+  "item_backpack": {
+   "model": "models/item_backpack.glb",
+   "type": "item"
+  },
   "item_chips": {
    "model": "models/item_chips.glb",
    "type": "item"
@@ -688,12 +692,20 @@
    "model": "models/item_fuel_cell_big.glb",
    "type": "item"
   },
+  "item_hauler": {
+   "model": "models/item_hauler.glb",
+   "type": "item"
+  },
   "item_health": {
    "model": "models/item_health.glb",
    "type": "item"
   },
   "item_keycard": {
    "model": "models/item_keycard.glb",
+   "type": "item"
+  },
+  "item_sling": {
+   "model": "models/item_sling.glb",
    "type": "item"
   },
   "item_statuette": {

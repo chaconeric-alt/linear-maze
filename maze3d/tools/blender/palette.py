@@ -40,6 +40,8 @@ MATERIALS = {
     'egg':        dict(color=(0.88, 0.84, 0.72), metal=0.0, rough=0.22, shader='worn', grime=0.5),
     'brass':      dict(color=(0.72, 0.55, 0.22), metal=1.0, rough=0.35, shader='worn', grime=0.5),
     'shroud':     dict(color=(0.05, 0.045, 0.06), metal=0.0, rough=0.95),
+    'canvas':     dict(color=(0.23, 0.24, 0.14), metal=0.0, rough=0.92, shader='worn', grime=0.55),   # olive drab packs (gear)
+    'webbing':    dict(color=(0.07, 0.075, 0.05), metal=0.0, rough=0.8),                               # straps and slings
     'leaf':       dict(color=(0.10, 0.32, 0.08), metal=0.0, rough=0.4, shader='flesh'),
     'petal':      dict(color=(0.55, 0.06, 0.30), metal=0.0, rough=0.35, shader='flesh'),
     'mirror':     dict(color=(0.95, 0.95, 1.0), metal=1.0, rough=0.03),
