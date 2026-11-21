@@ -2,6 +2,10 @@
 
 What changed and when, newest first. The reference for how things are now is `SPEC.md`; how to work on the code is `CLAUDE.md`.
 
+## 2026-11-20: after the refactor
+
+- **Generator: no door left standing beside the basement's lift shaft.** The basement's doors were placed on its thresholds while the lift shaft was still rock; digging the shaft afterwards could leave a door beside it with floor on one flank, which the engine then left out with a warning (13 of 330 generated levels, seeds 1–30 of every theme, among them `gen:rooms:deep --seed=5`). Such a door is now a plain opening. No random numbers are drawn for it, so every other level is unchanged.
+
 ## 2026-11-20: the maintainability refactor (branch `maze3d-refactor`)
 
 A structural cleanup. The game plays as it did; formats, def keys, level files and kit files are unchanged except where noted.

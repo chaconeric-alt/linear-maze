@@ -211,6 +211,7 @@ static func _basement(ctx: GenContext) -> void:
 	_passages(ctx, bg, b_in, brects)
 	ctx.dig(shaft)
 	bg[shaft.y][shaft.x] = "."
+	_open_doors_beside(bg, shaft)
 	ctx.lift_at[shaft] = true
 	ctx.used[shaft] = true
 	ctx.things.append({"at": [shaft.x, shaft.y], "lift": [-1, 0], "home": 0})
@@ -220,6 +221,22 @@ static func _basement(ctx: GenContext) -> void:
 		b_rooms.append(_furnish_room(ctx, brects[i], -1, "%s %d" % [ctx.p.get("basement_name", "Undercroft"), i + 1]))
 	_pits(ctx, bg)
 	ctx.storeys.append({"level": -1, "map": GenContext.rows(bg), "rooms": b_rooms})
+
+
+## The doors were put on the basement's thresholds while the shaft was still rock. Now that it is open, a door beside
+## it may stand with floor on one flank, and the engine leaves such a door out: make it a plain opening instead. (This
+## draws no random numbers, so levels without such a door are unchanged.)
+static func _open_doors_beside(bg: Array, c: Vector2i) -> void:
+	for d in DIRS:
+		var n: Vector2i = c + d
+		if GenContext.is_door(bg, n) and not _closes(bg, n):
+			bg[n.y][n.x] = "."
+
+
+## A door here would close an opening wall to wall: rock or a door on both sides, one way or the other.
+static func _closes(grid: Array, n: Vector2i) -> bool:
+	var wall := func(q: Vector2i) -> bool: return grid[q.y][q.x] == "#" or GenContext.is_door(grid, q)
+	return (wall.call(n + DIRS[1]) and wall.call(n + DIRS[3])) or (wall.call(n + DIRS[0]) and wall.call(n + DIRS[2]))
 
 
 ## The basement's chambers (params shapes "basement_rooms"), two cells apart; the first beside the shaft, so down there
