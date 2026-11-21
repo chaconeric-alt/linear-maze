@@ -77,7 +77,7 @@ func frames(n: int) -> void:
 func look_at(target: Vector3) -> void:
 	var d := target - pl.cam.global_position
 	pl.rotation.y = atan2(-d.x, -d.z)
-	pl.pitch = asin(clamp(d.y / max(0.01, d.length()), -1.0, 1.0))
+	pl.pitch = clampf(asin(clamp(d.y / max(0.01, d.length()), -1.0, 1.0)), -PlayerCamera.PITCH_LIMIT, PlayerCamera.PITCH_LIMIT)      # no further than a mouse can tilt the head
 	pl.head.rotation.x = pl.pitch
 
 
@@ -94,6 +94,7 @@ func storey(pos: Vector3) -> int:
 ## Put the player on an open spot with a clear line to the target, about `want` metres off. tight: closer, or in a doorway.
 func stand_near(target: Vector3, want := 5.0, tight := false) -> bool:
 	var best := Vector3.INF
+	var steep := Vector3.INF              # the best spot from which it would be almost straight up or down: if nothing else
 	var c := level.cell_of(target)
 	var st := storey(target)
 	for r in range(0, 4):
@@ -103,19 +104,54 @@ func stand_near(target: Vector3, want := 5.0, tight := false) -> bool:
 				var here: Dictionary = level.cell_s(q.x, q.y, st)
 				if here.is_empty() or (here["door"] != "" and not tight) or here["window"] != "":
 					continue
-				var p := level.center(q, 0.0)
-				p.y = level.floor_y(Vector3(p.x, st * level.H + 0.5, p.z)) + 0.05      # on the same storey as the target, if there is a floor there
-				if p.distance_to(target) < (1.2 if tight else 2.0):
-					continue
-				if level.los(p + Vector3(0, 1.6, 0), target) and abs(p.distance_to(target) - want) < abs(best.distance_to(target) - want):
-					best = p
+				for off in [Vector3.ZERO, Vector3(1.2, 0, 0), Vector3(-1.2, 0, 0), Vector3(0, 0, 1.2), Vector3(0, 0, -1.2)]:
+					var p: Vector3 = level.center(q, 0.0) + off
+					p.y = level.floor_y(Vector3(p.x, st * level.H + 0.5, p.z)) + 0.05      # on the same storey as the target, if there is a floor there
+					if p.distance_to(target) < (1.2 if tight else 2.0) or not _room_to_stand(p):
+						continue
+					if level.los(p + Vector3(0, 1.6, 0), target):
+						if _too_steep(p, target):
+							steep = _nearer(p, steep, target, want)
+						else:
+							best = _nearer(p, best, target, want)
+					if off == Vector3.ZERO:
+						break                               # the middle of the cell is free: no need to look round it
 		if best != Vector3.INF:
 			break
+	if best == Vector3.INF:
+		best = steep
 	if best == Vector3.INF:
 		return false
 	pl.global_position = best
 	pl.velocity = Vector3.ZERO
 	return true
+
+
+## p if it is nearer the distance wanted from the target than the best so far.
+func _nearer(p: Vector3, best: Vector3, target: Vector3, want: float) -> Vector3:
+	return p if absf(p.distance_to(target) - want) < absf(best.distance_to(target) - want) else best
+
+
+## Would the player have to look more than 70° up or down from there? A player steps back from a turret high on a
+## ceiling rather than stand under it; the head cannot tilt straight up (PlayerCamera.PITCH_LIMIT) and recoil pushes
+## the aim past where it is pointed.
+func _too_steep(p: Vector3, target: Vector3) -> bool:
+	var d := target - (p + Vector3(0, Player.EYE, 0))
+	return atan2(absf(d.y), Vector2(d.x, d.z).length()) > deg_to_rad(70.0)
+
+
+## Is there room for the player's body there? A spot inside a piece of furniture is not one: the physics would push the
+## player out to wherever it could, often behind that furniture with no line to what is being fought.
+func _room_to_stand(p: Vector3) -> bool:
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.4
+	cap.height = 1.8
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = cap
+	q.transform = Transform3D(Basis(), p + Vector3(0, 0.95, 0))
+	q.collision_mask = 1 | Level.GLASS
+	q.exclude = [pl.get_rid()]
+	return level.get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
 
 
 ## Back to where the level starts.

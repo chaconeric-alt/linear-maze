@@ -48,8 +48,13 @@ func generate(seed_value: int, p: Dictionary) -> Dictionary:
 		if not lv.is_empty():
 			lv["id"] = "gen-%d" % seed_value
 			return lv
-	push_warning("rooms generator: no solvable layout found; returning the last try without a lock")
-	return _try(seed_value, p, false)
+	push_warning("rooms generator: no solvable layout found; returning a try without a lock")
+	for attempt in 40:                       # the same seeds again, unlocked; the first is the one this always returned
+		var lv := _try(seed_value + attempt * 7919, p, false)
+		if not lv.is_empty():
+			return lv
+	push_error("rooms generator: these settings fit fewer than three rooms on every try; no level")
+	return {}                                # Main says so and goes back to the title instead of building nothing
 
 
 ## One layout from one seed, or {} if this seed's layout will not do (too few rooms, or the vault cannot be locked).

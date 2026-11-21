@@ -5,7 +5,7 @@ A line of warm light runs along every dado rail. Two rooms break the rule on pur
 chrome, and the security room is grey armour plate round a vault door.
 
 Rooms it is made for: bedroom, bathroom, den, living room, communications room, armoury, robot room, security room.
-The second half of the furniture is the CATALOGUE: things the player buys and sets down where they like (engine/decorate.gd).
+The second half of the furniture is the CATALOGUE: things the player buys and sets down where they like (engine/home/decorating.gd; what they cost is the catalogue in games/havenot/defs/home.json).
 """
 import math, random
 from mz import Mesh, T, R, S

@@ -7,7 +7,7 @@ class_name LevelData
 const DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]     # n e s w
 const DIR_NAMES := {"n": 0, "e": 1, "s": 2, "w": 3}
 const DIR_ROT := [0.0, -PI / 2, PI, PI / 2]       # a wall on that side, facing in
-const DEFAULT_LEGEND := {"#": {"solid": true}, " ": {"solid": true, "void": true}, ".": {}, "+": {"door": "door_split"}}
+const DEFAULT_LEGEND := {"#": {"solid": true}, " ": {"solid": true, "void": true}, ".": {}}     # the game adds its own (game.json "legend")
 ## Corner name -> (the two sides that corner closes, the yaw of a wall across it facing the open half)
 const DIAG := {"ne": [[0, 1], -PI / 4], "nw": [[0, 3], PI / 4], "se": [[2, 1], -3 * PI / 4], "sw": [[2, 3], 3 * PI / 4]}
 const VOID := {"solid": true, "void": true, "height": 0, "door": "", "style": "", "room": "", "tag": "", "fluid": false, "diag": "", "decks": [], "ramp": {}, "window": "", "edges": {}, "f": 0}
@@ -35,7 +35,7 @@ var rng := RandomNumberGenerator.new()      # one stream for everything the buil
 
 func _init(level_data: Dictionary) -> void:
 	data = level_data
-	kit_id = data.get("kit", "hightech")
+	kit_id = data.get("kit", str(LM.game.get("kits", [""])[0]))      # a level that names no kit uses the game's first
 	kit = LM.kits[kit_id]
 	C = kit.get("cell", 4.0)
 	H = kit.get("height", 4.0)
@@ -88,7 +88,7 @@ func _shaping_thing(e: Dictionary, x: int, y: int) -> void:
 
 func _parse_floor(fd: Dictionary, f: int) -> void:
 	var legend: Dictionary = DEFAULT_LEGEND.duplicate()
-	for src in [data.get("legend", {}), fd.get("legend", {})]:
+	for src in [LM.game.get("legend", {}), data.get("legend", {}), fd.get("legend", {})]:      # the game's, the level's, the floor's
 		for k in src:
 			legend[k] = src[k]
 	var rows: Array = fd.get("map", [])

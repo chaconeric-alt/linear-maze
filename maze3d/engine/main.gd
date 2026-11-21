@@ -19,7 +19,7 @@ func _ready() -> void:
 		var kv := a.trim_prefix("--").split("=")
 		_args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_debug_switches()
-	LM.boot(_args.get("game", ProjectSettings.get_setting("maze3d/game", "havenot")))
+	LM.boot(_args.get("game", ProjectSettings.get_setting("maze3d/game", _first_game())))
 	if not Debug.fixed_settings:                     # the self-test always measures the game as designed
 		Game.load_settings()
 	hud = Hud.new()
@@ -29,7 +29,10 @@ func _ready() -> void:
 	hud.restart_requested.connect(func(): _on_start(_level_id))
 	Game.ended.connect(_on_ended)
 	var first: String = _args.get("level", LM.game.get("start", ""))
-	_load(first, true)
+	if not _load(first, true):
+		push_error("no level %s" % first)
+		get_tree().quit(1)
+		return
 	if _args.has("level"):
 		hud.begin_play()
 		if _args.has("selftest"):
@@ -39,6 +42,12 @@ func _ready() -> void:
 	else:
 		hud.show_title()
 		get_tree().paused = true
+
+
+## The game to boot when neither --game nor Project Settings (maze3d/game) names one: the first folder in games/.
+func _first_game() -> String:
+	var found := DirAccess.get_directories_at("res://games")
+	return found[0] if not found.is_empty() else ""
 
 
 ## Switches for testing and looking at things, from the command line. Game code asks Debug (engine/debug.gd), never
@@ -98,15 +107,23 @@ func _on_start(id: String) -> void:
 		hud.show_title()
 		get_tree().paused = true
 		return
-	_load(id, false)
+	if not _load(id, false):                         # a generator that could not make a level with its settings
+		_load(LM.game.get("start", ""), true)
+		hud.show_title()
+		get_tree().paused = true
+		Game.say("Could not make a level from %s. Try another." % id, "warn")
+		return
 	hud.begin_play()
 
 
-func _load(id: String, _attract: bool) -> void:
+## Build the level with that id (or generate it: gen:<generator>[:<theme>]) and put the player in it. False if there is no
+## such level, or the generator could make nothing with its settings.
+func _load(id: String, _attract: bool) -> bool:
 	_level_id = id
 	if level:
 		level.queue_free()
 		remove_child(level)
+		level = null
 	Game.reset()
 	Game.calm = _args.has("calm")
 	if _args.has("easy"):                            # --easy / --easy=0: for this run only; the title screen button is the one that is remembered
@@ -114,7 +131,9 @@ func _load(id: String, _attract: bool) -> void:
 	var data: Dictionary
 	if id.begins_with("gen:"):
 		var bits := id.substr(4).split(":")        # gen:<generator>[:<theme>]
-		var g: Object = LM.generators[bits[0]]
+		var g: Object = LM.generators.get(bits[0])
+		if g == null:
+			return false
 		var params: Dictionary = LM.game.get("generator_params", {}).duplicate(true)
 		if bits.size() > 1:
 			params.merge(LM.game.get("generator_themes", {}).get(bits[1], {}), true)
@@ -124,7 +143,9 @@ func _load(id: String, _attract: bool) -> void:
 			if f:
 				f.store_string(JSON.stringify(data, " "))
 	else:
-		data = LM.levels[id].duplicate(true)
+		data = LM.levels.get(id, {}).duplicate(true)
+	if data.is_empty():
+		return false
 	level = Level.new()
 	level.name = "Level"
 	level.process_mode = Node.PROCESS_MODE_PAUSABLE      # Main keeps running while paused; the world must not
@@ -147,6 +168,7 @@ func _load(id: String, _attract: bool) -> void:
 	if data.has("intro"):
 		Game.say(data["intro"], "info")
 	hud.refresh()
+	return true
 
 
 ## An expedition is over. Out alive: what was carried is banked in the bunker. Dead: it is not.

@@ -4,6 +4,8 @@ extends Node3D
 ## It keeps the pitch (the body keeps the yaw), sniper zoom, shake, the bob and lean of walking, and the slump when you die.
 class_name PlayerCamera
 
+const PITCH_LIMIT := 1.5          # radians (86°) up or down: the mouse cannot tilt the head past this
+
 var pl: Player
 var cfg: Dictionary
 var cam: Camera3D
@@ -50,7 +52,7 @@ func setup(player: Player) -> void:
 func turn(rel: Vector2) -> void:
 	var s: float = cfg.get("sensitivity", 0.0022) * lerpf(1.0, cfg.get("zoom_fov", 20.0) / cfg.get("fov", 84.0), zoom)
 	pl.rotation.y -= rel.x * s
-	pitch = clamp(pitch - rel.y * s, -1.5, 1.5)
+	pitch = clamp(pitch - rel.y * s, -PITCH_LIMIT, PITCH_LIMIT)
 
 
 func toggle_lamp() -> void:

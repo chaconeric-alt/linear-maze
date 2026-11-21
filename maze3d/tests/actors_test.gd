@@ -17,6 +17,8 @@ func run() -> void:
 	if level.data.get("covers_all", false):
 		await runner.part("covers_all").run()
 	for a in level.actors.duplicate():
+		if is_instance_valid(a) and a.dead and not a.off_duty:
+			print("INFO  %s was already dead when its turn came (killed during an earlier fight)" % a.d.get("name", "?"))
 		if not is_instance_valid(a) or a.dead or a.off_duty:
 			continue
 		pl.equip(wi % pl.weapons.size())
