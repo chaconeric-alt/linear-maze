@@ -2,8 +2,8 @@ extends SelfTestPart
 ## A flyer on a balcony right over the player comes down to it. It used to hang there: it held its height, and as the
 ## player was within reach on the map it went straight for them instead of taking the way down. The flyer is put on
 ## the balcony cell farthest from a ramp, the player on the floor under it; it must come down to the player's level
-## and within reach. Then it is killed where it is, so the remains part sees a flyer that died in the air. Only on a
-## level with a balcony over open floor (Staff Only); runs after the fights, which leave the off-duty floor's flyers
+## and within reach. It is left hunting: the trap_victims part sends it past a laser next, and kills it there. Only on
+## a level with a balcony over open floor (Staff Only); runs after the fights, which leave the off-duty floor's flyers
 ## alive (one is angered for this).
 
 const WAIT := 1800          # frames it has to come down: on Staff Only its way is 45 m along the balcony to the ramp,
@@ -37,7 +37,6 @@ func run() -> void:
 		await get_tree().physics_frame
 		t += 1
 	say(_down(a), "a %s on a balcony %.0f m over the player comes down to it (%d frames; %.1f m above, %.1f m away)" % [nm, spot.z * level.H, t, a.global_position.y - pl.global_position.y, _flat(a)])
-	a.hurt(100000.0)
 	pl.hp = minf(hp_was, pl.max_hp)
 	Game.calm = was_calm
 	await frames(10)

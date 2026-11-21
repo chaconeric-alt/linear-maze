@@ -49,6 +49,7 @@ var lifts: Array = []
 var things_by_tag: Dictionary = {}
 var actors: Array = []
 var targets: Array = []          # Targets (engine/target.gd)
+var traps: Array = []            # Traps (engine/trap.gd), for hazard()
 var died: Array = []             # [kind, storey] of everything that has died here, in order (the repair bay reads it)
 var home: Home = null            # the bunker's workings, on a level with "home": true (engine/home.gd)
 var bad_doors := 0
@@ -261,3 +262,12 @@ func actor_died(a: Node) -> void:
 ## Effects that belong to the place: doors, lights, spawns, alarms (engine/level/level_effects.gd, registered at build).
 func run_effect(ef: Dictionary, ctx: Dictionary) -> void:
 	Game.effects.run(ef, ctx)
+
+
+## Would any trap hurt `who` if its origin were at `at`, now or within `lead` seconds? Flyers and climbers ask before
+## they move (ActorWary). `upright`: as it would stand on its feet there.
+func hazard(who: Node3D, at: Vector3, lead := 0.0, upright := false) -> bool:
+	for t in traps:
+		if is_instance_valid(t) and absf(t.global_position.x - at.x) < C and absf(t.global_position.z - at.z) < C and t.danger(who, at, lead, upright):
+			return true
+	return false

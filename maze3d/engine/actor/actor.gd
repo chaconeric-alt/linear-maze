@@ -26,6 +26,11 @@ func state_name() -> String:
 	return STATE_NAMES[state]
 
 
+## A machine, not a living thing ("robot": true in its def): traps can be told to spare one or the other.
+func is_robot() -> bool:
+	return d.get("robot", false)
+
+
 ## On a wall or the ceiling.
 func clinging() -> bool:
 	return surf == 1 or surf == 2

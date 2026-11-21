@@ -38,6 +38,7 @@ var senses: ActorSenses
 var move: ActorLocomotion
 var remains: ActorRemains          # added when it dies
 var climb: ActorClimb
+var wary: ActorWary              # flyers and climbers: keeping out of traps
 var attacks: ActorAttacks
 var aim: ActorAimRig
 var looks: ActorLooks
@@ -135,6 +136,8 @@ func _components() -> void:
 		attacks = _add(ActorAttacks.new())
 	if d.has("lounge"):
 		lounge = _add(ActorLounge.new())
+	if d.get("fly", false) or d.has("climb"):
+		wary = _add(ActorWary.new())
 
 
 func _add(c: Node) -> Node:

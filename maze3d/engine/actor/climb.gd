@@ -148,6 +148,9 @@ func _wall_tick(dt: float) -> void:
 	var off: float = cl.get("off", 0.3)
 	var c := a.level.cell_of(a.global_position)
 	var top := _ceil_y(c) - off
+	if a.wary and not _wall_clear(dt):
+		a.play("idle")
+		return
 	if _goal_up:
 		a.position.y += sp * dt
 		_orient(a.wall_n, Vector3.UP, 10 * dt)
@@ -165,12 +168,24 @@ func _wall_tick(dt: float) -> void:
 	a.play("walk", d.get("walk_rate", 1.0))
 
 
+## On a wall, going up or down: a trap a little way along (or, near the bottom, where it would land) and it waits;
+## waiting too long, it turns back.
+func _wall_clear(dt: float) -> bool:
+	var dir := 1.0 if _goal_up else -1.0
+	var ok: bool = a.wary.way_clear(a.global_position + Vector3(0, dir * ActorWary.LOOK * 0.5, 0))
+	if ok and not _goal_up and a.position.y <= a.base_y + 1.0:
+		ok = a.wary.safe_landing()
+	if not ok and a.wary.waited_out(dt):
+		_goal_up = not _goal_up
+	return ok
+
+
 func _ceiling_tick(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 	var cl: Dictionary = d.get("climb", {})
 	var sp: float = cl.get("speed", d.get("speed", 5.0))
 	var off: float = cl.get("off", 0.3)
 	var c := a.level.cell_of(a.global_position)
-	if dist < cl.get("drop_at", 1.8):
+	if dist < cl.get("drop_at", 1.8) and (a.wary == null or a.wary.safe_landing()):
 		drop()
 		return
 	var mv := a.move
@@ -197,6 +212,9 @@ func _ceiling_tick(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 		want = flat.normalized()                 # no route, but there they are
 	else:
 		drop()                                  # nowhere to go up here (they are on another floor): down, and think again
+		return
+	if a.wary and want.length() > 0.1 and not a.wary.way_clear(a.global_position + want * (ActorWary.LOOK + d.get("radius", 0.5))):
+		a.play("idle")                          # a trap ahead, up here: wait for it
 		return
 	a.position += want * sp * mv.gait_factor(dt) * dt
 	a.position.y = _ceil_y(c) - off

@@ -8,7 +8,7 @@ class_name Schema
 
 const WEAPON := ["name", "model", "kit", "hold", "scale", "ammo", "per_shot", "pickup_ammo", "damage", "pellets", "spread",
 	"rate", "auto", "range", "falloff", "projectile", "recoil", "kick", "sound", "color", "kind"]
-const ACTOR := ["name", "model", "kit", "scale", "hp", "armor", "takes", "mass", "gib", "speed", "accel", "turn", "radius",
+const ACTOR := ["name", "model", "kit", "scale", "robot", "hp", "armor", "takes", "mass", "gib", "speed", "accel", "turn", "radius",
 	"height", "center", "eye", "fly", "mount", "still", "sight", "hearing", "wake_sight", "behavior", "keep", "attacks",
 	"flee_below", "flee_text", "barks", "bark_color", "drops", "explode", "sounds", "blood", "clips", "walk_rate",
 	"footfall", "dormant_clip", "startle_time", "startle_text", "lounge", "climb", "aim", "screen", "gait", "bob", "swim",
@@ -29,8 +29,8 @@ const THING_KINDS := {
 		"seat_turn", "holds", "hidden", "rattle", "walk"],
 	"item": ["item", "y", "rest"],                     # and any item def key, to override it for this one
 	"rebuild": ["rebuild", "as"],
-	"trap": ["trap", "off", "phase", "cycle", "heights", "damage", "axis", "period", "on", "color", "hear", "quiet", "trip",
-		"effects", "delay", "volleys", "interval", "cooldown"],
+	"trap": ["trap", "off", "phase", "ignore", "cycle", "heights", "damage", "axis", "period", "on", "color", "hear", "quiet",
+		"trip", "effects", "delay", "volleys", "interval", "cooldown"],
 	"sign": ["sign", "size", "color", "y", "out", "width", "plain"],
 	"light": ["light", "y", "flicker", "shadows"],
 }

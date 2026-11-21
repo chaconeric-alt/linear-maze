@@ -11,7 +11,7 @@ extends Node
 ## --story). Parts use public methods only, of the game and of this runner.
 class_name SelfTest
 
-const STANDARD := ["movement", "reach", "traps", "identify", "arches", "actors", "balcony", "remains", "use_key", "containers", "pickups", "doors", "menus", "finish"]
+const STANDARD := ["movement", "reach", "traps", "identify", "arches", "actors", "balcony", "trap_victims", "remains", "use_key", "containers", "pickups", "doors", "menus", "finish"]
 
 var main: Node
 var level: Level

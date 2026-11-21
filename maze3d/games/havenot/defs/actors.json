@@ -113,6 +113,7 @@
   },
   "custodian": {
    "name": "Custodian",
+   "robot": true,
    "model": "actors/custodian_tripo.glb",
    "hp": 150,
    "armor": 0.15,
@@ -227,6 +228,7 @@
   },
   "monoid": {
    "name": "Monoid",
+   "robot": true,
    "model": "actors/monoid_tripo.glb",
    "hp": 90,
    "speed": 3.8,
@@ -482,6 +484,7 @@
   },
   "turret": {
    "name": "Ceiling Turret",
+   "robot": true,
    "model": "actors/turret.glb",
    "hp": 60,
    "armor": 0.2,
@@ -554,6 +557,7 @@
   },
   "eggbot": {
    "name": "Eggbot",
+   "robot": true,
    "model": "actors/eggbot_tripo.glb",
    "hp": 80,
    "armor": 0.2,
@@ -811,6 +815,7 @@
   },
   "dancer": {
    "name": "Dancer",
+   "robot": true,
    "model": "actors/dancer_tripo.glb",
    "hp": 55,
    "speed": 9.0,
@@ -1028,6 +1033,7 @@
   },
   "deadbot": {
    "name": "Deadbot",
+   "robot": true,
    "model": "actors/deadbot_tripo.glb",
    "own_materials": true,
    "scale": 2.3,
@@ -1151,6 +1157,7 @@
   },
   "defender": {
    "name": "Desktop Defender",
+   "robot": true,
    "model": "actors/defender.glb",
    "hp": 14,
    "speed": 8.5,
@@ -1214,6 +1221,7 @@
   },
   "sphinx": {
    "name": "Sphinx Gun",
+   "robot": true,
    "model": "actors/sphinx_tripo.glb",
    "hp": 160,
    "armor": 0.3,
@@ -1399,6 +1407,7 @@
   },
   "plodder": {
    "name": "Plodder (Heavy Security Drone)",
+   "robot": true,
    "model": "actors/plodder_tripo.glb",
    "hp": 220,
    "armor": 0.25,
@@ -1542,6 +1551,7 @@
   },
   "drone": {
    "name": "Knife Fighter",
+   "robot": true,
    "model": "actors/knife_tripo.glb",
    "hp": 26,
    "speed": 9.5,
@@ -2057,6 +2067,7 @@
   },
   "heavy": {
    "name": "Heavy Security Drone",
+   "robot": true,
    "model": "actors/heavy.glb",
    "kit": "hightech",
    "hp": 320,
@@ -2185,6 +2196,7 @@
   },
   "emitter": {
    "name": "Field Emitter",
+   "robot": true,
    "model": "actors/emitter.glb",
    "kit": "hightech",
    "hp": 70,

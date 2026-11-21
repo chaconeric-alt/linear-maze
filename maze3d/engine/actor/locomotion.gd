@@ -100,9 +100,9 @@ func fly_tick() -> void:
 
 ## A hunting flyer keeps its hover over whatever floor is under it: off a balcony's edge it sinks to the floor below,
 ## up a ramp it rises with it, at no more than HOVER_RATE metres a second. (Its body rides at "center" above its
-## origin, so the origin is where its floor is.)
+## origin, so the origin is where its floor is; ActorWary's lift raises it over a trap.)
 func _hover_vy() -> float:
-	var ground: float = a.level.floor_y(a.global_position)
+	var ground: float = a.level.floor_y(a.global_position) + (a.wary.lift if a.wary else 0.0)
 	var gap: float = ground - a.global_position.y
 	if absf(gap) < 0.02:
 		return 0.0
@@ -136,6 +136,8 @@ func hunt(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 			want = want.rotated(Vector3.UP, sin(_gait_ph * d["gait"].get("weave_rate", 9.0)) * wv)
 	a.velocity.x = move_toward(a.velocity.x, want.x * speed, d.get("accel", 30.0) * dt)
 	a.velocity.z = move_toward(a.velocity.z, want.z * speed, d.get("accel", 30.0) * dt)
+	if fly and a.wary:
+		a.wary.fly()                              # a trap ahead: over it, under it, or wait
 	fall(dt)
 	if fly:
 		a.velocity.y = _hover_vy()
@@ -259,6 +261,8 @@ func wander_tick(dt: float) -> void:
 		if a.global_position.distance_to(a.home) > 5.0:
 			_wander = (a.home - a.global_position).normalized()
 			_wander.y = 0
+	if fly and a.wary and a.wary.blocked(_wander):
+		_wander = Vector3.ZERO                       # a trap that way: stay put, and think again
 	var sp: float = d.get("speed", 4.0) * 0.25
 	a.velocity.x = move_toward(a.velocity.x, _wander.x * sp, 10 * dt)
 	a.velocity.z = move_toward(a.velocity.z, _wander.z * sp, 10 * dt)

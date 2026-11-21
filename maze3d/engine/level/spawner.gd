@@ -279,6 +279,7 @@ func _trap(e: Dictionary, p: Vector2i, s: int, _pos: Vector3) -> Node3D:
 	level.add_child(tr)
 	tr.position = ld.center(p, s * ld.H) + Vector3(off.x, 0, off.z)
 	tr.setup(level, e, p, ld.kit_id)
+	level.traps.append(tr)
 	return tr
 
 
