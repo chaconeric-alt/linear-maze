@@ -162,7 +162,7 @@ func end(info: Dictionary) -> void:
 	var home_id := LM.home_level()
 	var at_home: bool = Game.level != null and Game.level.data.get("home", false)
 	if home_id != "" and not at_home:
-		var s2: String = "Wake up in the bunker (what you were carrying is gone)" if dead else "Home to the bunker (%d cr banked)" % Game.credits
+		var s2: String = "Wake up in the bunker (nothing from the trip is kept)" if dead else "Home to the bunker (%d cr banked)" % Game.credits
 		box.add_child(style.button(s2, func(): hud.start_requested.emit(home_id), not dead))
 	box.add_child(style.button("Go again", func(): hud.restart_requested.emit(), home_id == "" or dead))
 	box.add_child(style.button("Back to the title", func(): hud.start_requested.emit("")))

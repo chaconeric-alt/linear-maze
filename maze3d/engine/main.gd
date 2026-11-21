@@ -111,11 +111,12 @@ func start_level(id: String) -> void:
 	_on_start(id)
 
 
-## Start the level being played again, as it was made: what it remembers is forgotten first (the pause screen's
-## "Start the level again", the end screen's "Go again"). Coming back to a level (start_level) finds it remembered.
+## Start the level being played again (the pause screen's "Start the level again", the end screen's "Go again"), as a
+## death does: the world goes back to how the expedition found it, so the level is as it was when the expedition set
+## out (as it was made, on a first visit). Coming back to a level (start_level) finds it remembered.
 func restart_level() -> void:
 	_leave("away")
-	_how_left = "died"                               # settled as a death is: its memory forgotten as it is unloaded
+	_how_left = "died"                               # settled as a death is, as it is unloaded
 	_on_start(_level_id)
 
 
@@ -154,6 +155,8 @@ func _load(id: String, _attract: bool, back: Dictionary = {}) -> bool:
 	if data.is_empty():
 		return false
 	var home: bool = data.get("home", false)
+	if not home and not _in_run and back.is_empty():
+		State.depart()                               # an expedition sets out: what a death goes back to (a save keeps its own)
 	State.enter_level(level_key(), home, back.is_empty())      # the bunker keeps its own record (the home), not a level's memory
 	level = Level.new()
 	level.name = "Level"
@@ -240,13 +243,16 @@ func _unload() -> void:
 	_settle()
 
 
-## What changed in the level is kept in its memory (LevelMemory), unless the player died there, which forgets it (it is
-## as it was made on the next visit), or it was a generated one whose run is over (a one-off), or it is the bunker,
-## which keeps its own record (the home).
+## What changed in the level is kept in its memory (LevelMemory), unless the player died there: then the whole world goes
+## back to how the expedition found it (State.die: this level, the bunker, the characters, the world's flags), the
+## departure copy kept if the expedition goes on (the level started again). A generated level whose run is over is
+## forgotten (a one-off); the bunker keeps its own record (the home).
 func _settle() -> void:
 	if level.data.get("home", false):
 		return
-	if _how_left == "died" or (_level_id.begins_with("gen:") and not _in_run):
+	if _how_left == "died":
+		State.die(_in_run)
+	elif _level_id.begins_with("gen:") and not _in_run:
 		State.forget_level(level_key())
 	else:
 		State.memory().merge(level.remember(), true)
@@ -267,8 +273,9 @@ func level_key() -> String:
 
 
 ## An expedition is over. Out alive: what was carried is banked in the bunker, and what changed in the level is saved
-## with it (a death's is settled as the level goes). Dead: nothing is banked. Either way the save no longer has a place
-## in a level: between levels, Restore from save comes back to the bunker.
+## with it. Dead: nothing is banked, and the save is at once the world as the death leaves it (State.after_death), so
+## neither F10 nor quitting brings back what the death took; the world in memory goes back as the level goes (_settle).
+## Either way the save no longer has a place in a level: between levels, Restore from save comes back to the bunker.
 func _on_ended(info: Dictionary) -> void:
 	if level == null:
 		return
@@ -280,7 +287,7 @@ func _on_ended(info: Dictionary) -> void:
 	_in_run = false
 	State.run().erase("where")
 	if dead:
-		Profile.died()
+		State.save_as(State.after_death(false))
 	else:
 		_settle()
 		if player:

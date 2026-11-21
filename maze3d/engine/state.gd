@@ -5,8 +5,10 @@ extends Node
 ##               weapons and armour in the armoury, salvage, trophies, what was bought and where it was put, the robot)
 ##   characters  the roster: each character ({"id", "name", "runs", "deaths", "best"}) and which one is "active"
 ##   run         the expedition under way: credits, haul, stats (Game reads and writes these through Game.credits and
-##               the rest); cleared as a level is loaded (Game.reset); and "where", the place a save comes back to
-##               (SavePoint: the level, the player as they stood), gone between levels
+##               the rest); cleared as a level is loaded (Game.reset); "where", the place a save comes back to
+##               (SavePoint: the level, the player as they stood), gone between levels; and "departure", a copy of
+##               the world, its characters and its levels as they were when the expedition set out, which a death
+##               (or starting the level again) goes back to: kept until the expedition is over
 ##   levels      what each level remembers, by its key (LevelMemory): its own flags, the key cards found in it, the
 ##               panel options used, and what changed in it (taken, killed, opened, moved). Kept for as long as the
 ##               world, except a generated level's, which goes when the run that made it ends, and any level's on a
@@ -63,9 +65,41 @@ func character() -> Dictionary:
 	return {}
 
 
-## A level is being loaded: the run's credits, haul and stats start again (as Game.reset always did).
+## A level is being loaded: the run's credits, haul and stats start again (as Game.reset always did). The departure
+## copy stays: the expedition is still the one that set out.
 func reset_run() -> void:
+	var copy: Variant = data["run"].get("departure")
 	data["run"] = WorldState.blank_run()
+	if copy != null:
+		data["run"]["departure"] = copy
+
+
+# ------------------------------------------------------------------ death (SPEC.md 5.16)
+## An expedition sets out (Main, as it starts one, before the level is entered): a copy of the world as it is now.
+func depart() -> void:
+	data["run"]["departure"] = {"world": data["world"].duplicate(true), "characters": data["characters"].duplicate(true),
+		"levels": data["levels"].duplicate(true)}
+
+
+## The world as a death leaves it: the world, its characters and what each level remembers as they were when the
+## expedition set out, and nothing of the run: no haul, no credits, no place to come back to. `going_on`: the expedition
+## goes on (the level started again), so the copy is kept for the next time. With no copy, the world as it is.
+func after_death(going_on: bool) -> Dictionary:
+	var copy: Dictionary = data["run"].get("departure", {})
+	var w := {"v": data["v"], "world": data["world"], "characters": data["characters"], "levels": data["levels"]}
+	if not copy.is_empty():
+		for part in ["world", "characters", "levels"]:
+			w[part] = copy[part]
+	w = w.duplicate(true)
+	w["run"] = WorldState.blank_run()
+	if going_on and not copy.is_empty():
+		w["run"]["departure"] = copy.duplicate(true)
+	return w
+
+
+## A death: the world goes back to how the expedition found it (after_death).
+func die(going_on: bool) -> void:
+	data = after_death(going_on)
 
 
 ## A level is about to be played: its memory, under its key: what was left there last time, or a new one. `fresh`:
@@ -163,8 +197,15 @@ static func blank_memory() -> Dictionary:
 
 # ------------------------------------------------------------------ on disk
 func save() -> void:
+	save_as(data)
+
+
+## Save that world in place of the saved one, without making it the world in memory (Main, at a death: the save is
+## the world as the death leaves it at once, while the level lingers on the end screen).
+func save_as(w: Dictionary) -> void:
+	var text := JSON.stringify(w, " ")
 	if memory_only:
-		kept = to_json()
+		kept = text
 		return
 	DirAccess.make_dir_recursive_absolute(DIR)
 	var path := DIR + world_name + ".json"
@@ -172,7 +213,7 @@ func save() -> void:
 	if f == null:
 		push_error("State: cannot write %s.tmp (%s)" % [path, error_string(FileAccess.get_open_error())])
 		return
-	f.store_string(to_json())
+	f.store_string(text)
 	f.close()
 	if FileAccess.file_exists(path):
 		if FileAccess.file_exists(DIR + world_name + ".bak"):

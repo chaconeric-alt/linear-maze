@@ -59,12 +59,6 @@ func bank(credits: int, weapons: Array, armor: float, haul: Dictionary) -> void:
 	save()
 
 
-func died() -> void:
-	var r := record()
-	r["deaths"] = int(r.get("deaths", 0)) + 1
-	save()
-
-
 ## Leaving by the lift: what the armoury holds goes with you, and the supply locker tops you up.
 func outfit(cfg: Dictionary) -> void:
 	var ws: Array = cfg.get("weapons", []).duplicate()
