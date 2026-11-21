@@ -758,23 +758,29 @@ MZ_ACTORS=heavy,emitter python3 tools/blender/build_all.py     # only those acto
 
 ## 9. Testing
 
+The baseline (every run in `tests/baseline.txt`), started the repeatable way, with a line per run and the failed checks:
+
 ```
-godot --headless --path maze3d -- --level=<id> --selftest
-godot --headless --path maze3d -- --level=gen:rooms:<theme> --seed=N --selftest
-godot --headless --path maze3d -- --level=anomalous --selftest --story
+python tests/run_baseline.py                      # all of it; logs in tests/out/<name>.log
+python tests/run_baseline.py gen5 deep            # only those
+python tests/run_baseline.py --jobs 2             # two at a time (Staff Only always alone: it needs about 3 GB)
+python tests/run_baseline.py --out before         # keep this run in tests/out/before/ ...
+python tests/run_baseline.py --compare before     # ... and after a change, list every check that differs from it
+```
+
+It finds Godot as `godot` on the PATH, or give `--godot <path>` or set `GODOT`. It exits with the number of runs that failed a check, hit a script error or printed no result. One run by hand:
+
+```
+godot --headless --fixed-fps 60 --path maze3d -- --level=<id> --selftest
+godot --headless --fixed-fps 60 --path maze3d -- --level=gen:rooms:<theme> --seed=N --selftest
+godot --headless --fixed-fps 60 --path maze3d -- --level=anomalous --selftest --story
 ```
 
 The self-test plays a level by script and prints `PASS` / `FAIL` / `INFO` lines, then `RESULT  n failures`, and exits with the number of failures. `tests/selftest.gd` (`SelfTest`) is the runner; each feature is a part (`SelfTestPart`, `tests/part.gd`) in `tests/<feature>_test.gd`, run in this order: `schema`, then `movement`, `reach`, `traps`, `identify`, `arches`, `actors` (with `off_duty` on an off-duty floor and `covers_all` on a level that says so), `use_key`, `containers`, `pickups`, `doors`, `menus`, `finish`. A level can bring its own test beside its level file, `games/<game>/levels/<id>_test.gd`; if its `replaces_standard()` says so it runs instead of the standard parts: the bunker always (rooms, every working piece of furniture, banking and what goes on show, the repair, buying, placing on floor and wall, taking back, the vault door, the lift's destinations, the outfit, and that a reload finds it all as it was left), the Anomalous Structure with `--story` (the intended route: both ways past the Sphinx Gun and the Monoid, the darts, the memo and locker 4, the three cards, the executive desk and safe, both lifts, the tubes, the mist, ENDURANCE, the tripwire, the Security Station, the Repair Bay, the emitters and the field, closing the agency, seizing the core, leaving, and what is banked). Tests use public methods only.
 
 On a level with `"covers_all": true` the self-test fails if any style, prop, door, monster or item in the game is not on the floor; on an off-duty floor it also checks that every kind of monster talks, lands an attack on a target, hurts nobody, that one called from the range walks there and back, and that a shut station shuts again. `LM_RANGE_ONLY=1` goes straight to the range; `LM_RANGE_ACTOR=<id>` picks who is called; `--verbose` prints a fight's state every 150 frames.
 
-**Repeatable runs.** `--repeatable` seeds the random numbers (12345, or `--repeatable=<seed>`) before the level is built and makes `Debug.now_msec()` count physics frames instead of reading the clock. Started with Godot's own `--fixed-fps 60` as well, physics steps a sixtieth of a second each frame however long the frame took, and a run is the same, line for line, every time:
-
-```
-godot --headless --fixed-fps 60 --path maze3d -- --level=<id> --selftest --repeatable
-```
-
-Use it to compare two versions of the code exactly: run both and diff the output. Without `--fixed-fps 60` the seed and clock alone do not make runs repeatable (the log says so). The game plays the same with or without it.
+**Repeatable runs.** The self-test is repeatable unless it is given `--realtime`: like `--repeatable`, it seeds the random numbers (12345, or `--repeatable=<seed>`) before the level is built and makes `Debug.now_msec()` count physics frames instead of reading the clock. Started with Godot's own `--fixed-fps 60` as well, physics steps a sixtieth of a second each frame however long the frame took, so a run prints the same lines every time and two versions of the code can be compared line for line (`run_baseline.py --compare`); any difference is the change. Without `--fixed-fps 60` the seed and the clock alone do not make runs repeatable. `--realtime` runs the self-test as the game runs, with physics following real time; that is the way to look for checks that only fail now and then. `--repeatable` does the same for a run that is not a self-test (`--frames`, `--shot`). The game plays the same with or without it.
 
 **Known flaky checks** (in the test, not the game; they come and go from run to run because physics steps follow real time; with `--repeatable` and `--fixed-fps 60` they come out the same every time): a monster can outlast the 900-frame fight limit (a fleeing Monoid, a Ceiling Turret on generated seed 11, the Princess); the test sometimes finds no spot to stand to fight a monster in a tight corner; a scanner arch walked through while something is attacking may not register; a monster wandering an upstairs room can be caught standing at the edge of its lift shaft by the "other storeys" check.
 

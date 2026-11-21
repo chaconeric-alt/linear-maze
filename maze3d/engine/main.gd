@@ -44,8 +44,10 @@ func _ready() -> void:
 ## Switches for testing and looking at things, from the command line. Game code asks Debug (engine/debug.gd), never
 ## the command line; the self-test sets its own.
 func _debug_switches() -> void:
-	if _args.has("repeatable"):                  # --repeatable[=seed]: the same run every time (see Debug.now_msec)
-		_repeatable(int(_args["repeatable"]) if OS.get_cmdline_user_args().has("--repeatable=" + _args["repeatable"]) else 12345)
+	# --repeatable[=seed]: the same run every time (see Debug.now_msec). The self-test is repeatable unless --realtime.
+	if _args.has("repeatable") or (_args.has("selftest") and not _args.has("realtime")):
+		var given: bool = _args.has("repeatable") and OS.get_cmdline_user_args().has("--repeatable=" + _args["repeatable"])
+		_repeatable(int(_args["repeatable"]) if given else 12345)
 	if _args.has("selftest"):
 		load("res://tests/selftest.gd").configure()
 	Debug.hold_zoom = Debug.hold_zoom or _args.has("zoom")

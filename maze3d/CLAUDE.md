@@ -44,17 +44,17 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 ## Running the tests
 
 ```
-godot --headless --path maze3d --import                                   # after adding a script with a class_name
-godot --headless --path maze3d -- --level=<id> --selftest
-godot --headless --path maze3d -- --level=anomalous --selftest --story
-godot --headless --path maze3d -- --level=gen:rooms --seed=5 --selftest
-godot --headless --path maze3d -- --level=gen:rooms:<theme> --seed=5 --selftest   # each theme in game.json generator_themes
+godot --headless --path maze3d --import                   # after adding a script with a class_name
+python3 maze3d/tests/run_baseline.py --out before          # the whole baseline, repeatably, before a change ...
+python3 maze3d/tests/run_baseline.py --compare before      # ... and after it: every check that differs is listed
+godot --headless --fixed-fps 60 --path maze3d -- --level=<id> --selftest      # one run by hand
 ```
 
-The baseline is: `staffonly`, `deepworks`, `menagerie`, `anomalous` (and with `--story`), `home`, `gen:rooms` with seeds 5, 7, 11 and 22, and every theme at seed 5. Every check that passed must still pass; never fix a failure by weakening a test. A script error does not always fail the test: look for `SCRIPT ERROR` in the output too.
+The baseline is `tests/baseline.txt`: `staffonly`, `deepworks`, `menagerie`, `anomalous` (and with `--story`), `home`, `gen:rooms` with seeds 5, 7, 11 and 22, and every theme at seed 5. Every check that passed must still pass; never fix a failure by weakening a test. A script error does not always fail the test: look for `SCRIPT ERROR` in the output too (the runner counts them).
 
-- Plain runs are not repeatable: physics steps follow real time, so fights, arches walked through and a wandering monster's position vary. `SPEC.md` section 9 lists the known flaky checks. To compare two versions exactly, run both as `godot --headless --fixed-fps 60 --path maze3d -- <args> --repeatable`: a fixed seed, the clock counted in frames, the output line-for-line the same every run. Diff the two outputs; any difference is the change.
-- Never read `Time.get_ticks_msec()` in game code; use `Debug.now_msec()`, or `--repeatable` stops being repeatable.
+- The self-test is repeatable by default (a fixed seed, the clock counted in physics frames); with Godot's `--fixed-fps 60`, which the runner passes, a run prints the same lines every time, so a difference between two runs is a difference in the code. `--realtime` makes physics follow real time as in the game: use it to hunt checks that fail only now and then (`SPEC.md` section 9 lists the known ones). `--repeatable` does the same for runs that are not self-tests.
+- A change that only moves things about should leave the baseline line for line the same (`--compare`). A change that moves the player or a monster, or adds frames to a test (a key press waits three), shifts every fight after it: compare the checks, not the lines, and look at any fight that now fails.
+- Never read `Time.get_ticks_msec()` in game or test code; use `Debug.now_msec()`, or the runs stop being repeatable.
 - Staff Only peaks near 3 GB: do not run two at once on a small machine.
 - `--dump=file.json` with `--frames=2` writes a generated level and quits; compare before and after a generator change.
 - Godot rewrites `.import` files when it runs; revert them before committing (`git checkout -- '*.import'`). New scripts get `.uid` files: commit those.

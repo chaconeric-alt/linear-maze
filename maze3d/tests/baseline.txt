@@ -1,0 +1,22 @@
+# The self-test baseline: one run per line, "name | arguments after --". Run them all with tests/run_baseline.py.
+# Every check that passes here must still pass after a change. Staff Only needs about 3 GB, so it is always run alone.
+staffonly       | --level=staffonly --selftest
+deepworks       | --level=deepworks --selftest
+menagerie       | --level=menagerie --selftest
+anomalous       | --level=anomalous --selftest
+anomalous_story | --level=anomalous --selftest --story
+home            | --level=home --selftest
+gen5            | --level=gen:rooms --seed=5 --selftest
+gen7            | --level=gen:rooms --seed=7 --selftest
+gen11           | --level=gen:rooms --seed=11 --selftest
+gen22           | --level=gen:rooms --seed=22 --selftest
+works           | --level=gen:rooms:works --seed=5 --selftest
+bunker          | --level=gen:rooms:bunker --seed=5 --selftest
+crypt           | --level=gen:rooms:crypt --seed=5 --selftest
+deep            | --level=gen:rooms:deep --seed=5 --selftest
+executive       | --level=gen:rooms:executive --seed=5 --selftest
+megaplex        | --level=gen:rooms:megaplex --seed=5 --selftest
+hospital        | --level=gen:rooms:hospital --seed=5 --selftest
+basilica        | --level=gen:rooms:basilica --seed=5 --selftest
+drowned         | --level=gen:rooms:drowned --seed=5 --selftest
+dust            | --level=gen:rooms:dust --seed=5 --selftest

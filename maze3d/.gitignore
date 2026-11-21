@@ -2,3 +2,4 @@
 *.translation
 export_presets.cfg
 __pycache__/
+tests/out/
