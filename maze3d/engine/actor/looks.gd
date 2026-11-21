@@ -211,7 +211,7 @@ func trail_tick(dt: float) -> void:
 	var top: float = tr.get("max", 58.0)
 	if want.length() > top:
 		want = want.normalized() * top
-	var t := Time.get_ticks_msec() * 0.001
+	var t := Debug.now_msec() * 0.001
 	for e2 in _trail:
 		var second: bool = e2[5] > 1.0
 		var k: float = tr.get("stiff", 30.0) * (0.55 if second else 1.0)

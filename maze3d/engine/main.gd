@@ -44,6 +44,8 @@ func _ready() -> void:
 ## Switches for testing and looking at things, from the command line. Game code asks Debug (engine/debug.gd), never
 ## the command line; the self-test sets its own.
 func _debug_switches() -> void:
+	if _args.has("repeatable"):                  # --repeatable[=seed]: the same run every time (see Debug.now_msec)
+		_repeatable(int(_args["repeatable"]) if OS.get_cmdline_user_args().has("--repeatable=" + _args["repeatable"]) else 12345)
 	if _args.has("selftest"):
 		load("res://tests/selftest.gd").configure()
 	Debug.hold_zoom = Debug.hold_zoom or _args.has("zoom")
@@ -53,6 +55,15 @@ func _debug_switches() -> void:
 	Debug.no_vfog = _args.has("novfog")
 	if Debug.memory_profile:
 		Profile.keep_in_memory()
+
+
+## Seeds the random numbers before anything draws one (the level is not loaded yet) and stops the clock reading real
+## time. Physics still steps with real time unless Godot itself is started with --fixed-fps 60, and a script cannot
+## see Godot's own arguments to check, so the log says it.
+func _repeatable(n: int) -> void:
+	Debug.repeatable = true
+	seed(n)
+	print("repeatable: seed %d, clock in physics frames (start Godot with --fixed-fps 60 for the same run every time)" % n)
 
 
 func _inputs() -> void:

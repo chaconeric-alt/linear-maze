@@ -163,7 +163,7 @@ func _process(dt: float) -> void:
 		return
 	var speed: float = 1.0 / max(0.05, meta.get("time", 0.5))
 	if jammed:
-		speed *= 0.3 + 0.5 * abs(sin(Time.get_ticks_msec() * 0.02))
+		speed *= 0.3 + 0.5 * abs(sin(Debug.now_msec() * 0.02))
 		_spark -= dt
 		if _spark <= 0.0:
 			_spark = randf_range(0.08, 0.3)

@@ -138,7 +138,7 @@ func _process(_dt: float) -> void:
 		level.add_child(_ghost)
 	aim(model)
 	_ghost.visible = _ok
-	_ghost.position = _spot + Vector3(0, 0.02 + 0.03 * sin(Time.get_ticks_msec() * 0.006), 0)
+	_ghost.position = _spot + Vector3(0, 0.02 + 0.03 * sin(Debug.now_msec() * 0.006), 0)
 	_ghost.rotation.y = _yaw
 
 

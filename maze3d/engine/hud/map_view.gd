@@ -73,7 +73,7 @@ func _cell_color(lv: Level, p: Vector2i, pf: int) -> Color:
 
 ## Anything hostile the player has seen: a red signal.
 func _draw_seen(lv: Level, pl: Node3D, s: float, pc: Vector2, mid: Vector2) -> void:
-	var beat := fmod(Time.get_ticks_msec() * 0.001, 1.2) / 1.2
+	var beat := fmod(Debug.now_msec() * 0.001, 1.2) / 1.2
 	for a in lv.actors:
 		if not is_instance_valid(a) or a.dead or not a.seen or absf(a.global_position.y - pl.global_position.y) > lv.H * 1.6:
 			continue

@@ -12,3 +12,12 @@ static var fixed_settings := false      # remembered settings (easy mode) are no
 static var no_ao := false               # --noao: no screen-space ambient occlusion
 static var ssil := false                # --ssil: screen-space indirect light, which is off unless asked for
 static var no_vfog := false             # --novfog: no volumetric fog
+static var repeatable := false          # --repeatable: random numbers from a fixed seed and the clock counted in physics frames
+
+
+## Milliseconds since the game started, for things that bob, pulse or grind with time. With --repeatable it counts
+## physics frames instead of reading the wall clock, so two runs at --fixed-fps 60 see the same times frame for frame.
+static func now_msec() -> int:
+	if repeatable:
+		return Engine.get_physics_frames() * 1000 / Engine.physics_ticks_per_second
+	return Time.get_ticks_msec()

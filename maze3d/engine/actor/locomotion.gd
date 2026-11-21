@@ -84,7 +84,7 @@ func walls_at(c: Vector2i) -> Array:
 ## flyer keeps its head out of it.
 func fly_tick() -> void:
 	if fly and d.has("bob"):
-		a.vis.position.y = d.get("model_y", 0.0) + sin(Time.get_ticks_msec() * 0.001 * d["bob"].get("rate", 5.0) + a.get_index()) * d["bob"].get("height", 0.2) * (1.0 if a.awake else (0.0 if a.dock != null else 0.35))
+		a.vis.position.y = d.get("model_y", 0.0) + sin(Debug.now_msec() * 0.001 * d["bob"].get("rate", 5.0) + a.get_index()) * d["bob"].get("height", 0.2) * (1.0 if a.awake else (0.0 if a.dock != null else 0.35))
 	if fly and not a.dead:
 		if _vis_top < 0.0:
 			var acc: Array = [null]
@@ -278,7 +278,7 @@ func dance_tick(dt: float) -> void:
 		mid = (a.home + _partner.home) / 2
 		rad = clampf(a.home.distance_to(_partner.home) / 2, 1.2, dn.get("radius", 1.6) * 1.5)
 		phase = 0.0 if a.get_instance_id() < _partner.get_instance_id() else PI
-	var ang: float = Time.get_ticks_msec() * 0.001 * dn.get("speed", 1.6) / rad + phase
+	var ang: float = Debug.now_msec() * 0.001 * dn.get("speed", 1.6) / rad + phase
 	var spot := mid + Vector3(cos(ang), 0, sin(ang)) * rad
 	var go := Vector3(spot.x - a.global_position.x, 0, spot.z - a.global_position.z) * 3.0
 	if go.length() > 3.5:

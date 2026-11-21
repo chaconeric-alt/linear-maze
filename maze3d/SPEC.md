@@ -596,7 +596,9 @@ Ambient occlusion is on, gentle (intensity 1.2, radius 0.8) and at full resoluti
 
 ### 5.12 Debug switches and the command line (`engine/debug.gd`, `engine/main.gd`)
 
-Game code never reads the command line: `Main` sets the static switches in `Debug` (`sure_rolls`, `quick_hacks`, `hold_zoom`, `memory_profile`, `fixed_settings`, `no_ao`, `ssil`, `no_vfog`) from its arguments, and the self-test sets what it needs (`SelfTest.configure`). Arguments (after `--`): `--level=<id>` or `--level=gen:<generator>[:<theme>]` with `--seed=N` and `--dump=file.json`; `--selftest` (and `--story`, `--verbose`); `--easy`, `--calm` (nothing notices the player), `--god`, `--alert`, `--at=x,y[,dx,dz]`, `--up=1`, `--yaw`, `--pitch`, `--zoom`, `--noprofile`, `--noao`, `--ssil`, `--novfog`, `--lights`, `--trace` (every actor's change of state; `--trace=Name` follows one), `--shot=file.png` with `--frames=N`, `--nohud`.
+Game code never reads the command line: `Main` sets the static switches in `Debug` (`sure_rolls`, `quick_hacks`, `hold_zoom`, `memory_profile`, `fixed_settings`, `no_ao`, `ssil`, `no_vfog`, `repeatable`) from its arguments, and the self-test sets what it needs (`SelfTest.configure`). Arguments (after `--`): `--level=<id>` or `--level=gen:<generator>[:<theme>]` with `--seed=N` and `--dump=file.json`; `--selftest` (and `--story`, `--verbose`); `--easy`, `--calm` (nothing notices the player), `--god`, `--alert`, `--at=x,y[,dx,dz]`, `--up=1`, `--yaw`, `--pitch`, `--zoom`, `--noprofile`, `--noao`, `--ssil`, `--novfog`, `--lights`, `--trace` (every actor's change of state; `--trace=Name` follows one), `--shot=file.png` with `--frames=N`, `--nohud`, `--repeatable[=seed]` (section 9).
+
+Code that moves with time (a bob, a pulse, a jammed door's grinding, the map's signal) reads `Debug.now_msec()`, never `Time.get_ticks_msec()`, so that `--repeatable` can stop the clock reading real time.
 
 ## 6. Generators
 
@@ -751,7 +753,15 @@ The self-test plays a level by script and prints `PASS` / `FAIL` / `INFO` lines,
 
 On a level with `"covers_all": true` the self-test fails if any style, prop, door, monster or item in the game is not on the floor; on an off-duty floor it also checks that every kind of monster talks, lands an attack on a target, hurts nobody, that one called from the range walks there and back, and that a shut station shuts again. `LM_RANGE_ONLY=1` goes straight to the range; `LM_RANGE_ACTOR=<id>` picks who is called; `--verbose` prints a fight's state every 150 frames.
 
-**Known flaky checks** (in the test, not the game; they come and go from run to run because physics steps follow real time): a monster can outlast the 900-frame fight limit (a fleeing Monoid, a Ceiling Turret on generated seed 11, the Princess); the test sometimes finds no spot to stand to fight a monster in a tight corner; a scanner arch walked through while something is attacking may not register; a monster wandering an upstairs room can be caught standing at the edge of its lift shaft by the "other storeys" check.
+**Repeatable runs.** `--repeatable` seeds the random numbers (12345, or `--repeatable=<seed>`) before the level is built and makes `Debug.now_msec()` count physics frames instead of reading the clock. Started with Godot's own `--fixed-fps 60` as well, physics steps a sixtieth of a second each frame however long the frame took, and a run is the same, line for line, every time:
+
+```
+godot --headless --fixed-fps 60 --path maze3d -- --level=<id> --selftest --repeatable
+```
+
+Use it to compare two versions of the code exactly: run both and diff the output. Without `--fixed-fps 60` the seed and clock alone do not make runs repeatable (the log says so). The game plays the same with or without it.
+
+**Known flaky checks** (in the test, not the game; they come and go from run to run because physics steps follow real time; with `--repeatable` and `--fixed-fps 60` they come out the same every time): a monster can outlast the 900-frame fight limit (a fleeing Monoid, a Ceiling Turret on generated seed 11, the Princess); the test sometimes finds no spot to stand to fight a monster in a tight corner; a scanner arch walked through while something is attacking may not register; a monster wandering an upstairs room can be caught standing at the edge of its lift shaft by the "other storeys" check.
 
 ## 10. Recipes
 
