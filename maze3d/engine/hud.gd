@@ -1,6 +1,8 @@
 extends CanvasLayer
-## Hud - everything drawn over the world: status, messages, the map, panels (terminals),
-## and the title, pause, death and end screens. Built in code; colours come from the game's theme.
+## Hud - everything drawn over the world: status, messages, the map, panels (terminals), and the title, pause, death
+## and end screens. Built in code; colours come from the game's theme. Its parts are in engine/hud/: HudStyle (how
+## words, bars and buttons look), HudCrosshair, HudMap and HudScreens (the full-screen overlays). It keeps the state
+## (title, play, panel, pause, end) and what goes with each.
 class_name Hud
 
 signal start_requested(level_id: String)
@@ -23,23 +25,20 @@ var _ident_detail: Label
 var _ident_tw: Tween
 var _toasts: VBoxContainer
 var _vignette: ColorRect
-var _cross: Control
-var _map: Control
+var _cross: HudCrosshair
+var _map: HudMap
 var _panel: PanelContainer
 var _panel_body: VBoxContainer
-var _overlay: ColorRect
-var _overlay_box: VBoxContainer
-var _big_map := false
+var _screens: HudScreens
+var _style: HudStyle
 var _state := "title"
-var _font_mono: SystemFont
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 10
-	accent = LM.col(LM.game.get("theme", {}).get("accent"), accent)
-	_font_mono = SystemFont.new()
-	_font_mono.font_names = PackedStringArray(["IBM Plex Mono", "Consolas", "DejaVu Sans Mono", "monospace"])
+	_style = HudStyle.new()
+	accent = _style.accent
 	root = Control.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -49,12 +48,24 @@ func _ready() -> void:
 	_vignette.color = Color(0.8, 0.05, 0.0, 0.0)
 	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_vignette)
-	_cross = Control.new()
+	_cross = HudCrosshair.new()
+	_cross.accent = accent
 	_cross.set_anchors_preset(Control.PRESET_CENTER)
 	_cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_cross.draw.connect(_draw_cross)
 	root.add_child(_cross)
-	# bottom left: health and armour
+	_build_status()
+	_build_messages()
+	_build_panel()
+	_screens = HudScreens.new(self, _style)          # full-screen overlays, over everything else
+	add_child(_screens.overlay)
+	Game.toast.connect(_on_toast)
+	Game.changed.connect(refresh)
+	Game.ended.connect(_on_end)
+	Game.interaction.view = self                    # the rules of panels are there; this only draws them
+
+
+## Health and armour bottom left, the weapon bottom right, the objective top left; credits, keys and the map top right.
+func _build_status() -> void:
 	var bl := VBoxContainer.new()
 	bl.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	bl.position = Vector2(28, -96)
@@ -62,12 +73,11 @@ func _ready() -> void:
 	root.add_child(bl)
 	_hp_label = _label("100", 34, Color.WHITE)
 	bl.add_child(_hp_label)
-	_health = _bar(Color(0.85, 0.2, 0.15))
+	_health = _style.bar(Color(0.85, 0.2, 0.15))
 	bl.add_child(_health)
-	_armor = _bar(Color(0.2, 0.7, 0.9))
+	_armor = _style.bar(Color(0.2, 0.7, 0.9))
 	_armor.custom_minimum_size.y = 6
 	bl.add_child(_armor)
-	# bottom right: weapon
 	var br := VBoxContainer.new()
 	br.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	br.position = Vector2(-330, -96)
@@ -80,13 +90,11 @@ func _ready() -> void:
 	_weapon = _label("", 16, accent)
 	_weapon.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	br.add_child(_weapon)
-	# top left: objective
 	_objective = _label("", 17, Color(0.95, 0.9, 0.8))
 	_objective.position = Vector2(28, 22)
 	_objective.custom_minimum_size = Vector2(520, 0)
 	_objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_objective)
-	# top right: credits, keys, map
 	var tr := VBoxContainer.new()
 	tr.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	tr.position = Vector2(-240, 20)
@@ -98,12 +106,15 @@ func _ready() -> void:
 	_keys = HBoxContainer.new()
 	_keys.alignment = BoxContainer.ALIGNMENT_END
 	tr.add_child(_keys)
-	_map = Control.new()
-	_map.custom_minimum_size = Vector2(212, 212)
+	_map = HudMap.new()
+	_map.accent = accent
+	_map.custom_minimum_size = HudMap.SMALL
 	_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_map.draw.connect(_draw_map)
 	tr.add_child(_map)
-	# messages
+
+
+## Messages along the top, the use prompt under the cross hairs, and easy mode's "what is that" at the bottom.
+func _build_messages() -> void:
 	_toasts = VBoxContainer.new()
 	_toasts.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_toasts.position = Vector2(-360, 70)
@@ -116,7 +127,6 @@ func _ready() -> void:
 	_prompt.custom_minimum_size = Vector2(600, 0)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_prompt)
-	# easy mode: what E said the player is looking at
 	_ident = VBoxContainer.new()
 	_ident.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_ident.position = Vector2(-460, -190)
@@ -132,7 +142,10 @@ func _ready() -> void:
 	_ident.add_child(_ident_detail)
 	root.add_child(_ident)
 	Game.identified.connect(_on_identified)
-	# terminal panel
+
+
+## The terminal panel (hidden until a panel opens).
+func _build_panel() -> void:
 	_panel = PanelContainer.new()
 	_panel.set_anchors_preset(Control.PRESET_CENTER)
 	_panel.custom_minimum_size = Vector2(680, 0)
@@ -148,67 +161,14 @@ func _ready() -> void:
 	_panel.add_child(_panel_body)
 	_panel.visible = false
 	add_child(_panel)
-	# full-screen overlays
-	_overlay = ColorRect.new()
-	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_overlay.color = Color(0, 0, 0, 0.72)
-	_overlay_box = VBoxContainer.new()
-	_overlay_box.set_anchors_preset(Control.PRESET_CENTER)
-	_overlay_box.custom_minimum_size = Vector2(760, 0)
-	_overlay_box.position = Vector2(-380, -230)
-	_overlay_box.add_theme_constant_override("separation", 14)
-	_overlay.add_child(_overlay_box)
-	add_child(_overlay)
-	Game.toast.connect(_on_toast)
-	Game.changed.connect(refresh)
-	Game.ended.connect(_on_end)
-	Game.interaction.view = self                    # the rules of panels are there; this only draws them
 
 
 func _label(text: String, size: int, c: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_override("font", _font_mono)
-	l.add_theme_font_size_override("font_size", size)
-	l.add_theme_color_override("font_color", c)
-	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
-	l.add_theme_constant_override("shadow_offset_x", 1)
-	l.add_theme_constant_override("shadow_offset_y", 2)
-	return l
-
-
-func _bar(c: Color) -> ProgressBar:
-	var b := ProgressBar.new()
-	b.show_percentage = false
-	b.custom_minimum_size = Vector2(300, 12)
-	var fg := StyleBoxFlat.new()
-	fg.bg_color = c
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0, 0, 0, 0.55)
-	b.add_theme_stylebox_override("fill", fg)
-	b.add_theme_stylebox_override("background", bg)
-	return b
+	return _style.label(text, size, c)
 
 
 func _button(text: String, cb: Callable, primary := false) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.add_theme_font_override("font", _font_mono)
-	b.add_theme_font_size_override("font_size", 19)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(accent.r, accent.g, accent.b, 0.22 if primary else 0.08)
-	sb.border_color = accent
-	sb.set_border_width_all(1)
-	sb.set_content_margin_all(10)
-	var hov := sb.duplicate()
-	hov.bg_color = Color(accent.r, accent.g, accent.b, 0.4)
-	b.add_theme_stylebox_override("normal", sb)
-	b.add_theme_stylebox_override("hover", hov)
-	b.add_theme_stylebox_override("pressed", hov)
-	b.add_theme_stylebox_override("focus", hov)
-	b.pressed.connect(cb)
-	return b
+	return _style.button(text, cb, primary)
 
 
 # ------------------------------------------------------------------ status
@@ -255,98 +215,6 @@ func _process(_dt: float) -> void:
 	_prompt.text = ("[E]  " + f.prompt()) if f and is_instance_valid(f) else ""
 	_cross.queue_redraw()
 	_map.queue_redraw()
-
-
-func _draw_cross() -> void:
-	var pl: Node = Game.player
-	if pl == null or not is_instance_valid(pl):
-		return
-	if pl.zoom > 0.05:                                # sniper mode: a scope's reticle, and the dark round it
-		var z: float = pl.zoom
-		var vs := get_viewport().get_visible_rect().size
-		var r: float = vs.y * 0.44
-		var dark := Color(0, 0, 0, 0.97 * z)
-		# everything outside the circle: four bands round its square, and a thick ring for the corners
-		_cross.draw_rect(Rect2(-vs.x, -vs.y, vs.x * 2, vs.y - r), dark)
-		_cross.draw_rect(Rect2(-vs.x, r, vs.x * 2, vs.y - r), dark)
-		_cross.draw_rect(Rect2(-vs.x, -r, vs.x - r, r * 2), dark)
-		_cross.draw_rect(Rect2(r, -r, vs.x - r, r * 2), dark)
-		_cross.draw_arc(Vector2.ZERO, r * 1.21, 0, TAU, 96, dark, r * 0.42)      # fills the corners between the square and the circle
-		_cross.draw_arc(Vector2.ZERO, r, 0, TAU, 96, Color(0, 0, 0, z), 3.0)
-		var line := Color(accent.r, accent.g, accent.b, 0.9 * z)
-		var gap: float = 10.0 + pl.recoil * 14.0
-		for d in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
-			_cross.draw_line(d * gap, d * r * 0.3, line, 1.5)
-			_cross.draw_line(d * r * 0.3, d * r, Color(0, 0, 0, 0.85 * z), 3.0)      # heavy posts outside, fine wire in the middle
-			for k in range(1, 5):                     # range ticks
-				var at: Vector2 = d * (gap + k * r * 0.06)
-				var nrm := Vector2(-d.y, d.x) * (5.0 if k % 2 == 0 else 3.0)
-				_cross.draw_line(at - nrm, at + nrm, line, 1.0)
-		_cross.draw_circle(Vector2.ZERO, 1.5, Color(1.0, 0.2, 0.15, z))
-		if z > 0.5:
-			return
-	var g: float = 7.0 + pl.recoil * 10.0
-	var c := Color(1, 1, 1, 0.85 * (1.0 - pl.zoom))
-	for d in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
-		_cross.draw_line(d * g, d * (g + 8.0), c, 2.0)
-	_cross.draw_circle(Vector2.ZERO, 1.5, accent)
-
-
-func _draw_map() -> void:
-	var lv: Level = Game.level
-	var pl: Node3D = Game.player
-	if lv == null or pl == null or not is_instance_valid(pl):
-		return
-	var size := _map.size
-	var s := 9.0 if not _big_map else 14.0
-	var pc := Vector2(pl.global_position.x, pl.global_position.z) / lv.C
-	var mid := size / 2
-	_map.draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.45))
-	var reach := int(size.x / s / 2) + 1
-	var cc := lv.cell_of(pl.global_position)
-	var pf := lv.floor_of(pl.global_position)          # the map shows the floor you are on
-	for dy in range(-reach, reach + 1):
-		for dx in range(-reach, reach + 1):
-			var p := cc + Vector2i(dx, dy)
-			if not lv.explored.has(Vector3i(p.x, p.y, pf)) or not lv.is_open(p.x, p.y, pf):
-				continue
-			var at := mid + (Vector2(p) - pc) * s
-			if at.x < 0 or at.y < 0 or at.x > size.x - s or at.y > size.y - s:
-				continue
-			var col := Color(0.55, 0.62, 0.66, 0.8)
-			var lc := lv.cell(p.x, p.y, pf)
-			if lc["window"] != "":
-				col = Color(0.4, 0.85, 1.0, 0.9)
-			elif not lc["ramp"].is_empty():
-				col = Color(0.8, 0.7, 0.45, 0.85)
-			elif not lc["decks"].is_empty():
-				col = Color(0.68, 0.74, 0.8, 0.9)
-			elif lc["fluid"]:
-				col = Color(0.35, 0.6, 0.7, 0.8)
-			if lc.has("lift"):
-				col = Color(0.5, 1.0, 0.6, 0.95)
-			var dk: Variant = p if pf == 0 else Vector3i(p.x, p.y, pf)
-			var dd: Dictionary = lv.doors if pf == 0 else lv.doors_up
-			if dd.has(dk):
-				var d: Door = dd[dk]
-				col = accent if not d.is_locked() else Door.LOCK_COLORS.get(d.lock, Color(0.7, 0.3, 1.0))
-			_map.draw_rect(Rect2(at, Vector2(s - 1, s - 1)), col)
-	var beat := fmod(Time.get_ticks_msec() * 0.001, 1.2) / 1.2          # anything hostile the player has seen: a red signal
-	for a in lv.actors:
-		if not is_instance_valid(a) or a.dead or not a.seen or absf(a.global_position.y - pl.global_position.y) > lv.H * 1.6:
-			continue
-		var at2 := mid + (Vector2(a.global_position.x, a.global_position.z) / lv.C - pc) * s
-		if at2.x < 4 or at2.y < 4 or at2.x > size.x - 4 or at2.y > size.y - 4:
-			continue
-		var red := Color(1.0, 0.16, 0.12)
-		_map.draw_arc(at2, 2.0 + beat * (7.0 if a.awake else 4.0), 0, TAU, 16, Color(red.r, red.g, red.b, 0.9 * (1.0 - beat)), 2.0)
-		_map.draw_colored_polygon(PackedVector2Array([at2 + Vector2(0, -4.5), at2 + Vector2(4.5, 0), at2 + Vector2(0, 4.5), at2 + Vector2(-4.5, 0)]), red)
-	var fwd := Vector2(-sin(pl.rotation.y), -cos(pl.rotation.y))
-	var side := Vector2(-fwd.y, fwd.x)
-	_map.draw_colored_polygon(PackedVector2Array([mid + fwd * 8, mid - fwd * 5 + side * 5, mid - fwd * 5 - side * 5]), Color.WHITE)
-	_map.draw_rect(Rect2(Vector2.ZERO, size), Color(accent.r, accent.g, accent.b, 0.6), false, 1.0)
-	if lv.floors.size() > 1:                           # which floor: B1 below, L0 the main one, L1 above
-		_map.draw_string(ThemeDB.fallback_font, Vector2(6, 16), ("B%d" % -pf) if pf < 0 else ("L%d" % pf), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, accent)
 
 
 func _on_identified(title: String, detail: String) -> void:
@@ -454,62 +322,16 @@ func close_panel() -> void:
 	refresh()
 
 
-# ------------------------------------------------------------------ title, pause, death, the end
-func _clear_overlay() -> void:
-	for c in _overlay_box.get_children():
-		_overlay_box.remove_child(c)
-		c.queue_free()
-
-
+# ------------------------------------------------------------------ title, pause, death, the end (HudScreens draws them)
 func show_title() -> void:
 	_state = "title"
-	_clear_overlay()
-	_overlay.visible = true
-	_overlay.color = Color(0, 0, 0, 0.78)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	var g: Dictionary = LM.game
-	_overlay_box.add_child(_label(str(g.get("title", "maze3d")).to_upper(), 84, accent))
-	var tag := _label(g.get("tagline", ""), 20, Color(0.9, 0.9, 0.85))
-	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_overlay_box.add_child(tag)
-	var ez: Dictionary = g.get("easy", {})
-	var eb := _button("", func(): pass)
-	var name_it := func() -> void:
-		eb.text = "Easy mode: %s   (your weapons ×%s, you take ÷%s)" % ["ON" if Game.easy else "off", String.num(ez.get("deal", 3), 0 if is_equal_approx(ez.get("deal", 3), roundf(ez.get("deal", 3))) else 1), String.num(ez.get("take", 3), 0 if is_equal_approx(ez.get("take", 3), roundf(ez.get("take", 3))) else 1)]
-	name_it.call()
-	eb.pressed.connect(func():
-		Game.set_easy(not Game.easy)
-		name_it.call())
-	_overlay_box.add_child(eb)
-	_overlay_box.add_child(_label("", 8, Color.WHITE))
-	for id in g.get("menu", LM.levels.keys()):
-		var lv: Dictionary = LM.levels.get(id, {})
-		_overlay_box.add_child(_button(("⌂  " if lv.get("home", false) else "▸  ") + lv.get("name", id), func(): start_requested.emit(id), true))
-	for gid in LM.generators:
-		_overlay_box.add_child(_label("RANDOM INSTALLATIONS", 14, Color(0.7, 0.75, 0.75)))
-		var grid := GridContainer.new()                  # three across, so a dozen places still fit on the screen
-		grid.columns = 3
-		grid.add_theme_constant_override("h_separation", 8)
-		grid.add_theme_constant_override("v_separation", 6)
-		_overlay_box.add_child(grid)
-		var add := func(text: String, target: String) -> void:
-			var bt := _button(text, func(): start_requested.emit(target))
-			bt.add_theme_font_size_override("font_size", 16)
-			bt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			grid.add_child(bt)
-		add.call("▸ Mixed", "gen:" + gid)
-		var themes: Dictionary = g.get("generator_themes", {})
-		for th in themes:
-			if not themes[th].get("menu", true):          # kept off the title screen; still playable with --level=gen:<generator>:<theme>
-				continue
-			add.call("▸ %s" % themes[th].get("title", th), "gen:%s:%s" % [gid, th])
-	_overlay_box.add_child(_label("", 8, Color.WHITE))
-	_overlay_box.add_child(_label("WASD move · mouse look · click fire · Shift dash · Space jump\nE use · right mouse zoom · 1-9 / wheel weapons · F lamp · Tab map · Esc pause", 15, Color(0.7, 0.75, 0.75)))
+	_screens.title()
 
 
 func begin_play() -> void:
 	_state = "play"
-	_overlay.visible = false
+	_screens.overlay.visible = false
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	refresh()
@@ -519,14 +341,7 @@ func _pause() -> void:
 	_state = "pause"
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	_clear_overlay()
-	_overlay.color = Color(0, 0, 0, 0.72)
-	_overlay.visible = true
-	_overlay_box.add_child(_label("PAUSED", 56, accent))
-	_overlay_box.add_child(_button("Resume", begin_play, true))
-	_overlay_box.add_child(_button("Start the level again", func(): restart_requested.emit()))
-	_overlay_box.add_child(_button("Back to the title", func(): start_requested.emit("")))
-	_overlay_box.add_child(_button("Quit", func(): get_tree().quit()))
+	_screens.pause()
 
 
 func _on_end(info: Dictionary) -> void:
@@ -534,30 +349,7 @@ func _on_end(info: Dictionary) -> void:
 	_state = "end"
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	_clear_overlay()
-	_overlay.color = Color(0.1, 0, 0, 0.78) if info.get("dead", false) else Color(0, 0, 0, 0.8)
-	_overlay.visible = true
-	var words: Dictionary = LM.game.get("words", {})
-	if info.get("dead", false):
-		_overlay_box.add_child(_label(words.get("death_title", "YOU DIED"), 64, Color(1, 0.3, 0.2)))
-		_overlay_box.add_child(_label(words.get("death_text", ""), 19, Color.WHITE))
-	else:
-		_overlay_box.add_child(_label(str(info.get("title", words.get("end_title", "Level complete"))).to_upper(), 56, accent))
-		var t := _label(info.get("text", ""), 19, Color.WHITE)
-		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_overlay_box.add_child(t)
-	var s: Dictionary = Game.stats
-	_overlay_box.add_child(_label("Salvage  %d cr      Finds  %d / %d      Kills  %d      Time  %d:%02d" % [Game.credits, s["treasure"], s["treasure_total"], s["kills"], int(s["time"]) / 60, int(s["time"]) % 60], 17, Color(0.8, 0.85, 0.85)))
-	var home_id := ""
-	for id in LM.levels:
-		if LM.levels[id].get("home", false):
-			home_id = id
-	var at_home: bool = Game.level != null and Game.level.data.get("home", false)
-	if home_id != "" and not at_home:
-		var s2: String = "Wake up in the bunker (what you were carrying is gone)" if info.get("dead", false) else "Home to the bunker (%d cr banked)" % Game.credits
-		_overlay_box.add_child(_button(s2, func(): start_requested.emit(home_id), not info.get("dead", false)))
-	_overlay_box.add_child(_button("Go again", func(): restart_requested.emit(), home_id == "" or info.get("dead", false)))
-	_overlay_box.add_child(_button("Back to the title", func(): start_requested.emit("")))
+	_screens.end(info)
 
 
 func _unhandled_key_input(ev: InputEvent) -> void:
@@ -570,8 +362,7 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 				_pause()
 				used = true
 			elif ev.is_action("map"):
-				_big_map = not _big_map
-				_map.custom_minimum_size = Vector2(420, 420) if _big_map else Vector2(212, 212)
+				_map.set_big(not _map.big)
 				used = true
 		"pause":
 			if ev.keycode == KEY_ESCAPE:

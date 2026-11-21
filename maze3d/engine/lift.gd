@@ -40,6 +40,13 @@ func setup(lv: Level, e: Dictionary, p: Vector2i) -> void:
 	cs.position.y = -0.09                             # its top stands a finger above the floor it stops at
 	add_child(cs)
 	var col := LM.col(e.get("color"), Color(0.4, 1.0, 0.6))
+	var metal := _build_plate()
+	_build_frame(col)
+	_build_rails(lv, p, metal)
+
+
+## The steel plate you stand on. Returns its material, which the guide rails share.
+func _build_plate() -> StandardMaterial3D:
 	var plate := MeshInstance3D.new()
 	var pm := BoxMesh.new()
 	pm.size = Vector3(_half * 2, 0.24, _half * 2)
@@ -51,6 +58,11 @@ func setup(lv: Level, e: Dictionary, p: Vector2i) -> void:
 	m.roughness = 0.4
 	plate.material_override = m
 	add_child(plate)
+	return m
+
+
+## A lit frame round the edge, in the lift's colour, and a light over it.
+func _build_frame(col: Color) -> void:
 	var glow := StandardMaterial3D.new()
 	glow.albedo_color = col
 	glow.emission_enabled = true
@@ -71,7 +83,12 @@ func setup(lv: Level, e: Dictionary, p: Vector2i) -> void:
 	_light.omni_range = 5.0
 	_light.position.y = 1.2
 	add_child(_light)
-	var posts := Node3D.new()                         # guide rails up the corners of the shaft; they do not move
+
+
+## Guide rails up the corners of the shaft, from the lowest stop to the top of the highest. They belong to the level,
+## not the lift, so they do not move with it.
+func _build_rails(lv: Level, p: Vector2i, m: StandardMaterial3D) -> void:
+	var posts := Node3D.new()
 	lv.add_child(posts)
 	var lo: float = stops[0]
 	var hi: float = stops[-1] + lv.H

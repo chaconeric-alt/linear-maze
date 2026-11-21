@@ -66,7 +66,7 @@ static func _soft_radius(n: Node) -> float:
 	if n is Actor:
 		return n.d.get("radius", 0.5) + 0.2 if n.dead else 0.0      # what is left of one
 	if n is Door:
-		return 1.5 if n._shape.disabled else 0.0     # open: the ray goes through the doorway
+		return 1.5 if n.is_passable() else 0.0     # open: the ray goes through the doorway
 	if n is Prop:
 		if n.meta.get("arch", false):
 			return 1.3                               # the ray goes through the opening
@@ -109,96 +109,147 @@ static func _nice(id: String) -> String:
 	return id.replace("_", " ").capitalize()
 
 
+## What E says about a thing: its name (title) and a line of what it is (detail). One describer per kind of thing.
 static func _describe(n: Node, lv: Level) -> Dictionary:
 	var bits: Array = []
 	var title := ""
 	if n is Actor:
-		var id: Variant = LM.defs.get("actors", {}).find_key(n.d)
-		title = n.d.get("name", str(id))
-		bits.append("monster \"%s\"" % str(id))
-		bits.append("model %s" % str(n.d.get("model", "?")).get_file())
-		bits.append("%s, hp %d/%d" % ["dead" if n.dead else ("awake" if n.awake else "not yet woken"), ceil(maxf(0.0, n.hp)), n.max_hp])
-		bits.append("behaviour %s" % n.d.get("behavior", "chaser"))
-		if n.tag != "":
-			bits.append("tag %s" % n.tag)
-		if n.off_duty:
-			bits.append("off duty%s" % (" (showing its attacks)" if n.drilling() else (", in its station" if n.dock != null else "")))
+		title = _about_actor(n, lv, bits)
 	elif n is Target:
-		title = "Target"
-		bits.append("target \"%s\"" % n.tag)
-		bits.append("%d hits, %d damage%s" % [n.hits, roundi(n.total), ", in use" if n.busy != null else ""])
+		title = _about_target(n, lv, bits)
 	elif n is Prop:
-		var pid: String = n.e["prop"]
-		title = n.e.get("name", n.meta.get("name", _nice(pid)))
-		bits.append("prop \"%s\"" % pid)
-		bits.append("kit %s" % LM.home_kit(n.kit_id, pid))
-		if n is Station:
-			var who := "empty"
-			if n.bot != null and is_instance_valid(n.bot) and not n.bot.dead and n.bot.dock == n:
-				who = "holds %s" % n.bot.d.get("name", "a robot")
-			bits.append("robot station, %s, %s" % ["open" if n._open > 0.5 else "shut", who])
-		if n.e.has("holds"):
-			var left: Array = []
-			for k in n.get_parent().get_children():
-				if k is Pickup and k._rest and k.global_position.distance_to(n.global_position) < 2.2:
-					left.append(str(k.d.get("item", "?")))
-			bits.append("container, holds: %s" % (", ".join(PackedStringArray(left)) if not left.is_empty() else "nothing now"))
-		var u: Dictionary = n.e.get("use", {})
-		if not u.is_empty():
-			bits.append("use: %s%s" % [u.get("type", "effects"), " (used)" if n.used > 0 else ""])
-		if not n._walk.is_empty():
-			bits.append("walk-through arch")
-		if n.e.has("hp"):
-			bits.append("breakable, hp %d" % ceil(n.hp))
-		if u.is_empty() and n._walk.is_empty() and not n.e.has("hp") and not n is Station and not n.e.has("holds"):
-			bits.append("furniture (does nothing)")
-		if n.tag != "":
-			bits.append("tag %s" % n.tag)
+		title = _about_prop(n, lv, bits)
 	elif n is Door:
-		var entry: Dictionary = lv.cell(n.cell_pos.x, n.cell_pos.y, n.storey).get("entry", {})
-		var did: String = entry.get("door", "?")
-		title = _nice(did)
-		bits.append("door \"%s\"" % did)
-		bits.append("kit %s" % LM.home_kit(lv.kit_id, did))
-		var st := "open" if n.target > 0.5 else "shut"
-		if n.sealed:
-			st += ", sealed"
-		if n.jammed:
-			st += ", jammed"
-		if n.lock != "":
-			st += ", %s lock" % n.lock
-		if n.flag != null:
-			st += ", opens on %s" % str(n.flag)
-		if n.need != "":
-			st += ", needs %s" % n.need
-		bits.append(st)
+		title = _about_door(n, lv, bits)
 	elif n is Pickup:
-		title = n.d.get("name", _nice(str(n.d.get("item", "item"))))
-		bits.append("item \"%s\"" % n.d.get("item", "?"))
-		bits.append("kind %s" % n.d.get("kind", "?"))
-		bits.append("model %s" % n.d.get("model", "?"))
+		title = _about_pickup(n, lv, bits)
 	elif n is Trap:
-		title = "%s trap" % _nice(n.kind)
-		bits.append("trap \"%s\"" % n.kind)
-		bits.append("on" if n.enabled else "switched off")
-		if n.e.get("tag", "") != "":
-			bits.append("tag %s" % n.e["tag"])
+		title = _about_trap(n, lv, bits)
 	elif n is Pit:
-		title = "Pit trap"
-		bits.append("trap \"pit\"")
-		bits.append("sprung" if n._open else "set")
+		title = _about_pit(n, lv, bits)
 	elif n is Lift:
-		title = "Lift"
-		bits.append("lift")
-		bits.append("stops at floors %s" % ", ".join(n.stops.map(func(y): return str(int(round(y / lv.H))))))
+		title = _about_lift(n, lv, bits)
 	elif n is Puddle:
-		title = "%s puddle" % _nice(n.kind)
-		bits.append("puddle left by a monster")
+		title = _about_puddle(n, lv, bits)
 	elif n is Label3D:
-		title = "Sign"
-		bits.append("sign \"%s\"" % n.text.replace("\n", " "))
+		title = _about_sign(n, lv, bits)
 	bits.append(_where(lv, n.global_position))
 	return {"title": title, "detail": " · ".join(bits)}
+
+
+static func _about_actor(n: Node, lv: Level, bits: Array) -> String:
+	var id: Variant = LM.defs.get("actors", {}).find_key(n.d)
+	var title: String = n.d.get("name", str(id))
+	bits.append("monster \"%s\"" % str(id))
+	bits.append("model %s" % str(n.d.get("model", "?")).get_file())
+	bits.append("%s, hp %d/%d" % ["dead" if n.dead else ("awake" if n.awake else "not yet woken"), ceil(maxf(0.0, n.hp)), n.max_hp])
+	bits.append("behaviour %s" % n.d.get("behavior", "chaser"))
+	if n.tag != "":
+		bits.append("tag %s" % n.tag)
+	if n.off_duty:
+		bits.append("off duty%s" % (" (showing its attacks)" if n.drilling() else (", in its station" if n.dock != null else "")))
+	return title
+
+
+static func _about_target(n: Node, lv: Level, bits: Array) -> String:
+	var title: String = "Target"
+	bits.append("target \"%s\"" % n.tag)
+	bits.append("%d hits, %d damage%s" % [n.hits, roundi(n.total), ", in use" if n.busy != null else ""])
+	return title
+
+
+static func _about_prop(n: Node, lv: Level, bits: Array) -> String:
+	var pid: String = n.e["prop"]
+	var title: String = n.e.get("name", n.meta.get("name", _nice(pid)))
+	bits.append("prop \"%s\"" % pid)
+	bits.append("kit %s" % LM.home_kit(n.kit_id, pid))
+	if n is Station:
+		var who := "empty"
+		if n.bot != null and is_instance_valid(n.bot) and not n.bot.dead and n.bot.dock == n:
+			who = "holds %s" % n.bot.d.get("name", "a robot")
+		bits.append("robot station, %s, %s" % ["open" if n.open_amount() > 0.5 else "shut", who])
+	if n.e.has("holds"):
+		var left: Array = []
+		for k in n.get_parent().get_children():
+			if k is Pickup and k.resting() and k.global_position.distance_to(n.global_position) < 2.2:
+				left.append(str(k.d.get("item", "?")))
+		bits.append("container, holds: %s" % (", ".join(PackedStringArray(left)) if not left.is_empty() else "nothing now"))
+	var u: Dictionary = n.e.get("use", {})
+	if not u.is_empty():
+		bits.append("use: %s%s" % [u.get("type", "effects"), " (used)" if n.used > 0 else ""])
+	if not n.walk_spec().is_empty():
+		bits.append("walk-through arch")
+	if n.e.has("hp"):
+		bits.append("breakable, hp %d" % ceil(n.hp))
+	if u.is_empty() and n.walk_spec().is_empty() and not n.e.has("hp") and not n is Station and not n.e.has("holds"):
+		bits.append("furniture (does nothing)")
+	if n.tag != "":
+		bits.append("tag %s" % n.tag)
+	return title
+
+
+static func _about_door(n: Node, lv: Level, bits: Array) -> String:
+	var entry: Dictionary = lv.cell(n.cell_pos.x, n.cell_pos.y, n.storey).get("entry", {})
+	var did: String = entry.get("door", "?")
+	var title: String = _nice(did)
+	bits.append("door \"%s\"" % did)
+	bits.append("kit %s" % LM.home_kit(lv.kit_id, did))
+	var st := "open" if n.target > 0.5 else "shut"
+	if n.sealed:
+		st += ", sealed"
+	if n.jammed:
+		st += ", jammed"
+	if n.lock != "":
+		st += ", %s lock" % n.lock
+	if n.flag != null:
+		st += ", opens on %s" % str(n.flag)
+	if n.need != "":
+		st += ", needs %s" % n.need
+	bits.append(st)
+	return title
+
+
+static func _about_pickup(n: Node, lv: Level, bits: Array) -> String:
+	var title: String = n.d.get("name", _nice(str(n.d.get("item", "item"))))
+	bits.append("item \"%s\"" % n.d.get("item", "?"))
+	bits.append("kind %s" % n.d.get("kind", "?"))
+	bits.append("model %s" % n.d.get("model", "?"))
+	return title
+
+
+static func _about_trap(n: Node, lv: Level, bits: Array) -> String:
+	var title: String = "%s trap" % _nice(n.kind)
+	bits.append("trap \"%s\"" % n.kind)
+	bits.append("on" if n.enabled else "switched off")
+	if n.e.get("tag", "") != "":
+		bits.append("tag %s" % n.e["tag"])
+	return title
+
+
+static func _about_pit(n: Node, lv: Level, bits: Array) -> String:
+	var title: String = "Pit trap"
+	bits.append("trap \"pit\"")
+	bits.append("sprung" if n.is_sprung() else "set")
+	return title
+
+
+static func _about_lift(n: Node, lv: Level, bits: Array) -> String:
+	var title: String = "Lift"
+	bits.append("lift")
+	bits.append("stops at floors %s" % ", ".join(n.stops.map(func(y): return str(int(round(y / lv.H))))))
+	return title
+
+
+static func _about_puddle(n: Node, lv: Level, bits: Array) -> String:
+	var title: String = "%s puddle" % _nice(n.kind)
+	bits.append("puddle left by a monster")
+	return title
+
+
+static func _about_sign(n: Node, lv: Level, bits: Array) -> String:
+	var title: String = "Sign"
+	bits.append("sign \"%s\"" % n.text.replace("\n", " "))
+	return title
 
 
 ## A wall, floor or ceiling: the tile laid nearest the spot, of the kind the surface says it is.

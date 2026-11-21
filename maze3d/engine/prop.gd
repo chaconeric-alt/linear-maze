@@ -39,34 +39,13 @@ func setup(lv: Level, entry: Dictionary, kit: String) -> void:
 	_glow(Door.OPEN_COLOR)
 	inst = LM.spawn_model(kit, e["prop"], {"lock": _lockmat})
 	add_child(inst)
-	for b in meta.get("solids", []):          # several boxes: [x, y, z, width, height, depth]
-		var bs := CollisionShape3D.new()
-		var bb := BoxShape3D.new()
-		bb.size = Vector3(b[3], b[4], b[5])
-		bs.shape = bb
-		bs.position = Vector3(b[0], b[1], b[2])
-		add_child(bs)
+	_add_solids()
 	if meta.has("walk") or e.has("walk"):      # a scanner arch: something happens when you walk through
-		_walk = meta.get("walk", {}).duplicate(true)
-		for k in e.get("walk", {}):
-			_walk[k] = e["walk"][k]
-		_walk_left = int(_walk.get("charges", -1))
-		_glow(LM.col(_walk.get("color"), Door.OPEN_COLOR))
-		_bar = LM.find_node(inst, "scanbar")
-		if _bar:
-			_bar_rest = _bar.position
+		_setup_arch()
 	collision_layer = 1
 	collision_mask = 0
 	if meta.has("solid") and e.get("solid", true):
-		var s: Array = meta["solid"]
-		var cs := CollisionShape3D.new()
-		var b := BoxShape3D.new()
-		b.size = Vector3(s[0], s[1], s[2])
-		cs.shape = b
-		cs.position = Vector3(0, s[1] / 2 if meta.get("mount", "") != "wall" else 1.4, s[2] / 2 if meta.get("mount", "") == "wall" else 0.0)
-		if meta.get("mount", "") == "wall":
-			b.size.y = 2.4
-		add_child(cs)
+		_add_solid()
 	if meta.has("light") and e.get("lit", true):
 		var l := level.make_light(meta["light"], global_transform, level.room_at(level.cell_of(global_position)), 0.0, false)
 		l.set_meta("prop", true)
@@ -100,6 +79,42 @@ func setup(lv: Level, entry: Dictionary, kit: String) -> void:
 		add_child(_label)
 	set_process(not _spin.is_empty() or not _parts.is_empty() or not _walk.is_empty())
 
+
+
+## Several boxes, for things you walk through or under (an arch's posts): meta "solids", [x, y, z, width, height, depth].
+func _add_solids() -> void:
+	for b in meta.get("solids", []):
+		var bs := CollisionShape3D.new()
+		var bb := BoxShape3D.new()
+		bb.size = Vector3(b[3], b[4], b[5])
+		bs.shape = bb
+		bs.position = Vector3(b[0], b[1], b[2])
+		add_child(bs)
+
+
+## One box, meta "solid" [width, height, depth]: standing on the floor, or 2.4 m tall on the wall for a wall mount.
+func _add_solid() -> void:
+	var s: Array = meta["solid"]
+	var cs := CollisionShape3D.new()
+	var b := BoxShape3D.new()
+	b.size = Vector3(s[0], s[1], s[2])
+	cs.shape = b
+	cs.position = Vector3(0, s[1] / 2 if meta.get("mount", "") != "wall" else 1.4, s[2] / 2 if meta.get("mount", "") == "wall" else 0.0)
+	if meta.get("mount", "") == "wall":
+		b.size.y = 2.4
+	add_child(cs)
+
+
+## A scanner arch: the model's "walk", with the placement's fields over it; its lights in its colour; its sweeping bar.
+func _setup_arch() -> void:
+	_walk = meta.get("walk", {}).duplicate(true)
+	for k in e.get("walk", {}):
+		_walk[k] = e["walk"][k]
+	_walk_left = int(_walk.get("charges", -1))
+	_glow(LM.col(_walk.get("color"), Door.OPEN_COLOR))
+	_bar = LM.find_node(inst, "scanbar")
+	if _bar:
+		_bar_rest = _bar.position
 
 func _glow(c: Color, k := 2.5) -> void:
 	_lockmat.albedo_color = Color(c.r * k, c.g * k, c.b * k)

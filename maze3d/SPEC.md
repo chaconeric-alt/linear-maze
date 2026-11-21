@@ -17,7 +17,8 @@ engine/              no game content. Autoloads: lm.gd (LM, the registry), game.
   actor/             Actor (actor.gd) on ActorCore (actor_core.gd), and its components
   player.gd          Player, and player/: controls, movement, camera_rig, weapons
   door.gd prop.gd station.gd pickup.gd trap.gd pit.gd lift.gd target.gd rebuilder.gd projectile.gd puddle.gd fx.gd
-  hud.gd identify.gd home.gd debug.gd schema.gd shaders/
+  hud.gd (and hud/: style, crosshair, map_view, screens) identify.gd home.gd (and home/decorating.gd)
+  debug.gd schema.gd shaders/
 kits/<kit>/          kit.json, generated.json, materials.json, models/*.glb
 actors/              rigged monsters (*.glb); actors/source/ what came from elsewhere
 games/<game>/        game.json, defs/*.json, levels/*.json (and a level's own test, <id>_test.gd)
@@ -306,8 +307,11 @@ All synthesised at start-up: `freq`, `to` (glide), `dur`, `wave` (`sine`, `squar
   "catalogue": [["hm_plant", 40], ["hm_painting", 45], ...],   // [model, price in credits]; names come from the models
   "broadcasts": ["...", "...", "..."],          // what the video radio always has on
   "broadcasts_sometimes": ["...", "..."],       // and one of these as well
-  "programmes": ["...", ...] } }                // the television by the sofa, one at a time
+  "programmes": ["...", ...],                   // the television by the sofa, one at a time
+  "words": {"comms_title": "VIDEO RADIO", ...} } }   // every line the bunker shows (below)
 ```
+
+`words` holds every text the bunker's panels and its decorating bar show, by key: for each piece of furniture `<what>_kicker` and `<what>_title` (the small line over the title and the title) and, where it has one, `<what>_text`; the ledger's `ledger_order`, `ledger_decorate`, `ledger_retire` and `retire_*`; the catalogue's `catalogue_*`, `buy_short`, `buy_done`; the cradle's `cradle_*` and `repaired_say`; the lift's `lift_*`; the decorating bar's `decor_*`; `list_item` and `list_none` for lists. Texts with `%s` or `%d` are filled in by the engine (a name, a count, a price) in the order the original line had them. A missing key shows as the key itself.
 
 ### 3.7 The schema check
 
@@ -561,9 +565,9 @@ The player's lamp (F) casts no shadows: a light at the eye throws slivers of sha
 
 `Prop` (`prop.gd`: any kit model standing in the world; arches walked through; parts, spin, screens; `show_up`), `Station` (`station.gd`), `Door` (`door.gd`), `Pickup` (`pickup.gd`), `Trap` (`trap.gd`), `Pit` (`pit.gd`), `Lift` (`lift.gd`), `Target` (`target.gd`), `Rebuilder` (`rebuilder.gd`), `Projectile` (`projectile.gd`), `Puddle` (`puddle.gd`), `Fx` (`fx.gd`: sparks, flashes, tracers, blasts, floating words).
 
-### 5.8 HUD and the map (`engine/hud.gd`)
+### 5.8 HUD and the map (`engine/hud.gd`, `engine/hud/`)
 
-Status, messages, the objective, the map (the floor you are on; any enemy the player has had in view shows as a red signal that follows it: a diamond with a ring that pulses, faster and wider once it is hunting), panels (drawing only: 5.3), the title, pause and end screens.
+Status, messages, the objective, the map (the floor you are on; any enemy the player has had in view shows as a red signal that follows it: a diamond with a ring that pulses, faster and wider once it is hunting), panels (drawing only: 5.3), the title, pause and end screens. `Hud` keeps the state (title, play, panel, pause, end) and builds the status, messages and panel; its parts are `HudStyle` (`hud/style.gd`: the accent colour, the font, how labels, bars and buttons look), `HudCrosshair` (`hud/crosshair.gd`: the cross hairs, and the scope when zoomed), `HudMap` (`hud/map_view.gd`: the map, small or big with Tab) and `HudScreens` (`hud/screens.gd`: the title, pause and end overlays).
 
 ### 5.9 Easy mode and Identify (`engine/identify.gd`)
 
@@ -573,7 +577,7 @@ For play-testing. `game.json` `"easy": {"deal": 3, "take": 3}`: with easy mode o
 
 ### 5.10 Home and Profile (`engine/home.gd`, `engine/profile.gd`)
 
-A level with `"home": true` gets a `Home` node (`level.home`). Furniture that does something carries `"use": {"type": "home", "what": <word>, "prompt": ...}` and `Prop.use` passes the word to `Home.use_prop`: `comms`, `ledger`, `trophy`, `rack`, `armor`, `locker`, `medic`, `bed`, `sofa`, `security`, `cradle`, `diagnostic`, `lift`. `Home` finds the rack, the armour stand, the trophy case and the cradle by `tag` (`rack`, `armor`, `trophy`, `cradle`). What it offers (robot, repair, catalogue, broadcasts, programmes) is the game's `defs/home.json` (section 3.6): `catalogue()`, `repair_needs()`, `robot_id()`.
+A level with `"home": true` gets a `Home` node (`level.home`). Furniture that does something carries `"use": {"type": "home", "what": <word>, "prompt": ...}` and `Prop.use` passes the word to `Home.use_prop`: `comms`, `ledger`, `trophy`, `rack`, `armor`, `locker`, `medic`, `bed`, `sofa`, `security`, `cradle`, `diagnostic`, `lift`. `Home` finds the rack, the armour stand, the trophy case and the cradle by `tag` (`rack`, `armor`, `trophy`, `cradle`). What it offers (robot, repair, catalogue, broadcasts, programmes) and every word it shows are the game's `defs/home.json` (section 3.6): `catalogue()`, `repair_needs()`, `robot_id()`, `word(key)`. The rack and the trophy case show their contents on whatever models stand there with those tags. Decorating is `HomeDecorating` (`engine/home/decorating.gd`), a child of `Home`; `Home` passes `toggle`, `place`, `take_back`, `aim` and `select` on to it.
 
 **Profile** (autoload, `user://havenot_home.json`): `credits`, `weapons`, `armor`, `salvage` {item id: count}, `trophies` [item ids], `owned` {model: count}, `decor` [{m, x, z, yaw}], `robot`, `runs`, `deaths`, `best`. `--selftest` and `--noprofile` keep it in memory and never touch the file.
 

@@ -47,6 +47,11 @@ func setup(lv: Level, e: Dictionary, p: Vector2i, s: int) -> void:
 	body.add_child(_cs)
 
 
+
+## The trapdoor is open (it has just dropped someone).
+func is_sprung() -> bool:
+	return _open
+
 func _physics_process(dt: float) -> void:
 	var pl := Game.player
 	if pl == null or not is_instance_valid(pl):

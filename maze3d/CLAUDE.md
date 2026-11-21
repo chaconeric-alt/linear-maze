@@ -15,9 +15,9 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 | Actors | `engine/actor/` | `Actor` on `ActorCore` (body, state machine, damage) plus components added only when their def key is present. |
 | Player | `engine/player.gd` + `engine/player/` | The body, health and use; `PlayerControls`, `PlayerMovement`, `PlayerCamera`, `PlayerWeapons`. |
 | World things | `engine/prop.gd`, `station.gd`, `door.gd`, `pickup.gd`, `trap.gd`, `pit.gd`, `lift.gd`, `target.gd`, `rebuilder.gd`, `projectile.gd`, `puddle.gd`, `fx.gd` | One class each. |
-| HUD | `engine/hud.gd` | Status, messages, map, panels (drawing), title and end screens. |
+| HUD | `engine/hud.gd` + `engine/hud/` | Status, messages, panels (drawing); `HudStyle`, `HudCrosshair`, `HudMap`, `HudScreens` (title, pause and end). |
 | Easy mode | `engine/identify.gd` | E names what you look at. |
-| Bunker | `engine/home.gd` | What the home level's furniture does; its content is `games/<game>/defs/home.json`. |
+| Bunker | `engine/home.gd` + `engine/home/decorating.gd` | What the home level's furniture does, and decorating; its content and words are `games/<game>/defs/home.json`. |
 | Switches | `engine/debug.gd` | Test and look switches; `main.gd` sets them from the command line. Game code never reads the command line. |
 | Schema | `engine/schema.gd` | The valid keys of actors, items, weapons and level things (mirrors `SPEC.md`). |
 | Generators | `generators/rooms.gd` + `generators/rooms/` | A pipeline of named stages over a `GenContext`. |
@@ -29,7 +29,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 ## Invariants
 
 - **Data-driven.** Levels, defs and kits are JSON; models come from `tools/blender/`; hand-built levels come from `tools/levels/`. A game is a folder of data. Do not change a JSON format, a def key, a level file or a kit file without updating `SPEC.md` and `Schema` together, and old data must still load.
-- **No game ids in `engine/`.** The engine must not name a monster, item, weapon, model, level or kit of any game, or carry its words. Content goes in the game's data. Exceptions still in code, to be moved out: `main.gd`'s fallback game `"havenot"` (Project Settings normally names it), `LevelData`'s built-in `+` door (`door_split`) and default kit (`hightech`), and in `home.gd` the rack and trophy-case model ids (`hm_rack`, `hm_trophy`) and the bunker's panel texts.
+- **No game ids in `engine/`.** The engine must not name a monster, item, weapon, model, level or kit of any game, or carry its words. Content goes in the game's data. Exceptions still in code, to be moved out: `main.gd`'s fallback game `"havenot"` (Project Settings normally names it), `LevelData`'s built-in `+` door (`door_split`) and default kit (`hightech`).
 - **Effects are the only scripting language.** Anything that should happen because of a trigger, a terminal, an item, an arch, a death or a locker is an effect type registered in the `EffectRegistry`. Do not add per-level code paths; add an effect.
 - **Same seed, same level.** Generators draw every random number from their one generator in a fixed order. A change to a generator that is meant to be structural must leave `--dump` output byte-for-byte identical.
 - **Public members across classes.** Do not reach into another class's underscore fields or methods; add a small public method. Tests use public methods only.
@@ -39,7 +39,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 ## Budgets
 
 - No file over about 400 lines; no function over about 60 lines. Cut by job, not by line count: a new file for a new job, a function per step.
-- Still over (to be cut when next touched): `engine/hud.gd` (591 lines; `_ready` 129), `engine/home.gd` (524), `engine/trap.gd` (`setup` 91, `_process` 87), `engine/identify.gd` (`_describe` 90), `engine/prop.gd` (`setup` 71), `engine/lift.gd` (`setup` 64); `tools/levels/staffonly.py` (`kit_wing` 274) and `anomalous.py` (633 lines of layout); the Blender kit scripts (one model per function, many files over 400 lines).
+- Still over (to be cut when next touched): `engine/actor/actor_core.gd` (416 lines); `tools/levels/staffonly.py` (`kit_wing` 274) and `anomalous.py` (633 lines of layout); the Blender kit scripts (one model per function, many files over 400 lines).
 
 ## Running the tests
 
