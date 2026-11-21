@@ -1,6 +1,7 @@
 extends Node
 ## Game - the state of one run: the player, the level being played, story flags, what's carried,
-## and the effect runner that levels script themselves with.
+## and the effect runner that levels script themselves with. The run's credits, haul, stats and keys are kept in State
+## (State.run(), so a save has them); Game.credits and the rest read and write them there.
 
 signal flag_set(name: String)
 signal toast(text: String, kind: String)
@@ -14,10 +15,20 @@ var player: Node3D = null
 var level: Node3D = null
 var hud: Node = null
 var flags: Dictionary = {}
-var keys: Dictionary = {}          # colour -> true
-var credits := 0
-var haul: Dictionary = {}          # item id -> how many picked up on this expedition (banked in the bunker if you get out: Profile)
-var stats := {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}
+var keys: Dictionary:              # colour -> true
+	get:
+		return State.run()["keys"]
+var credits: int:
+	get:
+		return int(State.run()["credits"])
+	set(v):
+		State.run()["credits"] = v
+var haul: Dictionary:              # item id -> how many picked up on this expedition (banked in the bunker if you get out: Profile)
+	get:
+		return State.run()["haul"]
+var stats: Dictionary:             # kills, treasure, treasure_total, secrets, time
+	get:
+		return State.run()["stats"]
 var playing := false
 var over := false
 var effects := EffectRegistry.new()     # effect type -> handler: the one place that says what each effect does
@@ -57,10 +68,7 @@ func take_scale() -> float:
 
 func reset() -> void:
 	flags.clear()
-	keys.clear()
-	credits = 0
-	haul.clear()
-	stats = {"kills": 0, "treasure": 0, "treasure_total": 0, "secrets": 0, "time": 0.0}
+	State.reset_run()
 	over = false
 	interaction.reset()
 

@@ -11,6 +11,7 @@ config/features=PackedStringArray("4.4", "Forward Plus")
 [autoload]
 
 LM="*res://engine/lm.gd"
+State="*res://engine/state.gd"
 Game="*res://engine/game.gd"
 Profile="*res://engine/profile.gd"
 Events="*res://engine/events.gd"

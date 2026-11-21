@@ -1,0 +1,13 @@
+{
+ "credits": 1234,
+ "weapons": ["handgun", "scattergun"],
+ "armor": 50,
+ "salvage": {"circuit": 2, "fuel_cell": 1, "statuette": 1},
+ "trophies": ["statuette"],
+ "owned": {"hm_sofa": 1, "hm_plant": 2},
+ "decor": [{"m": "hm_sofa", "x": 3.5, "z": -2.0, "yaw": 1.5708}, {"m": "hm_plant", "x": -1.0, "z": 4.25, "yaw": 0.0}],
+ "robot": true,
+ "runs": 7,
+ "deaths": 2,
+ "best": 900
+}

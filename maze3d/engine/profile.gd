@@ -1,54 +1,52 @@
 extends Node
-## Profile - what a scavenger keeps between expeditions: the bunker, and everything in it.
-## Saved in user://havenot_home.json. Levels do not touch it; engine/home.gd and Main do.
+## Profile - what a scavenger keeps between expeditions: the bunker, and everything in it. A front over State (the
+## saved world, engine/state.gd): the bunker is State's world.home, and Profile.d is that very dictionary, so home.gd
+## and the tests read and write it as they always did; the scavenger's record (runs, deaths, best) belongs to the
+## character being played (record()). Levels do not touch it; engine/home.gd and Main do.
 ##   credits   banked salvage money (what the bunker's catalogue is paid from)
 ##   weapons   every weapon ever brought home (the armoury rack); armor: the best vest brought home, 0..100
 ##   salvage   item id -> how many brought home (the robot is repaired out of these)
 ##   trophies  item ids for the trophy case, in the order they were found
 ##   owned     catalogue model -> how many bought;  decor: what has been put down, and where
-##   robot     the robot in the robot room has been repaired;  runs / deaths: how it has gone
+##   robot     the robot in the robot room has been repaired
 
-const PATH := "user://havenot_home.json"
-var d: Dictionary = {}
-var memory_only := false        # never read or write the real file (Debug.memory_profile: the self-test, --noprofile)
+var d: Dictionary:
+	get:
+		return State.home()
+var memory_only: bool:          # never read or write the disk (Debug.memory_profile: the self-test, --noprofile)
+	get:
+		return State.memory_only
 var sortie := false             # the next level is entered from the bunker's lift: take the armoury along
 
 
 func blank() -> Dictionary:
-	return {"credits": 0, "weapons": [], "armor": 0, "salvage": {}, "trophies": [], "owned": {}, "decor": [], "robot": false, "runs": 0, "deaths": 0, "best": 0}
+	return WorldState.blank_home()
 
 
-func _ready() -> void:
-	d = blank()
-	var got: Variant = LM.read_json(PATH)
-	if got is Dictionary:
-		for k in got:
-			d[k] = got[k]
-
-
-## Forget the file: start from a blank bunker that lives in memory only (Main, when Debug.memory_profile is set).
+## Forget the disk: a new world that lives in memory only (Main, when Debug.memory_profile is set).
 func keep_in_memory() -> void:
-	memory_only = true
-	d = blank()
+	State.keep_in_memory()
 
 
 func save() -> void:
-	if memory_only:
-		return
-	var f := FileAccess.open(PATH, FileAccess.WRITE)
-	if f:
-		f.store_string(JSON.stringify(d, " "))
+	State.save()
 
 
 func count(id: String) -> int:
 	return int(d["salvage"].get(id, 0))
 
 
+## How the character being played has done: runs, deaths, best.
+func record() -> Dictionary:
+	return State.character()
+
+
 ## Coming home from an expedition alive: everything carried goes into the bunker.
 func bank(credits: int, weapons: Array, armor: float, haul: Dictionary) -> void:
 	d["credits"] = int(d["credits"]) + credits
-	d["best"] = maxi(int(d["best"]), credits)
-	d["runs"] = int(d["runs"]) + 1
+	var r := record()
+	r["best"] = maxi(int(r.get("best", 0)), credits)
+	r["runs"] = int(r.get("runs", 0)) + 1
 	for w in weapons:
 		if not d["weapons"].has(w):
 			d["weapons"].append(w)
@@ -62,7 +60,8 @@ func bank(credits: int, weapons: Array, armor: float, haul: Dictionary) -> void:
 
 
 func died() -> void:
-	d["deaths"] = int(d["deaths"]) + 1
+	var r := record()
+	r["deaths"] = int(r.get("deaths", 0)) + 1
 	save()
 
 
@@ -82,6 +81,6 @@ func outfit(cfg: Dictionary) -> void:
 	cfg["ammo"] = am
 
 
+## The scavenger retires. The bunker and everything in it stay, for whoever takes it over (State.retire).
 func retire() -> void:
-	d = blank()
-	save()
+	State.retire()

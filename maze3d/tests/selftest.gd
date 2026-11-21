@@ -41,6 +41,7 @@ func run(m: Node) -> void:
 	print("INFO  level ", level.data.get("id"), ": ", level.w, "x", level.h, " cells, ", level.actors.size(), " actors, ", level.doors.size(), " doors")
 	await part("schema").run()
 	await part("keys").run()
+	await part("state").run()
 	var own := _level_test()
 	if own != null and own.replaces_standard():
 		await own.run()

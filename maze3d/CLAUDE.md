@@ -7,8 +7,9 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 | Subsystem | Where | What it does |
 |---|---|---|
 | Registry | `engine/lm.gd` (autoload `LM`) | Boots a game: reads `game.json`, kits, defs, levels, generators; checks the schema. Model and def lookups, sounds. |
-| Run state | `engine/game.gd` (autoload `Game`) | One run: player, level, flags, keys, credits, haul, stats; `run_effects`; `Game.interaction`. |
-| Saved state | `engine/profile.gd` (autoload `Profile`) | The bunker: banked credits, weapons, armour, salvage, trophies, furnishings, the robot. |
+| Run state | `engine/game.gd` (autoload `Game`) | One run: player, level, flags; keys, credits, haul, stats (kept in `State.run()`); `run_effects`; `Game.interaction`. |
+| Saved state | `engine/state.gd` (autoload `State`, class `WorldState`) + `engine/state/migrations.gd` | The one record of the world, and the one thing saved (`user://saves/<world>.json`, `.tmp` then rename, `.bak`): world (home = the bunker), characters, run, levels; versioned, migrated as read. |
+| Bunker record | `engine/profile.gd` (autoload `Profile`) | A front over `State.home()`: banked credits, weapons, armour, salvage, trophies, furnishings, the robot; `record()` = the character's runs, deaths, best. |
 | Event bus | `engine/events.gd` (autoload `Events`) | Game facts (`actor.died`, `item.taken`, `door.changed`, `flag.set`, ...) from whoever caused them to whoever listens; plain-data payloads; `--trace=events`; event triggers in level data. |
 | Effects | `engine/effects.gd` | `EffectRegistry`: effect type to handler. Run-wide types in `game.gd`, the place's in `engine/level/level_effects.gd`, a prop's `use` in `engine/prop_uses.gd`. |
 | Panels | `engine/interaction.gd`, `engine/option_gates.gd` | What a panel offers and what choosing does (conditions, cost, hack, risk, used marks, effects). `hud.gd` only draws. |

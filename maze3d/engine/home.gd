@@ -248,7 +248,8 @@ func _comms() -> void:
 
 func _ledger() -> void:
 	var p: Dictionary = Profile.d
-	var text := word("ledger_text") % [int(p["credits"]), int(p["runs"]), int(p["deaths"]), int(p["best"]), _list(p["salvage"]), _waiting()]
+	var r: Dictionary = Profile.record()
+	var text := word("ledger_text") % [int(p["credits"]), int(r.get("runs", 0)), int(r.get("deaths", 0)), int(r.get("best", 0)), _list(p["salvage"]), _waiting()]
 	_say_panel("ledger", text, [
 		{"label": word("ledger_order"), "do": _catalogue},
 		{"label": word("ledger_decorate"), "do": func():
