@@ -65,7 +65,10 @@ static func lay(level: Level, mem: Dictionary) -> void:
 	for k in extra:
 		var x: Dictionary = extra[k]
 		var at := Vector3(float(x["at"][0]), float(x["at"][1]), float(x["at"][2]))
-		var n := sp.spawn_thing(x["e"], level.cell_of(at), k)
+		var e: Dictionary = x["e"].duplicate()
+		if e.has("actor"):
+			e["lounge"] = "none"                     # made again where it stood, not sent off to lean on a wall or sit
+		var n := sp.spawn_thing(e, level.cell_of(at), k)
 		if n != null:
 			sp.made[k] = true
 			n.global_position = at

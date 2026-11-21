@@ -103,7 +103,7 @@ func memory_differs(before: Dictionary, after: Dictionary) -> Dictionary:
 			off.y = 0.0
 			near = level.C
 		if n == null or off.length() > near:
-			out["extra"].append(k)
+			out["extra"].append("%s (%s)" % [k, "not there" if n == null else "%s, %.2f m off (%.1f, %.1f, %.1f)" % [str(n.d.get("name", "")) if n is Actor else str(n.get("d").get("item", "") if n is Pickup else n.name), off.length(), off.x, off.y, off.z]])
 	for k in before["things"]:
 		var was: Dictionary = before["things"][k].duplicate()
 		if before["extra"].has(k):                   # made again where it was: its spot is in its "extra" record, so

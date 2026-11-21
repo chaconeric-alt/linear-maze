@@ -75,13 +75,16 @@ func _state() -> Dictionary:
 	return {"lock": lock, "flag": flag, "sealed": sealed, "jammed": jammed, "held": held}
 
 
-## Its lock, seal, jam and hold, where they differ from how the level placed it.
+## Its lock, seal, jam and hold, where they differ from how the level placed it; and standing open, so that whatever
+## stood in the doorway is not shut in the door when the level is built again (it closes as usual once nobody is near).
 func remember() -> Dictionary:
 	var r := {}
 	var now := _state()
 	for k in now:
 		if now[k] != _placed[k]:
 			r[k] = now[k]
+	if is_passable():
+		r["open"] = true
 	return r
 
 
@@ -92,6 +95,10 @@ func recall(r: Dictionary) -> void:
 	jammed = bool(r.get("jammed", jammed))
 	held = bool(r.get("held", held))
 	_refresh()
+	if r.get("open", false):
+		t = 1.0
+		target = 1.0
+		_pose()
 
 
 
@@ -203,6 +210,11 @@ func _process(dt: float) -> void:
 			_spark = randf_range(0.08, 0.3)
 			Fx.sparks(level, global_position + Vector3(randf_range(-1.2, 1.2), randf_range(0.3, 3.0), 0).rotated(Vector3.UP, rotation.y), Color(1.0, 0.8, 0.4), 6, 4.0)
 	t = move_toward(t, target, dt * speed)
+	_pose()
+
+
+## Its parts where t (0 shut .. 1 open) puts them; passable past 0.55.
+func _pose() -> void:
 	_shape.disabled = t > 0.55
 	for p in _parts:
 		var spec: Dictionary = p["spec"]
