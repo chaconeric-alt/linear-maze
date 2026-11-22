@@ -24,7 +24,6 @@ static func player_of(pl: Player) -> Dictionary:
 ## What they carried, into the settings the player is made from (in place of the armoury's outfit, which is for
 ## leaving the bunker, not for coming back to a save).
 static func fit(cfg: Dictionary, p: Dictionary) -> void:
-	cfg["hp"] = float(p.get("max_hp", cfg.get("hp", 100.0)))
 	cfg["armor"] = float(p.get("armor", 0.0))
 	cfg["weapons"] = p.get("weapons", []).duplicate()
 	cfg["ammo"] = p.get("ammo", {}).duplicate()
@@ -40,6 +39,7 @@ static func put_back(pl: Player, p: Dictionary, where := true) -> void:
 	if where:
 		pl.rotation.y = float(p.get("yaw", pl.rotation.y))
 		pl.pitch = float(p.get("pitch", 0.0))
+	pl.max_hp = float(p.get("max_hp", pl.max_hp))   # as saved: not through the settings, where the character's Physical would be added again
 	pl.hp = float(p.get("hp", pl.hp))
 	if not pl.weapons.is_empty():
 		pl.equip(int(p.get("current", 0)))

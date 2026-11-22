@@ -17,6 +17,8 @@ var max_hp := 100.0
 var armor := 0.0
 var max_armor := 100.0
 var gear: Array = []             # item ids worn (a backpack, a sling): more hands and a bigger pack (Carrying)
+var speed_mul := 1.0             # the character's Speed (CharacterSheet): PlayerMovement runs this much faster
+var natural_armor := 0.0         # a fraction off every hit, before armour (a mutation's chitin)
 var dead := false
 var held_by: Node = null         # the monster that has grabbed you, if one has
 var shape: CollisionShape3D      # the body (PlayerUnstick asks whether it fits somewhere)
@@ -95,6 +97,7 @@ func setup(lv: Level, config: Dictionary) -> void:
 	arms.name = "Weapons"
 	add_child(arms)
 	arms.setup(self)
+	apply_character(CharacterSheet.current())
 	controls = PlayerControls.new()
 	controls.name = "Controls"
 	add_child(controls)
@@ -135,9 +138,22 @@ func muzzle_pos() -> Vector3:
 	return arms.muzzle_pos()
 
 
-func heal(n: float) -> void:
+## Heals n, and what Medicine adds (CharacterSheet "heal"); says how much that came to.
+func heal(n: float) -> float:
+	n *= 1.0 + CharacterSheet.gives(CharacterSheet.current(), "heal")
 	hp = min(max_hp, hp + n)
 	Game.changed.emit()
+	return n
+
+
+## The character as this body: health from Physical, speed, natural armour, the lamp's reach (SPEC.md 5.22). Made at
+## setup from the character being played; a save brought back puts its own health over this.
+func apply_character(c: Dictionary) -> void:
+	max_hp = maxf(1.0, cfg.get("hp", 100.0) + CharacterSheet.gives(c, "hp"))
+	hp = max_hp
+	speed_mul = maxf(0.2, 1.0 + CharacterSheet.gives(c, "move"))
+	natural_armor = clampf(CharacterSheet.gives(c, "armor"), 0.0, 0.9)
+	lamp.spot_range = eye.lamp_reach() * (1.0 + CharacterSheet.gives(c, "lamp"))
 
 
 func shake(s: float) -> void:
@@ -147,7 +163,7 @@ func shake(s: float) -> void:
 func hurt(amount: float, info: Dictionary = {}) -> void:
 	if dead or movement.dashing() and DamageTypes.canon(str(info.get("type", ""))) != "explosive":       # a dash outruns all but a blast
 		return
-	amount *= Game.take_scale()
+	amount *= Game.take_scale() * (1.0 - natural_armor)
 	if armor > 0.0:
 		var soak: float = min(armor, amount * 0.6)
 		armor -= soak

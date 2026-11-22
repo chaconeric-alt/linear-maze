@@ -4,7 +4,9 @@ extends Node
 ##   world       the day, world flags, and "home": the bunker and everything stored in it (banked credits, the
 ##               weapons and armour in the armoury, the gear, salvage, trophies, what was bought and where it was put,
 ##               the robot)
-##   characters  the roster: each character ({"id", "name", "runs", "deaths", "best", "load"}) and which one is
+##   characters  the roster: each character ({"id", "name", "runs", "deaths", "best", "load", "origin", "mutations",
+##               "skills": its choices, CharacterSheet works out the rest; "made": false until they have been made at
+##               the ledger, HomeCreation}) and which one is
 ##               "active"; "load" is what they take when they leave the bunker ({"weapons", "gear"}: what they came
 ##               home with, or chose at the rack; Profile.outfit)
 ##   run         the expedition under way: credits, haul, stats (Game reads and writes these through Game.credits and
@@ -31,7 +33,7 @@ extends Node
 ## SPEC.md 5.10.
 class_name WorldState
 
-const VERSION := 4
+const VERSION := 5
 const DIR := "user://saves/"
 const OLD_HOME := "user://havenot_home.json"
 var data: Dictionary = {}
@@ -190,7 +192,8 @@ func retire() -> void:
 static func join(w: Dictionary, name := "") -> Dictionary:
 	var chars: Dictionary = w["characters"]
 	var n := int(chars.get("next", 1))
-	var c := {"id": "c%d" % n, "name": name, "runs": 0, "deaths": 0, "best": 0, "load": {"weapons": [], "gear": []}}
+	var c := {"id": "c%d" % n, "name": name, "runs": 0, "deaths": 0, "best": 0, "load": {"weapons": [], "gear": []},
+		"origin": CharacterSheet.ORIGIN, "mutations": [], "skills": {}, "made": false}
 	chars["next"] = n + 1
 	chars["roster"].append(c)
 	chars["active"] = c["id"]

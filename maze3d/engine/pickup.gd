@@ -79,6 +79,7 @@ func resting() -> bool:
 
 func _ready() -> void:
 	_base_y = position.y
+	add_to_group("pickups")                          # what the character's Sense can find (HudMap.sensed)
 
 
 func _process(dt: float) -> void:
@@ -115,8 +116,7 @@ func _on_body(b: Node) -> void:
 		"health":
 			if pl.hp >= pl.max_hp:
 				return
-			pl.heal(d.get("amount", 25))
-			Game.say("%s  +%d" % [name, d.get("amount", 25)], "good")
+			Game.say("%s  +%d" % [name, pl.heal(d.get("amount", 25))], "good")
 		"armor":
 			if pl.armor >= pl.max_armor:
 				return

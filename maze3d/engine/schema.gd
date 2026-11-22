@@ -17,6 +17,11 @@ const ITEM := ["name", "kind", "value", "amount", "ammo", "color", "weapon", "mo
 	"effects", "flag", "text", "trophy", "bulk", "wear", "capacity", "slots"]
 const INSTALLATION := ["name", "text", "levels", "entrances"]
 const ENTRANCE := ["name", "level", "arrive"]
+const STAT := ["name", "text", "gives"]                          # the character (SPEC.md 5.22)
+const SKILL := ["name", "text", "max", "gives"]
+const ORIGIN := ["name", "text", "stats", "mutations", "rerolls"]
+const MUTATION := ["name", "text", "stats", "gives"]
+const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor", "lamp"]     # what the engine reads (CharacterSheet)
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
 const THING := ["at", "tag", "offset", "face", "level", "restock"]
@@ -42,7 +47,8 @@ const PIT := ["trap", "delay", "damage"]
 ## Problems with the defs the game loaded: "<kind> '<id>': unknown key '<k>' (did you mean '<j>'?)".
 static func check_defs(defs: Dictionary) -> Array:
 	var out: Array = []
-	for pair in [["weapons", WEAPON], ["actors", ACTOR], ["items", ITEM], ["installations", INSTALLATION]]:
+	for pair in [["weapons", WEAPON], ["actors", ACTOR], ["items", ITEM], ["installations", INSTALLATION],
+			["stats", STAT], ["skills", SKILL], ["origins", ORIGIN], ["mutations", MUTATION]]:
 		for id in defs.get(pair[0], {}):
 			for k in defs[pair[0]][id]:
 				if k != "id" and not k in pair[1]:                # LM adds "id" itself
@@ -52,6 +58,11 @@ static func check_defs(defs: Dictionary) -> Array:
 			for k in e:
 				if not k in ENTRANCE:
 					out.append("installation '%s', an entrance: %s" % [id, _unknown(k, ENTRANCE)])
+	for kind in ["stats", "skills", "mutations"]:
+		for id in defs.get(kind, {}):
+			for k in defs[kind][id].get("gives", {}):
+				if not k in GIVES:
+					out.append("%s '%s', what it gives: %s" % [kind.trim_suffix("s"), id, _unknown(k, GIVES)])
 	return out
 
 
@@ -96,7 +107,7 @@ static func undocumented(spec_text: String) -> Array:
 	for m in fence.search_all(spec_text):
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
-	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT
+	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + STAT + SKILL + ORIGIN + MUTATION + GIVES
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

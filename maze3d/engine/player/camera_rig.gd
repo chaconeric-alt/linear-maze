@@ -28,7 +28,7 @@ func setup(player: Player) -> void:
 	cam.current = true
 	add_child(cam)
 	lamp = SpotLight3D.new()
-	lamp.spot_range = 26.0
+	lamp.spot_range = lamp_reach()
 	lamp.spot_angle = 30.0
 	lamp.spot_angle_attenuation = 0.8
 	lamp.light_energy = 2.2
@@ -89,3 +89,8 @@ func step(dt: float, side: float, bob: float, recoil: float, dashing: bool) -> v
 func slump(dt: float) -> void:
 	position.y = move_toward(position.y, 0.4, dt * 2.5)
 	cam.rotation.z = move_toward(cam.rotation.z, 0.6, dt * 1.5)
+
+
+## How far the lamp reaches before the character changes it (Player.apply_character).
+func lamp_reach() -> float:
+	return 26.0

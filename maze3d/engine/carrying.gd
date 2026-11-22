@@ -19,14 +19,14 @@ static func limited() -> bool:
 static func slots(gear: Array) -> int:
 	if not limited():
 		return NO_LIMIT
-	return int(LM.game["carrying"].get("slots", 2)) + Carrying._sum(gear, "slots")
+	return int(LM.game["carrying"].get("slots", 2)) + Carrying._sum(gear, "slots") + int(CharacterSheet.gives(CharacterSheet.current(), "slots"))
 
 
 ## Bulk the pack holds, with that gear worn.
 static func capacity(gear: Array) -> int:
 	if not limited():
 		return NO_LIMIT
-	return int(LM.game["carrying"].get("pack", 12)) + Carrying._sum(gear, "capacity")
+	return int(LM.game["carrying"].get("pack", 12)) + Carrying._sum(gear, "capacity") + int(CharacterSheet.gives(CharacterSheet.current(), "pack"))
 
 
 static func bulk(item_id: String) -> int:

@@ -8,6 +8,8 @@ extends RefCounted
 ##   "carrying": item id  (or a list: any one will do) it needs that with you: worn, in hand or in the pack (a cutting
 ##                        torch, a technician's kit). Without it, it says so ("missing", or "You need ...") and nothing
 ##                        happens. It is not used up. Asked first, before anything is paid or tried
+##   "skill": {id: rank}  it needs that rank in that skill, or in any one of several ({"mechanics": 2}); without it, it
+##                        says so ("missing", or "That needs Mechanics 2.") and nothing happens. Asked next
 ## Each is registered with the EffectRegistry as a gate (register_gate). `s` is the panel session (Game.interaction):
 ## in_panel(), panel_text(), show_panel(text, working), close_panel(), panel_ctx(), unmark_used().
 class_name OptionGates
@@ -15,6 +17,7 @@ class_name OptionGates
 
 func register(reg: EffectRegistry) -> void:
 	reg.register_gate("carrying", carrying)
+	reg.register_gate("skill", skill)
 	reg.register_gate("cost", cost_check, cost_pay)
 	reg.register_gate("hack", hack)
 	reg.register_gate("risk", Callable(), risk)
@@ -33,6 +36,30 @@ func carrying(o: Dictionary, s: Object) -> bool:
 ## The items an option's `carrying` gate asks for, as a list.
 static func needs(o: Dictionary) -> Array:
 	return o["carrying"] if o.get("carrying") is Array else [o.get("carrying", "")]
+
+
+func skill(o: Dictionary, s: Object) -> bool:
+	if OptionGates.skilled(o, CharacterSheet.current()):
+		return true
+	LM.sound("denied")
+	s.show_panel("%s\n\n%s" % [s.panel_text(), o.get("missing", "That needs %s." % OptionGates.skill_names(o))])
+	return false
+
+
+## True when the character has the rank one of an option's `skill` gate asks for.
+static func skilled(o: Dictionary, c: Dictionary) -> bool:
+	var need: Dictionary = o.get("skill", {})
+	for id in need:
+		if CharacterSheet.rank(c, str(id)) >= int(need[id]):
+			return true
+	return need.is_empty()
+
+
+## "Mechanics 2 or Hacking 3": what a `skill` gate asks for, as a player reads it.
+static func skill_names(o: Dictionary) -> String:
+	var need: Dictionary = o.get("skill", {})
+	return " or ".join(need.keys().map(func(id: Variant) -> String:
+		return "%s %d" % [LM.defs.get("skills", {}).get(str(id), {}).get("name", str(id)), int(need[id])]))
 
 
 func cost_check(o: Dictionary, s: Object) -> bool:

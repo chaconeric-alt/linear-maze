@@ -21,6 +21,8 @@ func run() -> void:
 		"an old bunker file becomes a world: its bunker the home, its record the one character's (version %d)" % int(w.get("v", 0)))
 	say(w["world"]["home"].get("gear") == [] and _same(who.get("load", {}).get("weapons"), old["weapons"]),
 		"  with an empty gear store, and the rack as the character's load (every weapon on it went along before)")
+	say(who.get("origin") == "human" and who.get("mutations") == [] and who.get("skills") == {} and who.get("made") == true,
+		"  and the character a Human with no mutations and no skills, as they played before characters")
 	var scratch := WorldState.new()
 	scratch.memory_only = true
 	scratch.data = w

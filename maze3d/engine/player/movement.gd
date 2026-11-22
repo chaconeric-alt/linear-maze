@@ -31,7 +31,7 @@ func step(dt: float, inp: Vector2, free: bool, held: bool) -> void:
 	var dir := (pl.global_transform.basis * Vector3(inp.x, 0, inp.y))
 	dir.y = 0
 	dir = dir.normalized()
-	var speed: float = cfg.get("speed", 8.5)
+	var speed: float = cfg.get("speed", 8.5) * pl.speed_mul       # the character's Speed (CharacterSheet)
 	speed *= lerpf(1.0, cfg.get("zoom_speed", 0.22), pl.zoom)
 	if pl.level and pl.level.fluid_at(pl.global_position):      # wading
 		speed *= 0.62

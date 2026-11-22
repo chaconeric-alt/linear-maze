@@ -43,6 +43,7 @@ func run(m: Node) -> void:
 	await part("schema").run()
 	await part("keys").run()
 	await part("state").run()
+	await part("character").run()
 	var own := _level_test()
 	if own != null and own.replaces_standard():
 		await own.run()

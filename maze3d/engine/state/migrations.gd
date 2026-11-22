@@ -5,7 +5,7 @@ extends RefCounted
 ## which will change with later versions. A save newer than this game is left as it is (and warned about).
 class_name StateMigrations
 
-const CURRENT := 4
+const CURRENT := 5
 
 
 static func up(d: Dictionary) -> Dictionary:
@@ -22,6 +22,8 @@ static func up(d: Dictionary) -> Dictionary:
 				d = v2_to_v3(d)
 			3:
 				d = v3_to_v4(d)
+			4:
+				d = v4_to_v5(d)
 		v = int(d.get("v", v + 1))
 	return d
 
@@ -87,4 +89,21 @@ static func v3_to_v4(d: Dictionary) -> Dictionary:
 		if not c.has("load"):
 			c["load"] = {"weapons": home.get("weapons", []).duplicate(), "gear": []}
 	d["v"] = 4
+	return d
+
+
+## Version 5: characters (SPEC.md 5.22). Each character gains its choices: an origin, mutations and skill ranks. One
+## made before had none of these: a Human with no mutations and no skills, which is what they played as; and they are
+## "made" (they have been playing: the ledger does not ask them who they are).
+static func v4_to_v5(d: Dictionary) -> Dictionary:
+	for c in d["characters"]["roster"]:
+		if not c.has("origin"):
+			c["origin"] = "human"
+		if not c.has("mutations"):
+			c["mutations"] = []
+		if not c.has("skills"):
+			c["skills"] = {}
+		if not c.has("made"):
+			c["made"] = true
+	d["v"] = 5
 	return d

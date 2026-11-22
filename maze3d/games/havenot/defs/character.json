@@ -1,0 +1,34 @@
+{
+ "stats": {
+  "speed": {"name": "Speed", "text": "How fast you move: 6% faster a point over 3.", "gives": {"move": 0.06}},
+  "sense": {"name": "Sense", "text": "Treasure and monsters within (4 + Sense) cells show on your map, through walls.", "gives": {"sense": 1}},
+  "physical": {"name": "Physical", "text": "Health (100 at 3, 20 a point) and the room in your pack (2 a point).", "gives": {"hp": 20, "pack": 2}},
+  "mental": {"name": "Mental", "text": "Every hack: 5% better a point over 3.", "gives": {"hack": 0.05}}
+ },
+ "skills": {
+  "hacking": {"name": "Hacking", "max": 5, "text": "Every hack: 8% better a rank.", "gives": {"hack": 0.08}},
+  "mechanics": {"name": "Mechanics", "max": 5, "text": "Machines: shutting them down, starting them up, putting them right. Panel options that need it say how much."},
+  "medicine": {"name": "Medicine", "max": 5, "text": "Healing: 15% more from every health pack and station a rank.", "gives": {"heal": 0.15}}
+ },
+ "origins": {
+  "human": {"name": "Human", "stats": {"speed": 3, "sense": 3, "physical": 3, "mental": 3},
+   "text": "The average, which out here is an achievement. 100 health, nothing to apologize for."},
+  "hyena": {"name": "Mutant Hyena", "stats": {"speed": 6, "sense": 6, "physical": 2, "mental": 2},
+   "text": "An Evolved Hyena: smaller, weaker, faster, sharper. 80 health, 18% faster, and you sense things 10 cells away."},
+  "mutant": {"name": "Random Mutant", "stats": {"speed": 3, "sense": 3, "physical": 3, "mental": 3}, "mutations": [1, 3], "rerolls": 1,
+   "text": "Human-ish, plus one to three mutations from the wastes. Some help, some don't. You see the roll, and you can roll again once."}
+ },
+ "mutations": {
+  "chitin": {"name": "Chitin Plates", "text": "Natural armour: 10% off every hit. Speed -1.", "stats": {"speed": -1}, "gives": {"armor": 0.1}},
+  "arm": {"name": "Third Arm", "text": "A third hand: hold one more weapon.", "gives": {"slots": 1}},
+  "eyes": {"name": "Stalk Eyes", "text": "Sense +3.", "stats": {"sense": 3}},
+  "lungs": {"name": "Bellows Lungs", "text": "Speed +2.", "stats": {"speed": 2}},
+  "stunted": {"name": "Stunted", "text": "Physical -1, Speed +1.", "stats": {"physical": -1, "speed": 1}},
+  "cranium": {"name": "Bulging Cranium", "text": "Mental +2, Physical -1.", "stats": {"mental": 2, "physical": -1}},
+  "glow": {"name": "Glowing Skin", "text": "You light up the dark (your lamp reaches half as far again). Sense -1.", "stats": {"sense": -1}, "gives": {"lamp": 0.5}},
+  "skull": {"name": "Thick Skull", "text": "Physical +1, Mental -1.", "stats": {"physical": 1, "mental": -1}},
+  "twitchy": {"name": "Twitchy", "text": "Speed +2, Mental -1.", "stats": {"speed": 2, "mental": -1}},
+  "echo": {"name": "Echolocation", "text": "Sense +2.", "stats": {"sense": 2}},
+  "brittle": {"name": "Brittle Bones", "text": "Physical -1.", "stats": {"physical": -1}}
+ }
+}
