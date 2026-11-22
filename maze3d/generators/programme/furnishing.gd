@@ -16,8 +16,18 @@ const SALT := 104729
 const TRIES := 4
 
 
-## The furniture, as level things.
-static func furnish(lay: ProgrammeLayout, fill: ProgrammeFill, kit: String, seed_value: int, amount: float) -> Array:
+## The furniture of a floor, as level things (each with the storey its room stands on: ProgrammeFill.storey_of). The
+## rooms in `skip` are left out; `extra` are [room id, rect, the map they lie in] furnished as well (a hall sunk from
+## the floor above, which lies in the lower floor's map).
+static func furnish(lay: ProgrammeLayout, fill: ProgrammeFill, kit: String, seed_value: int, amount: float, skip := [], extra := []) -> Array:
+	var rooms: Array = []
+	for id in ProgrammeFurnishing.order(lay):
+		if not skip.has(id):
+			rooms.append([id, lay.rects[id], lay.g])
+	return ProgrammeFurnishing.furnish_rooms(rooms + extra, lay.plan, fill, kit, seed_value, amount)
+
+
+static func furnish_rooms(rooms: Array, plan: ProgrammePlan, fill: ProgrammeFill, kit: String, seed_value: int, amount: float) -> Array:
 	var params: Dictionary = LM.game.get("generator_params", {}).duplicate()
 	params["size"] = [1, 1]                            # the context's own map is not used: the layout's is
 	var used := {}
@@ -25,11 +35,13 @@ static func furnish(lay: ProgrammeLayout, fill: ProgrammeFill, kit: String, seed
 		used[c] = true
 	var out: Array = []
 	var n := 0
-	for id in ProgrammeFurnishing.order(lay):
-		var pur: Dictionary = LM.defs.get("purposes", {}).get(str(lay.plan.rooms[id].get("purpose", "")), {})
+	for rm in rooms:
+		var id: String = rm[0]
+		var pur: Dictionary = LM.defs.get("purposes", {}).get(str(plan.rooms[id].get("purpose", "")), {})
 		if pur.is_empty():
 			continue
-		var rc: Rect2i = lay.rects[id]
+		var rc: Rect2i = rm[1]
+		var g: Array = rm[2]
 		var cells: Array = []
 		for y in range(rc.position.y, rc.end.y):
 			for x in range(rc.position.x, rc.end.x):
@@ -37,9 +49,9 @@ static func furnish(lay: ProgrammeLayout, fill: ProgrammeFill, kit: String, seed
 		var best: Array = []
 		for k in TRIES:
 			var ctx := GenContext.new(seed_value + SALT + n * 31 + k * 7, params, false)
-			ctx.g = lay.g
-			ctx.W = lay.W
-			ctx.H = lay.H
+			ctx.g = g
+			ctx.W = g[0].size()
+			ctx.H = g.size()
 			ctx.used = used.duplicate()
 			ctx.things = []
 			Furnish.furnish(ctx, n, cells, pur, kit, amount)
@@ -47,6 +59,10 @@ static func furnish(lay: ProgrammeLayout, fill: ProgrammeFill, kit: String, seed
 				best = ctx.things
 		for e in best:
 			used[Vector2i(int(e["at"][0]), int(e["at"][1]))] = true
+			if LM.model_meta(kit, str(e.get("prop", ""))).get("mount", "") == "wall":
+				e.erase("offset")                      # the level mounts it on the wall itself: pushed back too, it would be in the rock
+			if fill.storey_of(id) != 0:
+				e["level"] = fill.storey_of(id)
 		out += best
 		n += 1
 	return out

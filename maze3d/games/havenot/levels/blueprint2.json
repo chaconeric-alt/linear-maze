@@ -1,0 +1,334 @@
+{
+ "id": "blueprint2",
+ "name": "The Blueprint, Two Floors (a programme of two storeys)",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "Two floors from one programme. The lifts go down.",
+ "ambient_energy": 0.8,
+ "legend": {},
+ "programme": {
+  "spine": {
+   "gap": [
+    1,
+    3
+   ]
+  },
+  "bank": "lobby",
+  "rooms": [
+   {
+    "id": "gate",
+    "name": "Gate",
+    "style": "bunker_ops",
+    "size": [
+     4,
+     3
+    ],
+    "things": [
+     {
+      "item": "health"
+     }
+    ],
+    "purpose": "gatehouse"
+   },
+   {
+    "id": "motor",
+    "name": "Motor Pool",
+    "style": "bunker_hall",
+    "size": [
+     [
+      6,
+      7
+     ],
+     [
+      5,
+      6
+     ]
+    ],
+    "things": [
+     {
+      "actor": "roach",
+      "count": 2
+     }
+    ],
+    "purpose": "motor_pool",
+    "down": 1
+   },
+   {
+    "id": "mess",
+    "name": "Mess Hall",
+    "style": "bunker_hall",
+    "size": [
+     [
+      5,
+      6
+     ],
+     [
+      4,
+      5
+     ]
+    ],
+    "things": [
+     {
+      "actor": "custodian"
+     }
+    ],
+    "purpose": "mess_hall"
+   },
+   {
+    "id": "lobby",
+    "name": "Lift Lobby",
+    "style": "machine",
+    "size": [
+     3,
+     5
+    ],
+    "purpose": "lift_lobby"
+   }
+  ],
+  "wings": [
+   {
+    "id": "barracks",
+    "name": "Barracks Wing",
+    "after": "gate",
+    "side": "any",
+    "rooms": [
+     {
+      "id": "dorm",
+      "name": "Dormitory",
+      "style": "barracks",
+      "size": [
+       [
+        5,
+        6
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "things": [
+       {
+        "item": "crystal"
+       }
+      ],
+      "purpose": "bunk_room"
+     },
+     {
+      "id": "latrine",
+      "name": "Latrine",
+      "style": "storage",
+      "size": [
+       2,
+       2
+      ],
+      "door_to": "dorm",
+      "purpose": "latrine"
+     }
+    ]
+   }
+  ],
+  "below": {
+   "spine": {
+    "gap": [
+     1,
+     3
+    ]
+   },
+   "rooms": [
+    {
+     "id": "lobby",
+     "name": "Lower Lift Lobby",
+     "style": "machine",
+     "size": [
+      3,
+      5
+     ],
+     "purpose": "lift_lobby",
+     "lifts": {
+      "count": 2
+     }
+    },
+    {
+     "id": "hall",
+     "name": "Lower Hall",
+     "style": "bunker_hall",
+     "size": [
+      [
+       5,
+       6
+      ],
+      4
+     ],
+     "things": [
+      {
+       "actor": "eggbot"
+      }
+     ]
+    },
+    {
+     "id": "atrium",
+     "name": "Atrium",
+     "style": "lab",
+     "size": [
+      [
+       6,
+       7
+      ],
+      [
+       5,
+       6
+      ]
+     ],
+     "things": [
+      {
+       "item": "crystal"
+      }
+     ],
+     "purpose": "archive",
+     "height": 2
+    },
+    {
+     "id": "lab",
+     "name": "Lab",
+     "style": "lab",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "things": [
+      {
+       "actor": "roach"
+      }
+     ],
+     "purpose": "lab"
+    },
+    {
+     "id": "out",
+     "name": "Way Out",
+     "style": "machine",
+     "size": [
+      3,
+      3
+     ],
+     "things": [
+      {
+       "prop": "holo_table",
+       "blocks": false,
+       "use": {
+        "type": "effects",
+        "prompt": "Leave the Blueprint",
+        "effects": [
+         {
+          "type": "end",
+          "title": "Out of the Blueprint",
+          "text": "Down one floor and out."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "wings": [
+    {
+     "id": "wards",
+     "name": "Ward Wing",
+     "after": "hall",
+     "side": "any",
+     "rooms": [
+      {
+       "id": "ward",
+       "name": "Ward",
+       "style": "lab",
+       "size": [
+        [
+         5,
+         6
+        ],
+        [
+         4,
+         5
+        ]
+       ],
+       "purpose": "ward"
+      },
+      {
+       "id": "pharmacy",
+       "name": "Pharmacy",
+       "style": "storage",
+       "size": [
+        3,
+        3
+       ],
+       "door_to": "ward",
+       "purpose": "pharmacy"
+      }
+     ]
+    },
+    {
+     "id": "records",
+     "name": "Records Wing",
+     "after": "atrium",
+     "side": "any",
+     "rooms": [
+      {
+       "id": "office",
+       "name": "Office",
+       "style": "bunker_ops",
+       "size": [
+        [
+         3,
+         4
+        ],
+        3
+       ],
+       "purpose": "office"
+      },
+      {
+       "id": "store",
+       "name": "Store",
+       "style": "vault",
+       "size": [
+        3,
+        3
+       ],
+       "things": [
+        {
+         "item": "launcher"
+        },
+        {
+         "item": "rockets"
+        }
+       ],
+       "purpose": "quartermaster"
+      }
+     ]
+    }
+   ],
+   "locks": [
+    {
+     "room": "store",
+     "color": "red",
+     "card": "office"
+    }
+   ]
+  }
+ },
+ "things": [],
+ "objectives": [
+  {
+   "text": "Take the lift down."
+  },
+  {
+   "text": "Find the RED card, open the store, and leave by the way out.",
+   "done": "key_red"
+  }
+ ],
+ "triggers": []
+}

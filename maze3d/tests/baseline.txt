@@ -24,3 +24,4 @@ descent         | --level=descent_1 --selftest
 yard            | --level=yard --selftest
 range           | --level=range --selftest
 blueprint       | --level=blueprint --selftest
+blueprint2      | --level=blueprint2 --selftest

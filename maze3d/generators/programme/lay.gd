@@ -179,3 +179,35 @@ func doors_of(id: String) -> Array:
 ## The map as a level file writes it.
 func rows() -> Array:
 	return g.map(func(r: Array) -> String: return "".join(r))
+
+
+## Move the whole layout by d on a map of w by h (bigger, walls round it): two floors are laid out apart and then lined
+## up by their lift bank (ProgrammeFloors), and an installation's levels by where their bank stands.
+func shift(d: Vector2i, w: int, h: int) -> void:
+	var ng: Array = []
+	for y in h:
+		var row: Array = []
+		row.resize(w)
+		row.fill("#")
+		ng.append(row)
+	for y in H:
+		for x in W:
+			if g[y][x] != "#":
+				ng[y + d.y][x + d.x] = g[y][x]
+	g = ng
+	W = w
+	H = h
+	y0 += d.y
+	for id in rects:
+		rects[id] = Rect2i(rects[id].position + d, rects[id].size)
+	for dr in doors:
+		dr["at"] += d
+	for k in junctions:
+		junctions[k] += d
+	for i in corridors.size():
+		corridors[i] = Rect2i(corridors[i].position + d, corridors[i].size)
+
+
+## Is this cell floor (or a door) on this layout's map?
+func open_at(c: Vector2i) -> bool:
+	return c.x >= 0 and c.y >= 0 and c.x < W and c.y < H and g[c.y][c.x] != "#"

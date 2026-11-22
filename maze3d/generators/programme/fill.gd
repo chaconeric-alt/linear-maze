@@ -6,6 +6,9 @@ extends RefCounted
 ## makes several; an "actor", "item" or "prop" that lists several is one of them, the seed's pick, each time. A lock's
 ## "card" that lists several rooms is in one of them (those laid out), the seed's pick. Free floor is a room's floor less the cells beside its doors and, in a spine room, the spine's row
 ## (the way through is kept clear). The seed's choices come from the plan's generator, after the plan's own.
+## On two floors (ProgrammeFloors) the lower floor's fill has no start of its own, its things say their storey
+## ("level": -1), a hall sunk from the upper floor is filled as part of the upper but its things stand a storey down,
+## and the lifts' and ramps' cells are kept free.
 class_name ProgrammeFill
 
 const LOCK_LETTERS := {"red": "R", "blue": "B", "green": "G", "yellow": "Y", "purple": "P"}
@@ -15,15 +18,23 @@ var plan: ProgrammePlan
 var things: Array = []
 var legend: Dictionary = {}
 var problems: Array = []
+var storey := 0                          # the storey this floor's things stand on
+var storeys: Dictionary = {}             # room id -> a storey of its own (a hall sunk a storey down)
 var _used: Dictionary = {}
 
 
-func _init(l: ProgrammeLayout, prog: Dictionary) -> void:
+## opts: "start" (false: no start of its own), "storey", "storeys" (room -> storey), "reserve" (cells kept free).
+func _init(l: ProgrammeLayout, prog: Dictionary, opts := {}) -> void:
 	lay = l
 	plan = l.plan
-	var first: Rect2i = lay.rects[plan.spine[0]]
-	things.append({"start": true, "face": "e", "at": [first.position.x, lay.y0]})
-	_used[Vector2i(first.position.x, lay.y0)] = true
+	storey = int(opts.get("storey", 0))
+	storeys = opts.get("storeys", {})
+	for c in opts.get("reserve", []):
+		_used[c] = true
+	if opts.get("start", true):
+		var first: Rect2i = lay.rects[plan.spine[0]]
+		things.append({"start": true, "face": "e", "at": [first.position.x, lay.y0]})
+		_used[Vector2i(first.position.x, lay.y0)] = true
 	for lk in prog.get("locks", []):
 		_lock(lk, prog)
 	for id in plan.spine + _wing_rooms():
@@ -78,6 +89,9 @@ func _thing(room: String, t: Dictionary) -> void:
 			problems.append("no room left in '%s' for %s" % [room, JSON.stringify(t)])
 			return
 		e["at"] = [at.x, at.y]
+		var s := int(storeys.get(room, storey))
+		if s != 0:
+			e["level"] = s
 		_used[at] = true
 		things.append(e)
 
@@ -91,6 +105,11 @@ func _spot(room: String, at: Variant) -> Vector2i:
 	if free.is_empty():
 		return Vector2i(-1, -1)
 	return free[plan.rng.randi() % free.size()]
+
+
+## The storey a room's things stand on.
+func storey_of(room: String) -> int:
+	return int(storeys.get(room, storey))
 
 
 ## Every cell something has been put on (ProgrammeFurnishing works round them).

@@ -22,10 +22,11 @@ const SKILL := ["name", "text", "max", "gives"]
 const ORIGIN := ["name", "text", "stats", "mutations", "rerolls"]
 const MUTATION := ["name", "text", "stats", "gives"]
 const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor", "lamp"]     # what the engine reads (CharacterSheet)
-const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish"]   # a level's written programme (SPEC.md 6.3)
+const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "below"]   # a level's written programme (SPEC.md 6.3)
+const PROG_LIFTS := ["count", "travel", "start"]
 const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows"]   # defs "purposes" (furnishing a room for its use)
 const PROG_SPINE := ["gap"]
-const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance"]
+const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts"]
 const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms"]
 const PROG_LOCK := ["room", "wing", "color", "card", "door"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
@@ -98,6 +99,8 @@ static func check_level(lv: Dictionary) -> Array:
 static func _check_programme(lv: Dictionary, entries: Array) -> Array:
 	var out: Array = []
 	var p: Dictionary = lv.get("programme", {})
+	if p.has("below"):                                 # the floor below is a programme too
+		out += Schema._check_programme({"id": "%s (below)" % lv.get("id", "?"), "programme": p["below"]}, entries)
 	var at := "level '%s', programme" % lv.get("id", "?")
 	var pairs: Array = [[p, PROGRAMME, ""], [p.get("spine", {}), PROG_SPINE, " spine"]]
 	var rooms: Array = p.get("rooms", []).duplicate()
@@ -106,6 +109,8 @@ static func _check_programme(lv: Dictionary, entries: Array) -> Array:
 		rooms += w.get("rooms", [])
 	for r in rooms:
 		pairs.append([r, PROG_ROOM, " room '%s'" % r.get("id", "?")])
+		if r.has("lifts"):
+			pairs.append([r["lifts"], PROG_LIFTS, " room '%s' lifts" % r.get("id", "?")])
 		for t in r.get("things", []):
 			var e: Dictionary = t.duplicate()
 			e.erase("count")
@@ -141,7 +146,7 @@ static func undocumented(spec_text: String) -> Array:
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
 	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + STAT + SKILL + ORIGIN + MUTATION + GIVES \
-		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE
+		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PROG_LIFTS
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

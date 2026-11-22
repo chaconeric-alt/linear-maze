@@ -48,25 +48,32 @@ static func entered(level: Dictionary, seed_value: int, dump: String) -> Diction
 	return out
 
 
-## One try: the level, or {"problems": [...], "fatal": true when the programme itself is wrong}.
+## One try: the level, or {"problems": [...], "fatal": true when the programme itself is wrong}. With "below", two
+## floors (ProgrammeFloors): the upper laid out from the seed, the lower from the next, lined up by their bank.
 static func attempt(level: Dictionary, seed_value: int) -> Dictionary:
 	var prog: Dictionary = level.get("programme", {})
-	var plan := ProgrammePlan.new(prog, seed_value)
-	if not plan.problems.is_empty():
-		return {"problems": plan.problems, "fatal": true}
-	var lay := ProgrammeLayout.new(plan)
-	var fill := ProgrammeFill.new(lay, prog)
-	if not fill.problems.is_empty():
-		return {"problems": fill.problems, "fatal": true}
-	var out: Dictionary = level.duplicate(true)
-	out.erase("programme")
-	out["seed"] = seed_value
-	out["map"] = lay.rows()
-	out["legend"] = level.get("legend", {}).duplicate()
-	out["legend"].merge(fill.legend, true)
-	out["rooms"] = ProgrammeGen.rooms_of(lay, prog)
-	out["things"] = level.get("things", []).duplicate(true) + fill.things \
-		+ ProgrammeFurnishing.furnish(lay, fill, str(level.get("kit", "")), seed_value, float(prog.get("furnish", 1.0)))
+	var below: Dictionary = prog.get("below", {})
+	var top := ProgrammePlan.new(prog, seed_value)
+	var bot: ProgrammePlan = ProgrammePlan.new(below, seed_value + 1) if not below.is_empty() else null
+	var bad: Array = top.problems + (bot.problems if bot != null else [])
+	if not bad.is_empty():
+		return {"problems": bad, "fatal": true}
+	var lay := ProgrammeLayout.new(top)
+	var lay2: ProgrammeLayout = ProgrammeLayout.new(bot) if bot != null else null
+	var fl := ProgrammeFloors.new(lay, lay2, prog)
+	if not fl.problems.is_empty():
+		return {"problems": fl.problems}
+	var sunk := {}
+	for id in fl.sunken:
+		sunk[id] = -1
+	var fill := ProgrammeFill.new(lay, prog, {"reserve": fl.reserve_up, "storeys": sunk})
+	var fill2: ProgrammeFill = ProgrammeFill.new(lay2, below, {"start": false, "storey": -1, "reserve": fl.reserve_lo}) if bot != null else null
+	bad = fill.problems + (fill2.problems if fill2 != null else [])
+	if not bad.is_empty():
+		return {"problems": bad, "fatal": true}
+	var out := ProgrammeGen._assemble(level, seed_value, lay, fill, fl)
+	if bot != null:
+		ProgrammeGen._below(out, level, seed_value, lay, lay2, fill, fill2, fl)
 	var proof := ProgrammeCheck.solve(out)
 	if not proof["ok"]:
 		return {"problems": ["it cannot be finished (rooms not reached: %s; cards behind their own lock: %s)"
@@ -74,17 +81,54 @@ static func attempt(level: Dictionary, seed_value: int) -> Dictionary:
 	return out
 
 
-## The level's rooms (what has a name, a style and a height): each room as written, and each wing's corridor.
-static func rooms_of(lay: ProgrammeLayout, prog: Dictionary) -> Array:
+## The upper floor (the only one, with no "below") as the level: its map, rooms, things, furniture and the bank's lifts.
+static func _assemble(level: Dictionary, seed_value: int, lay: ProgrammeLayout, fill: ProgrammeFill, fl: ProgrammeFloors) -> Dictionary:
+	var prog: Dictionary = level["programme"]
+	var out: Dictionary = level.duplicate(true)
+	out.erase("programme")
+	out["seed"] = seed_value
+	out["map"] = lay.rows()
+	out["legend"] = level.get("legend", {}).duplicate()
+	out["legend"].merge(fill.legend, true)
+	out["rooms"] = ProgrammeGen.rooms_of(lay, fl.sunken)
+	var kit := str(level.get("kit", ""))
+	var amount := float(prog.get("furnish", 1.0))
+	out["things"] = level.get("things", []).duplicate(true) + fill.things + ProgrammeFurnishing.furnish(lay, fill, kit, seed_value, amount, fl.sunken)
+	var bank := str(prog.get("bank", ""))
+	if bank != "":
+		var bank_room: Dictionary = fl.lo.plan.rooms[bank] if fl.lo != null else lay.plan.rooms[bank]
+		out["things"] += fl.lift_things(bank_room.get("lifts", {}))
+	return out
+
+
+## The lower floor into the level: its own floor entry (map, rooms, the sunken halls, galleries and ramps), its things.
+static func _below(out: Dictionary, level: Dictionary, seed_value: int, lay: ProgrammeLayout, lay2: ProgrammeLayout,
+		fill: ProgrammeFill, fill2: ProgrammeFill, fl: ProgrammeFloors) -> void:
+	var prog: Dictionary = level["programme"]
+	var kit := str(level.get("kit", ""))
+	var amount := float(prog.get("furnish", 1.0))
+	var rooms := ProgrammeGen.rooms_of(lay2, [])
+	var halls: Array = []
+	for id in fl.sunken:
+		var e: Dictionary = ProgrammeGen.room_entry(lay, id)
+		e["height"] = maxi(2, int(e.get("height", 1)) + 1)
+		rooms.append(e)
+		halls.append([id, lay.rects[id], lay2.g])
+	out["floors"] = [{"level": -1, "map": lay2.rows(), "rooms": rooms, "decks": fl.decks, "ramps": fl.ramps}]
+	out["legend"].merge(fill2.legend, true)
+	out["things"] += fill2.things + ProgrammeFurnishing.furnish(lay2, fill2, kit, seed_value + 1, amount) \
+		+ ProgrammeFurnishing.furnish_rooms(halls, lay.plan, fill, kit, seed_value + 2, amount).map(func(e: Dictionary) -> Dictionary:
+			e["level"] = -1
+			return e)
+
+
+## The level's rooms (what has a name, a style and a height): each room as written (less those in `leave`), and each
+## wing's corridor.
+static func rooms_of(lay: ProgrammeLayout, leave: Array) -> Array:
 	var out: Array = []
 	for id in lay.plan.spine + lay.rects.keys().filter(func(k: String) -> bool: return not lay.plan.spine.has(k)):
-		var r: Dictionary = lay.plan.rooms[id]
-		var rc: Rect2i = lay.rects[id]
-		var e := {"name": r.get("name", id), "rect": [rc.position.x, rc.position.y, rc.size.x, rc.size.y], "id": id}
-		for k in ["style", "height", "purpose"]:
-			if r.has(k):
-				e[k] = r[k]
-		out.append(e)
+		if not leave.has(id):
+			out.append(ProgrammeGen.room_entry(lay, id))
 	for w in lay.plan.wings:
 		var c: Rect2i = lay.corridors.filter(func(rc: Rect2i) -> bool: return rc.has_point(lay.junctions[w["id"]]))[0]
 		var e := {"name": w["name"], "rect": [c.position.x, c.position.y, c.size.x, c.size.y], "wing": w["id"]}
@@ -92,3 +136,14 @@ static func rooms_of(lay: ProgrammeLayout, prog: Dictionary) -> Array:
 			e["style"] = w["corridor"]
 		out.append(e)
 	return out
+
+
+## One room as the level lists it.
+static func room_entry(lay: ProgrammeLayout, id: String) -> Dictionary:
+	var r: Dictionary = lay.plan.rooms[id]
+	var rc: Rect2i = lay.rects[id]
+	var e := {"name": r.get("name", id), "rect": [rc.position.x, rc.position.y, rc.size.x, rc.size.y], "id": id}
+	for k in ["style", "height", "purpose"]:
+		if r.has(k):
+			e[k] = r[k]
+	return e
