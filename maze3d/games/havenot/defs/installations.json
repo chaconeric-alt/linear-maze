@@ -1,0 +1,13 @@
+{
+ "installations": {
+  "descent": {
+   "name": "The Descent (two levels: travel between them)",
+   "text": "A grey test installation: two levels joined by a lift and a stair, and two ways in.",
+   "levels": ["descent_1", "descent_2"],
+   "entrances": [
+    {"name": "The front gate", "level": "descent_1"},
+    {"name": "The service shaft", "level": "descent_1", "arrive": "shaft"}
+   ]
+  }
+ }
+}

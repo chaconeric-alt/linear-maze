@@ -69,6 +69,11 @@ var start_yaw: float:
 		return ld.start_yaw
 
 
+## A named way in ({"start": "<name>"} in the data): {"cell", "level", "yaw"}, or {} if the level has none of that name.
+func arrival(name: String) -> Dictionary:
+	return ld.arrivals.get(name, {})
+
+
 ## Build the level from its data. `memory`: what it remembers from an earlier visit (State's memory of it, LevelMemory),
 ## laid over it as it is built; empty for a level seen for the first time, or one that keeps no memory (the bunker).
 func build(level_data: Dictionary, memory: Dictionary = {}) -> void:

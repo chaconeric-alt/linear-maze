@@ -20,3 +20,4 @@ hospital        | --level=gen:rooms:hospital --seed=5 --selftest
 basilica        | --level=gen:rooms:basilica --seed=5 --selftest
 drowned         | --level=gen:rooms:drowned --seed=5 --selftest
 dust            | --level=gen:rooms:dust --seed=5 --selftest
+descent         | --level=descent_1 --selftest

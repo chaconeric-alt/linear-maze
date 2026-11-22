@@ -341,10 +341,14 @@ func repair() -> bool:
 	return true
 
 
+## Where the lift goes: "built", the game's menu (an installation once, by its name), and "wild", every generator and
+## theme. Each is [label, what to start].
 func destinations() -> Dictionary:
 	var built: Array = []
 	for id in LM.game.get("menu", []):
-		if id != level.data.get("id", "home") and LM.levels.has(id):
+		if Installations.has(id):
+			built.append([Installations.name_of(id), id])
+		elif id != level.data.get("id", "home") and LM.levels.has(id):
 			built.append([LM.levels[id].get("name", id), id])
 	var wild: Array = []
 	for gid in LM.generators:
@@ -369,7 +373,19 @@ func _lift() -> void:
 		{"label": word("lift_wild"), "do": sub.bind(word("lift_wild_title"), d["wild"])}])
 
 
+## Go there: a level, or an installation by its way in (asked which, when it has more than one).
 func go(id: String) -> void:
+	if Installations.has(id):
+		var ways := Installations.entrances(id)
+		if ways.size() <= 1:
+			go(Installations.start_of(id))
+			return
+		var opts: Array = []
+		for i in ways.size():
+			opts.append({"label": str(ways[i].get("name", "")), "do": go.bind(Installations.start_of(id, i))})
+		opts.append({"label": word("lift_back"), "do": _lift})
+		panel(word("lift_kicker"), Installations.name_of(id), word("lift_which_way"), opts)
+		return
 	Profile.sortie = true
 	if Game.hud.in_panel():
 		Game.hud.close_panel()

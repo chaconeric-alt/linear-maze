@@ -44,6 +44,9 @@ func title() -> void:
 	box.add_child(_easy_button(g.get("easy", {})))
 	box.add_child(style.label("", 8, Color.WHITE))
 	for id in g.get("menu", LM.levels.keys()):
+		if Installations.has(id):                     # an installation, by its usual way in
+			box.add_child(style.button("▸  " + Installations.name_of(id), func(): hud.start_requested.emit(Installations.start_of(id)), true))
+			continue
 		var lv: Dictionary = LM.levels.get(id, {})
 		box.add_child(style.button(("⌂  " if lv.get("home", false) else "▸  ") + lv.get("name", id), func(): hud.start_requested.emit(id), true))
 	for gid in LM.generators:

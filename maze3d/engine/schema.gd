@@ -15,12 +15,14 @@ const ACTOR := ["name", "model", "kit", "scale", "robot", "hp", "armor", "takes"
 	"own_materials", "model_yaw", "model_y", "jelly", "touch", "equalizer", "dance", "trail", "talk"]
 const ITEM := ["name", "kind", "value", "amount", "ammo", "color", "weapon", "model", "kit", "scale", "glow", "sound",
 	"effects", "flag", "text", "trophy", "bulk", "wear", "capacity", "slots"]
+const INSTALLATION := ["name", "text", "levels", "entrances"]
+const ENTRANCE := ["name", "level", "arrive"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
 const THING := ["at", "tag", "offset", "face", "level", "restock"]
 const THING_KINDS := {
 	"start": ["start"],
-	"lift": ["lift", "home", "speed", "color"],
+	"lift": ["lift", "home", "speed", "color", "travel"],
 	"target": ["target"],
 	"station": ["station", "actor", "shut", "wake", "blocks"],
 	"actor": ["actor", "still", "alert", "hp_mul", "on_death", "on_anger", "lounge", "perch", "off_duty", "talk", "provoke",
@@ -40,11 +42,16 @@ const PIT := ["trap", "delay", "damage"]
 ## Problems with the defs the game loaded: "<kind> '<id>': unknown key '<k>' (did you mean '<j>'?)".
 static func check_defs(defs: Dictionary) -> Array:
 	var out: Array = []
-	for pair in [["weapons", WEAPON], ["actors", ACTOR], ["items", ITEM]]:
+	for pair in [["weapons", WEAPON], ["actors", ACTOR], ["items", ITEM], ["installations", INSTALLATION]]:
 		for id in defs.get(pair[0], {}):
 			for k in defs[pair[0]][id]:
 				if k != "id" and not k in pair[1]:                # LM adds "id" itself
 					out.append("%s '%s': %s" % [pair[0].trim_suffix("s"), id, _unknown(k, pair[1])])
+	for id in defs.get("installations", {}):
+		for e in defs["installations"][id].get("entrances", []):
+			for k in e:
+				if not k in ENTRANCE:
+					out.append("installation '%s', an entrance: %s" % [id, _unknown(k, ENTRANCE)])
 	return out
 
 
@@ -89,7 +96,7 @@ static func undocumented(spec_text: String) -> Array:
 	for m in fence.search_all(spec_text):
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
-	var all: Array = WEAPON + ACTOR + ITEM + THING + PIT
+	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

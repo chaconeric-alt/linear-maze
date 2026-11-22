@@ -31,13 +31,15 @@ static func fit(cfg: Dictionary, p: Dictionary) -> void:
 	cfg["gear"] = p.get("gear", []).duplicate()
 
 
-## Put the player, once made, back where they stood and as they were.
-static func put_back(pl: Player, p: Dictionary) -> void:
+## Put the player, once made, back where they stood and as they were. `where` false: as they were, but where they
+## have been put (travelling into another level: Arrival).
+static func put_back(pl: Player, p: Dictionary, where := true) -> void:
 	var at: Array = p.get("at", [])
-	if at.size() == 3:
+	if at.size() == 3 and where:
 		pl.global_position = Vector3(float(at[0]), float(at[1]), float(at[2]))
-	pl.rotation.y = float(p.get("yaw", pl.rotation.y))
-	pl.pitch = float(p.get("pitch", 0.0))
+	if where:
+		pl.rotation.y = float(p.get("yaw", pl.rotation.y))
+		pl.pitch = float(p.get("pitch", 0.0))
 	pl.hp = float(p.get("hp", pl.hp))
 	if not pl.weapons.is_empty():
 		pl.equip(int(p.get("current", 0)))

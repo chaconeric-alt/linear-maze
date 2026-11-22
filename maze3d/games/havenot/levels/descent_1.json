@@ -1,0 +1,227 @@
+{
+ "id": "descent_1",
+ "name": "The Descent, Level 1",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "A grey place with a lift and a stair down.",
+ "ambient_energy": 0.75,
+ "legend": {
+  "+": {
+   "door": "door_split"
+  }
+ },
+ "map": [
+  "#############",
+  "#...........#",
+  "#...........#",
+  "#...........#",
+  "###+#####+###",
+  "#.....#.....#",
+  "#.....#.....#",
+  "#.....+.....#",
+  "#.....#.....#",
+  "#.....#.....#",
+  "#############"
+ ],
+ "rooms": [
+  {
+   "name": "Gate Hall",
+   "rect": [
+    1,
+    1,
+    11,
+    3
+   ],
+   "style": "corridor"
+  },
+  {
+   "name": "Shaft Room",
+   "rect": [
+    1,
+    5,
+    5,
+    5
+   ],
+   "style": "storage"
+  },
+  {
+   "name": "Lift Room",
+   "rect": [
+    7,
+    5,
+    5,
+    5
+   ],
+   "style": "lab"
+  }
+ ],
+ "things": [
+  {
+   "start": true,
+   "face": "e",
+   "at": [
+    1,
+    2
+   ]
+  },
+  {
+   "start": "shaft",
+   "face": "n",
+   "at": [
+    2,
+    8
+   ]
+  },
+  {
+   "start": "lift",
+   "face": "w",
+   "at": [
+    10,
+    8
+   ]
+  },
+  {
+   "start": "stairs",
+   "face": "w",
+   "at": [
+    9,
+    6
+   ]
+  },
+  {
+   "sign": "THE DESCENT\nlevel 1",
+   "face": "s",
+   "color": [
+    0.4,
+    0.9,
+    1.0
+   ],
+   "size": 56,
+   "y": 3.0,
+   "at": [
+    4,
+    1
+   ]
+  },
+  {
+   "sign": "SERVICE SHAFT",
+   "face": "n",
+   "color": [
+    1.0,
+    0.8,
+    0.3
+   ],
+   "size": 40,
+   "y": 2.8,
+   "at": [
+    2,
+    9
+   ]
+  },
+  {
+   "lift": [
+    0
+   ],
+   "at": [
+    10,
+    8
+   ],
+   "travel": {
+    "level": "descent_2",
+    "arrive": "lift",
+    "way": "down",
+    "text": "Down to Level 2."
+   }
+  },
+  {
+   "sign": "LIFT DOWN",
+   "face": "n",
+   "color": [
+    0.4,
+    1.0,
+    0.6
+   ],
+   "size": 48,
+   "y": 3.0,
+   "at": [
+    10,
+    9
+   ]
+  },
+  {
+   "prop": "bk_console",
+   "at": [
+    11,
+    5
+   ],
+   "face": "w",
+   "blocks": false,
+   "use": {
+    "type": "effects",
+    "prompt": "Take the stairs down",
+    "sound": "servo",
+    "effects": [
+     {
+      "type": "travel",
+      "level": "descent_2",
+      "arrive": "stairs"
+     }
+    ]
+   }
+  },
+  {
+   "sign": "STAIRS",
+   "face": "w",
+   "color": [
+    1.0,
+    0.8,
+    0.3
+   ],
+   "size": 40,
+   "y": 2.8,
+   "at": [
+    11,
+    6
+   ]
+  },
+  {
+   "item": "crystal",
+   "at": [
+    3,
+    6
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    4,
+    8
+   ]
+  },
+  {
+   "prop": "holo_table",
+   "at": [
+    10,
+    2
+   ],
+   "blocks": false,
+   "use": {
+    "type": "effects",
+    "prompt": "Leave the Descent",
+    "effects": [
+     {
+      "type": "end",
+      "title": "Out of the Descent",
+      "text": "Down, up, and out again."
+     }
+    ]
+   }
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Go down to Level 2 and back up; leave by the gate."
+  }
+ ],
+ "triggers": []
+}

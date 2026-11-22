@@ -1,7 +1,7 @@
 extends Node3D
 ## Main - boots the game named in Project Settings (maze3d/game), shows the title, and
 ## builds and tears down levels. It saves the game and comes back to the save (F9 and F10, the pause screen's Save,
-## the title screen's Restore from save; SavePoint).
+## the title screen's Restore from save; SavePoint), and carries an expedition from one level to another (travel).
 ##
 ## For testing from a terminal:  godot --path maze3d -- --level=<id> [--shot=out.png] [--frames=N] [--god] [--at=x,y] [--yaw=deg]
 
@@ -14,6 +14,8 @@ var _left := true                # the level being played has been reported left
 var _how_left := ""              # how: "out", "died", "away" (what becomes of its memory is settled as it is unloaded)
 var _settled := false            # its memory has been settled: once, as it ends or is unloaded, whichever comes first
 var _in_run := false             # an expedition is under way (run.started ... run.ended)
+var _arrive := ""                # the named way in the next level is entered by ("<level>@<way in>"; Arrival)
+var _carry: Dictionary = {}      # travelling: the player as they left the last level, to be made again in the next
 var _args: Dictionary = {}
 
 
@@ -36,6 +38,7 @@ func _ready() -> void:
 	hud.restore_requested.connect(func(): restore_game())
 	hud.new_game_requested.connect(new_game)
 	Game.ended.connect(_on_ended)
+	Game.travel_requested.connect(func(id: String, way: String) -> void: travel.call_deferred(id, way))
 	var first: String = _args.get("level", LM.game.get("start", ""))
 	if not _load(first, true):
 		push_error("no level %s" % first)
@@ -141,14 +144,19 @@ func _on_start(id: String) -> void:
 ## Build the level with that id (or generate it: gen:<generator>[:<theme>]) and put the player in it. False if there is no
 ## such level, or the generator could make nothing with its settings. `back`: a save's place (SavePoint) being come
 ## back to: the seed it was made from, the run kept as it was saved, the player put back where they stood.
-func _load(id: String, _attract: bool, back: Dictionary = {}) -> bool:
+func _load(target: String, _attract: bool, back: Dictionary = {}) -> bool:
 	_unload()
+	var to: Array = Installations.split(target)  # "<level>@<way in>": an entrance other than the level's start
+	var id: String = to[0]
+	if to[1] != "":
+		_arrive = to[1]
 	_level_id = id
 	if level:
 		level.queue_free()
 		remove_child(level)
 		level = null
-	Game.reset(not back.is_empty())
+	var travelling := not _carry.is_empty()
+	Game.reset(not back.is_empty() or travelling)     # a save keeps the run it was saved with, and travel the one under way
 	Game.calm = _args.has("calm")
 	if _args.has("easy"):                            # --easy / --easy=0: for this run only; the title screen button is the one that is remembered
 		Game.easy = _args["easy"] != "0"
@@ -179,7 +187,7 @@ func _load(id: String, _attract: bool, back: Dictionary = {}) -> bool:
 	if not home and not _in_run:
 		_in_run = true
 		Events.emit("run.started", {"level": level_key(), "from": "home" if sortie else "title"})
-	Events.emit("level.entered", {"level": level_key(), "how": "restore" if not back.is_empty() else ("home" if home else ("sortie" if sortie else "start"))})
+	Events.emit("level.entered", {"level": level_key(), "how": "restore" if not back.is_empty() else ("travel" if travelling else ("home" if home else ("sortie" if sortie else "start")))})
 	if not level.restocked.is_empty():               # its makers have been at work since it was last left
 		Events.emit("level.restocked", {"level": level_key(), "keys": level.restocked})
 		Game.say(str(LM.game.get("words", {}).get("restocked", "Something has been at work here since you left.")), "warn")
@@ -206,27 +214,36 @@ func _level_data(id: String, back: Dictionary) -> Dictionary:
 	return data
 
 
-## Make the player: at the level's start, set up from the game's and the level's settings, with the armoury's outfit if
-## they came by the bunker's lift; or, coming back to a save, with what they carried, where they stood. True if they
-## came by the lift.
+## Make the player (Arrival): with what they carried, coming back to a save or travelling in from another level; with
+## the armoury's outfit if they came by the bunker's lift. True if they came by the lift.
 func _put_player(data: Dictionary, back: Dictionary) -> bool:
-	player = Player.new()
-	level.add_child(player)
-	player.position = level.center(level.start_cell, 0.05 + level.start_level * level.H)
-	player.rotation.y = level.start_yaw + PI
-	var cfg: Dictionary = LM.game.get("player", {}).duplicate(true)
-	for k in data.get("player", {}):
-		cfg[k] = data["player"][k]
 	var sortie: bool = Profile.sortie
-	if back.has("player"):
-		SavePoint.fit(cfg, back["player"])
-	elif Profile.sortie and not data.get("home", false):      # they came by the bunker's lift: the armoury comes too
-		Profile.outfit(cfg)
-	Profile.sortie = false
-	player.setup(level, cfg)
-	if back.has("player"):
-		SavePoint.put_back(player, back["player"])
+	player = Arrival.make(level, data, back, _carry, _arrive)
+	_carry = {}
+	_arrive = ""
 	return sortie
+
+
+## The travel effect (deferred, so whatever ran it is done with this level): into another level by its way in `way`,
+## with the player as they stand, the run and the departure copy; the level left is remembered. SPEC.md 5.19.
+func travel(id: String, way := "") -> void:
+	if level == null or player == null or player.dead or _left or level.data.get("home", false):
+		return
+	if not LM.levels.has(id) and not id.begins_with("gen:"):
+		push_warning("travel: no level %s" % id)
+		return
+	_carry = SavePoint.player_of(player)
+	_arrive = way
+	_leave("travel")
+	if hud.in_panel():
+		hud.close_panel()
+	if _load(id, false):
+		hud.begin_play()
+		save_game(true)                              # saved on arrival, as any level is
+		return
+	_carry = {}                                      # a generator that could make nothing: back to the title, as a start does
+	_arrive = ""
+	_on_start("")
 
 
 ## The level being played, by the id it was started with ("gen:rooms:crypt" for a generated one).

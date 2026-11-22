@@ -38,7 +38,8 @@
   "defs/actors.json",
   "defs/items.json",
   "defs/sounds.json",
-  "defs/home.json"
+  "defs/home.json",
+  "defs/installations.json"
  ],
  "levels": [
   "levels/home.json",
@@ -48,7 +49,9 @@
   "levels/staffonly.json",
   "levels/atrium.json",
   "levels/stack.json",
-  "levels/depot.json"
+  "levels/depot.json",
+  "levels/descent_1.json",
+  "levels/descent_2.json"
  ],
  "generators": [
   "rooms"
@@ -443,7 +446,8 @@
   "menagerie",
   "staffonly",
   "atrium",
-  "depot"
+  "depot",
+  "descent"
  ],
  "player": {
   "hp": 100,

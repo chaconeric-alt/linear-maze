@@ -29,6 +29,7 @@ var rooms: Array = []
 var start_cell := Vector2i.ZERO
 var start_level := 0
 var start_yaw := 0.0
+var arrivals: Dictionary = {}    # name -> {"cell", "level", "yaw"}: the named ways in ({"start": "<name>"}), where travel arrives
 var hung: Dictionary = {}        # Vector4i(x, y, storey, side): a wall face with a sign or a wall-mounted prop on it
 var rng := RandomNumberGenerator.new()      # one stream for everything the build picks, so a level always comes out the same
 

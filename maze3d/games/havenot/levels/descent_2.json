@@ -1,0 +1,192 @@
+{
+ "id": "descent_2",
+ "name": "The Descent, Level 2",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "The lower level. The way out is up.",
+ "ambient_energy": 0.75,
+ "legend": {
+  "+": {
+   "door": "door_split"
+  }
+ },
+ "map": [
+  "#############",
+  "#...........#",
+  "#...........#",
+  "#...........#",
+  "###+#####+###",
+  "#.....#.....#",
+  "#.....#.....#",
+  "#.....+.....#",
+  "#.....#.....#",
+  "#.....#.....#",
+  "#############"
+ ],
+ "rooms": [
+  {
+   "name": "Lower Hall",
+   "rect": [
+    1,
+    1,
+    11,
+    3
+   ],
+   "style": "corridor"
+  },
+  {
+   "name": "Store",
+   "rect": [
+    1,
+    5,
+    5,
+    5
+   ],
+   "style": "storage"
+  },
+  {
+   "name": "Lift Room",
+   "rect": [
+    7,
+    5,
+    5,
+    5
+   ],
+   "style": "lab"
+  }
+ ],
+ "things": [
+  {
+   "start": true,
+   "face": "e",
+   "at": [
+    1,
+    2
+   ]
+  },
+  {
+   "start": "lift",
+   "face": "w",
+   "at": [
+    10,
+    8
+   ]
+  },
+  {
+   "start": "stairs",
+   "face": "w",
+   "at": [
+    9,
+    6
+   ]
+  },
+  {
+   "sign": "THE DESCENT\nlevel 2",
+   "face": "s",
+   "color": [
+    0.4,
+    0.9,
+    1.0
+   ],
+   "size": 56,
+   "y": 3.0,
+   "at": [
+    4,
+    1
+   ]
+  },
+  {
+   "lift": [
+    0
+   ],
+   "at": [
+    10,
+    8
+   ],
+   "travel": {
+    "level": "descent_1",
+    "arrive": "lift",
+    "way": "up",
+    "text": "Up to Level 1."
+   }
+  },
+  {
+   "sign": "LIFT UP",
+   "face": "n",
+   "color": [
+    0.4,
+    1.0,
+    0.6
+   ],
+   "size": 48,
+   "y": 3.0,
+   "at": [
+    10,
+    9
+   ]
+  },
+  {
+   "prop": "bk_console",
+   "at": [
+    11,
+    5
+   ],
+   "face": "w",
+   "blocks": false,
+   "use": {
+    "type": "effects",
+    "prompt": "Take the stairs up",
+    "sound": "servo",
+    "effects": [
+     {
+      "type": "travel",
+      "level": "descent_1",
+      "arrive": "stairs"
+     }
+    ]
+   }
+  },
+  {
+   "sign": "STAIRS",
+   "face": "w",
+   "color": [
+    1.0,
+    0.8,
+    0.3
+   ],
+   "size": 40,
+   "y": 2.8,
+   "at": [
+    11,
+    6
+   ]
+  },
+  {
+   "item": "crystal",
+   "at": [
+    3,
+    6
+   ]
+  },
+  {
+   "item": "health",
+   "at": [
+    2,
+    8
+   ]
+  },
+  {
+   "actor": "roach",
+   "at": [
+    4,
+    8
+   ]
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Go down to Level 2 and back up; leave by the gate."
+  }
+ ],
+ "triggers": []
+}

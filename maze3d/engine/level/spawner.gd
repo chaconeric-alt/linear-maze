@@ -215,7 +215,12 @@ func spawn_thing(e: Dictionary, p: Vector2i, key := "") -> Node3D:
 	return null
 
 
+## Where the player starts ({"start": true}), or a named way in ({"start": "<name>"}): where travel from another
+## level, or another entrance, puts them (Level.arrival).
 func _start(e: Dictionary, p: Vector2i, _s: int, _pos: Vector3) -> Node3D:
+	if e["start"] is String and e["start"] != "":
+		ld.arrivals[e["start"]] = {"cell": p, "level": int(e.get("level", 0)), "yaw": ld.face_yaw(e.get("face", "n"))}
+		return null
 	ld.start_level = int(e.get("level", 0))
 	ld.start_cell = p
 	ld.start_yaw = ld.face_yaw(e.get("face", "n"))

@@ -9,6 +9,7 @@ signal toast(text: String, kind: String)
 signal identified(title: String, detail: String)      # easy mode: E named what the player is looking at
 signal changed            # something the HUD shows changed
 signal ended(info: Dictionary)
+signal travel_requested(level_id: String, arrive: String)    # the travel effect: Main carries the expedition there
 
 var easy := false            # easy mode: the player's weapons hit harder and the player takes less (game.json "easy"; title screen, or --easy)
 var calm := false            # --calm: nothing notices the player (for looking at things)
@@ -158,6 +159,7 @@ func _register_effects() -> void:
 	effects.register("quake", _fx_quake)
 	effects.register("chance", _fx_chance)
 	effects.register("end", func(ef: Dictionary, _c: Dictionary) -> void: finish(ef))
+	effects.register("travel", func(ef: Dictionary, _c: Dictionary) -> void: travel_requested.emit(str(ef.get("level", "")), str(ef.get("arrive", ""))))
 	effects.register("pass_time", func(ef: Dictionary, _c: Dictionary) -> void: State.pass_days(int(ef.get("days", 1))))
 	_prop_uses.register(effects)
 	_gates.register(effects)

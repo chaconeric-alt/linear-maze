@@ -1,6 +1,7 @@
 extends SelfTestPart
 ## The event bus heard the run. The self-test records every event from before the level is loaded
-## (Debug.record_events); this part runs last and holds the record up against the level as it is now: the level was
+## (Debug.record_events); this part runs last and holds this level's record (what happened while the player was in it)
+## up against the level as it is now: the level was
 ## entered; every dead monster was reported dead once; everything reported taken is gone; every flag that is set was
 ## reported; every payload was plain data; a trigger that listens for an event went off when it came. It prints what
 ## was emitted, by name, and a digest of it all, which the repeatable mode makes exact.
@@ -8,17 +9,12 @@ extends SelfTestPart
 
 func run() -> void:
 	var all: Array = Events.recorded()
-	var since := 0                                   # this level's events: from its first level.entered on, as the level
-	var entry := {}                                  # remembers its earlier visits (and the run.started just before it)
+	var entry := {}                                  # the level being played: the last one entered
 	for i in range(all.size() - 1, -1, -1):
 		if all[i][0] == "level.entered":
-			if entry.is_empty():
-				entry = all[i][1]
-			if all[i][1].get("level", "") == entry.get("level", ""):
-				since = i
-	if since > 0 and all[since - 1][0] == "run.started":
-		since -= 1
-	var log: Array = all.slice(since)
+			entry = all[i][1]
+			break
+	var log := _while_in(all, str(entry.get("level", "")))
 	say(entry.get("level", "") != "", "the level's entry was announced (%s)" % entry)
 	say(Events.bad_payloads == 0, "every event carried plain data (%d did not)" % Events.bad_payloads)
 	_deaths(log)
@@ -37,6 +33,22 @@ func run() -> void:
 	var names: Array = counts.keys()
 	names.sort()
 	print("INFO  events: %s; digest %08x" % [", ".join(names.map(func(n: String) -> String: return "%s %d" % [n, counts[n]])), JSON.stringify(log).hash() & 0xffffffff])
+
+
+## This level's events: those from while the player was in it (from each level.entered of it to the next level.entered
+## of another), and a run.started just before it is entered; the level remembers its earlier visits. Other levels of the
+## expedition (travel) keep their own keys, so their events are not this level's.
+func _while_in(all: Array, here: String) -> Array:
+	var out: Array = []
+	var cur := ""
+	for i in all.size():
+		var ev: Array = all[i]
+		if ev[0] == "level.entered":
+			cur = str(ev[1].get("level", ""))
+		var opens: bool = ev[0] == "run.started" and i + 1 < all.size() and all[i + 1][0] == "level.entered" and str(all[i + 1][1].get("level", "")) == here
+		if cur == here or opens:
+			out.append(ev)
+	return out
 
 
 ## Every monster lying dead was reported dead, once, under its own key: once a life, as a maker may have made it again
