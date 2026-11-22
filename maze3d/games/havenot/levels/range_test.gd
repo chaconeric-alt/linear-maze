@@ -21,11 +21,12 @@ func run() -> void:
 
 func _the_types() -> void:
 	say(DamageTypes.canon("blast") == "explosive" and DamageTypes.canon("toxic") == "poison" and DamageTypes.canon("laser") == "beam"
-		and DamageTypes.canon("explosive") == "explosive" and DamageTypes.canon("bullet") == "bullet",
-		"a kind's alias is its type (blast: explosive, toxic: poison, laser: beam); a kind the list does not name is its own")
+		and DamageTypes.canon("bullet") == "physical" and DamageTypes.canon("melee") == "physical" and DamageTypes.canon("explosive") == "explosive"
+		and DamageTypes.canon("ice") == "ice",
+		"a kind's alias is its type (blast: explosive, toxic: poison, laser: beam, bullet and melee: physical); a kind the list does not name is its own")
 	var takes: Dictionary = LM.get_def("actors", "custodian").get("takes", {})
 	say(is_equal_approx(DamageTypes.taken(takes, "explosive"), 1.6) and is_equal_approx(DamageTypes.taken(takes, "blast"), 1.6)
-		and is_equal_approx(DamageTypes.taken(takes, "bullet"), 1.0),
+		and is_equal_approx(DamageTypes.taken(takes, "melee"), 1.0),
 		"a robot written to take 1.6 from \"blast\" takes 1.6 from \"explosive\" too, and 1.0 from a kind it does not name")
 	var both := {"blast": 0.5, "explosive": 3.0}
 	say(is_equal_approx(DamageTypes.taken(both, "blast"), 0.5) and is_equal_approx(DamageTypes.taken(both, "explosive"), 3.0),

@@ -454,6 +454,7 @@
   "range"
  ],
  "damage_types": {
+  "physical": {"name": "Physical", "alias": ["bullet", "melee", "crush", "trap", "fall"]},
   "explosive": {"name": "Explosive", "alias": ["blast"]},
   "poison": {"name": "Poison", "alias": ["toxic"]},
   "beam": {"name": "Beam", "alias": ["laser"]},
