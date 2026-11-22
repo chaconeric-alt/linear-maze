@@ -4,7 +4,8 @@ extends Node3D
 ## door is a new model plus a few numbers. Opens for whoever comes near unless locked or sealed.
 class_name Door
 
-const LOCK_COLORS := {"red": Color(1.0, 0.12, 0.08), "blue": Color(0.15, 0.4, 1.0), "yellow": Color(1.0, 0.8, 0.1), "flag": Color(0.7, 0.3, 1.0)}
+const LOCK_COLORS := {"red": Color(1.0, 0.12, 0.08), "blue": Color(0.15, 0.4, 1.0), "yellow": Color(1.0, 0.8, 0.1),
+	"green": Color(0.15, 0.9, 0.3), "purple": Color(0.85, 0.2, 0.85), "flag": Color(0.7, 0.3, 1.0)}
 const OPEN_COLOR := Color(0.2, 0.95, 0.85)
 
 var level: Level

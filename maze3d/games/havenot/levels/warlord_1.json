@@ -1,0 +1,1241 @@
+{
+ "id": "warlord_1",
+ "name": "The Warlord's Bunker: Levels 1 and 2",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "The Warlord's Bunker. Level 1, the Garrison: the robots still keep the routine.",
+ "ambient_energy": 0.7,
+ "legend": {},
+ "programme": {
+  "spine": {
+   "gap": [
+    1,
+    3
+   ]
+  },
+  "bank": "lobby",
+  "bank_at": [
+   88,
+   14
+  ],
+  "rooms": [
+   {
+    "id": "gate",
+    "name": "Gatehouse",
+    "style": "bunker_ops",
+    "size": [
+     [
+      4,
+      5
+     ],
+     [
+      4,
+      5
+     ]
+    ],
+    "things": [
+     {
+      "prop": "bk_console",
+      "blocks": true,
+      "tag": "blast_door",
+      "use": {
+       "type": "effects",
+       "prompt": "Leave by the blast door",
+       "sound": "servo",
+       "effects": [
+        {
+         "type": "end",
+         "title": "Out of the Warlord's Bunker",
+         "text": "Back out into the red sand, with what you carried."
+        }
+       ]
+      }
+     },
+     {
+      "item": "health"
+     }
+    ],
+    "purpose": "gatehouse"
+   },
+   {
+    "id": "decon",
+    "name": "Decontamination Tunnel",
+    "style": "storage",
+    "size": [
+     3,
+     3
+    ],
+    "things": [
+     {
+      "trap": "vent",
+      "period": 4.0,
+      "on": 1.2,
+      "damage": 4
+     }
+    ],
+    "purpose": "decon"
+   },
+   {
+    "id": "motor",
+    "name": "Motor Pool",
+    "style": "bunker_hall",
+    "size": [
+     [
+      7,
+      8
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "things": [
+     {
+      "actor": "roach",
+      "count": 2
+     },
+     {
+      "actor": "deadbot"
+     },
+     {
+      "start": "ramp",
+      "face": "e"
+     },
+     {
+      "item": "fuel_cell"
+     }
+    ],
+    "purpose": "motor_pool",
+    "down": 1
+   },
+   {
+    "id": "drill",
+    "name": "Drill Hall",
+    "style": "bunker_hall",
+    "size": [
+     [
+      7,
+      8
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "things": [
+     {
+      "actor": "plodder"
+     },
+     {
+      "actor": "monoid",
+      "patrol": "room"
+     },
+     {
+      "item": "crystal"
+     }
+    ],
+    "purpose": "drill_hall",
+    "down": 1
+   },
+   {
+    "id": "comms",
+    "name": "Communications",
+    "style": "bunker_ops",
+    "size": [
+     [
+      4,
+      5
+     ],
+     [
+      4,
+      5
+     ]
+    ],
+    "things": [
+     {
+      "prop": "terminal_desk",
+      "blocks": true,
+      "use": {
+       "type": "terminal",
+       "prompt": "Use the communications console",
+       "kicker": "The Warlord's Bunker",
+       "title": "Communications",
+       "text": "The console still holds the garrison's last state: LIFT BANK IN LOCKDOWN. AWAITING STAND-DOWN AUTHORISATION.",
+       "options": [
+        {
+         "label": "Read in 4-1-1-KESTREL",
+         "when": "stand_down_read",
+         "unless": "stand_down",
+         "once": true,
+         "close": true,
+         "effects": [
+          {
+           "type": "flag",
+           "name": "stand_down"
+          },
+          {
+           "type": "message",
+           "text": "STAND-DOWN ACKNOWLEDGED. The lift bank comes out of lockdown.",
+           "kind": "good"
+          }
+         ]
+        },
+        {
+         "label": "Look at the lockdown",
+         "unless": "stand_down",
+         "result": "Nothing goes down until somebody authorises the stand-down. The code was never sent."
+        }
+       ]
+      },
+      "tag": "comms_console"
+     }
+    ],
+    "purpose": "communications"
+   },
+   {
+    "id": "lobby",
+    "name": "Lift Lobby",
+    "style": "machine",
+    "size": [
+     3,
+     5
+    ],
+    "purpose": "lift_lobby",
+    "lifts": {
+     "count": 3,
+     "lock": {
+      "flag": "stand_down",
+      "need": "the stand-down order: its code read into the communications console"
+     }
+    }
+   }
+  ],
+  "wings": [
+   {
+    "id": "barracks_a",
+    "name": "First Barracks",
+    "after": "gate",
+    "side": "n",
+    "rooms": [
+     {
+      "id": "bunks_a1",
+      "name": "Bunk Room",
+      "style": "barracks",
+      "size": [
+       [
+        5,
+        6
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "things": [
+       {
+        "actor": "roach"
+       }
+      ],
+      "purpose": "bunk_room"
+     },
+     {
+      "id": "latrine_a",
+      "name": "Latrine",
+      "style": "storage",
+      "size": [
+       2,
+       3
+      ],
+      "door_to": "bunks_a1",
+      "purpose": "latrine"
+     },
+     {
+      "id": "bunks_a2",
+      "name": "Bunk Room",
+      "style": "barracks",
+      "size": [
+       [
+        5,
+        6
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "things": [
+       {
+        "item": "chips"
+       }
+      ],
+      "purpose": "bunk_room"
+     },
+     {
+      "id": "showers_a",
+      "name": "Showers",
+      "style": "storage",
+      "size": [
+       2,
+       3
+      ],
+      "door_to": "bunks_a2",
+      "purpose": "showers"
+     }
+    ]
+   },
+   {
+    "id": "barracks_b",
+    "name": "Second Barracks",
+    "after": "gate",
+    "side": "s",
+    "rooms": [
+     {
+      "id": "bunks_b1",
+      "name": "Bunk Room",
+      "style": "barracks",
+      "size": [
+       [
+        5,
+        6
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "things": [
+       {
+        "actor": "roach",
+        "count": 2
+       }
+      ],
+      "purpose": "bunk_room"
+     },
+     {
+      "id": "latrine_b",
+      "name": "Latrine",
+      "style": "storage",
+      "size": [
+       2,
+       3
+      ],
+      "door_to": "bunks_b1",
+      "purpose": "latrine"
+     },
+     {
+      "id": "bunks_b2",
+      "name": "Bunk Room",
+      "style": "barracks",
+      "size": [
+       [
+        5,
+        6
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "purpose": "bunk_room"
+     },
+     {
+      "id": "showers_b",
+      "name": "Showers",
+      "style": "storage",
+      "size": [
+       2,
+       3
+      ],
+      "door_to": "bunks_b2",
+      "purpose": "showers"
+     }
+    ]
+   },
+   {
+    "id": "mess",
+    "name": "Mess Wing",
+    "after": "motor",
+    "side": "any",
+    "rooms": [
+     {
+      "id": "mess_hall",
+      "name": "Mess Hall",
+      "style": "bunker_hall",
+      "size": [
+       [
+        6,
+        7
+       ],
+       [
+        5,
+        6
+       ]
+      ],
+      "things": [
+       {
+        "actor": "custodian",
+        "off_duty": true
+       },
+       {
+        "actor": "drone",
+        "patrol": "room"
+       },
+       {
+        "item": "cookies"
+       }
+      ],
+      "purpose": "mess_hall"
+     },
+     {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "style": "storage",
+      "size": [
+       [
+        3,
+        4
+       ],
+       [
+        3,
+        4
+       ]
+      ],
+      "things": [
+       {
+        "actor": "custodian",
+        "off_duty": true
+       }
+      ],
+      "door_to": "mess_hall",
+      "purpose": "kitchen"
+     }
+    ]
+   },
+   {
+    "id": "training",
+    "name": "Training Wing",
+    "after": "drill",
+    "side": "n",
+    "rooms": [
+     {
+      "id": "gym",
+      "name": "Gym",
+      "style": "bunker_hall",
+      "size": [
+       [
+        5,
+        6
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "things": [
+       {
+        "start": "vent",
+        "face": "s"
+       }
+      ],
+      "purpose": "gym"
+     },
+     {
+      "id": "range",
+      "name": "Firing Range",
+      "style": "bunker_hall",
+      "size": [
+       [
+        7,
+        8
+       ],
+       [
+        3,
+        4
+       ]
+      ],
+      "things": [
+       {
+        "item": "shells"
+       }
+      ],
+      "purpose": "firing_range"
+     }
+    ]
+   },
+   {
+    "id": "officers",
+    "name": "Officers' Wing",
+    "after": "drill",
+    "side": "s",
+    "door": true,
+    "rooms": [
+     {
+      "id": "briefing",
+      "name": "Briefing Room",
+      "style": "bunker_ops",
+      "size": [
+       [
+        5,
+        6
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "purpose": "briefing_room"
+     },
+     {
+      "id": "map",
+      "name": "Map Room",
+      "style": "bunker_ops",
+      "size": [
+       [
+        4,
+        5
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "things": [
+       {
+        "prop": "an_lectern",
+        "blocks": true,
+        "use": {
+         "type": "terminal",
+         "prompt": "Read the typed sheet",
+         "kicker": "The Warlord's Bunker",
+         "title": "Pinned to the lectern",
+         "text": "A typed order on Marshal's paper, never sent: ALL UNITS STAND DOWN. AUTHORISATION 4-1-1-KESTREL. Somebody has underlined the code twice and written NOT YET beside it.",
+         "options": [
+          {
+           "label": "Remember the code: 4-1-1-KESTREL",
+           "once": true,
+           "close": true,
+           "effects": [
+            {
+             "type": "flag",
+             "name": "stand_down_read"
+            },
+            {
+             "type": "message",
+             "text": "Stand-down code: 4-1-1-KESTREL. The communications console will take it.",
+             "kind": "info"
+            }
+           ]
+          }
+         ]
+        },
+        "tag": "order_sheet"
+       }
+      ],
+      "door_to": "briefing",
+      "purpose": "map_room"
+     },
+     {
+      "id": "office_1",
+      "name": "Officer's Office",
+      "style": "bunker_ops",
+      "size": [
+       [
+        3,
+        4
+       ],
+       3
+      ],
+      "things": [
+       {
+        "actor": "monoid",
+        "off_duty": true
+       }
+      ],
+      "next_to": "map",
+      "purpose": "office"
+     },
+     {
+      "id": "office_2",
+      "name": "Officer's Office",
+      "style": "bunker_ops",
+      "size": [
+       [
+        3,
+        4
+       ],
+       3
+      ],
+      "next_to": "office_1",
+      "purpose": "office"
+     },
+     {
+      "id": "cipher",
+      "name": "Signals and Cipher Room",
+      "style": "lab",
+      "size": [
+       [
+        5,
+        6
+       ],
+       [
+        4,
+        5
+       ]
+      ],
+      "things": [
+       {
+        "item": "crystal"
+       }
+      ],
+      "purpose": "cipher_room"
+     },
+     {
+      "id": "stores",
+      "name": "Quartermaster's Store",
+      "style": "vault",
+      "size": [
+       [
+        3,
+        4
+       ],
+       [
+        3,
+        4
+       ]
+      ],
+      "things": [
+       {
+        "item": "shells"
+       },
+       {
+        "item": "cells"
+       },
+       {
+        "item": "armor"
+       },
+       {
+        "item": "health"
+       }
+      ],
+      "purpose": "quartermaster"
+     }
+    ]
+   }
+  ],
+  "locks": [
+   {
+    "room": "stores",
+    "color": "red",
+    "card": [
+     "office_1",
+     "office_2"
+    ]
+   }
+  ],
+  "lock_door": "door_vault",
+  "below": {
+   "spine": {
+    "gap": [
+     1,
+     3
+    ]
+   },
+   "rooms": [
+    {
+     "id": "lobby",
+     "name": "Lower Lift Lobby",
+     "style": "machine",
+     "size": [
+      3,
+      5
+     ],
+     "things": [
+      {
+       "prop": "terminal_desk",
+       "blocks": true,
+       "use": {
+        "type": "terminal",
+        "prompt": "Call the lift to Level 3",
+        "kicker": "The Warlord's Bunker",
+        "title": "The lift to Level 3",
+        "text": "THE ADMIRALTY. AUTHORISED PERSONNEL ONLY. Three slots: COMMAND, MEDICAL, LOYALTY.",
+        "options": [
+         {
+          "label": "Swipe the Chief Administrator's card (COMMAND)",
+          "when": "key_yellow",
+          "close": true,
+          "effects": [
+           {
+            "type": "end",
+            "title": "Down to Level 3",
+            "text": "The lift takes you down towards the Admiralty. (Level 3 is not built yet: the expedition ends here, alive.)"
+           }
+          ]
+         },
+         {
+          "label": "Swipe the chief surgeon's card (MEDICAL)",
+          "when": "key_blue",
+          "close": true,
+          "effects": [
+           {
+            "type": "end",
+            "title": "Down to Level 3",
+            "text": "The lift takes you down towards the Admiralty. (Level 3 is not built yet: the expedition ends here, alive.)"
+           }
+          ]
+         },
+         {
+          "label": "Swipe the loyalty card (LOYALTY)",
+          "when": "key_green",
+          "close": true,
+          "effects": [
+           {
+            "type": "end",
+            "title": "Down to Level 3",
+            "text": "The lift takes you down towards the Admiralty. (Level 3 is not built yet: the expedition ends here, alive.)"
+           }
+          ]
+         },
+         {
+          "label": "Look at the slots",
+          "result": "Any one of the three cards will call it."
+         }
+        ]
+       },
+       "tag": "lift_panel"
+      }
+     ],
+     "purpose": "lift_lobby",
+     "lifts": {
+      "count": 3,
+      "lock": {
+       "flag": "stand_down",
+       "need": "the stand-down order: its code read into the communications console"
+      }
+     }
+    },
+    {
+     "id": "atrium",
+     "name": "Head Admin",
+     "style": "lab",
+     "size": [
+      [
+       7,
+       8
+      ],
+      [
+       6,
+       7
+      ]
+     ],
+     "things": [
+      {
+       "actor": "mourner",
+       "patrol": "room"
+      },
+      {
+       "item": "crystal"
+      }
+     ],
+     "purpose": "archive",
+     "height": 2,
+     "door_above": false
+    },
+    {
+     "id": "theatre",
+     "name": "Conditioning Theatre",
+     "style": "lab",
+     "size": [
+      [
+       6,
+       8
+      ],
+      [
+       5,
+       6
+      ]
+     ],
+     "things": [
+      {
+       "actor": "heavy"
+      }
+     ],
+     "purpose": "theatre"
+    },
+    {
+     "id": "specimens",
+     "name": "Specimen Hall",
+     "style": "lab",
+     "size": [
+      [
+       6,
+       7
+      ],
+      [
+       5,
+       6
+      ]
+     ],
+     "things": [
+      {
+       "actor": "fouler"
+      },
+      {
+       "actor": "roach",
+       "count": 2
+      },
+      {
+       "item": "statuette"
+      }
+     ],
+     "purpose": "lab"
+    }
+   ],
+   "wings": [
+    {
+     "id": "infirmary",
+     "name": "Infirmary",
+     "after": "lobby",
+     "side": "any",
+     "rooms": [
+      {
+       "id": "ward",
+       "name": "Ward",
+       "style": "lab",
+       "size": [
+        [
+         5,
+         6
+        ],
+        [
+         4,
+         5
+        ]
+       ],
+       "things": [
+        {
+         "actor": "eggbot",
+         "off_duty": true
+        }
+       ],
+       "purpose": "ward"
+      },
+      {
+       "id": "pharmacy",
+       "name": "Pharmacy",
+       "style": "storage",
+       "size": [
+        3,
+        3
+       ],
+       "things": [
+        {
+         "item": "health",
+         "count": 2
+        }
+       ],
+       "door_to": "ward",
+       "purpose": "pharmacy"
+      },
+      {
+       "id": "surgery",
+       "name": "Operating Theatre",
+       "style": "lab",
+       "size": [
+        [
+         4,
+         5
+        ],
+        [
+         4,
+         5
+        ]
+       ],
+       "purpose": "operating_theatre"
+      },
+      {
+       "id": "morgue",
+       "name": "Morgue",
+       "style": "storage",
+       "size": [
+        [
+         4,
+         5
+        ],
+        [
+         4,
+         5
+        ]
+       ],
+       "things": [
+        {
+         "prop": "an_body",
+         "blocks": false,
+         "use": {
+          "type": "terminal",
+          "prompt": "Search the chief surgeon",
+          "kicker": "The Warlord's Bunker",
+          "title": "The chief surgeon",
+          "text": "A skeleton in a surgeon's gown over a Marshal's uniform, on the last slab in the row. A key card on a lanyard round the neck bones.",
+          "options": [
+           {
+            "label": "Take the lanyard",
+            "once": true,
+            "close": true,
+            "effects": [
+             {
+              "type": "drop",
+              "items": [
+               {
+                "item": "keycard",
+                "color": "blue"
+               }
+              ]
+             },
+             {
+              "type": "message",
+              "text": "The chief surgeon's key card. The MEDICAL slot.",
+              "kind": "good"
+             }
+            ]
+           }
+          ]
+         },
+         "tag": "surgeon"
+        },
+        {
+         "actor": "mourner"
+        }
+       ],
+       "purpose": "morgue"
+      }
+     ]
+    },
+    {
+     "id": "admin",
+     "name": "Head Admin's Offices",
+     "after": "atrium",
+     "side": "n",
+     "rooms": [
+      {
+       "id": "chief",
+       "name": "Chief Administrator's Office",
+       "style": "bunker_ops",
+       "size": [
+        [
+         4,
+         5
+        ],
+        [
+         3,
+         4
+        ]
+       ],
+       "things": [
+        {
+         "prop": "an_floorsafe",
+         "blocks": true,
+         "use": {
+          "type": "terminal",
+          "prompt": "Open the safe",
+          "kicker": "The Warlord's Bunker",
+          "title": "The Chief Administrator's safe",
+          "text": "A floor safe, the dial worn smooth at three numbers.",
+          "options": [
+           {
+            "label": "Dial 19-04-77",
+            "when": "admin_code",
+            "once": true,
+            "close": true,
+            "effects": [
+             {
+              "type": "drop",
+              "items": [
+               {
+                "item": "keycard",
+                "color": "yellow"
+               },
+               "chips"
+              ]
+             },
+             {
+              "type": "message",
+              "text": "Inside: the Chief Administrator's key card, and his pay.",
+              "kind": "good"
+             }
+            ]
+           },
+           {
+            "label": "Try the dial",
+            "unless": "admin_code",
+            "result": "It does not open to guesses."
+           }
+          ]
+         },
+         "tag": "safe"
+        }
+       ],
+       "purpose": "office"
+      },
+      {
+       "id": "archive",
+       "name": "Archive",
+       "style": "storage",
+       "size": [
+        [
+         3,
+         4
+        ],
+        [
+         3,
+         4
+        ]
+       ],
+       "things": [
+        {
+         "prop": "hs_cabinet",
+         "blocks": true,
+         "use": {
+          "type": "terminal",
+          "prompt": "Search the records",
+          "kicker": "The Warlord's Bunker",
+          "title": "Personnel records, Head Admin",
+          "text": "Drawer after drawer of loyalty assessments. One file is thicker than the rest: the Chief Administrator's own, with a safe combination clipped inside the cover, as a precaution.",
+          "options": [
+           {
+            "label": "Note the safe combination: 19-04-77",
+            "once": true,
+            "close": true,
+            "effects": [
+             {
+              "type": "flag",
+              "name": "admin_code"
+             },
+             {
+              "type": "message",
+              "text": "The Chief Administrator's safe: 19-04-77.",
+              "kind": "info"
+             }
+            ]
+           }
+          ]
+         },
+         "tag": "records"
+        }
+       ],
+       "door_to": "chief",
+       "purpose": "archive"
+      },
+      {
+       "id": "admin_1",
+       "name": "Administrator's Office",
+       "style": "bunker_ops",
+       "size": [
+        [
+         3,
+         4
+        ],
+        3
+       ],
+       "things": [
+        {
+         "actor": "monoid",
+         "off_duty": true
+        }
+       ],
+       "purpose": "office"
+      },
+      {
+       "id": "admin_2",
+       "name": "Administrator's Office",
+       "style": "bunker_ops",
+       "size": [
+        [
+         3,
+         4
+        ],
+        3
+       ],
+       "chance": 0.6,
+       "purpose": "office"
+      }
+     ]
+    },
+    {
+     "id": "conditioning",
+     "name": "Conditioning Wing",
+     "after": "atrium",
+     "side": "s",
+     "rooms": [
+      {
+       "id": "cell_1",
+       "name": "Induction Cell",
+       "style": "storage",
+       "size": [
+        2,
+        3
+       ],
+       "things": [
+        {
+         "actor": "mourner"
+        }
+       ],
+       "purpose": "cell"
+      },
+      {
+       "id": "cell_2",
+       "name": "Induction Cell",
+       "style": "storage",
+       "size": [
+        2,
+        3
+       ],
+       "next_to": "cell_1",
+       "purpose": "cell"
+      },
+      {
+       "id": "interview",
+       "name": "Interview Room",
+       "style": "bunker_ops",
+       "size": [
+        [
+         3,
+         4
+        ],
+        [
+         3,
+         4
+        ]
+       ],
+       "things": [
+        {
+         "prop": "terminal_desk",
+         "blocks": true,
+         "use": {
+          "type": "terminal",
+          "prompt": "Take the loyalty test",
+          "kicker": "The Warlord's Bunker",
+          "title": "LOYALTY ASSESSMENT",
+          "text": "The conditioning programme's test still runs. A pleasant voice: answer three questions.",
+          "options": [
+           {
+            "label": "Q1: Whom do you serve? (the Marshal)",
+            "unless": "loyal_1",
+            "once": true,
+            "effects": [
+             {
+              "type": "flag",
+              "name": "loyal_1"
+             },
+             {
+              "type": "message",
+              "text": "CORRECT. Question two.",
+              "kind": "info"
+             }
+            ]
+           },
+           {
+            "label": "Q2: What is doubt? (a wound the Marshal heals)",
+            "when": "loyal_1",
+            "unless": "loyal_2",
+            "once": true,
+            "effects": [
+             {
+              "type": "flag",
+              "name": "loyal_2"
+             },
+             {
+              "type": "message",
+              "text": "CORRECT. Question three.",
+              "kind": "info"
+             }
+            ]
+           },
+           {
+            "label": "Q3: When does the war end? (when the Marshal says)",
+            "when": "loyal_2",
+            "once": true,
+            "close": true,
+            "effects": [
+             {
+              "type": "drop",
+              "items": [
+               {
+                "item": "keycard",
+                "color": "green"
+               }
+              ]
+             },
+             {
+              "type": "message",
+              "text": "YOU ARE LOYAL. Your loyalty card is issued.",
+              "kind": "good"
+             }
+            ]
+           },
+           {
+            "label": "Answer honestly",
+            "unless": "loyal_2",
+            "close": true,
+            "effects": [
+             {
+              "type": "message",
+              "text": "INCORRECT. Please report to Conditioning.",
+              "kind": "warn"
+             },
+             {
+              "type": "alarm",
+              "radius": 24
+             }
+            ]
+           }
+          ]
+         },
+         "tag": "loyalty"
+        }
+       ],
+       "purpose": "interview_room"
+      },
+      {
+       "id": "neuro",
+       "name": "Neurology",
+       "style": "lab",
+       "size": [
+        [
+         4,
+         5
+        ],
+        [
+         4,
+         5
+        ]
+       ],
+       "things": [
+        {
+         "item": "circuit"
+        }
+       ],
+       "purpose": "lab"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "things": [],
+ "objectives": [
+  {
+   "text": "Get the lift bank out of lockdown.",
+   "done": "stand_down"
+  },
+  {
+   "text": "Level 2: find a card that calls the lift to Level 3.",
+   "done": [
+    "key_yellow",
+    "key_blue",
+    "key_green"
+   ]
+  }
+ ],
+ "triggers": []
+}

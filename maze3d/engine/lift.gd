@@ -10,6 +10,8 @@ extends AnimatableBody3D
 ## the level: ridden past its last stop that way (or, with one stop, at all), it sinks (or rises) out of sight and the
 ## travel effect carries the expedition to that level, arriving at its way in "arrive" (SPEC.md 5.19). A player who
 ## arrives standing on a lift has to step off before it takes them anywhere.
+## "lock": {"flag": "stand_down", "need": "the stand-down order"} holds it where it is (a list of flags: any one opens
+## it): it neither takes a rider nor comes when called until the flag is set, and says what it needs once a step-on.
 
 var level: Level
 var stops: Array = []             # heights
@@ -23,6 +25,9 @@ var _wait := 0.0
 var _armed := false               # the rider has to step off before it will take them (again, or at all on arriving)
 var _travel: Dictionary = {}      # a lift out of the level: where it goes past its last stop
 var _leaving := 0.0               # it is carrying the rider out of the level: seconds left (-1 once it has gone)
+var _lock: Variant = null         # flag(s), any one of which lets it run; null once one is set
+var _need := ""
+var _told := false                # it has said what it needs to the rider standing on it now
 var _light: OmniLight3D
 
 
@@ -35,6 +40,10 @@ func setup(lv: Level, e: Dictionary, p: Vector2i) -> void:
 	at = maxi(0, st.find(int(e.get("home", st[0]))))
 	speed = e.get("speed", 3.2)
 	_travel = e.get("travel", {})
+	var lk: Dictionary = e.get("lock", {})
+	if not lk.is_empty():
+		_lock = lk.get("flag")
+		_need = str(lk.get("need", ""))
 	_half = lv.C / 2 - 0.12
 	collision_layer = 1
 	collision_mask = 0
@@ -127,6 +136,8 @@ func _physics_process(dt: float) -> void:
 	var rel: Vector3 = pl.global_position - global_position
 	var inside: bool = absf(rel.x) < _half and absf(rel.z) < _half
 	var on: bool = inside and rel.y > -0.4 and rel.y < 1.6
+	if _locked(on):
+		return
 	if going >= 0:
 		var ty: float = stops[going]
 		if ty < global_position.y and inside and rel.y < -0.4:
@@ -156,6 +167,28 @@ func _physics_process(dt: float) -> void:
 					return
 				dir = -dir
 			_go(at + dir)
+
+
+## Is it held by its lock now (none of its flags set yet)?
+func is_locked() -> bool:
+	return _lock != null and not Game.has_flag(_lock)
+
+
+## Held by its lock: true while none of its flags is set (it then says so, once, to whoever steps on). A lift that
+## is moving when its lock is put on does not stop half way: a lock is only ever lifted in play.
+func _locked(on: bool) -> bool:
+	if _lock == null or going >= 0:
+		return false
+	if Game.has_flag(_lock):
+		_lock = null
+		return false
+	if not on:
+		_told = false
+	elif not _told:
+		_told = true
+		LM.sound("denied", global_position)
+		Game.say("Locked. It needs %s." % (_need if _need != "" else "authorisation"), "warn")
+	return true
 
 
 ## Past its last stop going that way (`d`: -1 down, 1 up) it leaves the level, if it is a lift out of the level that

@@ -1,6 +1,6 @@
 extends SelfTestPart
-## Doors: every door closes an opening wall to wall; pits drop you, lifts carry you, and every door opens and can
-## be stood in.
+## Doors: every door closes an opening wall to wall; pits drop you, lifts carry you (a lift held by its lock stays
+## put), and every door opens and can be stood in.
 
 
 func run() -> void:
@@ -20,6 +20,9 @@ func run() -> void:
 			pl.velocity = Vector3.ZERO
 			pl.global_position = n.global_position + Vector3(0, 0.1, 0)
 			await frames(420)
+			if n.is_locked():
+				say(n.at == was, "lift at %s is held by its lock: it stays put with the player on it" % level.cell_of(n.global_position))
+				continue
 			say(n.at != was and absf(pl.global_position.y - n.global_position.y) < 0.6, "lift at %s carries the player (stop %d to %d, player y=%.1f, lift y=%.1f)" % [level.cell_of(n.global_position), was, n.at, pl.global_position.y, n.global_position.y])
 	for dp in level.doors:
 		var d: Door = level.doors[dp]

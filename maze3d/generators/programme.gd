@@ -11,10 +11,13 @@ extends RefCounted
 ## the start, the locks, the cards and the rooms' things in; ProgrammeFurnishing furnishes each room for its purpose;
 ## ProgrammeCheck proves it can be finished. A seed whose
 ## level cannot be finished is tried again as the next (seed + 7919), as the rooms generator does, so the same seed
-## still always gives the same level.
+## still always gives the same level. On two floors (ProgrammeFloors) the lower floor's plan is drawn again, up to
+## LOWER_TRIES times, for an upper floor whose tall rooms it gets in the way of, before the whole seed is given up.
 class_name ProgrammeGen
 
 const TRIES := 20
+const LOWER_TRIES := 8
+const LOWER_STEP := 104729
 
 
 ## The level, laid out: the level file's own keys (name, kit, style, intro, objectives, triggers ...) kept, its
@@ -54,21 +57,31 @@ static func attempt(level: Dictionary, seed_value: int) -> Dictionary:
 	var prog: Dictionary = level.get("programme", {})
 	var below: Dictionary = prog.get("below", {})
 	var top := ProgrammePlan.new(prog, seed_value)
-	var bot: ProgrammePlan = ProgrammePlan.new(below, seed_value + 1) if not below.is_empty() else null
-	var bad: Array = top.problems + (bot.problems if bot != null else [])
-	if not bad.is_empty():
-		return {"problems": bad, "fatal": true}
-	var lay := ProgrammeLayout.new(top)
-	var lay2: ProgrammeLayout = ProgrammeLayout.new(bot) if bot != null else null
-	var fl := ProgrammeFloors.new(lay, lay2, prog)
+	if not top.problems.is_empty():
+		return {"problems": top.problems, "fatal": true}
+	var bot: ProgrammePlan = null
+	var lay: ProgrammeLayout
+	var lay2: ProgrammeLayout = null
+	var fl: ProgrammeFloors
+	for j in (LOWER_TRIES if not below.is_empty() else 1):
+		if not below.is_empty():
+			bot = ProgrammePlan.new(below, seed_value + 1 + j * LOWER_STEP)
+			if not bot.problems.is_empty():
+				return {"problems": bot.problems, "fatal": true}
+			lay2 = ProgrammeLayout.new(bot)
+		lay = ProgrammeLayout.new(top)                 # afresh: the floors move and carve the layouts they line up
+		fl = ProgrammeFloors.new(lay, lay2, prog)
+		if fl.problems.is_empty():
+			break
 	if not fl.problems.is_empty():
 		return {"problems": fl.problems}
 	var sunk := {}
 	for id in fl.sunken:
 		sunk[id] = -1
 	var fill := ProgrammeFill.new(lay, prog, {"reserve": fl.reserve_up, "storeys": sunk})
-	var fill2: ProgrammeFill = ProgrammeFill.new(lay2, below, {"start": false, "storey": -1, "reserve": fl.reserve_lo}) if bot != null else null
-	bad = fill.problems + (fill2.problems if fill2 != null else [])
+	var fill2: ProgrammeFill = ProgrammeFill.new(lay2, below, {"start": false, "storey": -1, "reserve": fl.reserve_lo,
+		"legend": fill.legend}) if bot != null else null
+	var bad: Array = fill.problems + (fill2.problems if fill2 != null else [])
 	if not bad.is_empty():
 		return {"problems": bad, "fatal": true}
 	var out := ProgrammeGen._assemble(level, seed_value, lay, fill, fl)
@@ -76,7 +89,7 @@ static func attempt(level: Dictionary, seed_value: int) -> Dictionary:
 		ProgrammeGen._below(out, level, seed_value, lay, lay2, fill, fill2, fl)
 	var proof := ProgrammeCheck.solve(out)
 	if not proof["ok"]:
-		return {"problems": ["it cannot be finished (rooms not reached: %s; cards behind their own lock: %s)"
+		return {"problems": ["it cannot be finished (rooms not reached: %s; keys behind their own lock: %s)"
 			% [", ".join(proof["missed"]), ", ".join(proof["behind"].keys())]]}
 	return out
 

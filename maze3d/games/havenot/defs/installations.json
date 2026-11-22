@@ -8,6 +8,16 @@
     {"name": "The front gate", "level": "descent_1"},
     {"name": "The service shaft", "level": "descent_1", "arrive": "shaft"}
    ]
+  },
+  "warlord": {
+   "name": "The Warlord's Bunker (Levels 1 and 2)",
+   "text": "A blast door in a hillside: the warlord's last army, sealed in. A new bunker in every world. Levels 1 and 2 so far, in borrowed furniture.",
+   "levels": ["warlord_1"],
+   "entrances": [
+    {"name": "The blast door", "level": "warlord_1"},
+    {"name": "The vehicle ramp", "level": "warlord_1", "arrive": "ramp"},
+    {"name": "The ventilation shaft", "level": "warlord_1", "arrive": "vent"}
+   ]
   }
  }
 }

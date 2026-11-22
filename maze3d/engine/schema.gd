@@ -22,19 +22,19 @@ const SKILL := ["name", "text", "max", "gives"]
 const ORIGIN := ["name", "text", "stats", "mutations", "rerolls"]
 const MUTATION := ["name", "text", "stats", "gives"]
 const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor", "lamp"]     # what the engine reads (CharacterSheet)
-const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "below"]   # a level's written programme (SPEC.md 6.3)
-const PROG_LIFTS := ["count", "travel", "start"]
+const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "bank_at", "below"]   # a level's written programme (SPEC.md 6.3)
+const PROG_LIFTS := ["count", "travel", "start", "lock"]
 const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows"]   # defs "purposes" (furnishing a room for its use)
 const PROG_SPINE := ["gap"]
-const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts"]
+const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts", "door_above"]
 const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms"]
-const PROG_LOCK := ["room", "wing", "color", "card", "door"]
+const PROG_LOCK := ["room", "wing", "color", "card", "door", "flag", "need"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
 const THING := ["at", "tag", "offset", "face", "level", "restock"]
 const THING_KINDS := {
 	"start": ["start"],
-	"lift": ["lift", "home", "speed", "color", "travel"],
+	"lift": ["lift", "home", "speed", "color", "travel", "lock"],
 	"target": ["target"],
 	"station": ["station", "actor", "shut", "wake", "blocks"],
 	"actor": ["actor", "still", "alert", "hp_mul", "on_death", "on_anger", "lounge", "perch", "off_duty", "talk", "provoke",

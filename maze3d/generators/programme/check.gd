@@ -4,10 +4,14 @@ extends RefCounted
 ## colour's card is held; go on until nothing new is reached. It walks every storey: "map" is storey 0, each of
 ## "floors" its own; a balcony ("decks", level n over its floor) is floor n storeys up; a ramp that rises to a storey
 ## (from 2 to 4 m) joins the cell it rises toward on the storey above; a lift joins its stops. It works on any level
-## dictionary, so the self-test can ask it of a level it did not make. What it says:
-##   ok        there is a start, every room's floor was reached, and no card lies behind its own lock
-##   reached   [cell, storey] -> true;  cards: colours held, in the order found;  missed: room names never reached
-##   behind    colour -> true for a card that lies behind its own lock (found only with itself)
+## dictionary, so the self-test can ask it of a level it did not make.
+## Flags are keys too. A thing reached that sets a flag (its "use" runs a "flag" effect, at once or as an option open
+## to anyone: no hack, skill, load or price, and its "when", if any, already held) gives that flag, and one that drops a
+## key card gives the card; a card gives its "key_<colour>" flag as well. A door with a "flag" in its legend entry, and
+## a lift with a "lock", open on any one of theirs. What it says:
+##   ok        there is a start, every room's floor was reached, and no card or flag lies behind its own lock
+##   reached   [cell, storey] -> true;  cards: colours held, in the order found;  flags: flags held, in that order
+##   missed    room names never reached;  behind: colour or flag -> true for one found only with itself
 class_name ProgrammeCheck
 
 const DIRS := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
@@ -16,40 +20,102 @@ const DIR_OF := {"n": Vector2i(0, -1), "s": Vector2i(0, 1), "e": Vector2i(1, 0),
 
 static func solve(level: Dictionary) -> Dictionary:
 	var w := ProgrammeCheck.world(level)
-	var cards := {}
+	var givers := ProgrammeCheck.givers(level)
 	var start: Array = []
 	for t in level.get("things", []):
-		var at: Array = t.get("at", [])
-		if at.size() < 2:
-			continue
-		var place := [Vector2i(int(at[0]), int(at[1])), int(t.get("level", 0))]
-		if t.get("start", null) is bool and t["start"]:
-			start = place
-		if t.get("item", "") == "keycard":
-			cards[place] = str(t.get("color", "red"))
+		if t.get("start", null) is bool and t["start"] and t.get("at", []).size() >= 2:
+			start = [Vector2i(int(t["at"][0]), int(t["at"][1])), int(t.get("level", 0))]
 	var held: Array = []
 	var reached := {}
 	while not start.is_empty():
-		var before := reached.size()
+		var before := held.size()
 		reached = ProgrammeCheck._flood(w, start, held)
-		var new_cards: Array = []
-		for c in cards:
-			if reached.has(c) and not held.has(cards[c]) and not new_cards.has(cards[c]):
-				new_cards.append(cards[c])
-		if new_cards.is_empty() and reached.size() == before:
+		for gv in givers:
+			if reached.has(gv["at"]) and ProgrammeCheck._may(gv["when"], held):
+				for k in gv["gives"]:
+					if not held.has(k):
+						held.append(k)
+		if held.size() == before:
 			break
-		held += new_cards
 	var behind := {}
-	for c in cards:                                    # a card found only once its own lock was open
-		if not ProgrammeCheck._flood(w, start, held.filter(func(k: String) -> bool: return k != cards[c])).has(c):
-			behind[cards[c]] = true
+	for gv in givers:                                  # a key found only once its own lock was open
+		for k in gv["gives"]:
+			if held.has(k) and not ProgrammeCheck._flood(w, start, held.filter(func(h: String) -> bool: return h != k)).has(gv["at"]):
+				behind[k] = true
 	var missed: Array = []
 	for fr in w["rooms"]:
 		var rc: Array = fr[0].get("rect", [])
 		if rc.size() == 4 and not ProgrammeCheck._any_reached(reached, rc, int(fr[1])):
 			missed.append(str(fr[0].get("name", "")))
-	return {"ok": not start.is_empty() and missed.is_empty() and behind.is_empty(), "reached": reached, "cards": held,
-		"missed": missed, "behind": behind}
+	return {"ok": not start.is_empty() and missed.is_empty() and behind.is_empty(), "reached": reached,
+		"cards": held.filter(func(k: String) -> bool: return k.begins_with("card:")).map(func(k: String) -> String: return k.substr(5)),
+		"flags": held.filter(func(k: String) -> bool: return not k.begins_with("card:")),
+		"missed": missed, "behind": ProgrammeCheck._named(behind)}
+
+
+## What gives a key, where: [{"at": [cell, storey], "gives": ["card:red", "key_red", flag...], "when": flags or null}].
+## A key card lying in the level; a thing whose use sets flags or drops cards, at once or by an option anyone can
+## take (an option's "when" is what it waits for).
+static func givers(level: Dictionary) -> Array:
+	var out: Array = []
+	for t in level.get("things", []):
+		var at: Array = t.get("at", [])
+		if at.size() < 2:
+			continue
+		var place := [Vector2i(int(at[0]), int(at[1])), int(t.get("level", 0))]
+		if t.get("item", "") == "keycard":
+			out.append({"at": place, "gives": ProgrammeCheck._card(t), "when": null})
+		var use: Dictionary = t.get("use", {}) if t.get("use") is Dictionary else {}
+		var runs: Array = [[use.get("effects", []), use.get("when")]]
+		for o in use.get("options", []):
+			if not (o.get("hack", false) or o.has("skill") or o.has("carrying") or o.has("cost")):
+				runs.append([o.get("effects", []), o.get("when")])
+		for rn in runs:
+			var gives := ProgrammeCheck._gives(rn[0])
+			if not gives.is_empty():
+				out.append({"at": place, "gives": gives, "when": rn[1]})
+	return out
+
+
+static func _card(t: Dictionary) -> Array:
+	var c := str(t.get("color", "red"))
+	return ["card:" + c, "key_" + c]
+
+
+## The keys a list of effects gives: the flags it sets, the cards it drops.
+static func _gives(effects: Variant) -> Array:
+	var out: Array = []
+	if not effects is Array:
+		return out
+	for ef in effects:
+		if not ef is Dictionary:
+			continue
+		if ef.get("type", "") == "flag" and ef.has("name"):
+			out.append(str(ef["name"]))
+		elif ef.get("type", "") == "key":
+			out += ProgrammeCheck._card({"color": ef.get("color", "red")})
+		elif ef.get("type", "") == "drop":
+			for it in ef.get("items", []):
+				if it is Dictionary and it.get("item", "") == "keycard":
+					out += ProgrammeCheck._card(it)
+	return out
+
+
+## Is what waits for these flags open: none, or any one of them held (as Game.has_flag reads a list).
+static func _may(need: Variant, held: Array) -> bool:
+	if need == null:
+		return true
+	if need is Array:
+		return need.is_empty() or need.any(func(f: Variant) -> bool: return held.has(str(f)))
+	return held.has(str(need))
+
+
+## A key as the level calls it: a card by its colour, a flag by its name.
+static func _named(keys: Dictionary) -> Dictionary:
+	var out := {}
+	for k in keys:
+		out[k.substr(5) if k.begins_with("card:") else k] = true
+	return out
 
 
 ## The level as the proof walks it: per storey its map's rows, the balconies on it, the legend; the links between
@@ -77,13 +143,14 @@ static func world(level: Dictionary) -> Dictionary:
 		for rp in d.get("ramps", []):
 			if float(rp.get("to", 2)) >= 4.0:              # its top is a storey up: it joins the cell it rises toward there
 				var c := Vector2i(int(rp["at"][0]), int(rp["at"][1]))
-				links.append([[c, f], [c + DIR_OF.get(str(rp.get("dir", "n")), Vector2i.ZERO), f + 1]])
+				links.append([[c, f], [c + DIR_OF.get(str(rp.get("dir", "n")), Vector2i.ZERO), f + 1], null])
 	for t in level.get("things", []):
 		if t.has("lift") and t.has("at"):
 			var stops: Array = t["lift"]
 			var c := Vector2i(int(t["at"][0]), int(t["at"][1]))
+			var lock: Variant = t["lock"].get("flag") if t.get("lock") is Dictionary else null
 			for i in range(1, stops.size()):
-				links.append([[c, int(stops[i - 1])], [c, int(stops[i])]])
+				links.append([[c, int(stops[i - 1])], [c, int(stops[i])], lock])
 	return {"maps": maps, "decks": decks, "links": links, "rooms": rooms, "legend": legend}
 
 
@@ -95,7 +162,7 @@ static func _any_reached(reached: Dictionary, rc: Array, f: int) -> bool:
 	return false
 
 
-## Can this place be stood on with these cards: a floor or open door of its storey's map, or a balcony.
+## Can this place be stood on with these keys: a floor or open door of its storey's map, or a balcony.
 static func _open(w: Dictionary, p: Array, held: Array) -> bool:
 	if w["decks"].has(p):
 		return true
@@ -104,15 +171,19 @@ static func _open(w: Dictionary, p: Array, held: Array) -> bool:
 	if c.y < 0 or c.y >= rows.size() or c.x < 0 or c.x >= str(rows[c.y]).length():
 		return false
 	var e: Dictionary = w["legend"].get(str(rows[c.y])[c.x], {})
-	return not e.get("solid", false) and not (e.has("lock") and not held.has(str(e["lock"])))
+	if e.get("solid", false) or (e.has("lock") and not held.has("card:" + str(e["lock"]))):
+		return false
+	return not e.has("flag") or ProgrammeCheck._may(e["flag"], held)
 
 
-## Every place reachable from the start with these cards.
+## Every place reachable from the start with these keys.
 static func _flood(w: Dictionary, start: Array, held: Array) -> Dictionary:
 	var seen := {start: true}
 	var todo: Array = [start]
 	var by_place := {}
 	for lk in w["links"]:
+		if not ProgrammeCheck._may(lk[2], held):
+			continue                                     # a lift still locked
 		for k in 2:
 			var a: Array = lk[k]
 			if not by_place.has(a):

@@ -7,8 +7,13 @@ extends RefCounted
 ##   storey -1, the upper floor's doors into it open onto a gallery (a balcony along that wall) with a ramp down;
 ##   a room of the lower floor with "height": 2 rises into the upper floor; where an upper corridor or room lies beside
 ##   it across its wall, a door opens there onto a gallery with a ramp down, the same way.
+##   one with "door_above": false has no door from the floor above (it would be a way down round the lifts): its
+##   gallery runs along one wall of its own, a mezzanine reached by its ramp (a wall without a door if it can).
 ## A tall room may not cross a room or corridor of the other floor (that seed is tried again). The bank's lifts stand
-## along a wall of it that has no door on either floor, in the same cells on both. Nothing here draws a random number.
+## along a wall of it that has no door on either floor, in the same cells on both. "bank_at": [x, y] puts the bank's
+## north-west corner at that cell of the map, so that every level of an installation that says the same has its bank
+## in the same place, and the bank lines up from level to level as well as from floor to floor. Nothing here draws a
+## random number.
 class_name ProgrammeFloors
 
 const DIRS := [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]
@@ -35,9 +40,12 @@ func _init(u: ProgrammeLayout, l: ProgrammeLayout, prog: Dictionary) -> void:
 			problems.append("the bank '%s' must be a room of both floors, the same size on both" % bank)
 			return
 		_line_up(bank)
+	if prog.has("bank_at") and up.rects.has(bank):
+		_place_bank(bank, Vector2i(int(prog["bank_at"][0]), int(prog["bank_at"][1])))
+	if lo != null and problems.is_empty():
 		_sink()
 		_rise()
-	if bank != "" and up.rects.has(bank):
+	if bank != "" and up.rects.has(bank) and problems.is_empty():
 		_bank(bank)
 
 
@@ -48,6 +56,19 @@ func _line_up(bank: String) -> void:
 	var size := Vector2i(maxi(up.W, d.x + lo.W), maxi(up.H, d.y + lo.H)) - lo_min
 	up.shift(-lo_min, size.x, size.y)
 	lo.shift(d - lo_min, size.x, size.y)
+
+
+## Both floors moved, the map grown with rock to the west and north, so the bank's corner is at `at`. A layout whose
+## bank already lies further east or south than that cannot be moved back: that seed is tried again.
+func _place_bank(bank: String, at: Vector2i) -> void:
+	var d: Vector2i = at - up.rects[bank].position
+	if d.x < 0 or d.y < 0:
+		problems.append("the bank '%s' lies past %s" % [bank, str(at)])
+		return
+	var size := Vector2i(up.W, up.H) + d
+	up.shift(d, size.x, size.y)
+	if lo != null:
+		lo.shift(d, size.x, size.y)
 
 
 ## Upper halls that go down a storey: carved out of the lower floor (which must be rock there, round them too) and
@@ -79,11 +100,14 @@ func _rise() -> void:
 		if not _rock(up, r.grow(1)):
 			problems.append("the tall room '%s' would rise into the floor above" % id)
 			return
+		if lo.plan.rooms[id].get("door_above", true) == false:
+			_mezzanine(r, id)
+			continue
 		var door := _door_beside(r)
 		if door.x >= 0:
 			up.g[door.y][door.x] = "+"
 			up.doors.append({"at": door, "rooms": [], "wing": "", "gallery": id})
-			_galleries(r, [door], id)
+			_galleries(r, [door], id, _row_of(id))
 
 
 func _rock(l: ProgrammeLayout, r: Rect2i) -> bool:
@@ -105,6 +129,29 @@ func _door_beside(r: Rect2i) -> Vector2i:
 	return Vector2i(-1, -1)
 
 
+## A gallery along one wall of a lower room nobody comes into from above, with its ramp: a wall with none of the
+## room's own doors in it if one will take a ramp (going round from the north), else one with a door (the gallery
+## passes over the doorway, a storey up).
+func _mezzanine(r: Rect2i, id: String) -> void:
+	var mine: Array = lo.doors_of(id).map(func(dr: Dictionary) -> Vector2i: return dr["at"])
+	var order: Array = []
+	for pass_ in 2:
+		for s in 4:
+			var has_door: bool = _side_cells(r, s).any(func(w: Vector2i) -> bool: return mine.has(w))
+			if has_door == (pass_ == 1):
+				order.append(s)
+	for s in order:
+		var deck_cells := {}
+		for c in _inner(r, s):
+			deck_cells[c] = true
+		var walls := _side_cells(r, s)
+		if _ramp(r, s, walls[walls.size() / 2], deck_cells, _row_of(id)):
+			for c in deck_cells:
+				decks.append({"at": [c.x, c.y], "level": 1})
+			return
+	problems.append("no room for a ramp in '%s'" % id)
+
+
 ## The wall cells along one side of r (outside it), corners left out.
 func _side_cells(r: Rect2i, s: int) -> Array:
 	var out: Array = []
@@ -119,7 +166,7 @@ func _side_cells(r: Rect2i, s: int) -> Array:
 
 ## A gallery along each side of r that has one of these doors in it, at the upper floor's height, and a ramp down from
 ## its far end (the end away from the door), two cells rising a storey. A room needs one ramp at least.
-func _galleries(r: Rect2i, doors: Array, id: String) -> void:
+func _galleries(r: Rect2i, doors: Array, id: String, row := -1) -> void:
 	var made := 0
 	var deck_cells := {}
 	var sides: Array = []
@@ -133,7 +180,7 @@ func _galleries(r: Rect2i, doors: Array, id: String) -> void:
 	for c in deck_cells:
 		decks.append({"at": [c.x, c.y], "level": 1})
 	for sd in sides:
-		made += 1 if _ramp(r, sd[0], sd[1], deck_cells) else 0
+		made += 1 if _ramp(r, sd[0], sd[1], deck_cells, row) else 0
 	if made == 0:
 		problems.append("no room for a ramp in '%s'" % id)
 
@@ -143,20 +190,21 @@ func _inner(r: Rect2i, s: int) -> Array:
 	return _side_cells(r, s).map(func(w: Vector2i) -> Vector2i: return w - DIRS[s])
 
 
-## Two ramp cells rising from the floor to the gallery at the end of side s away from the door, off the gallery, with
-## plain floor at the foot: a ramp only joins the floor at its two ends, so two ramps foot to foot (in a narrow hall)
-## would leave the hall's floor cut off from both.
-func _ramp(r: Rect2i, s: int, door: Vector2i, deck_cells: Dictionary) -> bool:
-	var line := _inner(r, s)
-	var ends: Array = [line[0], line[line.size() - 1]]
-	ends.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.distance_squared_to(door) > b.distance_squared_to(door))
+## Two ramp cells rising from the floor to the gallery, off the gallery, as far from the door as they will go (the
+## far end first, along the wall), with plain floor at the foot: a ramp only joins the floor at its two ends, so two
+## ramps foot to foot (in a narrow hall) would leave the hall's floor cut off from both. Not across a doorway, and not
+## on `row`, the spine's row through a lower spine room: the way through is kept clear.
+func _ramp(r: Rect2i, s: int, door: Vector2i, deck_cells: Dictionary, row := -1) -> bool:
+	var lands := _inner(r, s)
+	lands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.distance_squared_to(door) > b.distance_squared_to(door))
 	var inward: Vector2i = -DIRS[s]
-	for land in ends:
+	for land in lands:
 		var top: Vector2i = land + inward
 		var foot: Vector2i = top + inward
 		var below: Vector2i = foot + inward
 		var cells: Array = [top, foot, below]
-		if not r.has_point(below) or cells.any(func(c: Vector2i) -> bool: return deck_cells.has(c) or _ramped.has(c)):
+		if not r.has_point(below) or cells.any(func(c: Vector2i) -> bool:
+				return deck_cells.has(c) or _ramped.has(c) or _by_door(c) or c.y == row):
 			continue
 		for c in cells:
 			_ramped[c] = true
@@ -166,6 +214,19 @@ func _ramp(r: Rect2i, s: int, door: Vector2i, deck_cells: Dictionary) -> bool:
 		reserve_lo += [foot, top, foot + inward]
 		reserve_up += [foot, top, foot + inward]
 		return true
+	return false
+
+
+## The spine's row through a lower spine room (its way through), else -1.
+func _row_of(id: String) -> int:
+	return lo.y0 if lo.plan.spine.has(id) else -1
+
+
+## Just inside a doorway of the lower floor: a ramp there would rise across the way in.
+func _by_door(c: Vector2i) -> bool:
+	for dr in lo.doors:
+		if (dr["at"] - c).length_squared() == 1:
+			return true
 	return false
 
 
@@ -191,16 +252,18 @@ func _bank(bank: String) -> void:
 	problems.append("the bank '%s' has a door in every wall: nowhere for its lifts" % bank)
 
 
-## The lifts as level things: stops on both floors (or one), and what the programme's bank says of travel and arriving.
+## The lifts as level things: stops on both floors (or one), and what the programme's bank says of travel, a lock and
+## arriving. They wait at the top: one waiting below would leave an open shaft upstairs, a way down round its lock.
 func lift_things(spec: Dictionary) -> Array:
 	var out: Array = []
 	var stops: Array = [-1, 0] if lo != null else [0]
 	for i in lifts.size():
 		var c: Vector2i = lifts[i]
-		var e := {"at": [c.x, c.y], "lift": stops, "home": stops[0]}
-		if spec.has("travel"):
-			e["travel"] = spec["travel"]
+		var e := {"at": [c.x, c.y], "lift": stops, "home": stops[-1]}
+		for k in ["travel", "lock"]:
+			if spec.has(k):
+				e[k] = spec[k]
 		out.append(e)
 		if i == lifts.size() / 2 and spec.has("start"):          # the way in for those who come up or down by lift
-			out.append({"start": spec["start"], "at": [c.x, c.y], "level": stops[0]})
+			out.append({"start": spec["start"], "at": [c.x, c.y], "level": stops[-1]})
 	return out

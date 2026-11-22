@@ -9,9 +9,13 @@ extends RefCounted
 ## On two floors (ProgrammeFloors) the lower floor's fill has no start of its own, its things say their storey
 ## ("level": -1), a hall sunk from the upper floor is filled as part of the upper but its things stand a storey down,
 ## and the lifts' and ramps' cells are kept free.
+## A lock with a "flag" in place of a colour shuts its doors until that flag is set (any one, for a list), saying what
+## it needs ("need"); it has no card: something in the level sets the flag, and the proof finds what. An actor whose
+## "patrol" is "room" walks a beat round the room it is put in.
 class_name ProgrammeFill
 
 const LOCK_LETTERS := {"red": "R", "blue": "B", "green": "G", "yellow": "Y", "purple": "P"}
+const FLAG_LETTERS := "123456789"            # a flag lock's door, the first not taken by the level's legend already
 
 var lay: ProgrammeLayout
 var plan: ProgrammePlan
@@ -23,12 +27,14 @@ var storeys: Dictionary = {}             # room id -> a storey of its own (a hal
 var _used: Dictionary = {}
 
 
-## opts: "start" (false: no start of its own), "storey", "storeys" (room -> storey), "reserve" (cells kept free).
+## opts: "start" (false: no start of its own), "storey", "storeys" (room -> storey), "reserve" (cells kept free),
+## "legend" (the legend so far: the other floor's, whose flag-lock letters this floor shares or steps round).
 func _init(l: ProgrammeLayout, prog: Dictionary, opts := {}) -> void:
 	lay = l
 	plan = l.plan
 	storey = int(opts.get("storey", 0))
 	storeys = opts.get("storeys", {})
+	legend = opts.get("legend", {}).duplicate()
 	for c in opts.get("reserve", []):
 		_used[c] = true
 	if opts.get("start", true):
@@ -49,12 +55,19 @@ func _wing_rooms() -> Array:
 	return out
 
 
-## A lock: the doors it closes take a lettered door of its colour; its card goes in the room it names.
+## A lock: the doors it closes take a lettered door of its colour; its card goes in the room it names. A flag lock's
+## doors open on its flag, and it has no card.
 func _lock(lk: Dictionary, prog: Dictionary) -> void:
 	var color := str(lk.get("color", "red"))
-	var letter: String = LOCK_LETTERS.get(color, "R")
 	var plain: String = LM.game.get("legend", {}).get("+", {}).get("door", "")       # the game's own door, by default
-	legend[letter] = {"door": str(lk.get("door", prog.get("lock_door", plain))), "lock": color}
+	var door := str(lk.get("door", prog.get("lock_door", plain)))
+	var letter: String = LOCK_LETTERS.get(color, "R")
+	if lk.has("flag"):
+		var entry := {"door": door, "flag": lk["flag"], "need": str(lk.get("need", ""))}
+		letter = _flag_letter(entry)
+		legend[letter] = entry
+	else:
+		legend[letter] = {"door": door, "lock": color}
 	var shut: Array = []
 	if lk.has("room"):
 		shut = lay.doors_of(str(lk["room"]))
@@ -65,6 +78,8 @@ func _lock(lk: Dictionary, prog: Dictionary) -> void:
 	for d in shut:
 		var at: Vector2i = d["at"]
 		lay.g[at.y][at.x] = letter
+	if lk.has("flag"):
+		return
 	var card_v: Variant = lk.get("card", "")
 	if card_v is Array:
 		var there: Array = card_v.filter(func(c: Variant) -> bool: return lay.rects.has(str(c)))
@@ -74,6 +89,18 @@ func _lock(lk: Dictionary, prog: Dictionary) -> void:
 		problems.append("the %s card's room '%s' is not in the programme" % [color, card])
 		return
 	_thing(card, {"item": "keycard", "color": color})
+
+
+## The legend letter for a flag lock's door: the one already standing for the same door, else the first free.
+func _flag_letter(entry: Dictionary) -> String:
+	for ch in FLAG_LETTERS:
+		if legend.get(ch) == entry:
+			return ch
+	for ch in FLAG_LETTERS:
+		if not legend.has(ch):
+			return ch
+	problems.append("more than %d flag locks" % FLAG_LETTERS.length())
+	return FLAG_LETTERS[0]
 
 
 ## One of a room's things (several with "count"), placed.
@@ -89,6 +116,8 @@ func _thing(room: String, t: Dictionary) -> void:
 			problems.append("no room left in '%s' for %s" % [room, JSON.stringify(t)])
 			return
 		e["at"] = [at.x, at.y]
+		if str(e.get("patrol", "")) == "room":
+			e["patrol"] = _beat(room)
 		var s := int(storeys.get(room, storey))
 		if s != 0:
 			e["level"] = s
@@ -105,6 +134,15 @@ func _spot(room: String, at: Variant) -> Vector2i:
 	if free.is_empty():
 		return Vector2i(-1, -1)
 	return free[plan.rng.randi() % free.size()]
+
+
+## A beat round a room: its corners, one cell in from the walls where it is wide enough (along the middle where not),
+## clockwise from the north-west.
+func _beat(room: String) -> Array:
+	var r: Rect2i = lay.rects[room]
+	var a := r.position + Vector2i(1 if r.size.x > 2 else 0, 1 if r.size.y > 2 else 0)
+	var b := r.end - Vector2i(2 if r.size.x > 2 else 1, 2 if r.size.y > 2 else 1)
+	return [[a.x, a.y], [b.x, a.y], [b.x, b.y], [a.x, b.y]]
 
 
 ## The storey a room's things stand on.
