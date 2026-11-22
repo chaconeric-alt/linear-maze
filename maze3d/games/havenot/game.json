@@ -51,7 +51,8 @@
   "levels/stack.json",
   "levels/depot.json",
   "levels/descent_1.json",
-  "levels/descent_2.json"
+  "levels/descent_2.json",
+  "levels/yard.json"
  ],
  "generators": [
   "rooms"
@@ -447,8 +448,13 @@
   "staffonly",
   "atrium",
   "depot",
-  "descent"
+  "descent",
+  "yard"
  ],
+ "factions": {
+  "robots": {"name": "Machines", "hostile": ["player"]},
+  "monsters": {"name": "Creatures", "hostile": ["player"]}
+ },
  "player": {
   "hp": 100,
   "speed": 8.5,

@@ -12,7 +12,7 @@ const ACTOR := ["name", "model", "kit", "scale", "robot", "hp", "armor", "takes"
 	"height", "center", "eye", "fly", "mount", "still", "sight", "hearing", "wake_sight", "behavior", "keep", "attacks",
 	"flee_below", "flee_text", "barks", "bark_color", "drops", "explode", "sounds", "blood", "clips", "walk_rate",
 	"footfall", "dormant_clip", "startle_time", "startle_text", "lounge", "climb", "aim", "screen", "gait", "bob", "swim",
-	"own_materials", "model_yaw", "model_y", "jelly", "touch", "equalizer", "dance", "trail", "talk"]
+	"own_materials", "model_yaw", "model_y", "jelly", "touch", "equalizer", "dance", "trail", "talk", "faction"]
 const ITEM := ["name", "kind", "value", "amount", "ammo", "color", "weapon", "model", "kit", "scale", "glow", "sound",
 	"effects", "flag", "text", "trophy", "bulk", "wear", "capacity", "slots"]
 const INSTALLATION := ["name", "text", "levels", "entrances"]
@@ -26,7 +26,7 @@ const THING_KINDS := {
 	"target": ["target"],
 	"station": ["station", "actor", "shut", "wake", "blocks"],
 	"actor": ["actor", "still", "alert", "hp_mul", "on_death", "on_anger", "lounge", "perch", "off_duty", "talk", "provoke",
-		"roam", "greet"],
+		"roam", "greet", "faction", "patrol"],
 	"prop": ["prop", "use", "hp", "loot", "explode", "screen", "solid", "blocks", "lit", "turn", "seat", "seat_gap",
 		"seat_turn", "holds", "hidden", "rattle", "walk"],
 	"item": ["item", "y", "rest"],                     # and any item def key, to override it for this one

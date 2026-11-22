@@ -233,6 +233,9 @@ func idle_tick(dt: float) -> void:
 	if a.lounge and a.lounge.active():
 		a.lounge.tick(dt)
 		return
+	if a.patrol:                                     # walking its beat (ActorPatrol)
+		a.patrol.tick(dt)
+		return
 	if a.fixed or a.surf != 0 or d.get("still", false) or a.e.get("still", false):
 		a.play("idle")
 		return

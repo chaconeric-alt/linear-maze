@@ -6,8 +6,9 @@ extends Node
 ## rest (or lies still on a lift) the model is moved until the underside of what is drawn, as posed now, touches the
 ## floor: measured from the skinned mesh itself (a sample of its vertices through the current bone poses), not from
 ## bones, which can sit well outside the surface. Its body shrinks to a small ball as it dies, so it cannot wedge above
-## the floor. A robot killed in its station is laid in it and stays. Added by ActorCore when it dies, which then has it
-## leave() what a death leaves behind: the kill counted, a blast, drops, on_death effects, the actor.died event.
+## the floor. A robot killed in its station is laid in it and stays. Added by ActorCore when it dies, which has it die():
+## the body let go, then leave() what a death leaves behind: the kill counted, a blast, drops, on_death effects, the
+## actor.died event.
 class_name ActorRemains
 
 const SETTLE := 3.0          # seconds after coming to rest that the death pose is checked (a death clip is shorter)
@@ -28,6 +29,43 @@ var _skin_cache: Dictionary = {}     # mesh -> [vertices, bones, weights, influe
 func setup(actor: Actor) -> void:
 	a = actor
 	d = actor.d
+
+
+## It dies (ActorCore.hurt): it stops what it was doing, its body comes away from a wall or ceiling, keeps some of its
+## way if it was in the air, plays its death, and then leaves what a death leaves behind.
+func die(info: Dictionary) -> void:
+	a.dead = true
+	a.state = ActorCore.State.DEAD
+	if a.attacks:
+		a.attacks.drop_attack()
+	if a.lounge:
+		a.lounge.end()
+	if a.surf == 1 or a.surf == 2:
+		a.surf = 3
+	elif a.surf == 4:
+		a.surf = 0
+	a.collision_layer = 0
+	a.collision_mask = 1 | Level.GLASS
+	if a.surf != 0:
+		a.velocity = a.wall_n * 1.5
+	elif a.is_on_floor() and not a.move.fly:
+		a.velocity = Vector3.ZERO
+	else:
+		a.velocity = Vector3(a.velocity.x * 0.5, minf(a.velocity.y, 0.0), a.velocity.z * 0.5)      # in the air: it keeps some of its way and falls
+	died()
+	a.play("die")
+	LM.sound(d.get("sounds", {}).get("die", "die"), a.global_position)
+	leave(info)
+
+
+## Dead, each tick: it lets go of anyone it held, and what was shot off a wall comes down; or it comes to rest (tick).
+func dead_tick(dt: float) -> void:
+	if a.attacks:
+		a.attacks.release_if_holding()
+	if a.surf != 0:
+		a.climb.fall_tick(dt, Vector3.ZERO)
+	else:
+		tick(dt)
 
 
 func died() -> void:

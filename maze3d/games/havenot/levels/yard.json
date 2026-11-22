@@ -1,0 +1,203 @@
+{
+ "id": "yard",
+ "name": "The Yard (factions and patrols)",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "Guards on their beat, vermin in the pen, and a friend in the side room.",
+ "ambient_energy": 0.75,
+ "legend": {
+  "+": {
+   "door": "door_split"
+  }
+ },
+ "map": [
+  "################",
+  "#..............#",
+  "#..............#",
+  "#..............#",
+  "#..............#",
+  "#..............#",
+  "###+####+####+##",
+  "#.....#....#...#",
+  "#.....#....#...#",
+  "#.....#....#...#",
+  "#.....#....#...#",
+  "#.....#....#...#",
+  "################"
+ ],
+ "rooms": [
+  {
+   "name": "The Yard",
+   "rect": [
+    1,
+    1,
+    14,
+    5
+   ],
+   "style": "corridor"
+  },
+  {
+   "name": "The Pen",
+   "rect": [
+    1,
+    7,
+    5,
+    5
+   ],
+   "style": "storage"
+  },
+  {
+   "name": "The Gallery",
+   "rect": [
+    7,
+    7,
+    4,
+    5
+   ],
+   "style": "lab"
+  },
+  {
+   "name": "The Side Room",
+   "rect": [
+    12,
+    7,
+    3,
+    5
+   ],
+   "style": "lab"
+  }
+ ],
+ "factions": {
+  "guards": {
+   "name": "Yard guards",
+   "hostile": [
+    "vermin"
+   ]
+  },
+  "vermin": {
+   "name": "Vermin",
+   "hostile": []
+  },
+  "neutral": {
+   "name": "Neutral",
+   "hostile": []
+  }
+ },
+ "things": [
+  {
+   "start": true,
+   "face": "n",
+   "at": [
+    8,
+    10
+   ]
+  },
+  {
+   "sign": "THE YARD\nwho fights whom",
+   "face": "s",
+   "color": [
+    0.4,
+    0.9,
+    1.0
+   ],
+   "size": 56,
+   "y": 3.0,
+   "at": [
+    7,
+    1
+   ]
+  },
+  {
+   "actor": "eggbot",
+   "at": [
+    3,
+    2
+   ],
+   "faction": "guards",
+   "tag": "guard",
+   "patrol": {
+    "route": [
+     [
+      3,
+      2
+     ],
+     [
+      7,
+      2
+     ],
+     [
+      7,
+      4
+     ],
+     [
+      3,
+      4
+     ]
+    ],
+    "pause": 0.5,
+    "give_up": 3
+   }
+  },
+  {
+   "actor": "eggbot",
+   "at": [
+    14,
+    1
+   ],
+   "faction": "guards",
+   "still": true,
+   "tag": "guard2"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    3,
+    9
+   ],
+   "faction": "vermin",
+   "tag": "vermin",
+   "perch": "floor"
+  },
+  {
+   "actor": "roach",
+   "at": [
+    2,
+    10
+   ],
+   "tag": "enemy",
+   "perch": "floor"
+  },
+  {
+   "actor": "monoid",
+   "at": [
+    9,
+    8
+   ],
+   "faction": "neutral",
+   "lounge": "none",
+   "tag": "neutral"
+  },
+  {
+   "actor": "eggbot",
+   "at": [
+    13,
+    8
+   ],
+   "faction": "player",
+   "tag": "ally"
+  },
+  {
+   "item": "health",
+   "at": [
+    7,
+    10
+   ]
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Watch who fights whom."
+  }
+ ],
+ "triggers": []
+}

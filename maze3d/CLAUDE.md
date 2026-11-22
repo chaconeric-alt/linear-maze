@@ -14,7 +14,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 | Effects | `engine/effects.gd` | `EffectRegistry`: effect type to handler. Run-wide types in `game.gd`, the place's in `engine/level/level_effects.gd`, a prop's `use` in `engine/prop_uses.gd`. |
 | Panels | `engine/interaction.gd`, `engine/option_gates.gd` | What a panel offers and what choosing does (conditions, cost, hack, risk, used marks, effects). `hud.gd` only draws. |
 | Level | `engine/level.gd` + `engine/level/` | A thin `Level` node owning `LevelData` (cells and queries), `LevelBuilder` (shell, collision, nav, fluid, environment), `LevelLights`, `Spawner` (things, by kind, with stable keys), `LevelSigns`, `Triggers`, `LightingDebug`, `LevelMemory` (what a level remembers between visits: taken on leaving, laid on building), `Restock` (what its makers made again while the player was away, counted in the world's days). |
-| Actors | `engine/actor/` | `Actor` on `ActorCore` (body, state machine, damage) plus components added only when their def key is present; `ActorRemains` is added when it dies (the fall, the model laid on the floor); `ActorWary` keeps flyers and climbers out of traps. |
+| Actors | `engine/actor/` | `Actor` on `ActorCore` (body, state machine, damage) plus components added only when their def key is present; `ActorRemains` is added when it dies (dying, the fall, the model laid on the floor); `ActorWary` keeps flyers and climbers out of traps; `ActorFoes` picks whom it fights when factions are at war in the level (`Factions`: the game's `factions`, a level's over them); `ActorPatrol` walks an entry's `patrol` beat. |
 | Player | `engine/player.gd` + `engine/player/` | The body, health and use; `PlayerControls`, `PlayerMovement`, `PlayerCamera`, `PlayerWeapons`, `PlayerUnstick` (puts a boxed-in player back where they stood a step before). |
 | World things | `engine/prop.gd`, `station.gd`, `door.gd`, `pickup.gd`, `trap.gd`, `pit.gd`, `lift.gd`, `target.gd`, `rebuilder.gd`, `projectile.gd`, `puddle.gd`, `fx.gd` | One class each. |
 | HUD | `engine/hud.gd` + `engine/hud/` | Status, messages, panels (drawing); `HudStyle`, `HudCrosshair`, `HudMap`, `HudScreens` (title, pause and end). |
@@ -43,7 +43,7 @@ maze3d is a data-driven first-person engine in Godot 4 (GDScript; built and test
 ## Budgets
 
 - No file over about 400 lines; no function over about 60 lines. Cut by job, not by line count: a new file for a new job, a function per step.
-- Still over (to be cut when next touched): `engine/actor/actor_core.gd` (407 lines); `tools/levels/staffonly.py` (`kit_wing` 274) and `anomalous.py` (633 lines of layout); the Blender kit scripts (one model per function, many files over 400 lines).
+- Still over (to be cut when next touched): `tools/levels/staffonly.py` (`kit_wing` 274) and `anomalous.py` (633 lines of layout); the Blender kit scripts (one model per function, many files over 400 lines).
 
 ## Running the tests
 
@@ -54,7 +54,7 @@ python3 maze3d/tests/run_baseline.py --compare before      # ... and after it: e
 godot --headless --fixed-fps 60 --path maze3d -- --level=<id> --selftest      # one run by hand
 ```
 
-The baseline is `tests/baseline.txt`: `staffonly`, `deepworks`, `menagerie`, `anomalous` (and with `--story`), `home`, `gen:rooms` with seeds 5, 7, 11 and 22, every theme at seed 5, and the Descent (`descent_1`, its own test: travel between levels). Every check that passed must still pass; never fix a failure by weakening a test. A script error does not always fail the test: look for `SCRIPT ERROR` in the output too (the runner counts them).
+The baseline is `tests/baseline.txt`: `staffonly`, `deepworks`, `menagerie`, `anomalous` (and with `--story`), `home`, `gen:rooms` with seeds 5, 7, 11 and 22, every theme at seed 5, the Descent (`descent_1`, its own test: travel between levels) and the Yard (`yard`, its own test: factions and patrols). Every check that passed must still pass; never fix a failure by weakening a test. A script error does not always fail the test: look for `SCRIPT ERROR` in the output too (the runner counts them).
 
 - The self-test is repeatable by default (a fixed seed, the clock counted in physics frames); with Godot's `--fixed-fps 60`, which the runner passes, a run prints the same lines every time, so a difference between two runs is a difference in the code. `--realtime` makes physics follow real time as in the game: use it to hunt checks that fail only now and then (`SPEC.md` section 9 lists the known ones). `--repeatable` does the same for runs that are not self-tests.
 - A change that only moves things about should leave the baseline line for line the same (`--compare`). A change that moves the player or a monster, or adds frames to a test (a key press waits three), shifts every fight after it: compare the checks, not the lines, and look at any fight that now fails.

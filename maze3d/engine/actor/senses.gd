@@ -23,7 +23,7 @@ func look(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 		return
 	_see_t = 0.2
 	var clear: bool = a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0))
-	if clear and not a.seen and dist < 46.0:
+	if clear and not a.seen and dist < 46.0 and pl == Game.player:      # the player has laid eyes on it (the map)
 		var pf := Vector3(-sin(pl.rotation.y), 0, -cos(pl.rotation.y))
 		if dist < 3.0 or pf.dot(-flat.normalized()) > 0.45:
 			a.seen = true
@@ -45,6 +45,13 @@ func look_off_duty(dt: float, pl: Node3D, dist: float, reach: float) -> void:
 			and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0))
 	if see and not a.seen:
 		a.seen = true
+
+
+## It has woken: the others close by, on its floor, wake too.
+func wake_others() -> void:
+	for o in a.level.actors:
+		if is_instance_valid(o) and o != a and not o.awake and not o.dead and o.global_position.distance_to(a.global_position) < 10.0 and a.level.floor_of(o.global_position) == a.level.floor_of(a.global_position):
+			o.call_deferred("alert")
 
 
 ## Look again at once (the next tick), and forget what was seen.

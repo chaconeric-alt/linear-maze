@@ -109,7 +109,8 @@
      }
     ],
     "drill_label": "Show me the pounce"
-   }
+   },
+   "faction": "monsters"
   },
   "custodian": {
    "name": "Custodian",
@@ -224,7 +225,8 @@
      }
     ],
     "drill_label": "Show me a cleanup"
-   }
+   },
+   "faction": "robots"
   },
   "monoid": {
    "name": "Monoid",
@@ -369,7 +371,8 @@
      }
     ],
     "drill_label": "\"Show me the job, then\""
-   }
+   },
+   "faction": "robots"
   },
   "glorexx": {
    "name": "Glorexx",
@@ -480,7 +483,8 @@
      }
     ],
     "drill_label": "Show me the leap"
-   }
+   },
+   "faction": "monsters"
   },
   "turret": {
    "name": "Ceiling Turret",
@@ -553,7 +557,8 @@
     ],
     "drill_label": "Show me a burst",
     "reach": 10
-   }
+   },
+   "faction": "robots"
   },
   "eggbot": {
    "name": "Eggbot",
@@ -695,7 +700,8 @@
      }
     ],
     "drill_label": "Show me the perfect form, armed"
-   }
+   },
+   "faction": "robots"
   },
   "grease_monkey": {
    "name": "Hammerhead Gallumper",
@@ -811,7 +817,8 @@
      }
     ],
     "drill_label": "Show me the grab"
-   }
+   },
+   "faction": "monsters"
   },
   "dancer": {
    "name": "Dancer",
@@ -945,7 +952,8 @@
      }
     ],
     "drill_label": "Show me the finale"
-   }
+   },
+   "faction": "robots"
   },
   "snapper": {
    "name": "Snapper",
@@ -1029,7 +1037,8 @@
     ],
     "drill_label": "Show me the snap",
     "reach": 7
-   }
+   },
+   "faction": "monsters"
   },
   "deadbot": {
    "name": "Deadbot",
@@ -1153,7 +1162,8 @@
      }
     ],
     "drill_label": "\"Resume\""
-   }
+   },
+   "faction": "robots"
   },
   "defender": {
    "name": "Desktop Defender",
@@ -1217,7 +1227,8 @@
     ],
     "drill_label": "Show me how you defend a desk",
     "reach": 6
-   }
+   },
+   "faction": "robots"
   },
   "sphinx": {
    "name": "Sphinx Gun",
@@ -1403,7 +1414,8 @@
     ],
     "drill_label": "\"What happens if I get one wrong on a work day?\"",
     "reach": 12
-   }
+   },
+   "faction": "robots"
   },
   "plodder": {
    "name": "Plodder (Heavy Security Drone)",
@@ -1547,7 +1559,8 @@
      }
     ],
     "drill_label": "\"Show me the security response\""
-   }
+   },
+   "faction": "robots"
   },
   "drone": {
    "name": "Knife Fighter",
@@ -1699,7 +1712,8 @@
      }
     ],
     "drill_label": "\"Stab something, then\""
-   }
+   },
+   "faction": "robots"
   },
   "fouler": {
    "name": "Fouler",
@@ -1812,7 +1826,8 @@
      }
     ],
     "drill_label": "Show me the spit"
-   }
+   },
+   "faction": "monsters"
   },
   "princess": {
    "name": "The Princess",
@@ -1927,7 +1942,8 @@
     ],
     "drill_label": "\"Show me why they kneel\"",
     "reach": 12
-   }
+   },
+   "faction": "monsters"
   },
   "mourner": {
    "name": "Mourner",
@@ -2063,7 +2079,8 @@
      }
     ],
     "drill_label": "\"Show me what the grief is for\""
-   }
+   },
+   "faction": "monsters"
   },
   "heavy": {
    "name": "Heavy Security Drone",
@@ -2192,7 +2209,8 @@
     ],
     "drill_label": "Show me a courtesy barrage",
     "reach": 12
-   }
+   },
+   "faction": "robots"
   },
   "emitter": {
    "name": "Field Emitter",
@@ -2250,7 +2268,8 @@
       "result": "Your fillings ache."
      }
     ]
-   }
+   },
+   "faction": "robots"
   }
  }
 }

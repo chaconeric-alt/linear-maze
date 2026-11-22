@@ -194,6 +194,10 @@ func _strike(pl: Node3D, dist: float) -> void:
 func _grapple(at: Dictionary, pl: Node3D, dist: float) -> void:
 	_atk_done = true
 	LM.sound(at.get("sound", "clang"), a.global_position)
+	if not "held_by" in pl:                          # another monster (factions) cannot be held: it is struck
+		if dist <= at.get("range", 2.4) + 0.6 and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.0, 0)):
+			pl.hurt(at.get("damage", 6.0), {"type": "crush", "from": a.global_position, "by": a})
+		return
 	if dist <= at.get("range", 2.4) + 0.6 and absf(pl.global_position.y - a.global_position.y) < 2.0 and pl.held_by == null \
 			and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.0, 0)):
 		_grab_t = at.get("hold", 1.6)
@@ -225,7 +229,8 @@ func _shoot(at: Dictionary, pl: Node3D) -> void:
 			dir = bore.slerp(dir, lim / off).normalized()
 	var sp: float = deg_to_rad(at.get("spread", 2.0))
 	dir = dir.rotated(Vector3.UP, randf_range(-sp, sp)).rotated(a.global_transform.basis.x, randf_range(-sp, sp))
-	Projectile.launch(a.level, at.get("projectile", "bolt"), from, dir, at.get("damage", 8.0), a, false)
+	var shot := Projectile.launch(a.level, at.get("projectile", "bolt"), from, dir, at.get("damage", 8.0), a, false)
+	shot.at_actors = pl is ActorCore                 # shooting another monster (factions): monsters stop it too
 	Fx.flash(a.level, from, LM.col(LM.get_def("projectiles", at.get("projectile", "bolt")).get("color"), Color(1, 0.4, 0.2)), 2.5, 4.0)
 	LM.sound(at.get("sound", "bolt"), a.global_position)
 	_burst -= 1

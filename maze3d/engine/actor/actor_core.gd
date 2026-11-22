@@ -12,7 +12,9 @@ extends CharacterBody3D
 ##   ActorLounge        slacking off until caught ("lounge")               engine/actor/lounge.gd
 ##   ActorOffDuty       off duty: talks, wanders, shows what it does        engine/actor/off_duty.gd
 ##   ActorConversation  what it says, and the panel when you talk to it   engine/actor/conversation.gd
-## Who it is after is target(): the player, for now.
+##   ActorFoes          whom it fights, when not just the player (factions) engine/actor/foes.gd
+##   ActorPatrol        walking a beat (the entry's "patrol")              engine/actor/patrol.gd
+## Who it is after is target(): the player, or, with factions at war in the level, what ActorFoes picks.
 class_name ActorCore
 
 enum State { DORMANT, IDLE, ALERT, ATTACKING, STUNNED, CLIMBING, OFF_DUTY, DEAD }
@@ -45,6 +47,8 @@ var looks: ActorLooks
 var lounge: ActorLounge
 var od: ActorOffDuty
 var talker: ActorConversation
+var foes: ActorFoes               # factions at war in the level, or not at war with the player
+var patrol: ActorPatrol
 # shared state the components read and write
 var surf := 0                     # 0 floor · 1 on a wall · 2 on the ceiling · 3 falling off · 4 on foot, heading for a wall
 var wall_n := Vector3.ZERO        # the wall's normal, pointing into the room
@@ -138,6 +142,10 @@ func _components() -> void:
 		lounge = _add(ActorLounge.new())
 	if d.get("fly", false) or d.has("climb"):
 		wary = _add(ActorWary.new())
+	if ActorFoes.wanted(self):
+		foes = _add(ActorFoes.new())
+	if e.has("patrol"):
+		patrol = _add(ActorPatrol.new())
 
 
 func _add(c: Node) -> Node:
@@ -197,10 +205,10 @@ func play(clip: String, speed := 1.0, loop := false) -> bool:
 
 
 # ------------------------------------------------------------------ who it is after, and waking up
-## What it hunts: the player, for now (factions will change this). Off duty and showing its attacks, it fights its
-## Target instead (ActorOffDuty).
+## What it hunts: the player; or, when its faction is at war with others in the level or not with the player, what
+## ActorFoes has picked. Off duty and showing its attacks, it fights its Target instead (ActorOffDuty).
 func target() -> Node3D:
-	return Game.player
+	return foes.target() if foes else Game.player
 
 
 ## An off-duty thing stops being off duty (the effect "anger"): it is a monster again, and it knows where you are.
@@ -234,9 +242,7 @@ func alert() -> void:
 			anim.seek(0.0)
 	awake = true
 	LM.sound(d.get("sounds", {}).get("alert", ""), global_position)
-	for a in level.actors:       # friends close by wake too
-		if is_instance_valid(a) and a != self and not a.awake and not a.dead and a.global_position.distance_to(global_position) < 10.0 and level.floor_of(a.global_position) == level.floor_of(global_position):
-			a.call_deferred("alert")
+	senses.wake_others()
 
 
 func eye() -> Vector3:
@@ -256,7 +262,7 @@ func _physics_process(dt: float) -> void:
 		looks.trail_tick(dt)
 	if dead:
 		state = State.DEAD
-		_dead_tick(dt)
+		remains.dead_tick(dt)
 		return
 	_body_tick(dt)
 	var pl: Node3D = target()
@@ -268,7 +274,12 @@ func _physics_process(dt: float) -> void:
 			return
 	if pl == null or not is_instance_valid(pl) or pl.dead:
 		state = State.IDLE
-		_play("idle")
+		if foes or patrol:                           # nothing to fight: it goes about its business (its beat, pottering),
+			if attacks:                              # and an attack on what has gone is over
+				attacks.drop_attack()
+			move.idle_tick(dt)
+		else:
+			_play("idle")
 		return
 	var to: Vector3 = pl.global_position - global_position
 	var flat := Vector3(to.x, 0, to.z)
@@ -295,15 +306,6 @@ func _decide() -> int:
 	if attacks and attacks.busy():
 		return State.ATTACKING
 	return State.CLIMBING if surf != 0 else State.ALERT
-
-
-func _dead_tick(dt: float) -> void:
-	if attacks:
-		attacks.release_if_holding()
-	if surf != 0:                                    # shot off the wall: what is left comes down
-		climb.fall_tick(dt, Vector3.ZERO)
-	else:
-		remains.tick(dt)
 
 
 ## What goes on whatever it is doing: wading, its lights, its burning skin, flying, its face, swimming.
@@ -352,6 +354,8 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 	amount *= d.get("takes", {}).get(info.get("type", ""), 1.0)
 	amount *= (1.0 - d.get("armor", 0.0))
 	hp -= amount
+	if foes:
+		foes.hurt_by(info.get("by"))
 	if not awake:
 		alert()
 	if off_duty and e.get("provoke", false) and info.get("from_player", info.get("type", "") != "trap"):
@@ -382,26 +386,5 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 
 
 func _die(info: Dictionary) -> void:
-	dead = true
-	state = State.DEAD
-	if attacks:
-		attacks.drop_attack()
-	if lounge:
-		lounge.end()
-	if surf == 1 or surf == 2:
-		surf = 3
-	elif surf == 4:
-		surf = 0
-	collision_layer = 0
-	collision_mask = 1 | Level.GLASS
-	if surf != 0:
-		velocity = wall_n * 1.5
-	elif is_on_floor() and not move.fly:
-		velocity = Vector3.ZERO
-	else:
-		velocity = Vector3(velocity.x * 0.5, minf(velocity.y, 0.0), velocity.z * 0.5)      # in the air: it keeps some of its way and falls
 	remains = _add(ActorRemains.new())
-	remains.died()
-	_play("die")
-	LM.sound(d.get("sounds", {}).get("die", "die"), global_position)
-	remains.leave(info)
+	remains.die(info)

@@ -21,3 +21,4 @@ basilica        | --level=gen:rooms:basilica --seed=5 --selftest
 drowned         | --level=gen:rooms:drowned --seed=5 --selftest
 dust            | --level=gen:rooms:dust --seed=5 --selftest
 descent         | --level=descent_1 --selftest
+yard            | --level=yard --selftest
