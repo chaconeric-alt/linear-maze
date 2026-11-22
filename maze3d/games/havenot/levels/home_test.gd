@@ -3,8 +3,9 @@ extends SelfTestPart
 ## what is brought home is banked and put on show, the robot is repaired only with the parts, furnishings can be bought,
 ## put down, taken back, and are there after a reload, the vault door opens, the lift has somewhere to go, and the rack
 ## is the loadout: the lift takes what the character chose, as far as two hands hold it, and a sling from the outfitter
-## makes three. (Profile is memory-only in a self-test; the carrying limits, lifted for the rest of the self-test, are
-## on for the armoury.)
+## makes three; a new scavenger is made at the ledger (an origin, the mutations rolled and rolled again, skill points)
+## and is that character from then on. (Profile is memory-only in a self-test; the carrying limits, lifted for the rest
+## of the self-test, are on for the armoury.)
 
 
 func replaces_standard() -> bool:
@@ -17,6 +18,7 @@ func run() -> void:
 	await _coming_home()
 	var saved: Array = await _furnishing()
 	await _vault_and_lift()
+	await _making()
 	await _still_there(saved)
 
 
@@ -207,6 +209,42 @@ func _outfit() -> Dictionary:
 	return cfg
 
 
+## Making a new scavenger at the ledger: a Random Mutant's mutations are rolled and rolled again once; a Mutant Hyena
+## has none; three skill points go on Hacking and Medicine and no further; "This is me" makes them that character.
+func _making() -> void:
+	var hm: Home = level.home
+	var mk: HomeCreation = hm.creation
+	say(mk.wanted(), "a new scavenger is not made yet: the ledger asks who they are")
+	mk.open()
+	await frames(2)
+	var name: String = mk.draft.get("name", "")
+	mk.another_name()
+	say(Game.hud.in_panel() and name != "" and mk.draft["name"] != name and mk.draft["origin"] == "human" and mk.points_left() == 3,
+		"  the panel opens on a Human with a name from the list (%s, then %s) and 3 skill points" % [name, mk.draft["name"]])
+	mk.choose_origin("mutant")
+	var first: Array = mk.draft["mutations"].duplicate()
+	var again := mk.reroll()
+	var second: Array = mk.draft["mutations"].duplicate()
+	var known := (first + second).all(func(m: Variant) -> bool: return LM.defs["mutations"].has(m))
+	say(first.size() >= 1 and first.size() <= 3 and second.size() >= 1 and second.size() <= 3 and known and again and not mk.reroll()
+		and CharacterSheet.roll_mutations("mutant", 42) == CharacterSheet.roll_mutations("mutant", 42),
+		"  a Random Mutant rolls one to three mutations (%s), rolls again once (%s), and no more; the same seed rolls the same"
+		% [", ".join(first), ", ".join(second)])
+	mk.choose_origin("hyena")
+	var early := mk.done()
+	var spent := mk.add_skill("hacking") and mk.add_skill("hacking") and mk.add_skill("medicine")
+	say(mk.draft["mutations"].is_empty() and not early and spent and not mk.add_skill("mechanics") and mk.points_left() == 0,
+		"  a Mutant Hyena has none; it is not done with points to spend; the three go on Hacking 2 and Medicine 1, and no more")
+	var made := mk.done()
+	await frames(2)
+	var c: Dictionary = State.character()
+	say(made and c.get("origin") == "hyena" and c.get("mutations") == [] and int(c["skills"].get("hacking", 0)) == 2
+		and int(c["skills"].get("medicine", 0)) == 1 and bool(c.get("made", false)) and not mk.wanted() and not Game.hud.in_panel()
+		and pl.max_hp == 80.0 and is_equal_approx(pl.speed_mul, 1.18),
+		"\"This is me\": %s the %s (%s; %s), %d health, and the ledger no longer asks"
+		% [c.get("name", ""), CharacterSheet.origin_name(c), CharacterSheet.line(c), CharacterSheet.skills_line(c), pl.max_hp])
+
+
 ## And it is all still there next time.
 func _still_there(saved: Array) -> void:
 	main.start_level(level.data.get("id", "home"))
@@ -216,3 +254,6 @@ func _still_there(saved: Array) -> void:
 	var hm: Home = level.home
 	say(hm != null and hm.placed_count() == saved.size() and hm.robot is Actor and hm.shown_count() == 7 and Game.credits == int(Profile.d["credits"]),
 		"after coming back in: the furnishings, the robot, the rack and the credits are as they were left")
+	var c: Dictionary = State.character()
+	say(c.get("origin") == "hyena" and bool(c.get("made", false)) and pl.max_hp == 80.0 and not hm.creation.wanted(),
+		"  and the scavenger made at the ledger is still a %s, with %d health; the ledger no longer asks" % [CharacterSheet.origin_name(c), pl.max_hp])

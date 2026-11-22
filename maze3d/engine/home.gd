@@ -5,7 +5,8 @@ extends Node3D
 ## "use": {"type": "home", "what": <word>} and Prop hands the word to use_prop() here. Everything that lasts is in
 ## Profile (engine/profile.gd): banked credits, the weapons and armour brought home, salvage, trophies, the
 ## furnishings bought and where they were put, and whether the robot has been repaired. Putting furnishings down is
-## HomeDecorating (engine/home/decorating.gd), a child of this node.
+## HomeDecorating (engine/home/decorating.gd), a child of this node; making a new scavenger at the ledger is
+## HomeCreation (engine/home/creation.gd).
 ##
 ## What this bunker offers and says comes from the game's defs (games/<game>/defs/home.json, "home": {<level id>: {...}}):
 ##   "robot"      the actor that lies broken in the cradle until it is repaired
@@ -22,6 +23,7 @@ var cfg: Dictionary = {}                 # this bunker's entry in defs "home"
 var robot: Node3D = null                 # the repaired robot (an Actor, off duty), or the wreck in the cradle
 var decor: HomeDecorating
 var armoury: HomeArmoury                 # the rack as the loadout, and the outfitter (engine/home/armoury.gd)
+var creation: HomeCreation               # making a new scavenger (engine/home/creation.gd)
 var _shown: Array = []                   # what is on the rack, the stand and in the trophy case
 var decorating: bool:
 	get:
@@ -38,9 +40,12 @@ func setup(lv: Level) -> void:
 	add_child(decor)
 	decor.setup(self)
 	armoury = HomeArmoury.new(self)
+	creation = HomeCreation.new(self)
 	show_off()
 	_robot()
 	Game.changed.emit()
+	if creation.wanted():                            # a new scavenger: the ledger asks who they are
+		Game.say(word("make_say"), "info")
 
 
 ## [[model, price], ..]: what can be ordered from the ledger.
@@ -250,7 +255,11 @@ func _ledger() -> void:
 	var p: Dictionary = Profile.d
 	var r: Dictionary = Profile.record()
 	var text := word("ledger_text") % [int(p["credits"]), int(r.get("runs", 0)), int(r.get("best", 0)), _list(p["salvage"]), _waiting()]      # (no deaths: a death takes itself back, SPEC 5.16)
-	say_panel("ledger", text, [
+	var c: Dictionary = State.character()
+	text = word("ledger_character") % [c.get("name", ""), CharacterSheet.origin_name(c), CharacterSheet.line(c),
+		CharacterSheet.skills_line(c) if CharacterSheet.skills_line(c) != "" else word("list_none")] + "\n\n" + text
+	var opts: Array = [{"label": word("ledger_make"), "do": creation.open}] if creation.wanted() else []
+	say_panel("ledger", text, opts + [
 		{"label": word("ledger_order"), "do": _catalogue},
 		{"label": word("ledger_decorate"), "do": func():
 			Game.hud.close_panel()

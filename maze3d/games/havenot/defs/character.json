@@ -7,7 +7,7 @@
  },
  "skills": {
   "hacking": {"name": "Hacking", "max": 5, "text": "Every hack: 8% better a rank.", "gives": {"hack": 0.08}},
-  "mechanics": {"name": "Mechanics", "max": 5, "text": "Machines: shutting them down, starting them up, putting them right. Panel options that need it say how much."},
+  "mechanics": {"name": "Mechanics", "max": 5, "text": "Machines: shutting them down, starting them up, putting them right."},
   "medicine": {"name": "Medicine", "max": 5, "text": "Healing: 15% more from every health pack and station a rank.", "gives": {"heal": 0.15}}
  },
  "origins": {
@@ -25,7 +25,7 @@
   "lungs": {"name": "Bellows Lungs", "text": "Speed +2.", "stats": {"speed": 2}},
   "stunted": {"name": "Stunted", "text": "Physical -1, Speed +1.", "stats": {"physical": -1, "speed": 1}},
   "cranium": {"name": "Bulging Cranium", "text": "Mental +2, Physical -1.", "stats": {"mental": 2, "physical": -1}},
-  "glow": {"name": "Glowing Skin", "text": "You light up the dark (your lamp reaches half as far again). Sense -1.", "stats": {"sense": -1}, "gives": {"lamp": 0.5}},
+  "glow": {"name": "Glowing Skin", "text": "You light up the dark: your lamp reaches half as far again. Sense -1.", "stats": {"sense": -1}, "gives": {"lamp": 0.5}},
   "skull": {"name": "Thick Skull", "text": "Physical +1, Mental -1.", "stats": {"physical": 1, "mental": -1}},
   "twitchy": {"name": "Twitchy", "text": "Speed +2, Mental -1.", "stats": {"speed": 2, "mental": -1}},
   "echo": {"name": "Echolocation", "text": "Sense +2.", "stats": {"sense": 2}},
