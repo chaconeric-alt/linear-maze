@@ -40,7 +40,8 @@
   "defs/sounds.json",
   "defs/home.json",
   "defs/installations.json",
-  "defs/character.json"
+  "defs/character.json",
+  "defs/purposes.json"
  ],
  "levels": [
   "levels/home.json",

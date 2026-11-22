@@ -93,6 +93,11 @@ func _spot(room: String, at: Variant) -> Vector2i:
 	return free[plan.rng.randi() % free.size()]
 
 
+## Every cell something has been put on (ProgrammeFurnishing works round them).
+func used_cells() -> Array:
+	return _used.keys()
+
+
 ## A room's free floor: not beside a door, not on the spine's row in a spine room, not already used.
 func free_cells(room: String) -> Array:
 	var r: Rect2i = lay.rects[room]

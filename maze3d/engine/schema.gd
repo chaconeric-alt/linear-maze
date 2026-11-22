@@ -22,7 +22,8 @@ const SKILL := ["name", "text", "max", "gives"]
 const ORIGIN := ["name", "text", "stats", "mutations", "rerolls"]
 const MUTATION := ["name", "text", "stats", "gives"]
 const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor", "lamp"]     # what the engine reads (CharacterSheet)
-const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door"]          # a level's written programme (SPEC.md 6.3)
+const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish"]   # a level's written programme (SPEC.md 6.3)
+const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows"]   # defs "purposes" (furnishing a room for its use)
 const PROG_SPINE := ["gap"]
 const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance"]
 const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms"]
@@ -53,7 +54,7 @@ const PIT := ["trap", "delay", "damage"]
 static func check_defs(defs: Dictionary) -> Array:
 	var out: Array = []
 	for pair in [["weapons", WEAPON], ["actors", ACTOR], ["items", ITEM], ["installations", INSTALLATION],
-			["stats", STAT], ["skills", SKILL], ["origins", ORIGIN], ["mutations", MUTATION]]:
+			["stats", STAT], ["skills", SKILL], ["origins", ORIGIN], ["mutations", MUTATION], ["purposes", PURPOSE]]:
 		for id in defs.get(pair[0], {}):
 			for k in defs[pair[0]][id]:
 				if k != "id" and not k in pair[1]:                # LM adds "id" itself
@@ -140,7 +141,7 @@ static func undocumented(spec_text: String) -> Array:
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
 	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + STAT + SKILL + ORIGIN + MUTATION + GIVES \
-		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK
+		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

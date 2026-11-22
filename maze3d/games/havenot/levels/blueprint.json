@@ -26,7 +26,8 @@
      {
       "item": "health"
      }
-    ]
+    ],
+    "purpose": "gatehouse"
    },
    {
     "id": "mess",
@@ -49,7 +50,8 @@
        "roach"
       ]
      }
-    ]
+    ],
+    "purpose": "mess_hall"
    },
    {
     "id": "lab",
@@ -72,7 +74,8 @@
      {
       "actor": "eggbot"
      }
-    ]
+    ],
+    "purpose": "lab"
    },
    {
     "id": "lobby",
@@ -98,7 +101,8 @@
        ]
       }
      }
-    ]
+    ],
+    "purpose": "lift_lobby"
    }
   ],
   "wings": [
@@ -118,8 +122,8 @@
         6
        ],
        [
-        3,
-        4
+        4,
+        5
        ]
       ],
       "things": [
@@ -130,7 +134,8 @@
        {
         "item": "crystal"
        }
-      ]
+      ],
+      "purpose": "bunk_room"
      },
      {
       "id": "latrine",
@@ -140,7 +145,8 @@
        2,
        2
       ],
-      "door_to": "dorm"
+      "door_to": "dorm",
+      "purpose": "latrine"
      },
      {
       "id": "lockers",
@@ -156,7 +162,8 @@
         3
        ]
       ],
-      "chance": 0.6
+      "chance": 0.6,
+      "purpose": "locker_room"
      }
     ]
    },
@@ -179,7 +186,8 @@
         4
        ],
        3
-      ]
+      ],
+      "purpose": "office"
      },
      {
       "id": "quarters",
@@ -192,7 +200,8 @@
        ],
        3
       ],
-      "next_to": "office"
+      "next_to": "office",
+      "purpose": "officer_quarters"
      },
      {
       "id": "armoury",
@@ -209,7 +218,8 @@
        {
         "item": "rockets"
        }
-      ]
+      ],
+      "purpose": "armoury"
      }
     ]
    }

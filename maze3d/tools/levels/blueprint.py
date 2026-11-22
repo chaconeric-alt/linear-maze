@@ -9,7 +9,7 @@ Four rooms on the spine, from the gate to the lift lobby: the gate, the mess, th
 The seed picks the sizes, which side each wing goes, which side of its corridor each room, the gaps, where the
 officers' wing branches, whether there is a locker room, which room has the card and whether the mess has a custodian
 or a roach in it.
-A few roaches, a custodian and an eggbot (which shoots) to fight, a crystal or two, a health pack, and a way out in the lobby. Its own test
+Each room is furnished for its purpose (defs/purposes.json). A few roaches, a custodian and an eggbot (which shoots) to fight, a crystal or two, a health pack, and a way out in the lobby. Its own test
 (blueprint_test.gd) checks the layout keeps the programme, then plays it.
 
     python3 tools/levels/blueprint.py
@@ -30,21 +30,21 @@ exit_table = {"prop": "holo_table", "blocks": False,
 programme = {
     "spine": {"gap": [1, 3]},
     "rooms": [
-        room("gate", "Gate", "bunker_ops", [4, 3], [{"item": "health"}]),
-        room("mess", "Mess Hall", "bunker_hall", [[5, 6], [4, 5]], [{"actor": ["custodian", "roach"]}]),
-        room("lab", "Lab", "lab", [[4, 5], [3, 4]], [{"item": "crystal"}, {"actor": "eggbot"}]),
-        room("lobby", "Lift Lobby", "machine", [3, 5], [exit_table]),
+        room("gate", "Gate", "bunker_ops", [4, 3], [{"item": "health"}], purpose="gatehouse"),
+        room("mess", "Mess Hall", "bunker_hall", [[5, 6], [4, 5]], [{"actor": ["custodian", "roach"]}], purpose="mess_hall"),
+        room("lab", "Lab", "lab", [[4, 5], [3, 4]], [{"item": "crystal"}, {"actor": "eggbot"}], purpose="lab"),
+        room("lobby", "Lift Lobby", "machine", [3, 5], [exit_table], purpose="lift_lobby"),
     ],
     "wings": [
         {"id": "barracks", "name": "Barracks Wing", "after": "gate", "side": "any", "rooms": [
-            room("dorm", "Dormitory", "barracks", [[5, 6], [3, 4]], [{"actor": "roach", "count": 2}, {"item": "crystal"}]),
-            room("latrine", "Latrine", "storage", [2, 2], door_to="dorm"),
-            room("lockers", "Locker Room", "storage", [[3, 4], [2, 3]], chance=0.6),
+            room("dorm", "Dormitory", "barracks", [[5, 6], [4, 5]], [{"actor": "roach", "count": 2}, {"item": "crystal"}], purpose="bunk_room"),
+            room("latrine", "Latrine", "storage", [2, 2], door_to="dorm", purpose="latrine"),
+            room("lockers", "Locker Room", "storage", [[3, 4], [2, 3]], chance=0.6, purpose="locker_room"),
         ]},
         {"id": "officers", "name": "Officers' Wing", "after": ["mess", "lab"], "side": "any", "rooms": [
-            room("office", "Office", "bunker_ops", [[3, 4], 3]),
-            room("quarters", "Officer's Quarters", "barracks", [[3, 4], 3], next_to="office"),
-            room("armoury", "Armoury", "vault", [3, 3], [{"item": "launcher"}, {"item": "rockets"}]),
+            room("office", "Office", "bunker_ops", [[3, 4], 3], purpose="office"),
+            room("quarters", "Officer's Quarters", "barracks", [[3, 4], 3], next_to="office", purpose="officer_quarters"),
+            room("armoury", "Armoury", "vault", [3, 3], [{"item": "launcher"}, {"item": "rockets"}], purpose="armoury"),
         ]},
     ],
     "locks": [{"room": "armoury", "color": "red", "card": ["office", "quarters"]}],

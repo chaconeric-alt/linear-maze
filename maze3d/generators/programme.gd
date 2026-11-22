@@ -8,7 +8,8 @@ extends RefCounted
 ##
 ## The steps, each in generators/programme/: ProgrammePlan reads the programme and makes every choice the seed makes;
 ## ProgrammeLayout lays the plan out (the spine, its rooms, the wings and their rooms, the doors); ProgrammeFill puts
-## the start, the locks, the cards and the rooms' things in; ProgrammeCheck proves it can be finished. A seed whose
+## the start, the locks, the cards and the rooms' things in; ProgrammeFurnishing furnishes each room for its purpose;
+## ProgrammeCheck proves it can be finished. A seed whose
 ## level cannot be finished is tried again as the next (seed + 7919), as the rooms generator does, so the same seed
 ## still always gives the same level.
 class_name ProgrammeGen
@@ -64,7 +65,8 @@ static func attempt(level: Dictionary, seed_value: int) -> Dictionary:
 	out["legend"] = level.get("legend", {}).duplicate()
 	out["legend"].merge(fill.legend, true)
 	out["rooms"] = ProgrammeGen.rooms_of(lay, prog)
-	out["things"] = level.get("things", []).duplicate(true) + fill.things
+	out["things"] = level.get("things", []).duplicate(true) + fill.things \
+		+ ProgrammeFurnishing.furnish(lay, fill, str(level.get("kit", "")), seed_value, float(prog.get("furnish", 1.0)))
 	var proof := ProgrammeCheck.solve(out)
 	if not proof["ok"]:
 		return {"problems": ["it cannot be finished (rooms not reached: %s; cards behind their own lock: %s)"

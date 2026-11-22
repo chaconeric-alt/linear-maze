@@ -5,7 +5,8 @@ extends SelfTestPart
 ## its range), none overlapping, the spine rooms in order along one row, each wing's rooms against its branch
 ## corridor, rooms "next_to" sharing a wall and "door_to" a door in it; the armoury's every door is locked red and its
 ## card is in the office or the quarters; the proof finds the level can be finished and, without the card, the armoury
-## cannot be reached; over thirty worlds the seed's choices (where the officers' wing branches, the locker room or none,
+## cannot be reached; each room with a purpose and room to spare is furnished from that purpose's pieces, and none
+## stands on the way through a spine room or just inside a doorway; over thirty worlds the seed's choices (where the officers' wing branches, the locker room or none,
 ## the card's room, the mess's guard, each wing's side) each come out both ways, and every one can be finished; a
 ## programme written wrong says what is wrong. Then it is played as any level: the standard parts that walk, fight,
 ## take, open and finish.
@@ -29,6 +30,7 @@ func run() -> void:
 	_rooms(written["programme"], plan, lay)
 	_wings(plan, lay)
 	_locks(lay)
+	_furniture(lay)
 	_worlds(written)
 	_wrong(written)
 	for p in PARTS:
@@ -108,6 +110,38 @@ func _locks(lay: ProgrammeLayout) -> void:
 	var shut := ProgrammeCheck.solve(bare)
 	say(all_red and card and proof["ok"] and proof["cards"] == ["red"] and not shut["ok"] and shut["missed"] == ["Armoury"],
 		"the armoury's doors are locked red, its card is in the office or the quarters; the proof finishes the level with it, and without it misses the armoury")
+
+
+func _furniture(lay: ProgrammeLayout) -> void:
+	var furnished := 0
+	var bare: Array = []
+	var stray := 0
+	var in_way := 0
+	for id in lay.rects:
+		var pur: Dictionary = LM.defs.get("purposes", {}).get(str(lay.plan.rooms[id].get("purpose", "")), {})
+		if pur.is_empty():
+			continue
+		var pieces: Array = []
+		for k in ["wall", "floor", "centre"]:
+			for it in pur.get(k, []):
+				pieces.append(it[0] if it is Array else it)
+		var rc: Rect2i = lay.rects[id]
+		var n := 0
+		for t in level.data["things"]:
+			var at := Vector2i(int(t["at"][0]), int(t["at"][1])) if t.has("at") and t.has("prop") else Vector2i(-1, -1)
+			if not rc.has_point(at) or (t.has("use")):           # (the way out is the programme's own thing)
+				continue
+			n += 1
+			stray += 0 if pieces.has(t["prop"]) else 1
+			in_way += 1 if (lay.plan.spine.has(id) and at.y == lay.y0) or lay.doors.any(func(d: Dictionary) -> bool:
+				return (d["at"] as Vector2i).distance_squared_to(at) == 1) else 0
+		if n > 0:
+			furnished += 1
+		elif rc.get_area() >= 12:
+			bare.append(id)
+	say(furnished >= 6 and bare.is_empty() and stray == 0 and in_way == 0,
+		"rooms are furnished for their purpose (%d rooms; every room of 12 cells or more; every piece its purpose's), none in the way through or a doorway"
+		% furnished)
 
 
 ## Thirty worlds: the seed's every choice comes out both ways, and every one can be finished.
