@@ -79,6 +79,18 @@ func reset_run() -> void:
 		data["run"]["departure"] = copy
 
 
+## The world's own seed: a level laid out from a programme is laid out from it (SPEC.md 6.3), so another world is
+## another layout of the same rooms. Drawn the first time it is asked for (a world that never needs one draws nothing),
+## and written into the expedition's departure copy too, so a death that puts the world back keeps it.
+func world_seed() -> int:
+	if not data["world"].has("seed"):
+		data["world"]["seed"] = randi() % 1000000
+		var copy: Dictionary = data["run"].get("departure", {})
+		if copy.has("world"):
+			copy["world"]["seed"] = data["world"]["seed"]
+	return int(data["world"]["seed"])
+
+
 # ------------------------------------------------------------------ death (SPEC.md 5.16)
 ## An expedition sets out (Main, as it starts one, before the level is entered): a copy of the world as it is now.
 func depart() -> void:

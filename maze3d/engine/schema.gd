@@ -22,6 +22,11 @@ const SKILL := ["name", "text", "max", "gives"]
 const ORIGIN := ["name", "text", "stats", "mutations", "rerolls"]
 const MUTATION := ["name", "text", "stats", "gives"]
 const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor", "lamp"]     # what the engine reads (CharacterSheet)
+const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door"]          # a level's written programme (SPEC.md 6.3)
+const PROG_SPINE := ["gap"]
+const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance"]
+const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms"]
+const PROG_LOCK := ["room", "wing", "color", "card", "door"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
 const THING := ["at", "tag", "offset", "face", "level", "restock"]
@@ -70,6 +75,7 @@ static func check_defs(defs: Dictionary) -> Array:
 static func check_level(lv: Dictionary) -> Array:
 	var out: Array = []
 	var entries: Array = lv.get("things", []).duplicate()
+	var out_p := Schema._check_programme(lv, entries)
 	var legend: Dictionary = lv.get("objectLegend", {})
 	for ch in legend:
 		entries.append(legend[ch])
@@ -83,6 +89,32 @@ static func check_level(lv: Dictionary) -> Array:
 		for k in e:
 			if not k in valid:
 				out.append("level '%s', %s at %s: %s" % [lv.get("id", "?"), kind, e.get("at", e.get("tag", "?")), _unknown(k, valid)])
+	return out + out_p
+
+
+## A level's programme: its own keys, its spine's, each room's, wing's and lock's; each room's things are added to
+## `entries`, to be checked as things ("count" with them).
+static func _check_programme(lv: Dictionary, entries: Array) -> Array:
+	var out: Array = []
+	var p: Dictionary = lv.get("programme", {})
+	var at := "level '%s', programme" % lv.get("id", "?")
+	var pairs: Array = [[p, PROGRAMME, ""], [p.get("spine", {}), PROG_SPINE, " spine"]]
+	var rooms: Array = p.get("rooms", []).duplicate()
+	for w in p.get("wings", []):
+		pairs.append([w, PROG_WING, " wing '%s'" % w.get("id", "?")])
+		rooms += w.get("rooms", [])
+	for r in rooms:
+		pairs.append([r, PROG_ROOM, " room '%s'" % r.get("id", "?")])
+		for t in r.get("things", []):
+			var e: Dictionary = t.duplicate()
+			e.erase("count")
+			entries.append(e)
+	for lk in p.get("locks", []):
+		pairs.append([lk, PROG_LOCK, " lock"])
+	for pr in pairs:
+		for k in pr[0]:
+			if not k in pr[1]:
+				out.append("%s%s: %s" % [at, pr[2], _unknown(k, pr[1])])
 	return out
 
 
@@ -107,7 +139,8 @@ static func undocumented(spec_text: String) -> Array:
 	for m in fence.search_all(spec_text):
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
-	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + STAT + SKILL + ORIGIN + MUTATION + GIVES
+	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + STAT + SKILL + ORIGIN + MUTATION + GIVES \
+		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

@@ -196,8 +196,8 @@ func _load(target: String, _attract: bool, back: Dictionary = {}) -> bool:
 
 ## The level's data: from the game's levels, or generated (with the seed given, a save's, or a new one).
 func _level_data(id: String, back: Dictionary) -> Dictionary:
-	if not id.begins_with("gen:"):
-		return LM.levels.get(id, {}).duplicate(true)
+	if not id.begins_with("gen:"):                   # a written programme is laid out now (ProgrammeGen), from the world's seed
+		return ProgrammeGen.entered(LM.levels.get(id, {}).duplicate(true), int(_args.get("seed", -1)), str(_args.get("dump", "")))
 	var bits := id.substr(4).split(":")            # gen:<generator>[:<theme>]
 	var g: Object = LM.generators.get(bits[0])
 	if g == null:

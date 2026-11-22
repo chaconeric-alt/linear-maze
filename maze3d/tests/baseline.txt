@@ -23,3 +23,4 @@ dust            | --level=gen:rooms:dust --seed=5 --selftest
 descent         | --level=descent_1 --selftest
 yard            | --level=yard --selftest
 range           | --level=range --selftest
+blueprint       | --level=blueprint --selftest
