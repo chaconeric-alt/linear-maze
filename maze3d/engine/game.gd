@@ -158,6 +158,7 @@ func _register_effects() -> void:
 	effects.register("quake", _fx_quake)
 	effects.register("chance", _fx_chance)
 	effects.register("end", func(ef: Dictionary, _c: Dictionary) -> void: finish(ef))
+	effects.register("pass_time", func(ef: Dictionary, _c: Dictionary) -> void: State.pass_days(int(ef.get("days", 1))))
 	_prop_uses.register(effects)
 	_gates.register(effects)
 

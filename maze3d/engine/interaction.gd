@@ -80,6 +80,8 @@ func offered(final := false) -> Array:
 		var lab: String = o.get("label", "")
 		if o.has("hack"):                                # a hack shows its odds
 			lab += "   [hack: %d%%]" % roundi(Game.hack_chance(float(o.get("hard", 0.0))) * 100.0)
+		if o.has("carrying"):                            # and an option that needs a tool says which
+			lab += "   [needs %s]" % Carrying.names(OptionGates.needs(o))
 		out.append([i, lab])
 	return out
 
@@ -90,7 +92,7 @@ func choose(i: int) -> void:
 	var o: Dictionary = spec["options"][i]
 	_choosing = i
 	var reg: EffectRegistry = Game.effects
-	for key in reg.gates():                          # "cost", "hack": what has to be got past first (engine/option_gates.gd)
+	for key in reg.gates():                          # "carrying", "cost", "hack": what has to be got past first (engine/option_gates.gd)
 		var check: Callable = reg.gate(key)["check"]
 		if o.has(key) and check.is_valid():
 			var ok: bool = await check.call(o, self)

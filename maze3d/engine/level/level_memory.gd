@@ -9,7 +9,8 @@ extends RefCounted
 ## remember(), and is told it again by recall(): a prop's uses, lid and charges; a door's lock and seal; a trap
 ## switched off; a monster's health, where it stood, and being angered (it comes back calm). The level's triggers say
 ## which have gone off, what of the map was explored and which rooms were named. The memory also holds the level's
-## flags, key cards and used panel options, which are kept in it as they happen (State, Interaction).
+## flags, key cards and used panel options, which are kept in it as they happen (State, Interaction), and the day it
+## was left: on the next visit its makers catch up on the days since (Restock).
 ##
 ## A memory carries the signature of the level it was taken from (Spawner.signature): if the level's data has changed
 ## shape since (an edited level file), the memory is thrown away and the level starts afresh. SPEC.md 5.14.
@@ -39,21 +40,26 @@ static func take(level: Level) -> Dictionary:
 			if not r.is_empty():
 				things[k] = r
 	return {"sig": sp.signature(), "things": things, "gone": gone.keys(), "extra": extra, "extra_n": sp.extra_n,
-		"triggers": level.triggers.remember() if level.triggers else {}}
+		"triggers": level.triggers.remember() if level.triggers else {}, "left": State.day()}
 
 
-## Before the level's things are made: wipe a memory of a level of another shape; tell the Spawner what is gone.
-static func prepare(level: Level, mem: Dictionary) -> void:
+## Before the level's things are made: wipe a memory of a level of another shape; let its makers catch up on the days
+## since it was left (Restock); tell the Spawner what is gone. The keys of what the makers made again.
+static func prepare(level: Level, mem: Dictionary) -> Array:
 	if mem.is_empty():
-		return
+		return []
 	if str(mem.get("sig", "")) != "" and mem["sig"] != level.spawner.signature():
 		push_warning("Level %s has changed since it was last visited: what it remembered is forgotten" % level.data.get("id"))
 		var fresh := WorldState.blank_memory()
 		fresh["visits"] = mem.get("visits", 1)
 		mem.clear()
 		mem.merge(fresh)
+	var back: Array = []
+	if mem.has("left") and not level.data.get("home", false):
+		back = Restock.catch_up(mem, level.spawner.plan(), State.day() - int(mem["left"]), State.flags_for("world:"))
 	for k in mem.get("gone", []):
 		level.spawner.gone[k] = true
+	return back
 
 
 ## After the level is built: make again what was made while playing, and tell every remembered thing what it was.

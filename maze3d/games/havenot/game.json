@@ -464,6 +464,7 @@
   "stowed": "%s: your hands are full, so it goes in the pack.",
   "worn": "%s: you put it on.",
   "unstuck": "Wedged in. You squeeze back the way you came.",
+  "restocked": "Fresh scuffs on the floor. Something has been at work here since you left.",
   "death_title": "YOU BECAME SALVAGE",
   "death_text": "Somebody will find your boots useful.",
   "end_title": "The road goes on"

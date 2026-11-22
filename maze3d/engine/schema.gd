@@ -17,7 +17,7 @@ const ITEM := ["name", "kind", "value", "amount", "ammo", "color", "weapon", "mo
 	"effects", "flag", "text", "trophy", "bulk", "wear", "capacity", "slots"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
-const THING := ["at", "tag", "offset", "face", "level"]
+const THING := ["at", "tag", "offset", "face", "level", "restock"]
 const THING_KINDS := {
 	"start": ["start"],
 	"lift": ["lift", "home", "speed", "color"],

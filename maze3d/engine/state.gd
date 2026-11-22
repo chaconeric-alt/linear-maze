@@ -147,6 +147,29 @@ func set_flag(name: String) -> bool:
 	return true
 
 
+## The world's day. It moves on by one when a character comes home alive (Main), and by a `pass_time` effect; a level
+## catches up on the days since it was left as it is visited again (Restock).
+func day() -> int:
+	return int(data["world"].get("day", 0))
+
+
+func pass_days(n: int) -> void:
+	data["world"]["day"] = day() + maxi(n, 0)
+
+
+## Mark a level safe (the `make_safe` effect): its makers stop for good. Its memory is made if it has none yet, so a
+## level not yet visited can be made safe from another (an installation's mainframe). A death puts it back as it was.
+func mark_safe(key: String) -> void:
+	if not data["levels"].has(key):
+		data["levels"][key] = WorldState.blank_memory()
+	data["levels"][key]["safe"] = true
+
+
+## The level being played has been made safe.
+func is_safe() -> bool:
+	return memory().get("safe", false)
+
+
 ## The key cards held: they belong to the level they were found in.
 func keys() -> Dictionary:
 	return memory()["keys"]
@@ -193,7 +216,9 @@ static func blank_run() -> Dictionary:
 ## What a level remembers (LevelMemory): its flags and key cards; the panel options used ("used": thing key -> {option:
 ## true}) and other marks; "sig", the shape of the level it was taken from; "things" (key -> what that thing says
 ## changed), "gone" (keys not to make again), "extra" (things made while playing, to make again: key -> {"e", "at",
-## "yaw"}) and "extra_n"; "triggers" (which have gone off, the map explored, the rooms named); "visits".
+## "yaw"}) and "extra_n"; "triggers" (which have gone off, the map explored, the rooms named); "visits". Kept as they
+## come up, so not in a blank one: "left" (the day it was last left), "makers" (what each maker has made, Restock) and
+## "safe" (made safe: its makers have stopped).
 static func blank_memory() -> Dictionary:
 	return {"flags": {}, "keys": {}, "used": {}, "marks": {}, "sig": "", "things": {}, "gone": [], "extra": {}, "extra_n": 0, "triggers": {}, "visits": 0}
 

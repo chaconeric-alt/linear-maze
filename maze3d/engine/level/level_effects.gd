@@ -1,6 +1,6 @@
 extends RefCounted
 ## LevelEffects - the effects that belong to the place: doors, lights, spawns, alarms, things shown and hidden,
-## off-duty monsters sent to the range. Registered with the EffectRegistry by the Level when it is built, so the
+## off-duty monsters sent to the range, making the place safe. Registered with the EffectRegistry by the Level when it is built, so the
 ## handlers always act on the level being played. SPEC.md, "Effects".
 class_name LevelEffects
 
@@ -26,6 +26,7 @@ func register(reg: EffectRegistry) -> void:
 	reg.register("alarm", alarm)
 	reg.register("enable", enable)
 	reg.register("disable", enable)
+	reg.register("make_safe", make_safe)
 
 
 func _tagged(ef: Dictionary) -> Array:
@@ -151,3 +152,14 @@ func enable(ef: Dictionary, _ctx: Dictionary) -> void:
 	for t in _tagged(ef):
 		if t.has_method("set_enabled"):
 			t.set_enabled(ef["type"] == "enable")
+
+
+## The level is made safe for good: its makers stop (Restock) and so do its repair bays (Rebuilder). "levels": the keys
+## of other levels made safe with it, so one mainframe can shut a whole installation down. A death puts it back as the
+## expedition found it, as it does everything else.
+func make_safe(ef: Dictionary, _ctx: Dictionary) -> void:
+	var also: Array = ef.get("levels", [])
+	State.mark_safe(State.level_key)
+	for k in also:
+		State.mark_safe(str(k))
+	Events.emit("level.safe", {"level": State.level_key, "also": also.duplicate()})

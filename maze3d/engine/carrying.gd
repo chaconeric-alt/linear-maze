@@ -88,3 +88,17 @@ static func _sum(gear: Array, key: String) -> int:
 	for g in Carrying.wearable(gear):
 		n += int(LM.defs.get("items", {}).get(g, {}).get(key, 0))
 	return n
+
+
+## The player has that item with them: worn, in hand (a weapon's item, by its "weapon"), or in the pack (the run's
+## haul). What a panel option's `carrying` gate asks (OptionGates).
+static func carries(pl: Player, item_id: String) -> bool:
+	if pl == null or not is_instance_valid(pl):
+		return false
+	var d: Dictionary = LM.defs.get("items", {}).get(item_id, {})
+	return pl.gear.has(item_id) or int(Game.haul.get(item_id, 0)) > 0 or (d.has("weapon") and pl.weapons.has(d["weapon"]))
+
+
+## "A cutting torch or a plasma saw": the items' names, as a player reads them.
+static func names(ids: Array) -> String:
+	return " or ".join(ids.map(func(id: Variant) -> String: return str(LM.defs.get("items", {}).get(str(id), {}).get("name", str(id)))))

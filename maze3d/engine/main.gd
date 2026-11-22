@@ -12,6 +12,7 @@ var _level_id := ""
 var _seed := 0                   # what a generated level was made from: its key is "<id>#<seed>" (level_key)
 var _left := true                # the level being played has been reported left (level.left)
 var _how_left := ""              # how: "out", "died", "away" (what becomes of its memory is settled as it is unloaded)
+var _settled := false            # its memory has been settled: once, as it ends or is unloaded, whichever comes first
 var _in_run := false             # an expedition is under way (run.started ... run.ended)
 var _args: Dictionary = {}
 
@@ -163,7 +164,10 @@ func _load(id: String, _attract: bool, back: Dictionary = {}) -> bool:
 	level.process_mode = Node.PROCESS_MODE_PAUSABLE      # Main keeps running while paused; the world must not
 	add_child(level)
 	Game.level = level
+	var total: int = int(Game.stats.get("treasure_total", 0))
 	level.build(data, {} if home else State.memory())
+	if not back.is_empty():                          # a save's run counted the level's treasure already; its pickups count it again as they are made
+		Game.stats["treasure_total"] = total
 	var sortie := _put_player(data, back)
 	Game.player = player
 	Game.playing = true
@@ -171,10 +175,14 @@ func _load(id: String, _attract: bool, back: Dictionary = {}) -> bool:
 		Game.say(data["intro"], "info")
 	hud.refresh()
 	_left = false
+	_settled = false
 	if not home and not _in_run:
 		_in_run = true
 		Events.emit("run.started", {"level": level_key(), "from": "home" if sortie else "title"})
 	Events.emit("level.entered", {"level": level_key(), "how": "restore" if not back.is_empty() else ("home" if home else ("sortie" if sortie else "start"))})
+	if not level.restocked.is_empty():               # its makers have been at work since it was last left
+		Events.emit("level.restocked", {"level": level_key(), "keys": level.restocked})
+		Game.say(str(LM.game.get("words", {}).get("restocked", "Something has been at work here since you left.")), "warn")
 	return true
 
 
@@ -246,10 +254,13 @@ func _unload() -> void:
 ## What changed in the level is kept in its memory (LevelMemory), unless the player died there: then the whole world goes
 ## back to how the expedition found it (State.die: this level, the bunker, the characters, the world's flags), the
 ## departure copy kept if the expedition goes on (the level started again). A generated level whose run is over is
-## forgotten (a one-off); the bunker keeps its own record (the home).
+## forgotten (a one-off); the bunker keeps its own record (the home). Only once: a level that ended alive is settled
+## then, and its memory must not be taken again as it is unloaded, after the day has moved on (it notes the day it was
+## left, which Restock counts from).
 func _settle() -> void:
-	if level.data.get("home", false):
+	if level.data.get("home", false) or _settled:
 		return
+	_settled = true
 	if _how_left == "died":
 		State.die(_in_run)
 	elif _level_id.begins_with("gen:") and not _in_run:
@@ -289,6 +300,7 @@ func _on_ended(info: Dictionary) -> void:
 	State.run().erase("where")
 	if not dead:
 		_settle()
+		State.pass_days(1)                           # home alive: a day goes by, and the places left behind catch up (Restock)
 		if player:
 			Profile.bank(Game.credits, player.weapons, player.armor, Game.haul, player.gear)
 	if was_run:

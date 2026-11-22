@@ -4953,7 +4953,13 @@
     12
    ],
    "level": 2,
-   "tag": "bay"
+   "tag": "bay",
+   "restock": {
+    "every": [
+     1,
+     6
+    ]
+   }
   },
   {
    "prop": "an_poster_c",

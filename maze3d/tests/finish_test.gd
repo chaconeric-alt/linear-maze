@@ -1,9 +1,11 @@
 extends SelfTestPart
-## Objectives and the way out: whatever ends the level is used, and the level is finished.
+## Objectives and the way out: whatever ends the level is used, and the level is finished; coming out alive, a day
+## goes by (State.day, which Restock counts).
 
 
 func run() -> void:
 	Game.hud.refresh()
+	var day := State.day()
 	print("INFO  flags: ", Game.flags.keys())
 	print("INFO  objective now: ", Game.hud.objective_text())
 	for n in get_tree().get_nodes_in_group("usable"):
@@ -16,3 +18,4 @@ func run() -> void:
 						await Game.interaction.choose(i)
 	await frames(5)
 	say(Game.over, "the level can be finished")
+	say(State.day() == day + 1, "coming out alive, a day goes by (day %d)" % State.day())

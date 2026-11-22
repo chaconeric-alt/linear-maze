@@ -5687,7 +5687,10 @@
    ],
    "face": "s",
    "shut": true,
-   "blocks": true
+   "blocks": true,
+   "restock": {
+    "every": 1
+   }
   },
   {
    "station": "rb_station_dancer",
@@ -5709,7 +5712,10 @@
    ],
    "face": "s",
    "shut": true,
-   "blocks": true
+   "blocks": true,
+   "restock": {
+    "every": 1
+   }
   },
   {
    "station": "rb_station_deadbot",
@@ -5731,7 +5737,10 @@
    ],
    "face": "s",
    "shut": true,
-   "blocks": true
+   "blocks": true,
+   "restock": {
+    "every": 1
+   }
   },
   {
    "station": "rb_station_defender",
@@ -5753,7 +5762,10 @@
    ],
    "face": "s",
    "shut": true,
-   "blocks": true
+   "blocks": true,
+   "restock": {
+    "every": 1
+   }
   },
   {
    "station": "rb_station_knife",
@@ -5775,7 +5787,10 @@
    ],
    "face": "s",
    "shut": true,
-   "blocks": true
+   "blocks": true,
+   "restock": {
+    "every": 1
+   }
   },
   {
    "station": "rb_station_eggbot",
@@ -5797,7 +5812,10 @@
    ],
    "face": "s",
    "shut": true,
-   "blocks": true
+   "blocks": true,
+   "restock": {
+    "every": 1
+   }
   },
   {
    "station": "rb_station_monoid",
@@ -5819,7 +5837,10 @@
    ],
    "face": "s",
    "shut": true,
-   "blocks": true
+   "blocks": true,
+   "restock": {
+    "every": 1
+   }
   },
   {
    "station": "rb_station_plodder",
@@ -5841,7 +5862,10 @@
    ],
    "face": "s",
    "shut": true,
-   "blocks": true
+   "blocks": true,
+   "restock": {
+    "every": 1
+   }
   },
   {
    "sign": "ROBOT DEPOT\nopen, and shut",

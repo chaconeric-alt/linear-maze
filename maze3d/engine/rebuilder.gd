@@ -4,7 +4,9 @@ extends Node3D
 ##                "text": "Fresh paint. The Repair Bay has been busy."}, "at": [x, y], "level": 2}
 ## While its `off` flag is not set, every `every` seconds it rebuilds one robot of a listed kind that has been destroyed on
 ## its own storey (`level`), at most `max` in all, and sends it out from where it stands. It does not work while you watch
-## from closer than 7 m. Monsters do not use lifts, so what it rebuilds stays on its floor.
+## from closer than 7 m, nor once the level has been made safe (make_safe). Monsters do not use lifts, so what it
+## rebuilds stays on its floor. Between visits it works as a maker if it has "restock" (Restock): it makes again what was
+## destroyed of the kinds it rebuilds, where the level put them.
 class_name Rebuilder
 
 var level: Level
@@ -32,7 +34,7 @@ func waiting() -> Array:
 
 
 func _process(dt: float) -> void:
-	if spec.has("off") and Game.has_flag(spec["off"]):
+	if (spec.has("off") and Game.has_flag(spec["off"])) or State.is_safe():
 		return
 	_t -= dt
 	if _t > 0.0:

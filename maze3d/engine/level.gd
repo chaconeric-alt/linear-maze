@@ -48,6 +48,7 @@ var doors_up: Dictionary = {}    # Vector3i(x, y, storey) -> Door, for doors tha
 var lifts: Array = []
 var things_by_tag: Dictionary = {}
 var things: Dictionary = {}      # key -> node: every thing by the key its place in the level's data gives it (Spawner.plan)
+var restocked: Array = []        # the keys of what its makers made again since the last visit (Restock)
 var actors: Array = []
 var targets: Array = []          # Targets (engine/target.gd)
 var traps: Array = []            # Traps (engine/trap.gd), for hazard()
@@ -99,7 +100,7 @@ func build(level_data: Dictionary, memory: Dictionary = {}) -> void:
 	nav_graph = builder.build_nav()
 	nav = nav_graph.astar
 	spawner = Spawner.new(self, ld)
-	LevelMemory.prepare(self, memory)
+	restocked = LevelMemory.prepare(self, memory)
 	spawner.build_things()
 	builder.build_fluid()
 	builder.build_environment()

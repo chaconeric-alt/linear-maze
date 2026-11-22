@@ -1,8 +1,8 @@
 extends Control
 ## HudMap - the map in the top right corner (Tab makes it bigger): the cells explored on the floor you are on, windows,
 ## ramps, balconies, pools, lifts and doors (in their lock's colour while locked), anything hostile you have seen as a
-## red signal that pulses (faster and wider once it is hunting), you as a white arrow, and B1 / L0 / L1 when the level
-## has more than one floor.
+## red signal that pulses (faster and wider once it is hunting), you as a white arrow, B1 / L0 / L1 when the level
+## has more than one floor, and SAFE once it has been made safe.
 class_name HudMap
 
 const SMALL := Vector2(212, 212)
@@ -32,8 +32,20 @@ func _draw() -> void:
 	var side := Vector2(-fwd.y, fwd.x)
 	draw_colored_polygon(PackedVector2Array([mid + fwd * 8, mid - fwd * 5 + side * 5, mid - fwd * 5 - side * 5]), Color.WHITE)
 	draw_rect(Rect2(Vector2.ZERO, size), Color(accent.r, accent.g, accent.b, 0.6), false, 1.0)
-	if lv.floors.size() > 1:                           # which floor: B1 below, L0 the main one, L1 above
-		draw_string(ThemeDB.fallback_font, Vector2(6, 16), ("B%d" % -pf) if pf < 0 else ("L%d" % pf), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, accent)
+	var label := HudMap.corner(lv.floors.size(), pf, State.is_safe())
+	if label != "":
+		draw_string(ThemeDB.fallback_font, Vector2(6, 16), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, accent)
+
+
+## What the corner says: which floor (B1 below, L0 the main one, L1 above) when there is more than one, and SAFE once
+## the level has been made safe (its makers have stopped for good).
+static func corner(floors: int, pf: int, safe: bool) -> String:
+	var out: Array = []
+	if floors > 1:
+		out.append(("B%d" % -pf) if pf < 0 else ("L%d" % pf))
+	if safe:
+		out.append("SAFE")
+	return "  ".join(out)
 
 
 func _draw_cells(lv: Level, pl: Node3D, pf: int, s: float, pc: Vector2, mid: Vector2) -> void:

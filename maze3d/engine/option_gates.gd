@@ -5,15 +5,34 @@ extends RefCounted
 ##                        it can be tried again, at the same price
 ##   "risk": 0..1         it goes wrong that often, after it has been paid for: "fail" effects, "fail_result" words,
 ##                        and it can be tried again
+##   "carrying": item id  (or a list: any one will do) it needs that with you: worn, in hand or in the pack (a cutting
+##                        torch, a technician's kit). Without it, it says so ("missing", or "You need ...") and nothing
+##                        happens. It is not used up. Asked first, before anything is paid or tried
 ## Each is registered with the EffectRegistry as a gate (register_gate). `s` is the panel session (Game.interaction):
 ## in_panel(), panel_text(), show_panel(text, working), close_panel(), panel_ctx(), unmark_used().
 class_name OptionGates
 
 
 func register(reg: EffectRegistry) -> void:
+	reg.register_gate("carrying", carrying)
 	reg.register_gate("cost", cost_check, cost_pay)
 	reg.register_gate("hack", hack)
 	reg.register_gate("risk", Callable(), risk)
+
+
+func carrying(o: Dictionary, s: Object) -> bool:
+	var need: Array = OptionGates.needs(o)
+	for id in need:
+		if Carrying.carries(Game.player, str(id)):
+			return true
+	LM.sound("denied")
+	s.show_panel("%s\n\n%s" % [s.panel_text(), o.get("missing", "You need %s." % Carrying.names(need))])
+	return false
+
+
+## The items an option's `carrying` gate asks for, as a list.
+static func needs(o: Dictionary) -> Array:
+	return o["carrying"] if o.get("carrying") is Array else [o.get("carrying", "")]
 
 
 func cost_check(o: Dictionary, s: Object) -> bool:

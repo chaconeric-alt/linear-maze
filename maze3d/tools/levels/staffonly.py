@@ -4,7 +4,8 @@
 It is a test floor, and it is built from what exists: this script reads every kit and the game's defs and lays out
   - a room in every style of every kit, each kit in a wing of its own off one spine corridor,
   - one of every piece of furniture, in a room of its own kit, and one of every door,
-  - one of every monster wandering, lounging or perched where it belongs; every robot in its station, open and shut,
+  - one of every monster wandering, lounging or perched where it belongs; every robot in its station, open and shut
+    (a shut one restocks: it makes its robot again a day after it is destroyed),
   - every loot container, stocked; one of every item,
   - a gun range, and targets for what cannot walk to it,
   - a lift, a pit, a pool, ramps, balconies, a room over a room, a basement, windows, thin walls, cut corners,
@@ -342,7 +343,10 @@ for i, what in enumerate(order):
             for shut in (False, True):
                 if x0 + j >= x0 + RW:
                     sys.exit("staffonly.py: more stations than the Depot's wall holds; widen RW")
-                T.append({"station": STATIONS[a], "actor": a, "at": [x0 + j, y0 + 1], "face": "s", "shut": shut, "blocks": True})
+                st = {"station": STATIONS[a], "actor": a, "at": [x0 + j, y0 + 1], "face": "s", "shut": shut, "blocks": True}
+                if shut:
+                    st["restock"] = {"every": 1}      # a shut one makes its robot again a day after it is destroyed (Restock)
+                T.append(st)
                 placed.add(STATIONS[a])
                 actors_used.add(a)
                 j += 2

@@ -523,7 +523,8 @@ put(F, 'bk_console', (21, 13), 'e', along=0.0, tag='bay_console', use=read('Use 
          dict(type='drop', items=['fuel_cell_big', 'fuel_cell_big']), msg('The Repair Bay winds down. Lugnut Mae would kiss you for that coupling.', 'good')],
          result='REPAIR BAY: OFFLINE. The coupling comes out warm.'),
     dict(label='Read the board', when='bay_off', result='UNITS REBUILT THIS QUARTER: 1,104. The number has stopped going up.')]))
-T.append(dict(rebuild=dict(actors=['custodian', 'drone'], every=40, max=5, off='bay_off', text='Fresh paint on a robot. The Repair Bay has been busy.'), at=[20, 12], level=2, tag='bay'))
+T.append(dict(rebuild=dict(actors=['custodian', 'drone'], every=40, max=5, off='bay_off', text='Fresh paint on a robot. The Repair Bay has been busy.'), at=[20, 12], level=2, tag='bay',
+         restock=dict(every=[1, 6])))   # between visits too: one robot every one to six days (a robot generator; Eric, 21 Nov)
 poster(F, (19, 14), 's', 'SAFETY IS A COMPETITION', 'DAYS SINCE A ROBOT REBUILT A ROBOT INCORRECTLY: 0.\n\nBlack and yellow stripes, a cartoon robot giving a thumbs up with a hand that is on backwards.', 'an_poster_c', ink=(0.1, 0.1, 0.1))
 item(F, 'fuel_cell_big', (21, 9), y=0.4)
 actor(F, 'custodian', (20, 13), lounge='none')

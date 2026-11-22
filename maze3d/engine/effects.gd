@@ -8,7 +8,7 @@ extends RefCounted
 ##
 ## Two families share the table under a prefix, because they are the same idea with a different caller:
 ##   "use:<type>"     what a Prop does when it is used ("use": {"type": "cache"} in a level), engine/prop_uses.gd
-##   "option:<key>"   a key on a panel option that has to be got past first ("cost", "hack", "risk"), engine/option_gates.gd
+##   "option:<key>"   a key on a panel option that has to be got past first ("carrying", "cost", "hack", "risk"), engine/option_gates.gd
 ## Neither is meant for an effect list in a level file.
 class_name EffectRegistry
 

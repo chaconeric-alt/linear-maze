@@ -39,12 +39,16 @@ func run() -> void:
 	print("INFO  events: %s; digest %08x" % [", ".join(names.map(func(n: String) -> String: return "%s %d" % [n, counts[n]])), JSON.stringify(log).hash() & 0xffffffff])
 
 
-## Every monster lying dead was reported dead, once, under its own key.
+## Every monster lying dead was reported dead, once, under its own key: once a life, as a maker may have made it again
+## since it died (level.restocked), and then it can die again.
 func _deaths(log: Array) -> void:
 	var told := {}
 	var twice := 0
 	for ev in log:
-		if ev[0] == "actor.died":
+		if ev[0] == "level.restocked":
+			for k in ev[1]["keys"]:
+				told.erase(k)                            # made again: a new life
+		elif ev[0] == "actor.died":
 			twice += 1 if told.has(ev[1]["key"]) else 0
 			told[ev[1]["key"]] = true
 	var dead := 0
