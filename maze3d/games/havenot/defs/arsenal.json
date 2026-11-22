@@ -7,6 +7,10 @@
   "cells": {
    "name": "cells",
    "max": 60
+  },
+  "rockets": {
+   "name": "rockets",
+   "max": 6
   }
  },
  "weapons": {
@@ -104,6 +108,30 @@
     0.24,
     -0.2,
     -0.42
+   ]
+  },
+  "launcher": {
+   "name": "Rocket Launcher",
+   "model": "weapon_launcher",
+   "ammo": "rockets",
+   "per_shot": 1,
+   "pickup_ammo": 1,
+   "damage": 120,
+   "rate": 0.8,
+   "spread": 0.3,
+   "recoil": 2.4,
+   "kick": 0.3,
+   "projectile": "rocket",
+   "sound": "rocket",
+   "color": [
+    1.0,
+    0.55,
+    0.2
+   ],
+   "hold": [
+    0.3,
+    -0.29,
+    -0.8
    ]
   }
  },
@@ -256,6 +284,26 @@
    ],
    "light": 1.2,
    "kind": "energy"
+  },
+  "rocket": {
+   "speed": 30,
+   "radius": 0.12,
+   "color": [
+    1.0,
+    0.55,
+    0.2
+   ],
+   "light": 3.0,
+   "kind": "explosive",
+   "blast": {
+    "kind": "explosive",
+    "radius": 4.5,
+    "damage": 90,
+    "knock": 11.0,
+    "lift": 4.0,
+    "self": true,
+    "fireball": true
+   }
   }
  }
 }

@@ -11,6 +11,7 @@
   "armor": {"name": "Light Ballistic Vest", "kind": "armor", "model": "item_armor", "amount": 50, "glow": [0.2, 0.9, 1.0]},
   "shells": {"name": "Shells", "kind": "ammo", "ammo": "shells", "amount": 8, "model": "item_ammo_shells", "glow": [1.0, 0.4, 0.2]},
   "cells": {"name": "Energy cells", "kind": "ammo", "ammo": "cells", "amount": 12, "model": "item_ammo_cells", "glow": [0.2, 0.9, 1.0]},
+  "rockets": {"name": "Rockets", "kind": "ammo", "ammo": "rockets", "amount": 2, "model": "item_ammo_rockets", "glow": [1.0, 0.5, 0.15]},
   "keycard": {"name": "Key card", "kind": "key", "model": "item_keycard", "color": "red", "scale": 2.0},
   "scattergun": {"bulk": 4, "name": "Pump Scattergun", "kind": "weapon", "weapon": "scattergun", "model": "weapon_scattergun", "glow": [1.0, 0.6, 0.3], "scale": 1.3},
   "lucky_chip": {"name": "Lucky chip", "kind": "quest", "model": "item_chip", "kit": "anomalous", "flag": "lucky_chip", "text": "A worn gambler's chip. Somebody wants this more than you do.", "glow": [1.0, 0.8, 0.3], "scale": 2.2},
@@ -19,6 +20,7 @@
   "ad_core": {"bulk": 4, "trophy": true, "name": "The agency's inner core", "kind": "treasure", "model": "item_core", "kit": "anomalous", "value": 2500, "glow": [1.0, 0.3, 0.85], "scale": 2.4},
   "arc": {"bulk": 4, "name": "Arc Carbine", "kind": "weapon", "weapon": "arc", "model": "weapon_arc", "kit": "anomalous", "glow": [0.4, 0.92, 1.0], "scale": 1.3},
   "plasma": {"bulk": 5, "name": "Plasma Musket", "kind": "weapon", "weapon": "plasma", "model": "weapon_plasma", "glow": [0.3, 0.9, 1.0], "scale": 1.3},
+  "launcher": {"bulk": 6, "name": "Rocket Launcher", "kind": "weapon", "weapon": "launcher", "model": "weapon_launcher", "glow": [1.0, 0.55, 0.2], "scale": 1.2},
   "backpack": {"name": "Scavenger's backpack", "kind": "gear", "wear": "back", "capacity": 6, "bulk": 2, "model": "item_backpack", "glow": [0.9, 0.75, 0.35]},
   "hauler": {"name": "Hauler frame", "kind": "gear", "wear": "back", "capacity": 10, "bulk": 3, "model": "item_hauler", "glow": [0.9, 0.75, 0.35]},
   "sling": {"name": "Gun sling", "kind": "gear", "wear": "sling", "slots": 1, "bulk": 1, "model": "item_sling", "glow": [0.9, 0.75, 0.35]}

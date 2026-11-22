@@ -5,13 +5,16 @@ extends SelfTestPart
 ## may last 900 frames, or three times as long as the weapon would take to kill it if every shot hit, whichever is
 ## longer: a tough monster (the Princess: 650 health and armour) gets the time a player would need. Known to be
 ## flaky: a fleeing monster can still outlast the limit, and there is sometimes no spot to stand in a tight corner.
+## A weapon whose blast hurts the one who fires it (the rocket launcher: "self" in its projectile's "blast") is left
+## out: these fights are fought up close, and it has its own test on the Proving Range (range_test.gd).
 
 const STALL := 120          # frames with no damage landing before the player looks for another spot
 
 
 func run() -> void:
 	for wid in LM.defs.get("weapons", {}):
-		pl.give_weapon(wid)
+		if not _hurts_user(wid):
+			pl.give_weapon(wid)
 	for k in pl.ammo:
 		pl.ammo[k] = 9999
 	var wi := 0
@@ -81,6 +84,14 @@ func _time_allowed(a: Actor) -> int:
 	if per_second <= 0.0:
 		return 900
 	return maxi(900, ceili(3.0 * a.hp / per_second * 60.0))
+
+
+## True for a weapon whose shot's blast hurts the one who fired it.
+func _hurts_user(wid: String) -> bool:
+	var w: Dictionary = LM.get_def("weapons", wid)
+	if not w.has("projectile"):
+		return false
+	return bool(LM.get_def("projectiles", str(w["projectile"])).get("blast", {}).get("self", false))
 
 
 ## Where the fight aims, and so what a spot to fight from must see: the middle of its body. (Seeing its eye is not

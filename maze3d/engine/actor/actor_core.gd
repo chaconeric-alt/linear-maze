@@ -351,7 +351,7 @@ func attacking() -> bool:
 func hurt(amount: float, info: Dictionary = {}) -> void:
 	if dead:
 		return
-	amount *= d.get("takes", {}).get(info.get("type", ""), 1.0)
+	amount *= DamageTypes.taken(d.get("takes", {}), str(info.get("type", "")))
 	amount *= (1.0 - d.get("armor", 0.0))
 	hp -= amount
 	if foes:
@@ -379,10 +379,11 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 		_play("hurt")
 		if anim:
 			anim.seek(0.0)
-	if info.has("from") and not fixed:
+	if info.has("from") and not fixed:                # thrown back: by the hit's own "knock" (a blast's), else by how hard it was
 		var k: Vector3 = (global_position - info["from"])
 		k.y = 0
-		velocity += k.normalized() * min(6.0, amount * 0.25) / d.get("mass", 1.0)
+		velocity += k.normalized() * float(info.get("knock", min(6.0, amount * 0.25))) / d.get("mass", 1.0)
+		velocity.y += float(info.get("lift", 0.0)) / d.get("mass", 1.0)
 
 
 func _die(info: Dictionary) -> void:

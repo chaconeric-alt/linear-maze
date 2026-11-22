@@ -584,6 +584,14 @@ def p_ammo(kind):
         for i in range(3):
             m.cyl(0.035, 0.1, at=(-0.07 + i * 0.07, 0, 0.09), mat='glow_red', seg=8)
             m.cyl(0.037, 0.03, at=(-0.07 + i * 0.07, 0, 0.13), mat='gold', seg=8)
+    elif kind == 'rockets':                              # an open crate with two rockets lying in it
+        m.box((0.46, 0.26, 0.1), at=(0, 0, 0.05), mat='canvas', bevel=0.012)
+        m.box((0.46, 0.27, 0.02), at=(0, 0, 0.1), mat='hazard')
+        for j in (-0.065, 0.065):
+            m.cyl(0.045, 0.34, at=(-0.03, j, 0.15), rot=(0, 90, 0), mat='hull', seg=12)
+            m.cyl(0.045, 0.1, at=(0.19, j, 0.15), rot=(0, 90, 0), mat='trim', seg=12, r2=0.0)
+            m.cyl(0.046, 0.02, at=(0.12, j, 0.15), rot=(0, 90, 0), mat='glow_red', seg=12)
+            m.cyl(0.03, 0.05, at=(-0.22, j, 0.15), rot=(0, 90, 0), mat='trim', seg=10)
     else:
         m.box((0.2, 0.14, 0.26), mat='hull_dark', bevel=0.02)
         m.box((0.12, 0.15, 0.16), mat='glow_cyan')
@@ -675,6 +683,23 @@ def w_plasma():
 
 
 
+def w_launcher():
+    """The rocket launcher: a long olive tube carried on the shoulder, a grip and trigger under it, a sight on top, a
+    flared back blast cone and hazard bands. Forward is -Y, as for every weapon; the rocket leaves the front of the tube."""
+    m = Mesh('launcher')
+    m.cyl(0.075, 0.98, at=(0, -0.2, 0.06), rot=(90, 0, 0), mat='canvas', seg=16, caps=False)
+    m.cyl(0.062, 0.02, at=(0, -0.6, 0.06), rot=(90, 0, 0), mat='rubber', seg=16)        # the dark bore, a little way in
+    m.ring(0.075, 0.012, at=(0, -0.69, 0.06), rot=(90, 0, 0), mat='trim', seg=16, tseg=6)
+    m.cyl(0.075, 0.14, at=(0, 0.33, 0.06), rot=(90, 0, 0), mat='trim', seg=16, r2=0.11)          # the back blast cone, bare metal
+    for y in (-0.5, 0.12):
+        m.cyl(0.079, 0.04, at=(0, y, 0.06), rot=(90, 0, 0), mat='hazard', seg=16)
+    m.box((0.05, 0.1, 0.15), at=(0, 0.02, -0.06), rot=(-12, 0, 0), mat='rubber', bevel=0.012)
+    m.box((0.045, 0.08, 0.12), at=(0, -0.3, -0.04), rot=(-8, 0, 0), mat='rubber', bevel=0.012)
+    m.box((0.06, 0.16, 0.05), at=(-0.03, -0.12, 0.16), mat='hull_dark', bevel=0.008)
+    m.box((0.05, 0.03, 0.03), at=(-0.03, -0.2, 0.19), mat='glow_red')
+    return dict(objects=[m.to_object()], meta=dict(type='weapon', muzzle=(0, -0.72, 0.06)))
+
+
 def window_obs(seed=7):
     """An observation window: fills a wall cell like a door frame does, with a wide pane at eye height. It does not open."""
     rnd = random.Random(seed)
@@ -709,9 +734,10 @@ PROPS = {'window_obs': window_obs,
     'item_statuette': t_statuette, 'item_fuel_cell': t_fuel_cell, 'item_fuel_cell_big': lambda: t_fuel_cell(True), 'item_circuit': t_circuit, 'item_crystal': t_crystal,
     'item_chips': t_chips, 'item_cookies': t_cookies, 'item_health': p_health, 'item_armor': p_armor,
     'item_ammo_bullets': lambda: p_ammo('bullets'), 'item_ammo_shells': lambda: p_ammo('shells'), 'item_ammo_cells': lambda: p_ammo('cells'), 'item_keycard': p_keycard,
+    'item_ammo_rockets': lambda: p_ammo('rockets'),
     'item_backpack': p_backpack, 'item_hauler': p_hauler, 'item_sling': p_sling,
     'trap_laser': trap_laser, 'trap_shock': trap_shock, 'trap_vent': trap_vent,
-    'weapon_handgun': w_handgun, 'weapon_scattergun': w_scattergun, 'weapon_plasma': w_plasma,
+    'weapon_handgun': w_handgun, 'weapon_scattergun': w_scattergun, 'weapon_plasma': w_plasma, 'weapon_launcher': w_launcher,
 }
 
 

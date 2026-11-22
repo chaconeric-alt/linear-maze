@@ -386,6 +386,16 @@
    "noise": 0.2,
    "decay": 8,
    "gain": 0.7
+  },
+  "rocket": {
+   "freq": 160,
+   "to": 60,
+   "dur": 0.55,
+   "wave": "saw",
+   "noise": 0.7,
+   "decay": 3,
+   "gain": 0.9,
+   "lowpass": 0.4
   }
  }
 }

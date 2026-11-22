@@ -52,7 +52,8 @@
   "levels/depot.json",
   "levels/descent_1.json",
   "levels/descent_2.json",
-  "levels/yard.json"
+  "levels/yard.json",
+  "levels/range.json"
  ],
  "generators": [
   "rooms"
@@ -449,8 +450,18 @@
   "atrium",
   "depot",
   "descent",
-  "yard"
+  "yard",
+  "range"
  ],
+ "damage_types": {
+  "explosive": {"name": "Explosive", "alias": ["blast"]},
+  "poison": {"name": "Poison", "alias": ["toxic"]},
+  "beam": {"name": "Beam", "alias": ["laser"]},
+  "fire": {"name": "Fire"},
+  "energy": {"name": "Energy"},
+  "acid": {"name": "Acid"},
+  "shock": {"name": "Shock"}
+ },
  "factions": {
   "robots": {"name": "Machines", "hostile": ["player"]},
   "monsters": {"name": "Creatures", "hostile": ["player"]}

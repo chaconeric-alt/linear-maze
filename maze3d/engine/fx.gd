@@ -94,8 +94,12 @@ static func words(parent: Node, pos: Vector3, text: String, c := Color(1, 0.4, 0
 	tw.tween_callback(l.queue_free)
 
 
-## A blast: hurts everything with a hurt() method in range that the centre can see.
-static func explode(level: Node3D, pos: Vector3, radius: float, damage: float, c := Color(1.0, 0.55, 0.15), by: Node = null, hurts_player := true) -> void:
+## A blast: hurts everything with a hurt() method in range that the centre can see, less with distance. `how` (a
+## projectile's "blast", SPEC.md 5.21): "kind" of hurt ("blast" if not said), "knock" and "lift" (metres a second, at the
+## centre, less with distance: things are thrown back and up), "fireball" (a ball of fire and a ring of smoke).
+static func explode(level: Node3D, pos: Vector3, radius: float, damage: float, c := Color(1.0, 0.55, 0.15), by: Node = null, hurts_player := true, how := {}) -> void:
+	if how.get("fireball", false):
+		fireball(level, pos, radius, c, level.floor_y(pos) if level.has_method("floor_y") else pos.y - 1.0)
 	sparks(level, pos, c, 36, radius * 2.2, 0.7, 0.12, 6.0)
 	sparks(level, pos, Color(1, 0.9, 0.6), 18, radius * 1.2, 0.4, 0.2, 0.0)
 	flash(level, pos, c, 12.0, radius * 3.0, 0.35)
@@ -105,7 +109,7 @@ static func explode(level: Node3D, pos: Vector3, radius: float, damage: float, c
 	if hurts_player and Game.player:
 		targets.append(Game.player)
 	for t in targets:
-		if not is_instance_valid(t) or t == by:
+		if not is_instance_valid(t) or t == by and t != Game.player:    # the player is in the list only if it hurts them ("self")
 			continue
 		var tp: Vector3 = t.global_position + Vector3(0, 0.8, 0)
 		var d := tp.distance_to(pos)
@@ -113,6 +117,62 @@ static func explode(level: Node3D, pos: Vector3, radius: float, damage: float, c
 			continue
 		if not level.los(pos + Vector3(0, 0.2, 0), tp) and d > 1.5:
 			continue
-		t.hurt(damage * (1.0 - 0.6 * d / radius), {"type": "blast", "from": pos, "by": by})
+		var info := {"type": str(how.get("kind", "blast")), "from": pos, "by": by}
+		if how.has("knock"):
+			info["knock"] = float(how["knock"]) * (1.0 - d / radius)
+			info["lift"] = float(how.get("lift", 0.0)) * (1.0 - d / radius)
+		t.hurt(damage * (1.0 - 0.6 * d / radius), info)
 	if Game.player and Game.player.global_position.distance_to(pos) < radius * 3.0:
 		Game.player.shake(0.6)
+
+
+## An explosion's look: a white-hot core inside a ball of fire that swells, reddens and fades, and a ring of smoke that
+## spreads along the floor (at `floor_y`). Tweens only, drawing no random numbers (the self-test's runs stay the same).
+static func fireball(parent: Node, pos: Vector3, radius: float, c: Color, floor_y: float) -> void:
+	var fire := _ball(parent, pos, Color(c.r * 3.0, c.g * 2.2, c.b * 1.2))
+	var core := _ball(parent, pos, Color(3.0, 2.8, 2.2))
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 0.35
+	tm.outer_radius = 0.5
+	ring.mesh = tm
+	var sk := StandardMaterial3D.new()
+	sk.albedo_color = Color(0.22, 0.2, 0.19, 0.75)
+	sk.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sk.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ring.material_override = sk
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(ring)
+	ring.global_position = Vector3(pos.x, floor_y + 0.15, pos.z)
+	var fm: StandardMaterial3D = fire.material_override
+	var cm: StandardMaterial3D = core.material_override
+	var tw := parent.create_tween().set_parallel(true)
+	tw.tween_property(fire, "scale", Vector3.ONE * radius * 0.9, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tw.tween_property(fm, "albedo_color", Color(c.r * 1.6, c.g * 0.5, c.b * 0.2, 0.0), 0.45).set_ease(Tween.EASE_IN)
+	tw.tween_property(core, "scale", Vector3.ONE * radius * 0.4, 0.15).set_ease(Tween.EASE_OUT)
+	tw.tween_property(cm, "albedo_color:a", 0.0, 0.2).set_ease(Tween.EASE_IN)
+	tw.tween_property(ring, "scale", Vector3(radius * 2.0, 1.0, radius * 2.0), 1.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tw.tween_property(sk, "albedo_color:a", 0.0, 1.2).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(fire.queue_free)
+	tw.tween_callback(core.queue_free)
+	tw.tween_callback(ring.queue_free)
+
+
+## A glowing ball for the fireball, with its own material (it is faded out, so not glow_mat's shared one).
+static func _ball(parent: Node, pos: Vector3, c: Color) -> MeshInstance3D:
+	var ball := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.5
+	sm.height = 1.0
+	ball.mesh = sm
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = Color(c.r, c.g, c.b, 1.0)
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ball.material_override = m
+	ball.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(ball)
+	ball.global_position = pos
+	ball.scale = Vector3.ONE * 0.3
+	return ball

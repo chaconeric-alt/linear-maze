@@ -656,6 +656,10 @@
    "model": "models/item_ammo_cells.glb",
    "type": "item"
   },
+  "item_ammo_rockets": {
+   "model": "models/item_ammo_rockets.glb",
+   "type": "item"
+  },
   "item_ammo_shells": {
    "model": "models/item_ammo_shells.glb",
    "type": "item"
@@ -895,6 +899,15 @@
     0,
     0.035,
     0.36
+   ],
+   "type": "weapon"
+  },
+  "weapon_launcher": {
+   "model": "models/weapon_launcher.glb",
+   "muzzle": [
+    0,
+    0.06,
+    0.72
    ],
    "type": "weapon"
   },

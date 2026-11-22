@@ -145,7 +145,7 @@ func shake(s: float) -> void:
 
 
 func hurt(amount: float, info: Dictionary = {}) -> void:
-	if dead or movement.dashing() and info.get("type", "") != "blast":
+	if dead or movement.dashing() and DamageTypes.canon(str(info.get("type", ""))) != "explosive":       # a dash outruns all but a blast
 		return
 	amount *= Game.take_scale()
 	if armor > 0.0:
@@ -160,6 +160,7 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 		var k: Vector3 = global_position - info["from"]
 		k.y = 0
 		velocity += k.normalized() * info.get("knock", 2.0)
+		velocity.y += float(info.get("lift", 0.0))     # a blast's (SPEC.md 5.21): thrown up as well as back
 	LM.sound("hurt")
 	Game.changed.emit()
 	if hp <= 0.0:

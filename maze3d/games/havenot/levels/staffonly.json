@@ -2664,51 +2664,65 @@
    ]
   },
   {
-   "item": "lucky_chip",
+   "item": "launcher",
    "at": [
     3,
     32
    ]
   },
   {
-   "item": "order",
+   "item": "lucky_chip",
    "at": [
     4,
     32
    ]
   },
   {
-   "item": "plasma",
+   "item": "order",
    "at": [
     5,
     32
    ]
   },
   {
-   "item": "scattergun",
+   "item": "plasma",
    "at": [
     6,
     32
    ]
   },
   {
-   "item": "shells",
+   "item": "rockets",
    "at": [
     7,
     32
    ]
   },
   {
-   "item": "sling",
+   "item": "scattergun",
    "at": [
     8,
     32
    ]
   },
   {
-   "item": "statuette",
+   "item": "shells",
    "at": [
     9,
+    32
+   ]
+  },
+  {
+   "item": "sling",
+   "at": [
+    10,
+    32
+   ]
+  },
+  {
+   "item": "statuette",
+   "at": [
+    11,
     32
    ]
   },

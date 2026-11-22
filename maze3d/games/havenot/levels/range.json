@@ -1,0 +1,150 @@
+{
+ "id": "range",
+ "name": "The Proving Range (explosives)",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "Dummies in a row. Mind the back blast.",
+ "ambient_energy": 0.8,
+ "legend": {
+  "+": {
+   "door": "door_split"
+  }
+ },
+ "map": [
+  "################",
+  "#..............#",
+  "#..............#",
+  "#..............#",
+  "#+##############",
+  "#..............#",
+  "################"
+ ],
+ "rooms": [
+  {
+   "name": "The Lane",
+   "rect": [
+    1,
+    1,
+    14,
+    3
+   ],
+   "style": "corridor"
+  },
+  {
+   "name": "The Back Room",
+   "rect": [
+    1,
+    5,
+    14,
+    1
+   ],
+   "style": "storage"
+  }
+ ],
+ "factions": {
+  "dummies": {
+   "name": "Dummies",
+   "hostile": []
+  }
+ },
+ "things": [
+  {
+   "start": true,
+   "face": "e",
+   "at": [
+    1,
+    2
+   ]
+  },
+  {
+   "sign": "PROVING RANGE\nmind the back blast",
+   "face": "s",
+   "color": [
+    1.0,
+    0.6,
+    0.2
+   ],
+   "size": 56,
+   "y": 3.0,
+   "at": [
+    6,
+    1
+   ]
+  },
+  {
+   "actor": "custodian",
+   "faction": "dummies",
+   "still": true,
+   "at": [
+    8,
+    2
+   ],
+   "tag": "near"
+  },
+  {
+   "actor": "custodian",
+   "faction": "dummies",
+   "still": true,
+   "at": [
+    8,
+    2
+   ],
+   "offset": [
+    3.0,
+    0,
+    0
+   ],
+   "tag": "side"
+  },
+  {
+   "actor": "custodian",
+   "faction": "dummies",
+   "still": true,
+   "at": [
+    6,
+    3
+   ],
+   "tag": "open"
+  },
+  {
+   "actor": "custodian",
+   "faction": "dummies",
+   "still": true,
+   "at": [
+    8,
+    5
+   ],
+   "tag": "behind"
+  },
+  {
+   "actor": "custodian",
+   "faction": "dummies",
+   "still": true,
+   "at": [
+    14,
+    2
+   ],
+   "tag": "far"
+  },
+  {
+   "item": "launcher",
+   "at": [
+    2,
+    1
+   ]
+  },
+  {
+   "item": "rockets",
+   "at": [
+    2,
+    3
+   ]
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Try the launcher."
+  }
+ ],
+ "triggers": []
+}
