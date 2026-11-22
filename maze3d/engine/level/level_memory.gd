@@ -16,6 +16,8 @@ extends RefCounted
 ## shape since (an edited level file), the memory is thrown away and the level starts afresh. SPEC.md 5.14.
 class_name LevelMemory
 
+const ALWAYS := 1.0e6             # a trap that will come on within this many seconds: one that comes on at all
+
 
 ## What to keep of the level as it is now.
 static func take(level: Level) -> Dictionary:
@@ -33,10 +35,17 @@ static func take(level: Level) -> Dictionary:
 		if sp.made.has(k) and n.has_method("entry"):
 			var at: Vector3 = n.global_position
 			if n is Actor and (n as Actor).surf != 0:
-				at.y = level.floor_y(at)             # on a wall or the ceiling: made again on the floor under it
+				at.y = level.floor_y(at)             # on a wall or the ceiling: made again on the floor under it,
+				at = LevelMemory.room_for(level, n, at)  # beside anyone standing there (it climbs back up)
+			at = LevelMemory.out_of_traps(level, n, at)
 			extra[k] = {"e": n.entry(), "at": [at.x, at.y, at.z], "yaw": n.rotation.y}
 		if n.has_method("remember"):
 			var r: Dictionary = n.remember()
+			if n is Actor and not (n as Actor).off_duty and (n as Actor).dock == null:      # its own record, too
+				var q := LevelMemory.out_of_traps(level, n, n.global_position)
+				if q != n.global_position:
+					r["at"] = [q.x, q.y, q.z]
+					r["yaw"] = n.rotation.y
 			if not r.is_empty():
 				things[k] = r
 	return {"sig": sp.signature(), "things": things, "gone": gone.keys(), "extra": extra, "extra_n": sp.extra_n,
@@ -87,3 +96,48 @@ static func lay(level: Level, mem: Dictionary) -> void:
 			n.recall(things[k])
 	if level.triggers:
 		level.triggers.recall(mem.get("triggers", {}))
+
+
+## A monster left standing in a working trap (one that would hurt it at some point in its cycle) is remembered at the
+## nearest spot beside it that is open and clear of traps, as it would have stepped out while the player was away: made
+## again in it, it would be hurt the moment the level was built, at a different time from when it was left. Anything
+## else, or a monster with nowhere to step to, is remembered where it is.
+static func out_of_traps(level: Level, n: Node, at: Vector3) -> Vector3:
+	if not (n is Actor) or (n as Actor).surf != 0 or not level.hazard(n, at, ALWAYS):
+		return at
+	var c := level.cell_of(at)
+	var storey := floori((at.y + 1.0) / level.H)
+	var best := at
+	var bd := INF
+	for dy in [-1, 0, 1]:
+		for dx in [-1, 0, 1]:
+			var q: Vector2i = c + Vector2i(dx, dy)
+			var p := level.center(q, at.y)
+			if level.open_s(q.x, q.y, storey) and not level.hazard(n, p, ALWAYS) and p.distance_to(at) < bd:
+				best = p
+				bd = p.distance_to(at)
+	return best
+
+
+## A spot on the floor near `at` where `n` does not stand inside another monster: `at` itself if nobody is there,
+## else the nearest open one of the spots round it, a metre and then two out. A climber remembered on the floor under
+## where it clung could otherwise be made again inside whatever stood below it, and be pushed up onto its head.
+static func room_for(level: Level, n: Node, at: Vector3) -> Vector3:
+	var storey := floori((at.y + 1.0) / level.H)
+	for r in [0.0, 1.0, 2.0]:
+		for i in (1 if r == 0.0 else 8):
+			var p: Vector3 = at + Vector3(cos(i * TAU / 8), 0, sin(i * TAU / 8)) * r
+			var c := level.cell_of(p)
+			if level.open_s(c.x, c.y, storey) and LevelMemory._free(level, n, p):
+				return p
+	return at
+
+
+static func _free(level: Level, n: Node, p: Vector3) -> bool:
+	var r: float = float((n as Actor).d.get("radius", 0.5))
+	for o in level.actors:
+		if o != n and is_instance_valid(o) and not o.dead and o.surf == 0 and absf(o.global_position.y - p.y) < 1.5:
+			if Vector2(o.global_position.x - p.x, o.global_position.z - p.z).length() < r + float(o.d.get("radius", 0.5)) + 0.1:
+				return false
+	return true
+

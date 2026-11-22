@@ -3,6 +3,8 @@ extends ActorCore
 ## showing what it does, and talking to it. How it works is ActorCore (engine/actor/actor_core.gd) and its components.
 class_name Actor
 
+const NEAR_HOME := 0.1           # metres: further than this from where the level put it, where it stands is remembered
+
 
 func hear(from: Vector3) -> void:
 	senses.hear(from)
@@ -40,14 +42,15 @@ func entry() -> Dictionary:
 	return en
 
 
-## What has changed since it was placed: health lost, where it stands (off its spot, on the floor, out of any station;
+## What has changed since it was placed: health lost, where it stands (more than NEAR_HOME off its spot, so that it is
+## made again where it was and not inside a neighbour; on the floor, out of any station;
 ## not one off duty, which goes back to its post), and that it was angered on an off-duty floor. Dead, it is not
 ## remembered: it is gone (LevelMemory.take).
 func remember() -> Dictionary:
 	var r := {}
 	if hp < max_hp:
 		r["hp"] = hp
-	if surf == 0 and dock == null and not off_duty and global_position.distance_to(home) > 0.75:
+	if surf == 0 and dock == null and not off_duty and global_position.distance_to(home) > NEAR_HOME:
 		r["at"] = [global_position.x, global_position.y, global_position.z]
 		r["yaw"] = rotation.y
 	if not off_duty and bool(e.get("off_duty", level.data.get("off_duty", false))):
