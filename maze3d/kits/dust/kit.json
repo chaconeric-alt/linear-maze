@@ -177,7 +177,8 @@
     "flicker": 0.2,
     "dead": 0.15,
     "dead_tile": "ceil_du_plain"
-   }
+   },
+   "wall_plain": "wall_du_plate"
   },
   "du_archive": {
    "floor": [
@@ -254,7 +255,8 @@
     "flicker": 0.3,
     "dead": 0.15,
     "dead_tile": "ceil_du_plain"
-   }
+   },
+   "wall_plain": "wall_du_rib"
   },
   "du_bay": {
    "floor": [
@@ -400,7 +402,8 @@
     "flicker": 0.5,
     "dead": 0.45,
     "dead_tile": "ceil_du_plain"
-   }
+   },
+   "wall_plain": "wall_du_plate2"
   }
  }
 }

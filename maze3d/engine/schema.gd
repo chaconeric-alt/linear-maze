@@ -24,7 +24,7 @@ const MUTATION := ["name", "text", "stats", "gives"]
 const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor", "lamp"]     # what the engine reads (CharacterSheet)
 const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "bank_at", "below"]   # a level's written programme (SPEC.md 6.3)
 const PROG_LIFTS := ["count", "travel", "start", "lock"]
-const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows"]   # defs "purposes" (furnishing a room for its use)
+const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows", "floor_fill", "crammed"]   # defs "purposes" (furnishing a room for its use)
 const PROG_SPINE := ["gap"]
 const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts", "door_above"]
 const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms"]
@@ -40,7 +40,7 @@ const THING_KINDS := {
 	"actor": ["actor", "still", "alert", "hp_mul", "on_death", "on_anger", "lounge", "perch", "off_duty", "talk", "provoke",
 		"roam", "greet", "faction", "patrol"],
 	"prop": ["prop", "use", "hp", "loot", "explode", "screen", "solid", "blocks", "lit", "turn", "seat", "seat_gap",
-		"seat_turn", "holds", "hidden", "rattle", "walk"],
+		"seat_turn", "holds", "hidden", "rattle", "walk", "crammed"],
 	"item": ["item", "y", "rest"],                     # and any item def key, to override it for this one
 	"rebuild": ["rebuild", "as"],
 	"trap": ["trap", "off", "phase", "ignore", "cycle", "heights", "damage", "axis", "period", "on", "color", "hear", "quiet",

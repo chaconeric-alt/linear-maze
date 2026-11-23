@@ -78,9 +78,10 @@ static func attempt(level: Dictionary, seed_value: int) -> Dictionary:
 	var sunk := {}
 	for id in fl.sunken:
 		sunk[id] = -1
-	var fill := ProgrammeFill.new(lay, prog, {"reserve": fl.reserve_up, "storeys": sunk})
+	var kit := str(level.get("kit", ""))
+	var fill := ProgrammeFill.new(lay, prog, {"reserve": fl.reserve_up, "storeys": sunk, "kit": kit})
 	var fill2: ProgrammeFill = ProgrammeFill.new(lay2, below, {"start": false, "storey": -1, "reserve": fl.reserve_lo,
-		"legend": fill.legend}) if bot != null else null
+		"legend": fill.legend, "kit": kit}) if bot != null else null
 	var bad: Array = fill.problems + (fill2.problems if fill2 != null else [])
 	if not bad.is_empty():
 		return {"problems": bad, "fatal": true}

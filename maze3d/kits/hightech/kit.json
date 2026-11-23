@@ -205,7 +205,8 @@
     "every": 2,
     "flicker": 0.2,
     "energy": 1.2
-   }
+   },
+   "wall_plain": "wall_plain_a"
   },
   "ruin": {
    "floor": [
@@ -260,7 +261,8 @@
     "flicker": 0.9,
     "dead": 0.35,
     "dead_tile": "ceil_cables"
-   }
+   },
+   "wall_plain": "wall_plain_a"
   },
   "vault": {
    "floor": [

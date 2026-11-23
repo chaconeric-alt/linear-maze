@@ -5,6 +5,9 @@ extends RefCounted
 ##   centre  one piece in the middle of the room, with a clear lap all round it
 ##   floor   pieces out on the floor, never two side by side; with "rows" they all face the same way (seats, pews, beds)
 ##   corner  what goes in the corners (the old dressing); defaults to the theme's props
+##   crammed a room meant to be crammed full (a store): a piece on every wall cell, pieces on the floor side by side,
+##           and each stands in front of whatever the wall shows ("crammed" on the thing: elsewhere the level gives a
+##           wall something stands against its plain tile, LevelData.find_hung). The ways between doors stay clear.
 ## Anywhere a piece is named, ["station", "chair"] names a set instead: the station goes where the piece would, and the
 ## chair in front of it, facing it (the level's "seat"). Station depth + chair depth should come to under 3.3 m.
 ## The rule that keeps a furnished room from becoming an obstacle course: the cells on the shortest way between every
@@ -19,6 +22,7 @@ const NAMES := GenContext.NAMES
 static func furnish(ctx: GenContext, unit: int, cells: Array, pur: Dictionary, kit: String, amount: float) -> void:
 	var fp := _plan(ctx, cells)
 	fp["kit"] = kit
+	fp["crammed"] = pur.get("crammed", false)
 	_centre(ctx, fp, cells, pur)
 	_along_walls(ctx, fp, pur, amount)
 	_on_floor(ctx, fp, cells, pur, amount)
@@ -85,6 +89,8 @@ static func _put(ctx: GenContext, fp: Dictionary, c: Vector2i, item: Variant, fa
 	var rng := ctx.rng
 	var id: String = item if item is String else item[0]      # ["station", "chair"]: a set
 	var e := {"at": [c.x, c.y], "prop": id, "face": NAMES[face], "blocks": true}      # monsters path round it, as the player walks round it
+	if fp.get("crammed", false):
+		e["crammed"] = true
 	if id.begins_with("@"):                           # "@custodian": that robot's station. Some are empty (it is out), some shut
 		var who := id.substr(1)
 		if not ctx.stations.has(who):
@@ -130,7 +136,7 @@ static func _centre(ctx: GenContext, fp: Dictionary, cells: Array, pur: Dictiona
 			fp["keep"][best + d] = true
 
 
-## Along the walls: every other wall cell, up to `fill` of them.
+## Along the walls: every other wall cell (every one, crammed), up to `fill` of them.
 static func _along_walls(ctx: GenContext, fp: Dictionary, pur: Dictionary, amount: float) -> void:
 	var wall: Array = pur.get("wall", [])
 	if wall.is_empty():
@@ -143,13 +149,13 @@ static func _along_walls(ctx: GenContext, fp: Dictionary, pur: Dictionary, amoun
 	for c in order:
 		if want <= 0:
 			break
-		if (c.x + c.y) % 2 != parity or not _free(ctx, fp, c):
+		if ((c.x + c.y) % 2 != parity and not fp["crammed"]) or not _free(ctx, fp, c):
 			continue
 		_put(ctx, fp, c, wall[ctx.rng.randi() % wall.size()], (edge[c] + 2) % 4, true)
 		want -= 1
 
 
-## Out on the floor: never two side by side; in rows if the purpose says so.
+## Out on the floor: never two side by side (unless crammed); in rows if the purpose says so.
 static func _on_floor(ctx: GenContext, fp: Dictionary, cells: Array, pur: Dictionary, amount: float) -> void:
 	var fl: Array = pur.get("floor", [])
 	if fl.is_empty():
@@ -171,7 +177,7 @@ static func _on_floor(ctx: GenContext, fp: Dictionary, cells: Array, pur: Dictio
 			continue
 		var crowded := false
 		for d in DIRS:
-			if taken_here.has(c + d) or not inside.has(c + d):
+			if (taken_here.has(c + d) and not fp["crammed"]) or not inside.has(c + d):
 				crowded = true
 		if crowded:
 			continue

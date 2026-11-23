@@ -30,7 +30,7 @@ var start_cell := Vector2i.ZERO
 var start_level := 0
 var start_yaw := 0.0
 var arrivals: Dictionary = {}    # name -> {"cell", "level", "yaw"}: the named ways in ({"start": "<name>"}), where travel arrives
-var hung: Dictionary = {}        # Vector4i(x, y, storey, side): a wall face with a sign or a wall-mounted prop on it
+var hung: Dictionary = {}        # Vector4i(x, y, storey, side): a wall face with a sign or a wall-mounted prop on it, or furniture against it
 var rng := RandomNumberGenerator.new()      # one stream for everything the build picks, so a level always comes out the same
 
 
@@ -324,21 +324,45 @@ func lights_for(st: Dictionary, room: String) -> Dictionary:
 	return li
 
 
-# ------------------------------------------------------------------ walls things hang on
-## Wall faces that have a sign or a wall-mounted prop on them get the style's plain wall ("wall_plain" in the style,
-## or else its commonest wall tile), so what hangs there is not lost among pipes and screens.
+# ------------------------------------------------------------------ walls things hang on or stand against
+## Wall faces that have a sign or a wall-mounted prop on them, or a piece of furniture standing back against them, get
+## the style's plain wall ("wall_plain" in the style, or else its commonest wall tile), so what hangs there is not lost
+## among pipes and screens, and nothing stands in front of lockers or shelves that are part of the wall (Eric, 22 Nov:
+## "if an object is meant to be against a wall, it should be against a bare wall"). A thing marked "crammed" (a room
+## meant to be crammed full) stands in front of whatever the wall shows.
 func find_hung() -> void:
 	hung.clear()
 	for e in data.get("things", []):
-		if not (e is Dictionary) or not e.has("at"):
+		if not (e is Dictionary) or not e.has("at") or e.get("crammed", false):
 			continue
-		var hangs: bool = e.has("sign")
-		if e.has("prop"):
-			hangs = LM.model_meta(kit_id, e["prop"]).get("mount", "") == "wall"
-		if hangs:
-			var s := int(e.get("level", 0))
-			var p := Vector2i(int(e["at"][0]), int(e["at"][1]))
+		var s := int(e.get("level", 0))
+		var p := Vector2i(int(e["at"][0]), int(e["at"][1]))
+		var meta: Dictionary = LM.model_meta(kit_id, e["prop"]) if e.has("prop") else {}
+		if e.has("sign") or meta.get("mount", "") == "wall":
 			hung[Vector4i(p.x, p.y, s, wall_side(p, e.get("face", ""), s))] = true
+		elif e.has("prop"):
+			for d in _backed(e, meta, p, s):
+				hung[Vector4i(p.x, p.y, s, d)] = true
+
+
+## The walls round its cell a piece of furniture stands back against: within AGAINST metres of the wall's face, by its
+## size ("solid" in its model's meta: width, height, depth, the depth along the way it faces), where it faces and how
+## far its "offset" moves it.
+const AGAINST := 0.6
+
+func _backed(e: Dictionary, meta: Dictionary, p: Vector2i, s: int) -> Array:
+	var out: Array = []
+	var sz: Array = meta.get("solid", [1.0, 1.0, 1.0])
+	var off: Vector3 = LM.vec(e.get("offset"), Vector3.ZERO)
+	var facing: int = DIR_NAMES.get(str(e.get("face", "s")), 2)
+	for d in 4:
+		var n: Vector2i = p + DIRS[d]
+		if open_s(n.x, n.y, s):
+			continue
+		var half: float = float(sz[2] if d % 2 == facing % 2 else sz[0]) / 2.0
+		if off.x * DIRS[d].x + off.z * DIRS[d].y + half >= C / 2.0 - AGAINST:
+			out.append(d)
+	return out
 
 
 func plain_wall(st: Dictionary) -> String:

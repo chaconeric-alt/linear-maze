@@ -18,7 +18,7 @@
   "office": {"name": "Office", "floor": [["hm_desk", "ex_chair"]], "wall": ["hm_bookcase", "lt_shelf_ex", "hm_plant"], "fill": 0.6},
   "briefing_room": {"name": "Briefing Room", "floor": ["mp_seats"], "rows": true, "wall": ["hs_screen", "terminal_wall"], "fill": 0.3},
   "officer_quarters": {"name": "Officer's Quarters", "wall": ["hm_bed", "hm_dresser", "hm_bookcase"], "floor": ["hm_armchair"], "fill": 0.6},
-  "quartermaster": {"name": "Quartermaster's Store", "wall": ["lt_shelf_bk", "bk_crates", "wk_drums", "locker"], "floor": ["crate"], "fill": 0.8},
+  "quartermaster": {"name": "Quartermaster's Store", "wall": ["lt_shelf_bk", "bk_crates", "wk_drums", "locker"], "floor": ["crate", "bk_crates"], "fill": 0.9, "floor_fill": 2.0, "crammed": true},
   "armoury": {"name": "Armoury", "wall": ["hm_rack", "lt_charge_rack", "bk_crates", "locker"], "fill": 0.8},
   "generator_room": {"name": "Generator Room", "centre": ["bk_generator"], "wall": ["wk_drums", "server_rack"], "fill": 0.5},
   "lab": {"name": "Laboratory", "wall": ["terminal_wall", "cryo_pod", "server_rack"], "floor": [["terminal_desk", "ex_chair"]], "fill": 0.6},

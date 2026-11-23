@@ -112,7 +112,8 @@
     "tile": "ceil_bb_halo",
     "every": 2,
     "flicker": 0.0
-   }
+   },
+   "wall_plain": "wall_bb_stone"
   },
   "bb_chapel": {
    "floor": [
@@ -153,7 +154,8 @@
     "tile": "ceil_bb_halo",
     "every": 2,
     "flicker": 0.0
-   }
+   },
+   "wall_plain": "wall_bb_stone"
   },
   "bb_vestry": {
    "floor": [
@@ -194,7 +196,8 @@
     "tile": "ceil_bb_halo",
     "every": 2,
     "flicker": 0.0
-   }
+   },
+   "wall_plain": "wall_bb_stone2"
   }
  }
 }

@@ -169,7 +169,8 @@
     "tile": "ceil_hs_surg",
     "every": 3,
     "flicker": 0.0
-   }
+   },
+   "wall_plain": "wall_hs_tile"
   },
   "hs_pharmacy": {
    "floor": [
@@ -216,7 +217,8 @@
      "wall_hs_light",
      1
     ]
-   ]
+   ],
+   "wall_plain": "wall_hs_tile"
   }
  }
 }

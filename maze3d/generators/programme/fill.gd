@@ -11,7 +11,10 @@ extends RefCounted
 ## and the lifts' and ramps' cells are kept free.
 ## A lock with a "flag" in place of a colour shuts its doors until that flag is set (any one, for a list), saying what
 ## it needs ("need"); it has no card: something in the level sets the flag, and the proof finds what. An actor whose
-## "patrol" is "room" walks a beat round the room it is put in.
+## "patrol" is "room" walks a beat round the room it is put in. A prop put in without a "face" of its own turns to the
+## room: against a wall it faces away from it, pushed back as the furnishing pushes its wall pieces (so the level gives
+## that wall its plain tile, and nothing stands with its back to lockers or a screen); out on the floor it faces the
+## room's middle.
 class_name ProgrammeFill
 
 const LOCK_LETTERS := {"red": "R", "blue": "B", "green": "G", "yellow": "Y", "purple": "P"}
@@ -24,14 +27,16 @@ var legend: Dictionary = {}
 var problems: Array = []
 var storey := 0                          # the storey this floor's things stand on
 var storeys: Dictionary = {}             # room id -> a storey of its own (a hall sunk a storey down)
+var kit := ""                            # the level's kit, for the size of a prop it turns to the room
 var _used: Dictionary = {}
 
 
 ## opts: "start" (false: no start of its own), "storey", "storeys" (room -> storey), "reserve" (cells kept free),
-## "legend" (the legend so far: the other floor's, whose flag-lock letters this floor shares or steps round).
+## "legend" (the legend so far: the other floor's, whose flag-lock letters this floor shares or steps round), "kit".
 func _init(l: ProgrammeLayout, prog: Dictionary, opts := {}) -> void:
 	lay = l
 	plan = l.plan
+	kit = str(opts.get("kit", ""))
 	storey = int(opts.get("storey", 0))
 	storeys = opts.get("storeys", {})
 	legend = opts.get("legend", {}).duplicate()
@@ -116,6 +121,8 @@ func _thing(room: String, t: Dictionary) -> void:
 			problems.append("no room left in '%s' for %s" % [room, JSON.stringify(t)])
 			return
 		e["at"] = [at.x, at.y]
+		if e.has("prop") and not e.has("face"):
+			_turn(room, at, e)
 		if str(e.get("patrol", "")) == "room":
 			e["patrol"] = _beat(room)
 		var s := int(storeys.get(room, storey))
@@ -134,6 +141,29 @@ func _spot(room: String, at: Variant) -> Vector2i:
 	if free.is_empty():
 		return Vector2i(-1, -1)
 	return free[plan.rng.randi() % free.size()]
+
+
+## A prop turned to the room it stands in (see the top of this file). One hung on a wall the level hangs itself.
+func _turn(room: String, at: Vector2i, e: Dictionary) -> void:
+	var meta: Dictionary = LM.model_meta(kit, str(e["prop"]))
+	if meta.get("mount", "") == "wall":
+		return
+	var r: Rect2i = lay.rects[room]
+	var dirs := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+	var names := ["n", "e", "s", "w"]
+	for d in 4:
+		var n: Vector2i = at + dirs[d]
+		if not r.has_point(n) and not lay.open_at(n):         # a wall behind it, not a doorway
+			var depth := float(meta.get("solid", [1.0, 1.0, 1.0])[2])
+			var push := maxf(0.0, 2.0 - depth / 2.0 - 0.12)
+			e["face"] = names[(d + 2) % 4]
+			e["offset"] = [dirs[d].x * push, 0, dirs[d].y * push]
+			return
+	var v := Vector2(r.get_center()) - Vector2(at) - Vector2(0.5, 0.5)
+	if absf(v.x) > absf(v.y):
+		e["face"] = "e" if v.x > 0 else "w"
+	else:
+		e["face"] = "s" if v.y >= 0 else "n"
 
 
 ## A beat round a room: its corners, one cell in from the walls where it is wide enough (along the middle where not),

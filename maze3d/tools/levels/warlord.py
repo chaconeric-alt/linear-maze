@@ -129,7 +129,7 @@ garrison = {
                  next_to="map", purpose="office"),
             room("office_2", "Officer's Office", "bunker_ops", [[3, 4], 3], next_to="office_1", purpose="office"),
             room("cipher", "Signals and Cipher Room", "lab", [[5, 6], [4, 5]], [{"item": "crystal"}], purpose="cipher_room"),
-            room("stores", "Quartermaster's Store", "vault", [[3, 4], [3, 4]],
+            room("stores", "Quartermaster's Store", "vault", [[4, 5], [4, 5]],
                  [{"item": "shells"}, {"item": "cells"}, {"item": "armor"}, {"item": "health"}], purpose="quartermaster"),
         ]},
     ],

@@ -71,7 +71,8 @@
     "tile": "ceil_mp_sky",
     "every": 2,
     "flicker": 0.02
-   }
+   },
+   "wall_plain": "wall_mp_tile"
   },
   "mp_shops": {
    "floor": [
@@ -185,7 +186,8 @@
     "tile": "ceil_mp_track",
     "every": 2,
     "flicker": 0.05
-   }
+   },
+   "wall_plain": "wall_mp_tile"
   },
   "mp_cinema": {
    "floor": [

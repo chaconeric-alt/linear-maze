@@ -199,7 +199,8 @@
      "wall_bk_lamp",
      1
     ]
-   ]
+   ],
+   "wall_plain": "wall_bk_concrete"
   }
  }
 }

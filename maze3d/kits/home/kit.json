@@ -228,7 +228,8 @@
    "lights": {
     "tile": "ceil_hm_tinlamp",
     "every": 3
-   }
+   },
+   "wall_plain": "wall_hm_panel"
   },
   "hm_bath": {
    "floor": [
@@ -324,7 +325,8 @@
    "lights": {
     "tile": "ceil_hm_lamp",
     "every": 3
-   }
+   },
+   "wall_plain": "wall_hm_panel"
   },
   "hm_armory": {
    "floor": [
@@ -436,7 +438,8 @@
    "lights": {
     "tile": "ceil_hm_lamp",
     "every": 3
-   }
+   },
+   "wall_plain": "wall_hm_panel"
   },
   "hm_security": {
    "floor": [

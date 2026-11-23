@@ -116,7 +116,8 @@
     "tile": "ceil_cr_chandelier",
     "every": 3,
     "flicker": 0.0
-   }
+   },
+   "wall_plain": "wall_cr_blocks"
   },
   "ossuary": {
    "floor": [
@@ -161,7 +162,8 @@
     "tile": "ceil_cr_chandelier",
     "every": 3,
     "flicker": 0.0
-   }
+   },
+   "wall_plain": "wall_cr_blocks"
   }
  }
 }
