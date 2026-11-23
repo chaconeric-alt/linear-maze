@@ -1,5 +1,5 @@
 """Bring an outside model (Tripo, Meshy) in as furniture for a kit. It keeps its own textures.
-    python3 adopt_prop.py <source.glb> <kit> <id> --height 1.4 [--yaw 180] [--tris 9000] [--tex 2048]
+    python3 adopt_prop.py <source.glb> <kit> <id> --height 1.4 [--yaw 180] [--tris 9000] [--tex 2048] [--wall]
                           [--depth-limit 1.2] [--preview out.png] [--emit 2.0]
 Writes kits/<kit>/models/ext/<id>.glb and prints the "models" entry for kits/<kit>/kit.json (use adopt_props.py to do
 a batch and write the entries). What it does:
@@ -8,6 +8,8 @@ a batch and write the entries). What it does:
   - thins the mesh to about --tris triangles
   - shrinks the textures to --tex pixels and re-saves them as JPEG (normal maps too): a 4K Tripo export is 10 MB, this is ~1
   - measures the box round it: the "solid" the player and monsters collide with
+  - --wall: a piece hung on a wall ("mount": "wall"): it stands with its back, not its middle, at the origin, as the
+    level hangs such a piece by its back on the wall's face
 A model's material is left alone by the engine because the kit has no material of that name (LM.dress), so the textures
 it came with are what you see. --emit N turns the base colour into a glow of that strength where the texture is bright
 and saturated (screens, lamps): crude, but it lights indicator panels without touching the rest."""
@@ -19,7 +21,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 
 
-def adopt(src, kit, pid, height=None, width=None, fit=None, yaw=0.0, tris=9000, tex=2048, preview=None, views=None):
+def adopt(src, kit, pid, height=None, width=None, fit=None, yaw=0.0, tris=9000, tex=2048, preview=None, views=None,
+          wall=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=src)
     meshes = [o for o in bpy.data.objects if o.type == 'MESH']
@@ -58,7 +61,8 @@ def adopt(src, kit, pid, height=None, width=None, fit=None, yaw=0.0, tris=9000, 
     else:
         k = (height or 1.0) / size.z
     mid = (lo + hi) / 2
-    ob.matrix_world = Matrix.Scale(k, 4) @ Matrix.Translation((-mid.x, -mid.y, -lo.z))
+    back = hi.y if wall else mid.y                     # its front faces -Y, so its back is the far +Y side
+    ob.matrix_world = Matrix.Scale(k, 4) @ Matrix.Translation((-mid.x, -back, -lo.z))
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     bpy.ops.object.shade_smooth()
     size = size * k
@@ -72,13 +76,16 @@ def adopt(src, kit, pid, height=None, width=None, fit=None, yaw=0.0, tris=9000, 
         sys.path.insert(0, HERE)
         import mz
         for nm, frm in (views or (('q', (1.9, -2.6, 1.7)),)):
-            mz.preview(preview.replace('.png', '_%s.png' % nm), frm, (0, 0, size.z * 0.5), (380, 420), 10)
+            mz.preview(preview.replace('.png', '_%s.png' % nm), frm, (0, -size.y * 0.5 if wall else 0, size.z * 0.5), (380, 420), 10)
             bpy.context.scene.world.node_tree.nodes['Background'].inputs[0].default_value = (0.7, 0.72, 0.76, 1)
     bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', export_image_format='JPEG', export_jpeg_quality=85, export_apply=True, export_yup=True,
                               export_animations=False, export_skins=False)
     recode(out)
     entry = {'model': 'models/ext/%s.glb' % pid, 'type': 'prop', 'solid': [round(size.x * 0.9, 2), round(size.z, 2), round(size.y * 0.9, 2)],
              'source': os.path.basename(src)}
+    if wall:
+        entry['mount'] = 'wall'
+        entry['solid'][2] = round(size.y, 2)              # hung on the wall, it reaches its whole depth out from it
     print('adopted prop %s/%s  %.2f x %.2f x %.2f m (w d h)  %d tris  %.1f MB' % (kit, pid, size.x, size.y, size.z,
           sum(len(p.vertices) - 2 for p in ob.data.polygons), os.path.getsize(out) / 1048576))
     return entry
@@ -129,7 +136,7 @@ if __name__ == '__main__':
     ap.add_argument('src'); ap.add_argument('kit'); ap.add_argument('id')
     ap.add_argument('--height', type=float); ap.add_argument('--width', type=float); ap.add_argument('--fit', type=float, nargs=3)
     ap.add_argument('--yaw', type=float, default=0.0); ap.add_argument('--tris', type=int, default=9000); ap.add_argument('--tex', type=int, default=2048)
-    ap.add_argument('--preview')
+    ap.add_argument('--preview'); ap.add_argument('--wall', action='store_true')
     a = ap.parse_args()
     import json
-    print(json.dumps(adopt(a.src, a.kit, a.id, a.height, a.width, a.fit, a.yaw, a.tris, a.tex, a.preview)))
+    print(json.dumps(adopt(a.src, a.kit, a.id, a.height, a.width, a.fit, a.yaw, a.tris, a.tex, a.preview, wall=a.wall)))

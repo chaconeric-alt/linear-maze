@@ -1954,6 +1954,15 @@
    "screen": "STAFF\nONLY"
   },
   {
+   "prop": "terminal_wall_b",
+   "at": [
+    31,
+    10
+   ],
+   "face": "s",
+   "screen": "STAFF\nONLY"
+  },
+  {
    "prop": "arch_medical",
    "at": [
     9,
@@ -5899,14 +5908,14 @@
   {
    "prop": "cache",
    "at": [
-    31,
-    10
+    26,
+    12
    ],
-   "face": "s",
+   "face": "e",
    "offset": [
-    0.0,
+    -1.48,
     0,
-    -1.48
+    0.0
    ],
    "blocks": false,
    "use": {
@@ -5925,7 +5934,7 @@
   },
   {
    "sign": "RED CARD",
-   "face": "s",
+   "face": "e",
    "color": [
     1.0,
     0.2,
@@ -5934,8 +5943,8 @@
    "size": 26,
    "y": 3.2,
    "at": [
-    31,
-    10
+    26,
+    12
    ]
   },
   {

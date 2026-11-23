@@ -12,6 +12,13 @@ PROPS = [
     ('hightech', 'ht_chair_command', 'chair_command.glb', 'Command Chair',    dict(height=1.6)),
     ('hightech', 'ht_chair_cockpit', 'chair_cockpit.glb', 'Cockpit Chair',    dict(height=1.5)),
     ('hightech', 'ht_chair_throne',  'chair_throne.glb',  'Throne Chair',     dict(height=1.75)),
+    # the wall terminals (Tripo, Nov 22; Eric's replacements for the made one): hung on a wall by their backs, the
+    # screen text set where each model's screen is. Delivered at 1.9 million triangles and 4K textures each; the
+    # sources kept here are thinned to 200k with 2K textures, and the game's copies to 12k with 1K.
+    ('hightech', 'terminal_wall',   'terminal_scifi.glb', 'Wall Terminal',    dict(height=1.9, yaw=90, tris=12000, tex=1024, wall=True,
+        meta={'screen': {'at': [0, 1.36, 0.8], 'size': [0.55, 0.42], 'tilt': 20}})),
+    ('hightech', 'terminal_wall_b', 'terminal_tall.glb',  'Tall Wall Terminal', dict(height=2.1, yaw=-90, tris=12000, tex=1024, wall=True,
+        meta={'screen': {'at': [0.02, 1.53, 0.6], 'size': [0.3, 0.28], 'tilt': 10}})),
 ]
 
 if __name__ == '__main__':
@@ -19,7 +26,8 @@ if __name__ == '__main__':
     for kit, pid, src, name, opt in PROPS:
         if only and pid not in only:
             continue
-        entry = adopt_prop.adopt(os.path.join(ROOT, 'kits', kit, 'source', src), kit, pid, **opt)
+        args = {k: v for k, v in opt.items() if k != 'meta'}
+        entry = adopt_prop.adopt(os.path.join(ROOT, 'kits', kit, 'source', src), kit, pid, **args)
         entry['name'] = name
         entry.update(opt.get('meta', {}))
         p = os.path.join(ROOT, 'kits', kit, 'kit.json')

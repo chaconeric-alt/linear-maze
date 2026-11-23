@@ -358,6 +358,54 @@
    ],
    "source": "chair_throne.glb",
    "name": "Throne Chair"
+  },
+  "terminal_wall": {
+   "model": "models/ext/terminal_wall.glb",
+   "type": "prop",
+   "solid": [
+    0.72,
+    1.9,
+    0.94
+   ],
+   "source": "terminal_scifi.glb",
+   "mount": "wall",
+   "name": "Wall Terminal",
+   "screen": {
+    "at": [
+     0,
+     1.36,
+     0.8
+    ],
+    "size": [
+     0.55,
+     0.42
+    ],
+    "tilt": 20
+   }
+  },
+  "terminal_wall_b": {
+   "model": "models/ext/terminal_wall_b.glb",
+   "type": "prop",
+   "solid": [
+    0.7,
+    2.1,
+    0.64
+   ],
+   "source": "terminal_tall.glb",
+   "mount": "wall",
+   "name": "Tall Wall Terminal",
+   "screen": {
+    "at": [
+     0.02,
+     1.53,
+     0.6
+    ],
+    "size": [
+     0.3,
+     0.28
+    ],
+    "tilt": 10
+   }
   }
  }
 }
