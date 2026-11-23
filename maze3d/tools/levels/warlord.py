@@ -84,7 +84,7 @@ comms_console = use("terminal_desk", "Use the communications console", "Communic
 garrison = {
     "spine": {"gap": [1, 3]},
     "bank": "lobby",
-    "bank_at": [88, 14],
+    "bank_at": [56, 18],
     "rooms": [
         room("gate", "Gatehouse", "bunker_ops", [[4, 5], [4, 5]],
              [blast_door, {"item": "health"}], purpose="gatehouse"),     # no guard in the room you start in

@@ -7,7 +7,7 @@ extends SelfTestPart
 ## with a gallery and no way in from above; the bank lies where the programme puts it on both floors, three lifts that
 ## stop on both, held by the lockdown; without the stand-down nothing of Level 2 is reached, and the lifts are all
 ## that holds it; the three cards are each found their own way and each calls the lift to Level 3; the ways in are in
-## their rooms; twenty worlds can all be finished. Then it is played: the standard parts, then the lockdown (a locked
+## their rooms; twenty worlds can all be finished, and Level 1 stays compact in all of them. Then it is played: the standard parts, then the lockdown (a locked
 ## lift does not move; the order read, the code read in, it does), Level 2's three cards, and the lift down.
 
 const PARTS := ["movement", "reach", "actors", "pickups", "doors"]
@@ -134,16 +134,37 @@ func _ways_in() -> void:
 func _worlds(written: Dictionary) -> void:
 	var finished := 0
 	var placed := 0
+	var biggest := _span(level.data["map"])
 	var at: Array = written["programme"]["bank_at"]
 	for s in 20:
 		var lv := ProgrammeGen.make(written, 3000 + s * 61)
 		if lv.is_empty():
 			continue
 		finished += 1 if ProgrammeCheck.solve(lv)["ok"] else 0
+		var sp := _span(lv["map"])
+		biggest = Vector2i(maxi(biggest.x, sp.x), maxi(biggest.y, sp.y))
 		for r in lv["rooms"]:
 			if r.get("id", "") == "lobby" and int(r["rect"][0]) == int(at[0]) and int(r["rect"][1]) == int(at[1]):
 				placed += 1
 	say(finished == 20 and placed == 20, "twenty worlds: each laid out with its bank in the same place, each can be finished (%d, %d)" % [finished, placed])
+	say(biggest.x <= 60 and biggest.y <= 42, "compact: Level 1 lays out within 60 by 42 cells in this world and the twenty (at most %d by %d)" % [biggest.x, biggest.y])
+
+
+## How many columns and rows a floor's open cells span (its walls left out).
+func _span(rows: Array) -> Vector2i:
+	var x0 := 1 << 20
+	var x1 := -1
+	var y0 := 1 << 20
+	var y1 := -1
+	for y in rows.size():
+		var row := str(rows[y])
+		for x in row.length():
+			if row[x] != "#":
+				x0 = mini(x0, x)
+				x1 = maxi(x1, x)
+				y0 = mini(y0, y)
+				y1 = maxi(y1, y)
+	return Vector2i(x1 - x0 + 1, y1 - y0 + 1) if x1 >= 0 else Vector2i.ZERO
 
 
 # ------------------------------------------------------------------ played

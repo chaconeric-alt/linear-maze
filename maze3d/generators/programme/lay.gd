@@ -1,11 +1,14 @@
 extends RefCounted
 ## ProgrammeLayout - lays a plan (ProgrammePlan) out as cells (SPEC.md 6.3): the spine is a corridor along one row,
-## threaded through the spine rooms in order from west to east (a door in each room's west and east wall on that row);
-## between two spine rooms the corridor runs on far enough to leave room for the wings that branch there, and the
-## seed's gap. A wing is a branch corridor going north or south from the spine, with its rooms on both sides, nearest
-## the spine first, each with a door onto it, one wall between neighbours (a door in it for "door_to"). Walls are whole
-## cells, as everywhere in the engine; a door only ever stands in a wall cell with floor on both sides and wall to both
-## flanks. Nothing here draws a random number: the plan made every choice.
+## threaded through the spine rooms in order from west to east (a door in each room's west and east wall on that row).
+## A wing is a branch corridor going north or south from the spine, with its rooms on both sides, nearest the spine
+## first, each with a door onto it, one wall between neighbours (a door in it for "door_to").
+## Compact (Eric, 22 Nov: "make the generator create things more compact"): a wing's branch corridor leaves the spine
+## between two spine rooms, but its rooms may reach out east and west over the spine rooms beside it, starting just
+## beyond them, so the corridor between spine rooms only has to be long enough for the branch corridors (and the seed's
+## gap), not for whole wings. Wings on one side never overlap one another: each starts east of the one before.
+## Walls are whole cells, as everywhere in the engine; a door only ever stands in a wall cell with floor on both sides
+## and wall to both flanks. Nothing here draws a random number: the plan made every choice.
 class_name ProgrammeLayout
 
 var plan: ProgrammePlan
@@ -23,8 +26,11 @@ func _init(p: ProgrammePlan) -> void:
 	plan = p
 	var xs := _columns()
 	W = int(xs["width"])
-	y0 = maxi(_reach("n"), _reach_spine(true)) + 1
-	H = y0 + maxi(_reach("s"), _reach_spine(false)) + 2
+	var clear := {}
+	for w in plan.wings:
+		clear[w["id"]] = _clearance(w, xs)
+	y0 = maxi(_reach("n", clear), _reach_spine(true)) + 1
+	H = y0 + maxi(_reach("s", clear), _reach_spine(false)) + 2
 	for y in H:
 		var row: Array = []
 		row.resize(W)
@@ -32,15 +38,16 @@ func _init(p: ProgrammePlan) -> void:
 		g.append(row)
 	_spine(xs)
 	for w in plan.wings:
-		_wing(w, xs)
+		_wing(w, int(xs["branch"][w["id"]]), int(clear[w["id"]]))
 
 
-## How far the wings on a side reach from the spine (their longer side, a wall per room).
-func _reach(side: String) -> int:
+## How far the wings on a side reach from the spine: past the spine rooms they reach over, then their longer side (a
+## wall per room).
+func _reach(side: String, clear: Dictionary) -> int:
 	var n := 0
 	for w in plan.wings:
 		if w["side"] == side:
-			n = maxi(n, maxi(plan.length(w["west"]), plan.length(w["east"])))
+			n = maxi(n, int(clear[w["id"]]) - 2 + maxi(plan.length(w["west"]), plan.length(w["east"])))
 	return n
 
 
@@ -49,15 +56,23 @@ func _reach(side: String) -> int:
 func _reach_spine(up: bool) -> int:
 	var n := 0
 	for id in plan.spine:
-		var h := int(plan.rooms[id]["h"])
-		n = maxi(n, (h - 1) / 2 if up else h - 1 - (h - 1) / 2)
+		n = maxi(n, _half(id, up))
 	return n
 
 
-## Where each spine room's floor starts across the map, and where the corridor after it starts and how long it is:
-## long enough for the plan's gap and for the wings branching there, side by side, on whichever side is wider.
+## Rows of a spine room's floor above (up) or below the spine's row.
+func _half(id: String, up: bool) -> int:
+	var h := int(plan.rooms[id]["h"])
+	return (h - 1) / 2 if up else h - 1 - (h - 1) / 2
+
+
+## Where each spine room's floor starts across the map, where the corridor after it starts and how long it is, and
+## where each wing's branch corridor leaves it. Walking east: a wing's branch goes as far west in its stretch of
+## corridor as it can, with its west rooms clear of the wings on its side before it (a wall between); the stretch
+## runs on until every branch in it has left, and at least the seed's gap.
 func _columns() -> Dictionary:
-	var out := {"room": {}, "after": {}}
+	var out := {"room": {}, "after": {}, "branch": {}}
+	var free := {"n": 1, "s": 1}                       # per side: the first column a wing's room may take
 	var x := 1
 	for i in plan.spine.size():
 		var id: String = plan.spine[i]
@@ -65,27 +80,35 @@ func _columns() -> Dictionary:
 		x += int(plan.rooms[id]["w"]) + 1                 # the floor, then its east wall
 		if i == plan.spine.size() - 1:
 			break
-		var need := maxi(_footprints(id, "n"), _footprints(id, "s"))
-		var run := maxi(need, int(plan.gaps.get(id, 1)))
-		out["after"][id] = [x, run]
-		x += run + 1                                      # the corridor, then the next room's west wall
-	out["width"] = x
+		var e := x + maxi(1, int(plan.gaps.get(id, 1)))   # the stretch: [x, e)
+		for side in ["n", "s"]:
+			for w in plan.wings_after(id, side):
+				var wl := plan.width(w["west"])
+				var wr := plan.width(w["east"])
+				var xb := maxi(x, int(free[side]) + (wl + 1 if wl > 0 else 0))
+				out["branch"][w["id"]] = xb
+				free[side] = (xb + 2 + wr if wr > 0 else xb + 1) + 1
+				e = maxi(e, xb + 1)
+		out["after"][id] = [x, e - x]
+		x = e + 1                                         # the next room's west wall, then its floor
+	out["width"] = maxi(x, maxi(int(free["n"]), int(free["s"])))
 	return out
 
 
-## How many columns the wings branching after a room on one side take, side by side.
-func _footprints(id: String, side: String) -> int:
-	var n := 0
-	for w in plan.wings_after(id, side):
-		n += footprint(w)
-	return n
-
-
-## A wing's columns: its west rooms and a wall, the branch corridor, a wall and its east rooms.
-func footprint(w: Dictionary) -> int:
+## How many rows from the spine's row to a wing's first room: two (a wall row between) beside the corridor, or past
+## the spine rooms its rooms reach over (their walls included) and a wall row.
+func _clearance(w: Dictionary, xs: Dictionary) -> int:
+	var xb := int(xs["branch"][w["id"]])
 	var wl := plan.width(w["west"])
 	var wr := plan.width(w["east"])
-	return (wl + 1 if wl > 0 else 0) + 1 + (wr + 1 if wr > 0 else 0)
+	var lo := xb - 1 - wl if wl > 0 else xb
+	var hi := xb + 2 + wr if wr > 0 else xb + 1        # [lo, hi): the columns its rooms take
+	var n := 2
+	for id in plan.spine:
+		var rx := int(xs["room"][id])
+		if lo < rx + int(plan.rooms[id]["w"]) + 1 and hi > rx - 1:
+			n = maxi(n, _half(id, w["side"] == "n") + 2)
+	return n
 
 
 func _spine(xs: Dictionary) -> void:
@@ -106,18 +129,10 @@ func _spine(xs: Dictionary) -> void:
 			corridors.append(cor)
 
 
-## A wing: its branch corridor off the spine, its rooms up (or down) each side, their doors.
-func _wing(w: Dictionary, xs: Dictionary) -> void:
-	var a: Array = xs["after"][w["after"]]
-	var s := int(a[0])
-	for other in plan.wings_after(w["after"], w["side"]):            # wings on the same side sit side by side
-		if other == w:
-			break
-		s += footprint(other)
-	var wl := plan.width(w["west"])
-	var xb := s + (wl + 1 if wl > 0 else 0)
+## A wing: its branch corridor off the spine, its rooms up (or down) each side past `clear` rows, their doors.
+func _wing(w: Dictionary, xb: int, clear: int) -> void:
 	var dy := -1 if w["side"] == "n" else 1
-	var reach := maxi(plan.length(w["west"]), plan.length(w["east"]))
+	var reach := clear - 2 + maxi(plan.length(w["west"]), plan.length(w["east"]))
 	var y_far := y0 + dy * reach
 	var cor := Rect2i(xb, mini(y0 + dy, y_far), 1, absi(y_far - y0))
 	_carve(cor)
@@ -126,12 +141,12 @@ func _wing(w: Dictionary, xs: Dictionary) -> void:
 	if w.get("door", false):                           # a door where the wing meets the spine
 		_door(junctions[w["id"]], [], w["id"])
 	for side in ["west", "east"]:
-		_side(w, side, xb, dy)
+		_side(w, side, xb, dy, clear)
 
 
 ## One side of a wing: its rooms against the branch corridor, nearest the spine first.
-func _side(w: Dictionary, side: String, xb: int, dy: int) -> void:
-	var near := y0 + 2 * dy                                # the row nearest the spine (a wall row between)
+func _side(w: Dictionary, side: String, xb: int, dy: int, clear: int) -> void:
+	var near := y0 + clear * dy                            # the row nearest the spine
 	var prev := ""
 	for id in w[side]:
 		var r: Dictionary = plan.rooms[id]
