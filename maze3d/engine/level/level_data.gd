@@ -355,11 +355,12 @@ func _backed(e: Dictionary, meta: Dictionary, p: Vector2i, s: int) -> Array:
 	var sz: Array = meta.get("solid", [1.0, 1.0, 1.0])
 	var off: Vector3 = LM.vec(e.get("offset"), Vector3.ZERO)
 	var facing: int = DIR_NAMES.get(str(e.get("face", "s")), 2)
+	var quarter := absf(absf(fmod(float(e.get("turn", 0.0)), 180.0)) - 90.0) < 10.0     # turned side on: its width faces the way it faces
 	for d in 4:
 		var n: Vector2i = p + DIRS[d]
 		if open_s(n.x, n.y, s):
 			continue
-		var half: float = float(sz[2] if d % 2 == facing % 2 else sz[0]) / 2.0
+		var half: float = float(sz[2] if (d % 2 == facing % 2) != quarter else sz[0]) / 2.0
 		if off.x * DIRS[d].x + off.z * DIRS[d].y + half >= C / 2.0 - AGAINST:
 			out.append(d)
 	return out

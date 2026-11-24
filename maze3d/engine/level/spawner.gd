@@ -301,46 +301,18 @@ func _prop(e: Dictionary, p: Vector2i, s: int, pos: Vector3) -> Node3D:
 	pr.setup(level, e, ld.kit_id)
 	if e.get("blocks", meta.has("solid") and meta["solid"][0] >= 1.4):
 		level.block(p, true, s)
-	if e.has("seat"):
-		_seat(e, pr, meta)
-	_holds(e, pr, meta)
+	PropParts.make(self, e, pr, meta)                   # its chair, chairs round it, footlocker, the goods it holds
 	return pr
 
 
-## A chair that goes with it: in front of it, facing it.
-func _seat(e: Dictionary, pr: Prop, meta: Dictionary) -> void:
-	var sm := LM.model_meta(ld.kit_id, e["seat"])
-	var front := Vector3(sin(pr.rotation.y), 0, cos(pr.rotation.y))
-	var d0: float = meta.get("solid", [1.0, 1.0, 1.0])[2] * (1.0 if meta.get("mount", "") == "wall" else 0.5)
-	var d1: float = sm.get("solid", [1.0, 1.0, 1.0])[2] * 0.5
-	var ch := Prop.new()
-	level.add_child(ch)
-	ch.position = pr.position + front * (d0 + e.get("seat_gap", 0.25) + d1)
-	ch.rotation.y = pr.rotation.y + PI + deg_to_rad(e.get("seat_turn", 0.0))
-	ch.setup(level, {"prop": e["seat"], "at": e["at"]}, ld.kit_id)
-	_key(ch, _making + "/seat")
-	if gone.has(_making + "/seat"):
-		ch.queue_free()                              # broken on an earlier visit
+## A part of the thing being made (a desk's chair, a container's goods) is known by the thing's key and `suffix`.
+func key_part(n: Node, suffix: String) -> void:
+	_key(n, _making + suffix)
 
 
-## A container: what it holds sits in its places, to be taken.
-func _holds(e: Dictionary, pr: Prop, meta: Dictionary) -> void:
-	var slots: Array = meta.get("slots", [])
-	var hi := 0
-	for held in e.get("holds", []):
-		if hi >= slots.size():
-			break
-		if gone.has(_making + "/holds.%d" % hi):          # taken on an earlier visit
-			hi += 1
-			continue
-		var ie: Dictionary = (held if held is Dictionary else {"item": held}).duplicate()
-		ie["rest"] = true
-		var pk := Pickup.new()
-		level.add_child(pk)
-		pk.position = pr.transform * LM.vec(slots[hi])
-		pk.setup(level, ie, ld.kit_id)
-		_key(pk, _making + "/holds.%d" % hi)
-		hi += 1
+## The level's memory says this part of the thing being made was taken or broken on an earlier visit.
+func part_gone(suffix: String) -> bool:
+	return gone.has(_making + suffix)
 
 
 func _item(e: Dictionary, _p: Vector2i, _s: int, pos: Vector3) -> Node3D:

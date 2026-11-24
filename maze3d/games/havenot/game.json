@@ -60,6 +60,27 @@
   "levels/blueprint2.json",
   "levels/warlord_1.json"
  ],
+ "stand_ins": {
+  "chair_plain": ["ht_chair_ops"],
+  "footlocker": ["crate"],
+  "stove": ["mp_autochef", "fabricator"],
+  "prep_table": ["hs_table", "hm_workbench", "wk_bench", "terminal_desk"],
+  "restraint_chair": ["ht_chair_cockpit"],
+  "morgue_drawers": ["hs_cabinet", "locker"],
+  "iv_stand": ["hs_monitor", "server_rack"],
+  "toilet_stall": ["hm_toilet", "crate"],
+  "urinal": ["hm_sink", "crate"],
+  "weight_bench": ["mp_bench", "wk_bench", "crate"],
+  "punching_bag": ["hm_armor", "barrel"],
+  "firing_booth": ["bk_crates", "crate"],
+  "range_target": ["hm_armor", "barrel"],
+  "lectern": ["an_lectern", "bb_pulpit", "terminal_desk"],
+  "projection_screen": ["hs_screen", "terminal_wall"],
+  "pin_board": ["an_whiteboard", "terminal_wall"],
+  "signals_desk": ["terminal_desk"],
+  "typewriter_desk": ["hm_desk", "ex_desk", "terminal_desk"],
+  "cell_cot": ["hm_bed", "bk_bunk", "crate"]
+ },
  "generators": [
   "rooms"
  ],
@@ -247,170 +268,21 @@
   ],
   "purposes": {
    "lab": [
-    {
-     "name": "Control Room",
-     "wall": [
-      [
-       "terminal_desk",
-       "ht_chair_ops"
-      ],
-      [
-       "terminal_desk",
-       "ht_chair_command"
-      ],
-      "server_rack"
-     ],
-     "centre": [
-      "holo_table"
-     ],
-     "corner": [
-      "server_rack",
-      "crate"
-     ],
-     "fill": 0.45,
-     "valuable": true
-    },
-    {
-     "name": "Laboratory",
-     "wall": [
-      "cryo_pod",
-      [
-       "terminal_desk",
-       "ht_chair_ops"
-      ],
-      "cryo_pod_broken"
-     ],
-     "corner": [
-      "crate",
-      "barrel"
-     ],
-     "fill": 0.45
-    },
-    {
-     "name": "Monitoring Station",
-     "floor": [
-      [
-       "terminal_desk",
-       "ht_chair_command"
-      ]
-     ],
-     "rows": true,
-     "wall": [
-      "server_rack"
-     ],
-     "corner": [
-      "crate"
-     ],
-     "fill": 0.25,
-     "floor_fill": 0.8
-    }
+    {"name": "Control Room", "wall": [{"piece": "terminal_desk", "seat": "ht_chair_ops", "count": [3, 5], "side_by_side": true}, ["terminal_desk", "ht_chair_command"], "server_rack", "terminal_wall"], "centre": [["holo_table", "ht_chair_command"]], "corner": ["server_rack", "crate"], "fill": 0.45, "valuable": true},
+    {"name": "Laboratory", "wall": [{"piece": "cryo_pod", "count": [2, 3], "side_by_side": true}, ["terminal_desk", "ht_chair_ops"], "cryo_pod_broken", "server_rack"], "corner": ["crate", "barrel"], "fill": 0.45},
+    {"name": "Monitoring Station", "floor": [{"piece": "terminal_desk", "seat": "ht_chair_command", "count": [4, 8], "side_by_side": true}], "rows": true, "wall": ["server_rack", "terminal_wall"], "corner": ["crate"], "fill": 0.25, "floor_fill": 0.8}
    ],
    "machine": [
-    {
-     "name": "Engine Room",
-     "centre": [
-      "fabricator"
-     ],
-     "wall": [
-      [
-       "terminal_desk",
-       "ht_chair_cockpit"
-      ],
-      "server_rack",
-      "barrel"
-     ],
-     "corner": [
-      "barrel",
-      "crate"
-     ],
-     "fill": 0.35
-    },
-    {
-     "name": "Server Hall",
-     "floor": [
-      "server_rack"
-     ],
-     "rows": true,
-     "wall": [
-      [
-       "terminal_desk",
-       "ht_chair_ops"
-      ]
-     ],
-     "corner": [
-      "crate"
-     ],
-     "fill": 0.2,
-     "floor_fill": 0.9,
-     "valuable": true
-    },
-    {
-     "name": "Robot Bay",
-     "wall": [
-      "@custodian",
-      "@monoid",
-      "@dancer",
-      "@defender",
-      "@drone"
-     ],
-     "corner": [
-      "crate",
-      "server_rack"
-     ],
-     "fill": 0.7,
-     "bay": true
-    }
+    {"name": "Engine Room", "centre": ["fabricator"], "wall": [["terminal_desk", "ht_chair_cockpit"], {"piece": "server_rack", "count": 2, "side_by_side": true, "per_cell": 2}, "barrel"], "corner": ["barrel", "crate"], "fill": 0.35},
+    {"name": "Server Hall", "floor": [{"piece": "server_rack", "count": [6, 12], "side_by_side": true, "per_cell": 2}], "rows": true, "wall": [["terminal_desk", "ht_chair_ops"]], "corner": ["crate"], "fill": 0.2, "floor_fill": 0.9, "valuable": true},
+    {"name": "Robot Bay", "wall": ["@custodian", "@monoid", "@dancer", "@defender", "@drone"], "corner": ["crate", "server_rack"], "fill": 0.7, "bay": true}
    ],
    "ruin": [
-    {
-     "name": "Wrecked Bridge",
-     "centre": [
-      [
-       "holo_table",
-       "ht_chair_throne"
-      ]
-     ],
-     "wall": [
-      [
-       "terminal_desk",
-       "ht_chair_cockpit"
-      ],
-      "ht_chair_cockpit"
-     ],
-     "corner": [
-      "debris",
-      "crate"
-     ],
-     "fill": 0.35
-    },
-    {
-     "name": "Crew Quarters",
-     "wall": [
-      "ht_chair_ops",
-      "crate",
-      "cryo_pod_broken"
-     ],
-     "corner": [
-      "debris",
-      "barrel"
-     ],
-     "fill": 0.3
-    }
+    {"name": "Wrecked Bridge", "centre": [["holo_table", "ht_chair_throne"]], "wall": [["terminal_desk", "ht_chair_cockpit"], "ht_chair_cockpit"], "corner": ["debris", "crate"], "fill": 0.35},
+    {"name": "Crew Quarters", "wall": ["ht_chair_ops", "crate", "cryo_pod_broken"], "corner": ["debris", "barrel"], "fill": 0.3}
    ],
    "vault": [
-    {
-     "name": "Vault",
-     "wall": [
-      "crate",
-      "server_rack"
-     ],
-     "corner": [
-      "crate",
-      "barrel"
-     ],
-     "fill": 0.3,
-     "valuable": true
-    }
+    {"name": "Vault", "wall": ["crate", "server_rack"], "corner": ["crate", "barrel"], "fill": 0.3, "valuable": true}
    ]
   },
   "stations": {
@@ -591,87 +463,18 @@
    "ambush_text": "RED CARD REMOVED. The shift has been called in.",
    "menu": true,
    "purposes": {
-    "foundry": [
-     {
-      "name": "Foundry",
-      "centre": [
-       "wk_forge"
-      ],
-      "wall": [
-       "wk_vat",
-       "wk_drums"
-      ],
-      "corner": [
-       "wk_drums",
-       "barrel"
-      ],
-      "fill": 0.3
-     }
-    ],
-    "assembly": [
-     {
-      "name": "Assembly Line",
-      "floor": [
-       "wk_press"
-      ],
-      "rows": true,
-      "wall": [
-       "wk_bench",
-       "wk_drums"
-      ],
-      "corner": [
-       "crate",
-       "wk_drums"
-      ],
-      "fill": 0.3,
-      "floor_fill": 0.7
-     },
-     {
-      "name": "Workshop",
-      "wall": [
-       "wk_bench",
-       "wk_bench",
-       "wk_drums"
-      ],
-      "corner": [
-       "crate"
-      ],
-      "fill": 0.5,
-      "valuable": true
-     },
-     {
-      "name": "Robot Bay",
-      "wall": [
-       "@eggbot",
-       "@defender",
-       "@plodder",
-       "@drone"
-      ],
-      "corner": [
-       "crate",
-       "barrel"
-      ],
-      "fill": 0.7,
-      "bay": true
-     }
-    ],
-    "machine": [
-     {
-      "name": "Vat Room",
-      "floor": [
-       "wk_vat"
-      ],
-      "wall": [
-       "wk_drums"
-      ],
-      "corner": [
-       "barrel"
-      ],
-      "fill": 0.25,
-      "floor_fill": 0.6
-     }
-    ]
-   },
+   "foundry": [
+    {"name": "Foundry", "centre": ["wk_forge"], "wall": [{"piece": "wk_vat", "count": [1, 2], "side_by_side": true}, "wk_drums", "wk_bench"], "corner": ["wk_drums", "barrel"], "fill": 0.3}
+   ],
+   "assembly": [
+    {"name": "Assembly Line", "floor": [{"piece": "wk_press", "count": [3, 4], "side_by_side": true}], "rows": true, "wall": [{"piece": "wk_bench", "count": 2, "side_by_side": true}, "wk_drums"], "corner": ["crate", "wk_drums"], "fill": 0.3, "floor_fill": 0.7},
+    {"name": "Workshop", "wall": [{"piece": "wk_bench", "count": [2, 3], "side_by_side": true}, "wk_drums", "lt_shelf_wk"], "corner": ["crate"], "fill": 0.5, "valuable": true},
+    {"name": "Robot Bay", "wall": ["@eggbot", "@defender", "@plodder", "@drone"], "corner": ["crate", "barrel"], "fill": 0.7, "bay": true}
+   ],
+   "machine": [
+    {"name": "Vat Room", "floor": [{"piece": "wk_vat", "count": [2, 3]}], "wall": ["wk_drums"], "corner": ["barrel"], "fill": 0.25, "floor_fill": 0.6}
+   ]
+  },
    "containers": {
     "shelf": "lt_shelf_wk",
     "trophy": "lt_trophy_wk",
@@ -767,89 +570,17 @@
    "ambush_text": "RED CARD REMOVED. Stand to. Stand to.",
    "menu": true,
    "purposes": {
-    "barracks": [
-     {
-      "name": "Barracks",
-      "wall": [
-       "bk_bunk"
-      ],
-      "corner": [
-       "bk_crates"
-      ],
-      "fill": 0.7
-     },
-     {
-      "name": "Mess",
-      "floor": [
-       "bk_table"
-      ],
-      "rows": true,
-      "wall": [
-       "bk_crates"
-      ],
-      "corner": [
-       "bk_crates"
-      ],
-      "fill": 0.25,
-      "floor_fill": 1.0
-     }
-    ],
-    "bunker_ops": [
-     {
-      "name": "Operations",
-      "wall": [
-       "bk_console"
-      ],
-      "centre": [
-       "bk_table"
-      ],
-      "corner": [
-       "bk_crates"
-      ],
-      "fill": 0.5,
-      "valuable": true
-     },
-     {
-      "name": "Plant Room",
-      "centre": [
-       "bk_generator"
-      ],
-      "wall": [
-       "bk_crates",
-       "bk_console"
-      ],
-      "corner": [
-       "bk_crates"
-      ],
-      "fill": 0.25
-     },
-     {
-      "name": "Decontamination",
-      "wall": [
-       "bk_shower"
-      ],
-      "corner": [
-       "bk_crates"
-      ],
-      "fill": 0.5
-     },
-     {
-      "name": "Drone Bay",
-      "wall": [
-       "@deadbot",
-       "@plodder",
-       "@defender",
-       "@drone",
-       "@custodian"
-      ],
-      "corner": [
-       "bk_crates"
-      ],
-      "fill": 0.7,
-      "bay": true
-     }
-    ]
-   },
+   "barracks": [
+    {"name": "Barracks", "wall": [{"piece": "bk_bunk", "turn": -90, "foot": "footlocker", "count": [4, 8], "side_by_side": true, "per_cell": 2}, "bk_crates"], "corner": ["bk_crates"], "fill": 0.7, "floor": [{"piece": "bk_bunk", "turn": -90, "foot": "footlocker", "count": [2, 4], "side_by_side": true, "per_cell": 2}], "rows": true},
+    {"name": "Mess", "floor": [{"piece": "bk_table", "around": "chair_plain", "chairs": 4, "count": [4, 6], "side_by_side": true}], "rows": true, "wall": [{"piece": "bk_crates", "count": 2, "side_by_side": true}, "server_rack"], "corner": ["bk_crates"], "fill": 0.25, "floor_fill": 1.0}
+   ],
+   "bunker_ops": [
+    {"name": "Operations", "wall": [{"piece": "bk_console", "seat": "ht_chair_ops", "count": [3, 4], "side_by_side": true}, "server_rack"], "centre": [["holo_table", "ht_chair_command"]], "corner": ["bk_crates"], "fill": 0.5, "valuable": true},
+    {"name": "Plant Room", "centre": ["bk_generator"], "wall": [{"piece": "bk_crates", "count": 2, "side_by_side": true}, "bk_console", "server_rack"], "corner": ["bk_crates"], "fill": 0.25},
+    {"name": "Decontamination", "wall": [{"piece": "bk_shower", "count": [3, 4], "side_by_side": true}], "corner": ["bk_crates"], "fill": 0.5},
+    {"name": "Drone Bay", "wall": ["@deadbot", "@plodder", "@defender", "@drone", "@custodian"], "corner": ["bk_crates"], "fill": 0.7, "bay": true}
+   ]
+  },
    "containers": {
     "shelf": "lt_shelf_bk",
     "trophy": "lt_trophy_bk",
@@ -956,56 +687,16 @@
    },
    "menu": true,
    "purposes": {
-    "chapel": [
-     {
-      "name": "Chapel",
-      "centre": [
-       "cr_statue"
-      ],
-      "wall": [
-       "cr_brazier",
-       "cr_plinth"
-      ],
-      "corner": [
-       "cr_candles",
-       "cr_brazier"
-      ],
-      "fill": 0.3
-     }
-    ],
-    "ossuary": [
-     {
-      "name": "Ossuary",
-      "wall": [
-       "cr_coffin"
-      ],
-      "corner": [
-       "cr_bones",
-       "cr_candles"
-      ],
-      "fill": 0.55
-     }
-    ],
-    "catacomb": [
-     {
-      "name": "Tomb Hall",
-      "floor": [
-       "cr_coffin"
-      ],
-      "rows": true,
-      "wall": [
-       "cr_plinth"
-      ],
-      "corner": [
-       "cr_bones",
-       "cr_candles"
-      ],
-      "fill": 0.2,
-      "floor_fill": 0.9,
-      "valuable": true
-     }
-    ]
-   },
+   "chapel": [
+    {"name": "Chapel", "centre": ["cr_statue"], "wall": ["cr_brazier", "cr_plinth"], "corner": ["cr_candles", "cr_brazier"], "fill": 0.3}
+   ],
+   "ossuary": [
+    {"name": "Ossuary", "wall": [{"piece": "cr_coffin", "count": [4, 8], "side_by_side": true}], "corner": ["cr_bones", "cr_candles"], "fill": 0.55}
+   ],
+   "catacomb": [
+    {"name": "Tomb Hall", "floor": [{"piece": "cr_coffin", "count": [4, 8], "side_by_side": true}], "rows": true, "wall": ["cr_plinth"], "corner": ["cr_bones", "cr_candles"], "fill": 0.2, "floor_fill": 0.9, "valuable": true}
+   ]
+  },
    "containers": {
     "shelf": "lt_shelf_cr",
     "trophy": "lt_trophy_cr",
@@ -1222,126 +913,20 @@
     "ex_bar"
    ],
    "purposes": {
-    "ex_office": [
-     {
-      "name": "Corner Office",
-      "centre": [
-       "ex_desk"
-      ],
-      "wall": [
-       "ex_bar",
-       "ex_case",
-       "ex_chair"
-      ],
-      "corner": [
-       "ex_globe",
-       "ex_chair",
-       "ex_case"
-      ],
-      "fill": 0.35,
-      "valuable": true
-     },
-     {
-      "name": "Executive Lounge",
-      "wall": [
-       "ex_bar",
-       "ex_chair",
-       "ex_chair"
-      ],
-      "floor": [
-       "ex_chair"
-      ],
-      "corner": [
-       "ex_globe",
-       "ex_case"
-      ],
-      "fill": 0.45,
-      "floor_fill": 0.6
-     },
-     {
-      "name": "Typing Pool",
-      "floor": [
-       "ex_desk"
-      ],
-      "rows": true,
-      "wall": [
-       "ex_case"
-      ],
-      "corner": [
-       "ex_chair"
-      ],
-      "fill": 0.2
-     },
-     {
-      "name": "Security Annex",
-      "wall": [
-       "@monoid",
-       "@custodian",
-       "@defender",
-       "@drone"
-      ],
-      "corner": [
-       "crate"
-      ],
-      "fill": 0.7,
-      "bay": true
-     }
-    ],
-    "ex_board": [
-     {
-      "name": "Boardroom",
-      "centre": [
-       "ex_table"
-      ],
-      "floor": [
-       "ex_table"
-      ],
-      "rows": true,
-      "wall": [
-       "ex_chair",
-       "ex_bar"
-      ],
-      "corner": [
-       "ex_globe"
-      ],
-      "fill": 0.35,
-      "floor_fill": 0.5,
-      "valuable": true
-     }
-    ],
-    "ex_gallery": [
-     {
-      "name": "Gallery",
-      "floor": [
-       "ex_case"
-      ],
-      "wall": [
-       "ex_chair"
-      ],
-      "corner": [
-       "ex_globe",
-       "ex_case"
-      ],
-      "fill": 0.15,
-      "floor_fill": 0.8,
-      "valuable": true
-     },
-     {
-      "name": "Rotunda",
-      "centre": [
-       "ex_globe"
-      ],
-      "wall": [
-       "ex_case",
-       "ex_chair"
-      ],
-      "corner": [
-       "ex_case"
-      ],
-      "fill": 0.3
-     }
-    ]
-   },
+   "ex_office": [
+    {"name": "Corner Office", "centre": [{"piece": "ex_desk", "seat": "ht_chair_throne", "count": 1}], "wall": [{"piece": "ex_case", "count": 2, "side_by_side": true}, "ex_bar", "ex_chair"], "corner": ["ex_globe", "ex_chair", "ex_case"], "fill": 0.35, "valuable": true},
+    {"name": "Executive Lounge", "wall": ["ex_bar", "ex_chair", "ex_chair"], "floor": ["ex_chair"], "corner": ["ex_globe", "ex_case"], "fill": 0.45, "floor_fill": 0.6},
+    {"name": "Typing Pool", "floor": [{"piece": "typewriter_desk", "seat": "chair_plain", "count": [6, 8], "side_by_side": true}], "rows": true, "wall": [{"piece": "ex_case", "count": 2, "side_by_side": true}], "corner": ["ex_chair"], "fill": 0.2},
+    {"name": "Security Annex", "wall": ["@monoid", "@custodian", "@defender", "@drone"], "corner": ["crate"], "fill": 0.7, "bay": true}
+   ],
+   "ex_board": [
+    {"name": "Boardroom", "centre": [{"piece": "ex_table", "around": "ex_chair", "count": 1}], "floor": [{"piece": "ex_table", "around": "ex_chair", "count": [0, 1]}], "rows": true, "wall": ["ex_bar", "ex_case"], "corner": ["ex_globe"], "fill": 0.35, "floor_fill": 0.5, "valuable": true}
+   ],
+   "ex_gallery": [
+    {"name": "Gallery", "floor": [{"piece": "ex_case", "count": [4, 6]}], "wall": ["ex_chair"], "corner": ["ex_globe", "ex_case"], "fill": 0.15, "floor_fill": 0.8, "valuable": true},
+    {"name": "Rotunda", "centre": ["ex_globe"], "wall": ["ex_case", "ex_chair"], "corner": ["ex_case"], "fill": 0.3}
+   ]
+  },
    "actors": [
     [
      "monoid",
@@ -1456,101 +1041,19 @@
     "crate"
    ],
    "purposes": {
-    "mp_shops": [
-     {
-      "name": "Shop",
-      "centre": [
-       "mp_kiosk"
-      ],
-      "wall": [
-       "mp_vendor",
-       "mp_kiosk"
-      ],
-      "corner": [
-       "mp_vendor",
-       "crate"
-      ],
-      "fill": 0.4,
-      "valuable": true
-     },
-     {
-      "name": "Kiosk Court",
-      "floor": [
-       "mp_kiosk"
-      ],
-      "wall": [
-       "mp_bench",
-       "mp_vendor"
-      ],
-      "corner": [
-       "mp_vendor"
-      ],
-      "fill": 0.25,
-      "floor_fill": 0.8
-     },
-     {
-      "name": "Lounge",
-      "floor": [
-       "mp_bench"
-      ],
-      "wall": [
-       "mp_vendor",
-       "mp_bench"
-      ],
-      "corner": [
-       "mp_vendor"
-      ],
-      "fill": 0.3,
-      "floor_fill": 0.7
-     },
-     {
-      "name": "Service Bay",
-      "wall": [
-       "@eggbot",
-       "@defender",
-       "@custodian",
-       "@monoid",
-       "@drone"
-      ],
-      "corner": [
-       "crate"
-      ],
-      "fill": 0.7,
-      "bay": true
-     }
-    ],
-    "mp_foodcourt": [
-     {
-      "name": "Food Court",
-      "floor": [
-       "mp_table"
-      ],
-      "wall": [
-       "mp_autochef",
-       "mp_vendor",
-       "mp_autochef"
-      ],
-      "corner": [
-       "mp_vendor"
-      ],
-      "fill": 0.5,
-      "floor_fill": 1.4
-     }
-    ],
-    "mp_cinema": [
-     {
-      "name": "Screen",
-      "floor": [
-       "mp_seats"
-      ],
-      "rows": true,
-      "corner": [
-       "mp_vendor"
-      ],
-      "floor_fill": 1.6
-     }
-    ]
-   },
+   "mp_shops": [
+    {"name": "Shop", "centre": ["mp_kiosk"], "wall": ["mp_vendor", "mp_kiosk"], "corner": ["mp_vendor", "crate"], "fill": 0.4, "valuable": true},
+    {"name": "Kiosk Court", "floor": ["mp_kiosk"], "wall": ["mp_bench", "mp_vendor"], "corner": ["mp_vendor"], "fill": 0.25, "floor_fill": 0.8},
+    {"name": "Lounge", "floor": ["mp_bench"], "wall": ["mp_vendor", "mp_bench"], "corner": ["mp_vendor"], "fill": 0.3, "floor_fill": 0.7},
+    {"name": "Service Bay", "wall": ["@eggbot", "@defender", "@custodian", "@monoid", "@drone"], "corner": ["crate"], "fill": 0.7, "bay": true}
+   ],
+   "mp_foodcourt": [
+    {"name": "Food Court", "floor": [{"piece": "mp_table", "around": "chair_plain", "chairs": 2, "count": [6, 10]}], "wall": [{"piece": "mp_autochef", "count": 2, "side_by_side": true}, "mp_vendor"], "corner": ["mp_vendor"], "fill": 0.5, "floor_fill": 1.4}
+   ],
+   "mp_cinema": [
+    {"name": "Screen", "floor": [{"piece": "mp_seats", "count": [6, 12], "side_by_side": true}], "rows": true, "corner": ["mp_vendor"], "floor_fill": 1.6}
+   ]
+  },
    "actors": [
     [
      "eggbot",
@@ -1670,88 +1173,18 @@
     "hs_cabinet"
    ],
    "purposes": {
-    "hs_ward": [
-     {
-      "name": "Ward",
-      "wall": [
-       "hs_bed",
-       "hs_bed",
-       "hs_bed",
-       "hs_monitor"
-      ],
-      "corner": [
-       "hs_screen",
-       "hs_cabinet",
-       "hs_gurney"
-      ],
-      "fill": 0.7
-     },
-     {
-      "name": "Recovery",
-      "wall": [
-       "hs_bed",
-       "hs_screen"
-      ],
-      "floor": [
-       "hs_gurney"
-      ],
-      "corner": [
-       "hs_monitor",
-       "hs_cabinet"
-      ],
-      "fill": 0.5,
-      "floor_fill": 0.5
-     }
-    ],
-    "hs_theatre": [
-     {
-      "name": "Surgical Theatre",
-      "centre": [
-       "hs_table"
-      ],
-      "wall": [
-       "hs_monitor",
-       "hs_cabinet"
-      ],
-      "corner": [
-       "hs_gurney",
-       "hs_monitor"
-      ],
-      "fill": 0.25
-     }
-    ],
-    "hs_pharmacy": [
-     {
-      "name": "Dispensary",
-      "wall": [
-       "hs_cabinet"
-      ],
-      "floor": [
-       "hs_gurney"
-      ],
-      "corner": [
-       "hs_cabinet"
-      ],
-      "fill": 0.6,
-      "floor_fill": 0.3,
-      "valuable": true
-     },
-     {
-      "name": "Orderly Bay",
-      "wall": [
-       "@custodian",
-       "@deadbot",
-       "@defender",
-       "@drone"
-      ],
-      "corner": [
-       "crate"
-      ],
-      "fill": 0.7,
-      "bay": true
-     }
-    ]
-   },
+   "hs_ward": [
+    {"name": "Ward", "wall": [{"piece": "hs_bed", "count": [4, 8], "side_by_side": true, "per_cell": 2}, "hs_monitor", "iv_stand"], "corner": ["hs_screen", "hs_cabinet", "hs_gurney"], "fill": 0.7},
+    {"name": "Recovery", "wall": [{"piece": "hs_bed", "count": [2, 3], "side_by_side": true}, "hs_screen", "iv_stand"], "floor": ["hs_gurney"], "corner": ["hs_monitor", "hs_cabinet"], "fill": 0.5, "floor_fill": 0.5}
+   ],
+   "hs_theatre": [
+    {"name": "Surgical Theatre", "centre": ["hs_table"], "wall": [{"piece": "hs_monitor", "count": 2, "side_by_side": true, "per_cell": 2}, "hs_cabinet"], "corner": ["hs_gurney", "hs_monitor"], "fill": 0.25}
+   ],
+   "hs_pharmacy": [
+    {"name": "Dispensary", "wall": [{"piece": "hs_cabinet", "count": [4, 6], "side_by_side": true, "per_cell": 2}], "floor": ["hs_gurney"], "corner": ["hs_cabinet"], "fill": 0.6, "floor_fill": 0.3, "valuable": true},
+    {"name": "Orderly Bay", "wall": ["@custodian", "@deadbot", "@defender", "@drone"], "corner": ["crate"], "fill": 0.7, "bay": true}
+   ]
+  },
    "actors": [
     [
      "custodian",
@@ -1860,112 +1293,20 @@
     "bb_font"
    ],
    "purposes": {
-    "bb_nave": [
-     {
-      "name": "Nave",
-      "floor": [
-       "bb_pew"
-      ],
-      "rows": true,
-      "wall": [
-       "bb_censer"
-      ],
-      "corner": [
-       "bb_censer",
-       "bb_font"
-      ],
-      "fill": 0.15,
-      "floor_fill": 1.6
-     }
-    ],
-    "bb_chapel": [
-     {
-      "name": "Chapel of Offers",
-      "centre": [
-       "bb_altar"
-      ],
-      "wall": [
-       "bb_reliquary",
-       "bb_censer"
-      ],
-      "corner": [
-       "bb_censer"
-      ],
-      "fill": 0.3,
-      "valuable": true
-     },
-     {
-      "name": "Baptistry",
-      "centre": [
-       "bb_font"
-      ],
-      "wall": [
-       "bb_reliquary"
-      ],
-      "corner": [
-       "bb_censer"
-      ],
-      "fill": 0.25
-     },
-     {
-      "name": "Reliquary",
-      "floor": [
-       "bb_reliquary"
-      ],
-      "wall": [
-       "bb_censer"
-      ],
-      "corner": [
-       "bb_reliquary"
-      ],
-      "fill": 0.2,
-      "floor_fill": 0.8,
-      "valuable": true
-     }
-    ],
-    "bb_vestry": [
-     {
-      "name": "Pulpit Hall",
-      "centre": [
-       "bb_pulpit"
-      ],
-      "floor": [
-       "bb_pew"
-      ],
-      "rows": true,
-      "corner": [
-       "bb_censer"
-      ],
-      "floor_fill": 1.0
-     },
-     {
-      "name": "Vestry",
-      "wall": [
-       "bb_reliquary",
-       "bb_censer",
-       "bb_font"
-      ],
-      "corner": [
-       "bb_reliquary"
-      ],
-      "fill": 0.4
-     },
-     {
-      "name": "Sexton's Bay",
-      "wall": [
-       "@monoid",
-       "@dancer",
-       "@eggbot",
-       "@drone"
-      ],
-      "corner": [
-       "crate"
-      ],
-      "fill": 0.7,
-      "bay": true
-     }
-    ]
-   },
+   "bb_nave": [
+    {"name": "Nave", "floor": [{"piece": "bb_pew", "count": [6, 12], "side_by_side": true}], "rows": true, "wall": ["bb_censer"], "corner": ["bb_censer", "bb_font"], "fill": 0.15, "floor_fill": 1.6}
+   ],
+   "bb_chapel": [
+    {"name": "Chapel of Offers", "centre": ["bb_altar"], "wall": ["bb_reliquary", "bb_censer"], "corner": ["bb_censer"], "fill": 0.3, "valuable": true},
+    {"name": "Baptistry", "centre": ["bb_font"], "wall": ["bb_reliquary"], "corner": ["bb_censer"], "fill": 0.25},
+    {"name": "Reliquary", "floor": ["bb_reliquary"], "wall": ["bb_censer"], "corner": ["bb_reliquary"], "fill": 0.2, "floor_fill": 0.8, "valuable": true}
+   ],
+   "bb_vestry": [
+    {"name": "Pulpit Hall", "centre": ["bb_pulpit"], "floor": [{"piece": "bb_pew", "count": [4, 8], "side_by_side": true}], "rows": true, "corner": ["bb_censer"], "floor_fill": 1.0},
+    {"name": "Vestry", "wall": ["bb_reliquary", "bb_censer", "bb_font"], "corner": ["bb_reliquary"], "fill": 0.4},
+    {"name": "Sexton's Bay", "wall": ["@monoid", "@dancer", "@eggbot", "@drone"], "corner": ["crate"], "fill": 0.7, "bay": true}
+   ]
+  },
    "actors": [
     [
      "mourner",
@@ -2168,256 +1509,27 @@
    },
    "stationed": 0.75,
    "purposes": {
-    "dr_lab": [
-     {
-      "name": "Laboratory",
-      "wall": [
-       "dr_bench",
-       [
-        "dr_console",
-        "ht_chair_ops"
-       ],
-       "dr_tank",
-       "dr_bench"
-      ],
-      "floor": [
-       [
-        "dr_console",
-        "ht_chair_command"
-       ]
-      ],
-      "corner": [
-       "dr_cart",
-       "crate"
-      ],
-      "fill": 0.5,
-      "floor_fill": 0.35
-     },
-     {
-      "name": "Control Room",
-      "wall": [
-       [
-        "dr_console",
-        "ht_chair_ops"
-       ],
-       [
-        "dr_console",
-        "ht_chair_command"
-       ],
-       "dr_rack"
-      ],
-      "centre": [
-       [
-        "holo_table",
-        "ht_chair_throne"
-       ]
-      ],
-      "corner": [
-       "dr_cart",
-       "dr_rack"
-      ],
-      "fill": 0.5,
-      "valuable": true
-     },
-     {
-      "name": "Specimen Hall",
-      "floor": [
-       "dr_tank"
-      ],
-      "rows": true,
-      "wall": [
-       "dr_bench",
-       [
-        "dr_console",
-        "ht_chair_ops"
-       ]
-      ],
-      "corner": [
-       "dr_cart"
-      ],
-      "fill": 0.3,
-      "floor_fill": 0.8
-     },
-     {
-      "name": "Monitoring Floor",
-      "floor": [
-       [
-        "dr_console",
-        "ht_chair_command"
-       ],
-       [
-        "dr_console",
-        "ht_chair_ops"
-       ]
-      ],
-      "rows": true,
-      "wall": [
-       "dr_rack"
-      ],
-      "corner": [
-       "dr_cart"
-      ],
-      "fill": 0.25,
-      "floor_fill": 0.9
-     }
-    ],
-    "dr_servers": [
-     {
-      "name": "Server Hall",
-      "floor": [
-       "dr_rack"
-      ],
-      "rows": true,
-      "wall": [
-       [
-        "dr_console",
-        "ht_chair_ops"
-       ]
-      ],
-      "corner": [
-       "dr_cart"
-      ],
-      "fill": 0.2,
-      "floor_fill": 0.9,
-      "valuable": true
-     },
-     {
-      "name": "Machine Hall",
-      "centre": [
-       "dr_pump"
-      ],
-      "wall": [
-       [
-        "dr_console",
-        "ht_chair_cockpit"
-       ],
-       "dr_rack",
-       "dr_cart"
-      ],
-      "corner": [
-       "barrel",
-       "dr_cart"
-      ],
-      "fill": 0.35
-     },
-     {
-      "name": "Operations",
-      "floor": [
-       [
-        "dr_console",
-        "ht_chair_command"
-       ]
-      ],
-      "rows": true,
-      "wall": [
-       "dr_rack",
-       [
-        "dr_console",
-        "ht_chair_ops"
-       ]
-      ],
-      "corner": [
-       "dr_cart"
-      ],
-      "fill": 0.3,
-      "floor_fill": 0.7,
-      "valuable": true
-     }
-    ],
-    "dr_bay": [
-     {
-      "name": "Robot Bay",
-      "wall": [
-       "@custodian",
-       "@monoid",
-       "@defender",
-       "@drone",
-       "@eggbot",
-       "@deadbot"
-      ],
-      "centre": [
-       "dr_arm"
-      ],
-      "corner": [
-       "dr_cart",
-       "crate"
-      ],
-      "fill": 0.7,
-      "bay": true
-     },
-     {
-      "name": "Robot Workshop",
-      "floor": [
-       "dr_arm"
-      ],
-      "wall": [
-       "@custodian",
-       "@plodder",
-       "dr_bench",
-       [
-        "dr_console",
-        "ht_chair_ops"
-       ],
-       "@monoid"
-      ],
-      "corner": [
-       "dr_cart"
-      ],
-      "fill": 0.55,
-      "floor_fill": 0.5,
-      "bay": true
-     },
-     {
-      "name": "Service Bay",
-      "centre": [
-       "fabricator"
-      ],
-      "wall": [
-       "@dancer",
-       "@defender",
-       "@drone",
-       "dr_rack"
-      ],
-      "corner": [
-       "dr_cart",
-       "barrel"
-      ],
-      "fill": 0.6,
-      "bay": true
-     }
-    ],
-    "dr_sump": [
-     {
-      "name": "Flooded Section",
-      "wall": [
-       "dr_rack",
-       "dr_cart",
-       "cryo_pod_broken"
-      ],
-      "corner": [
-       "debris",
-       "dr_cart"
-      ],
-      "fill": 0.3
-     },
-     {
-      "name": "Wrecked Station",
-      "wall": [
-       "dr_console",
-       "dr_bench",
-       "debris"
-      ],
-      "centre": [
-       "dr_pump"
-      ],
-      "corner": [
-       "debris",
-       "crate"
-      ],
-      "fill": 0.3
-     }
-    ]
-   },
+   "dr_lab": [
+    {"name": "Laboratory", "wall": [{"piece": "dr_bench", "count": [2, 3], "side_by_side": true}, ["dr_console", "ht_chair_ops"], "dr_tank"], "floor": [["dr_console", "ht_chair_command"]], "corner": ["dr_cart", "crate"], "fill": 0.5, "floor_fill": 0.35},
+    {"name": "Control Room", "wall": [{"piece": "dr_console", "seat": "ht_chair_ops", "count": [3, 5], "side_by_side": true}, "dr_rack"], "centre": [["holo_table", "ht_chair_throne"]], "corner": ["dr_cart", "dr_rack"], "fill": 0.5, "valuable": true},
+    {"name": "Specimen Hall", "floor": [{"piece": "dr_tank", "count": [4, 8], "side_by_side": true}], "rows": true, "wall": ["dr_bench", ["dr_console", "ht_chair_ops"]], "corner": ["dr_cart"], "fill": 0.3, "floor_fill": 0.8},
+    {"name": "Monitoring Floor", "floor": [{"piece": "dr_console", "seat": "ht_chair_command", "count": [4, 8], "side_by_side": true}], "rows": true, "wall": ["dr_rack"], "corner": ["dr_cart"], "fill": 0.25, "floor_fill": 0.9}
+   ],
+   "dr_servers": [
+    {"name": "Server Hall", "floor": [{"piece": "dr_rack", "count": [6, 12], "side_by_side": true, "per_cell": 2}], "rows": true, "wall": [["dr_console", "ht_chair_ops"]], "corner": ["dr_cart"], "fill": 0.2, "floor_fill": 0.9, "valuable": true},
+    {"name": "Machine Hall", "centre": ["dr_pump"], "wall": [["dr_console", "ht_chair_cockpit"], "dr_rack", "dr_cart"], "corner": ["barrel", "dr_cart"], "fill": 0.35},
+    {"name": "Operations", "floor": [{"piece": "dr_console", "seat": "ht_chair_command", "count": [3, 6], "side_by_side": true}], "rows": true, "wall": ["dr_rack", ["dr_console", "ht_chair_ops"]], "corner": ["dr_cart"], "fill": 0.3, "floor_fill": 0.7, "valuable": true}
+   ],
+   "dr_bay": [
+    {"name": "Robot Bay", "wall": ["@custodian", "@monoid", "@defender", "@drone", "@eggbot", "@deadbot"], "centre": ["dr_arm"], "corner": ["dr_cart", "crate"], "fill": 0.7, "bay": true},
+    {"name": "Robot Workshop", "floor": ["dr_arm"], "wall": ["@custodian", "@plodder", "dr_bench", ["dr_console", "ht_chair_ops"], "@monoid"], "corner": ["dr_cart"], "fill": 0.55, "floor_fill": 0.5, "bay": true},
+    {"name": "Service Bay", "centre": ["fabricator"], "wall": ["@dancer", "@defender", "@drone", "dr_rack"], "corner": ["dr_cart", "barrel"], "fill": 0.6, "bay": true}
+   ],
+   "dr_sump": [
+    {"name": "Flooded Section", "wall": ["dr_rack", "dr_cart", "cryo_pod_broken"], "corner": ["debris", "dr_cart"], "fill": 0.3},
+    {"name": "Wrecked Station", "wall": ["dr_console", "dr_bench", "debris"], "centre": ["dr_pump"], "corner": ["debris", "crate"], "fill": 0.3}
+   ]
+  },
    "shapes": {
     "pool": 0.6,
     "max_pools": 5,
@@ -2545,256 +1657,27 @@
    },
    "stationed": 0.75,
    "purposes": {
-    "du_lab": [
-     {
-      "name": "Laboratory",
-      "wall": [
-       "du_bench",
-       [
-        "du_console",
-        "ht_chair_command"
-       ],
-       "du_reel",
-       "du_bench"
-      ],
-      "floor": [
-       [
-        "du_console",
-        "ht_chair_ops"
-       ]
-      ],
-      "corner": [
-       "du_cart",
-       "crate"
-      ],
-      "fill": 0.5,
-      "floor_fill": 0.35
-     },
-     {
-      "name": "Control Room",
-      "wall": [
-       [
-        "du_console",
-        "ht_chair_command"
-       ],
-       [
-        "du_console",
-        "ht_chair_ops"
-       ],
-       "du_rack"
-      ],
-      "centre": [
-       [
-        "holo_table",
-        "ht_chair_throne"
-       ]
-      ],
-      "corner": [
-       "du_cart",
-       "du_rack"
-      ],
-      "fill": 0.5,
-      "valuable": true
-     },
-     {
-      "name": "Assay Hall",
-      "floor": [
-       "du_reel"
-      ],
-      "rows": true,
-      "wall": [
-       "du_bench",
-       [
-        "du_console",
-        "ht_chair_command"
-       ]
-      ],
-      "corner": [
-       "du_cart"
-      ],
-      "fill": 0.3,
-      "floor_fill": 0.8
-     },
-     {
-      "name": "Monitoring Floor",
-      "floor": [
-       [
-        "du_console",
-        "ht_chair_ops"
-       ],
-       [
-        "du_console",
-        "ht_chair_command"
-       ]
-      ],
-      "rows": true,
-      "wall": [
-       "du_rack"
-      ],
-      "corner": [
-       "du_cart"
-      ],
-      "fill": 0.25,
-      "floor_fill": 0.9
-     }
-    ],
-    "du_archive": [
-     {
-      "name": "Archive",
-      "floor": [
-       "du_reel"
-      ],
-      "rows": true,
-      "wall": [
-       [
-        "du_console",
-        "ht_chair_command"
-       ]
-      ],
-      "corner": [
-       "du_cart"
-      ],
-      "fill": 0.2,
-      "floor_fill": 0.9,
-      "valuable": true
-     },
-     {
-      "name": "Machine Hall",
-      "centre": [
-       "du_scope"
-      ],
-      "wall": [
-       [
-        "du_console",
-        "ht_chair_cockpit"
-       ],
-       "du_rack",
-       "du_cart"
-      ],
-      "corner": [
-       "barrel",
-       "du_cart"
-      ],
-      "fill": 0.35
-     },
-     {
-      "name": "Operations",
-      "floor": [
-       [
-        "du_console",
-        "ht_chair_ops"
-       ]
-      ],
-      "rows": true,
-      "wall": [
-       "du_rack",
-       [
-        "du_console",
-        "ht_chair_command"
-       ]
-      ],
-      "corner": [
-       "du_cart"
-      ],
-      "fill": 0.3,
-      "floor_fill": 0.7,
-      "valuable": true
-     }
-    ],
-    "du_bay": [
-     {
-      "name": "Robot Bay",
-      "wall": [
-       "@custodian",
-       "@monoid",
-       "@defender",
-       "@drone",
-       "@eggbot",
-       "@deadbot"
-      ],
-      "centre": [
-       "du_arm"
-      ],
-      "corner": [
-       "du_cart",
-       "crate"
-      ],
-      "fill": 0.7,
-      "bay": true
-     },
-     {
-      "name": "Robot Workshop",
-      "floor": [
-       "du_arm"
-      ],
-      "wall": [
-       "@custodian",
-       "@plodder",
-       "du_bench",
-       [
-        "du_console",
-        "ht_chair_command"
-       ],
-       "@monoid"
-      ],
-      "corner": [
-       "du_cart"
-      ],
-      "fill": 0.55,
-      "floor_fill": 0.5,
-      "bay": true
-     },
-     {
-      "name": "Service Bay",
-      "centre": [
-       "fabricator"
-      ],
-      "wall": [
-       "@dancer",
-       "@defender",
-       "@drone",
-       "du_rack"
-      ],
-      "corner": [
-       "du_cart",
-       "barrel"
-      ],
-      "fill": 0.6,
-      "bay": true
-     }
-    ],
-    "du_ruin": [
-     {
-      "name": "Buried Section",
-      "wall": [
-       "du_rack",
-       "du_cart",
-       "cryo_pod_broken"
-      ],
-      "corner": [
-       "debris",
-       "du_cart"
-      ],
-      "fill": 0.3
-     },
-     {
-      "name": "Wrecked Station",
-      "wall": [
-       "du_console",
-       "du_bench",
-       "debris"
-      ],
-      "centre": [
-       "du_scope"
-      ],
-      "corner": [
-       "debris",
-       "crate"
-      ],
-      "fill": 0.3
-     }
-    ]
-   },
+   "du_lab": [
+    {"name": "Laboratory", "wall": [{"piece": "du_bench", "count": [2, 3], "side_by_side": true}, ["du_console", "ht_chair_command"], "du_reel"], "floor": [["du_console", "ht_chair_ops"]], "corner": ["du_cart", "crate"], "fill": 0.5, "floor_fill": 0.35},
+    {"name": "Control Room", "wall": [{"piece": "du_console", "seat": "ht_chair_command", "count": [3, 5], "side_by_side": true}, "du_rack"], "centre": [["holo_table", "ht_chair_throne"]], "corner": ["du_cart", "du_rack"], "fill": 0.5, "valuable": true},
+    {"name": "Assay Hall", "floor": [{"piece": "du_reel", "count": [4, 8], "side_by_side": true, "per_cell": 2}], "rows": true, "wall": ["du_bench", ["du_console", "ht_chair_command"]], "corner": ["du_cart"], "fill": 0.3, "floor_fill": 0.8},
+    {"name": "Monitoring Floor", "floor": [{"piece": "du_console", "seat": "ht_chair_ops", "count": [4, 8], "side_by_side": true}], "rows": true, "wall": ["du_rack"], "corner": ["du_cart"], "fill": 0.25, "floor_fill": 0.9}
+   ],
+   "du_archive": [
+    {"name": "Archive", "floor": [{"piece": "du_reel", "count": [6, 12], "side_by_side": true, "per_cell": 2}], "rows": true, "wall": [["du_console", "ht_chair_command"]], "corner": ["du_cart"], "fill": 0.2, "floor_fill": 0.9, "valuable": true},
+    {"name": "Machine Hall", "centre": ["du_scope"], "wall": [["du_console", "ht_chair_cockpit"], "du_rack", "du_cart"], "corner": ["barrel", "du_cart"], "fill": 0.35},
+    {"name": "Operations", "floor": [{"piece": "du_console", "seat": "ht_chair_ops", "count": [3, 6], "side_by_side": true}], "rows": true, "wall": ["du_rack", ["du_console", "ht_chair_command"]], "corner": ["du_cart"], "fill": 0.3, "floor_fill": 0.7, "valuable": true}
+   ],
+   "du_bay": [
+    {"name": "Robot Bay", "wall": ["@custodian", "@monoid", "@defender", "@drone", "@eggbot", "@deadbot"], "centre": ["du_arm"], "corner": ["du_cart", "crate"], "fill": 0.7, "bay": true},
+    {"name": "Robot Workshop", "floor": ["du_arm"], "wall": ["@custodian", "@plodder", "du_bench", ["du_console", "ht_chair_command"], "@monoid"], "corner": ["du_cart"], "fill": 0.55, "floor_fill": 0.5, "bay": true},
+    {"name": "Service Bay", "centre": ["fabricator"], "wall": ["@dancer", "@defender", "@drone", "du_rack"], "corner": ["du_cart", "barrel"], "fill": 0.6, "bay": true}
+   ],
+   "du_ruin": [
+    {"name": "Buried Section", "wall": ["du_rack", "du_cart", "cryo_pod_broken"], "corner": ["debris", "du_cart"], "fill": 0.3},
+    {"name": "Wrecked Station", "wall": ["du_console", "du_bench", "debris"], "centre": ["du_scope"], "corner": ["debris", "crate"], "fill": 0.3}
+   ]
+  },
    "shapes": {
     "pool": 0.0,
     "max_pools": 0,

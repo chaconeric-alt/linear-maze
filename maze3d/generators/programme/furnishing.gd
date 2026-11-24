@@ -59,8 +59,6 @@ static func furnish_rooms(rooms: Array, plan: ProgrammePlan, fill: ProgrammeFill
 				best = ctx.things
 		for e in best:
 			used[Vector2i(int(e["at"][0]), int(e["at"][1]))] = true
-			if LM.model_meta(kit, str(e.get("prop", ""))).get("mount", "") == "wall":
-				e.erase("offset")                      # the level mounts it on the wall itself: pushed back too, it would be in the rock
 			if fill.storey_of(id) != 0:
 				e["level"] = fill.storey_of(id)
 		out += best

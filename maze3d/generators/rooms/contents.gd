@@ -101,7 +101,11 @@ static func _room(ctx: GenContext, a: Dictionary, floor_cells: Array, nooks: Arr
 		if pur.has("name") and a.has("room"):
 			seen_purpose[pur["name"]] = seen_purpose.get(pur["name"], 0) + 1
 			ctx.rooms[a["room"]]["name"] = pur["name"] if seen_purpose[pur["name"]] == 1 else "%s %d" % [pur["name"], seen_purpose[pur["name"]]]
+		var main := ctx.rng                          # the furniture draws numbers of its own: what a room is furnished
+		ctx.rng = RandomNumberGenerator.new()         # with can change without moving a monster, a trap or a pit
+		ctx.rng.seed = ctx.seed_value * 7919 + i * 104729 + 31
 		Furnish.furnish(ctx, i, floor_cells, pur, p.get("kit", "hightech"), float(p.get("furnish", 1.0)))
+		ctx.rng = main
 		props = pur.get("corner", props)
 	_dressing(ctx, nooks, props)
 	_lockers(ctx, floor_cells)

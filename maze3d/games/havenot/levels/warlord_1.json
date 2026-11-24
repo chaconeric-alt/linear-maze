@@ -788,7 +788,7 @@
        "item": "statuette"
       }
      ],
-     "purpose": "lab"
+     "purpose": "specimen_hall"
     }
    ],
    "wings": [
@@ -975,7 +975,7 @@
          "tag": "safe"
         }
        ],
-       "purpose": "office"
+       "purpose": "corner_office"
       },
       {
        "id": "archive",
@@ -1046,18 +1046,21 @@
        "purpose": "office"
       },
       {
-       "id": "admin_2",
-       "name": "Administrator's Office",
+       "id": "meeting",
+       "name": "Meeting Room",
        "style": "bunker_ops",
        "size": [
         [
-         3,
-         4
+         4,
+         5
         ],
-        3
+        [
+         4,
+         5
+        ]
        ],
        "chance": 0.6,
-       "purpose": "office"
+       "purpose": "meeting_room"
       }
      ]
     },
@@ -1215,7 +1218,7 @@
          "item": "circuit"
         }
        ],
-       "purpose": "lab"
+       "purpose": "neurology"
       }
      ]
     }

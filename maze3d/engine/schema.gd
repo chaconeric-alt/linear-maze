@@ -25,6 +25,7 @@ const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor",
 const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "bank_at", "below"]   # a level's written programme (SPEC.md 6.3)
 const PROG_LIFTS := ["count", "travel", "start", "lock"]
 const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows", "floor_fill", "crammed"]   # defs "purposes" (furnishing a room for its use)
+const PIECE := ["piece", "seat", "around", "chairs", "foot", "turn", "count", "side_by_side", "per_cell"]   # a purpose's piece written out
 const PROG_SPINE := ["gap"]
 const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts", "door_above"]
 const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms"]
@@ -40,7 +41,7 @@ const THING_KINDS := {
 	"actor": ["actor", "still", "alert", "hp_mul", "on_death", "on_anger", "lounge", "perch", "off_duty", "talk", "provoke",
 		"roam", "greet", "faction", "patrol"],
 	"prop": ["prop", "use", "hp", "loot", "explode", "screen", "solid", "blocks", "lit", "turn", "seat", "seat_gap",
-		"seat_turn", "holds", "hidden", "rattle", "walk", "crammed"],
+		"seat_turn", "around", "chairs", "foot", "holds", "hidden", "rattle", "walk", "crammed"],
 	"item": ["item", "y", "rest"],                     # and any item def key, to override it for this one
 	"rebuild": ["rebuild", "as"],
 	"trap": ["trap", "off", "phase", "ignore", "cycle", "heights", "damage", "axis", "period", "on", "color", "hear", "quiet",
@@ -65,6 +66,12 @@ static func check_defs(defs: Dictionary) -> Array:
 			for k in e:
 				if not k in ENTRANCE:
 					out.append("installation '%s', an entrance: %s" % [id, _unknown(k, ENTRANCE)])
+	for id in defs.get("purposes", {}):
+		for list_key in ["wall", "floor", "centre"]:
+			for pc in defs["purposes"][id].get(list_key, []):
+				for k in (pc if pc is Dictionary else []):    # a piece written out as a dictionary
+					if not k in PIECE:
+						out.append("purpose '%s', a piece in %s: %s" % [id, list_key, _unknown(k, PIECE)])
 	for kind in ["stats", "skills", "mutations"]:
 		for id in defs.get(kind, {}):
 			for k in defs[kind][id].get("gives", {}):
@@ -146,7 +153,7 @@ static func undocumented(spec_text: String) -> Array:
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
 	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + STAT + SKILL + ORIGIN + MUTATION + GIVES \
-		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PROG_LIFTS
+		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

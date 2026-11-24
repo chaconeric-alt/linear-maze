@@ -194,7 +194,9 @@ func material(kit_id: String, name: String, world_space := true) -> Material:
 
 func model_path(kit_id: String, model_id: String) -> String:
 	var kit: Dictionary = kits.get(kit_id, {})
-	var m: Variant = kit.get("models", {}).get(model_id, kit.get("tiles", {}).get(model_id))
+	var m: Variant = _model(kit, model_id)
+	if m == null:
+		m = kit.get("tiles", {}).get(model_id)
 	if m == null:
 		return ""
 	var path: String = m["model"]
@@ -202,7 +204,22 @@ func model_path(kit_id: String, model_id: String) -> String:
 
 
 func model_meta(kit_id: String, model_id: String) -> Dictionary:
-	return kits.get(kit_id, {}).get("models", {}).get(model_id, {})
+	var m: Variant = _model(kits.get(kit_id, {}), model_id)
+	return {} if m == null else m
+
+
+## A kit's model; one it has not got may have a stand-in (the game's "stand_ins": id -> the models to use instead,
+## the first the kit has), so a game's data can name a piece of furniture before it is made, and gets the real one
+## the day it is added to the kit without changing.
+func _model(kit: Dictionary, model_id: String) -> Variant:
+	var models: Dictionary = kit.get("models", {})
+	if models.has(model_id):
+		return models[model_id]
+	var alts: Variant = game.get("stand_ins", {}).get(model_id, [])
+	for alt in (alts if alts is Array else [alts]):
+		if models.has(alt):
+			return models[alt]
+	return null
 
 
 ## Swap every surface whose material name the kit knows for the kit's material.
@@ -226,7 +243,9 @@ func dress(node: Node, kit_id: String, world_space := false, overrides := {}) ->
 ## The kit whose materials a model wears: its own, even when another kit borrows it.
 func home_kit(kit_id: String, model_id: String) -> String:
 	var kit: Dictionary = kits.get(kit_id, {})
-	var m: Variant = kit.get("models", {}).get(model_id, kit.get("tiles", {}).get(model_id))
+	var m: Variant = _model(kit, model_id)
+	if m == null:
+		m = kit.get("tiles", {}).get(model_id)
 	return kit_id if m == null else m.get("_kit", kit_id)
 
 

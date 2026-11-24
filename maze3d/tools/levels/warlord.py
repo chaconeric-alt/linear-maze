@@ -14,7 +14,8 @@ room; read its code into the communications console and the lifts run.
 Level 2, Command and Conditioning (storey -1), where the Marshal's people were patched up and made loyal again. The
 lift lobby under the one above; Head Admin, an atrium of records two storeys tall with a gallery; the conditioning
 theatre; the specimen hall. Wings: the infirmary (a ward and its pharmacy, the operating theatre, the morgue), Head
-Admin's offices (the Chief Administrator's office and the archive through its door, and the administrators'), and the
+Admin's offices (the Chief Administrator's office and the archive through its door, an administrator's office and,
+six times in ten, a meeting room), and the
 conditioning wing (induction cells, an interview room, neurology). The way down: one of three key cards calls the lift
 to Level 3 at the panel in the lobby, each found its own way: the Chief Administrator's safe (yellow; its code is in
 the archive), the chief surgeon's body in the morgue (blue), and the loyalty test in the interview room (green).
@@ -203,7 +204,7 @@ command = {
              [{"actor": "mourner", "patrol": "room"}, {"item": "crystal"}], purpose="archive", height=2, door_above=False),
         room("theatre", "Conditioning Theatre", "lab", [[6, 8], [5, 6]], [{"actor": "heavy"}], purpose="theatre"),
         room("specimens", "Specimen Hall", "lab", [[6, 7], [5, 6]],
-             [{"actor": "fouler"}, {"actor": "roach", "count": 2}, {"item": "statuette"}], purpose="lab"),
+             [{"actor": "fouler"}, {"actor": "roach", "count": 2}, {"item": "statuette"}], purpose="specimen_hall"),
     ],
     "wings": [
         {"id": "infirmary", "name": "Infirmary", "after": "lobby", "side": "any", "rooms": [
@@ -214,17 +215,17 @@ command = {
             room("morgue", "Morgue", "storage", [[4, 5], [4, 5]], [surgeon, {"actor": "mourner"}], purpose="morgue"),
         ]},
         {"id": "admin", "name": "Head Admin's Offices", "after": "atrium", "side": "n", "rooms": [
-            room("chief", "Chief Administrator's Office", "bunker_ops", [[4, 5], [3, 4]], [safe], purpose="office"),
+            room("chief", "Chief Administrator's Office", "bunker_ops", [[4, 5], [3, 4]], [safe], purpose="corner_office"),
             room("archive", "Archive", "storage", [[3, 4], [3, 4]], [records], door_to="chief", purpose="archive"),
             room("admin_1", "Administrator's Office", "bunker_ops", [[3, 4], 3], [{"actor": "monoid", "off_duty": True}],
                  purpose="office"),
-            room("admin_2", "Administrator's Office", "bunker_ops", [[3, 4], 3], chance=0.6, purpose="office"),
+            room("meeting", "Meeting Room", "bunker_ops", [[4, 5], [4, 5]], chance=0.6, purpose="meeting_room"),
         ]},
         {"id": "conditioning", "name": "Conditioning Wing", "after": "atrium", "side": "s", "rooms": [
             room("cell_1", "Induction Cell", "storage", [2, 3], [{"actor": "mourner"}], purpose="cell"),
             room("cell_2", "Induction Cell", "storage", [2, 3], next_to="cell_1", purpose="cell"),
             room("interview", "Interview Room", "bunker_ops", [[3, 4], [3, 4]], [loyalty], purpose="interview_room"),
-            room("neuro", "Neurology", "lab", [[4, 5], [4, 5]], [{"item": "circuit"}], purpose="lab"),
+            room("neuro", "Neurology", "lab", [[4, 5], [4, 5]], [{"item": "circuit"}], purpose="neurology"),
         ]},
     ],
 }

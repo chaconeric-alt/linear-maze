@@ -123,8 +123,8 @@ func _furniture(lay: ProgrammeLayout) -> void:
 			continue
 		var pieces: Array = []
 		for k in ["wall", "floor", "centre"]:
-			for it in pur.get(k, []):
-				pieces.append(it[0] if it is Array else it)
+			for it in pur.get(k, []):                   # an id, [station, chair], or {"piece": id, ...}
+				pieces.append(it["piece"] if it is Dictionary else (it[0] if it is Array else it))
 		var rc: Rect2i = lay.rects[id]
 		var n := 0
 		for t in level.data["things"]:
