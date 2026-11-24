@@ -2274,9 +2274,7 @@
   "bailiff": {
    "name": "Bailiff",
    "robot": true,
-   "model": "actors/plodder_tripo.glb",
-   "own_materials": true,
-   "scale": 2.4,
+   "model": "actors/bailiff.glb",
    "hp": 400,
    "armor": 0.4,
    "sides": {
@@ -2354,7 +2352,6 @@
     0.3,
     0.2
    ],
-   "walk_rate": 0.9,
    "talk": {
     "greet": [
      "OFF THE CLOCK. YOUR DEBT IS NOT.",
@@ -2385,9 +2382,7 @@
   "auditor": {
    "name": "Auditor",
    "robot": true,
-   "model": "actors/heavy.glb",
-   "kit": "hightech",
-   "scale": 0.55,
+   "model": "actors/auditor.glb",
    "hp": 110,
    "armor": 0.1,
    "speed": 5.0,
@@ -2482,9 +2477,7 @@
   "garnisher": {
    "name": "Garnisher",
    "robot": true,
-   "model": "actors/knife_tripo.glb",
-   "own_materials": true,
-   "scale": 0.6,
+   "model": "actors/garnisher.glb",
    "hp": 18,
    "speed": 10.0,
    "accel": 40,
@@ -2500,7 +2493,6 @@
     0.9,
     1.0
    ],
-   "model_y": 0.7,
    "stolen_item": "chips",
    "attacks": [
     {
@@ -2552,9 +2544,7 @@
   "foreclosure": {
    "name": "Foreclosure Unit",
    "robot": true,
-   "model": "actors/deadbot_tripo.glb",
-   "own_materials": true,
-   "scale": 1.6,
+   "model": "actors/foreclosure.glb",
    "hp": 260,
    "armor": 0.25,
    "speed": 3.8,
@@ -2656,9 +2646,7 @@
   "liquidator": {
    "name": "The Liquidator",
    "robot": true,
-   "model": "actors/plodder_tripo.glb",
-   "own_materials": true,
-   "scale": 3.3,
+   "model": "actors/liquidator.glb",
    "hp": 700,
    "armor": 0.35,
    "speed": 3.0,
@@ -2765,9 +2753,7 @@
   },
   "stalker": {
    "name": "Shroud Stalker",
-   "model": "actors/mourner_tripo.glb",
-   "own_materials": true,
-   "scale": 2.0,
+   "model": "actors/stalker.glb",
    "hp": 180,
    "speed": 4.5,
    "accel": 14,
@@ -2855,8 +2841,7 @@
   },
   "sporecap": {
    "name": "Sporecap",
-   "model": "actors/snapper.glb",
-   "scale": 0.6,
+   "model": "actors/sporecap.glb",
    "hp": 140,
    "speed": 0,
    "radius": 0.6,
@@ -2938,9 +2923,7 @@
   },
   "rattleback": {
    "name": "Rattleback",
-   "model": "actors/gallumper_tripo.glb",
-   "own_materials": true,
-   "scale": 1.35,
+   "model": "actors/rattleback.glb",
    "hp": 480,
    "armor": 0.3,
    "sides": {
@@ -3026,9 +3009,7 @@
   },
   "bloodfly": {
    "name": "Bloodfly Cloud",
-   "model": "actors/knife_tripo.glb",
-   "own_materials": true,
-   "scale": 0.9,
+   "model": "actors/bloodfly.glb",
    "hp": 60,
    "speed": 7.0,
    "accel": 20,
@@ -3044,7 +3025,6 @@
     0.1,
     0.1
    ],
-   "model_y": 0.6,
    "drain": 0.5,
    "takes": {
     "explosive": 3.0
@@ -3115,9 +3095,8 @@
   },
   "bloodfly_small": {
    "name": "Bloodfly Cloud",
-   "model": "actors/knife_tripo.glb",
-   "own_materials": true,
-   "scale": 0.65,
+   "model": "actors/bloodfly.glb",
+   "scale": 0.72,
    "hp": 30,
    "speed": 7.5,
    "accel": 22,
@@ -3133,7 +3112,7 @@
     0.1,
     0.1
    ],
-   "model_y": 0.6,
+   "model_y": 0.292,
    "drain": 0.5,
    "takes": {
     "explosive": 3.0
@@ -3190,9 +3169,8 @@
   },
   "bloodfly_mite": {
    "name": "Bloodfly Cloud",
-   "model": "actors/knife_tripo.glb",
-   "own_materials": true,
-   "scale": 0.45,
+   "model": "actors/bloodfly.glb",
+   "scale": 0.5,
    "hp": 15,
    "speed": 8.0,
    "accel": 24,
@@ -3260,8 +3238,7 @@
   },
   "matron": {
    "name": "Brood Matron",
-   "model": "actors/princess.glb",
-   "scale": 1.15,
+   "model": "actors/matron.glb",
    "hp": 900,
    "armor": 0.2,
    "sides": {

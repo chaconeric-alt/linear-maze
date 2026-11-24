@@ -4,6 +4,20 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-24
 
+- **The ten danger-zone monsters' own models** (the fourth of the dressing doc's suggestions; SPEC 4.13). Code-built and rigged like the rest, in real metres with the five clips, in `tools/blender/actors_collections.py` and `actors_overgrowth.py` (built by `build_all.py`, `MZ_ACTORS=...` for just these). They replace the stand-ins in `defs/actors.json`.
+  - **The Collections Division:**
+    - The Bailiff: a riot shield on its left arm, its shotgun round the edge, a plain back; it bashes with the shield.
+    - The Foreclosure Unit: a strongroom on six crab legs, a padlock lit in its door, a mine rack on its back.
+    - The Garnisher: a brass purse on two rotors, a coin slot, one cyan eye, two claws.
+    - The Auditor: a floating disc with a great red lens and a turning ring of tally counters.
+    - The Liquidator: a walking incinerator with fuel tanks, a flamethrower arm with a pilot light, a rocket pod and a smokestack.
+  - **The Overgrowth:**
+    - The Rattleback: four stumps of legs, a bone brow, tusks, a rattling ridge of plates, and a bare pink rump.
+    - The Bloodfly cloud: seventy flies round a glutted core, seething on swaying strands. Its smaller clouds wear the same model, scaled.
+    - The Sporecap: a pale mushroom with glowing pores and sporelings at its foot.
+    - The Shroud Stalker: a tall, hunched figure of bone plates, with scythe claws, a violet slit and rags.
+    - The Brood Matron: a plated front with mandibles, six legs, and a veined, glowing egg sac.
+
 - **The danger-zone monsters' pieces, and the two sets' own monsters** (the third of the dressing doc's suggestions; SPEC 3.1, 3.2, 3.3, 4.10, 4.13, 5.5, 5.21, 5.23, 7, 9). Ten new monsters (and the Bloodfly's two smaller clouds) are data. Each is built from shared pieces any monster can use. They wear stand-in models until their own are made (the next step).
   - **Afflictions** (`engine/afflictions.gd`, the game's `afflictions`). A hit can carry `"afflict": {"burn": 3}`. Burning (6 a second, fire) and Poisoned (3 a second) hurt over their time. Stunned holds the player (they cannot move or shoot) or a monster. A body that takes none of a kind is not afflicted by it. Attacks, projectiles and clouds can all afflict.
   - **Armour by side** (`sides`; `ActorWounds`). The Bailiff's shield takes a tenth from the front. The Rattleback's and the Matron's backs take double.
