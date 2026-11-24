@@ -21,6 +21,11 @@ func run() -> void:
 		if not is_instance_valid(t) or not t.enabled or t.e.get("trip", false) or float(t.e.get("damage", 1.0)) <= 0.0 or done.has(t.kind):
 			continue
 		done[t.kind] = true
+		if not is_instance_valid(walker) or walker.dead:   # killed between checks (a puddle, a cloud where it stood): another
+			walker = _pick(func(a: Actor) -> bool: return _walks(a) and not a.is_robot())
+			if walker == null:
+				print("INFO  no living monster left to put in a %s" % t.kind)
+				break
 		var kept: Array = t.ignore                     # a danger zone's traps may spare its own monsters ("trap_ignore"):
 		t.ignore = []                                  # first, that the trap hurts a monster at all, then that it spares
 		say(await _hurt_in(walker, t) > 0.0, "a %s hurts a %s that stands in it" % [t.kind, walker.d.get("name")])

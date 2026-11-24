@@ -1,5 +1,4 @@
-"""Rebuild every generated model of the high-tech kit and the monsters (actors.py, actors2.py, kits_anomalous.py, and
-the danger zones' actors_collections.py and actors_overgrowth.py).
+"""Rebuild every generated model of the high-tech kit and the monsters.
 
   blender -b -P tools/blender/build_all.py            (or: python3 build_all.py with `pip install bpy`)
   ... build_all.py -- wall_pipes roach                rebuild only these
@@ -100,13 +99,14 @@ def main():
     mz.define_materials(palette.MATERIALS)
     mz.define_materials(agency.MATERIALS)
     import kits_works_bunker_crypt, kits_executive_megaplex_hospital_basilica, kits_robots_loot, kits_drowned_dust, kits_home, kits_anomalous, actors2
-    import actors_collections, actors_overgrowth
+    import actors_collections, actors_overgrowth, kits_fittings2
     later = dict(kits_works_bunker_crypt.KITS)
     later.update(kits_executive_megaplex_hospital_basilica.KITS)
     later.update(kits_robots_loot.KITS)
     later.update(kits_drowned_dust.KITS)
     later.update(kits_home.KITS)
     later.update(kits_anomalous.KITS)
+    later.update(kits_fittings2.KITS)
     just = [k for k in os.environ.get('MZ_KITS', '').split(',') if k]        # MZ_KITS=hospital,basilica: only those kits, no actors
     acts = [k for k in os.environ.get('MZ_ACTORS', '').split(',') if k]     # MZ_ACTORS=heavy,emitter: only those actors, no kits
     if acts:

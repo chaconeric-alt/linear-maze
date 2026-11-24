@@ -46,12 +46,18 @@ static func _seat(sp: Spawner, e: Dictionary, pr: Prop, meta: Dictionary) -> voi
 	_part(sp, e["seat"], e["at"], pos, pr.rotation.y + PI + deg_to_rad(float(e.get("seat_turn", 0.0))), "/seat")
 
 
-## What stands at its foot (in front of it), facing the same way: a footlocker at the end of a bed.
+## What stands at its foot, facing out the way the piece faces: in front of a bed (its front is its foot), and at the
+## room end of a bunk turned side on to its wall ("turn" a quarter: it lies along its front, so its end, not its long
+## side, is the way it faced). Put in front of a turned bunk, a footlocker stood in the gap between it and the next one,
+## out of sight behind them.
 static func _foot(sp: Spawner, e: Dictionary, pr: Prop, meta: Dictionary) -> void:
 	var fm := LM.model_meta(sp.ld.kit_id, e["foot"])
-	var front := Vector3(sin(pr.rotation.y), 0, cos(pr.rotation.y))
+	var quarter := absf(absf(fmod(float(e.get("turn", 0.0)), 180.0)) - 90.0) < 10.0
+	var yaw: float = pr.rotation.y - (deg_to_rad(float(e.get("turn", 0.0))) if quarter else 0.0)
+	var out := Vector3(sin(yaw), 0, cos(yaw))
+	var reach: float = float(meta.get("solid", [1.0, 1.0, 1.0])[0]) * 0.5 if quarter else _depth(meta)
 	var d1: float = fm.get("solid", [1.0, 1.0, 1.0])[2] * 0.5
-	_part(sp, e["foot"], e["at"], pr.position + front * (_depth(meta) + FOOT_GAP + d1), pr.rotation.y, "/foot")
+	_part(sp, e["foot"], e["at"], pr.position + out * (reach + FOOT_GAP + d1), yaw, "/foot")
 
 
 ## Chairs all round a table, each facing it: as many as fit side by side along both long sides, then one at each end

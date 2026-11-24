@@ -4,6 +4,24 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-24
 
+- **The Fittings kit: the first tier of furniture** (the fifth of the dressing doc's suggestions; SPEC 2.5, 6.3, 7). The plain pieces a room needs to read as what it is, code-built in `tools/blender/kits_fittings.py` and `kits_fittings2.py`, in their own materials.
+  - **The pieces:**
+    - Living: a plain stacking chair, an olive footlocker, a cell cot.
+    - Kitchen: a six-burner stove, a steel prep table.
+    - Hygiene: a toilet stall with its door open, a urinal with its screen.
+    - Gym and range: a weight bench with a loaded bar, a punching bag on its gallows, a firing booth, a paper range target.
+    - Medical: a restraint chair, a wall of morgue drawers with one pulled out, an IV stand, a surgical lamp.
+    - Offices and briefings: a lectern, a projection screen, a pin board with string, a map table, a signals desk (switchboard, teleprinter), a typewriter desk.
+    - The motor pool: a half-track and a scissor lift.
+    - The danger zones: the dead scavenger at the threshold, and the Garnisher dispenser.
+  - **Where they appear.** Every kit but `hightech` now uses `fittings` (as they use `loot` and `robots`), so the purposes' pieces are the real ones wherever they stand. The stand-ins stay for a `hightech` level. The purposes ask for three more: the motor pool's vehicle and lift, the operating theatre's surgical lamp, and the map room's map table with plain chairs (in place of the holo table).
+  - **Generated levels.** The levels laid out the same. Only the real pieces stand where the stand-ins stood, pushed to the wall by their own depth.
+  - **Staff Only** has a Fittings room in a new last band, laid out after everything else, so nothing already on the floor moved.
+  - **Fixes the real pieces showed up:**
+    - A bunk turned side on to its wall had its footlocker put in front of its long side. That is the gap between it and the next bunk, where the low real footlocker hid between two bunks and easy mode's E could not see it. It now stands at the bunk's room end, facing out (`PropParts._foot`, as SPEC 4.5 meant). A bed's is in front of it as before.
+    - The trap check (`trap_victims`) takes another monster when the one it was using has been killed between checks: in gen22 the roach it held had gone home into an acid pool.
+  - **Checks that shifted:** the furniture's own sizes and solids change where monsters walk and fight in the generated runs and the programme levels. Every check passes. In the bunker theme, easy mode's E misses five footlockers that rows of bunks hide (8 of 173 things, within the check's one in twenty).
+
 - **The ten danger-zone monsters' own models** (the fourth of the dressing doc's suggestions; SPEC 4.13). Code-built and rigged like the rest, in real metres with the five clips, in `tools/blender/actors_collections.py` and `actors_overgrowth.py` (built by `build_all.py`, `MZ_ACTORS=...` for just these). They replace the stand-ins in `defs/actors.json`.
   - **The Collections Division:**
     - The Bailiff: a riot shield on its left arm, its shotgun round the edge, a plain back; it bashes with the shield.

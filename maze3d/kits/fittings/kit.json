@@ -1,0 +1,10 @@
+{
+ "name": "Fittings",
+ "about": "The plain furniture every installation has, that a room needs to read as what it is: chairs, footlockers, a stove and a prep table, toilet stalls and urinals, a weight bench and a punching bag, firing booths and targets, cell cots, a restraint chair, morgue drawers, an IV stand and a surgical lamp, a lectern, a projection screen, a pin board, a map table, a signals desk, a typewriter desk, a half-track and its lift, and the danger zones' dead scavenger and Garnisher dispenser. In its own materials (olive drab, stainless steel, porcelain, paper) wherever it stands. Every other kit uses this one.",
+ "uses": [
+  "hightech"
+ ],
+ "cell": 4.0,
+ "height": 4.0,
+ "styles": {}
+}

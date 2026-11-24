@@ -1,0 +1,124 @@
+{
+ "fit_blanket": {
+  "color": [
+   0.3,
+   0.32,
+   0.29
+  ],
+  "metal": 0.0,
+  "rough": 0.95
+ },
+ "fit_cork": {
+  "color": [
+   0.6,
+   0.42,
+   0.25
+  ],
+  "metal": 0.0,
+  "rough": 0.95
+ },
+ "fit_ink": {
+  "color": [
+   0.08,
+   0.08,
+   0.09
+  ],
+  "metal": 0.0,
+  "rough": 0.8
+ },
+ "fit_leather": {
+  "color": [
+   0.3,
+   0.15,
+   0.08
+  ],
+  "grime": 0.4,
+  "metal": 0.0,
+  "rough": 0.5,
+  "shader": "worn"
+ },
+ "fit_mattress": {
+  "color": [
+   0.56,
+   0.55,
+   0.48
+  ],
+  "grime": 0.6,
+  "metal": 0.0,
+  "rough": 0.9,
+  "shader": "worn"
+ },
+ "fit_olive": {
+  "color": [
+   0.24,
+   0.28,
+   0.15
+  ],
+  "grime": 0.6,
+  "metal": 0.3,
+  "rough": 0.55,
+  "shader": "worn"
+ },
+ "fit_paper": {
+  "color": [
+   0.88,
+   0.85,
+   0.74
+  ],
+  "metal": 0.0,
+  "rough": 0.9
+ },
+ "fit_porcelain": {
+  "color": [
+   0.9,
+   0.9,
+   0.87
+  ],
+  "grime": 0.45,
+  "metal": 0.0,
+  "rough": 0.15,
+  "shader": "worn"
+ },
+ "fit_red": {
+  "color": [
+   0.62,
+   0.08,
+   0.06
+  ],
+  "grime": 0.4,
+  "metal": 0.1,
+  "rough": 0.5,
+  "shader": "worn"
+ },
+ "fit_sheet": {
+  "color": [
+   0.84,
+   0.85,
+   0.83
+  ],
+  "metal": 0.0,
+  "rough": 0.8
+ },
+ "fit_steel": {
+  "color": [
+   0.6,
+   0.62,
+   0.64
+  ],
+  "grime": 0.35,
+  "metal": 0.9,
+  "rough": 0.3,
+  "shader": "worn"
+ },
+ "fit_wood": {
+  "color": [
+   0.42,
+   0.27,
+   0.14
+  ],
+  "grime": 0.4,
+  "metal": 0.0,
+  "rough": 0.6,
+  "shader": "worn"
+ }
+}

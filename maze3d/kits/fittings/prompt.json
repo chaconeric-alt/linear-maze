@@ -1,0 +1,107 @@
+{
+ "about": "How easy mode's P describes this kit to an image generator (engine/imageprompt.gd). tail: the kit's style line. looks: what a model is, by id ({name, look, class}; class is wall, mounted, floor, centrepiece or corner). tag: the kit's id prefix.",
+ "tag": "fit",
+ "tail": "Utilitarian mid-century military and institutional furniture: olive-drab painted steel, brushed stainless steel, white porcelain, worn wood, canvas and paper; plain, sturdy, used, a little grimy.",
+ "looks": {
+  "chair_plain": {
+   "look": "A stacking chair: a bent steel frame, an olive seat and back moulded in one.",
+   "class": "floor"
+  },
+  "footlocker": {
+   "look": "An olive steel footlocker: lid, hasp and padlock, a stencilled number, carry handles.",
+   "class": "floor"
+  },
+  "cell_cot": {
+   "look": "A steel cot bolted to the floor: a thin striped mattress, a grey blanket folded at the foot.",
+   "class": "floor"
+  },
+  "stove": {
+   "look": "An institutional range: six burners on a steel top, two oven doors with windows, a splashback with the knobs.",
+   "class": "wall"
+  },
+  "prep_table": {
+   "look": "A steel prep table: a shelf under it, a chopping board, a knife rack, two pans.",
+   "class": "floor"
+  },
+  "toilet_stall": {
+   "look": "A toilet in its stall: two steel partitions, a door standing half open, the bowl at the back.",
+   "class": "wall"
+  },
+  "urinal": {
+   "look": "A porcelain urinal on the wall, a privacy screen beside it, the flush pipe running up.",
+   "class": "wall"
+  },
+  "weight_bench": {
+   "look": "A weight bench with its rack, a loaded bar across the uprights, plates stacked at the foot.",
+   "class": "floor"
+  },
+  "punching_bag": {
+   "look": "A heavy bag hanging from a steel gallows by a chain: leather, taped, dented where it has been hit.",
+   "class": "floor"
+  },
+  "firing_booth": {
+   "look": "A firing booth: two partitions, a counter with ear defenders and a box of rounds, a number board.",
+   "class": "wall"
+  },
+  "range_target": {
+   "look": "A paper target on a wooden stand: a black silhouette with its rings, holed.",
+   "class": "floor"
+  },
+  "restraint_chair": {
+   "look": "A heavy chair bolted to a plate: leather straps at wrist, ankle and brow, a headpiece on a gantry, its cable.",
+   "class": "floor"
+  },
+  "morgue_drawers": {
+   "look": "A wall of nine steel drawers, three by three, each with its handle and name card; one pulled half out, a shape under a sheet on it, a tag on its toe.",
+   "class": "wall"
+  },
+  "iv_stand": {
+   "look": "An IV stand: a five-wheeled base, a pole, a bag of something cloudy, its line.",
+   "class": "floor"
+  },
+  "surgical_lamp": {
+   "look": "A surgical lamp on a weighted stand: a jointed arm and a wide round head of lights, aimed down.",
+   "class": "floor"
+  },
+  "lectern": {
+   "look": "A wooden lectern: a sloped reading top with a brass lamp and a gooseneck microphone, the emblem plate on its front.",
+   "class": "floor"
+  },
+  "projection_screen": {
+   "look": "A tripod projection screen pulled up, showing a faint, flickering slide.",
+   "class": "wall"
+  },
+  "pin_board": {
+   "look": "A cork board on the wall: orders, photographs and a map, pinned and joined with red string.",
+   "class": "mounted"
+  },
+  "map_table": {
+   "look": "A map table: a wide paper map of the sector under a glass top, counters, a ruler, and a lamp on a bracket.",
+   "class": "centrepiece"
+  },
+  "signals_desk": {
+   "look": "A switchboard desk: a panel of jacks and lamps, patch cords hanging, a teleprinter with its paper, a headset.",
+   "class": "wall"
+  },
+  "typewriter_desk": {
+   "look": "A steel office desk: a typewriter with a sheet in it, a desk lamp, a stack of forms and a wire in-tray.",
+   "class": "floor"
+  },
+  "vehicle": {
+   "look": "A half-track: an olive armoured cab, two road wheels at the front and a track at the back, a pintle mount, a jerrycan and a spare. Longer than a cell is wide: it stands lengthwise.",
+   "class": "centrepiece"
+  },
+  "vehicle_lift": {
+   "look": "A scissor lift for vehicles: two long platforms with hazard edges on scissor legs, a control post.",
+   "class": "centrepiece"
+  },
+  "dead_scavenger": {
+   "look": "A scavenger who went in and came back out as far as the door: sat against the wall in a canvas coat and a helmet, pack still on, legs out, a note pinned to the chest.",
+   "class": "wall"
+  },
+  "garnisher_dispenser": {
+   "look": "A Collections Division dispenser: a steel cabinet with a lit COLLECTIONS panel, a coin-slot hatch the Garnishers come out of, hazard stripes, and a counter that only ever goes up.",
+   "class": "wall"
+  }
+ }
+}

@@ -4,7 +4,8 @@
  "uses": [
   "hightech",
   "robots",
-  "loot"
+  "loot",
+  "fittings"
  ],
  "cell": 4.0,
  "height": 4.0,

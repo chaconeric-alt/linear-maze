@@ -99,13 +99,13 @@ RW = 32                         # cells of rooms in a wing
 SX = RW + 2                     # the spine: two columns, with a wall between it and the rooms either side
 BAND = 9                        # wall, five rows of rooms, wall with the doors in it, two rows of corridor
 kit_wings = [k for k in KITS if k in HALLS]
-SPECIAL = ['SHAPES', 'EXIT', 'BREAK', 'RANGE', 'STORES', 'NEST', 'DEPOT']
+SPECIAL = ['SHAPES', 'EXIT', 'BREAK', 'RANGE', 'STORES', 'NEST', 'DEPOT', 'FITTINGS']
 unknown = [k for k in KITS if KITS[k]['styles'] and k not in HALLS]
 for k in unknown:               # a new kit: its first style is its hall
     HALLS[k] = KITS[k]['styles'][0]
     kit_wings.append(k)
 # west and east of the spine, north to south. The break room and the range are in the middle.
-order = ['SHAPES', 'EXIT'] + kit_wings[:4] + ['BREAK', 'RANGE'] + kit_wings[4:] + ['STORES', 'NEST', 'DEPOT']
+order = ['SHAPES', 'EXIT'] + kit_wings[:4] + ['BREAK', 'RANGE'] + kit_wings[4:] + ['STORES', 'NEST', 'DEPOT', 'FITTINGS']
 if len(order) % 2:
     order.append('SPARE')
 NB = len(order) // 2
@@ -280,7 +280,9 @@ vault_free = []
 for i, what in enumerate(order):
     b, side = i // 2, i % 2
     x0, y0 = wing_x(side), band_y(b)
-    if what in KITS:
+    if what == 'FITTINGS':
+        fittings_at = (b, side)                   # laid out last, after the monsters (fittings_room below)
+    elif what in KITS:
         _, _, left = kit_wing(b, side, what)
         if what == 'hightech':
             vault_free = left
@@ -491,6 +493,27 @@ for aid in settled + DANGER:
     if d.get('lounge'):
         more['lounge'] = 'none'                   # this one is up and about; the loungers are in the break room
     actor(aid, spot[0], spot[1], **more)
+
+def fittings_room(b, side):
+    """Fittings: the furniture every installation has (the Fittings kit, which every other kit uses), one of each
+    along the north wall of a room of its own in the last band. Laid out after the monsters, so that adding it moved
+    nothing already on the floor."""
+    x0, y0 = wing_x(side), band_y(b)
+    corridor(b, side, 'corridor', 'Fittings')
+    carve(g0, x0, y0 + 1, RW, 5)
+    room("Fittings", x0, y0 + 1, RW, 5, 'vault')
+    for dx in (x0 + 5, x0 + 21):
+        door(dx, y0 + 6)
+    pieces = sorted(n for n in KITS['fittings']['props'] if not NOT_FURNITURE(n))
+    if len(pieces) > RW:
+        sys.exit("staffonly.py: more fittings than the Fittings room's wall holds; widen RW")
+    for j, n in enumerate(pieces):
+        prop(n, x0 + j, y0 + 1, 'n')
+    sign("FITTINGS\nwhat every installation is furnished with", x0 + 13, y0 + 5, 'n', size=40, color=(0.9, 0.85, 0.5))
+
+
+if 'fittings' in KITS:
+    fittings_room(*fittings_at)
 
 ONLY = os.environ.get('SO_ACTORS')                  # for looking at part of it: SO_ACTORS=monoid,sphinx keeps just those monsters
 if ONLY is not None:
