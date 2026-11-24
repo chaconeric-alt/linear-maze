@@ -1,0 +1,91 @@
+{
+ "id": "pen",
+ "name": "The Pen (monster pieces)",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "One at a time.",
+ "ambient_energy": 0.8,
+ "legend": {
+  "+": {
+   "door": "door_split"
+  },
+  "R": {
+   "door": "door_split",
+   "lock": "red"
+  }
+ },
+ "map": [
+  "################",
+  "#..........#...#",
+  "#..........+...#",
+  "#..........#...#",
+  "#....#.....#####",
+  "#..........#...#",
+  "#..........R...#",
+  "#..........#...#",
+  "################"
+ ],
+ "rooms": [
+  {
+   "name": "The Arena",
+   "rect": [
+    1,
+    1,
+    10,
+    7
+   ],
+   "style": "corridor"
+  },
+  {
+   "name": "The Side Room",
+   "rect": [
+    12,
+    1,
+    3,
+    3
+   ],
+   "style": "storage"
+  },
+  {
+   "name": "The Locked Room",
+   "rect": [
+    12,
+    5,
+    3,
+    3
+   ],
+   "style": "storage"
+  }
+ ],
+ "things": [
+  {
+   "start": true,
+   "face": "e",
+   "at": [
+    1,
+    4
+   ]
+  },
+  {
+   "sign": "THE PEN\nno feeding",
+   "face": "s",
+   "color": [
+    1.0,
+    0.4,
+    0.2
+   ],
+   "size": 56,
+   "y": 3.0,
+   "at": [
+    3,
+    1
+   ]
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Watch them work."
+  }
+ ],
+ "triggers": []
+}

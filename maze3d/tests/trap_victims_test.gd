@@ -1,7 +1,7 @@
 extends SelfTestPart
-## Traps hurt monsters and robots as well as the player, and spare whom their "ignore" says; a flyer gets past a live
-## laser without being burned (it rises over the beams, or waits for them to go off); a climber will not let go over a
-## live trap. Runs after the fights, so it needs a level that leaves monsters alive: an off-duty floor (Staff Only).
+## Traps hurt monsters and robots as well as the player, and spare whom their "ignore" says (a danger zone's spare
+## its own monsters: each is checked both ways); a flyer gets past a live laser without being burned (it rises over the
+## beams, or waits for them to go off); a climber will not let go over a live trap. Runs after the fights, so it needs a level that leaves monsters alive: an off-duty floor (Staff Only).
 ## Everything it moves goes back where it was, and each flyer it sends past the laser is killed there, in the air, for
 ## the remains part to look at.
 
@@ -21,7 +21,12 @@ func run() -> void:
 		if not is_instance_valid(t) or not t.enabled or t.e.get("trip", false) or float(t.e.get("damage", 1.0)) <= 0.0 or done.has(t.kind):
 			continue
 		done[t.kind] = true
+		var kept: Array = t.ignore                     # a danger zone's traps may spare its own monsters ("trap_ignore"):
+		t.ignore = []                                  # first, that the trap hurts a monster at all, then that it spares
 		say(await _hurt_in(walker, t) > 0.0, "a %s hurts a %s that stands in it" % [t.kind, walker.d.get("name")])
+		t.ignore = kept
+		if not t.hurts(walker):
+			say(await _hurt_in(walker, t) == 0.0, "a %s set to spare %s spares the %s" % [t.kind, ", ".join(kept), walker.d.get("name")])
 		if t.kind != "laser":
 			continue
 		var was: Array = t.ignore

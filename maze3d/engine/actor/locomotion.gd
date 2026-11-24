@@ -124,7 +124,7 @@ func hunt(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 		a.play("walk" if a.senses.see else "idle")
 		return
 	var want := _want(dt, pl, flat, dist)
-	if d.has("flee_below") and a.hp < a.max_hp * d["flee_below"]:
+	if _fleeing():
 		speed *= 1.4
 	want = _out_of_station(want).normalized()
 	if wet:
@@ -154,11 +154,17 @@ func hunt(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 			a.play("idle")
 
 
+## Running away: hurt enough to ("flee_below"), dazzled by the lamp (ActorWounds), or keeping away after a latch.
+func _fleeing() -> bool:
+	return (d.has("flee_below") and a.hp < a.max_hp * d["flee_below"]) or (a.wounds != null and a.wounds.scared()) \
+		or (a.moves != null and a.moves.keeping_away())
+
+
 ## Which way it wants to go: away (hurt enough to flee), round them at a distance (a skirmisher), straight at them
 ## (close and in sight), or along the route the level's nav finds.
 func _want(dt: float, pl: Node3D, flat: Vector3, dist: float) -> Vector3:
 	var see: bool = a.senses.see
-	if d.has("flee_below") and a.hp < a.max_hp * d["flee_below"]:
+	if _fleeing():
 		if not _fled:
 			_fled = true
 			if d.has("flee_text"):

@@ -28,6 +28,7 @@ var focus: Node = null           # the usable thing in front of you: E works it
 var last_seen: Dictionary = {}    # easy mode: what E last named (Identify.look), for P's image prompt
 var last_hit_dir := Vector3.ZERO
 var hurt_flash := 0.0
+var afflictions: Afflictions      # burning, poisoned, stunned (engine/afflictions.gd): added the first time
 var controls: PlayerControls
 var movement: PlayerMovement
 var eye: PlayerCamera
@@ -169,6 +170,7 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 		armor -= soak
 		amount -= soak
 	hp -= amount
+	Afflictions.on_hurt(self, info)
 	hurt_flash = min(1.0, hurt_flash + 0.35 + amount / 40.0)
 	shake(min(0.5, amount / 40.0))
 	if info.has("from"):
@@ -213,7 +215,8 @@ func _physics_process(dt: float) -> void:
 	if held_by != null and (not is_instance_valid(held_by) or held_by.dead):
 		held_by = null
 	var held := held_by != null                      # something has hold of you: look and shoot, but it decides where you are
-	var free := not frozen and not held
+	var stunned := afflictions != null and afflictions.stunned()      # stunned: neither moving nor shooting
+	var free := not frozen and not held and not stunned
 	var inp := controls.move_vector() if free else Vector2.ZERO
 	eye.update_zoom(dt, free and controls.zoom_held() and not movement.dashing())
 	movement.step(dt, inp, free, held)
@@ -222,7 +225,7 @@ func _physics_process(dt: float) -> void:
 	arms.settle(dt)
 	hurt_flash = move_toward(hurt_flash, 0.0, dt * 1.4)
 	eye.step(dt, inp.x, movement.bob, arms.recoil, movement.dashing())
-	arms.step(dt, eye.zoom, movement.bob, not frozen and controls.fire_held())
+	arms.step(dt, eye.zoom, movement.bob, not frozen and not stunned and controls.fire_held())
 	_find_focus()
 
 

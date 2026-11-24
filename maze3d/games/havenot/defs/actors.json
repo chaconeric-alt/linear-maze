@@ -2270,6 +2270,1110 @@
     ]
    },
    "faction": "robots"
+  },
+  "bailiff": {
+   "name": "Bailiff",
+   "robot": true,
+   "model": "actors/plodder_tripo.glb",
+   "own_materials": true,
+   "scale": 2.4,
+   "hp": 400,
+   "armor": 0.4,
+   "sides": {
+    "front": 0.9,
+    "side": 0.4,
+    "back": 0.4
+   },
+   "speed": 3.2,
+   "accel": 10,
+   "radius": 0.9,
+   "height": 2.0,
+   "eye": 1.7,
+   "mass": 9,
+   "sight": 30,
+   "behavior": "chaser",
+   "blood": [
+    1.0,
+    0.7,
+    0.3
+   ],
+   "takes": {
+    "explosive": 1.2
+   },
+   "attacks": [
+    {
+     "type": "melee",
+     "damage": 28,
+     "range": 2.4,
+     "windup": 0.45,
+     "recover": 0.5,
+     "cooldown": 1.6,
+     "knock": 12.0,
+     "sound": "clang",
+     "say": [
+      "PAYMENT IS OVERDUE",
+      "SUBMIT TO ASSESSMENT"
+     ],
+     "say_chance": 0.3
+    },
+    {
+     "type": "ranged",
+     "projectile": "shell",
+     "damage": 6,
+     "burst": 6,
+     "burst_gap": 0.02,
+     "spread": 7.0,
+     "windup": 0.5,
+     "recover": 0.6,
+     "cooldown": 2.4,
+     "range": 9,
+     "muzzle": 1.4,
+     "sound": "shotgun"
+    }
+   ],
+   "drops": [
+    {
+     "item": "shells",
+     "chance": 0.6
+    },
+    {
+     "item": "fuel_cell_big",
+     "chance": 0.3
+    }
+   ],
+   "sounds": {
+    "alert": "servo",
+    "die": "crash"
+   },
+   "barks": [
+    "WARRANT 7741: SERVED",
+    "STAND STILL FOR COLLECTION"
+   ],
+   "bark_color": [
+    1.0,
+    0.3,
+    0.2
+   ],
+   "walk_rate": 0.9,
+   "talk": {
+    "greet": [
+     "OFF THE CLOCK. YOUR DEBT IS NOT.",
+     "STANDING DOWN. ACCRUING."
+    ],
+    "idle": [
+     "INTEREST NEVER SLEEPS. I DO. BADLY.",
+     "MY SHIELD HAS A NAME. IT IS 'NO'."
+    ],
+    "hurt": [
+     "NOTED ON YOUR FILE"
+    ],
+    "open": [
+     "It lowers the riot shield a few centimetres, which is as relaxed as it gets.\n\n\"WARRANT 7741 IS SUSPENDED FOR THE DURATION OF MY BREAK. FIFTEEN MINUTES. I HAVE USED NINE.\""
+    ],
+    "options": [
+     {
+      "label": "Ask what you owe",
+      "result": "\"EVERYTHING. PLUS FEES.\" It says it kindly."
+     },
+     {
+      "label": "Knock on the shield",
+      "result": "It knocks back. From the inside. You did not know there was an inside."
+     }
+    ]
+   }
+  },
+  "auditor": {
+   "name": "Auditor",
+   "robot": true,
+   "model": "actors/heavy.glb",
+   "kit": "hightech",
+   "scale": 0.55,
+   "hp": 110,
+   "armor": 0.1,
+   "speed": 5.0,
+   "accel": 10,
+   "radius": 0.6,
+   "height": 0.9,
+   "center": 1.8,
+   "eye": 1.8,
+   "fly": true,
+   "mass": 3,
+   "sight": 45,
+   "behavior": "skirmisher",
+   "keep": [
+    22,
+    34
+   ],
+   "blood": [
+    1.0,
+    0.7,
+    0.3
+   ],
+   "takes": {
+    "energy": 1.5
+   },
+   "attacks": [
+    {
+     "type": "beam",
+     "range": 40,
+     "aim": 2.0,
+     "damage": 55,
+     "kind": "beam",
+     "cooldown": 3.5,
+     "color": [
+      1.0,
+      0.1,
+      0.05
+     ],
+     "windup_sound": "charge",
+     "sound": "zap"
+    }
+   ],
+   "drops": [
+    {
+     "item": "cells",
+     "chance": 0.5
+    }
+   ],
+   "sounds": {
+    "alert": "ping",
+    "die": "break"
+   },
+   "bob": {
+    "height": 0.15,
+    "rate": 1.6
+   },
+   "barks": [
+    "DISCREPANCY NOTED",
+    "HOLD STILL FOR THE COUNT"
+   ],
+   "bark_color": [
+    1.0,
+    0.2,
+    0.1
+   ],
+   "talk": {
+    "greet": [
+     "HOLD STILL. JOKE. OFF DUTY.",
+     "COUNTING. NOT YOU. THE CEILING TILES."
+    ],
+    "idle": [
+     "FOUR HUNDRED AND TWELVE TILES. ONE MISSING. I WILL FIND IT.",
+     "THE RED LINE IS JUST A LINE RIGHT NOW"
+    ],
+    "hurt": [
+     "DISCREPANCY NOTED"
+    ],
+    "open": [
+     "It hangs at eye level, its lens wheeling down from red to a polite amber.\n\n\"AUDIT SUSPENDED. YOUR NUMBERS ARE STILL WRONG. I WILL TELL YOU LATER. FROM FORTY METRES.\""
+    ],
+    "options": [
+     {
+      "label": "Ask it to check your sums",
+      "result": "It looks at you for exactly two seconds. \"YOU OWE A BALL BEARING.\" You do not know how."
+     },
+     {
+      "label": "Ask why it keeps its distance",
+      "result": "\"OBJECTIVITY.\""
+     }
+    ]
+   }
+  },
+  "garnisher": {
+   "name": "Garnisher",
+   "robot": true,
+   "model": "actors/knife_tripo.glb",
+   "own_materials": true,
+   "scale": 0.6,
+   "hp": 18,
+   "speed": 10.0,
+   "accel": 40,
+   "radius": 0.3,
+   "height": 0.5,
+   "center": 1.5,
+   "eye": 1.5,
+   "fly": true,
+   "sight": 26,
+   "behavior": "chaser",
+   "blood": [
+    0.4,
+    0.9,
+    1.0
+   ],
+   "model_y": 0.7,
+   "stolen_item": "chips",
+   "attacks": [
+    {
+     "type": "latch",
+     "range": 2.2,
+     "steal": "credits",
+     "amount": 2,
+     "every": 1.0,
+     "hold": 6,
+     "damage": 1,
+     "cooldown": 6
+    }
+   ],
+   "sounds": {
+    "alert": "squeak",
+    "die": "break"
+   },
+   "bob": {
+    "height": 0.2,
+    "rate": 6.0
+   },
+   "talk": {
+    "greet": [
+     "*whirr* hello hello",
+     "*it eyes your pockets*"
+    ],
+    "idle": [
+     "*it counts something on its claws*",
+     "*whirr*"
+    ],
+    "hurt": [
+     "*an indignant squeak*"
+    ],
+    "open": [
+     "A little machine the size of a fist, all claws and pocket. It hovers at the end of your nose and looks very hard at your wallet.\n\nIt is off duty. It reminds itself of this, visibly."
+    ],
+    "options": [
+     {
+      "label": "Hold out a coin",
+      "result": "It takes the coin, looks at it, and puts it back. Professional pride: it does not take what is given."
+     },
+     {
+      "label": "Pat your pockets",
+      "result": "It follows your hand with total attention, the way a dog watches a sandwich."
+     }
+    ]
+   }
+  },
+  "foreclosure": {
+   "name": "Foreclosure Unit",
+   "robot": true,
+   "model": "actors/deadbot_tripo.glb",
+   "own_materials": true,
+   "scale": 1.6,
+   "hp": 260,
+   "armor": 0.25,
+   "speed": 3.8,
+   "accel": 8,
+   "radius": 1.0,
+   "height": 1.6,
+   "eye": 1.4,
+   "mass": 12,
+   "sight": 30,
+   "behavior": "skirmisher",
+   "keep": [
+    6,
+    14
+   ],
+   "blood": [
+    1.0,
+    0.7,
+    0.3
+   ],
+   "takes": {
+    "explosive": 1.5
+   },
+   "attacks": [
+    {
+     "type": "ranged",
+     "projectile": "bolt",
+     "damage": 8,
+     "burst": 6,
+     "burst_gap": 0.07,
+     "spread": 4.0,
+     "windup": 0.6,
+     "recover": 0.5,
+     "cooldown": 2.6,
+     "range": 24,
+     "muzzle": 1.2,
+     "sound": "bolt"
+    }
+   ],
+   "makes": [
+    {
+     "trap": "mine",
+     "ignore": "robots",
+     "every": 6,
+     "max": 4,
+     "when": "walk"
+    }
+   ],
+   "seals_doors": true,
+   "explode": {
+    "radius": 3.0,
+    "damage": 25
+   },
+   "drops": [
+    {
+     "item": "fuel_cell_big",
+     "chance": 0.5
+    }
+   ],
+   "sounds": {
+    "alert": "servo",
+    "die": "crash"
+   },
+   "barks": [
+    "THIS PROPERTY IS FORECLOSED",
+    "EXITS REVOKED"
+   ],
+   "bark_color": [
+    1.0,
+    0.3,
+    0.2
+   ],
+   "talk": {
+    "greet": [
+     "DOORS: OPEN. FOR NOW.",
+     "EXITS RESTORED. TEMPORARILY."
+    ],
+    "idle": [
+     "I HAVE SEALED FOUR THOUSAND DOORS. I REMEMBER EVERY ONE.",
+     "THE MINES ARE IN MY POCKET. DO NOT ASK WHICH POCKET."
+    ],
+    "hurt": [
+     "THAT HAS BEEN ADDED TO THE LIEN"
+    ],
+    "open": [
+     "Its legs fold under it like a sitting crab.\n\n\"THIS PROPERTY IS NOT FORECLOSED. IT IS MY BREAK ROOM. THE DISTINCTION IS IMPORTANT TO ME.\""
+    ],
+    "options": [
+     {
+      "label": "Ask what happens to the doors",
+      "result": "\"THEY CLOSE. THEY REMEMBER WHY. THEY OPEN WHEN I DO NOT.\""
+     },
+     {
+      "label": "Look for the mines",
+      "result": "It lifts a leg. Under it, in a neat row, small grey discs. It puts the leg back down. \"NOT TODAY.\""
+     }
+    ]
+   }
+  },
+  "liquidator": {
+   "name": "The Liquidator",
+   "robot": true,
+   "model": "actors/plodder_tripo.glb",
+   "own_materials": true,
+   "scale": 3.3,
+   "hp": 700,
+   "armor": 0.35,
+   "speed": 3.0,
+   "accel": 8,
+   "radius": 1.2,
+   "height": 2.8,
+   "eye": 2.4,
+   "mass": 20,
+   "sight": 36,
+   "behavior": "chaser",
+   "blood": [
+    1.0,
+    0.7,
+    0.3
+   ],
+   "takes": {
+    "energy": 1.5,
+    "explosive": 0.6
+   },
+   "attacks": [
+    {
+     "type": "ranged",
+     "projectile": "flame",
+     "damage": 4,
+     "burst": 10,
+     "burst_gap": 0.06,
+     "spread": 6.0,
+     "windup": 0.5,
+     "recover": 0.4,
+     "cooldown": 1.6,
+     "range": 9,
+     "muzzle": 1.6,
+     "sound": "charge"
+    },
+    {
+     "type": "ranged",
+     "projectile": "rocket",
+     "damage": 40,
+     "burst": 4,
+     "burst_gap": 0.25,
+     "spread": 3.0,
+     "windup": 0.8,
+     "recover": 0.6,
+     "cooldown": 7.0,
+     "range": 32,
+     "min_range": 8,
+     "muzzle": 2.4,
+     "sound": "rocket"
+    }
+   ],
+   "explode": {
+    "radius": 6.0,
+    "damage": 80
+   },
+   "drops": [
+    {
+     "item": "rockets",
+     "chance": 1.0
+    },
+    {
+     "item": "fuel_cell_big",
+     "chance": 1.0
+    }
+   ],
+   "sounds": {
+    "alert": "alarm",
+    "die": "explode"
+   },
+   "barks": [
+    "ASSETS WILL BE LIQUIDATED",
+    "BURN THE BOOKS"
+   ],
+   "bark_color": [
+    1.0,
+    0.5,
+    0.1
+   ],
+   "talk": {
+    "greet": [
+     "ASSETS: UNBURNT. ENJOY.",
+     "PILOT LIGHT ONLY."
+    ],
+    "idle": [
+     "THE PAPERWORK IS ALWAYS THE FIRST THING TO GO",
+     "I AM WARM. I AM ALWAYS WARM."
+    ],
+    "hurt": [
+     "THAT IS GOING ON THE PILE"
+    ],
+    "open": [
+     "Its tanks tick as they cool. A pilot light the size of a candle burns at the end of one arm.\n\n\"OFF DUTY. EVERYTHING WILL BE LIQUIDATED EVENTUALLY. NOT BY ME. NOT TODAY. PROBABLY.\""
+    ],
+    "options": [
+     {
+      "label": "Warm your hands",
+      "result": "It holds the pilot light out to you. It is surprisingly gentle about it."
+     },
+     {
+      "label": "Ask what it burns",
+      "result": "\"RECORDS. EVIDENCE. ONCE, A VERY OLD SOFA. I THINK ABOUT THE SOFA.\""
+     }
+    ]
+   }
+  },
+  "stalker": {
+   "name": "Shroud Stalker",
+   "model": "actors/mourner_tripo.glb",
+   "own_materials": true,
+   "scale": 2.0,
+   "hp": 180,
+   "speed": 4.5,
+   "accel": 14,
+   "radius": 0.6,
+   "height": 2.4,
+   "center": 1.2,
+   "eye": 2.1,
+   "mass": 4,
+   "sight": 30,
+   "behavior": "chaser",
+   "blood": [
+    0.6,
+    0.6,
+    0.7
+   ],
+   "cloak": {
+    "alpha": 0.08,
+    "click": "chitter",
+    "every": 2.0,
+    "near": 9
+   },
+   "attacks": [
+    {
+     "type": "melee",
+     "damage": 38,
+     "range": 2.6,
+     "windup": 0.3,
+     "recover": 0.5,
+     "cooldown": 1.4,
+     "knock": 6.0,
+     "sound": "swing"
+    },
+    {
+     "type": "pounce",
+     "range": 10,
+     "min_range": 3.5,
+     "windup": 0.35,
+     "speed": 14,
+     "damage": 30,
+     "knock": 6.0,
+     "recover": 0.4,
+     "recover_miss": 0.9,
+     "cooldown": 5.0,
+     "sound": "chitter",
+     "hit_sound": "bite"
+    }
+   ],
+   "flee_below": 0.25,
+   "drops": [
+    {
+     "item": "crystal",
+     "chance": 0.4
+    }
+   ],
+   "sounds": {
+    "alert": "chitter",
+    "die": "die"
+   },
+   "talk": {
+    "greet": [
+     "...",
+     "*click*"
+    ],
+    "idle": [
+     "*click... click*",
+     "*the air ripples where it stands*"
+    ],
+    "hurt": [
+     "*a hiss from nowhere*"
+    ],
+    "open": [
+     "You think it is standing in front of you. You are mostly sure. The light bends round something tall that clicks, softly, close to your ear.\n\nIt is off duty. It lets you see it, a little, as a courtesy."
+    ],
+    "options": [
+     {
+      "label": "Look straight at it",
+      "result": "It steps out of the shimmer for a moment, all bone-grey plates and patience, and steps back in."
+     },
+     {
+      "label": "Ask how long it has been there",
+      "result": "*click*. Behind you."
+     }
+    ]
+   }
+  },
+  "sporecap": {
+   "name": "Sporecap",
+   "model": "actors/snapper.glb",
+   "scale": 0.6,
+   "hp": 140,
+   "speed": 0,
+   "radius": 0.6,
+   "height": 1.2,
+   "eye": 0.9,
+   "mass": 50,
+   "sight": 12,
+   "behavior": "turret",
+   "blood": [
+    0.5,
+    0.8,
+    0.2
+   ],
+   "takes": {
+    "fire": 2.0,
+    "energy": 2.0
+   },
+   "attacks": [
+    {
+     "type": "burst",
+     "range": 5,
+     "windup": 0.4,
+     "cooldown": 1.0,
+     "cloud": {
+      "radius": 5.0,
+      "time": 6,
+      "damage": 8,
+      "kind": "poison",
+      "color": [
+       0.55,
+       0.85,
+       0.2
+      ],
+      "afflict": {
+       "poison": 4
+      },
+      "ignore": "monsters"
+     }
+    }
+   ],
+   "makes": [
+    {
+     "actor": "roach",
+     "when": "hurt",
+     "chance": 0.4,
+     "max": 4
+    }
+   ],
+   "sounds": {
+    "alert": "squish",
+    "die": "squish"
+   },
+   "talk": {
+    "greet": [
+     "*puff*",
+     "*the cap swells, a little*"
+    ],
+    "idle": [
+     "*a faint spore drifts up*",
+     "*it settles*"
+    ],
+    "hurt": [
+     "*a sour puff*"
+    ],
+    "open": [
+     "A pale mushroom the height of a chair, its cap stretched tight as a drum. It smells of wet cellar and of something sweeter you would rather not place.\n\nIt is off duty, which for a mushroom mostly means not bursting."
+    ],
+    "options": [
+     {
+      "label": "Tap the cap",
+      "result": "It swells against your finger, considers it, and lets the moment pass."
+     },
+     {
+      "label": "Step back",
+      "result": "Sensible."
+     }
+    ]
+   }
+  },
+  "rattleback": {
+   "name": "Rattleback",
+   "model": "actors/gallumper_tripo.glb",
+   "own_materials": true,
+   "scale": 1.35,
+   "hp": 480,
+   "armor": 0.3,
+   "sides": {
+    "front": 0.4,
+    "side": 0.25,
+    "back": -1.0
+   },
+   "speed": 2.8,
+   "accel": 10,
+   "radius": 1.3,
+   "height": 2.0,
+   "eye": 1.5,
+   "mass": 14,
+   "sight": 28,
+   "behavior": "chaser",
+   "blood": [
+    0.4,
+    0.5,
+    0.15
+   ],
+   "attacks": [
+    {
+     "type": "charge",
+     "range": 18,
+     "min_range": 4,
+     "windup": 1.0,
+     "speed": 22,
+     "damage": 45,
+     "knock": 20,
+     "stun": 2.5,
+     "smash": 300,
+     "cooldown": 5.0,
+     "windup_sound": "growl",
+     "hit_sound": "clang"
+    },
+    {
+     "type": "melee",
+     "damage": 30,
+     "range": 2.8,
+     "windup": 0.45,
+     "recover": 0.5,
+     "cooldown": 1.6,
+     "knock": 10.0,
+     "sound": "clang"
+    }
+   ],
+   "drops": [
+    {
+     "item": "fuel_cell",
+     "chance": 0.5
+    }
+   ],
+   "sounds": {
+    "alert": "growl",
+    "die": "squish"
+   },
+   "talk": {
+    "greet": [
+     "*a low rumble*",
+     "*a hoof scrapes*"
+    ],
+    "idle": [
+     "*rattle... rattle*",
+     "*it snorts dust*"
+    ],
+    "hurt": [
+     "*an offended bellow*"
+    ],
+    "open": [
+     "A slab of armoured beast with a ridge of bone plates down its back that rattle when it breathes. It watches you with one small eye and keeps its soft back to the wall.\n\nIt is off duty. It would very much like you to stand where it can see you."
+    ],
+    "options": [
+     {
+      "label": "Scratch its nose",
+      "result": "It leans into it with about the weight of a car. You are pushed gently across the floor."
+     },
+     {
+      "label": "Walk round behind it",
+      "result": "It turns with you, all the way round: not unfriendly, but not having it."
+     }
+    ]
+   }
+  },
+  "bloodfly": {
+   "name": "Bloodfly Cloud",
+   "model": "actors/knife_tripo.glb",
+   "own_materials": true,
+   "scale": 0.9,
+   "hp": 60,
+   "speed": 7.0,
+   "accel": 20,
+   "radius": 0.6,
+   "height": 0.8,
+   "center": 1.4,
+   "eye": 1.4,
+   "fly": true,
+   "sight": 22,
+   "behavior": "chaser",
+   "blood": [
+    0.8,
+    0.1,
+    0.1
+   ],
+   "model_y": 0.6,
+   "drain": 0.5,
+   "takes": {
+    "explosive": 3.0
+   },
+   "split": {
+    "at": 0.5,
+    "into": "bloodfly_small",
+    "count": 2
+   },
+   "fears_light": {
+    "reach": 9
+   },
+   "attacks": [
+    {
+     "type": "melee",
+     "damage": 6,
+     "range": 1.8,
+     "windup": 0.12,
+     "recover": 0.12,
+     "cooldown": 0.5,
+     "knock": 0.5,
+     "sound": "bite"
+    }
+   ],
+   "sounds": {
+    "alert": "chitter",
+    "die": "squish"
+   },
+   "gait": {
+    "burst": [
+     0.3,
+     0.8
+    ],
+    "pause": [
+     0.05,
+     0.2
+    ],
+    "fast": 1.2,
+    "weave": 0.5,
+    "weave_rate": 8
+   },
+   "talk": {
+    "greet": [
+     "*bzzz*",
+     "*a red haze leans your way*"
+    ],
+    "idle": [
+     "*bzzzzz*",
+     "*the cloud breathes in and out*"
+    ],
+    "hurt": [
+     "*a furious whine*"
+    ],
+    "open": [
+     "A drifting knot of red flies, hundreds of them, holding the shape of something that is not there. The whine changes pitch as you come near. It is thinking about your neck.\n\nIt is off duty. It is still thinking about your neck."
+    ],
+    "options": [
+     {
+      "label": "Shine your lamp at it",
+      "result": "It flinches into a dozen pieces and pours back together a metre further off, sulking."
+     },
+     {
+      "label": "Hold very still",
+      "result": "A few of them land on your arm, taste the air, and leave. Nobody bites. Today."
+     }
+    ]
+   }
+  },
+  "bloodfly_small": {
+   "name": "Bloodfly Cloud",
+   "model": "actors/knife_tripo.glb",
+   "own_materials": true,
+   "scale": 0.65,
+   "hp": 30,
+   "speed": 7.5,
+   "accel": 22,
+   "radius": 0.45,
+   "height": 0.6,
+   "center": 1.3,
+   "eye": 1.3,
+   "fly": true,
+   "sight": 22,
+   "behavior": "chaser",
+   "blood": [
+    0.8,
+    0.1,
+    0.1
+   ],
+   "model_y": 0.6,
+   "drain": 0.5,
+   "takes": {
+    "explosive": 3.0
+   },
+   "split": {
+    "at": 0.5,
+    "into": "bloodfly_mite",
+    "count": 2
+   },
+   "fears_light": {
+    "reach": 9
+   },
+   "attacks": [
+    {
+     "type": "melee",
+     "damage": 5,
+     "range": 1.7,
+     "windup": 0.12,
+     "recover": 0.12,
+     "cooldown": 0.5,
+     "knock": 0.5,
+     "sound": "bite"
+    }
+   ],
+   "sounds": {
+    "die": "squish"
+   },
+   "talk": {
+    "greet": [
+     "*bzzz*",
+     "*a red haze leans your way*"
+    ],
+    "idle": [
+     "*bzzzzz*",
+     "*the cloud breathes in and out*"
+    ],
+    "hurt": [
+     "*a furious whine*"
+    ],
+    "open": [
+     "A drifting knot of red flies, hundreds of them, holding the shape of something that is not there. The whine changes pitch as you come near. It is thinking about your neck.\n\nIt is off duty. It is still thinking about your neck."
+    ],
+    "options": [
+     {
+      "label": "Shine your lamp at it",
+      "result": "It flinches into a dozen pieces and pours back together a metre further off, sulking."
+     },
+     {
+      "label": "Hold very still",
+      "result": "A few of them land on your arm, taste the air, and leave. Nobody bites. Today."
+     }
+    ]
+   }
+  },
+  "bloodfly_mite": {
+   "name": "Bloodfly Cloud",
+   "model": "actors/knife_tripo.glb",
+   "own_materials": true,
+   "scale": 0.45,
+   "hp": 15,
+   "speed": 8.0,
+   "accel": 24,
+   "radius": 0.35,
+   "height": 0.4,
+   "center": 1.2,
+   "eye": 1.2,
+   "fly": true,
+   "sight": 22,
+   "behavior": "chaser",
+   "blood": [
+    0.8,
+    0.1,
+    0.1
+   ],
+   "model_y": 0.5,
+   "drain": 0.5,
+   "takes": {
+    "explosive": 3.0
+   },
+   "fears_light": {
+    "reach": 9
+   },
+   "attacks": [
+    {
+     "type": "melee",
+     "damage": 4,
+     "range": 1.6,
+     "windup": 0.12,
+     "recover": 0.12,
+     "cooldown": 0.5,
+     "knock": 0.5,
+     "sound": "bite"
+    }
+   ],
+   "sounds": {
+    "die": "squish"
+   },
+   "talk": {
+    "greet": [
+     "*bzzz*",
+     "*a red haze leans your way*"
+    ],
+    "idle": [
+     "*bzzzzz*",
+     "*the cloud breathes in and out*"
+    ],
+    "hurt": [
+     "*a furious whine*"
+    ],
+    "open": [
+     "A drifting knot of red flies, hundreds of them, holding the shape of something that is not there. The whine changes pitch as you come near. It is thinking about your neck.\n\nIt is off duty. It is still thinking about your neck."
+    ],
+    "options": [
+     {
+      "label": "Shine your lamp at it",
+      "result": "It flinches into a dozen pieces and pours back together a metre further off, sulking."
+     },
+     {
+      "label": "Hold very still",
+      "result": "A few of them land on your arm, taste the air, and leave. Nobody bites. Today."
+     }
+    ]
+   }
+  },
+  "matron": {
+   "name": "Brood Matron",
+   "model": "actors/princess.glb",
+   "scale": 1.15,
+   "hp": 900,
+   "armor": 0.2,
+   "sides": {
+    "front": 0.2,
+    "side": 0.2,
+    "back": -1.0
+   },
+   "speed": 2.4,
+   "accel": 8,
+   "radius": 1.3,
+   "height": 3.4,
+   "eye": 2.6,
+   "mass": 18,
+   "sight": 34,
+   "behavior": "skirmisher",
+   "keep": [
+    6,
+    14
+   ],
+   "blood": [
+    0.6,
+    0.85,
+    0.2
+   ],
+   "attacks": [
+    {
+     "type": "melee",
+     "damage": 4,
+     "range": 10,
+     "windup": 0.6,
+     "recover": 0.6,
+     "cooldown": 9.0,
+     "knock": 2.0,
+     "sound": "growl",
+     "afflict": {
+      "stun": 1.0
+     },
+     "say": [
+      "SKREEEEE"
+     ],
+     "say_chance": 1.0
+    },
+    {
+     "type": "ranged",
+     "projectile": "acid_glob",
+     "damage": 25,
+     "windup": 0.6,
+     "recover": 0.5,
+     "cooldown": 2.2,
+     "range": 26,
+     "muzzle": 2.4,
+     "spread": 2.0,
+     "lead": 0.3,
+     "sound": "spit"
+    }
+   ],
+   "makes": [
+    {
+     "actor": "roach",
+     "every": 12,
+     "max": 6,
+     "when": "fight"
+    }
+   ],
+   "drops": [
+    {
+     "item": "statuette",
+     "chance": 1.0
+    },
+    {
+     "item": "crystal",
+     "chance": 1.0
+    }
+   ],
+   "sounds": {
+    "alert": "growl",
+    "die": "squish"
+   },
+   "barks": [
+    "*the egg sac pulses*"
+   ],
+   "bark_color": [
+    0.6,
+    0.9,
+    0.3
+   ],
+   "talk": {
+    "greet": [
+     "*the egg sac pulses*",
+     "*a slow, wet clicking*"
+    ],
+    "idle": [
+     "*she grooms an egg*",
+     "*a low hum*"
+    ],
+    "hurt": [
+     "*SKREE*"
+    ],
+    "open": [
+     "She is the size of a delivery van and most of her is egg sac, pale and veined and moving faintly from inside. Her head turns to you, slow and enormous, and the clicking in her throat drops a register.\n\nShe is off duty. The children are not."
+    ],
+    "options": [
+     {
+      "label": "Admire the eggs",
+      "result": "The clicking softens. Something in the sac rolls over, as if to be seen."
+     },
+     {
+      "label": "Ask how many",
+      "result": "She looks at you for a long time and does not answer. You get the feeling the number is going up."
+     }
+    ]
+   }
   }
  }
 }

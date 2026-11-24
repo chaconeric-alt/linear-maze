@@ -77,6 +77,14 @@ func give_weapon(id: String) -> void:
 	equip(weapons.size() - 1)
 
 
+## Something takes ammunition from the gun in hand (a latcher's theft): up to n of its kind, none if it takes none.
+func spend_ammo(n: int) -> void:
+	var kind: Variant = weapon().get("ammo") if not weapons.is_empty() else null
+	if kind != null:
+		ammo[kind] = maxi(0, int(ammo.get(kind, 0)) - n)
+		Game.changed.emit()
+
+
 func add_ammo(kind: String, n: int) -> bool:
 	var mx: int = int(LM.defs.get("ammo", {}).get(kind, {}).get("max", 999))
 	if ammo.get(kind, 0) >= mx:

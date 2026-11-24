@@ -32,9 +32,9 @@ func setup(actor: Actor) -> void:
 	d = actor.d
 
 
-## An attack is under way.
+## An attack is under way (its own, or one of ActorMoves').
 func busy() -> bool:
-	return _atk != null
+	return _atk != null or (a.moves != null and a.moves.busy())
 
 
 ## It has hold of somebody.
@@ -59,6 +59,8 @@ func cool(dt: float) -> void:
 func drop_attack() -> void:
 	_atk = null
 	_leap = false
+	if a.moves:
+		a.moves.stop()
 
 
 ## Forget the attack it was in (sent to show what it does).
@@ -92,13 +94,15 @@ func tick(dt: float, pl: Node3D, to: Vector3, flat: Vector3, dist: float) -> boo
 	if _grab_t > 0.0:                                # it has hold of them
 		_grab_tick(dt, pl)
 		return false
+	if a.moves and a.moves.busy():                   # a beam, a latch, a charge, a burst
+		return a.moves.tick(dt, pl, to, flat, dist)
 	if _atk != null and _atk.get("type", "") == "pounce":
 		_pounce_tick(dt, pl, to, dist)
 		return false
 	if _atk != null:
 		return _under_way(dt, pl, flat, dist)
 	_choose(pl, to, dist)
-	return not (_atk != null and _atk.get("type", "") == "pounce")
+	return not (_atk != null and _atk.get("type", "") == "pounce") and not (a.moves and a.moves.busy())
 
 
 ## Wind up, strike (a turret holds the shot until its gun is on them), recover.
@@ -156,6 +160,10 @@ func _choose(pl: Node3D, to: Vector3, dist: float) -> void:
 
 
 func _begin(at: Dictionary, i: int) -> void:
+	if ActorMoves.KINDS.has(at.get("type", "")):
+		_cool[i] = at.get("cooldown", 3.0) * randf_range(0.85, 1.2)
+		a.moves.begin(at)
+		return
 	_atk = at
 	_atk_t = 0.0
 	_atk_hold = 0.0
@@ -184,11 +192,20 @@ func _strike(pl: Node3D, dist: float) -> void:
 			_atk_done = true
 			LM.sound(at.get("sound", "swing"), a.global_position)
 			if dist <= at.get("range", 2.0) + 0.7 and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.0, 0)):
-				pl.hurt(at.get("damage", 10.0), {"type": at.get("kind", "melee"), "from": a.global_position, "by": a, "knock": at.get("knock", 3.0)})
+				pl.hurt(at.get("damage", 10.0), _hit_info(at, {"type": at.get("kind", "melee"), "from": a.global_position, "by": a, "knock": at.get("knock", 3.0)}))
 		"grapple":
 			_grapple(at, pl, dist)
 		"ranged":
 			_shoot(at, pl)
+
+
+## A blow's hurt: what it leaves behind ("afflict"), and the health a drinker ("drain": a share of the blow) takes back.
+func _hit_info(at: Dictionary, info: Dictionary) -> Dictionary:
+	if at.has("afflict"):
+		info["afflict"] = at["afflict"]
+	if d.has("drain"):
+		a.hp = minf(a.max_hp, a.hp + float(at.get("damage", 10.0)) * float(d["drain"]))
+	return info
 
 
 func _grapple(at: Dictionary, pl: Node3D, dist: float) -> void:
@@ -258,7 +275,7 @@ func _pounce_tick(dt: float, pl: Node3D, to: Vector3, dist: float) -> void:
 		a.vis.rotation.x = clamp(-atan2(a.velocity.y, hv.length()) * 0.6, -0.7, 0.7)
 	if not _leap_hit and a.global_position.distance_to(pl.global_position + Vector3(0, 0.8, 0)) < d.get("radius", 0.5) + 1.1:
 		_leap_hit = true
-		pl.hurt(at.get("damage", 12.0), {"type": at.get("kind", "melee"), "from": a.global_position, "by": a, "knock": at.get("knock", 6.0)})
+		pl.hurt(at.get("damage", 12.0), _hit_info(at, {"type": at.get("kind", "melee"), "from": a.global_position, "by": a, "knock": at.get("knock", 6.0)}))
 		LM.sound(at.get("hit_sound", "bite"), a.global_position)
 		a.velocity.x *= 0.2
 		a.velocity.z *= 0.2

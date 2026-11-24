@@ -27,6 +27,7 @@ func register(reg: EffectRegistry) -> void:
 	reg.register("enable", enable)
 	reg.register("disable", enable)
 	reg.register("make_safe", make_safe)
+	reg.register("cloud", cloud)
 
 
 func _tagged(ef: Dictionary) -> Array:
@@ -163,3 +164,13 @@ func make_safe(ef: Dictionary, _ctx: Dictionary) -> void:
 	for k in also:
 		State.mark_safe(str(k))
 	Events.emit("level.safe", {"level": State.level_key, "also": also.duplicate()})
+
+
+## A cloud that hangs for a while and hurts whoever breathes it (Cloud): where the thing that ran it is, or the player.
+func cloud(ef: Dictionary, ctx: Dictionary) -> void:
+	var at: Vector3 = Game.player.global_position
+	if ctx.get("at") is Vector3:
+		at = ctx["at"]
+	elif ctx.get("prop") is Node3D and is_instance_valid(ctx["prop"]):
+		at = ctx["prop"].global_position
+	Cloud.make(level, at, ef)

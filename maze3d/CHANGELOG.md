@@ -2,6 +2,39 @@
 
 What changed and when, newest first. The reference for how things are now is `SPEC.md`; how to work on the code is `CLAUDE.md`.
 
+## 2026-11-24
+
+- **The danger-zone monsters' pieces, and the two sets' own monsters** (the third of the dressing doc's suggestions; SPEC 3.1, 3.2, 3.3, 4.10, 4.13, 5.5, 5.21, 5.23, 7, 9). Ten new monsters (and the Bloodfly's two smaller clouds) are data. Each is built from shared pieces any monster can use. They wear stand-in models until their own are made (the next step).
+  - **Afflictions** (`engine/afflictions.gd`, the game's `afflictions`). A hit can carry `"afflict": {"burn": 3}`. Burning (6 a second, fire) and Poisoned (3 a second) hurt over their time. Stunned holds the player (they cannot move or shoot) or a monster. A body that takes none of a kind is not afflicted by it. Attacks, projectiles and clouds can all afflict.
+  - **Armour by side** (`sides`; `ActorWounds`). The Bailiff's shield takes a tenth from the front. The Rattleback's and the Matron's backs take double.
+  - **Splitting, drinking, fearing the lamp** (`split`, `drain`, `fears_light`; `ActorWounds`). A Bloodfly cloud hurt past half comes apart into two smaller clouds, and those come apart again. Each heals by half of what it bites. The player's lamp turned on it scatters it, and it keeps fleeing for 1.5 s after.
+  - **Four new moves** (`ActorMoves`): `beam`, `latch`, `charge` and `burst`.
+    - **Beam** (the Auditor): an aiming line for 2 s, then a 55-point shot. Breaking its sight spoils it.
+    - **Latch** (the Garnisher): it clamps on in front of the face and takes credits or ammunition. Killed, it drops what it took as chips.
+    - **Charge** (the Rattleback): a bellow, then a run it cannot steer. It smashes furniture in its way and stuns itself on a wall, its back to the room.
+    - **Burst** (the Sporecap): it bursts into a cloud and is gone.
+  - **Making things in a fight** (`makes`; `ActorBrood`). The Matron gives birth to roaches as she fights. The Foreclosure Unit lays mines as it walks. The Sporecap sheds sporelings when hurt.
+  - **Sealing doors** (`seals_doors`; `ActorBrood`). The Foreclosure Unit seals the unlocked doors near it as the fight starts, and they open again when it dies. It remembers them, so a save made mid-fight still opens them.
+  - **Cloak** (`cloak`; `ActorCloak`). The Shroud Stalker hunts as a shimmer the map does not show. It clicks when near, and shows itself while it strikes, when hurt and up close.
+  - **Clouds** (`Cloud`, `engine/cloud.gd`, and the effect `cloud`): a cloud that hangs and hurts whoever breathes it, sparing whom it is told to.
+  - **Projectiles' `life`**: a flame is a short puff (`flame`, the Liquidator's, which sets you alight). The Matron spits `acid_glob`, which leaves a pool.
+  - **The monsters:**
+    - The Collections Division: the Bailiff, the Auditor, Garnishers (let out by a dispenser, `garnisher_dispenser`, a danger set's new `extra`), the Foreclosure Unit, and the Liquidator as its keeper.
+    - The Overgrowth: Bloodfly clouds, Sporecaps, the Shroud Stalker, the Rattleback, and the Brood Matron as its keeper.
+    - Each has off-duty talk for Staff Only.
+    - The danger sets now use them in place of the stand-ins.
+  - **The Pen** (`pen`, `tools/levels/pen.py`, its own test). A bare arena where each piece is seen to work, one monster at a time. It is in the baseline (now 28 runs).
+  - **Fixes found on the way:**
+    - A flyer ducking under a trap could take its origin more than 0.9 m under the floor and count as on the storey below; now it stays within 0.8 m (`ActorWary`).
+    - A dead flyer's origin landed under the floor for the same reason (`ActorRemains`).
+    - A Maker with a model made its monsters inside the machine (`Maker`).
+  - **Checks that changed, said plainly:**
+    - The duel time a monster is allowed counts the armour it shows the player: its front, for one with armour by side (`actors_test`).
+    - The Collections Office's "keeper and alarm in the same room" check now tells the alarm from the dispenser by its model.
+    - Staff Only places the danger monsters after the others, standing still at the quiet south end of the spine, so every monster already there stands where it stood and walks where it walked. A Sporecap's target stands in the cell beside it.
+    - The trap check (`trap_victims`) now also runs on generated levels where the new monsters leave something alive (a Sporecap's sporelings, the Matron's brood). A danger zone's traps spare its own monsters, so it checks them both ways: with the sparing lifted, that they hurt a monster at all, and with it, that they spare it.
+    - The dead-flyer fix moves where some bodies rest, which shifts the later fights in two runs (the Anomalous Structure, the basilica theme). Every check still passes.
+
 ## 2026-11-23
 
 - **Danger zones** (the second of the dressing doc's suggestions, with today's monsters standing in; SPEC 4.5, 4.10, 4.13, 5.8, 6.2, 6.3, 7, 9). A danger zone is an optional part of a level behind a sealed door, about three times as dangerous and as rich, with one sure prize. The player chooses whether to go in.

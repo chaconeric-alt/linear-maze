@@ -14,6 +14,10 @@ extends CharacterBody3D
 ##   ActorConversation  what it says, and the panel when you talk to it   engine/actor/conversation.gd
 ##   ActorFoes          whom it fights, when not just the player (factions) engine/actor/foes.gd
 ##   ActorPatrol        walking a beat (the entry's "patrol")              engine/actor/patrol.gd
+##   ActorWounds        armour by side, splitting, fearing light           engine/actor/wounds.gd
+##   ActorMoves         beam, latch, charge, burst                         engine/actor/moves.gd
+##   ActorBrood         what it makes, doors it seals, while it fights     engine/actor/brood.gd
+##   ActorCloak         a shimmer while it hunts ("cloak")                 engine/actor/cloak.gd
 ## Who it is after is target(): the player, or, with factions at war in the level, what ActorFoes picks.
 class_name ActorCore
 
@@ -49,6 +53,11 @@ var od: ActorOffDuty
 var talker: ActorConversation
 var foes: ActorFoes               # factions at war in the level, or not at war with the player
 var patrol: ActorPatrol
+var wounds: ActorWounds           # armour by side, splitting, fearing light
+var moves: ActorMoves             # beam, latch, charge, burst
+var brood: ActorBrood             # what it makes and the doors it seals while it fights
+var cloak: ActorCloak
+var afflictions: Afflictions      # burning, poisoned, stunned: added the first time it is
 # shared state the components read and write
 var surf := 0                     # 0 floor · 1 on a wall · 2 on the ceiling · 3 falling off · 4 on foot, heading for a wall
 var wall_n := Vector3.ZERO        # the wall's normal, pointing into the room
@@ -146,6 +155,14 @@ func _components() -> void:
 		foes = _add(ActorFoes.new())
 	if e.has("patrol"):
 		patrol = _add(ActorPatrol.new())
+	if ActorWounds.wanted(d):
+		wounds = _add(ActorWounds.new())
+	if ActorMoves.wanted(d):
+		moves = _add(ActorMoves.new())
+	if d.has("makes") or d.get("seals_doors", false):
+		brood = _add(ActorBrood.new())
+	if d.has("cloak"):
+		cloak = _add(ActorCloak.new())
 
 
 func _add(c: Node) -> Node:
@@ -172,32 +189,10 @@ func meshes() -> Array:
 	return _meshes
 
 
-## Play one of its clips (by our name; the def's "clips" maps it to the model's). Idle is whatever it does instead: a
-## lounge, standing dormant, swimming. False if the model has no such clip.
+## Play one of its clips (by our name; the def's "clips" maps it to the model's): ActorClips. False if the model has
+## no such clip.
 func _play(clip: String, speed := 1.0, loop := false) -> bool:
-	if anim == null:
-		return false
-	anim.speed_scale = 1.0
-	if clip == "idle" and not awake and not dead:
-		if lounge and lounge.active():
-			clip = lounge.clip()                     # off duty
-			loop = true
-		elif d.has("dormant_clip") and not roused:
-			clip = d["dormant_clip"]                 # things that stand switched off until you are close
-			loop = true
-	if move.wet and d.has("swim") and (clip == "walk" or clip == "idle") and not dead:
-		clip = d["swim"].get("clip", "swim")         # in fluid it swims, moving or not
-		loop = true
-		if speed < 0.6:
-			speed = 0.6
-	var nm: String = d.get("clips", {}).get(clip, clip)
-	if not anim.has_animation(nm):
-		return false
-	if loop or clip == "idle" or clip == "walk":     # clips made elsewhere rarely say that they loop
-		anim.get_animation(nm).loop_mode = Animation.LOOP_LINEAR
-	if anim.current_animation != nm or not anim.is_playing():
-		anim.play(nm, 0.15, speed)
-	return true
+	return ActorClips.play(self, clip, speed, loop)
 
 
 func play(clip: String, speed := 1.0, loop := false) -> bool:
@@ -352,8 +347,9 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 	if dead:
 		return
 	amount *= DamageTypes.taken(d.get("takes", {}), str(info.get("type", "")))
-	amount *= (1.0 - d.get("armor", 0.0))
+	amount *= 1.0 - (wounds.armor(info) if wounds else d.get("armor", 0.0))     # by the side it is hit on, or plain
 	hp -= amount
+	Afflictions.on_hurt(self, info)
 	if foes:
 		foes.hurt_by(info.get("by"))
 	if not awake:
@@ -374,6 +370,14 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 	if hp <= 0.0:
 		_die(info)
 		return
+	if wounds:
+		wounds.after_hurt()                          # it may come apart
+	if brood:
+		brood.hurt()                                 # it may shed young
+	if cloak:
+		cloak.hurt()                                 # it shows itself a moment
+	if dead:
+		return
 	LM.sound(d.get("sounds", {}).get("hurt", "hit"), global_position, -3.0)
 	if not attacking() and amount > max_hp * 0.12:
 		_play("hurt")
@@ -387,5 +391,9 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 
 
 func _die(info: Dictionary) -> void:
+	if moves:
+		moves.on_death()
+	if brood:
+		brood.on_death()
 	remains = _add(ActorRemains.new())
 	remains.die(info)

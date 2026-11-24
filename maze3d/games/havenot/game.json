@@ -60,7 +60,8 @@
   "levels/blueprint.json",
   "levels/blueprint2.json",
   "levels/warlord_1.json",
-  "levels/collections.json"
+  "levels/collections.json",
+  "levels/pen.json"
  ],
  "stand_ins": {
   "chair_plain": ["ht_chair_ops"],
@@ -82,7 +83,13 @@
   "signals_desk": ["terminal_desk"],
   "typewriter_desk": ["hm_desk", "ex_desk", "terminal_desk"],
   "cell_cot": ["hm_bed", "bk_bunk", "crate"],
-  "dead_scavenger": ["an_body", "debris"]
+  "dead_scavenger": ["an_body", "debris"],
+  "garnisher_dispenser": ["mp_vendor", "fabricator"]
+ },
+ "afflictions": {
+  "burn": {"name": "Burning", "dps": 6, "kind": "fire", "color": [1.0, 0.5, 0.1], "text": "You're on fire!"},
+  "poison": {"name": "Poisoned", "dps": 3, "kind": "poison", "color": [0.55, 0.9, 0.2], "text": "Poisoned!"},
+  "stun": {"name": "Stunned", "stun": true, "color": [1.0, 0.9, 0.4], "text": "Stunned! You can't move!"}
  },
  "generators": [
   "rooms"

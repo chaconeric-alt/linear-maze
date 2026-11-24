@@ -102,6 +102,10 @@ func _shrink() -> void:
 	ball.radius = 0.15
 	ball.height = 0.3
 	a.cs.shape = ball
+	if bottom > 0.0:                         # a flyer's body hovered above its origin: the origin goes up to the body
+		a.global_position.y += bottom        # (the model staying where it is), so that it lands on the floor with the
+		a.vis.position.y -= bottom           # body and not under it, where it would count as on the storey below
+		bottom = 0.0
 	a.cs.position.y = bottom + 0.15
 
 

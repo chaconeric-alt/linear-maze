@@ -82,7 +82,7 @@ func _inside() -> void:
 	var monsters := things.filter(func(t: Dictionary) -> bool: return set_ids.has(t.get("actor", "")))
 	var traps := things.filter(func(t: Dictionary) -> bool: return trap_ids.has(t.get("trap", "")))
 	var keeper := things.filter(func(t: Dictionary) -> bool: return t.get("tag", "") == ZID + "_keeper" and t.get("actor") == ds["keeper"]["actor"])
-	var makers := things.filter(func(t: Dictionary) -> bool: return t.has("maker") and t.get("zone") == ZID and t.get("when") == ZID + "_open" and t.get("off") == ZID + "_clear")
+	var makers := things.filter(func(t: Dictionary) -> bool: return t.has("maker") and t.get("model") == ds["maker"]["model"] and t.get("zone") == ZID and t.get("when") == ZID + "_open" and t.get("off") == ZID + "_clear")
 	var prize := things.any(func(t: Dictionary) -> bool: return ds["prizes"].any(func(p: Array) -> bool: return p[0] == t.get("item", "")))
 	var deep := not keeper.is_empty() and not makers.is_empty() and level.room_at(Vector2i(keeper[0]["at"][0], keeper[0]["at"][1])) == level.room_at(Vector2i(makers[0]["at"][0], makers[0]["at"][1]))
 	var lit: Array = level.zones().light(ZID)

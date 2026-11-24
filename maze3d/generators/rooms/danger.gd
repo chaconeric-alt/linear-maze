@@ -156,6 +156,7 @@ static func _inside(ctx: GenContext, ds: Dictionary, cells: Array, rng: RandomNu
 	if kp.has("actor"):
 		want.append({"actor": kp["actor"], "tag": ZONE + "_keeper", "hp_mul": float(kp.get("hp_mul", 1.0))})
 	want.append(ProgrammeDanger.maker(ds, ZONE))
+	want += ProgrammeDanger.extras(ds, ZONE)
 	var prizes: Array = ds.get("prizes", [])
 	if not prizes.is_empty():
 		var pz: Variant = prizes[rng.randi() % prizes.size()]

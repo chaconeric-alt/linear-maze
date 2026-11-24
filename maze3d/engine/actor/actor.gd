@@ -55,6 +55,8 @@ func remember() -> Dictionary:
 		r["yaw"] = rotation.y
 	if not off_duty and bool(e.get("off_duty", level.data.get("off_duty", false))):
 		r["angry"] = true
+	if brood and not brood.sealed.is_empty():
+		r["sealed"] = brood.sealed.duplicate()       # the doors it sealed, opened again when it dies
 	return r
 
 
@@ -70,6 +72,8 @@ func recall(r: Dictionary) -> void:
 		if level.open_s(c.x, c.y, floori((p.y + 1.0) / level.H)):
 			global_position = p
 			rotation.y = float(r.get("yaw", rotation.y))
+	if brood and r.has("sealed"):
+		brood.sealed = r["sealed"].duplicate()
 	if r.get("angry", false) and off_duty:
 		off_duty = false
 		od.stop()

@@ -14,6 +14,7 @@ const LEAD := 0.8           # seconds: a beam that comes on before a climber wou
 const STEP := 0.15          # metres between the heights a flyer tries
 const TRIES := 20           # heights tried each way: up to 3 m above and below
 const GIVE_UP := 4.0        # seconds a climber waits on a wall before it turns back
+const DEEPEST := 0.8        # metres a flyer's origin may go under the floor (see _fits)
 var a: Actor
 var d: Dictionary
 var lift := 0.0             # a hunting flyer: how far above the floor under it it is keeping, to clear a trap
@@ -127,11 +128,15 @@ func _clear_height(pos: Vector3, dir: Vector3, dist: float, lead: float) -> floa
 	return NAN
 
 
-## Would its body, with its origin at height y over `at`, be clear of the floor and the ceiling there?
+## Would its body, with its origin at height y over `at`, be clear of the floor and the ceiling there? Its origin
+## also stays less than DEEPEST under the floor, however small the body riding above it: which storey a thing is on is
+## told from its origin (a storey's band starts 0.9 below its floor), so a drone that ducked any lower to pass under a
+## beam would count as on the storey below.
 func _fits(at: Vector3, y: float) -> bool:
 	var cap := a.cs.shape as CapsuleShape3D
 	var mid: float = a.cs.global_position.y - a.global_position.y + y
 	var half: float = cap.height / 2.0 if cap else float(d.get("height", 1.6)) / 2.0
 	var c := a.level.cell_of(at)
 	var top: float = a.level.ceiling_y(c.x, c.y, a.move.storey())
-	return mid - half > a.level.floor_y(Vector3(at.x, a.global_position.y, at.z)) + 0.05 and mid + half < top - 0.1
+	var ground: float = a.level.floor_y(Vector3(at.x, a.global_position.y, at.z))
+	return mid - half > ground + 0.05 and mid + half < top - 0.1 and y > ground - DEEPEST

@@ -2820,6 +2820,61 @@
     "text": "Pick somebody. The nearest one of that kind that is free walks to the range, shows what it does for a few seconds, and goes back to where it was.\n\nYou can also ask any of them yourself (E).",
     "options": [
      {
+      "label": "Call Auditor",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "auditor",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
+      "label": "Call Bailiff",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "bailiff",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
+      "label": "Call Bloodfly Cloud",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "bloodfly",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
+      "label": "Call Bloodfly Cloud",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "bloodfly_mite",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
+      "label": "Call Bloodfly Cloud",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "bloodfly_small",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
       "label": "Call Custodian",
       "effects": [
        {
@@ -2886,22 +2941,22 @@
       "result": "Called. Give it a moment to walk here."
      },
      {
-      "label": "Call Fouler",
+      "label": "Call Foreclosure Unit",
       "effects": [
        {
         "type": "drill",
-        "actor": "fouler",
+        "actor": "foreclosure",
         "tag": "range"
        }
       ],
       "result": "Called. Give it a moment to walk here."
      },
      {
-      "label": "Call Glorexx",
+      "label": "Call Fouler",
       "effects": [
        {
         "type": "drill",
-        "actor": "glorexx",
+        "actor": "fouler",
         "tag": "range"
        }
       ],
@@ -2942,6 +2997,28 @@
     "text": "Pick somebody. The nearest one of that kind that is free walks to the range, shows what it does for a few seconds, and goes back to where it was.\n\nYou can also ask any of them yourself (E).",
     "options": [
      {
+      "label": "Call Garnisher",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "garnisher",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
+      "label": "Call Glorexx",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "glorexx",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
       "label": "Call Hammerhead Gallumper",
       "effects": [
        {
@@ -2958,6 +3035,28 @@
        {
         "type": "drill",
         "actor": "heavy",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
+      "label": "Call The Liquidator",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "liquidator",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
+      "label": "Call Brood Matron",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "matron",
         "tag": "range"
        }
       ],
@@ -3008,11 +3107,33 @@
       "result": "Called. Give it a moment to walk here."
      },
      {
+      "label": "Call Rattleback",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "rattleback",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
       "label": "Call Gladiator Roach",
       "effects": [
        {
         "type": "drill",
         "actor": "roach",
+        "tag": "range"
+       }
+      ],
+      "result": "Called. Give it a moment to walk here."
+     },
+     {
+      "label": "Call Shroud Stalker",
+      "effects": [
+       {
+        "type": "drill",
+        "actor": "stalker",
         "tag": "range"
        }
       ],
@@ -6074,6 +6195,111 @@
     13
    ],
    "face": "e"
+  },
+  {
+   "actor": "auditor",
+   "at": [
+    34,
+    63
+   ],
+   "still": true
+  },
+  {
+   "actor": "bailiff",
+   "at": [
+    35,
+    63
+   ],
+   "still": true
+  },
+  {
+   "actor": "bloodfly",
+   "at": [
+    34,
+    65
+   ],
+   "still": true
+  },
+  {
+   "actor": "bloodfly_mite",
+   "at": [
+    35,
+    65
+   ],
+   "still": true
+  },
+  {
+   "actor": "bloodfly_small",
+   "at": [
+    34,
+    67
+   ],
+   "still": true
+  },
+  {
+   "actor": "foreclosure",
+   "at": [
+    35,
+    67
+   ],
+   "still": true
+  },
+  {
+   "actor": "garnisher",
+   "at": [
+    34,
+    69
+   ],
+   "still": true
+  },
+  {
+   "actor": "liquidator",
+   "at": [
+    35,
+    69
+   ],
+   "still": true
+  },
+  {
+   "actor": "matron",
+   "at": [
+    34,
+    72
+   ],
+   "still": true
+  },
+  {
+   "actor": "rattleback",
+   "at": [
+    35,
+    72
+   ],
+   "still": true
+  },
+  {
+   "target": "spot",
+   "at": [
+    35,
+    74
+   ],
+   "face": "w"
+  },
+  {
+   "actor": "sporecap",
+   "at": [
+    34,
+    74
+   ],
+   "face": "e",
+   "still": true
+  },
+  {
+   "actor": "stalker",
+   "at": [
+    34,
+    76
+   ],
+   "still": true
   }
  ],
  "objectives": [

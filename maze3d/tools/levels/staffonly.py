@@ -70,6 +70,30 @@ USES = {
 }
 SEATS = {'terminal_desk': 'ht_chair_ops', 'holo_table': 'ht_chair_throne'}       # a chair that goes with a work station
 
+
+def danger_monsters():
+    """The danger zones' own monsters (defs/danger.json: a set's monsters, keeper and the makers among its extras, and
+    what any of them splits into), less any with a home above. They stand still at the quiet south end of the spine,
+    past the others' spots and clear of the walks the self-test makes, and are placed after them, so a new one changes
+    nothing for the monsters already here (nor which flyer a self-test part finds first)."""
+    sets = load(GAME, 'defs', 'danger.json')['danger']
+    ids = []
+    for ds in sets.values():
+        ids += [m[0] if isinstance(m, list) else m for m in ds.get('monsters', [])]
+        ids += [ds['keeper']['actor']] if 'actor' in ds.get('keeper', {}) else []
+        for x in ds.get('extra', []):
+            ids += x.get('maker', []) if isinstance(x.get('maker'), list) else ([x['maker']] if 'maker' in x else [])
+    more = list(ids)
+    while more:
+        sp = actors.get(more.pop(), {}).get('split', {})
+        if sp.get('into') and sp['into'] not in ids:
+            ids.append(sp['into'])
+            more.append(sp['into'])
+    return sorted(i for i in set(ids) if i in actors and i not in HOMES)
+
+
+DANGER = danger_monsters()
+
 # ------------------------------------------------------------------ the plan: a spine, and wings in bands off it
 RW = 32                         # cells of rooms in a wing
 SX = RW + 2                     # the spine: two columns, with a wall between it and the rooms either side
@@ -429,21 +453,40 @@ if vault_free:
 hx, hy = wing_x(order.index('hightech') % 2), band_y(order.index('hightech') // 2)
 actor('sphinx', hx, hy + 7, face='e', still=True)           # at the dead end of the hightech hall, looking down it
 target(hx + 4, hy + 7, 'w')
-for aid in sorted(actors):
+settled = sorted(a for a in actors if a not in DANGER)
+# The danger monsters' spots: the spine's rows south of the others' spots, walled both sides (no hall crosses there),
+# every other row, two to a row; one whose target stands beside it has a row to itself.
+quiet = [y for y in range(BAND + 6 + 5 * 9 + 3, Hh - 1) if g0[y][SX] != '#' and g0[y][SX - 1] == '#' and g0[y][SX + 2] == '#']
+rows = []
+for y in quiet:
+    if not rows or y - rows[-1] >= 2:
+        rows.append(y)
+quiet = rows
+danger_spots, slot = {}, 0
+for aid in DANGER:
+    own = actors[aid].get('behavior') == 'turret'
+    slot += 1 if own and slot % 2 else 0
+    danger_spots[aid] = (SX + slot % 2, quiet[slot // 2])
+    slot += 2 if own else 1
+for aid in settled + DANGER:
     if aid in ('monoid', 'roach', 'glorexx', 'snapper', 'fouler', 'sphinx'):
         continue                                  # placed with their rooms above
     home = HOMES.get(aid, 'SPINE')
-    if home == 'SPINE' or home not in wander_spots or not wander_spots[home]:
-        spot = (SX + (len(actors_used) % 2), BAND + 6 + 5 * (sorted(actors).index(aid) % 10))
+    if aid in DANGER:
+        spot = danger_spots[aid]
+    elif home == 'SPINE' or home not in wander_spots or not wander_spots[home]:
+        spot = (SX + (len(actors_used) % 2), BAND + 6 + 5 * (settled.index(aid) % 10))
     else:
         spot = wander_spots[home].pop(0)
     more = {}
     d = actors[aid]
     if d.get('behavior') == 'turret' or d.get('mount'):          # it cannot go to the range: it gets a target where it is
-        tx = spot[0] + 3 if g0[spot[1]][min(W - 1, spot[0] + 3)] != '#' else spot[0] - 3
+        burst = any(a.get('type') == 'burst' for a in d.get('attacks', []))      # a burst reaches only the cell beside it
+        step = 1 if burst else 3
+        tx = spot[0] + step if g0[spot[1]][min(W - 1, spot[0] + step)] != '#' else spot[0] - step
         target(tx, spot[1], 'w' if tx > spot[0] else 'e')
         more['face'] = 'e' if tx > spot[0] else 'w'
-    if aid == 'princess':
+    if aid == 'princess' or aid in DANGER:
         more['still'] = True
     if d.get('lounge'):
         more['lounge'] = 'none'                   # this one is up and about; the loungers are in the break room

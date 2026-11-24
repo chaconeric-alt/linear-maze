@@ -3,7 +3,8 @@ extends SelfTestPart
 ## floor, that it has everything). Each actor is let out of its station or knocked off its wall, and fought from a spot
 ## with a clear line to it, moving to another spot when the line is lost or no shot has landed for two seconds. A fight
 ## may last 900 frames, or three times as long as the weapon would take to kill it if every shot hit, whichever is
-## longer: a tough monster (the Princess: 650 health and armour) gets the time a player would need. Known to be
+## longer: a tough monster (the Princess: 650 health and armour; the Bailiff's shield, shot at from the front) gets
+## the time a player would need. Known to be
 ## flaky: a fleeing monster can still outlast the limit, and there is sometimes no spot to stand in a tight corner.
 ## A weapon whose blast hurts the one who fires it (the rocket launcher: "self" in its projectile's "blast") is left
 ## out: these fights are fought up close, and it has its own test on the Proving Range (range_test.gd).
@@ -76,11 +77,13 @@ func run() -> void:
 
 
 ## Frames a fight may take: 900, or three times what the weapon in hand needs to kill it if every shot hits
-## (its damage, pellets and rate against the monster's health, armour and what it takes from that kind of shot).
+## (its damage, pellets and rate against the monster's health, armour and what it takes from that kind of shot). One
+## with armour by side is fought from in front, so its front's armour is the one that counts.
 func _time_allowed(a: Actor) -> int:
 	var w: Dictionary = pl.weapon()
 	var per_second: float = w.get("damage", 10.0) * w.get("pellets", 1) * w.get("rate", 4.0) * Game.deal_scale()
-	per_second *= a.d.get("takes", {}).get(w.get("kind", "bullet"), 1.0) * (1.0 - a.d.get("armor", 0.0))
+	var armour: float = a.d.get("sides", {}).get("front", a.d.get("armor", 0.0))     # it keeps its front to the one fighting it
+	per_second *= a.d.get("takes", {}).get(w.get("kind", "bullet"), 1.0) * (1.0 - armour)
 	if per_second <= 0.0:
 		return 900
 	return maxi(900, ceili(3.0 * a.hp / per_second * 60.0))

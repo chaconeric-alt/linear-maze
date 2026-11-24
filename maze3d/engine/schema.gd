@@ -12,7 +12,8 @@ const ACTOR := ["name", "model", "kit", "scale", "robot", "hp", "armor", "takes"
 	"height", "center", "eye", "fly", "mount", "still", "sight", "hearing", "wake_sight", "behavior", "keep", "attacks",
 	"flee_below", "flee_text", "barks", "bark_color", "drops", "explode", "sounds", "blood", "clips", "walk_rate",
 	"footfall", "dormant_clip", "startle_time", "startle_text", "lounge", "climb", "aim", "screen", "gait", "bob", "swim",
-	"own_materials", "model_yaw", "model_y", "jelly", "touch", "equalizer", "dance", "trail", "talk", "faction"]
+	"own_materials", "model_yaw", "model_y", "jelly", "touch", "equalizer", "dance", "trail", "talk", "faction",
+	"sides", "split", "fears_light", "makes", "cloak", "drain", "stolen_item", "seals_doors"]
 const ITEM := ["name", "kind", "value", "amount", "ammo", "color", "weapon", "model", "kit", "scale", "glow", "sound",
 	"effects", "flag", "text", "trophy", "bulk", "wear", "capacity", "slots"]
 const INSTALLATION := ["name", "text", "levels", "entrances"]
@@ -26,7 +27,7 @@ const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", 
 const PROG_LIFTS := ["count", "travel", "start", "lock"]
 const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows", "floor_fill", "crammed"]   # defs "purposes" (furnishing a room for its use)
 const DANGER := ["name", "kicker", "sign", "title", "notice", "open", "opened", "leave", "need", "note", "enter", "clear",
-	"color", "light", "seal", "monsters", "per_room", "keeper", "traps", "traps_per_room", "trap_ignore", "maker", "loot",
+	"color", "light", "seal", "monsters", "per_room", "keeper", "traps", "traps_per_room", "trap_ignore", "maker", "extra", "loot",
 	"treasure", "prizes"]                                          # defs "danger": a danger zone's set (SPEC.md 4.13)
 const PIECE := ["piece", "seat", "around", "chairs", "foot", "turn", "count", "side_by_side", "per_cell"]   # a purpose's piece written out
 const PROG_SPINE := ["gap"]

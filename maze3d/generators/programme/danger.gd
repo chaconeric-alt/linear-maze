@@ -66,6 +66,7 @@ static func _things(ds: Dictionary, rng: RandomNumberGenerator, zid: String, dee
 		if kp.has("actor"):
 			out.append({"actor": kp["actor"], "tag": zid + "_keeper", "hp_mul": float(kp.get("hp_mul", 1.0))})
 		out.append(ProgrammeDanger.maker(ds, zid))
+		out += ProgrammeDanger.extras(ds, zid)
 		var prizes: Array = ds.get("prizes", [])
 		if not prizes.is_empty():
 			var pz: Variant = prizes[rng.randi() % prizes.size()]
@@ -100,6 +101,21 @@ static func maker(ds: Dictionary, zid: String) -> Dictionary:
 		if mk.has(k):
 			e[k] = mk[k]
 	return e
+
+
+## The set's "extra" things, put in with the keeper: a list of thing entries (a Garnisher dispenser is a maker of
+## its own). A maker among them works as the zone's does: only while the player is in the zone, once the seal is
+## broken, until the keeper dies.
+static func extras(ds: Dictionary, zid: String) -> Array:
+	var out: Array = []
+	for x in ds.get("extra", []):
+		var e: Dictionary = x.duplicate(true)
+		if e.has("maker"):
+			e["zone"] = zid
+			e["when"] = zid + "_open"
+			e["off"] = zid + "_clear"
+		out.append(e)
+	return out
 
 
 ## One of a weighted list ([[id, weight], ...] or plain ids).

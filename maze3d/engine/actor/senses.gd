@@ -23,7 +23,7 @@ func look(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 		return
 	_see_t = 0.2
 	var clear: bool = a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0))
-	if clear and not a.seen and dist < 46.0 and pl == Game.player:      # the player has laid eyes on it (the map)
+	if clear and not a.seen and dist < 46.0 and pl == Game.player and (a.cloak == null or a.cloak.showing()):      # the player has laid eyes on it (the map); a shimmer is not seen
 		var pf := Vector3(-sin(pl.rotation.y), 0, -cos(pl.rotation.y))
 		if dist < 3.0 or pf.dot(-flat.normalized()) > 0.45:
 			a.seen = true

@@ -101,9 +101,13 @@ func make_one() -> Actor:
 	return a
 
 
-## Its own cell if nothing stands on it, else the first open one beside it.
+## Its own cell if nothing stands on it, else the first open one beside it. One with a model (a fabricator, a
+## dispenser) stands on its own cell itself, so what it makes comes out beside it: made inside the machine, a small
+## flyer was pushed out through the floor.
 func _free_cell() -> Vector2i:
 	for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		if d == Vector2i.ZERO and e.has("model"):
+			continue
 		var c: Vector2i = cell_pos + d
 		if level.open_s(c.x, c.y, storey) and not _crowded(c):
 			return c

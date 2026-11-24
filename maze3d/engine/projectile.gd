@@ -20,6 +20,7 @@ static func launch(lv: Level, id: String, from: Vector3, dir: Vector3, dmg: floa
 	p.by = owner_node
 	p.from_player = player_shot
 	p.vel = dir.normalized() * p.d.get("speed", 24.0)
+	p._life = p.d.get("life", 4.0)                  # a flame is a short puff; a bolt flies until it hits something
 	lv.add_child(p)
 	p.global_position = from
 	var c := LM.col(p.d.get("color"), Color(0.3, 0.9, 1.0))
@@ -69,5 +70,8 @@ func _physics_process(dt: float) -> void:
 		LM.sound("hit", pos, -6.0)
 	var col: Object = hit["collider"]
 	if col and col.has_method("hurt"):
-		col.hurt(damage, {"type": d.get("kind", "energy"), "from": global_position, "by": by, "point": pos})
+		var info := {"type": d.get("kind", "energy"), "from": global_position, "by": by, "point": pos}
+		if d.has("afflict"):                          # (a flame, a spit of acid: what it leaves behind)
+			info["afflict"] = d["afflict"]
+		col.hurt(damage, info)
 	queue_free()
