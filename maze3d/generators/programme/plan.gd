@@ -79,7 +79,8 @@ func _wing(w: Dictionary, n: int) -> void:
 	if side == "any":
 		side = "n" if rng.randi() % 2 == 0 else "s"
 	var wing := {"id": id, "name": w.get("name", id), "style": w.get("style", ""), "corridor": w.get("corridor", ""),
-		"after": after, "side": side, "west": [], "east": [], "door": bool(w.get("door", false))}
+		"after": after, "side": side, "west": [], "east": [], "danger": str(w.get("danger", "")),
+		"door": bool(w.get("door", false)) or str(w.get("danger", "")) != ""}       # a danger zone is behind a door
 	for r in w.get("rooms", []):
 		var rid := str(r.get("id", ""))
 		if r.has("chance") and rng.randf() >= float(r["chance"]):

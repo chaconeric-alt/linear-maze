@@ -4,7 +4,8 @@ extends RefCounted
 ##
 ## What a level entry makes is decided by its kind, and each kind is a factory registered here (register_kind): the
 ## first kind whose test matches the entry makes it. The order is the precedence: {"station": .., "actor": ..} is a
-## station (with its robot in it), not a loose actor; {"trap": "pit"} is a pit, any other "trap" a trap. A new kind of
+## station (with its robot in it), not a loose actor; {"trap": "pit"} is a pit, {"trap": "collapse"} a floor that gives
+## way, any other "trap" a trap. A new kind of
 ## thing is a new factory, registered; spawn_thing does not change. SPEC.md, "Levels".
 ##
 ## Every thing gets a key (plan(), Level.key_of) from where it comes from in the level's data, the same on every load
@@ -27,8 +28,10 @@ func _init(lv: Level, data: LevelData) -> void:
 	register_kind("start", _has("start"), _start)
 	register_kind("lift", _has("lift"), _lift)
 	register_kind("pit", func(e: Dictionary) -> bool: return e.get("trap", "") == "pit", _pit)
+	register_kind("collapse", func(e: Dictionary) -> bool: return e.get("trap", "") == "collapse", _collapse)
 	register_kind("target", _has("target"), _target)
 	register_kind("station", _has("station"), _station)
+	register_kind("maker", _has("maker"), _maker)
 	register_kind("actor", _has("actor"), _actor)
 	register_kind("prop", _has("prop"), _prop)
 	register_kind("item", _has("item"), _item)
@@ -241,6 +244,23 @@ func _pit(e: Dictionary, p: Vector2i, s: int, _pos: Vector3) -> Node3D:
 	pt.position = ld.center(p, s * ld.H)
 	pt.setup(level, e, p, s)
 	return pt
+
+
+## Something that makes monsters while the level is played (engine/maker.gd).
+func _maker(e: Dictionary, p: Vector2i, _s: int, pos: Vector3) -> Node3D:
+	var mk := Maker.new()
+	level.add_child(mk)
+	mk.position = pos
+	mk.setup(level, e, p, ld.kit_id)
+	return mk
+
+
+func _collapse(e: Dictionary, p: Vector2i, s: int, _pos: Vector3) -> Node3D:
+	var cl := Collapse.new()
+	level.add_child(cl)
+	cl.position = ld.center(p, s * ld.H)
+	cl.setup(level, e, p, s)
+	return cl
 
 
 ## Something for off-duty monsters (and the player) to hit.

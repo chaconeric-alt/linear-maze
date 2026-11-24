@@ -31,6 +31,7 @@ var start_level := 0
 var start_yaw := 0.0
 var arrivals: Dictionary = {}    # name -> {"cell", "level", "yaw"}: the named ways in ({"start": "<name>"}), where travel arrives
 var hung: Dictionary = {}        # Vector4i(x, y, storey, side): a wall face with a sign or a wall-mounted prop on it, or furniture against it
+var zones: LevelZones            # the level's "zones": places marked out apart (a danger zone)
 var rng := RandomNumberGenerator.new()      # one stream for everything the build picks, so a level always comes out the same
 
 
@@ -41,6 +42,7 @@ func _init(level_data: Dictionary) -> void:
 	C = kit.get("cell", 4.0)
 	H = kit.get("height", 4.0)
 	rng.seed = hash(data.get("id", "level")) + int(data.get("seed", 0))
+	zones = LevelZones.new(data)
 
 
 # ------------------------------------------------------------------ reading the map
@@ -79,9 +81,9 @@ func _shaping_thing(e: Dictionary, x: int, y: int) -> void:
 				blank["void"] = false
 				blank["f"] = f
 				floors[f][y * w + x] = blank
-	elif e.get("trap", "") == "pit":
+	elif e.get("trap", "") == "pit" or e.get("trap", "") == "collapse":       # (a collapse digs its own shaft)
 		var s := int(e.get("level", 0))
-		if is_open(x, y, s) and open_s(x, y, s - 1):
+		if is_open(x, y, s) and (open_s(x, y, s - 1) or e["trap"] == "collapse"):
 			cell(x, y, s)["pit"] = true
 		else:
 			push_warning("Level %s: pit at %s has no floor to open or nothing below it" % [data.get("id"), e["at"]])

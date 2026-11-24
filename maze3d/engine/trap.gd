@@ -1,5 +1,6 @@
 extends Node3D
-## Trap - a hazard built into a cell. What it does is its kind's (engine/traps/, made by make_kind); what every kind
+## Trap - a hazard built into a cell: a laser, darts, a shock floor, a gas vent; a crusher, a flame jet, a sweeping
+## laser, a mine, a spore pod. What it does is its kind's (engine/traps/, made by make_kind); what every kind
 ## shares is here: its entry, its clock, its light, who it spares, the measures of a body, and switching it off.
 ## Every one can be switched off by a story flag ("off": a flag, or a list of them) or a "disable" effect on its tag.
 ## It hurts whatever is in it, the player, monsters and robots alike, except those it is told to spare: "ignore":
@@ -57,6 +58,16 @@ static func make_kind(k: String, t: Trap) -> TrapKind:
 			return TrapShock.new(t)
 		"vent":
 			return TrapVent.new(t)
+		"crusher":
+			return TrapCrusher.new(t)
+		"flame":
+			return TrapFlame.new(t)
+		"sweep":
+			return TrapSweep.new(t)
+		"mine":
+			return TrapMine.new(t)
+		"spores":
+			return TrapSpores.new(t)
 	return TrapKind.new(t)
 
 

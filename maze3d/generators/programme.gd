@@ -9,7 +9,7 @@ extends RefCounted
 ## The steps, each in generators/programme/: ProgrammePlan reads the programme and makes every choice the seed makes;
 ## ProgrammeLayout lays the plan out (the spine, its rooms, the wings and their rooms, the doors); ProgrammeFill puts
 ## the start, the locks, the cards and the rooms' things in; ProgrammeFurnishing furnishes each room for its purpose;
-## ProgrammeCheck proves it can be finished. A seed whose
+## ProgrammeCheck proves it can be finished; ProgrammeDanger makes a wing written "danger" a danger zone. A seed whose
 ## level cannot be finished is tried again as the next (seed + 7919), as the rooms generator does, so the same seed
 ## still always gives the same level. On two floors (ProgrammeFloors) the lower floor's plan is drawn again, up to
 ## LOWER_TRIES times, for an upper floor whose tall rooms it gets in the way of, before the whole seed is given up.
@@ -78,6 +78,9 @@ static func attempt(level: Dictionary, seed_value: int) -> Dictionary:
 	var sunk := {}
 	for id in fl.sunken:
 		sunk[id] = -1
+	prog = ProgrammeDanger.expand(prog, top)           # danger wings: their locks, and what lives in them
+	if bot != null:
+		below = ProgrammeDanger.expand(below, bot)
 	var kit := str(level.get("kit", ""))
 	var fill := ProgrammeFill.new(lay, prog, {"reserve": fl.reserve_up, "storeys": sunk, "kit": kit})
 	var fill2: ProgrammeFill = ProgrammeFill.new(lay2, below, {"start": false, "storey": -1, "reserve": fl.reserve_lo,
@@ -88,6 +91,9 @@ static func attempt(level: Dictionary, seed_value: int) -> Dictionary:
 	var out := ProgrammeGen._assemble(level, seed_value, lay, fill, fl)
 	if bot != null:
 		ProgrammeGen._below(out, level, seed_value, lay, lay2, fill, fill2, fl)
+	ProgrammeDanger.finish(out, lay, 0)                # their thresholds, zones and triggers
+	if bot != null:
+		ProgrammeDanger.finish(out, lay2, -1)
 	var proof := ProgrammeCheck.solve(out)
 	if not proof["ok"]:
 		return {"problems": ["it cannot be finished (rooms not reached: %s; keys behind their own lock: %s)"

@@ -31,6 +31,11 @@ func make(spec: Dictionary, xf: Transform3D, room: String, flicker := 0.0, shado
 	l.distance_fade_shadow = 22.0
 	level.add_child(l)
 	l.position = xf * LM.vec(spec.get("at"))
+	var zc := ld.cell_of(l.position)
+	var zl: Array = ld.zones.light(ld.zones.at(zc.x, zc.y, ld.floor_of(l.position)))     # a zone's lights burn low and red
+	if zl[0] != 1.0:
+		l.light_energy *= zl[0]
+		l.light_color = l.light_color.lerp(zl[1], 0.6)
 	if not by_room.has(room):
 		by_room[room] = []
 	by_room[room].append(l)

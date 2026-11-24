@@ -1,0 +1,208 @@
+{
+ "id": "collections",
+ "name": "The Collections Office (a danger zone)",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "The Collections Office. Something in the vault is still collecting.",
+ "ambient_energy": 0.7,
+ "legend": {},
+ "programme": {
+  "spine": {
+   "gap": [
+    1,
+    2
+   ]
+  },
+  "rooms": [
+   {
+    "id": "foyer",
+    "name": "Foyer",
+    "style": "bunker_ops",
+    "size": [
+     4,
+     4
+    ],
+    "things": [
+     {
+      "item": "health"
+     }
+    ],
+    "purpose": "lift_lobby"
+   },
+   {
+    "id": "traps",
+    "name": "Trap Hall",
+    "style": "machine",
+    "size": [
+     [
+      7,
+      8
+     ],
+     5
+    ],
+    "things": [
+     {
+      "trap": "crusher",
+      "tag": "t_crusher"
+     },
+     {
+      "trap": "flame",
+      "tag": "t_flame"
+     },
+     {
+      "trap": "sweep",
+      "tag": "t_sweep"
+     },
+     {
+      "trap": "mine",
+      "tag": "t_mine"
+     },
+     {
+      "trap": "spores",
+      "tag": "t_spores"
+     },
+     {
+      "trap": "collapse",
+      "tag": "t_collapse"
+     }
+    ]
+   },
+   {
+    "id": "records",
+    "name": "Records Room",
+    "style": "storage",
+    "size": [
+     [
+      4,
+      5
+     ],
+     4
+    ],
+    "things": [
+     {
+      "actor": "roach",
+      "count": 2
+     }
+    ],
+    "purpose": "archive"
+   },
+   {
+    "id": "lobby",
+    "name": "Lobby",
+    "style": "machine",
+    "size": [
+     3,
+     5
+    ],
+    "things": [
+     {
+      "prop": "holo_table",
+      "blocks": false,
+      "tag": "way_out",
+      "use": {
+       "type": "effects",
+       "prompt": "Leave the Collections Office",
+       "effects": [
+        {
+         "type": "end",
+         "title": "Out of the Collections Office",
+         "text": "Whatever was repossessed in there, some of it is yours now."
+        }
+       ]
+      }
+     }
+    ],
+    "purpose": "lift_lobby"
+   }
+  ],
+  "wings": [
+   {
+    "id": "clerks",
+    "name": "Clerks' Wing",
+    "after": "foyer",
+    "side": "any",
+    "rooms": [
+     {
+      "id": "office",
+      "name": "Clerk's Office",
+      "style": "bunker_ops",
+      "size": [
+       [
+        3,
+        4
+       ],
+       3
+      ],
+      "things": [
+       {
+        "item": "crystal"
+       }
+      ],
+      "purpose": "office"
+     },
+     {
+      "id": "filing",
+      "name": "Filing Room",
+      "style": "storage",
+      "size": [
+       [
+        3,
+        4
+       ],
+       3
+      ],
+      "next_to": "office",
+      "purpose": "archive"
+     }
+    ]
+   },
+   {
+    "id": "vault",
+    "name": "Repossessed Property",
+    "after": "records",
+    "side": "any",
+    "danger": "collections",
+    "rooms": [
+     {
+      "id": "seized",
+      "name": "Seized Goods",
+      "style": "vault",
+      "size": [
+       5,
+       5
+      ],
+      "purpose": "quartermaster"
+     },
+     {
+      "id": "counting",
+      "name": "Counting Room",
+      "style": "vault",
+      "size": [
+       5,
+       5
+      ]
+     },
+     {
+      "id": "strongroom",
+      "name": "Strongroom",
+      "style": "vault",
+      "size": [
+       [
+        5,
+        6
+       ],
+       5
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "things": [],
+ "objectives": [
+  {
+   "text": "Leave by the lobby. The vault is optional, and dangerous."
+  }
+ ],
+ "triggers": []
+}

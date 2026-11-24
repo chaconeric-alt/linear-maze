@@ -3,7 +3,8 @@ extends Control
 ## ramps, balconies, pools, lifts and doors (in their lock's colour while locked), anything hostile you have seen as a
 ## red signal that pulses (faster and wider once it is hunting), what the character senses through walls (Sense,
 ## SPEC.md 5.22: monsters not yet seen as a dim orange ring, treasure as a gold dot), you as a white arrow, B1 / L0 /
-## L1 when the level has more than one floor, and SAFE once it has been made safe.
+## L1 when the level has more than one floor, SAFE once it has been made safe, and the outline of a zone (red, or
+## green once it is safe) round the cells of it seen.
 class_name HudMap
 
 const SMALL := Vector2(212, 212)
@@ -62,6 +63,32 @@ func _draw_cells(lv: Level, pl: Node3D, pf: int, s: float, pc: Vector2, mid: Vec
 			if at.x < 0 or at.y < 0 or at.x > size.x - s or at.y > size.y - s:
 				continue
 			draw_rect(Rect2(at, Vector2(s - 1, s - 1)), _cell_color(lv, p, pf))
+			var zid := lv.zone_at_cell(p, pf)
+			if zid != "":
+				_draw_zone_edges(lv, p, pf, zid, at, s)
+
+
+## A zone's outline (SPEC.md 4.13): a line on each side of a cell of it where the next cell is not in it.
+func _draw_zone_edges(lv: Level, p: Vector2i, pf: int, zid: String, at: Vector2, s: float) -> void:
+	var c := lv.zones().color(zid)
+	for side in HudMap.zone_sides(lv, p, pf):
+		var a: Vector2 = at + Vector2(0 if side != 1 else s - 1, 0 if side != 2 else s - 1)
+		var b: Vector2 = a + (Vector2(s - 1, 0) if side % 2 == 0 else Vector2(0, s - 1))
+		draw_line(a, b, c, 2.0)
+
+
+## Which sides of a cell (0 north, 1 east, 2 south, 3 west) are a zone's edge: the cell is in a zone and the one past
+## that side is not in the same one.
+static func zone_sides(lv: Level, p: Vector2i, pf: int) -> Array:
+	var zid := lv.zone_at_cell(p, pf)
+	var out: Array = []
+	if zid == "":
+		return out
+	for d in 4:
+		var q: Vector2i = p + [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)][d]
+		if lv.zone_at_cell(q, pf) != zid:
+			out.append(d)
+	return out
 
 
 func _cell_color(lv: Level, p: Vector2i, pf: int) -> Color:

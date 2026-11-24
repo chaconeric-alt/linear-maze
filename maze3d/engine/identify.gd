@@ -50,7 +50,7 @@ static func look(pl: Player) -> Dictionary:
 static func _owner_of(col: Object, lv: Level) -> Node:
 	var n := col as Node
 	while n != null and n != lv:
-		if n is Prop or n is Door or n is Actor or n is Pickup or n is Lift or n is Pit or n is Trap or n is Target:
+		if n is Prop or n is Door or n is Actor or n is Pickup or n is Lift or n is Pit or n is Collapse or n is Trap or n is Target:
 			return n
 		n = n.get_parent()
 	return null
@@ -135,6 +135,11 @@ static func _describe(n: Node, lv: Level) -> Dictionary:
 		title = _about_trap(n, lv, bits, ref)
 	elif n is Pit:
 		title = _about_pit(n, lv, bits, ref)
+	elif n is Collapse:
+		title = "Rotten floor"
+		ref.merge({"kind": "trap", "id": "collapse"})
+		bits.append("trap \"collapse\"")
+		bits.append("fallen in" if n.is_open() else "holding, for now")
 	elif n is Lift:
 		title = _about_lift(n, lv, bits, ref)
 	elif n is Puddle:

@@ -69,6 +69,8 @@ func _lock(lk: Dictionary, prog: Dictionary) -> void:
 	var letter: String = LOCK_LETTERS.get(color, "R")
 	if lk.has("flag"):
 		var entry := {"door": door, "flag": lk["flag"], "need": str(lk.get("need", ""))}
+		if lk.has("tag"):                              # (a danger zone's door: its triggers seal and open it)
+			entry["tag"] = str(lk["tag"])
 		letter = _flag_letter(entry)
 		legend[letter] = entry
 	else:

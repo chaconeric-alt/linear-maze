@@ -169,6 +169,20 @@ func room_at(p: Vector2i) -> String:
 	return ld.room_at(p)
 
 
+## The zone (SPEC.md 4.13) a place is in, or "": by position, or by cell and storey.
+func zone_at(pos: Vector3) -> String:
+	var c := ld.cell_of(pos)
+	return ld.zones.at(c.x, c.y, ld.floor_of(pos))
+
+
+func zone_at_cell(p: Vector2i, s: int) -> String:
+	return ld.zones.at(p.x, p.y, s)
+
+
+func zones() -> LevelZones:
+	return ld.zones
+
+
 func fluid_at(pos: Vector3) -> bool:
 	return ld.fluid_at(pos)
 

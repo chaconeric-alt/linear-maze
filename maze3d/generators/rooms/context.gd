@@ -51,6 +51,7 @@ var is_diag: Dictionary = {}
 var upstairs: Array = []          # [cell, level, unit]: places on a balcony where something could stand
 # contents
 var things: Array = []
+var zones: Array = []             # the level's "zones": a danger zone (generators/rooms/danger.gd)
 var used := {}
 var no_win := {}                  # walls with a container against them: no window there
 var no_door_up := {}              # nor, upstairs, a door

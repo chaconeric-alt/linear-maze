@@ -40,6 +40,7 @@ const Contents := preload("res://generators/rooms/contents.gd")
 const Hazards := preload("res://generators/rooms/hazards.gd")
 const Storeys := preload("res://generators/rooms/storeys.gd")
 const Stations := preload("res://generators/rooms/stations.gd")
+const Danger := preload("res://generators/rooms/danger.gd")
 
 
 func generate(seed_value: int, p: Dictionary) -> Dictionary:
@@ -79,6 +80,7 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	Storeys.storeys(ctx)                     # doors and rooms upstairs, the basement, lifts and pits
 	Stations.stations(ctx)                   # robots off duty into their stations; sphinx guns
 	_ambush(ctx)
+	Danger.zone(ctx)                         # a danger zone in a dead end, on numbers of its own: last of all
 	return _assemble(ctx)
 
 
@@ -115,6 +117,8 @@ func _assemble(ctx: GenContext) -> Dictionary:
 		"objectives": [{"text": "Find the RED card.", "done": "key_red"}, {"text": "Get through the vault door and signal the surface."}]}
 	if not ctx.storeys.is_empty():
 		out["floors"] = ctx.storeys
+	if not ctx.zones.is_empty():
+		out["zones"] = ctx.zones
 	if ctx.flooded:
 		out["fluid"] = p.get("fluid", {"level": 0.7, "color": [0.12, 0.55, 0.35, 0.6], "glow": 0.35})
 	return out

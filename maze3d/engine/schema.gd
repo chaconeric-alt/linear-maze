@@ -25,10 +25,13 @@ const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor",
 const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "bank_at", "below"]   # a level's written programme (SPEC.md 6.3)
 const PROG_LIFTS := ["count", "travel", "start", "lock"]
 const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows", "floor_fill", "crammed"]   # defs "purposes" (furnishing a room for its use)
+const DANGER := ["name", "kicker", "sign", "title", "notice", "open", "opened", "leave", "need", "note", "enter", "clear",
+	"color", "light", "seal", "monsters", "per_room", "keeper", "traps", "traps_per_room", "trap_ignore", "maker", "loot",
+	"treasure", "prizes"]                                          # defs "danger": a danger zone's set (SPEC.md 4.13)
 const PIECE := ["piece", "seat", "around", "chairs", "foot", "turn", "count", "side_by_side", "per_cell"]   # a purpose's piece written out
 const PROG_SPINE := ["gap"]
 const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts", "door_above"]
-const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms"]
+const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms", "danger"]
 const PROG_LOCK := ["room", "wing", "color", "card", "door", "flag", "need"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
@@ -38,6 +41,7 @@ const THING_KINDS := {
 	"lift": ["lift", "home", "speed", "color", "travel", "lock"],
 	"target": ["target"],
 	"station": ["station", "actor", "shut", "wake", "blocks"],
+	"maker": ["maker", "every", "zone", "when", "off", "max", "model", "say"],
 	"actor": ["actor", "still", "alert", "hp_mul", "on_death", "on_anger", "lounge", "perch", "off_duty", "talk", "provoke",
 		"roam", "greet", "faction", "patrol"],
 	"prop": ["prop", "use", "hp", "loot", "explode", "screen", "solid", "blocks", "lit", "turn", "seat", "seat_gap",
@@ -45,18 +49,19 @@ const THING_KINDS := {
 	"item": ["item", "y", "rest"],                     # and any item def key, to override it for this one
 	"rebuild": ["rebuild", "as"],
 	"trap": ["trap", "off", "phase", "ignore", "cycle", "heights", "damage", "axis", "period", "on", "color", "hear", "quiet",
-		"trip", "effects", "delay", "volleys", "interval", "cooldown"],
+		"trip", "effects", "delay", "volleys", "interval", "cooldown", "height", "radius", "blast", "cloud", "time"],
 	"sign": ["sign", "size", "color", "y", "out", "width", "plain"],
 	"light": ["light", "y", "flicker", "shadows"],
 }
 const PIT := ["trap", "delay", "damage"]
+const COLLAPSE := ["trap", "warn", "damage"]
 
 
 ## Problems with the defs the game loaded: "<kind> '<id>': unknown key '<k>' (did you mean '<j>'?)".
 static func check_defs(defs: Dictionary) -> Array:
 	var out: Array = []
 	for pair in [["weapons", WEAPON], ["actors", ACTOR], ["items", ITEM], ["installations", INSTALLATION],
-			["stats", STAT], ["skills", SKILL], ["origins", ORIGIN], ["mutations", MUTATION], ["purposes", PURPOSE]]:
+			["stats", STAT], ["skills", SKILL], ["origins", ORIGIN], ["mutations", MUTATION], ["purposes", PURPOSE], ["danger", DANGER]]:
 		for id in defs.get(pair[0], {}):
 			for k in defs[pair[0]][id]:
 				if k != "id" and not k in pair[1]:                # LM adds "id" itself
@@ -92,7 +97,7 @@ static func check_level(lv: Dictionary) -> Array:
 		if not e is Dictionary:
 			continue
 		var kind := thing_kind(e)
-		var valid: Array = THING + (PIT if kind == "pit" else THING_KINDS.get(kind, []))
+		var valid: Array = THING + (PIT if kind == "pit" else (COLLAPSE if kind == "collapse" else THING_KINDS.get(kind, [])))
 		if kind == "item":
 			valid = valid + ITEM
 		for k in e:
@@ -134,6 +139,8 @@ static func _check_programme(lv: Dictionary, entries: Array) -> Array:
 static func thing_kind(e: Dictionary) -> String:
 	if e.get("trap", "") == "pit":
 		return "pit"
+	if e.get("trap", "") == "collapse":
+		return "collapse"
 	for kind in THING_KINDS:
 		if e.has(kind):
 			return kind
@@ -152,8 +159,8 @@ static func undocumented(spec_text: String) -> Array:
 	for m in fence.search_all(spec_text):
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
-	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + STAT + SKILL + ORIGIN + MUTATION + GIVES \
-		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS
+	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + COLLAPSE + STAT + SKILL + ORIGIN + MUTATION + GIVES \
+		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS + DANGER
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

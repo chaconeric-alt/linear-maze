@@ -1,6 +1,6 @@
 extends RefCounted
 ## Triggers - a level's "triggers": [{"on": {"type": "enter", "tag": "hall"}, "do": [effects], "once": true,
-## "when": flag, "unless": flag}], and what sets them off: the player entering a tagged cell or a room, a flag being
+## "when": flag, "unless": flag}], and what sets them off: the player entering a tagged cell, a room or a zone, a flag being
 ## set, a thing being used or walked through or picked up (Level.notify), the last of a tagged group dying ("clear"),
 ## or an event on the bus ("event": {"type": "event", "name": "actor.died", "kind": "drone"} goes off when that event
 ## is emitted with every other key of "on" in its payload, at the same value).
@@ -15,6 +15,7 @@ var _rooms_seen: Dictionary = {} # index in rooms -> true: its name has been sho
 var _last_cell := Vector2i(-99, -99)
 var _last_floor := 0
 var _last_room := ""
+var _last_zone := ""
 
 
 func _init(lv: Level, data: LevelData) -> void:
@@ -113,6 +114,11 @@ func track(pl: Node3D) -> void:
 	var c := ld.cell(pc.x, pc.y, pf)
 	if c["tag"] != "":
 		fire("enter", c["tag"])
+	var z := ld.zones.at(pc.x, pc.y, pf)
+	if z != _last_zone:
+		_last_zone = z
+		if z != "":
+			fire("zone", z)
 	if c["room"] != _last_room:
 		_last_room = c["room"]
 		if _last_room != "":

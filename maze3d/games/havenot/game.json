@@ -41,7 +41,8 @@
   "defs/home.json",
   "defs/installations.json",
   "defs/character.json",
-  "defs/purposes.json"
+  "defs/purposes.json",
+  "defs/danger.json"
  ],
  "levels": [
   "levels/home.json",
@@ -58,7 +59,8 @@
   "levels/range.json",
   "levels/blueprint.json",
   "levels/blueprint2.json",
-  "levels/warlord_1.json"
+  "levels/warlord_1.json",
+  "levels/collections.json"
  ],
  "stand_ins": {
   "chair_plain": ["ht_chair_ops"],
@@ -79,13 +81,15 @@
   "pin_board": ["an_whiteboard", "terminal_wall"],
   "signals_desk": ["terminal_desk"],
   "typewriter_desk": ["hm_desk", "ex_desk", "terminal_desk"],
-  "cell_cot": ["hm_bed", "bk_bunk", "crate"]
+  "cell_cot": ["hm_bed", "bk_bunk", "crate"],
+  "dead_scavenger": ["an_body", "debris"]
  },
  "generators": [
   "rooms"
  ],
  "generator_params": {
   "kit": "agency",
+  "danger": {"chance": 0.5, "sets": ["collections", "overgrowth"]},
   "styles": [
    "lab",
    "machine",
@@ -331,7 +335,8 @@
   "range",
   "blueprint",
   "blueprint2",
-  "warlord"
+  "warlord",
+  "collections"
  ],
  "character": {"base": 3, "min": 1, "max": 7, "skill_points": 3, "sense_reach": 7,
   "names": ["Dusty", "Rook", "Juniper", "Sable", "Tamsin", "Cobb", "Wren", "Ash", "Marlow", "Vesper", "Kestrel", "Bram"]},
