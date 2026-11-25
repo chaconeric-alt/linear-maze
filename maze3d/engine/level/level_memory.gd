@@ -49,7 +49,7 @@ static func take(level: Level) -> Dictionary:
 			if not r.is_empty():
 				things[k] = r
 	return {"sig": sp.signature(), "things": things, "gone": gone.keys(), "extra": extra, "extra_n": sp.extra_n,
-		"triggers": level.triggers.remember() if level.triggers else {}, "left": State.day()}
+		"triggers": level.triggers.remember() if level.triggers else {}, "systems": level.systems.remember(), "left": State.day()}
 
 
 ## Before the level's things are made: wipe a memory of a level of another shape; let its makers catch up on the days
@@ -96,6 +96,7 @@ static func lay(level: Level, mem: Dictionary) -> void:
 			n.recall(things[k])
 	if level.triggers:
 		level.triggers.recall(mem.get("triggers", {}))
+	level.systems.recall(mem.get("systems", {}))
 
 
 ## A monster left standing in a working trap (one that would hurt it at some point in its cycle) is remembered at the

@@ -26,7 +26,7 @@ static func make(lv: Level, at: Vector3, spec: Dictionary) -> Cloud:
 func setup(lv: Level, spec: Dictionary) -> void:
 	level = lv
 	c = spec
-	left = float(spec.get("time", 6.0))
+	left = float(spec.get("time", 6.0)) * lv.systems.factor("clouds")      # the air: running, it clears sooner (LevelSystems)
 	var col := LM.col(spec.get("color"), Color(0.5, 0.9, 0.25))
 	var r := float(spec.get("radius", 2.5))
 	_parts = CPUParticles3D.new()

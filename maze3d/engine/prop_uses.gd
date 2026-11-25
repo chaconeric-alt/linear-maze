@@ -18,7 +18,11 @@ func register(reg: EffectRegistry) -> void:
 
 ## Something to read or work: the HUD's panel, with the block's text and options.
 func panel(u: Dictionary, ctx: Dictionary) -> bool:
-	Game.hud.open_panel(ctx["prop"], u)
+	var spec := u
+	if str(u.get("text", "")).contains("{sys:"):     # the level's systems' states, as they are now (LevelSystems.fill)
+		spec = u.duplicate()
+		spec["text"] = (ctx["prop"].level as Level).systems.fill(str(u["text"]))
+	Game.hud.open_panel(ctx["prop"], spec)
 	return true
 
 

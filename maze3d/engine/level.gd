@@ -53,6 +53,7 @@ var things_by_tag: Dictionary = {}
 var things: Dictionary = {}      # key -> node: every thing by the key its place in the level's data gives it (Spawner.plan)
 var restocked: Array = []        # the keys of what its makers made again since the last visit (Restock)
 var actors: Array = []
+var systems: LevelSystems         # its power, security, air ... (LevelSystems): what needs them works only as they say
 var _dice: Dictionary = {}       # name -> its stream (dice)
 var targets: Array = []          # Targets (engine/target.gd)
 var traps: Array = []            # Traps (engine/trap.gd), for hazard()
@@ -109,6 +110,7 @@ func build(level_data: Dictionary, memory: Dictionary = {}) -> void:
 	tiles_at = builder.tiles_at
 	builder.make_bodies()
 	perception = LevelPerception.new(self)
+	systems = LevelSystems.new(self)
 	ld.hung = LevelHung.find(ld)
 	var homes := LevelWayHome.find(ld)
 	for on in homes:

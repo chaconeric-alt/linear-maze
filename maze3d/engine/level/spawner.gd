@@ -164,6 +164,8 @@ func _door(p: Vector2i, c: Dictionary) -> Door:
 	d.rotation.y = 0.0 if across else PI / 2
 	d.storey = f
 	d.setup(level, p, c["entry"], ld.kit_id)
+	if c["entry"].get("needs") is Dictionary:
+		level.systems.watch(d, c["entry"]["needs"])
 	if f == 0:
 		level.doors[p] = d
 	else:
@@ -214,6 +216,8 @@ func spawn_thing(e: Dictionary, p: Vector2i, key := "") -> Node3D:
 			if n != null:
 				_register(n, e.get("tag", ""))
 				_key(n, key)
+				if e.get("needs") is Dictionary:          # it works only while the level's systems say so
+					level.systems.watch(n, e["needs"])
 			return n
 	return null
 

@@ -28,6 +28,9 @@ var _check := 0.0
 var _told := false
 var _spark := 0.0
 var _max_delay := 0.0
+var working := true             # the level's systems let it move (its entry's "needs"): without them it stays as it is
+var _needs: Dictionary = {}
+var _dead_told := false
 
 
 var storey := 0                 # which floor it is on (set before setup)
@@ -43,6 +46,7 @@ func setup(lv: Level, p: Vector2i, entry: Dictionary, kit_id: String) -> void:
 	need = entry.get("need", "")
 	sealed = entry.get("sealed", false)
 	jammed = entry.get("jammed", false)
+	_needs = entry["needs"] if entry.get("needs") is Dictionary else {}
 	_mat = StandardMaterial3D.new()
 	_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	var inst := LM.spawn_model(kit_id, entry["door"], {"lock": _mat})
@@ -198,7 +202,10 @@ func _process(dt: float) -> void:
 		if flag != null and lock == "" and not sealed and Game.has_flag(flag):
 			flag = null
 			_refresh()
-		target = 1.0 if (held or _someone_near()) else 0.0
+		if working:
+			target = 1.0 if (held or _someone_near()) else 0.0
+		else:
+			_refuse()
 		if target != was:
 			LM.sound(meta.get("sound", "door_slide"), global_position, -4.0, 0.7 if jammed else 1.0)
 	if t == target:
@@ -212,6 +219,24 @@ func _process(dt: float) -> void:
 			Fx.sparks(level, global_position + Vector3(randf_range(-1.2, 1.2), randf_range(0.3, 3.0), 0).rotated(Vector3.UP, rotation.y), Color(1.0, 0.8, 0.4), 6, 4.0)
 	t = move_toward(t, target, dt * speed)
 	_pose()
+
+
+## The level's systems let it move, or not (LevelSystems): without them it stays as it is, shut or open.
+func set_working(on: bool) -> void:
+	working = on
+	_dead_told = false
+
+
+## Not working: the player who comes up to it is told why, once.
+func _refuse() -> void:
+	var pl := Game.player
+	if pl == null or not is_instance_valid(pl) or _dead_told:
+		return
+	if Vector2(pl.global_position.x - global_position.x, pl.global_position.z - global_position.z).length() < 3.0 \
+			and absf(pl.global_position.y - global_position.y) < 2.6 and t < 0.5:
+		_dead_told = true
+		LM.sound("denied", global_position)
+		Game.say(level.systems.refusal(_needs), "warn")
 
 
 ## Its parts where t (0 shut .. 1 open) puts them; passable past 0.55.

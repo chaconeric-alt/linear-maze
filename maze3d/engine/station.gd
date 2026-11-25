@@ -14,6 +14,7 @@ var _poll := 0.0
 var _opening := false
 var _front := 2.0
 var _away_t := 0.0
+var working := true               # the level's systems let it work (its entry's "needs"): without them it keeps its robot
 
 
 func setup(lv: Level, entry: Dictionary, kit: String) -> void:
@@ -72,9 +73,14 @@ func _process(dt: float) -> void:
 		release()
 
 
+## The level's systems let it work, or not (LevelSystems): unpowered, it keeps its robot in, whatever wakes it.
+func set_working(on: bool) -> void:
+	working = on
+
+
 ## Open up and switch the robot on. Called by the sensor, and by the robot itself when anything wakes it.
 func release() -> void:
-	if released:
+	if released or not working:
 		return
 	released = true
 	if _open >= 0.999:

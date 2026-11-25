@@ -8,6 +8,8 @@ extends RefCounted
 ##   "carrying": item id  (or a list: any one will do) it needs that with you: worn, in hand or in the pack (a cutting
 ##                        torch, a technician's kit). Without it, it says so ("missing", or "You need ...") and nothing
 ##                        happens. It is not used up. Asked first, before anything is paid or tried
+##   "needs": {system: state}  the level's systems must be so (LevelSystems: {"power": "on"}); without, it says what is
+##                        wrong ("No power.") and nothing happens. Asked first of all
 ##   "skill": {id: rank}  it needs that rank in that skill, or in any one of several ({"mechanics": 2}); without it, it
 ##                        says so ("missing", or "That needs Mechanics 2.") and nothing happens. Asked next
 ## Each is registered with the EffectRegistry as a gate (register_gate). `s` is the panel session (Game.interaction):
@@ -21,11 +23,20 @@ static func rolls() -> RandomNumberGenerator:
 
 
 func register(reg: EffectRegistry) -> void:
+	reg.register_gate("needs", systems)
 	reg.register_gate("carrying", carrying)
 	reg.register_gate("skill", skill)
 	reg.register_gate("cost", cost_check, cost_pay)
 	reg.register_gate("hack", hack)
 	reg.register_gate("risk", Callable(), risk)
+
+
+func systems(o: Dictionary, s: Object) -> bool:
+	if not (Game.level is Level) or (Game.level as Level).systems.ok(o["needs"]):
+		return true
+	LM.sound("denied")
+	s.show_panel("%s\n\n%s" % [s.panel_text(), o.get("missing", (Game.level as Level).systems.refusal(o["needs"]))])
+	return false
 
 
 func carrying(o: Dictionary, s: Object) -> bool:

@@ -29,10 +29,14 @@ var _lock: Variant = null         # flag(s), any one of which lets it run; null 
 var _need := ""
 var _told := false                # it has said what it needs to the rider standing on it now
 var _light: OmniLight3D
+var working := true               # the level's systems let it run (its entry's "needs"; LevelSystems)
+var _needs: Dictionary = {}
+var _dead_told := false
 
 
 func setup(lv: Level, e: Dictionary, p: Vector2i) -> void:
 	level = lv
+	_needs = e["needs"] if e.get("needs") is Dictionary else {}
 	var st: Array = (e["lift"] as Array).map(func(a): return int(a))
 	st.sort()
 	for s in st:
@@ -136,7 +140,7 @@ func _physics_process(dt: float) -> void:
 	var rel: Vector3 = pl.global_position - global_position
 	var inside: bool = absf(rel.x) < _half and absf(rel.z) < _half
 	var on: bool = inside and rel.y > -0.4 and rel.y < 1.6
-	if _locked(on):
+	if _locked(on) or _dead(on):
 		return
 	if going >= 0:
 		var ty: float = stops[going]
@@ -167,6 +171,25 @@ func _physics_process(dt: float) -> void:
 					return
 				dir = -dir
 			_go(at + dir)
+
+
+## The level's systems let it run, or not (LevelSystems). A lift moving when it stops stops where it is.
+func set_working(on: bool) -> void:
+	working = on
+
+
+## Not working: it stays put, and says why once to whoever steps on.
+func _dead(on: bool) -> bool:
+	if working:
+		_dead_told = false
+		return false
+	if on and not _dead_told:
+		_dead_told = true
+		LM.sound("denied", global_position)
+		Game.say(level.systems.refusal(_needs), "warn")
+	elif not on:
+		_dead_told = false
+	return true
 
 
 ## Is it held by its lock now (none of its flags set yet)?

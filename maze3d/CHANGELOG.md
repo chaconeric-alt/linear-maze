@@ -4,6 +4,23 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Level systems: power, security, air** (the generation review's build order, step 2 of 4: "shared systems, not isolated switches"; SPEC 4.5, 4.10, 4.12, 5.13, 5.25, 7, 9).
+  - **`LevelSystems`** (`engine/level/systems.gd`, `Level.systems`). A level's `systems` name which it has, the state each starts in, the rooms it serves and what happens as it comes to a state (`do`). The game's `systems` say what each kind is: HaveNot has
+    - `power`: off gives the emergency lights, low and red; or on;
+    - `security`: normal, alert (red light) or off;
+    - `air`: running, where a cloud clears in 0.4 of the time; or off, where it hangs 1.6 times as long.
+  - **What needs them.** A thing with `needs` works only while the systems are so, told now and at every change:
+    - a door stays as it is and says why ("No power.");
+    - a lift stays put;
+    - a station keeps its robot in, whatever wakes it;
+    - a trap or a maker is off;
+    - a terminal does not answer.
+    - A panel option's `needs` is a gate, and its label says what it needs ("[needs Main power ON]").
+  - **Changing them.** The `system` effect (`to`, or `next`) changes a state. It tells everything that needs the system, sets the lights of the rooms the system serves, says its line, sounds, emits `system.changed` and runs the level's `do`. The level's memory keeps the states. A terminal's words show `{sys:<name>}`.
+  - **Where it hooks in:** `Door`, `Lift` and `Station` each got a `set_working`. `Prop.prompt` and `use` refuse, saying why. `Cloud` lasts by the air. `Spawner` watches what needs a system. `LevelMemory` keeps the states, and `OptionGates` has the `needs` gate.
+  - **The Pumping Station** (`plant`, `tools/levels/plant.py`, the baseline's 30th run): a generator panel, a security panel, a Lab door and console that need power, a fabricator and a robot station that need it, a lift that needs it, a gas vent that needs the air and a laser that needs security. Its test (`plant_test.gd`) checks each of them both ways, the alarm security raises on alert, a cloud's life by the air, and the states kept across leaving and coming back.
+  - **Baseline item63:** 30 runs, 4024 checks, 0 failures. Every run that was there before is the same line for line (its own random streams: nothing in them moved); the Pumping Station adds 46.
+
 - **Random streams of their own** (the generation review's build order, step 1 of 4; Eric, 25 Nov: "let's do the first 4"; SPEC 4.13, 5.12, 6.1, 6.3).
   - **At play** (`Dice`, `engine/dice.gd`). Game code that decides anything now draws from a stream of its own, never the global `randf`:
     - each actor from `Actor.rng`, seeded by the Spawner from the run's seed, the level and its key;

@@ -28,6 +28,7 @@ func register(reg: EffectRegistry) -> void:
 	reg.register("disable", enable)
 	reg.register("make_safe", make_safe)
 	reg.register("cloud", cloud)
+	reg.register("system", system)
 
 
 func _tagged(ef: Dictionary) -> Array:
@@ -165,6 +166,16 @@ func make_safe(ef: Dictionary, _ctx: Dictionary) -> void:
 	for k in also:
 		State.mark_safe(str(k))
 	Events.emit("level.safe", {"level": State.level_key, "also": also.duplicate()})
+
+
+## {"type": "system", "system": "power", "to": "on"}: the level's system comes to that state; "next": true, to the
+## next of its states (a switch of two flips). LevelSystems.
+func system(ef: Dictionary, _ctx: Dictionary) -> void:
+	var n := str(ef.get("system", ""))
+	if ef.get("next", false):
+		level.systems.cycle(n)
+	else:
+		level.systems.set_state(n, str(ef.get("to", "")))
 
 
 ## A cloud that hangs for a while and hurts whoever breathes it (Cloud): where the thing that ran it is, or the player.

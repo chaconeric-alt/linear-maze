@@ -36,7 +36,10 @@ const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", 
 const PROG_LOCK := ["room", "wing", "color", "card", "door", "flag", "need"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
-const THING := ["at", "tag", "offset", "face", "level", "restock"]
+const THING := ["at", "tag", "offset", "face", "level", "restock", "needs"]
+const LEVEL_SYSTEM := ["start", "rooms", "do"]                   # a level's systems (SPEC.md 5.25)
+const SYSTEM := ["name", "states"]                               # the game's systems
+const SYSTEM_STATE := ["name", "say", "kind", "sound", "lights", "clouds", "refuse"]
 const THING_KINDS := {
 	"start": ["start"],
 	"lift": ["lift", "home", "speed", "color", "travel", "lock"],
@@ -94,6 +97,12 @@ static func check_level(lv: Dictionary) -> Array:
 	var legend: Dictionary = lv.get("objectLegend", {})
 	for ch in legend:
 		entries.append(legend[ch])
+	var systems: Dictionary = lv.get("systems", {})
+	for n in systems:
+		if systems[n] is Dictionary:
+			for k in systems[n]:
+				if not k in LEVEL_SYSTEM:
+					out.append("level '%s', system %s: %s" % [lv.get("id", "?"), n, _unknown(k, LEVEL_SYSTEM)])
 	for e in entries:
 		if not e is Dictionary:
 			continue
@@ -161,7 +170,7 @@ static func undocumented(spec_text: String) -> Array:
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
 	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + COLLAPSE + STAT + SKILL + ORIGIN + MUTATION + GIVES \
-		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS + DANGER
+		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS + DANGER + LEVEL_SYSTEM + SYSTEM + SYSTEM_STATE
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

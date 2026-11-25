@@ -265,6 +265,8 @@ func prompt() -> String:
 	var u: Dictionary = e.get("use", {})
 	if u.is_empty():
 		return ""
+	if e.get("needs") is Dictionary and not level.systems.ok(e["needs"]):
+		return u.get("prompt", "Use") + "  [" + level.systems.refusal(e["needs"]) + "]"
 	if u.get("once", u.get("type", "") in ["cache", "locker"]) and used > 0:
 		return ""
 	if u.has("when") and not Game.has_flag(u["when"]):
@@ -278,6 +280,10 @@ func use(_player: Node) -> void:
 		return
 	if u.has("when") and not Game.has_flag(u["when"]):
 		Game.say(u.get("locked", "Nothing happens."), "warn")
+		LM.sound("denied", global_position)
+		return
+	if e.get("needs") is Dictionary and not level.systems.ok(e["needs"]):      # it needs the level's systems (LevelSystems)
+		Game.say(level.systems.refusal(e["needs"]), "warn")
 		LM.sound("denied", global_position)
 		return
 	if not Game.effects.use(u.get("type", "effects"), u, {"prop": self, "player": _player}):      # engine/prop_uses.gd

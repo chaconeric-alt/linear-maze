@@ -64,7 +64,8 @@
   "levels/warlord_1.json",
   "levels/collections.json",
   "levels/pen.json",
-  "levels/perception.json"
+  "levels/perception.json",
+  "levels/plant.json"
  ],
  "stand_ins": {
   "chair_plain": ["ht_chair_ops"],
@@ -1712,5 +1713,19 @@
  "hacking": {
   "base": 0.1,
   "per_level": 0.05
+ },
+ "systems": {
+  "power": {"name": "Main power", "states": {
+   "off": {"name": "OFF", "say": "Main power is down. Emergency lighting only.", "kind": "warn", "sound": "denied",
+           "lights": {"energy": 0.15, "color": [1.0, 0.3, 0.2]}, "refuse": "No power."},
+   "on": {"name": "ON", "say": "Main power restored. Please resume being productive.", "kind": "good", "sound": "confirm"}}},
+  "security": {"name": "Security", "states": {
+   "normal": {"name": "NORMAL", "say": "Security standing by.", "refuse": "Security is not on alert."},
+   "alert": {"name": "ALERT", "say": "SECURITY ALERT. Intruder courtesy protocols engaged.", "kind": "warn", "sound": "alarm",
+             "lights": {"color": [1.0, 0.15, 0.1]}},
+   "off": {"name": "OFFLINE", "say": "Security offline. Nobody is watching. Probably.", "kind": "good", "refuse": "Security is offline."}}},
+  "air": {"name": "Ventilation", "states": {
+   "on": {"name": "RUNNING", "say": "Ventilation running.", "clouds": 0.4},
+   "off": {"name": "OFF", "say": "Ventilation off. The air goes still.", "kind": "warn", "clouds": 1.6, "refuse": "The air is not running."}}}
  }
 }

@@ -84,6 +84,8 @@ func offered(final := false) -> Array:
 			lab += "   [needs %s]" % Carrying.names(OptionGates.needs(o))
 		if o.has("skill"):                               # and one that needs a skill, how much
 			lab += "   [%s]" % OptionGates.skill_names(o)
+		if o.get("needs") is Dictionary and Game.level is Level and not (Game.level as Level).systems.ok(o["needs"]):
+			lab += "   [needs %s]" % (Game.level as Level).systems.wanted(o["needs"])      # and one the systems stop
 		out.append([i, lab])
 	return out
 
