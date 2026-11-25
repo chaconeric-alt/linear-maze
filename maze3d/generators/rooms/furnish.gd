@@ -1,13 +1,16 @@
 extends RefCounted
 ## Furnish a room for its purpose (params "purposes": {style: [purpose, ..]}; one is picked per room):
-##   {"name": "Ward", "wall": [pieces], "floor": [pieces], "centre": [pieces], "corner": [ids], "fill": 0.5, "rows": true}
+##   {"name": "Ward", "wall": [pieces], "floor": [pieces], "centre": [pieces], "corner": [ids], "outside": piece,
+##    "fill": 0.5, "rows": true}
 ##   wall    pieces that stand against a wall, facing the room: on every other wall cell, up to `fill` of them
 ##   centre  one piece in the middle of a room of 20 cells or more (any size if it has a count), with a clear lap all round
 ##   floor   pieces out on the floor, never two side by side; with "rows" they all face the same way (seats, pews, beds)
 ##   corner  what goes in the corners (the old dressing); defaults to the theme's props
+##   outside the piece hung on the room's way out to the world (a vehicle bay's shutter): on the wall with the most
+##           rock behind it, nearest the middle of the room, its floor kept clear (furnish_put.gd rock_behind)
 ##   crammed a room meant to be crammed full (a store): a piece on every wall cell, pieces on the floor side by side,
 ##           and each stands in front of whatever the wall shows ("crammed" on the thing: elsewhere the level gives a
-##           wall something stands against its plain tile, LevelData.find_hung). The ways between doors stay clear.
+##           wall something stands against its plain tile, LevelHung). The ways between doors stay clear.
 ## A piece is a model id, ["station", "chair"] (the station where the piece would go and the chair in front of it,
 ## facing it: the level's "seat"; station depth + chair depth should come to under 3.3 m), or a dictionary:
 ##   {"piece": id, "seat": chair, "around": chair, "chairs": n, "foot": id, "turn": degrees,
@@ -37,6 +40,7 @@ static func furnish(ctx: GenContext, unit: int, cells: Array, pur: Dictionary, k
 	fp["kit"] = kit
 	fp["crammed"] = pur.get("crammed", false)
 	_centre(ctx, fp, cells, pur)
+	_outside(ctx, fp, pur)
 	_along_walls(ctx, fp, pur, amount)
 	_on_floor(ctx, fp, cells, pur, amount)
 	var placed: Array = fp["placed"]
@@ -119,6 +123,56 @@ static func _centre(ctx: GenContext, fp: Dictionary, cells: Array, pur: Dictiona
 		Put.put(ctx, fp, best, centre[ctx.rng.randi() % centre.size()], ctx.rng.randi() % 4, false)
 		for d in DIRS:
 			fp["keep"][best + d] = true
+
+
+## The room's way out to the world (a motor pool's vehicle shutter, two cells wide): hung on the wall with the most
+## rock behind it (one on the outside of the place if it has one), on the free wall cells nearest the room's middle,
+## with the floor in front of it kept clear. Nothing is drawn at random for it, so the rest of the room furnishes as it
+## would have without it.
+static func _outside(ctx: GenContext, fp: Dictionary, pur: Dictionary) -> void:
+	if not pur.has("outside"):
+		return
+	var pc := Put.piece(pur["outside"])
+	var cell := float(LM.kits.get(fp["kit"], {}).get("cell", 4.0))
+	var n := Put.span(LM.model_meta(fp["kit"], pc["piece"]), cell)
+	var edge: Dictionary = fp["edge"]
+	var best: Array = []
+	var most := -1
+	var near := INF
+	for c in edge:
+		var run := _wall_run(ctx, fp, c, n)
+		if run.is_empty():
+			continue
+		var rock: int = run.map(func(q: Vector2i) -> int: return Put.rock_behind(ctx.g, q, edge[c])).min()
+		var far := (Vector2(c) + Vector2(DIRS[(edge[c] + 1) % 4]) * (n - 1) / 2.0).distance_to(fp["sum"])
+		if rock > most or (rock == most and far < near):
+			best = run
+			most = rock
+			near = far
+	if best.is_empty():
+		return
+	var d: int = edge[best[0]]
+	Put.put(ctx, fp, best[0], pc, (d + 2) % 4, true)
+	var e: Dictionary = fp["placed"].back()[1]
+	e["blocks"] = false                               # hung on the wall, it leaves the floor in front of it to walk on
+	var side: Vector2i = DIRS[(d + 1) % 4]
+	if n > 1:                                         # centred on its cells, the first and those along from it
+		e["offset"] = [side.x * cell * (n - 1) / 2.0, 0, side.y * cell * (n - 1) / 2.0]
+	for q in best:
+		fp["taken_here"][q] = true
+		fp["keep"][q - DIRS[d]] = true
+
+
+## n free cells along one wall from c (c first, going clockwise round the room from it), or none.
+static func _wall_run(ctx: GenContext, fp: Dictionary, c: Vector2i, n: int) -> Array:
+	var d: int = fp["edge"][c]
+	var run: Array = []
+	for k in n:
+		var q: Vector2i = c + DIRS[(d + 1) % 4] * k
+		if fp["edge"].get(q, -1) != d or not Put.is_free(ctx, fp, q):
+			return []
+		run.append(q)
+	return run
 
 
 ## Along the walls: the counted pieces first, then every other wall cell (every one, crammed), up to `fill` of them.

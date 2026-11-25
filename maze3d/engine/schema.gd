@@ -25,7 +25,7 @@ const MUTATION := ["name", "text", "stats", "gives"]
 const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor", "lamp"]     # what the engine reads (CharacterSheet)
 const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "bank_at", "below"]   # a level's written programme (SPEC.md 6.3)
 const PROG_LIFTS := ["count", "travel", "start", "lock"]
-const PURPOSE := ["name", "wall", "floor", "centre", "corner", "fill", "rows", "floor_fill", "crammed"]   # defs "purposes" (furnishing a room for its use)
+const PURPOSE := ["name", "wall", "floor", "centre", "corner", "outside", "fill", "rows", "floor_fill", "crammed"]   # defs "purposes" (furnishing a room for its use)
 const DANGER := ["name", "kicker", "sign", "title", "notice", "open", "opened", "leave", "need", "note", "enter", "clear",
 	"color", "light", "seal", "monsters", "per_room", "keeper", "traps", "traps_per_room", "trap_ignore", "maker", "extra", "loot",
 	"treasure", "prizes"]                                          # defs "danger": a danger zone's set (SPEC.md 4.13)

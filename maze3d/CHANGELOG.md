@@ -2,6 +2,20 @@
 
 What changed and when, newest first. The reference for how things are now is `SPEC.md`; how to work on the code is `CLAUDE.md`.
 
+## 2026-11-25
+
+- **Shutters to the outside world** (Eric: "in motor pools and blast doors, there should be large metal shutters representing the openings to the outside world"; SPEC 2.5, 6.2, 6.3, 7).
+  - **Two new Fittings models**, two cells wide (7.9 m) and 3.75 m tall so they fit any storey, hung on the wall, in `tools/blender/kits_fittings2.py`:
+    - `shutter_roller`: a vehicle bay's roller shutter, corrugated slats between hazard-striped jambs, the roll housing overhead, a control box, amber beacons (lit) and a line of daylight under it.
+    - `shutter_blast`: a blast door of two armoured leaves with ribs and bolts, a locking wheel at the seam, chevrons up the posts and red lamps (lit).
+  - **A purpose's `outside` piece.** The motor pool's is the roller shutter. It hangs on the wall with the most rock behind it: wall cells counted out from the room, and a wall whose rock runs to the map's edge (the outside of the place) beats any other. It takes as many free wall cells side by side as its width needs, nearest the room's middle. The floor in front is kept clear, and the shutter does not block that floor to monsters. Nothing is drawn at random for it, so the rest of a room furnishes exactly as before.
+  - **`"at": "outside"` for a programme's thing.** It is hung the same way: on cells not beside a door and with no prop on them yet (the spine's row is no bar to something on the wall).
+  - **The Warlord's blast door** is now the blast door model, not a console. It is hung on the gatehouse's outside wall, behind where the player starts, and keeps its use ("Leave by the blast door").
+  - **Plain wall behind a wide piece.** The plain wall behind something hung (`LevelHung`) now covers every cell its width and offset reach, not only its own.
+  - **Staff Only's Fittings room** gives each shutter two cells.
+  - **Two moves first, so the files stayed in budget.** How a piece is put in moved from `generators/rooms/furnish.gd` to `furnish_put.gd`. The walls things hang on moved from `engine/level/level_data.gd` to `level_hung.gd` (`LevelHung`). Neither move changed anything: gen22, bunker, blueprint2 and hospital gave the same check lines, word for word.
+  - No check changed.
+
 ## 2026-11-24
 
 - **The Fittings kit: the first tier of furniture** (the fifth of the dressing doc's suggestions; SPEC 2.5, 6.3, 7). The plain pieces a room needs to read as what it is, code-built in `tools/blender/kits_fittings.py` and `kits_fittings2.py`, in their own materials.

@@ -221,6 +221,56 @@
    ],
    "type": "prop"
   },
+  "shutter_blast": {
+   "light": {
+    "at": [
+     0,
+     3.2,
+     0.9
+    ],
+    "color": [
+     1.0,
+     0.2,
+     0.15
+    ],
+    "energy": 0.8,
+    "range": 6.0
+   },
+   "model": "models/shutter_blast.glb",
+   "mount": "wall",
+   "name": "Blast Door",
+   "solid": [
+    7.9,
+    3.75,
+    0.55
+   ],
+   "type": "prop"
+  },
+  "shutter_roller": {
+   "light": {
+    "at": [
+     3.45,
+     3.5,
+     0.7
+    ],
+    "color": [
+     1.0,
+     0.6,
+     0.2
+    ],
+    "energy": 0.6,
+    "range": 5.0
+   },
+   "model": "models/shutter_roller.glb",
+   "mount": "wall",
+   "name": "Vehicle Bay Shutter",
+   "solid": [
+    7.9,
+    3.75,
+    0.5
+   ],
+   "type": "prop"
+  },
   "signals_desk": {
    "model": "models/signals_desk.glb",
    "name": "Signals Desk",

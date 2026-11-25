@@ -1,7 +1,8 @@
 """The Fittings kit, second half (kits_fittings.py has the first and the kit's materials): the medical pieces (a
 restraint chair, a wall of morgue drawers, an IV stand, a surgical lamp), the office and briefing pieces (a lectern, a
-projection screen, a pin board, a map table, a signals desk, a typewriter desk), the motor pool's vehicle and lift, and
-the danger zones' own (a dead scavenger at the threshold, a Garnisher dispenser). All face Blender's front view (-Y)."""
+projection screen, a pin board, a map table, a signals desk, a typewriter desk), the motor pool's vehicle and lift, the
+openings to the outside world (a vehicle bay's roller shutter, a blast door, each two cells wide), and the danger zones' own (a dead
+scavenger at the threshold, a Garnisher dispenser). All face Blender's front view (-Y)."""
 import math
 from mz import Mesh
 from kits_fittings import P, LAMP, legs4, FIT_MATS, PROPS_A
@@ -272,8 +273,76 @@ def garnisher_dispenser():
     return P(m, 'Garnisher Dispenser', (1.2, 2.3, 0.85), light=LAMP((0, -0.6, 1.85), 0.6, 4.0, (1.0, 0.2, 0.15)))
 
 
+# ---------------------------------------------------------------- openings to the outside world
+# Each is two cells wide (a cell is 4 m), hung on a wall with nothing beyond it, and short enough for any storey.
+OUT_W = 7.9
+
+
+def shutter_roller():
+    """A vehicle bay's roller shutter, the motor pool's way out to the world: a corrugated steel curtain between
+    hazard-striped jambs, its roll housing overhead, a control box on a jamb with its lamps, a warning beacon, a
+    stencilled plate, and a line of daylight under it."""
+    m = Mesh('shutter_roller')
+    h = OUT_W / 2
+    for s in (-1, 1):
+        m.box((0.24, 0.34, 3.5), at=(s * (h - 0.12), -0.17, 1.75), mat='hull_dark', bevel=0.02)    # the jambs
+        for k in range(7):
+            m.box((0.24, 0.02, 0.24), at=(s * (h - 0.12), -0.35, 0.25 + k * 0.48), rot=(0, 45, 0), mat='hazard')
+    m.box((OUT_W, 0.55, 0.5), at=(0, -0.27, 3.32), mat='hull_dark', bevel=0.04)                  # the roll housing
+    m.cyl(0.26, OUT_W - 0.4, at=(0, -0.32, 3.25), rot=(0, 90, 0), mat='trim', seg=12)
+    for k in range(15):                                                                           # the slats
+        z = 0.12 + k * 0.205
+        m.box((OUT_W - 0.48, 0.06, 0.19), at=(0, -0.12, z + 0.095), mat=('fit_steel', 'trim')[k % 2], bevel=0.015)
+    m.box((OUT_W - 0.48, 0.1, 0.1), at=(0, -0.13, 0.07), mat='rubber', bevel=0.02)               # its bottom bar
+    for x in (-1.9, 1.9):
+        m.box((0.36, 0.04, 0.06), at=(x, -0.19, 0.2), mat='fit_steel')                            # the handles
+    m.box((OUT_W - 0.7, 0.04, 0.025), at=(0, -0.2, 0.012), mat='glow_white')                      # daylight under it
+    m.box((0.2, 0.12, 0.42), at=(-(h - 0.12), -0.4, 1.4), mat='hazard', bevel=0.02)               # the control box
+    m.cyl(0.035, 0.03, at=(-(h - 0.12), -0.47, 1.5), rot=(90, 0, 0), mat='glow_green', seg=8)
+    m.cyl(0.035, 0.03, at=(-(h - 0.12), -0.47, 1.38), rot=(90, 0, 0), mat='glow_red', seg=8)
+    for x in (-(h - 0.5), h - 0.5):
+        m.cyl(0.09, 0.13, at=(x, -0.4, 3.66), mat='glow_amber', seg=10)                           # the beacons
+    m.box((2.2, 0.01, 0.3), at=(0, -0.155, 2.4), mat='fit_paper')                                 # VEHICLES ONLY plate
+    for k in range(9):
+        m.box((0.14, 0.012, 0.16), at=(-0.85 + k * 0.21, -0.16, 2.4), mat='hull_dark')
+    return P(m, 'Vehicle Bay Shutter', (OUT_W, 3.75, 0.5), mount='wall',
+             light=LAMP((h - 0.5, -0.7, 3.5), 0.6, 5.0, (1.0, 0.6, 0.2)))
+
+
+def shutter_blast():
+    """A blast door to the outside: two armoured leaves meeting in the middle under a massive frame, chevrons up its
+    posts, ribs and bolt heads, a locking wheel at the seam and red lamps either side. The gatehouse's way out."""
+    m = Mesh('shutter_blast')
+    h = OUT_W / 2
+    m.box((OUT_W, 0.42, 0.5), at=(0, -0.21, 3.5), mat='hull_dark', bevel=0.05)                   # the lintel
+    for s in (-1, 1):
+        m.box((0.34, 0.42, 3.75), at=(s * (h - 0.17), -0.21, 1.87), mat='hull_dark', bevel=0.05)  # the posts
+        for k in range(6):
+            m.prism([(-0.13, 0.0), (0.13, 0.0), (0.0, 0.22)], 0.02, at=(s * (h - 0.17), -0.43, 0.35 + k * 0.55), rot=(90, 0, 0), mat='hazard')
+        x0 = s * (h - 0.34) / 2                                                                    # a leaf
+        lw = h - 0.36
+        m.box((lw, 0.3, 3.24), at=(x0, -0.17, 1.62), mat='trim', bevel=0.03)
+        for k in range(5):
+            m.box((lw - 0.08, 0.06, 0.13), at=(x0, -0.35, 0.35 + k * 0.65), mat='fit_steel', bevel=0.01)
+        for k in range(3):
+            m.box((0.1, 0.05, 3.0), at=(x0 + (k - 1) * lw / 3, -0.34, 1.62), mat='fit_steel')
+        for bx in (-lw / 2 + 0.15, lw / 2 - 0.15):
+            for bz in (0.2, 1.62, 3.05):
+                m.cyl(0.055, 0.05, at=(x0 + bx, -0.34, bz), rot=(90, 0, 0), mat='hull_dark', seg=8)
+        m.cyl(0.14, 0.12, at=(s * (h - 0.17), -0.5, 3.25), rot=(90, 0, 0), mat='glow_red', seg=12)  # red lamps
+    m.box((0.05, 0.32, 3.24), at=(0, -0.18, 1.62), mat='hull_dark')                                # the seam
+    m.ring(0.45, 0.06, at=(0, -0.42, 1.6), rot=(90, 0, 0), mat='fit_steel', seg=24, tseg=6)       # the wheel
+    for k in range(4):
+        m.box((0.86, 0.05, 0.06), at=(0, -0.42, 1.6), rot=(0, k * 45, 0), mat='fit_steel')
+    m.cyl(0.1, 0.12, at=(0, -0.44, 1.6), rot=(90, 0, 0), mat='hull_dark', seg=10)
+    m.box((2.4, 0.01, 0.26), at=(0, -0.43, 2.95), mat='hazard')                                   # BLAST DOOR plate
+    for k in range(10):
+        m.box((0.15, 0.012, 0.15), at=(-0.95 + k * 0.21, -0.44, 2.95), mat='hull_dark')
+    return P(m, 'Blast Door', (OUT_W, 3.75, 0.55), mount='wall', light=LAMP((0, -0.9, 3.2), 0.8, 6.0, (1.0, 0.2, 0.15)))
+
 PROPS_B = {f.__name__: f for f in (restraint_chair, morgue_drawers, iv_stand, surgical_lamp, lectern, projection_screen, pin_board, map_table,
-                                   signals_desk, typewriter_desk, vehicle, vehicle_lift, dead_scavenger, garnisher_dispenser)}
+                                   signals_desk, typewriter_desk, vehicle, vehicle_lift, dead_scavenger, garnisher_dispenser,
+                                   shutter_roller, shutter_blast)}
 
 PROPS = dict(PROPS_A)
 PROPS.update(PROPS_B)

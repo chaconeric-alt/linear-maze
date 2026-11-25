@@ -20,11 +20,27 @@ static func find(ld: LevelData) -> Dictionary:
 		var p := Vector2i(int(e["at"][0]), int(e["at"][1]))
 		var meta: Dictionary = LM.model_meta(ld.kit_id, e["prop"]) if e.has("prop") else {}
 		if e.has("sign") or meta.get("mount", "") == "wall":
-			hung[Vector4i(p.x, p.y, s, ld.wall_side(p, e.get("face", ""), s))] = true
+			var d := ld.wall_side(p, e.get("face", ""), s)
+			for q in _along(ld, e, meta, p, d):
+				hung[Vector4i(q.x, q.y, s, d)] = true
 		elif e.has("prop"):
 			for d in _backed(ld, e, meta, p, s):
 				hung[Vector4i(p.x, p.y, s, d)] = true
 	return hung
+
+
+## The cells whose wall on side d a thing hung there covers: its own, and those either side that its width and its
+## "offset" along the wall reach into (a vehicle bay's shutter two cells wide).
+static func _along(ld: LevelData, e: Dictionary, meta: Dictionary, p: Vector2i, d: int) -> Array:
+	var side: Vector2i = LevelData.DIRS[(d + 1) % 4]
+	var off: Vector3 = LM.vec(e.get("offset"), Vector3.ZERO)
+	var mid: float = off.x * side.x + off.z * side.y
+	var half: float = float(meta.get("solid", [1.0, 1.0, 1.0])[0]) / 2.0
+	var out: Array = []
+	for k in range(-2, 3):
+		if absf(k * ld.C - mid) < half + ld.C / 2.0 - 0.1:
+			out.append(p + side * k)
+	return out
 
 
 ## The walls round its cell a piece of furniture stands back against: within AGAINST metres of the wall's face, by its

@@ -35,8 +35,8 @@
     ],
     "things": [
      {
-      "prop": "bk_console",
-      "blocks": true,
+      "prop": "shutter_blast",
+      "at": "outside",
       "tag": "blast_door",
       "use": {
        "type": "effects",

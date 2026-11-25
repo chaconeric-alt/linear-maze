@@ -2,7 +2,8 @@ extends RefCounted
 ## ProgrammeFill - what goes in a laid-out programme (SPEC.md 6.3): the start, in the first spine room facing east;
 ## the locks (every door of a locked room, or a wing's door, takes the lock's colour) and their cards, each in the room
 ## the lock names; and each room's "things", as written, put on its free floor. A thing that says "at" is put there
-## (in cells of the room: [0, 0] its north-west corner); one that does not goes on a free cell the seed picks; "count"
+## (in cells of the room: [0, 0] its north-west corner; "outside": hung on the wall with the most rock behind it, the
+## room's way out to the world, facing in); one that does not goes on a free cell the seed picks; "count"
 ## makes several; an "actor", "item" or "prop" that lists several is one of them, the seed's pick, each time. A lock's
 ## "card" that lists several rooms is in one of them (those laid out), the seed's pick. Free floor is a room's floor less the cells beside its doors and, in a spine room, the spine's row
 ## (the way through is kept clear). The seed's choices come from the plan's generator, after the plan's own.
@@ -17,6 +18,7 @@ extends RefCounted
 ## room's middle.
 class_name ProgrammeFill
 
+const Put := preload("res://generators/rooms/furnish_put.gd")
 const LOCK_LETTERS := {"red": "R", "blue": "B", "green": "G", "yellow": "Y", "purple": "P"}
 const FLAG_LETTERS := "123456789"            # a flag lock's door, the first not taken by the level's legend already
 
@@ -29,6 +31,7 @@ var storey := 0                          # the storey this floor's things stand 
 var storeys: Dictionary = {}             # room id -> a storey of its own (a hall sunk a storey down)
 var kit := ""                            # the level's kit, for the size of a prop it turns to the room
 var _used: Dictionary = {}
+var _props: Dictionary = {}              # the cells a prop has been put on (a thing hung outside goes round them)
 
 
 ## opts: "start" (false: no start of its own), "storey", "storeys" (room -> storey), "reserve" (cells kept free),
@@ -118,7 +121,8 @@ func _thing(room: String, t: Dictionary) -> void:
 		for k in ["actor", "item", "prop"]:
 			if e.get(k) is Array and not e[k].is_empty():
 				e[k] = e[k][plan.rng.randi() % e[k].size()]
-		var at := _spot(room, t.get("at"))
+		var out: Array = _outside(room, e) if str(t.get("at", "")) == "outside" else []
+		var at: Vector2i = out[0] if not out.is_empty() else _spot(room, t.get("at"))
 		if at.x < 0:
 			problems.append("no room left in '%s' for %s" % [room, JSON.stringify(t)])
 			return
@@ -131,6 +135,11 @@ func _thing(room: String, t: Dictionary) -> void:
 		if s != 0:
 			e["level"] = s
 		_used[at] = true
+		for c in out:
+			_used[c] = true
+		if e.has("prop"):
+			for c in [at] + out:
+				_props[c] = true
 		things.append(e)
 
 
@@ -143,6 +152,56 @@ func _spot(room: String, at: Variant) -> Vector2i:
 	if free.is_empty():
 		return Vector2i(-1, -1)
 	return free[plan.rng.randi() % free.size()]
+
+
+## The room's way out to the world, for a prop hung on the wall (`e`, given its face, its offset along the wall if it
+## is wider than a cell, and "blocks": false, as the floor in front of it stays free to walk on): the cells it covers
+## (one, or two for a shutter two cells wide) against the wall with the most rock behind it, out to the map's edge if
+## the room has such a wall, nearest the room's middle; not beside a door nor where a prop already stands. None if
+## it has no such wall.
+func _outside(room: String, e: Dictionary) -> Array:
+	var r: Rect2i = lay.rects[room]
+	var cell := float(LM.kits.get(kit, {}).get("cell", 4.0))
+	var n := Put.span(LM.model_meta(kit, str(e.get("prop", ""))), cell)
+	var mid := Vector2(r.get_center()) - Vector2(0.5, 0.5)
+	var by_doors := _by_doors()
+	var best: Array = []
+	var bd := 0
+	var most := -1
+	var near := INF
+	for y in range(r.position.y, r.end.y):
+		for x in range(r.position.x, r.end.x):
+			for d in 4:
+				var run := _wall_run(r, Vector2i(x, y), d, n, by_doors)
+				if run.is_empty():
+					continue
+				var rock: int = run.map(func(c: Vector2i) -> int: return Put.rock_behind(lay.g, c, d)).min()
+				var far := (Vector2(run[0]) + Vector2(run[-1])).distance_to(mid * 2.0) / 2.0
+				if rock > most or (rock == most and far < near):
+					best = run
+					bd = d
+					most = rock
+					near = far
+	if not best.is_empty():
+		var side: Vector2i = GenContext.DIRS[(bd + 1) % 4]
+		e["face"] = GenContext.NAMES[(bd + 2) % 4]
+		e["blocks"] = false
+		if n > 1:
+			e["offset"] = [side.x * cell * (n - 1) / 2.0, 0, side.y * cell * (n - 1) / 2.0]
+	return best
+
+
+## n cells of room r along its wall on side d from c (c first, going clockwise round the room), each with plain wall
+## behind it, not beside a door and with no prop on it yet; or none.
+func _wall_run(r: Rect2i, c: Vector2i, d: int, n: int, by_doors: Dictionary) -> Array:
+	var run: Array = []
+	for k in n:
+		var q: Vector2i = c + GenContext.DIRS[(d + 1) % 4] * k
+		var w: Vector2i = q + GenContext.DIRS[d]
+		if not r.has_point(q) or r.has_point(w) or lay.open_at(w) or by_doors.has(q) or _props.has(q):
+			return []
+		run.append(q)
+	return run
 
 
 ## A prop turned to the room it stands in (see the top of this file). One hung on a wall the level hangs itself.
@@ -190,11 +249,7 @@ func used_cells() -> Array:
 ## A room's free floor: not beside a door, not on the spine's row in a spine room, not already used.
 func free_cells(room: String) -> Array:
 	var r: Rect2i = lay.rects[room]
-	var near := {}
-	for d in lay.doors:
-		var at: Vector2i = d["at"]
-		for dv in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			near[at + dv] = true
+	var near := _by_doors()
 	var out: Array = []
 	for y in range(r.position.y, r.end.y):
 		for x in range(r.position.x, r.end.x):
@@ -203,3 +258,13 @@ func free_cells(room: String) -> Array:
 				continue
 			out.append(c)
 	return out
+
+
+## The cells beside a doorway.
+func _by_doors() -> Dictionary:
+	var near := {}
+	for d in lay.doors:
+		var at: Vector2i = d["at"]
+		for dv in GenContext.DIRS:
+			near[at + dv] = true
+	return near

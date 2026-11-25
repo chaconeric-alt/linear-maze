@@ -155,3 +155,25 @@ static func room_path(inside: Dictionary, a: Vector2i, b: Vector2i) -> Array:
 		c2 = from[c2]
 	out.append(a)
 	return out
+
+
+## How many cells along its wall a piece hung there covers, by its width (the solid's first number): one, or two for
+## a vehicle bay's shutter.
+static func span(meta: Dictionary, cell: float) -> int:
+	return maxi(1, ceili(float(meta.get("solid", [1.0, 1.0, 1.0])[0]) / cell - 0.05))
+
+
+## How much rock lies behind the wall on side d of c, in the map g (rows of one-letter cells, "#" rock or wall): wall
+## cells in a line out from c, and OUTSIDE if the line reaches the map's edge without meeting floor. The wall with the
+## most behind it is where a room meets the world outside: a motor pool's vehicle shutter, a gatehouse's blast door.
+const OUTSIDE := 1000
+
+static func rock_behind(g: Array, c: Vector2i, d: int) -> int:
+	var n := 0
+	var p: Vector2i = c + DIRS[d]
+	while p.y >= 0 and p.y < g.size() and p.x >= 0 and p.x < g[p.y].size():
+		if g[p.y][p.x] != "#":
+			return n
+		n += 1
+		p += DIRS[d]
+	return OUTSIDE

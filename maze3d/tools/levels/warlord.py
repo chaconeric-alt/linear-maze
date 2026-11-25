@@ -58,7 +58,7 @@ LOCKDOWN = {"flag": "stand_down", "need": "the stand-down order: its code read i
 
 # --- Level 1: the Garrison --------------------------------------------------------------------------------------
 
-blast_door = {"prop": "bk_console", "blocks": True, "tag": "blast_door",
+blast_door = {"prop": "shutter_blast", "at": "outside", "tag": "blast_door",      # on the gatehouse's outside wall
               "use": {"type": "effects", "prompt": "Leave by the blast door", "sound": "servo",
                       "effects": [{"type": "end", "title": "Out of the Warlord's Bunker",
                                    "text": "Back out into the red sand, with what you carried."}]}}

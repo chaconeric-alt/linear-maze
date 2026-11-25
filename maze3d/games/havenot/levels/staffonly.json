@@ -6579,9 +6579,37 @@
    "blocks": false
   },
   {
-   "prop": "signals_desk",
+   "prop": "shutter_blast",
    "at": [
     17,
+    91
+   ],
+   "face": "s",
+   "offset": [
+    2.0,
+    0,
+    0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "shutter_roller",
+   "at": [
+    19,
+    91
+   ],
+   "face": "s",
+   "offset": [
+    2.0,
+    0,
+    0
+   ],
+   "blocks": false
+  },
+  {
+   "prop": "signals_desk",
+   "at": [
+    21,
     91
    ],
    "face": "s",
@@ -6595,7 +6623,7 @@
   {
    "prop": "stove",
    "at": [
-    18,
+    22,
     91
    ],
    "face": "s",
@@ -6609,7 +6637,7 @@
   {
    "prop": "surgical_lamp",
    "at": [
-    19,
+    23,
     91
    ],
    "face": "s",
@@ -6623,7 +6651,7 @@
   {
    "prop": "toilet_stall",
    "at": [
-    20,
+    24,
     91
    ],
    "face": "s",
@@ -6637,7 +6665,7 @@
   {
    "prop": "typewriter_desk",
    "at": [
-    21,
+    25,
     91
    ],
    "face": "s",
@@ -6651,7 +6679,7 @@
   {
    "prop": "urinal",
    "at": [
-    22,
+    26,
     91
    ],
    "face": "s",
@@ -6665,7 +6693,7 @@
   {
    "prop": "vehicle",
    "at": [
-    23,
+    27,
     91
    ],
    "face": "s",
@@ -6674,7 +6702,7 @@
   {
    "prop": "vehicle_lift",
    "at": [
-    24,
+    28,
     91
    ],
    "face": "s",
@@ -6683,7 +6711,7 @@
   {
    "prop": "weight_bench",
    "at": [
-    25,
+    29,
     91
    ],
    "face": "s",

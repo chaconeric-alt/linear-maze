@@ -18,6 +18,7 @@ if anything is left out, and the engine's self-test checks the same thing (--lev
     python3 tools/levels/staffonly.py
 """
 import json, os, sys
+import math
 import levelkit as lk
 
 ROOT, GAME, load = lk.ROOT, lk.GAME, lk.load
@@ -505,10 +506,13 @@ def fittings_room(b, side):
     for dx in (x0 + 5, x0 + 21):
         door(dx, y0 + 6)
     pieces = sorted(n for n in KITS['fittings']['props'] if not NOT_FURNITURE(n))
-    if len(pieces) > RW:
+    span = {n: max(1, math.ceil(META.get(n, {}).get('solid', [1.0])[0] / 4.0 - 0.05)) for n in pieces}
+    if sum(span.values()) > RW:
         sys.exit("staffonly.py: more fittings than the Fittings room's wall holds; widen RW")
-    for j, n in enumerate(pieces):
-        prop(n, x0 + j, y0 + 1, 'n')
+    x = x0
+    for n in pieces:                                 # one wider than a cell (a shutter) across as many as it needs
+        prop(n, x, y0 + 1, 'n', **({"offset": [2.0 * (span[n] - 1), 0, 0], "blocks": False} if span[n] > 1 else {}))
+        x += span[n]
     sign("FITTINGS\nwhat every installation is furnished with", x0 + 13, y0 + 5, 'n', size=40, color=(0.9, 0.85, 0.5))
 
 
