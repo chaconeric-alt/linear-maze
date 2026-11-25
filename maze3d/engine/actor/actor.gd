@@ -6,8 +6,9 @@ class_name Actor
 const NEAR_HOME := 0.1           # metres: further than this from where the level put it, where it stands is remembered
 
 
-func hear(from: Vector3) -> void:
-	senses.hear(from)
+## A noise reached it (LevelPerception.noise): at `from`, of a `kind`, telling of the place `about`.
+func hear(from: Vector3, kind := "", about: Variant = null) -> void:
+	senses.hear(from, kind, about)
 
 
 ## The other way (the effect "pacify"): it will not fight again. It can still be talked to.

@@ -104,6 +104,8 @@ static func explode(level: Node3D, pos: Vector3, radius: float, damage: float, c
 	sparks(level, pos, Color(1, 0.9, 0.6), 18, radius * 1.2, 0.4, 0.2, 0.0)
 	flash(level, pos, c, 12.0, radius * 3.0, 0.35)
 	LM.sound("explode", pos)
+	if level is Level:                                # it is heard far off (LevelPerception)
+		(level as Level).perception.noise(pos, LevelPerception.EXPLOSION, "explosion", by)
 	var targets: Array = level.actors.duplicate()
 	targets.append_array(level.get_tree().get_nodes_in_group("breakable"))
 	if hurts_player and Game.player:

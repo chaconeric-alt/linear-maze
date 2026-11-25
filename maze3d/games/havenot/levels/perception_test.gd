@@ -127,16 +127,31 @@ func _railing_shots() -> void:
 
 
 # ------------------------------------------------------------------ hearing
-## One shot, and whether a sleeping monster wakes: across the hall from the gallery (handgun), from the Office's
-## doorway above the hall (handgun), and in the hall beside the Store's shut door, with a monster in the Store (the Arc
-## Carbine, then the Pump Scattergun).
+## One shot, and whether a sleeping monster wakes (sound carries through the air: SPEC.md 5.24). Heard: a handgun
+## across the hall from the gallery, and from the Office's doorway above the hall. In the hall beside the Store's shut
+## door, a monster in the Store: the quiet Arc Carbine is not heard, the loud Pump Scattergun is. A silent noise wakes
+## nobody.
 func _hearing() -> void:
 	var across := await _shot("handgun", Vector2i(1, 4), 1, Vector3.ZERO, Vector2i(6, 8), "e")
 	var doorway := await _shot("handgun", Vector2i(3, 3), 1, Vector3(0, 0, 1.0), Vector2i(3, 7), "s")
 	var wall_quiet := await _shot("arc", Vector2i(3, 5), 0, Vector3.ZERO, Vector2i(3, 2), "n")
 	var wall_loud := await _shot("scattergun", Vector2i(3, 5), 0, Vector3.ZERO, Vector2i(3, 2), "n")
-	print("INFO  hearing: a handgun shot from the gallery %s across the hall (%.1f m); from the doorway above it %s (%.1f m, floors %d and %d); behind the Store's shut door the Arc Carbine %s, the Pump Scattergun %s (%.1f m)" % [
-		_heard(across), across[1], _heard(doorway), doorway[1], doorway[2], doorway[3], _heard(wall_quiet), _heard(wall_loud), wall_quiet[1]])
+	say(across[0] and doorway[0], "a handgun shot is heard across the hall from the gallery (%.1f m), and from the doorway above it (%.1f m; floors %d and %d)" % [across[1], doorway[1], doorway[2], doorway[3]])
+	say(not wall_quiet[0] and wall_loud[0], "behind the Store's shut door, %.1f m off, the Arc Carbine %s and the Pump Scattergun %s" % [wall_quiet[1], _heard(wall_quiet), _heard(wall_loud)])
+	var silent := await _silent()
+	say(not silent, "a silent weapon (noise 0) wakes nobody, even 8 m away")
+
+
+## A noise of loudness 0 (a melee weapon's) near a sleeping monster with its back turned: does it wake?
+func _silent() -> bool:
+	_put(Vector2i(3, 5), 0)
+	var m := _make("custodian", Vector2i(3, 7), {"still": true, "face": "s"})        # 8 m off, its back turned: it cannot see you
+	await frames(5)
+	level.perception.noise(pl.global_position + Vector3(0, 1.4, 0), 0.0, "gunfire", pl)
+	await frames(3)
+	var woke := m.awake
+	await _kill(m)
+	return woke
 
 
 func _heard(r: Array) -> String:

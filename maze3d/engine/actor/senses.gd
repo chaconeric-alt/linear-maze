@@ -1,6 +1,7 @@
 extends Node
 ## ActorSenses - seeing and hearing. Every actor has them; the def tunes them:
-##   "sight": 24 (awake), "wake_sight": sight * 0.75 (asleep), "hearing": 18 (gunfire, not through a floor).
+##   "sight": 24 (awake), "wake_sight": sight * 0.75 (asleep), "hearing": 18 (how keen its ears are: a noise reaches it
+##   as far as the noise's loudness times hearing / 18, through the level's air: LevelPerception.noise).
 ## Five times a second it looks: can it see the target (glass and railings do not stop sight), could it shoot it (they
 ## do), and at what height (LevelPerception: its chest, else its head, else its hips), has the player seen it (then it
 ## shows on the map), and if it was asleep, does what it sees wake it.
@@ -12,6 +13,7 @@ var see := false                  # the target is in sight
 var shot := true                  # nothing solid, glass and railings included, between it and some part of the target
 var aim_y := -1.0                 # the height above the target's feet that a shot can reach (-1: none)
 var _see_t := 0.0
+const WAKE := 10.0                # metres through the air that waking carries to others
 
 
 func setup(actor: Actor) -> void:
@@ -50,10 +52,11 @@ func look_off_duty(dt: float, pl: Node3D, dist: float, reach: float) -> void:
 		a.seen = true
 
 
-## It has woken: the others close by, on its floor, wake too.
+## It has woken: the others within 10 m of it through the air (LevelPerception.carried) wake too.
 func wake_others() -> void:
 	for o in a.level.actors:
-		if is_instance_valid(o) and o != a and not o.awake and not o.dead and o.global_position.distance_to(a.global_position) < 10.0 and a.level.floor_of(o.global_position) == a.level.floor_of(a.global_position):
+		if is_instance_valid(o) and o != a and not o.awake and not o.dead and o.global_position.distance_to(a.global_position) < WAKE \
+				and a.level.perception.carried(a.eye(), o.eye(), WAKE) <= WAKE:
 			o.call_deferred("alert")
 
 
@@ -63,6 +66,7 @@ func reset() -> void:
 	_see_t = 0.0
 
 
-func hear(from: Vector3) -> void:
-	if not a.awake and from.distance_to(a.global_position) < d.get("hearing", 18.0) and a.level.floor_of(from) == a.level.floor_of(a.global_position):      # not through a floor
+## A noise reached it (LevelPerception.noise has decided it was heard): at `from`, of a kind, telling of `about`.
+func hear(_from: Vector3, _kind := "", _about: Variant = null) -> void:
+	if not a.awake:
 		a.alert()

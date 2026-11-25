@@ -15,7 +15,7 @@
  },
  "weapons": {
   "handgun": {
-   "name": "Frontier Handgun",
+   "name": "Frontier Handgun", "noise": 32,
    "model": "weapon_handgun",
    "ammo": null,
    "damage": 15,
@@ -37,7 +37,7 @@
    ]
   },
   "scattergun": {
-   "name": "Pump Scattergun",
+   "name": "Pump Scattergun", "noise": 48,
    "model": "weapon_scattergun",
    "ammo": "shells",
    "pickup_ammo": 12,
@@ -62,7 +62,7 @@
    ]
   },
   "plasma": {
-   "name": "Plasma Musket",
+   "name": "Plasma Musket", "noise": 26,
    "model": "weapon_plasma",
    "ammo": "cells",
    "per_shot": 2,
@@ -86,7 +86,7 @@
    ]
   },
   "arc": {
-   "name": "Arc Carbine",
+   "name": "Arc Carbine", "noise": 20,
    "model": "weapon_arc",
    "kit": "anomalous",
    "ammo": "cells",
@@ -111,7 +111,7 @@
    ]
   },
   "launcher": {
-   "name": "Rocket Launcher",
+   "name": "Rocket Launcher", "noise": 70,
    "model": "weapon_launcher",
    "ammo": "rockets",
    "per_shot": 1,

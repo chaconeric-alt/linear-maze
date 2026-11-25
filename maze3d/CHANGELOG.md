@@ -4,13 +4,24 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Sound carries through the air** (step 3 of 6; SPEC 3.2, 3.3, 5.24).
+  - **A noise** is a place, a loudness and a kind (`LevelPerception.noise`). It reaches each actor within its loudness times the actor's `hearing` / 18, and that actor is told (`Actor.hear(from, kind, about)`).
+  - **How far it seems.** In a clear line, the straight distance. Otherwise the cheapest way air goes: walkways, ramps and balconies; from a balcony down into the hall under it; lift shafts and pits; each shut door adds 10 m. Or through walls, at three times the straight line. The map's floor numbers no longer decide what is heard; waking a neighbour (10 m) and an alarm's radius go the same way (`carried`).
+  - **Loudness is the weapon's** (`noise`, a new weapon key): the Frontier Handgun 32 m, the Pump Scattergun 48, the Plasma Musket 26, the Arc Carbine 20, the Rocket Launcher 70; an explosion 60; 30 if a weapon does not say; 0 is silent, for melee.
+  - **The Listening Post's hearing checks:**
+    - A handgun shot is now heard across the hall from the gallery (25.9 m) and from the doorway above it (15.5 m, another floor).
+    - Behind the Store's shut door, the Arc Carbine is not heard and the Pump Scattergun is (both were heard before).
+    - A silent noise wakes nobody.
+  - **Baseline item57:** 29 runs, 3972 checks, 0 failures. The fights shifted again: across 14 runs, 544 "dies" checks became 541, the rest "already dead when its turn came" INFO lines. Nothing fails.
+  - **A correction.** The step 2 entry below first gave those runs' fight counts wrongly; they are fixed.
+
 - **Sight is what is drawn** (step 2 of 6; SPEC 4.3, 5.4, 5.24).
   - **One place to ask.** `LevelPerception` (`engine/level/perception.gd`, `Level.perception`) answers for every actor: its senses, whom to fight, a blow, a climber with no route, a robot station's sensor.
   - **Railings are see-through.** Their collision moved to the glass layer: they still stop bodies and shots, and no longer stop sight.
   - **Three points.** A target is looked for at its chest, head and hips, so a railing or a desk hiding part of it does not hide it all. A monster's gun aims at the best height it has a clear shot at.
   - **Moving.** A skirmisher keeps its distance only while it has a shot, and a chaser goes straight at you only along a clear line; otherwise each takes its route. The Auditor's beam is spoiled by a railing or glass too.
   - **The Listening Post's sight check:** a monster on the hall floor now sees you on the gallery wherever you can see it (16 of 16 places; it was 2).
-  - **Baseline item56:** 29 runs, 3972 checks, 0 failures. The fights shifted. Across eleven runs, some "dies" checks became "already dead when its turn came" INFO lines and some went the other way: 467 such checks before, 468 now. Nothing fails.
+  - **Baseline item56:** 29 runs, 3972 checks, 0 failures. The fights shifted. Across eleven runs, some "dies" checks became "already dead when its turn came" INFO lines and some went the other way: in those runs 494 such checks before, 495 now. Nothing fails.
 
 - **The Listening Post: the awareness rebuild's test level** (step 1 of the six in "Monster awareness: an assessment"; SPEC 7, 9).
   - **The level** (`tools/levels/perception.py`): a hall two storeys tall and 40 m long, with a railed gallery on a ramp, a gallery only a lift reaches, a crate that blocks its cell, a store behind a door under the gallery, and an office whose door opens on to the gallery.

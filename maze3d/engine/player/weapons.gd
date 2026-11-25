@@ -4,6 +4,7 @@ extends Node
 ## pellets and fall-off as the weapon's def says. A shot is heard by every actor in the level.
 class_name PlayerWeapons
 
+const NOISE := 30.0              # metres a shot carries, for a weapon whose def does not say (its "noise"; 0 is silent)
 var pl: Player
 var weapons: Array = []
 var ammo: Dictionary = {}
@@ -169,9 +170,7 @@ func fire(w: Dictionary) -> void:
 			_launch(w, mz, fwd, dir)
 		else:
 			_ray(w, mz, dir, c)
-	for a in pl.level.actors:
-		if is_instance_valid(a):
-			a.hear(pl.global_position)
+	pl.level.perception.noise(pl.global_position + Vector3(0, 1.4, 0), float(w.get("noise", NOISE)), "gunfire", pl)
 	Game.changed.emit()
 
 

@@ -188,6 +188,28 @@ func is_blocked(p: Vector2i, f := 0) -> bool:
 	return astar.has_point(id) and astar.is_point_disabled(id)
 
 
+## Where a nav point stands: [x, y, floor, layer] (layer 0 the ground, 1 and 2 a balcony, 3 a ramp), or [].
+func where(id: int) -> Array:
+	return _pt.get(id, [])
+
+
+## The nav point of cell c on floor f at `layer`, or -1 if it has none.
+func point_id(c: Vector2i, layer: int, f := 0) -> int:
+	if c.x < 0 or c.y < 0 or c.x >= ld.w or c.y >= ld.h or not ld.floors.has(f):
+		return -1
+	var id := _nid(c.x, c.y, layer, f)
+	return id if astar.has_point(id) else -1
+
+
+## Every lift and pit as [from, to]: the hops a body takes but does not walk.
+func hop_pairs() -> Array:
+	var out: Array = []
+	for a in _hops:
+		for b in _hops[a]:
+			out.append([a, b])
+	return out
+
+
 ## The nav point something standing at pos is on: the one in its cell nearest its height.
 func point_at(pos: Vector3) -> int:
 	var p := ld.cell_of(pos)

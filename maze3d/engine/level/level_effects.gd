@@ -140,12 +140,13 @@ func spawn(ef: Dictionary, ctx: Dictionary) -> void:
 		level.spawn_thing(e, p)
 
 
-## An alarm with a radius is heard on its own floor.
+## An alarm with a radius is heard as far as that, through the level's air from where the player is (LevelPerception).
 func alarm(ef: Dictionary, _ctx: Dictionary) -> void:
 	LM.sound("alarm")
+	var at := Game.player.global_position + Vector3(0, 1.4, 0)
 	for a in level.actors:
 		if is_instance_valid(a) and not a.dead:
-			if not ef.has("radius") or (a.global_position.distance_to(Game.player.global_position) < ef["radius"] and level.floor_of(a.global_position) == level.floor_of(Game.player.global_position)):
+			if not ef.has("radius") or level.perception.carried(at, a.eye(), float(ef["radius"])) <= float(ef["radius"]):
 				a.alert()
 
 

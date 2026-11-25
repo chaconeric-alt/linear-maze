@@ -6,7 +6,7 @@ extends RefCounted
 ## LM.boot checks the game's defs and level files; the self-test checks those and the level it is playing.
 class_name Schema
 
-const WEAPON := ["name", "model", "kit", "hold", "scale", "ammo", "per_shot", "pickup_ammo", "damage", "pellets", "spread",
+const WEAPON := ["name", "model", "kit", "hold", "scale", "ammo", "per_shot", "pickup_ammo", "damage", "pellets", "spread", "noise",
 	"rate", "auto", "range", "falloff", "projectile", "recoil", "kick", "sound", "color", "kind"]
 const ACTOR := ["name", "model", "kit", "scale", "robot", "hp", "armor", "takes", "mass", "gib", "speed", "accel", "turn", "radius",
 	"height", "center", "eye", "fly", "mount", "still", "sight", "hearing", "wake_sight", "behavior", "keep", "attacks",
