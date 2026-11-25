@@ -125,7 +125,7 @@ func _walls(batches: Dictionary, c: Dictionary, x: int, y: int, f: int, d: int, 
 		if need:
 			var tile := ld.pick(st.get("wall") if lv == 0 else st.get("wall_upper", st.get("wall")))
 			if lv == 0 and ld.hung.has(Vector4i(x, y, f, d)):      # something hangs here: the plain wall, so it is not lost among pipes and screens
-				tile = ld.plain_wall(st)
+				tile = LevelHung.plain_wall(st)
 			_add(batches, tile, Transform3D(Basis(Vector3.UP, LevelData.DIR_ROT[d]), wp + Vector3(0, lv * ld.H, 0)), x, y, c["room"], st)
 
 

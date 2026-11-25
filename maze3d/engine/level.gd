@@ -99,7 +99,7 @@ func build(level_data: Dictionary, memory: Dictionary = {}) -> void:
 	builder = LevelBuilder.new(self, ld, lights)
 	tiles_at = builder.tiles_at
 	builder.make_bodies()
-	ld.find_hung()
+	ld.hung = LevelHung.find(ld)
 	builder.build_shell()
 	builder.build_collision()
 	nav_graph = builder.build_nav()
