@@ -4,8 +4,8 @@ extends SelfTestPart
 ## Each monster is made where it is needed and killed after. Measured: a monster on the hall floor against a player on
 ## the gallery behind its railing; a shot through the railing; gunfire heard across the hall, from the doorway above it
 ## and through the Store's shut door; the route to a player standing by a crate that blocks its cell; a player on the
-## gallery only the lift reaches; a flyer under the gallery; and where a monster goes when the player vanishes.
-## Answers still waiting for the step that settles them are INFO lines; each becomes a check as its step lands.
+## gallery only the lift reaches (a monster that shoots finds a shot, one that does not waits under them, one hurt there
+## hides); a flyer under the gallery; where a monster goes when the player vanishes; how one startles.
 
 const NORTH := Vector2i(3, 4)        # a cell of the north gallery (storey 1)
 const SOUTH := Vector2i(3, 9)        # a cell of the south gallery, which only the lift reaches
@@ -175,18 +175,20 @@ func _shot(gun: String, at: Vector2i, s: int, off: Vector3, ear: Vector2i, face:
 
 
 # ------------------------------------------------------------------ where it goes
-## The route to a player standing beside the crate that blocks its cell.
+## The route to a player standing beside the crate that blocks its cell: it ends beside them, not nowhere.
 func _furnished_cell() -> void:
 	_put(CRATE, 0, Vector3(1.4, 0, 1.4))
 	var m := _make("custodian", Vector2i(9, 8), {"still": true})
 	await frames(3)
 	var route := level.path(m.global_position, pl.global_position)
-	print("INFO  beside the crate: the route to you has %d points" % route.size())
+	var short := Vector2(route[-1].x - pl.global_position.x, route[-1].z - pl.global_position.z).length() if route.size() > 1 else -1.0
+	say(route.size() > 1 and short < 0.5, "beside the crate that blocks its cell: the route to you has %d points and ends %.1f m from you" % [route.size(), short])
 	await _kill(m)
 
 
 ## The player on the south gallery, which only the lift reaches, 1.5 m back from its railing: a Monoid (it shoots) and
-## a Custodian (it does not), both hunting, on the hall floor for 8 s.
+## a Custodian (it does not), both hunting, on the hall floor for 8 s. Neither can walk to them: the Monoid goes where
+## it has a clear shot over the railing, the Custodian to the floor under them.
 func _lift_only() -> void:
 	var rail := level.center(SOUTH).z - level.C / 2.0 + 0.08
 	_put(SOUTH, 1, Vector3(0, 0, rail + 1.5 - level.center(SOUTH).z))
@@ -200,13 +202,33 @@ func _lift_only() -> void:
 		clear += 1 if is_instance_valid(mo) and mo.senses.shot else 0
 	var under := level.center(SOUTH)
 	var near := Vector2(cu.global_position.x - under.x, cu.global_position.z - under.z).length()
-	print("INFO  on the gallery only the lift reaches: a Monoid on the floor has a clear shot in %d of 16 looks; a Custodian ends %.1f m from the floor under you" % [clear, near])
+	say(clear >= 8, "on the gallery only the lift reaches: a Monoid on the floor finds somewhere with a clear shot (%d of 16 looks)" % clear)
+	say(near < 3.0, "  a Custodian, which cannot shoot, waits on the floor under you (%.1f m from it)" % near)
 	await _kill(mo)
 	await _kill(cu)
+	await _hides(rail)
 
 
-## A Drone (it flies) hunting on the hall floor under the north gallery, the player on the gallery right over it: how
-## long until it is beside them.
+## The player on the south gallery again; a Custodian in the hall, in their sight, is hurt by them. It can neither
+## reach them nor shoot back: it gets out of their sight.
+func _hides(rail: float) -> void:
+	var at := Vector3(0, 0, rail + 1.5 - level.center(SOUTH).z)
+	_put(SOUTH, 1, at)
+	var m := _make("custodian", Vector2i(6, 6), {"alert": true})
+	await frames(10)
+	var was := level.perception.sees(_eye(), m)
+	m.hurt(4.0, {"type": "physical", "by": pl})
+	for k in 10:
+		await frames(30)
+		_put(SOUTH, 1, at)
+		pl.hp = pl.max_hp
+	var hid := not level.perception.sees(_eye(), m)
+	say(was and hid and not m.dead, "  a Custodian you hurt from there, which can neither reach you nor shoot back, gets out of your sight (it was in it; now %.1f m away)" % m.global_position.distance_to(pl.global_position))
+	await _kill(m)
+
+
+## A Drone (it flies) hunting on the hall floor in front of the north gallery, the player on the gallery above it: it
+## goes up through the air and over the railing, not round by the ramp, and is beside them within 3 s.
 func _flyer() -> void:
 	_put(NORTH, 1, Vector3(0, 0, _north_rail() - 1.5 - level.center(NORTH).z))
 	var d := _make("drone", Vector2i(3, 6), {"alert": true})
@@ -218,7 +240,7 @@ func _flyer() -> void:
 		if is_instance_valid(d) and d.global_position.distance_to(pl.global_position) < 2.5:
 			took = t
 			break
-	print("INFO  a Drone under the gallery reaches you in %s" % (("%.1f s" % (took / 60.0)) if took >= 0 else "more than 10 s"))
+	say(took >= 0 and took <= 180, "a Drone on the hall floor goes up through the air, over the railing, to you on the gallery in %s (not round by the ramp)" % (("%.1f s" % (took / 60.0)) if took >= 0 else "more than 10 s"))
 	await _kill(d)
 
 

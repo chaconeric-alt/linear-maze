@@ -9,6 +9,7 @@ var damage := 10.0
 var by: Node = null
 var from_player := false
 var at_actors := false            # a monster's shot at another monster (factions): it can hit monsters, and the player
+var spares_player := false        # fired by something off duty, showing what it does: it hurts its target, not the player
 var _life := 4.0
 
 
@@ -19,6 +20,7 @@ static func launch(lv: Level, id: String, from: Vector3, dir: Vector3, dmg: floa
 	p.damage = dmg
 	p.by = owner_node
 	p.from_player = player_shot
+	p.spares_player = owner_node is ActorCore and (owner_node as ActorCore).off_duty
 	p.vel = dir.normalized() * p.d.get("speed", 24.0)
 	p._life = p.d.get("life", 4.0)                  # a flame is a short puff; a bolt flies until it hits something
 	lv.add_child(p)
@@ -63,13 +65,13 @@ func _physics_process(dt: float) -> void:
 	if d.has("puddle"):                              # what it was made of stays where it landed
 		Puddle.drop(level, pos, d["puddle"], by)
 	if d.has("blast"):
-		Fx.explode(level, pos - vel.normalized() * 0.2, d["blast"].get("radius", 3.0), d["blast"].get("damage", damage) * (Game.deal_scale() if from_player and d["blast"].has("damage") else 1.0), c, by, not from_player or d["blast"].get("self", false), d["blast"])
+		Fx.explode(level, pos - vel.normalized() * 0.2, d["blast"].get("radius", 3.0), d["blast"].get("damage", damage) * (Game.deal_scale() if from_player and d["blast"].has("damage") else 1.0), c, by, (not from_player or d["blast"].get("self", false)) and not spares_player, d["blast"])
 	else:
 		Fx.sparks(level, pos, c, 10, 4.0)
 		Fx.flash(level, pos, c, 3.0, 4.0)
 		LM.sound("hit", pos, -6.0)
 	var col: Object = hit["collider"]
-	if col and col.has_method("hurt"):
+	if col and col.has_method("hurt") and not (spares_player and col == Game.player):
 		var info := {"type": d.get("kind", "energy"), "from": global_position, "by": by, "point": pos}
 		if d.has("afflict"):                          # (a flame, a spit of acid: what it leaves behind)
 			info["afflict"] = d["afflict"]

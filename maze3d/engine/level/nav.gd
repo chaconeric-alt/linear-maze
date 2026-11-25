@@ -229,20 +229,24 @@ func point_at(pos: Vector3) -> int:
 
 
 ## Where to walk, one place after another, from here to there: over ramps and along balconies if that is the way.
+## Either end may be in a blocked cell (a crate that fills it, the floor under a lift): it is let in for the asking,
+## and the route ends where `to` stands, beside what blocks it, not at the cell's middle.
 func path(from: Vector3, to: Vector3) -> PackedVector3Array:
 	var out := PackedVector3Array()
 	var a := point_at(from)
 	var b := point_at(to)
 	if a < 0 and astar.get_point_count() > 0:
 		a = astar.get_closest_point(from, true)
-	if a < 0 or b < 0 or astar.is_point_disabled(b):
+	if a < 0 or b < 0:
 		return out
-	var was := astar.is_point_disabled(a)
-	if was:
-		astar.set_point_disabled(a, false)
+	var shut := [a, b].filter(func(id: int) -> bool: return astar.is_point_disabled(id))
+	for id in shut:
+		astar.set_point_disabled(id, false)
 	out = astar.get_point_path(a, b)
-	if was:
-		astar.set_point_disabled(a, true)
+	for id in shut:
+		astar.set_point_disabled(id, true)
+	if b in shut and out.size() > 1:
+		out[out.size() - 1] = Vector3(to.x, out[out.size() - 1].y, to.z)
 	return out
 
 

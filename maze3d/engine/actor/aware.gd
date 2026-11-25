@@ -27,6 +27,7 @@ const PACE := 0.7                # of its speed, going to look
 const SPREAD := 8.0              # metres round the last place that a search looks
 const CHASE := 4.0               # in the GRACE after losing sight, it follows them as far as CHASE + RUN m/s from where it
 const RUN := 8.0                 # last saw them: round a corner, not up a lift or through a wall
+const HURT := 6.0                # seconds it counts as hurt lately
 
 var a: Actor
 var state := UNAWARE
@@ -38,8 +39,9 @@ var _search := 0.0
 var _look := 0.0
 var _wary := 0.0
 var _seen := Vector3.ZERO        # where they were at the last contact
-var _there := false
-var _gone := 0.0                 # seconds with nothing to go after              # it has got to where it was sent: the search's time runs from then
+var _there := false              # it has got to where it was sent: the search's time runs from then
+var _gone := 0.0                 # seconds with nothing to go after
+var _hurt := 100.0               # seconds since it was last hurt
 
 
 func setup(actor: Actor) -> void:
@@ -59,6 +61,12 @@ func hunting() -> bool:
 ## Lately given up: it sees all round, not only ahead.
 func wary() -> bool:
 	return _wary > 0.0
+
+
+## Hurt within the last HURT seconds: one that cannot reach its target, nor shoot back, gets out of its sight
+## (ActorWay).
+func hurt_lately() -> bool:
+	return _hurt < HURT
 
 
 ## It wakes (ActorCore.alert): how it noticed ("saw", "hurt", "heard", "call", or "told": a spawn, an alarm, a
@@ -115,6 +123,7 @@ func saw(at: Vector3) -> void:
 
 ## It was hurt by them: contact, as if it had seen them.
 func hurt() -> void:
+	_hurt = 0.0
 	if a.awake:
 		_since = 0.0
 		state = HUNTING
@@ -142,6 +151,7 @@ func _send(to: int, at: Vector3) -> void:
 ## Every tick while it is awake (ActorCore): in contact, it knows where they are; losing them, it starts to search.
 func tick(dt: float, target: Node3D) -> void:
 	_wary = maxf(0.0, _wary - dt)
+	_hurt += dt
 	_gone = 0.0
 	if not a.awake or a.off_duty:
 		state = UNAWARE
@@ -181,8 +191,12 @@ func seek(dt: float) -> void:
 		_search -= dt                                # the time it gives counts from when it first gets there
 	if not a.fixed and flat.length() > NEAR and _look <= 0.0:
 		a.move.go(dt, spot, PACE)
-		if a.move.roam.size() < 2 and flat.length() > a.level.C:
-			_look = 0.01                             # no way there: look from here instead
+		if a.move.roam.size() < 2 and flat.length() > a.level.C:      # no way there (a gallery only a lift reaches):
+			var near: Variant = a.move.way.nearest(spot)                # it goes as near as it can, and looks from there
+			if near != null and Vector2(near.x - a.global_position.x, near.z - a.global_position.z).length() > NEAR:
+				spot = near
+			else:
+				_look = 0.01
 		return
 	_there = true
 	_look += dt

@@ -1,8 +1,9 @@
 extends Node
-## ActorLocomotion - getting about: on foot after its target (chase, flee, skirmish, follow a path, and the way down
-## or up when it is on another level), wandering near home, dancing, walking a route (off duty), flying ("fly", "bob",
-## keeping over the floor under it), swimming ("swim"), scuttling ("gait"). Every actor has it; walls and ceilings
-## are ActorClimb; what is left when it dies is ActorRemains.
+## ActorLocomotion - getting about: on foot after its target (which way it wants to go is ActorWay: chase, flee,
+## skirmish, follow a path, the way down or up when it is on another level, somewhere useful with no way), wandering
+## near home, dancing, walking a route (off duty), flying ("fly", "bob", keeping over the floor under it), swimming
+## ("swim"), scuttling ("gait"). Every actor has it; walls and ceilings are ActorClimb; what is left when it dies is
+## ActorRemains.
 ##   "speed": 4, "accel": 30, "walk_rate": 1, "behavior": "chaser" | "skirmisher" | "turret", "keep": [6, 12],
 ##   "flee_below": 0.3, "flee_text": "...", "turn": 4 (a turret), "mass": 1
 class_name ActorLocomotion
@@ -18,9 +19,7 @@ var leaving: Node3D = null        # the station it is on its way out of: out thr
 var path: PackedVector3Array = PackedVector3Array()      # hunting: the way to the target
 var path_t := 0.0
 var roam: PackedVector3Array = PackedVector3Array()      # a route it is walking (off duty)
-var _fled := false
-var _strafe := 1.0
-var _strafe_t := 0.0
+var way: ActorWay                 # which way it wants to go, hunting
 var _wander_t := 0.0
 var _wander := Vector3.ZERO
 var _vis_bot := 0.0               # how far the model's underside is below its origin (negative)
@@ -37,6 +36,7 @@ func setup(actor: Actor) -> void:
 	a = actor
 	d = actor.d
 	fly = d.get("fly", false)
+	way = ActorWay.new(actor)
 
 
 func fall(dt: float) -> void:
@@ -108,10 +108,11 @@ func fly_tick() -> void:
 
 
 ## A hunting flyer keeps its hover over whatever floor is under it: off a balcony's edge it sinks to the floor below,
-## up a ramp it rises with it, at no more than HOVER_RATE metres a second. (Its body rides at "center" above its
-## origin, so the origin is where its floor is; ActorWary's lift raises it over a trap.)
-func _hover_vy() -> float:
-	var ground: float = a.level.floor_y(a.global_position) + (a.wary.lift if a.wary else 0.0)
+## up a ramp it rises with it, at no more than HOVER_RATE metres a second; going up through the air to a target on a
+## floor above (ActorWay.air_height), it rises to `over`. (Its body rides at "center" above its origin, so the origin is
+## where its floor is; ActorWary's lift raises it over a trap.)
+func _hover_vy(over := -INF) -> float:
+	var ground: float = maxf(a.level.floor_y(a.global_position), over) + (a.wary.lift if a.wary else 0.0)
 	var gap: float = ground - a.global_position.y
 	if absf(gap) < 0.02:
 		return 0.0
@@ -132,8 +133,8 @@ func hunt(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 			turn_to(flat, dt, d.get("turn", 4.0))
 		a.play("walk" if a.senses.see else "idle")
 		return
-	var want := _want(dt, pl, flat, dist)
-	if _fleeing():
+	var want := way.want(dt, pl, flat, dist)
+	if fleeing():
 		speed *= 1.4
 	want = _out_of_station(want).normalized()
 	if wet:
@@ -149,13 +150,15 @@ func hunt(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 		a.wary.fly()                              # a trap ahead: over it, under it, or wait
 	fall(dt)
 	if fly:
-		a.velocity.y = _hover_vy()
+		a.velocity.y = _hover_vy(way.air_height(pl))
 	a.move_and_slide()
 	var hv := Vector3(a.velocity.x, 0, a.velocity.z)
 	if a.senses.see and (d.get("behavior", "") == "skirmisher" or dist < 5.0):
 		turn_to(flat, dt, 8.0)
 	elif hv.length() > 0.4:
 		turn_to(hv, dt, 8.0)
+	elif a.senses.see:                               # standing where it can do no better (ActorWay): facing them
+		turn_to(flat, dt, 6.0)
 	if not a.attacking():
 		if hv.length() > 0.5:
 			_walk_anim(hv)
@@ -164,51 +167,9 @@ func hunt(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 
 
 ## Running away: hurt enough to ("flee_below"), dazzled by the lamp (ActorWounds), or keeping away after a latch.
-func _fleeing() -> bool:
+func fleeing() -> bool:
 	return (d.has("flee_below") and a.hp < a.max_hp * d["flee_below"]) or (a.wounds != null and a.wounds.scared()) \
 		or (a.moves != null and a.moves.keeping_away())
-
-
-## Which way it wants to go: away (hurt enough to flee), round them at a distance (a skirmisher), straight at them
-## (close and in sight), or along the route the level's nav finds.
-func _want(dt: float, pl: Node3D, flat: Vector3, dist: float) -> Vector3:
-	var see: bool = a.senses.see
-	var clear: bool = a.senses.shot                 # nothing in the way, a railing or glass included
-	if _fleeing():
-		if not _fled:
-			_fled = true
-			if d.has("flee_text"):
-				Game.say(d["flee_text"], "warn")
-		return -flat.normalized() if see else Vector3.ZERO
-	if d.get("behavior", "chaser") == "skirmisher" and clear:      # keeping its distance only while it has a shot
-		var keep: Array = d.get("keep", [6.0, 12.0])
-		_strafe_t -= dt
-		if _strafe_t <= 0.0:
-			_strafe_t = randf_range(1.0, 2.6)
-			_strafe = -_strafe if randf() < 0.6 else _strafe
-		var side := flat.normalized().cross(Vector3.UP) * _strafe
-		if dist < keep[0]:
-			return -flat.normalized() + side * 0.5
-		elif dist > keep[1]:
-			return flat.normalized() + side * 0.3
-		return side
-	# Close, in a clear line and on its level: straight at them. Above or below them (a balcony over their head), or
-	# behind a railing or glass, straight at them is nowhere: it takes the route down (or up) like anything out of sight.
-	if clear and dist < 7.0 and absf(pl.global_position.y - a.global_position.y) < LEVEL_GAP:
-		return flat.normalized() if dist > d.get("radius", 0.5) + 0.9 else Vector3.ZERO
-	path_t -= dt
-	if path_t <= 0.0:
-		path_t = 0.45
-		path = a.level.path(a.global_position, pl.global_position)
-	if path.size() > 1:
-		var next := path[1]
-		if Vector2(next.x - a.global_position.x, next.z - a.global_position.z).length() < 1.0 and path.size() > 2:
-			path.remove_at(1)
-			next = path[1]
-		return Vector3(next.x - a.global_position.x, 0, next.z - a.global_position.z).normalized()
-	elif see:
-		return flat.normalized()
-	return Vector3.ZERO
 
 
 ## A station has walls: the way out is the front, wherever it is going.

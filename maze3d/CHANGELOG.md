@@ -4,6 +4,24 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Somewhere to go when there is no route** (step 5 of 6; the review: "no walking route means no behaviour"; SPEC 3.3, 4.3, 4.11, 5.5, 5.24, 9).
+  - **Moved:** which way a hunter wants to go (`ActorLocomotion._want`, with its strafing and fleeing state) is now `ActorWay` (`engine/actor/way.gd`), owned by the locomotion; `_fleeing` became the public `fleeing()`. Locomotion is 356 lines (it was 396).
+  - **No route to the player** (a gallery only a lift reaches). Every 1.5 s, and at once when it is hurt, it looks over the places it can walk to:
+    - one that shoots goes to the nearest place within its reach (range or sight, the shorter) with a clear shot that holds for 0.7 m round it, and stays there firing;
+    - one hurt in the last 6 s that cannot shoot back gets out of the player's sight;
+    - any other waits at the place nearest the player (the floor under the gallery), facing them.
+  - **Searching** for a place it has no route to, it goes as near as it can and looks from there (it used to look from wherever it stood).
+  - **Flyers** with the player in sight on a floor above, within 12 m, go up through the air: they rise until the body clears the railing, hold off the edge until high enough, cross and settle on the player's floor.
+  - **A route may end in a blocked cell** (a crate that fills it, the floor under a lift): it ends where the player stands beside it.
+  - **Facing:** a hunter standing still with the player in sight turns to face them.
+  - **A fix the baseline found:** an off-duty monster showing its attack fired shells whose blasts could reach the player watching 3 m from the target (Staff Only: "nothing off duty hurt the player" failed, 8 lost, the Bailiff's shells; the random spread had shifted). Now a projectile fired by something off duty spares the player, by blast and by hit (`Projectile.spares_player`), as its blows already did.
+  - **The Listening Post's INFO lines are checks now:**
+    - the route to you beside the crate ends beside you (5 points);
+    - on the lift-only gallery, a Monoid finds a clear shot (15 of 16 looks; it was 1), and a Custodian waits on the floor under you (0.2 m; it stood 28.8 m off);
+    - new: a Custodian you hurt from there gets out of your sight;
+    - a Drone reaches you on the gallery in 1.5 s (it took 9.0 s round by the ramp).
+  - **Baseline item59:** 29 runs, 3995 checks, 1 failure (the Staff Only one above). After the fix, the five runs with off-duty things (`staffonly`, `anomalous`, `anomalous_story`, `home`, `warlord_1`) were run again (item59b): the same lines, with that check passing. Against step 4: the fights shifted (736 "dies" checks became 735); the Basilica's Knife Fighter on a balcony is the INFO line "no flyer left alive to put on the balcony" again, as before step 4; the Collections Office has two more mine-trap checks. Nothing fails.
+
 - **Awareness with memory; the relentless; the startle** (step 4 of 6; Eric, 25 Nov: some monsters "know everything and follow relentlessly", others "move to the last place they saw the player and hunt from there", and "a startle or a jump and turn, moving antenna ... along with an audio cue"; SPEC 3, 5.13, 5.20, 5.24, 9).
   - **Four states** (`ActorAware`, `engine/actor/aware.gd`, on every actor):
     - *Unaware:* asleep.
