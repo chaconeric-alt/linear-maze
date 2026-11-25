@@ -136,7 +136,7 @@ func spawn(ef: Dictionary, ctx: Dictionary) -> void:
 			break
 		var p: Vector2i = spots[i % spots.size()]
 		var e := {"actor": ef.get("actor", ""), "tag": ef.get("as", ""), "alert": ef.get("alert", true), "level": storey,
-			"offset": [randf_range(-1.0, 1.0), 0, randf_range(-1.0, 1.0)]}
+			"offset": [level.dice("spawn").randf_range(-1.0, 1.0), 0, level.dice("spawn").randf_range(-1.0, 1.0)]}
 		level.spawn_thing(e, p)
 
 

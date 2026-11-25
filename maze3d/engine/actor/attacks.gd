@@ -161,7 +161,7 @@ func _choose(pl: Node3D, to: Vector3, dist: float) -> void:
 
 func _begin(at: Dictionary, i: int) -> void:
 	if ActorMoves.KINDS.has(at.get("type", "")):
-		_cool[i] = at.get("cooldown", 3.0) * randf_range(0.85, 1.2)
+		_cool[i] = at.get("cooldown", 3.0) * a.rng.randf_range(0.85, 1.2)
 		a.moves.begin(at)
 		return
 	_atk = at
@@ -169,7 +169,7 @@ func _begin(at: Dictionary, i: int) -> void:
 	_atk_hold = 0.0
 	_atk_done = false
 	_burst = int(at.get("burst", 1))
-	_cool[i] = at.get("cooldown", 1.5) * randf_range(0.85, 1.2)
+	_cool[i] = at.get("cooldown", 1.5) * a.rng.randf_range(0.85, 1.2)
 	if at.get("type", "melee") == "pounce":
 		_leap = false
 		if not a.play("pounce", at.get("clip_windup", 0.3) / maxf(0.05, at.get("windup", 0.4))):
@@ -250,7 +250,7 @@ func _shoot(at: Dictionary, pl: Node3D) -> void:
 		if off > lim:
 			dir = bore.slerp(dir, lim / off).normalized()
 	var sp: float = deg_to_rad(at.get("spread", 2.0))
-	dir = dir.rotated(Vector3.UP, randf_range(-sp, sp)).rotated(a.global_transform.basis.x, randf_range(-sp, sp))
+	dir = dir.rotated(Vector3.UP, a.rng.randf_range(-sp, sp)).rotated(a.global_transform.basis.x, a.rng.randf_range(-sp, sp))
 	var shot := Projectile.launch(a.level, at.get("projectile", "bolt"), from, dir, at.get("damage", 8.0), a, false)
 	shot.at_actors = pl is ActorCore                 # shooting another monster (factions): monsters stop it too
 	Fx.flash(a.level, from, LM.col(LM.get_def("projectiles", at.get("projectile", "bolt")).get("color"), Color(1, 0.4, 0.2)), 2.5, 4.0)

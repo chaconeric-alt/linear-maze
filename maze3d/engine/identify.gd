@@ -60,7 +60,9 @@ static func _owner_of(col: Object, lv: Level) -> Node:
 static func _soft_radius(n: Node) -> float:
 	if n is Pickup:
 		return 0.6
-	if n is Trap or n is Puddle:
+	if n is Trap:
+		return 1.3 if (n as Trap).shows() else 0.0      # a spent mine is not there to name
+	if n is Puddle:
 		return 1.3
 	if n is Label3D:
 		return 0.9

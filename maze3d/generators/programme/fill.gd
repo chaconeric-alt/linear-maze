@@ -6,7 +6,7 @@ extends RefCounted
 ## room's way out to the world, facing in); one that does not goes on a free cell the seed picks; "count"
 ## makes several; an "actor", "item" or "prop" that lists several is one of them, the seed's pick, each time. A lock's
 ## "card" that lists several rooms is in one of them (those laid out), the seed's pick. Free floor is a room's floor less the cells beside its doors and, in a spine room, the spine's row
-## (the way through is kept clear). The seed's choices come from the plan's generator, after the plan's own.
+## (the way through is kept clear). The seed's choices come from a stream of the plan's seed of their own ("fill").
 ## On two floors (ProgrammeFloors) the lower floor's fill has no start of its own, its things say their storey
 ## ("level": -1), a hall sunk from the upper floor is filled as part of the upper but its things stand a storey down,
 ## and the lifts' and ramps' cells are kept free.
@@ -24,6 +24,7 @@ const FLAG_LETTERS := "123456789"            # a flag lock's door, the first not
 
 var lay: ProgrammeLayout
 var plan: ProgrammePlan
+var rng: RandomNumberGenerator    # the fill's own numbers (Dice): which room has the card, which monster a thing is
 var things: Array = []
 var legend: Dictionary = {}
 var problems: Array = []
@@ -39,6 +40,7 @@ var _props: Dictionary = {}              # the cells a prop has been put on (a t
 func _init(l: ProgrammeLayout, prog: Dictionary, opts := {}) -> void:
 	lay = l
 	plan = l.plan
+	rng = plan.stream("fill")
 	kit = str(opts.get("kit", ""))
 	storey = int(opts.get("storey", 0))
 	storeys = opts.get("storeys", {})
@@ -93,7 +95,7 @@ func _lock(lk: Dictionary, prog: Dictionary) -> void:
 	var card_v: Variant = lk.get("card", "")
 	if card_v is Array:
 		var there: Array = card_v.filter(func(c: Variant) -> bool: return lay.rects.has(str(c)))
-		card_v = there[plan.rng.randi() % there.size()] if not there.is_empty() else ""
+		card_v = there[rng.randi() % there.size()] if not there.is_empty() else ""
 	var card := str(card_v)
 	if not lay.rects.has(card):
 		problems.append("the %s card's room '%s' is not in the programme" % [color, card])
@@ -120,7 +122,7 @@ func _thing(room: String, t: Dictionary) -> void:
 		e.erase("count")
 		for k in ["actor", "item", "prop"]:
 			if e.get(k) is Array and not e[k].is_empty():
-				e[k] = e[k][plan.rng.randi() % e[k].size()]
+				e[k] = e[k][rng.randi() % e[k].size()]
 		var out: Array = _outside(room, e) if str(t.get("at", "")) == "outside" else []
 		var at: Vector2i = out[0] if not out.is_empty() else _spot(room, t.get("at"))
 		if at.x < 0:
@@ -151,7 +153,7 @@ func _spot(room: String, at: Variant) -> Vector2i:
 	var free := free_cells(room)
 	if free.is_empty():
 		return Vector2i(-1, -1)
-	return free[plan.rng.randi() % free.size()]
+	return free[rng.randi() % free.size()]
 
 
 ## The room's way out to the world, for a prop hung on the wall (`e`, given its face, its offset along the wall if it

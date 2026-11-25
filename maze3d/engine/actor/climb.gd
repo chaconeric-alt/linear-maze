@@ -24,9 +24,9 @@ func start_perch() -> void:
 	var cl: Dictionary = d["climb"]
 	var where: String = a.e.get("perch", "")
 	if where == "":
-		if randf() > cl.get("perch", 0.5):
+		if a.rng.randf() > cl.get("perch", 0.5):
 			return
-		where = "ceiling" if cl.get("ceiling", true) and randf() < 0.5 else "wall"
+		where = "ceiling" if cl.get("ceiling", true) and a.rng.randf() < 0.5 else "wall"
 	var c := a.level.cell_of(a.position)
 	if a.level.air(c.x, c.y, a.move.storey())["door"] != "":
 		return
@@ -38,17 +38,17 @@ func start_perch() -> void:
 		var walls := a.move.walls_at(c)
 		if walls.is_empty():
 			return
-		var dv: Vector3 = walls[randi() % walls.size()]
+		var dv: Vector3 = walls[a.rng.randi() % walls.size()]
 		a.wall_n = -dv
 		a.position = a.level.center(c) + dv * (a.level.C / 2 - cl.get("off", 0.3))
-		a.position.y = a.base_y + randf_range(1.3, maxf(1.5, _ceil_y(c) - a.base_y - 1.2))
+		a.position.y = a.base_y + a.rng.randf_range(1.3, maxf(1.5, _ceil_y(c) - a.base_y - 1.2))
 		a.surf = 1
 		a.basis = _facing(a.wall_n, Vector3.DOWN)       # head down, the way they wait
 
 
 ## Woken on a wall: up to the ceiling, more often than not.
 func on_alert() -> void:
-	_goal_up = d.get("climb", {}).get("ceiling", true) and randf() < 0.6
+	_goal_up = d.get("climb", {}).get("ceiling", true) and a.rng.randf() < 0.6
 
 
 func _ceil_y(c: Vector2i) -> float:
@@ -98,7 +98,7 @@ func fall_tick(dt: float, flat: Vector3) -> void:
 	var z := Vector3(a.basis.z.x, 0, a.basis.z.z)
 	a.basis = Basis(Vector3.UP, atan2(z.x, z.z))
 	a.velocity = Vector3.ZERO
-	next_t = randf_range(4.0, 8.0)
+	next_t = a.rng.randf_range(4.0, 8.0)
 	if not a.dead:
 		var pl := a.target()
 		var dmg: float = d.get("climb", {}).get("drop_damage", 0.0)
@@ -115,13 +115,13 @@ func consider(dt: float, dist: float) -> bool:
 	next_t -= dt
 	if next_t > 0.0:
 		return false
-	next_t = randf_range(3.0, 6.0)
+	next_t = a.rng.randf_range(3.0, 6.0)
 	var cl: Dictionary = d["climb"]
-	if dist > cl.get("min_dist", 7.0) and randf() < cl.get("chance", 0.5) and a.is_on_floor() and not a.move.wet:
+	if dist > cl.get("min_dist", 7.0) and a.rng.randf() < cl.get("chance", 0.5) and a.is_on_floor() and not a.move.wet:
 		var c := a.level.cell_of(a.global_position)
 		var walls := a.move.walls_at(c)
 		if not walls.is_empty():
-			var dv: Vector3 = walls[randi() % walls.size()]
+			var dv: Vector3 = walls[a.rng.randi() % walls.size()]
 			_approach = a.level.center(c) + dv * (a.level.C / 2 - cl.get("off", 0.3))
 			_approach_t = 2.0
 			a.wall_n = -dv

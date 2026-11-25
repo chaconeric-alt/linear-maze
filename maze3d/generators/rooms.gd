@@ -31,8 +31,9 @@ extends RefCounted
 
 ## How it is built: _try runs the stages below in order over one GenContext (generators/rooms/context.gd), which
 ## carries the map and everything placed so far from stage to stage. Each stage is named for the phase it does and
-## lives with its neighbours in generators/rooms/. Every random number comes from the context's one generator, in a
-## fixed order, so the same seed always makes the same level.
+## lives with its neighbours in generators/rooms/. The layout (units to galleries) draws from the context's generator
+## in a fixed order; every stage after it, and each room's contents and furniture, from a stream of its own (Dice,
+## GenContext.stage), so the same seed always makes the same level and a stage that changes moves nothing else.
 
 const Layout := preload("res://generators/rooms/layout.gd")
 const Galleries := preload("res://generators/rooms/galleries.gd")
@@ -70,16 +71,23 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 		return {}
 	Galleries.cut_corners(ctx)
 	Galleries.galleries(ctx)                 # balconies and ramps, before the furniture
+	ctx.stage("essentials")
 	Contents.essentials(ctx)                 # the start, the card, the guns, the way out
 	Contents.arches(ctx)
-	Contents.rooms(ctx)                      # monsters, treasure, furniture, dressing, lockers
+	Contents.rooms(ctx)                      # monsters, treasure, furniture, dressing, lockers: each room its own numbers
+	ctx.stage("balconies")
 	Contents.balconies(ctx)                  # something worth the climb
+	ctx.stage("hazards")
 	Hazards.windows(ctx)
 	Hazards.traps(ctx)
 	Hazards.pools(ctx)                       # last of the main floor's features
+	ctx.stage("storeys")
 	Storeys.storeys(ctx)                     # doors and rooms upstairs, the basement, lifts and pits
+	ctx.stage("stations")
 	Stations.stations(ctx)                   # robots off duty into their stations; sphinx guns
+	ctx.stage("ambush")
 	_ambush(ctx)
+	ctx.stage("danger")
 	Danger.zone(ctx)                         # a danger zone in a dead end, on numbers of its own: last of all
 	return _assemble(ctx)
 

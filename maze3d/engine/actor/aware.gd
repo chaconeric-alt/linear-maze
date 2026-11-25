@@ -273,7 +273,7 @@ func _near(at: Vector3) -> Vector3:
 		ring = next
 	if out.is_empty():
 		return at
-	return nav.astar.get_point_position(out[randi() % out.size()])
+	return nav.astar.get_point_position(out[a.rng.randi() % out.size()])
 
 
 ## The search is over: back to its post (its beat, if it walks one), asleep, warier.

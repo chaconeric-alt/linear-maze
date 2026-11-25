@@ -56,11 +56,11 @@ func start() -> void:
 		pool.append(o)
 	if pool.is_empty():
 		return
-	current = pool[randi() % pool.size()]
+	current = pool[a.rng.randi() % pool.size()]
 	if current.get("at", "floor") == "screen" and not _find_screen(pool):
 		return
 	if current.get("at", "floor") == "wall":
-		var dv: Vector3 = walls[randi() % walls.size()]
+		var dv: Vector3 = walls[a.rng.randi() % walls.size()]
 		if a.e.has("face"):                            # the level can say which wall
 			var f: Vector3 = Vector3(Level.DIRS[Level.DIR_NAMES.get(a.e["face"], 0)].x, 0, Level.DIRS[Level.DIR_NAMES.get(a.e["face"], 0)].y)
 			if walls.has(-f):
@@ -71,7 +71,7 @@ func start() -> void:
 			a.rotation.y = atan2(dv.x, dv.z)
 	a.home = a.position
 	a.cs.position.y += current.get("drop", 0.0)
-	_puff_t = randf_range(1.0, 5.0)
+	_puff_t = a.rng.randf_range(1.0, 5.0)
 	a.play("idle")
 
 
@@ -96,7 +96,7 @@ func _find_screen(pool: Array) -> bool:
 		if others.is_empty():
 			current = {}
 			return false
-		current = others[randi() % others.size()]
+		current = others[a.rng.randi() % others.size()]
 		return true
 	var f: Vector3 = best.global_transform.basis.z
 	a.position = best.position + f * current.get("stand", 2.2)

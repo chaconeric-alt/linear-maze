@@ -168,10 +168,10 @@ func leave(info: Dictionary) -> void:
 	if d.has("explode"):
 		Fx.explode(a.level, a.eye(), d["explode"].get("radius", 3.0), d["explode"].get("damage", 20.0), Color(1.0, 0.5, 0.15), a)
 	for dr in d.get("drops", []):
-		if randf() < dr.get("chance", 1.0):
+		if a.rng.randf() < dr.get("chance", 1.0):
 			var p := Pickup.new()
 			a.level.add_child(p)
-			p.global_position = Vector3(pos.x + randf_range(-0.4, 0.4), a.level.floor_y(pos) + 1.0, pos.z + randf_range(-0.4, 0.4))      # on whatever floor it died on
+			p.global_position = Vector3(pos.x + a.rng.randf_range(-0.4, 0.4), a.level.floor_y(pos) + 1.0, pos.z + a.rng.randf_range(-0.4, 0.4))      # on whatever floor it died on
 			p.setup(a.level, dr, a.level.kit_id)
 			a.level.spawner.keep(p)
 	Game.run_effects(a.e.get("on_death"))

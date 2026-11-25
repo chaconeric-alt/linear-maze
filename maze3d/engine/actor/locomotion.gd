@@ -196,7 +196,7 @@ func _gait(dt: float) -> float:
 	if _gait_t <= 0.0:
 		_gait_go = not _gait_go
 		var r: Array = g.get("burst", [0.25, 0.7]) if _gait_go else g.get("pause", [0.04, 0.16])
-		_gait_t = randf_range(r[0], r[1])
+		_gait_t = a.rng.randf_range(r[0], r[1])
 	return g.get("fast", 1.3) if _gait_go else 0.0
 
 
@@ -235,9 +235,9 @@ func stunned_tick(dt: float) -> void:
 func wander_tick(dt: float) -> void:
 	_wander_t -= dt
 	if _wander_t <= 0.0:
-		_wander_t = randf_range(2.0, 5.0)
-		var ang := randf() * TAU
-		_wander = Vector3(cos(ang), 0, sin(ang)) if randf() < 0.5 else Vector3.ZERO
+		_wander_t = a.rng.randf_range(2.0, 5.0)
+		var ang := a.rng.randf() * TAU
+		_wander = Vector3(cos(ang), 0, sin(ang)) if a.rng.randf() < 0.5 else Vector3.ZERO
 		if a.global_position.distance_to(a.home) > 5.0:
 			_wander = (a.home - a.global_position).normalized()
 			_wander.y = 0

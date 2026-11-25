@@ -4,6 +4,30 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Random streams of their own** (the generation review's build order, step 1 of 4; Eric, 25 Nov: "let's do the first 4"; SPEC 4.13, 5.12, 6.1, 6.3).
+  - **At play** (`Dice`, `engine/dice.gd`). Game code that decides anything now draws from a stream of its own, never the global `randf`:
+    - each actor from `Actor.rng`, seeded by the Spawner from the run's seed, the level and its key;
+    - the player from `Player.rng` (a gun's spread);
+    - each kind of chance a level takes from `Level.dice(name)`: `chance` (an effect's odds), `rolls` (a panel's hack, risk and results), `spawn`, `loot`.
+    - The global stream is left to what only looks or sounds different (sparks, pitch, shake, barks) and to the bunker's ledger.
+    - So one monster that strafes once more no longer changes every fight after it; nor does a bark.
+  - **In the generators.**
+    - The rooms generator's layout (units to galleries) draws from its own generator as before, so geometry up to the galleries is the same for the same seed.
+    - Every later stage (essentials, balconies, hazards, storeys, stations, the ambush, the danger zone), each room's contents and each room's furniture draw from a stream named for it and the kit (`GenContext.stage`, `Dice.derive`). Without the kit in the name, the ten themes on seed 5 drew alike, and five of them lost their basements together.
+    - A programme's fill and each danger wing draw from streams of their own (`ProgrammePlan.stream`).
+    - What those stages place changed once, so the generated levels hold other arches, lifts, pits and traps than before.
+  - **Two fixes the new numbers showed.**
+    - A zone's doorway is in neither room. Pressed against the inside of the Collections vault's sealed door, the player counted as outside, and its alarm stopped counting ("the seal broken ... the alarm calls one more in" failed). `Level.zone_at` now puts a body in a doorway on the side of the door it stands.
+    - E named a mine that had gone up, which has nothing left to see, and P could not write it a prompt (gen7: "P writes an image prompt for each kind of thing it names" failed, "none for trap/mine"). A spent mine is no longer named (`Trap.shows`, `TrapKind.there`).
+  - **A test's setup made plain:** the Listening Post's call check puts its Glorexx on the floor (`"perch": "none"`). With its own numbers it had perched on the ceiling, where a climber sees all round, and saw the player itself. The check's expectation is unchanged.
+  - **Baseline item62:** 29 runs, 3949 checks, 1 failure (gen7's prompt). After the mine fix and the kit in the stream names, the fifteen generated runs were run again (item62d): 0 failures. Together: 3978 checks, 0 failures (item61: 3976).
+    - The fights moved once more (716 "dies" checks became 730).
+    - The per-thing checks follow what the levels now hold:
+      - arches: medical 31 → 17, toll 27 → 15, supply 21 → 13, security 19 → 29;
+      - lifts 33 → 31, pits 40 → 34, crusher traps 6 → 3, mine traps 6 → 4.
+    - E's naming check still passes everywhere; on gen7 it counts three spent mines as not named, as INFO lines.
+    - Nothing fails.
+
 - **Calls between monsters** (step 6 of 6, the last; SPEC 3.3, 4.5, 5.13, 5.24, 9).
   - **When it calls.** A monster calls when its contact becomes its own and fresh: woken by seeing the player or by being hurt by someone, or seeing them after being told where they were or after losing them. At most once in 6 s (`ActorAware._call`).
   - **What a call is.** A noise of the kind `call`, as loud as the actor's `call` (a new actor key: 25 m; 0, it never calls), telling where the player is, with its alert sound. It carries only by the air (`LevelPerception.carried`, `walls` false), not through solid walls and floors.

@@ -323,7 +323,7 @@ func _calls() -> void:
 	Events.on("actor.noticed", listen)
 	_put(Vector2i(3, 8), 0)
 	var far := _make("custodian", Vector2i(10, 7), {"still": true, "face": "e"})
-	var other := _make("glorexx", Vector2i(6, 5), {"still": true, "face": "e"})
+	var other := _make("glorexx", Vector2i(6, 5), {"still": true, "face": "e", "perch": "none"})      # on the floor, its back to you
 	await frames(5)
 	var caller := _make("custodian", Vector2i(6, 8), {"still": true, "face": "w"})
 	for k in 20:

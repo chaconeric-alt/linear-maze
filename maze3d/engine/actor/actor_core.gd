@@ -27,6 +27,7 @@ const STATE_NAMES := ["dormant", "idle", "alert", "attacking", "stunned", "climb
 const G := 22.0
 
 var level: Level
+var rng := RandomNumberGenerator.new()      # its own random numbers (Dice): the Spawner seeds them from its key
 var d: Dictionary                 # its def
 var e: Dictionary                 # the level entry that placed it
 var tag := ""
@@ -102,7 +103,7 @@ func setup(lv: Level, def: Dictionary, entry: Dictionary) -> void:
 	_components()
 	vis.rotation.y = deg_to_rad(d.get("model_yaw", 0.0))      # models from elsewhere do not always face our way
 	vis.position.y = d.get("model_y", 0.0)
-	var climb_t := randf_range(1.0, 3.0)         # drawn for every kind, so the random stream is the same whatever it can do
+	var climb_t := rng.randf_range(1.0, 3.0)         # drawn for every kind, so its stream is the same whatever it can do
 	if climb:
 		climb.next_t = climb_t
 	if not e.get("alert", false):
@@ -358,7 +359,7 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 		od.hurt(amount)
 	elif dock == null:
 		awake = true
-	if (surf == 1 or surf == 2) and hp > 0.0 and (amount > max_hp * 0.25 or randf() < 0.4):
+	if (surf == 1 or surf == 2) and hp > 0.0 and (amount > max_hp * 0.25 or rng.randf() < 0.4):
 		climb.drop()                                 # knocked off
 	_flash_t = 0.08
 	for m in _meshes:

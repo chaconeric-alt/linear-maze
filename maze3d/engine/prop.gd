@@ -362,7 +362,7 @@ func hurt(amount: float, _info: Dictionary = {}) -> void:
 		for it in e.get("loot", []):
 			var p := Pickup.new()
 			level.add_child(p)
-			p.global_position = pos + Vector3(randf_range(-0.4, 0.4), 0.2, randf_range(-0.4, 0.4))
+			p.global_position = pos + Vector3(level.dice("loot").randf_range(-0.4, 0.4), 0.2, level.dice("loot").randf_range(-0.4, 0.4))
 			p.setup(level, it, kit_id)
 			level.spawner.keep(p, self, "loot.%d" % li)
 			li += 1

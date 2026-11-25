@@ -11,6 +11,7 @@ class_name Player
 
 const EYE := 1.62
 var level: Level
+var rng := Dice.stream("player")  # the player's own random numbers (Dice): a gun's spread
 var cfg: Dictionary = {}
 var hp := 100.0
 var max_hp := 100.0

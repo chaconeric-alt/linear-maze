@@ -196,7 +196,7 @@ func _fx_quake(ef: Dictionary, _ctx: Dictionary) -> void:
 
 ## {"p": 0.5, "do": [effects]}: sometimes
 func _fx_chance(ef: Dictionary, ctx: Dictionary) -> void:
-	if randf() < float(ef.get("p", 0.5)):
+	if ((level as Level).dice("chance") if level is Level else Dice.stream("chance")).randf() < float(ef.get("p", 0.5)):
 		run_effects(ef.get("do"), ctx)
 
 

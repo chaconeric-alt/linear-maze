@@ -52,7 +52,7 @@ func _physics_process(dt: float) -> void:
 func hurt() -> void:
 	var list: Array = a.d.get("makes", [])
 	for i in list.size():
-		if str(list[i].get("when", "")) == "hurt" and randf() < float(list[i].get("chance", 0.3)):
+		if str(list[i].get("when", "")) == "hurt" and a.rng.randf() < float(list[i].get("chance", 0.3)):
 			make(i, false)
 
 

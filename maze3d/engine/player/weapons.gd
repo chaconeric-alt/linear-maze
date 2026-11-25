@@ -165,7 +165,7 @@ func fire(w: Dictionary) -> void:
 	var fwd := -cam.global_transform.basis.z
 	var spread: float = deg_to_rad(w.get("spread", 1.0)) * (1.0 + recoil * 0.5)
 	for i in int(w.get("pellets", 1)):
-		var dir := fwd.rotated(cam.global_transform.basis.y, randf_range(-spread, spread)).rotated(cam.global_transform.basis.x, randf_range(-spread, spread))
+		var dir := fwd.rotated(cam.global_transform.basis.y, pl.rng.randf_range(-spread, spread)).rotated(cam.global_transform.basis.x, pl.rng.randf_range(-spread, spread))
 		if w.has("projectile"):
 			_launch(w, mz, fwd, dir)
 		else:

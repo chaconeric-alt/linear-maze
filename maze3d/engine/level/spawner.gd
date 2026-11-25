@@ -299,6 +299,7 @@ func _station(e: Dictionary, p: Vector2i, s: int, pos: Vector3) -> Node3D:
 
 func _actor(e: Dictionary, _p: Vector2i, _s: int, pos: Vector3) -> Node3D:
 	var a := Actor.new()
+	a.rng = level.dice("actor " + _making)          # its own numbers, from its key, before it draws any (Dice)
 	level.add_child(a)
 	a.position = pos
 	a.rotation.y = ld.face_yaw(e.get("face", "s"))

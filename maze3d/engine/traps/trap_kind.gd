@@ -35,6 +35,11 @@ func harmless() -> bool:
 	return false
 
 
+## Something there to see and name (Identify): a spent mine is not.
+func there() -> bool:
+	return true
+
+
 ## Switched off: whatever it was showing goes.
 func off() -> void:
 	on = false

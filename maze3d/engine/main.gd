@@ -70,6 +70,8 @@ func _debug_switches() -> void:
 	if _args.has("repeatable") or (_args.has("selftest") and not _args.has("realtime")):
 		var given: bool = _args.has("repeatable") and OS.get_cmdline_user_args().has("--repeatable=" + _args["repeatable"])
 		_repeatable(int(_args["repeatable"]) if given else 12345)
+	else:
+		Dice.base = randi()                          # a new run's own numbers, every time it starts
 	if _args.has("selftest"):
 		load("res://tests/selftest.gd").configure()
 	Debug.hold_zoom = Debug.hold_zoom or _args.has("zoom")
@@ -89,6 +91,7 @@ func _debug_switches() -> void:
 func _repeatable(n: int) -> void:
 	Debug.repeatable = true
 	seed(n)
+	Dice.base = n
 	print("repeatable: seed %d, clock in physics frames (start Godot with --fixed-fps 60 for the same run every time)" % n)
 
 

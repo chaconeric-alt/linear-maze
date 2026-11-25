@@ -34,7 +34,7 @@ func say(kind: String, fallback: Array = []) -> void:
 	var lines: Array = talk().get(kind, fallback if not fallback.is_empty() else d.get("barks", []))
 	if lines.is_empty():
 		return
-	var line: String = lines[randi() % lines.size()]
+	var line: String = lines[a.rng.randi() % lines.size()]
 	a.set_screen(line)
 	Fx.words(a.level, a.eye() + Vector3(0, 0.6, 0), line, LM.col(d.get("talk", {}).get("color", d.get("bark_color")), Color(0.6, 0.95, 0.8)), 2.6)
 	LM.sound(d.get("sounds", {}).get("bark", ""), a.global_position, -6.0)
@@ -51,7 +51,7 @@ func use() -> void:
 		return
 	var t: Dictionary = talk()                       # the level may give this one its own conversation
 	var opens: Array = t.get("open", ["It looks at you. It does not seem to mind."])
-	var spec := {"kicker": t.get("kicker", "OFF DUTY"), "title": d.get("name", ""), "text": opens[randi() % opens.size()], "options": []}
+	var spec := {"kicker": t.get("kicker", "OFF DUTY"), "title": d.get("name", ""), "text": opens[a.rng.randi() % opens.size()], "options": []}
 	Game.interaction.forget_used(a)                 # a new conversation: every option is on offer again
 	if t.has("riddles"):
 		_riddle(t, spec)
@@ -65,10 +65,10 @@ func use() -> void:
 
 ## One of its riddles, its answers in a shuffled order; the right one pays its prize, once.
 func _riddle(t: Dictionary, spec: Dictionary) -> void:
-	var r: Dictionary = t["riddles"][randi() % t["riddles"].size()]
+	var r: Dictionary = t["riddles"][a.rng.randi() % t["riddles"].size()]
 	spec["text"] = "%s\n\n%s" % [spec["text"], r.get("q", "")]
 	var order: Array = range(r.get("answers", []).size())
-	order.shuffle()
+	Dice.shuffle(a.rng, order)
 	for i in order:
 		var right: bool = i == int(r.get("right", 0))
 		var o := {"label": r["answers"][i], "result": r.get("yes", "CORRECT.") if right else r.get("no", "INCORRECT."), "final": true}

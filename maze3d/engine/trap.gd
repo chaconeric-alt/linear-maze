@@ -81,6 +81,11 @@ func recall(r: Dictionary) -> void:
 		set_enabled(false)
 
 
+## Something of it there to see and name (Identify): its kind says (a spent mine has nothing left).
+func shows() -> bool:
+	return job == null or job.there()
+
+
 func set_enabled(on: bool) -> void:
 	enabled = on
 	if not on:

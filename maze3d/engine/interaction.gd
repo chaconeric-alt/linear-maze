@@ -120,7 +120,7 @@ func choose(i: int) -> void:
 	var who: Node = thing
 	var result: String = o.get("result", spec.get("text", ""))
 	if o.has("results"):                             # one of several things it might say
-		result = o["results"][randi() % o["results"].size()]
+		result = Dice.pick(OptionGates.rolls(), o["results"])
 	if o.get("close", false):
 		close_panel()
 	else:

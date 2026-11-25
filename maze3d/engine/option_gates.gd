@@ -15,6 +15,11 @@ extends RefCounted
 class_name OptionGates
 
 
+## The level's stream for a panel's chances: a hack, a risk, which of its results (Dice).
+static func rolls() -> RandomNumberGenerator:
+	return (Game.level as Level).dice("rolls") if Game.level is Level else Dice.stream("rolls")
+
+
 func register(reg: EffectRegistry) -> void:
 	reg.register_gate("carrying", carrying)
 	reg.register_gate("skill", skill)
@@ -86,7 +91,7 @@ func hack(o: Dictionary, s: Object) -> bool:
 	await Game.get_tree().create_timer(0.02 if Debug.quick_hacks else 1.2, true).timeout
 	if not s.in_panel():
 		return false
-	if Debug.sure_rolls or randf() < Game.hack_chance(float(o.get("hard", 0.0))):
+	if Debug.sure_rolls or OptionGates.rolls().randf() < Game.hack_chance(float(o.get("hard", 0.0))):
 		return true
 	LM.sound("denied")
 	Game.run_effects(o.get("fail"), s.panel_ctx())
@@ -99,7 +104,7 @@ func hack(o: Dictionary, s: Object) -> bool:
 
 
 func risk(o: Dictionary, s: Object) -> bool:
-	if not (randf() < float(o["risk"]) and not Debug.sure_rolls):
+	if not (OptionGates.rolls().randf() < float(o["risk"]) and not Debug.sure_rolls):
 		return true
 	LM.sound("denied")
 	s.unmark_used()

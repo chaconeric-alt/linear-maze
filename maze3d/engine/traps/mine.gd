@@ -41,6 +41,11 @@ func off() -> void:
 	_lamp.visible = false
 
 
+## Gone up (or switched off): nothing is left of it to see or name.
+func there() -> bool:
+	return _disc.visible
+
+
 func tick(dt: float, _pl: Node3D, who: Array) -> void:
 	var fast := _armed >= 0.0
 	var blink := fmod(trap.t, 0.2 if fast else 1.4) < (0.1 if fast else 0.12)

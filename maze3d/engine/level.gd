@@ -53,6 +53,7 @@ var things_by_tag: Dictionary = {}
 var things: Dictionary = {}      # key -> node: every thing by the key its place in the level's data gives it (Spawner.plan)
 var restocked: Array = []        # the keys of what its makers made again since the last visit (Restock)
 var actors: Array = []
+var _dice: Dictionary = {}       # name -> its stream (dice)
 var targets: Array = []          # Targets (engine/target.gd)
 var traps: Array = []            # Traps (engine/trap.gd), for hazard()
 var died: Array = []             # [kind, storey] of everything that has died here, in order (the repair bay reads it)
@@ -186,7 +187,16 @@ func room_at(p: Vector2i) -> String:
 ## The zone (SPEC.md 4.13) a place is in, or "": by position, or by cell and storey.
 func zone_at(pos: Vector3) -> String:
 	var c := ld.cell_of(pos)
-	return ld.zones.at(c.x, c.y, ld.floor_of(pos))
+	var f := ld.floor_of(pos)
+	var z := ld.zones.at(c.x, c.y, f)
+	if z != "" or str(air(c.x, c.y, f).get("door", "")) == "":
+		return z
+	# A doorway is in neither room: a body in it is on whichever side of the door it stands (pressed against the
+	# inside of a zone's sealed door, the player is still in the zone)
+	var off := pos - ld.center(c, pos.y)
+	var across := ld.wallish(c.x - 1, c.y, f) and ld.wallish(c.x + 1, c.y, f)      # walls east and west: the way is north-south
+	var step := Vector2i(0, int(signf(off.z))) if across else Vector2i(int(signf(off.x)), 0)
+	return ld.zones.at(c.x + step.x, c.y + step.y, f) if step != Vector2i.ZERO else ""
 
 
 func zone_at_cell(p: Vector2i, s: int) -> String:
@@ -245,6 +255,14 @@ func glass_body() -> StaticBody3D:
 # ------------------------------------------------------------------ things in it (Spawner, LevelLights)
 func spawn_thing(e: Dictionary, p: Vector2i) -> Node3D:
 	return spawner.spawn_thing(e, p)
+
+
+## The level's stream of random numbers named `name` (Dice): an actor's ("actor <key>"), or one kind of chance taken
+## here ("chance", "rolls", "spawn", "loot"). The same run, level and name give the same numbers whatever else draws.
+func dice(name: String) -> RandomNumberGenerator:
+	if not _dice.has(name):
+		_dice[name] = Dice.stream("%s|%s|%s" % [ld.data.get("id", ""), ld.data.get("seed", ""), name])
+	return _dice[name]
 
 
 ## The key a thing is known by, the same on every load of this level ("door:12,7,0", "thing:41", "obj:3,9",

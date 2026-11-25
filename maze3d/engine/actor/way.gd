@@ -50,8 +50,8 @@ func want(dt: float, pl: Node3D, flat: Vector3, dist: float) -> Vector3:
 		var keep: Array = d.get("keep", [6.0, 12.0])
 		_strafe_t -= dt
 		if _strafe_t <= 0.0:
-			_strafe_t = randf_range(1.0, 2.6)
-			_strafe = -_strafe if randf() < 0.6 else _strafe
+			_strafe_t = a.rng.randf_range(1.0, 2.6)
+			_strafe = -_strafe if a.rng.randf() < 0.6 else _strafe
 		var side := flat.normalized().cross(Vector3.UP) * _strafe
 		if dist < keep[0]:
 			return -flat.normalized() + side * 0.5

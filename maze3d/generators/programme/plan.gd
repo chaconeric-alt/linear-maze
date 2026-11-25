@@ -14,7 +14,8 @@ extends RefCounted
 ## item a thing is, when they list several.
 class_name ProgrammePlan
 
-var rng := RandomNumberGenerator.new()
+var rng := RandomNumberGenerator.new()          # the plan's own choices; later stages draw from streams of their own
+var seed_value := 0
 var spine: Array = []            # room ids
 var wings: Array = []            # {"id", "name", "style", "after", "side", "west": [ids], "east": [ids]}
 var rooms: Dictionary = {}       # id -> room dict (+ "w", "h", "wing")
@@ -23,8 +24,9 @@ var left_out: Array = []         # wing rooms whose "chance" the seed did not gi
 var problems: Array = []         # what is wrong with the programme as written (nothing is laid out then)
 
 
-func _init(prog: Dictionary, seed_value: int) -> void:
-	rng.seed = seed_value
+func _init(prog: Dictionary, seed_v: int) -> void:
+	seed_value = seed_v
+	rng.seed = seed_v
 	for r in prog.get("rooms", []):
 		_room(r, "")
 		spine.append(str(r.get("id", "")))
@@ -41,6 +43,11 @@ func _init(prog: Dictionary, seed_value: int) -> void:
 	var gap: Array = prog.get("spine", {}).get("gap", [1, 2])
 	for i in spine.size() - 1:
 		gaps[spine[i]] = rng.randi_range(int(gap[0]), int(gap[1]))
+
+
+## A stream of this plan's seed for a later stage (Dice.derive): what one stage draws never moves another's.
+func stream(name: String) -> RandomNumberGenerator:
+	return Dice.derive(seed_value, name)
 
 
 func _room(r: Dictionary, wing: String) -> void:

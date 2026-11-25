@@ -79,6 +79,12 @@ var triggers: Array = []
 var tags := {}
 
 
+## From here on the stages draw from a stream of their own, named for them and the kit (Dice.derive): what one draws
+## never moves what another makes, and two themes on the same seed do not draw alike.
+func stage(name: String) -> void:
+	rng = Dice.derive(seed_value, "%s|%s" % [p.get("kit", ""), name])
+
+
 func _init(seed_v: int, params: Dictionary, locked: bool) -> void:
 	seed_value = seed_v
 	p = params

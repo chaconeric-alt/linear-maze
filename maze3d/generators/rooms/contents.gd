@@ -84,8 +84,9 @@ static func _free(ctx: GenContext, floor_cells: Array) -> Vector2i:
 ## purpose, dressing in its corners, lockers.
 static func _room(ctx: GenContext, a: Dictionary, floor_cells: Array, nooks: Array, seen_purpose: Dictionary) -> void:
 	var p := ctx.p
-	var rng := ctx.rng
 	var i: int = a["unit"]
+	ctx.stage("room %d %s" % [i, a["rect"].position])   # each room its own numbers: one room's change moves no other
+	var rng := ctx.rng
 	var props: Array = p.get("style_props", {}).get(a["style"], p.get("props", []))
 	_monsters(ctx, floor_cells)
 	var purposes: Array = p.get("purposes", {}).get(a["style"], [])
@@ -102,8 +103,7 @@ static func _room(ctx: GenContext, a: Dictionary, floor_cells: Array, nooks: Arr
 			seen_purpose[pur["name"]] = seen_purpose.get(pur["name"], 0) + 1
 			ctx.rooms[a["room"]]["name"] = pur["name"] if seen_purpose[pur["name"]] == 1 else "%s %d" % [pur["name"], seen_purpose[pur["name"]]]
 		var main := ctx.rng                          # the furniture draws numbers of its own: what a room is furnished
-		ctx.rng = RandomNumberGenerator.new()         # with can change without moving a monster, a trap or a pit
-		ctx.rng.seed = ctx.seed_value * 7919 + i * 104729 + 31
+		ctx.stage("furnish %d %s" % [i, a["rect"].position])   # with can change without moving a monster, a trap or a pit
 		Furnish.furnish(ctx, i, floor_cells, pur, p.get("kit", "hightech"), float(p.get("furnish", 1.0)))
 		ctx.rng = main
 		props = pur.get("corner", props)

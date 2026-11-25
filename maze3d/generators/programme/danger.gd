@@ -30,11 +30,12 @@ static func expand(prog: Dictionary, plan: ProgrammePlan) -> Dictionary:
 		var zid: String = w["id"]
 		locks.append({"wing": zid, "flag": zid + "_open", "need": str(ds.get("need", "")), "tag": zid + "_door"})
 		var last := ProgrammeDanger.deepest(w)
+		var rng := plan.stream("danger " + zid)       # its own numbers (Dice): a zone that changes moves nothing else
 		for rid in w["west"] + w["east"]:
 			var r: Dictionary = plan.rooms[rid]
 			var room := int(r["w"]) * int(r["h"])
 			var room_for: int = int(room * ROOM_SHARE) - r.get("things", []).size()
-			var add := ProgrammeDanger._things(ds, plan.rng, zid, rid == last)
+			var add := ProgrammeDanger._things(ds, rng, zid, rid == last)
 			r["things"] = r.get("things", []) + add.slice(0, maxi(0, room_for))
 	out["locks"] = locks
 	return out

@@ -121,7 +121,7 @@ func _tick(dt: float, pl: Node3D) -> void:
 	if a.roused and dist < 14.0:
 		_chat_t -= dt
 		if _chat_t <= 0.0:
-			_chat_t = randf_range(8.0, 15.0)
+			_chat_t = a.rng.randf_range(8.0, 15.0)
 			a.talker.say("idle")
 	if _od == "back":                                # going home after a drill
 		_go_back(dt)
@@ -138,7 +138,7 @@ func _attention(dt: float) -> void:
 		_rouse_t = 0.0
 		if not a.roused:
 			a.roused = true
-			_chat_t = randf_range(6.0, 11.0)
+			_chat_t = a.rng.randf_range(6.0, 11.0)
 			a.talker.say("greet")
 			if d.has("dormant_clip") and a.play("startle"):       # powering up takes a moment
 				a.stun = d.get("startle_time", 1.0)
@@ -196,7 +196,7 @@ func _stay(dt: float, flat: Vector3, dist: float) -> void:
 		_roam_for += dt
 		if mv.follow(dt, 0.4) or _roam_for > 14.0:
 			mv.roam = PackedVector3Array()
-			_roam_t = randf_range(3.0, 9.0)
+			_roam_t = a.rng.randf_range(3.0, 9.0)
 		return
 	mv.stand(dt)
 	_roam_t -= dt
@@ -209,7 +209,7 @@ func _stay(dt: float, flat: Vector3, dist: float) -> void:
 func _pick_stroll() -> void:
 	var r: int = int(a.e.get("roam", 4))
 	var pc := a.level.cell_of(post)
-	var c := pc + Vector2i(randi_range(-r, r), randi_range(-r, r))
+	var c := pc + Vector2i(a.rng.randi_range(-r, r), a.rng.randi_range(-r, r))
 	var st := a.move.storey()
 	if r <= 0 or c.x < 1 or c.y < 1 or c.x >= a.level.w - 1 or c.y >= a.level.h - 1:
 		return
