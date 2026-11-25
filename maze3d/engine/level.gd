@@ -43,6 +43,8 @@ var nav: AStar3D                 # points: ground, deck 1, deck 2 and ramp, per 
 var tiles_at: Dictionary = {}    # Vector2i -> [[tile id, where it was laid], ..]: which tile is where (Identify)
 var lights_by_room: Dictionary = {}
 var explored: Dictionary = {}
+var way_home: Dictionary = {}    # Vector3i(x, y, floor) -> true: the cells of the ways home, marked (LevelWayHome)
+var _way_marks: Array = []
 var doors: Dictionary = {}       # Vector2i -> Door
 var doors_up: Dictionary = {}    # Vector3i(x, y, storey) -> Door, for doors that are not on storey 0
 var lifts: Array = []
@@ -70,6 +72,11 @@ var start_yaw: float:
 
 
 ## A named way in ({"start": "<name>"} in the data): {"cell", "level", "yaw"}, or {} if the level has none of that name.
+## The squares of light on the floors of the ways home (LevelWayHome), one node each, its half size as meta "half".
+func way_home_marks() -> Array:
+	return _way_marks
+
+
 func arrival(name: String) -> Dictionary:
 	return ld.arrivals.get(name, {})
 
@@ -100,6 +107,11 @@ func build(level_data: Dictionary, memory: Dictionary = {}) -> void:
 	tiles_at = builder.tiles_at
 	builder.make_bodies()
 	ld.hung = LevelHung.find(ld)
+	var homes := LevelWayHome.find(ld)
+	for on in homes:
+		for k in on:
+			way_home[k] = true
+	_way_marks = LevelWayHome.mark(self, homes)
 	builder.build_shell()
 	builder.build_collision()
 	nav_graph = builder.build_nav()

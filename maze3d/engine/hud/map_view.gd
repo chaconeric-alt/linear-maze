@@ -1,6 +1,6 @@
 extends Control
 ## HudMap - the map in the top right corner (Tab makes it bigger): the cells explored on the floor you are on, windows,
-## ramps, balconies, pools, lifts and doors (in their lock's colour while locked), anything hostile you have seen as a
+## ramps, balconies, pools, lifts, the ways home (in their own colour) and doors (in their lock's colour while locked), anything hostile you have seen as a
 ## red signal that pulses (faster and wider once it is hunting), what the character senses through walls (Sense,
 ## SPEC.md 5.22: monsters not yet seen as a dim orange ring, treasure as a gold dot), you as a white arrow, B1 / L0 /
 ## L1 when the level has more than one floor, SAFE once it has been made safe, and the outline of a zone (red, or
@@ -62,7 +62,7 @@ func _draw_cells(lv: Level, pl: Node3D, pf: int, s: float, pc: Vector2, mid: Vec
 			var at := mid + (Vector2(p) - pc) * s
 			if at.x < 0 or at.y < 0 or at.x > size.x - s or at.y > size.y - s:
 				continue
-			draw_rect(Rect2(at, Vector2(s - 1, s - 1)), _cell_color(lv, p, pf))
+			draw_rect(Rect2(at, Vector2(s - 1, s - 1)), HudMap.cell_color(lv, p, pf, accent))
 			var zid := lv.zone_at_cell(p, pf)
 			if zid != "":
 				_draw_zone_edges(lv, p, pf, zid, at, s)
@@ -91,7 +91,9 @@ static func zone_sides(lv: Level, p: Vector2i, pf: int) -> Array:
 	return out
 
 
-func _cell_color(lv: Level, p: Vector2i, pf: int) -> Color:
+## The colour of an explored cell on floor pf: a way home's own colour (LevelWayHome) over anything but a door; a door
+## in its lock's colour while locked (open ones in `accent`); a lift, a window, a ramp, a balcony, a pool, or the floor.
+static func cell_color(lv: Level, p: Vector2i, pf: int, accent: Color) -> Color:
 	var col := Color(0.55, 0.62, 0.66, 0.8)
 	var lc := lv.cell(p.x, p.y, pf)
 	if lc["window"] != "":
@@ -104,6 +106,8 @@ func _cell_color(lv: Level, p: Vector2i, pf: int) -> Color:
 		col = Color(0.35, 0.6, 0.7, 0.8)
 	if lc.has("lift"):
 		col = Color(0.5, 1.0, 0.6, 0.95)
+	if lv.way_home.has(Vector3i(p.x, p.y, pf)):
+		col = LevelWayHome.color()
 	var dk: Variant = p if pf == 0 else Vector3i(p.x, p.y, pf)
 	var dd: Dictionary = lv.doors if pf == 0 else lv.doors_up
 	if dd.has(dk):

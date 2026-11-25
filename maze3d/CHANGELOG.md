@@ -4,6 +4,14 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **The way home is marked** (Eric: "the entry / exit square to go back home should be marked in its own distinct color"; SPEC 3, 4.10, 5.4, 5.5).
+  - **What counts.** A way home is anything placed whose `use` ends the expedition (an `end` effect, at any depth, so a terminal with a way out among its options counts too). Examples: the console that signals the surface, the Warlord's blast door, the Level 3 lift panel that ends the expedition alive.
+  - **On the floor.** It gets a square of light, four strips 0.65 m in from the cell's edges so they show in front of something hung on the wall. A thing two cells wide, like the blast door, gets one oblong across both cells. The strips are unlit by any lamp, so a level has no more lights than before (`LevelWayHome`, `engine/level/way_home.gd`).
+  - **On the map.** Its cells are drawn in the game's `theme.way_home`, rose (1.0, 0.4, 0.65), a colour no lock, door, lift, zone or window uses (`HudMap.cell_color`, now public and static).
+  - **Not marked.** The square you arrive on, unless it is also a way out.
+  - **A new check** in the `finish` part: every way home has its square and its colour on the map, and there are no other squares. It passes in all 21 runs that finish their level. No other line of the baseline changed (item54: 28 runs, 3940 checks, 0 failures).
+  - `LevelHung.along` is now public, as the marks share it.
+
 - **Shelves back to back** (Eric: "book shelves in the middle of the room with blank backs exposed look weird. If a book shelf is NOT against a wall, the shelf should have another shelf on the other side facing outward. Check to make sure this doesn't make space between them too narrow"; SPEC 6.2).
   - **Pairs.** `generator_params.back_to_back` lists the pieces with a blank back: `hm_bookcase`, `an_filing`, `du_reel`, `server_rack`, `dr_rack`. Out on the floor (in the rooms generator and a programme's furnishing alike), each now stands in a pair, backs together and fronts out, centred on its cell (`FurnishPut.put`, `_twin`). Against a wall it is alone, as before.
   - **Lights.** The second of a lit pair is not lit, so a room has no more lights than before.

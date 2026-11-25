@@ -21,7 +21,7 @@ static func find(ld: LevelData) -> Dictionary:
 		var meta: Dictionary = LM.model_meta(ld.kit_id, e["prop"]) if e.has("prop") else {}
 		if e.has("sign") or meta.get("mount", "") == "wall":
 			var d := ld.wall_side(p, e.get("face", ""), s)
-			for q in _along(ld, e, meta, p, d):
+			for q in along(ld, e, meta, p, d):
 				hung[Vector4i(q.x, q.y, s, d)] = true
 		elif e.has("prop"):
 			for d in _backed(ld, e, meta, p, s):
@@ -31,7 +31,7 @@ static func find(ld: LevelData) -> Dictionary:
 
 ## The cells whose wall on side d a thing hung there covers: its own, and those either side that its width and its
 ## "offset" along the wall reach into (a vehicle bay's shutter two cells wide).
-static func _along(ld: LevelData, e: Dictionary, meta: Dictionary, p: Vector2i, d: int) -> Array:
+static func along(ld: LevelData, e: Dictionary, meta: Dictionary, p: Vector2i, d: int) -> Array:
 	var side: Vector2i = LevelData.DIRS[(d + 1) % 4]
 	var off: Vector3 = LM.vec(e.get("offset"), Vector3.ZERO)
 	var mid: float = off.x * side.x + off.z * side.y
