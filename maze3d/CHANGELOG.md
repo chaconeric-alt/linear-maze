@@ -4,6 +4,14 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Sight is what is drawn** (step 2 of 6; SPEC 4.3, 5.4, 5.24).
+  - **One place to ask.** `LevelPerception` (`engine/level/perception.gd`, `Level.perception`) answers for every actor: its senses, whom to fight, a blow, a climber with no route, a robot station's sensor.
+  - **Railings are see-through.** Their collision moved to the glass layer: they still stop bodies and shots, and no longer stop sight.
+  - **Three points.** A target is looked for at its chest, head and hips, so a railing or a desk hiding part of it does not hide it all. A monster's gun aims at the best height it has a clear shot at.
+  - **Moving.** A skirmisher keeps its distance only while it has a shot, and a chaser goes straight at you only along a clear line; otherwise each takes its route. The Auditor's beam is spoiled by a railing or glass too.
+  - **The Listening Post's sight check:** a monster on the hall floor now sees you on the gallery wherever you can see it (16 of 16 places; it was 2).
+  - **Baseline item56:** 29 runs, 3972 checks, 0 failures. The fights shifted. Across eleven runs, some "dies" checks became "already dead when its turn came" INFO lines and some went the other way: 467 such checks before, 468 now. Nothing fails.
+
 - **The Listening Post: the awareness rebuild's test level** (step 1 of the six in "Monster awareness: an assessment"; SPEC 7, 9).
   - **The level** (`tools/levels/perception.py`): a hall two storeys tall and 40 m long, with a railed gallery on a ramp, a gallery only a lift reaches, a crate that blocks its cell, a store behind a door under the gallery, and an office whose door opens on to the gallery.
   - **Its test** (`perception_test.gd`) makes each monster where it needs it. One check holds already: a shot through the railing stops at it, both ways.

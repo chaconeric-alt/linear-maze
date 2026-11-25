@@ -191,7 +191,7 @@ func _strike(pl: Node3D, dist: float) -> void:
 		"melee":
 			_atk_done = true
 			LM.sound(at.get("sound", "swing"), a.global_position)
-			if dist <= at.get("range", 2.0) + 0.7 and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.0, 0)):
+			if dist <= at.get("range", 2.0) + 0.7 and _reaches(pl):
 				pl.hurt(at.get("damage", 10.0), _hit_info(at, {"type": at.get("kind", "melee"), "from": a.global_position, "by": a, "knock": at.get("knock", 3.0)}))
 		"grapple":
 			_grapple(at, pl, dist)
@@ -212,11 +212,11 @@ func _grapple(at: Dictionary, pl: Node3D, dist: float) -> void:
 	_atk_done = true
 	LM.sound(at.get("sound", "clang"), a.global_position)
 	if not "held_by" in pl:                          # another monster (factions) cannot be held: it is struck
-		if dist <= at.get("range", 2.4) + 0.6 and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.0, 0)):
+		if dist <= at.get("range", 2.4) + 0.6 and _reaches(pl):
 			pl.hurt(at.get("damage", 6.0), {"type": "crush", "from": a.global_position, "by": a})
 		return
 	if dist <= at.get("range", 2.4) + 0.6 and absf(pl.global_position.y - a.global_position.y) < 2.0 and pl.held_by == null \
-			and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.0, 0)):
+			and _reaches(pl):
 		_grab_t = at.get("hold", 1.6)
 		_grab_tick_t = 0.0
 		_grab_hp = a.hp
@@ -225,6 +225,11 @@ func _grapple(at: Dictionary, pl: Node3D, dist: float) -> void:
 		Fx.words(a.level, a.eye() + Vector3(0, 0.6, 0), at.get("text", "GOT YOU"), LM.col(d.get("bark_color"), Color(1.0, 0.4, 0.3)))
 	elif a.anim and at.has("miss_at"):
 		a.anim.seek(at["miss_at"])                  # closed on nothing: straight to the end of the clip
+
+
+## A blow can land: some part of them in a clear line from its eye, past glass and railings as well.
+func _reaches(pl: Node3D) -> bool:
+	return a.level.perception.shot_height(a.eye(), pl) >= 0.0
 
 
 func _shoot(at: Dictionary, pl: Node3D) -> void:
@@ -236,7 +241,7 @@ func _shoot(at: Dictionary, pl: Node3D) -> void:
 	var from: Vector3 = a.global_position + fwd3 * (d.get("radius", 0.5) + 0.25) + Vector3(0, at.get("muzzle", d.get("eye", 1.2)) * (-1.0 if d.get("mount", "") == "ceiling" else 1.0), 0)
 	if aiming and d["aim"].has("muzzle"):            # out of the barrel itself: a point that rides the gun bone
 		from = rig.muzzle()
-	var target_at: Vector3 = pl.global_position + Vector3(0, 1.1, 0) + pl.velocity * at.get("lead", 0.0) * (from.distance_to(pl.global_position) / 30.0)
+	var target_at: Vector3 = pl.global_position + Vector3(0, a.senses.aim_y if a.senses.aim_y >= 0.0 else 1.1, 0) + pl.velocity * at.get("lead", 0.0) * (from.distance_to(pl.global_position) / 30.0)
 	var dir: Vector3 = (target_at - from).normalized()
 	if aiming:                                       # a shot leaves along the barrel: it cannot go where the gun is not pointing
 		var bore: Vector3 = rig.bore()

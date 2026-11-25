@@ -101,7 +101,7 @@ func hurt_by(by: Variant) -> void:
 
 
 func _sees(n: Node3D) -> bool:
-	return a.level.los(a.eye(), n.global_position + Vector3(0, 1.0, 0))
+	return a.level.perception.sees(a.eye(), n)
 
 
 func _alive(n: Variant) -> bool:

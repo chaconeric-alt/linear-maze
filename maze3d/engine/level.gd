@@ -43,6 +43,7 @@ var nav: AStar3D                 # points: ground, deck 1, deck 2 and ramp, per 
 var tiles_at: Dictionary = {}    # Vector2i -> [[tile id, where it was laid], ..]: which tile is where (Identify)
 var lights_by_room: Dictionary = {}
 var explored: Dictionary = {}
+var perception: LevelPerception  # what can be seen and shot here: every actor asks it
 var way_home: Dictionary = {}    # Vector3i(x, y, floor) -> true: the cells of the ways home, marked (LevelWayHome)
 var _way_marks: Array = []
 var doors: Dictionary = {}       # Vector2i -> Door
@@ -106,6 +107,7 @@ func build(level_data: Dictionary, memory: Dictionary = {}) -> void:
 	builder = LevelBuilder.new(self, ld, lights)
 	tiles_at = builder.tiles_at
 	builder.make_bodies()
+	perception = LevelPerception.new(self)
 	ld.hung = LevelHung.find(ld)
 	var homes := LevelWayHome.find(ld)
 	for on in homes:

@@ -5,7 +5,7 @@ extends SelfTestPart
 ## the gallery behind its railing; a shot through the railing; gunfire heard across the hall, from the doorway above it
 ## and through the Store's shut door; the route to a player standing by a crate that blocks its cell; a player on the
 ## gallery only the lift reaches; a flyer under the gallery; and where a monster goes when the player vanishes.
-## Today's answers are INFO lines; each becomes a check as the step that settles it lands.
+## Answers still waiting for the step that settles them are INFO lines; each becomes a check as its step lands.
 
 const NORTH := Vector2i(3, 4)        # a cell of the north gallery (storey 1)
 const SOUTH := Vector2i(3, 9)        # a cell of the south gallery, which only the lift reaches
@@ -108,7 +108,7 @@ func _railing_sight() -> void:
 			visible += 1 if you else 0
 			missed += 1 if you and not it else 0
 			await _kill(m)
-	print("INFO  the gallery: of 16 places, a monster on the hall floor sees you in %d, you can see it in %d, and you see it while it cannot see you in %d" % [sees, visible, missed])
+	say(missed == 0 and visible > 0, "a monster on the hall floor sees you on the gallery wherever you can see it: of 16 places, it sees you in %d, you see it in %d, you see it unseen in %d" % [sees, visible, missed])
 
 
 ## A shot through the railing stops at it, both ways: the player's, aimed low through it at a monster below, and the

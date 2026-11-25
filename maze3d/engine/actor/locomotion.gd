@@ -164,13 +164,14 @@ func _fleeing() -> bool:
 ## (close and in sight), or along the route the level's nav finds.
 func _want(dt: float, pl: Node3D, flat: Vector3, dist: float) -> Vector3:
 	var see: bool = a.senses.see
+	var clear: bool = a.senses.shot                 # nothing in the way, a railing or glass included
 	if _fleeing():
 		if not _fled:
 			_fled = true
 			if d.has("flee_text"):
 				Game.say(d["flee_text"], "warn")
 		return -flat.normalized() if see else Vector3.ZERO
-	if d.get("behavior", "chaser") == "skirmisher" and see:
+	if d.get("behavior", "chaser") == "skirmisher" and clear:      # keeping its distance only while it has a shot
 		var keep: Array = d.get("keep", [6.0, 12.0])
 		_strafe_t -= dt
 		if _strafe_t <= 0.0:
@@ -182,9 +183,9 @@ func _want(dt: float, pl: Node3D, flat: Vector3, dist: float) -> Vector3:
 		elif dist > keep[1]:
 			return flat.normalized() + side * 0.3
 		return side
-	# Close, in sight and on its level: straight at them. Above or below them (a balcony over their head), straight
-	# at them is nowhere: it takes the route down (or up) like anything out of sight.
-	if see and dist < 7.0 and absf(pl.global_position.y - a.global_position.y) < LEVEL_GAP:
+	# Close, in a clear line and on its level: straight at them. Above or below them (a balcony over their head), or
+	# behind a railing or glass, straight at them is nowhere: it takes the route down (or up) like anything out of sight.
+	if clear and dist < 7.0 and absf(pl.global_position.y - a.global_position.y) < LEVEL_GAP:
 		return flat.normalized() if dist > d.get("radius", 0.5) + 0.9 else Vector3.ZERO
 	path_t -= dt
 	if path_t <= 0.0:

@@ -68,7 +68,7 @@ func _process(dt: float) -> void:
 		return
 	var eye: Vector3 = global_position + global_transform.basis.z * _front + Vector3(0, 1.4, 0)      # the sensor over the door
 	var reach: float = e.get("wake", meta.get("wake", 8.0 if _open < 0.5 else 14.0))
-	if eye.distance_to(pl.global_position) < reach and level.los(eye, pl.global_position + Vector3(0, 1.3, 0)):
+	if eye.distance_to(pl.global_position) < reach and level.perception.sees(eye, pl):
 		release()
 
 
@@ -109,7 +109,7 @@ func _off_duty(dt: float) -> void:
 	var near := false
 	if pl != null and is_instance_valid(pl) and not pl.dead and not Game.calm:
 		var eye: Vector3 = global_position + global_transform.basis.z * _front + Vector3(0, 1.4, 0)
-		near = eye.distance_to(pl.global_position) < float(e.get("wake", meta.get("wake", 8.0))) and level.los(eye, pl.global_position + Vector3(0, 1.3, 0))
+		near = eye.distance_to(pl.global_position) < float(e.get("wake", meta.get("wake", 8.0))) and level.perception.sees(eye, pl)
 	if near or not home:
 		_away_t = 0.0
 		if _open_target < 1.0:

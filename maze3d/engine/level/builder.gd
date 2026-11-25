@@ -166,14 +166,14 @@ func _needs_rail(x: int, y: int, f: int, lv: int, d: int) -> bool:
 	return true
 
 
-## A railing along local X, centred on xf, standing on xf's origin. Its collision too.
+## A railing along local X, centred on xf, standing on xf's origin. Its collision too, on the glass layer (LevelPerception).
 func _rail(xf: Transform3D, length: float) -> void:
 	for hgt in [0.55, 1.05]:
 		_rails.append(xf * Transform3D(Basis().scaled(Vector3(length, 0.06, 0.06)), Vector3(0, hgt, 0)))
 	var n := int(max(2, round(length / 1.34) + 1))
 	for i in n:
 		_boxes.append(xf * Transform3D(Basis().scaled(Vector3(0.07, 1.08, 0.07)), Vector3(-length / 2 + 0.05 + (length - 0.1) * i / (n - 1), 0.54, 0)))
-	LevelCollision.shape(solid, xf * Transform3D(Basis(), Vector3(0, 0.56, 0)), Vector3(length, 1.12, 0.12))
+	LevelCollision.shape(glass, xf * Transform3D(Basis(), Vector3(0, 0.56, 0)), Vector3(length, 1.12, 0.12))      # it stops bodies and shots; it is bars, so not sight
 
 
 func _ramp(x: int, y: int, c: Dictionary, tile: String, batches: Dictionary, room: String) -> void:

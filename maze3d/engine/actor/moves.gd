@@ -87,7 +87,7 @@ func _beam(dt: float, pl: Node3D, flat: Vector3) -> void:
 	_still(dt)
 	var from := a.eye()
 	var aim_at: Vector3 = pl.global_position + Vector3(0, 1.2, 0)
-	if not a.level.los(from, aim_at):                # broken line of sight: the shot is spoiled
+	if not a.level.los(from, aim_at, true):          # broken line (a railing or glass too): the shot is spoiled
 		stop()
 		return
 	_show_line(from, aim_at, LM.col(at.get("color"), Color(1.0, 0.1, 0.05)))

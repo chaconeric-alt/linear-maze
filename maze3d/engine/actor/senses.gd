@@ -1,14 +1,16 @@
 extends Node
 ## ActorSenses - seeing and hearing. Every actor has them; the def tunes them:
 ##   "sight": 24 (awake), "wake_sight": sight * 0.75 (asleep), "hearing": 18 (gunfire, not through a floor).
-## Five times a second it looks: can it see the target (glass does not stop sight), could it shoot it (glass does),
-## has the player seen it (then it shows on the map), and if it was asleep, does what it sees wake it.
+## Five times a second it looks: can it see the target (glass and railings do not stop sight), could it shoot it (they
+## do), and at what height (LevelPerception: its chest, else its head, else its hips), has the player seen it (then it
+## shows on the map), and if it was asleep, does what it sees wake it.
 class_name ActorSenses
 
 var a: Actor
 var d: Dictionary
 var see := false                  # the target is in sight
-var shot := true                  # nothing solid, glass included, between it and the target
+var shot := true                  # nothing solid, glass and railings included, between it and some part of the target
+var aim_y := -1.0                 # the height above the target's feet that a shot can reach (-1: none)
 var _see_t := 0.0
 
 
@@ -22,12 +24,13 @@ func look(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 	if _see_t > 0.0:
 		return
 	_see_t = 0.2
-	var clear: bool = a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0))
+	var clear: bool = a.level.perception.sees(a.eye(), pl)
 	if clear and not a.seen and dist < 46.0 and pl == Game.player and (a.cloak == null or a.cloak.showing()):      # the player has laid eyes on it (the map); a shimmer is not seen
 		var pf := Vector3(-sin(pl.rotation.y), 0, -cos(pl.rotation.y))
 		if dist < 3.0 or pf.dot(-flat.normalized()) > 0.45:
 			a.seen = true
-	shot = clear and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0), true)
+	aim_y = a.level.perception.shot_height(a.eye(), pl) if clear else -1.0
+	shot = aim_y >= 0.0
 	see = not Game.calm and dist < (d.get("sight", 24.0) if a.awake else d.get("wake_sight", d.get("sight", 24.0) * 0.75)) and clear
 	if see and not a.awake:
 		var fwd := a.global_transform.basis.z
@@ -42,7 +45,7 @@ func look_off_duty(dt: float, pl: Node3D, dist: float, reach: float) -> void:
 		return
 	_see_t = 0.25
 	see = dist < reach and absf(pl.global_position.y - a.global_position.y) < 5.0 and (a.dock == null or a.dock.open_amount() > 0.9) \
-			and a.level.los(a.eye(), pl.global_position + Vector3(0, 1.3, 0))
+			and a.level.perception.sees(a.eye(), pl)
 	if see and not a.seen:
 		a.seen = true
 

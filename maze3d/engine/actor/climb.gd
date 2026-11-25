@@ -208,7 +208,7 @@ func _ceiling_tick(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 				drop()
 				return
 		want = gap.normalized()
-	elif absf(pl.global_position.y - a.base_y) < a.level.H * 0.6 and a.level.los(a.global_position, pl.global_position + Vector3(0, 1.0, 0)):
+	elif absf(pl.global_position.y - a.base_y) < a.level.H * 0.6 and a.level.perception.sees(a.global_position, pl):
 		want = flat.normalized()                 # no route, but there they are
 	else:
 		drop()                                  # nowhere to go up here (they are on another floor): down, and think again
