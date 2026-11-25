@@ -1,0 +1,171 @@
+{
+ "id": "perception",
+ "name": "The Listening Post (what monsters see and hear)",
+ "kit": "omni",
+ "style": "corridor",
+ "intro": "Somebody is always listening.",
+ "ambient_energy": 0.8,
+ "legend": {
+  "+": {
+   "door": "door_split"
+  }
+ },
+ "map": [
+  "#############",
+  "#....########",
+  "#....########",
+  "##+##########",
+  "#..........##",
+  "#..........##",
+  "#..........##",
+  "#..........##",
+  "#..........##",
+  "#..........##",
+  "#############",
+  "#############"
+ ],
+ "rooms": [
+  {
+   "name": "The Store",
+   "rect": [
+    1,
+    1,
+    4,
+    2
+   ],
+   "style": "storage"
+  },
+  {
+   "name": "The Hall",
+   "rect": [
+    1,
+    4,
+    10,
+    6
+   ],
+   "style": "white_hall",
+   "height": 2
+  }
+ ],
+ "decks": [
+  {
+   "rect": [
+    1,
+    4,
+    10,
+    1
+   ],
+   "level": 1
+  },
+  {
+   "rect": [
+    1,
+    9,
+    6,
+    1
+   ],
+   "level": 1
+  }
+ ],
+ "ramps": [
+  {
+   "at": [
+    10,
+    6
+   ],
+   "dir": "n",
+   "from": 0,
+   "to": 2
+  },
+  {
+   "at": [
+    10,
+    5
+   ],
+   "dir": "n",
+   "from": 2,
+   "to": 4
+  }
+ ],
+ "floors": [
+  {
+   "level": 1,
+   "map": [
+    "#############",
+    "#....########",
+    "#....########",
+    "###+#########",
+    "#############",
+    "#############",
+    "#############",
+    "#############",
+    "#############",
+    "#############",
+    "#############",
+    "#############"
+   ],
+   "rooms": [
+    {
+     "name": "The Office",
+     "rect": [
+      1,
+      1,
+      4,
+      2
+     ],
+     "style": "bunker_ops"
+    }
+   ]
+  }
+ ],
+ "things": [
+  {
+   "start": true,
+   "face": "w",
+   "at": [
+    8,
+    7
+   ]
+  },
+  {
+   "sign": "THE LISTENING POST\nwho hears what",
+   "at": [
+    6,
+    4
+   ],
+   "face": "s",
+   "size": 48,
+   "y": 6.4,
+   "color": [
+    1.0,
+    0.3,
+    0.85
+   ]
+  },
+  {
+   "prop": "crate",
+   "at": [
+    5,
+    7
+   ],
+   "blocks": true
+  },
+  {
+   "lift": [
+    0,
+    1
+   ],
+   "at": [
+    7,
+    9
+   ],
+   "home": 0
+  }
+ ],
+ "objectives": [
+  {
+   "text": "Be heard."
+  }
+ ],
+ "triggers": []
+}

@@ -4,6 +4,19 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **The Listening Post: the awareness rebuild's test level** (step 1 of the six in "Monster awareness: an assessment"; SPEC 7, 9).
+  - **The level** (`tools/levels/perception.py`): a hall two storeys tall and 40 m long, with a railed gallery on a ramp, a gallery only a lift reaches, a crate that blocks its cell, a store behind a door under the gallery, and an office whose door opens on to the gallery.
+  - **Its test** (`perception_test.gd`) makes each monster where it needs it. One check holds already: a shot through the railing stops at it, both ways.
+  - **What it measures today, as INFO lines.** Each becomes a check when its step lands:
+    - Of 16 places, a monster on the hall floor sees you on the gallery in 2; you can see it in 16.
+    - A handgun shot is not heard across the hall at 25.9 m, nor from the doorway above it at 15.5 m.
+    - The Arc Carbine and the Pump Scattergun are both heard through the Store's shut door, at 12 m.
+    - The route to you beside the crate has 0 points.
+    - On the lift-only gallery, a Monoid has a clear shot in 0 of 16 looks, and a Custodian stands 28.8 m away.
+    - A Drone under the gallery takes 8.6 s to reach you, round by the ramp.
+    - When you vanish, the Custodian heads for where you are now, not where it last saw you.
+  - The baseline has a 29th run, `perception`.
+
 - **The way home is marked** (Eric: "the entry / exit square to go back home should be marked in its own distinct color"; SPEC 3, 4.10, 5.4, 5.5).
   - **What counts.** A way home is anything placed whose `use` ends the expedition (an `end` effect, at any depth, so a terminal with a way out among its options counts too). Examples: the console that signals the surface, the Warlord's blast door, the Level 3 lift panel that ends the expedition alive.
   - **On the floor.** It gets a square of light, four strips 0.65 m in from the cell's edges so they show in front of something hung on the wall. A thing two cells wide, like the blast door, gets one oblong across both cells. The strips are unlit by any lamp, so a level has no more lights than before (`LevelWayHome`, `engine/level/way_home.gd`).

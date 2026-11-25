@@ -63,7 +63,8 @@
   "levels/blueprint2.json",
   "levels/warlord_1.json",
   "levels/collections.json",
-  "levels/pen.json"
+  "levels/pen.json",
+  "levels/perception.json"
  ],
  "stand_ins": {
   "chair_plain": ["ht_chair_ops"],

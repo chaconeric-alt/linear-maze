@@ -28,3 +28,4 @@ blueprint2      | --level=blueprint2 --selftest
 warlord_1       | --level=warlord_1 --selftest
 collections     | --level=collections --selftest
 pen             | --level=pen --selftest
+perception      | --level=perception --selftest
