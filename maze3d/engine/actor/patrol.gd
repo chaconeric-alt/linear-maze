@@ -4,9 +4,9 @@ extends Node
 ##   "patrol": [[3, 4], [12, 4], [12, 9]]
 ##   "patrol": {"route": "beat_a", "pause": 1.5, "give_up": 10}
 ## Not hunting, it walks from point to point at a walk, waits `pause` seconds at each, and goes round again. It sees
-## and hears as any monster does, and wakes to fight. When what it was after has not been seen for `give_up` seconds,
-## or is gone, it breaks off and goes back to its beat, from the point nearest where it is, until it sees something
-## again.
+## and hears as any monster does, and wakes to fight. When it loses what it was after it searches for `give_up` seconds
+## (ActorAware), then breaks off and goes back to its beat, from the point nearest where it is, until it notices
+## something again.
 class_name ActorPatrol
 
 const PACE := 0.45                # of its speed: a walk, not a chase
@@ -18,7 +18,6 @@ var pause := 1.5
 var give_up := 10.0
 var at := -1                      # the point it is making for (-1: not chosen yet; it has not been placed at setup)
 var _wait := 0.0
-var _lost := 0.0
 
 
 func setup(actor: Actor) -> void:
@@ -65,23 +64,8 @@ func tick(dt: float) -> void:
 	a.move.go(dt, dest, PACE)
 
 
-## Hunting: losing what it was after for long enough sends it back to its beat.
-func _physics_process(dt: float) -> void:
-	if not a.awake or a.dead or a.off_duty or a.attacking():
-		_lost = 0.0
-		return
-	var t := a.target()
-	if t != null and is_instance_valid(t) and not t.dead and a.senses.see:
-		_lost = 0.0
-		return
-	_lost += dt
-	if _lost >= give_up:
-		back_to_beat()
-
-
 ## Break off: it goes back to its beat from the nearest point, and wakes again when it next sees something.
 func back_to_beat() -> void:
-	_lost = 0.0
 	a.awake = false
 	a.senses.reset()
 	at = nearest()

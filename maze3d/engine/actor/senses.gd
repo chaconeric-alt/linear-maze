@@ -36,8 +36,10 @@ func look(dt: float, pl: Node3D, flat: Vector3, dist: float) -> void:
 	see = not Game.calm and dist < (d.get("sight", 24.0) if a.awake else d.get("wake_sight", d.get("sight", 24.0) * 0.75)) and clear
 	if see and not a.awake:
 		var fwd := a.global_transform.basis.z
-		if dist < 7.0 or a.surf != 0 or d.has("dormant_clip") or fwd.dot(flat.normalized()) > 0.2:      # from a wall they see the whole room
-			a.alert()
+		if dist < 7.0 or a.surf != 0 or d.has("dormant_clip") or fwd.dot(flat.normalized()) > 0.2 or a.aware.wary():      # from a wall, or lately searching, they see all round
+			a.alert("saw", pl.global_position)
+	if see and a.awake:
+		a.aware.saw(pl.global_position)
 
 
 ## Off duty: is somebody here to talk to? (within reach, on about the same level, out of its station, in sight)
@@ -67,6 +69,10 @@ func reset() -> void:
 
 
 ## A noise reached it (LevelPerception.noise has decided it was heard): at `from`, of a kind, telling of `about`.
-func hear(_from: Vector3, _kind := "", _about: Variant = null) -> void:
+## Asleep, it wakes to go and look there (ActorAware); awake and looking, it goes to look there instead.
+func hear(from: Vector3, _kind := "", about: Variant = null) -> void:
+	var at: Vector3 = about if about is Vector3 else from
 	if not a.awake:
-		a.alert()
+		a.alert("heard", at)
+	else:
+		a.aware.heard(at)

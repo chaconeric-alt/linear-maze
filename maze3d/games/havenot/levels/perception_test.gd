@@ -28,6 +28,7 @@ func run() -> void:
 	await _lift_only()
 	await _flyer()
 	await _vanish()
+	await _startle()
 
 
 # ------------------------------------------------------------------ helpers
@@ -221,11 +222,13 @@ func _flyer() -> void:
 	await _kill(d)
 
 
-## A Custodian hunting the player in the hall; the player vanishes into the Office (storey 1, out of its sight). 4 s
-## later: how far it is from where it last saw them, and from where they are.
+## A Custodian (it can lose you) and a Deadbot (relentless) hunting the player in the hall; the player vanishes into
+## the Office (storey 1, out of their sight). The Custodian goes to where it last saw them and searches there; the
+## Deadbot keeps after them. Then the Custodian gives up its search and is asleep again, back where it stood.
 func _vanish() -> void:
 	_put(Vector2i(9, 7), 0)
 	var m := _make("custodian", Vector2i(6, 7), {"alert": true})
+	var dbot := _make("deadbot", Vector2i(6, 5), {"alert": true})
 	await frames(60)
 	var last := pl.global_position
 	_put(OFFICE, 1)
@@ -233,6 +236,53 @@ func _vanish() -> void:
 		await frames(30)
 		_put(OFFICE, 1)
 		pl.hp = pl.max_hp
-	print("INFO  you vanish: 4 s later the Custodian is %.1f m from where it last saw you, %.1f m from where you are" % [
-		m.global_position.distance_to(last), m.global_position.distance_to(pl.global_position)])
+	var off := Vector2(m.global_position.x - last.x, m.global_position.z - last.z).length()
+	say(m.aware.state_name() == "searching" and off < ActorAware.SPREAD and dbot.aware.state_name() == "hunting",
+		"you vanish: 4 s later the Custodian is %s %.1f m from where it last saw you (%.1f m from you); the relentless Deadbot is %s" % [
+		m.aware.state_name(), off, m.global_position.distance_to(pl.global_position), dbot.aware.state_name()])
+	await _kill(dbot)
+	var took := -1
+	for t in 40:
+		await frames(30)
+		_put(OFFICE, 1)
+		if not m.awake:
+			took = t
+			break
+	say(took >= 0 and m.aware.state_name() == "unaware", "its search over, the Custodian gives up and is asleep again (%s)" % (("%.1f s later" % (took * 0.5)) if took >= 0 else "not in 20 s"))
 	await _kill(m)
+
+
+## A Custodian asleep with its back to the player, 12 m off, hears a shot: it startles (a hop, a hard turn toward the
+## noise, its alert sound, "actor.noticed" saying it heard) and goes to look. A Glorexx woken twitches its feelers.
+func _startle() -> void:
+	var told: Array = []
+	var listen := func(p: Dictionary) -> void:
+		told.append(p)
+	Events.on("actor.noticed", listen)
+	_put(Vector2i(3, 7), 0)
+	var m := _make("custodian", Vector2i(6, 7), {"still": true, "face": "e"})
+	await frames(5)
+	var y0 := m.global_position.y
+	_arm("handgun")
+	look_at(pl.global_position + Vector3(0, 30, 0.1))
+	pl.fire()
+	var rose := 0.0
+	for k in 24:
+		await frames(1)
+		rose = maxf(rose, m.global_position.y - y0)
+	var to_you := Vector3(pl.global_position.x - m.global_position.x, 0, pl.global_position.z - m.global_position.z).normalized()
+	var facing := m.global_transform.basis.z.dot(to_you)
+	var mine: Array = told.filter(func(p: Dictionary) -> bool: return p.get("key", "") == level.key_of(m))
+	var how: String = mine[0].get("how", "") if not mine.is_empty() else ""
+	var cue: String = mine[0].get("cue", "") if not mine.is_empty() else ""
+	say(rose > 0.1 and facing > 0.8 and how == "heard" and cue == str(m.d.get("sounds", {}).get("alert", "-")),
+		"a sleeping Custodian that hears a shot startles: it hops %.2f m, turns to the noise (facing %.2f), says it heard, sounds '%s'" % [rose, facing, cue])
+	await _kill(m)
+	var g := _make("glorexx", Vector2i(6, 7), {"still": true})
+	await frames(5)
+	g.alert()
+	await frames(4)
+	var tw := ActorTwitch.on(LM.find_type(g.vis, "Skeleton3D") as Skeleton3D)
+	say(tw != null and tw.twitching(), "a Glorexx woken twitches its feelers")
+	await _kill(g)
+	Events.off("actor.noticed", listen)

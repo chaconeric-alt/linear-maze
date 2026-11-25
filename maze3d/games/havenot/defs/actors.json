@@ -2,6 +2,7 @@
  "actors": {
   "roach": {
    "name": "Gladiator Roach",
+   "relentless": true,
    "model": "actors/roach_tripo.glb",
    "hp": 24,
    "speed": 7.5,
@@ -376,6 +377,7 @@
   },
   "glorexx": {
    "name": "Glorexx",
+   "relentless": true,
    "model": "actors/glorexx_tripo.glb",
    "hp": 115,
    "speed": 6.2,
@@ -1042,6 +1044,7 @@
   },
   "deadbot": {
    "name": "Deadbot",
+   "relentless": true,
    "robot": true,
    "model": "actors/deadbot_tripo.glb",
    "own_materials": true,
@@ -2476,6 +2479,7 @@
   },
   "garnisher": {
    "name": "Garnisher",
+   "relentless": true,
    "robot": true,
    "model": "actors/garnisher.glb",
    "hp": 18,
@@ -2645,6 +2649,7 @@
   },
   "liquidator": {
    "name": "The Liquidator",
+   "relentless": true,
    "robot": true,
    "model": "actors/liquidator.glb",
    "hp": 700,
@@ -2753,6 +2758,7 @@
   },
   "stalker": {
    "name": "Shroud Stalker",
+   "relentless": true,
    "model": "actors/stalker.glb",
    "hp": 180,
    "speed": 4.5,
@@ -3009,6 +3015,7 @@
   },
   "bloodfly": {
    "name": "Bloodfly Cloud",
+   "relentless": true,
    "model": "actors/bloodfly.glb",
    "hp": 60,
    "speed": 7.0,
@@ -3095,6 +3102,7 @@
   },
   "bloodfly_small": {
    "name": "Bloodfly Cloud",
+   "relentless": true,
    "model": "actors/bloodfly.glb",
    "scale": 0.72,
    "hp": 30,
@@ -3169,6 +3177,7 @@
   },
   "bloodfly_mite": {
    "name": "Bloodfly Cloud",
+   "relentless": true,
    "model": "actors/bloodfly.glb",
    "scale": 0.5,
    "hp": 15,
@@ -3238,6 +3247,7 @@
   },
   "matron": {
    "name": "Brood Matron",
+   "relentless": true,
    "model": "actors/matron.glb",
    "hp": 900,
    "armor": 0.2,

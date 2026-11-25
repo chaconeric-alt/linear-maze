@@ -4,6 +4,26 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Awareness with memory; the relentless; the startle** (step 4 of 6; Eric, 25 Nov: some monsters "know everything and follow relentlessly", others "move to the last place they saw the player and hunt from there", and "a startle or a jump and turn, moving antenna ... along with an audio cue"; SPEC 3, 5.13, 5.20, 5.24, 9).
+  - **Four states** (`ActorAware`, `engine/actor/aware.gd`, on every actor):
+    - *Unaware:* asleep.
+    - *Alerted:* it heard something and goes to look, at 0.7 of its speed.
+    - *Hunting:* it has seen you, been hurt or been told within the last 2.5 s. Only then does it know where you are. In those 2.5 s it follows you only as far as you could have run: round a corner, not up a lift.
+    - *Searching:* it lost you. It goes to where it last knew you were and looks round places within 8 m for its `search` seconds (10), or its beat's `give_up`. Then it gives up: back to its beat, or asleep, and for 20 s it sees all round.
+  - **The relentless** (`relentless`, a new actor key): the roach, the Glorexx, the Shroud Stalker, the Deadbot, the three Bloodflies, the Garnisher, the Liquidator and the Brood Matron hunt from the moment they wake until they die.
+  - **The startle** (`ActorStartle`, `ActorTwitch`). A monster that wakes:
+    - turns hard toward what it noticed, and hops (not a flyer, a turret or a thing on a wall);
+    - plays its `startle` clip; failing that, twitches its antennae, feelers, stalks, tails, ears, jaws, heads and necks (a skeleton modifier); failing that, jolts;
+    - stands 0.35 s and makes its alert sound. Starting to search, it makes the same sound lower and quieter.
+    - `actor.noticed` (with how it noticed and the cue) and `actor.gave_up` are new events.
+  - **Moved:** the patrol's own give-up (`ActorPatrol._lost`) is now the searching state's end, in `ActorAware`; `Actor.alert`'s body is `ActorAware.wake`.
+  - **The Listening Post's new checks:**
+    - When you vanish into the Office, the Custodian searches where it last saw you while the relentless Deadbot keeps after you.
+    - Its search over, the Custodian gives up and is asleep again.
+    - A sleeping Custodian that hears a shot hops, turns to the noise, says it heard and sounds its alarm.
+    - A woken Glorexx twitches its feelers.
+  - **Baseline item58:** 29 runs, 3990 checks, 0 failures. The fights shifted: across the runs, 721 "dies" checks became 736 (97 "already dead when its turn came" INFO lines became 82). The Basilica's Knife Fighter on a balcony now has a check (it was INFO), and the Collections Office's mine trap too. On the Hospital, the trap checks after the fights found every monster dead this time: 3 checks there ("a laser hurts a Fouler", "a laser that ignores monsters spares the Fouler", "a vent hurts a Fouler") are now the INFO line "no living monster left to put in a trap". That part is built for Staff Only, whose monsters are off duty and live: its checks there are unchanged. Nothing fails.
+
 - **Sound carries through the air** (step 3 of 6; SPEC 3.2, 3.3, 5.24).
   - **A noise** is a place, a loudness and a kind (`LevelPerception.noise`). It reaches each actor within its loudness times the actor's `hearing` / 18, and that actor is told (`Actor.hear(from, kind, about)`).
   - **How far it seems.** In a clear line, the straight distance. Otherwise the cheapest way air goes: walkways, ramps and balconies; from a balcony down into the hall under it; lift shafts and pits; each shut door adds 10 m. Or through walls, at three times the straight line. The map's floor numbers no longer decide what is heard; waking a neighbour (10 m) and an alarm's radius go the same way (`carried`).

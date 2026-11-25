@@ -4,6 +4,7 @@ extends CharacterBody3D
 ## which extends this. An actor is a monster, a robot, anything with a def in "actors" (SPEC.md, "Actors"). What it can do lives in component nodes, each added only when its def
 ## (or the level, for off duty) asks for it:
 ##   ActorSenses        seeing and hearing (always)                       engine/actor/senses.gd
+##   ActorAware         what it knows: unaware, alerted, hunting, searching (always)  engine/actor/aware.gd
 ##   ActorLocomotion    on foot, flying, swimming, gait, wandering, paths  engine/actor/locomotion.gd
 ##   ActorClimb         walls and ceilings ("climb")                       engine/actor/climb.gd
 ##   ActorAttacks       melee, ranged, pounce, grapple, touch              engine/actor/attacks.gd
@@ -41,6 +42,7 @@ var vis: Node3D
 var anim: AnimationPlayer
 # components; null when the def does not ask for them
 var senses: ActorSenses
+var aware: ActorAware            # what it knows of whom it is after (ActorStartle when it notices)
 var move: ActorLocomotion
 var remains: ActorRemains          # added when it dies
 var climb: ActorClimb
@@ -138,6 +140,7 @@ func _body() -> void:
 ## before the split, so the random choices they make (a face's first line, a tail's sway) come out the same.
 func _components() -> void:
 	senses = _add(ActorSenses.new())
+	aware = _add(ActorAware.new())
 	move = _add(ActorLocomotion.new())
 	if d.has("aim"):
 		aim = _add(ActorAimRig.new())
@@ -220,24 +223,10 @@ func anger() -> void:
 	awake = true
 
 
-func alert() -> void:
-	if awake or dead or off_duty:
-		return
-	if dock != null:                                 # in its station: the station opens first, then switches it on
-		dock.release()
-		return
-	if lounge and lounge.active():                   # caught slacking
-		lounge.caught()
-	if surf == 1:
-		climb.on_alert()
-	if d.has("dormant_clip") and stun <= 0.0:        # powering up takes a moment
-		awake = true
-		if _play("startle"):
-			stun = d.get("startle_time", 1.0)
-			anim.seek(0.0)
-	awake = true
-	LM.sound(d.get("sounds", {}).get("alert", ""), global_position)
-	senses.wake_others()
+## It wakes: how it noticed ("saw", "hurt", "heard", "call", or "told": a spawn, an alarm, a station, a neighbour) and
+## the place that told of, if any (ActorAware.wake: it startles, sounds, and wakes the others near it).
+func alert(how := "told", at: Variant = null) -> void:
+	aware.wake(how, at)
 
 
 func eye() -> Vector3:
@@ -269,6 +258,7 @@ func _physics_process(dt: float) -> void:
 			return
 	if pl == null or not is_instance_valid(pl) or pl.dead:
 		state = State.IDLE
+		aware.no_target(dt)
 		if foes or patrol:                           # nothing to fight: it goes about its business (its beat, pottering),
 			if attacks:                              # and an attack on what has gone is over
 				attacks.drop_attack()
@@ -280,6 +270,7 @@ func _physics_process(dt: float) -> void:
 	var flat := Vector3(to.x, 0, to.z)
 	var dist := flat.length()
 	senses.look(dt, pl, flat, dist)
+	aware.tick(dt, pl)
 	if attacks:
 		attacks.cool(dt)
 	state = _decide()
@@ -316,8 +307,12 @@ func _body_tick(dt: float) -> void:
 	move.swim_tick(dt)
 
 
-## Awake and after its target: shout, aim, hold on, strike or choose a strike, climb, or go after it.
+## Awake and after its target: shout, aim, hold on, strike or choose a strike, climb, or go after it. Not in contact
+## (ActorAware: alerted by a noise, or searching where it lost them), it goes to look instead.
 func _hunt(dt: float, pl: Node3D, to: Vector3, flat: Vector3, dist: float) -> void:
+	if not off_duty and not aware.hunting() and not attacking():
+		aware.seek(dt)
+		return
 	if looks:
 		looks.bark(dt)
 	if aim:
@@ -353,7 +348,8 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 	if foes:
 		foes.hurt_by(info.get("by"))
 	if not awake:
-		alert()
+		alert("hurt")
+	aware.hurt()
 	if off_duty and e.get("provoke", false) and info.get("from_player", info.get("type", "") != "trap"):
 		anger()                                      # this one was only being polite
 	if off_duty:

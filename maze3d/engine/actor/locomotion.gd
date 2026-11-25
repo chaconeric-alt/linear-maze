@@ -30,6 +30,7 @@ var _gait_go := true
 var _gait_ph := 0.0
 var _partner: Node3D = null
 var _partner_t := 0.0
+var _hop := 0.0                   # m/s up for the next step (a startle's jump: ActorStartle)
 
 
 func setup(actor: Actor) -> void:
@@ -39,12 +40,20 @@ func setup(actor: Actor) -> void:
 
 
 func fall(dt: float) -> void:
-	if fly or d.get("mount", "") == "ceiling":
+	if _hop > 0.0:                                   # a jump, from the floor
+		a.velocity.y = _hop
+		_hop = 0.0
+	elif fly or d.get("mount", "") == "ceiling":
 		a.velocity.y = 0.0
 	elif not a.is_on_floor():
 		a.velocity.y -= 22.0 * dt
 	else:
 		a.velocity.y = 0.0
+
+
+## Jump at `up` m/s on its next step (a startle).
+func hop(up: float) -> void:
+	_hop = up
 
 
 func turn_to(dir: Vector3, dt: float, rate: float) -> void:
