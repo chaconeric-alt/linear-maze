@@ -25,6 +25,8 @@ extends RefCounted
 ##                 would cut off part of the room.
 ##   per_cell      that many to a cell, side by side across its face (a bank of lockers, two bunks): cells are 4 m
 ## A model the kit has not got yet can be named all the same if the game gives it a stand-in (LM.model_meta).
+## A piece the params name in "back_to_back" (shelving with a blank back) never stands alone out on the floor: it stands
+## back to back with another of itself facing the other way, the pair centred on its cell (FurnishPut).
 ## The rule that keeps a furnished room from becoming an obstacle course: the cells on the shortest way between every
 ## pair of the room's doorways, and the cell in front of each, are never furnished; furniture out on the floor never has
 ## furniture next to it (but its own kind, side by side); and anything that would cut off part of the floor is taken
@@ -39,6 +41,7 @@ static func furnish(ctx: GenContext, unit: int, cells: Array, pur: Dictionary, k
 	var fp := _plan(ctx, cells)
 	fp["kit"] = kit
 	fp["crammed"] = pur.get("crammed", false)
+	fp["back_to_back"] = ctx.p.get("back_to_back", [])
 	_centre(ctx, fp, cells, pur)
 	_outside(ctx, fp, pur)
 	_along_walls(ctx, fp, pur, amount)

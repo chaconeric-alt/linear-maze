@@ -97,6 +97,7 @@
  ],
  "generator_params": {
   "kit": "agency",
+  "back_to_back": ["hm_bookcase", "an_filing", "du_reel", "server_rack", "dr_rack"],
   "danger": {"chance": 0.5, "sets": ["collections", "overgrowth"]},
   "styles": [
    "lab",

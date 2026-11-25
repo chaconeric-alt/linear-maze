@@ -64,12 +64,15 @@ static func put(ctx: GenContext, fp: Dictionary, c: Vector2i, item: Variant, fac
 		if pc.has(k):
 			e[k] = pc[k]
 	var meta := LM.model_meta(fp["kit"], id)
+	var bk: Vector2i = DIRS[(face + 2) % 4]
 	if hug and meta.get("mount", "") != "wall":     # one hung on the wall is put there by the level itself
-		var sz: Array = meta.get("solid", [1.0, 1.0, 1.0])
-		var side_on := absf(absf(fmod(float(pc.get("turn", 0.0)), 180.0)) - 90.0) < 10.0   # turned a quarter: its width meets the wall
-		var push: float = maxf(0.0, 2.0 - float(sz[0 if side_on else 2]) / 2.0 - 0.12)
-		var wd: Vector2i = DIRS[(face + 2) % 4]
-		e["offset"] = [wd.x * push, 0, wd.y * push]
+		var push: float = maxf(0.0, 2.0 - depth(meta, pc) / 2.0 - 0.12)
+		e["offset"] = [bk.x * push, 0, bk.y * push]
+	var pair := 0.0                                   # one with a blank back, out on the floor: how far forward each of the pair stands
+	if not hug and fp.get("back_to_back", []).has(id):
+		pair = depth(meta, pc) / 2.0 + 0.01
+		var o0: Array = e.get("offset", [0, 0, 0])
+		e["offset"] = [snappedf(o0[0] - bk.x * pair, 0.001), 0, snappedf(o0[2] - bk.y * pair, 0.001)]
 	var n := int(pc.get("per_cell", 1))
 	var side: Vector2i = DIRS[(face + 1) % 4]
 	var cell := float(LM.kits.get(fp["kit"], {}).get("cell", 4.0))
@@ -80,7 +83,31 @@ static func put(ctx: GenContext, fp: Dictionary, c: Vector2i, item: Variant, fac
 			var o: Array = ek.get("offset", [0, 0, 0])
 			ek["offset"] = [snappedf(o[0] + side.x * s, 0.001), 0, snappedf(o[2] + side.y * s, 0.001)]
 		fp["placed"].append([c, ek])
+		if pair > 0.0:
+			fp["placed"].append([c, _twin(ek, face, pair, meta.has("light"))])
 	fp["taken_here"][c] = true
+
+
+## How deep a piece is along the way it faces: its width, if it is turned a quarter (side on).
+static func depth(meta: Dictionary, pc: Dictionary) -> float:
+	var sz: Array = meta.get("solid", [1.0, 1.0, 1.0])
+	var side_on := absf(absf(fmod(float(pc.get("turn", 0.0)), 180.0)) - 90.0) < 10.0
+	return float(sz[0 if side_on else 2])
+
+
+## The other of a back-to-back pair (Eric, 25 Nov: a shelf out in a room with its blank back showing looks wrong). The
+## first stands `pair` in front of the cell's middle, so its back is at the middle; this is the same piece turned
+## round, `pair` behind the middle, its back against the first's, each front facing out. A lit one's twin is not lit,
+## so the pair has one lamp and the room as many lights as it had.
+static func _twin(e: Dictionary, face: int, pair: float, lit: bool) -> Dictionary:
+	var t: Dictionary = e.duplicate(true)
+	var bk: Vector2i = DIRS[(face + 2) % 4]
+	var o: Array = e["offset"]
+	t["offset"] = [snappedf(o[0] + bk.x * pair * 2.0, 0.001), 0, snappedf(o[2] + bk.y * pair * 2.0, 0.001)]
+	t["face"] = NAMES[(face + 2) % 4]
+	if lit:
+		t["lit"] = false
+	return t
 
 
 ## Out on the floor a piece needs floor all round it, and nothing beside it: unless the room is crammed, or (`row`, a

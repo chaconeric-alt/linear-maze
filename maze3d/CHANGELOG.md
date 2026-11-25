@@ -4,6 +4,13 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Shelves back to back** (Eric: "book shelves in the middle of the room with blank backs exposed look weird. If a book shelf is NOT against a wall, the shelf should have another shelf on the other side facing outward. Check to make sure this doesn't make space between them too narrow"; SPEC 6.2).
+  - **Pairs.** `generator_params.back_to_back` lists the pieces with a blank back: `hm_bookcase`, `an_filing`, `du_reel`, `server_rack`, `dr_rack`. Out on the floor (in the rooms generator and a programme's furnishing alike), each now stands in a pair, backs together and fronts out, centred on its cell (`FurnishPut.put`, `_twin`). Against a wall it is alone, as before.
+  - **Lights.** The second of a lit pair is not lit, so a room has no more lights than before.
+  - **Random numbers.** None are drawn for it, and `count` still counts stacks.
+  - **Aisles.** A pair is 1.12 m deep (bookcases) to 1.82 m (the deepest racks), so its cell keeps at least 1.09 m clear either side. Rows of pairs are a row apart. In the baseline's levels every floor shelf is now in a pair (6 in the Warlord's Bunker, 4 in the Blueprint, Two Floors, 4 in the Dust theme), and the narrowest aisle between two stacks is 6.63 m.
+  - **One check changed, by moving.** In the Dust theme (seed 5) the extra pieces shift the fights a little. Four "dies" checks (a Knife Fighter twice, a Desktop Defender, a Gladiator Roach) are now INFO lines: "already dead when its turn came (killed during an earlier fight)". None fails, and every other check is as it was.
+
 - **Shutters to the outside world** (Eric: "in motor pools and blast doors, there should be large metal shutters representing the openings to the outside world"; SPEC 2.5, 6.2, 6.3, 7).
   - **Two new Fittings models**, two cells wide (7.9 m) and 3.75 m tall so they fit any storey, hung on the wall, in `tools/blender/kits_fittings2.py`:
     - `shutter_roller`: a vehicle bay's roller shutter, corrugated slats between hazard-striped jambs, the roll housing overhead, a control box, amber beacons (lit) and a line of daylight under it.
