@@ -13,7 +13,7 @@ var see := false                  # the target is in sight
 var shot := true                  # nothing solid, glass and railings included, between it and some part of the target
 var aim_y := -1.0                 # the height above the target's feet that a shot can reach (-1: none)
 var _see_t := 0.0
-const WAKE := 10.0                # metres through the air that waking carries to others
+const WAKE := 10.0                # metres through the air that waking (its alert sound) carries to others
 
 
 func setup(actor: Actor) -> void:
@@ -54,7 +54,14 @@ func look_off_duty(dt: float, pl: Node3D, dist: float, reach: float) -> void:
 		a.seen = true
 
 
-## It has woken: the others within 10 m of it through the air (LevelPerception.carried) wake too.
+## Look again at once (the next tick), and forget what was seen.
+func reset() -> void:
+	see = false
+	_see_t = 0.0
+
+
+## It has woken: the others within 10 m of it through the air (LevelPerception.carried) wake too, stirred by its
+## startle and its alert sound, whatever their side. (A call, ActorAware, carries further, to its own side.)
 func wake_others() -> void:
 	for o in a.level.actors:
 		if is_instance_valid(o) and o != a and not o.awake and not o.dead and o.global_position.distance_to(a.global_position) < WAKE \
@@ -62,16 +69,20 @@ func wake_others() -> void:
 			o.call_deferred("alert")
 
 
-## Look again at once (the next tick), and forget what was seen.
-func reset() -> void:
-	see = false
-	_see_t = 0.0
-
-
-## A noise reached it (LevelPerception.noise has decided it was heard): at `from`, of a kind, telling of `about`.
-## Asleep, it wakes to go and look there (ActorAware); awake and looking, it goes to look there instead.
-func hear(from: Vector3, _kind := "", about: Variant = null) -> void:
+## A noise reached it (LevelPerception.noise has decided it was heard): at `from`, of a kind, telling of `about`,
+## made `by` someone. Asleep, it wakes to go and look there (ActorAware); awake and looking, it goes to look there
+## instead. A call is word from one of its own (another faction's is ignored): it wakes, or if awake and not hunting,
+## knows where the player is and hunts (ActorAware.told).
+func hear(from: Vector3, kind := "", about: Variant = null, by: Node = null) -> void:
 	var at: Vector3 = about if about is Vector3 else from
+	if kind == "call":
+		if by == null or Factions.of(by) != Factions.of(a):
+			return
+		if not a.awake:
+			a.alert("call", at)
+		else:
+			a.aware.told(at)
+		return
 	if not a.awake:
 		a.alert("heard", at)
 	else:

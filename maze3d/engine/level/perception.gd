@@ -71,9 +71,9 @@ var _links: Dictionary = {}      # nav point -> other nav points sound reaches a
 var _spread_cache: Dictionary = {}
 
 
-## A noise at `at`, `loud` metres loud, of a `kind` ("gunfire", "explosion"): every actor it reaches is told
-## (Actor.hear). `by` made it (it does not hear itself); `about` is the place it tells of (where the noise is, unless
-## it carries word of somewhere else).
+## A noise at `at`, `loud` metres loud, of a `kind` ("gunfire", "explosion", "call"): every actor it reaches is told
+## (Actor.hear). `by` made it (it does not hear itself, and a call is heeded only by its own faction); `about` is the
+## place it tells of (where the noise is, unless it carries word of somewhere else: a call tells where the player is).
 func noise(at: Vector3, loud: float, kind: String, by: Node = null, about: Variant = null) -> void:
 	if loud <= 0.0:
 		return
@@ -85,8 +85,8 @@ func noise(at: Vector3, loud: float, kind: String, by: Node = null, about: Varia
 		if not is_instance_valid(a) or a.dead or a == by:
 			continue
 		var reach := loud * ear(a)
-		if carried(at, a.eye(), reach, most) <= reach:
-			a.hear(at, kind, about if about != null else at)
+		if carried(at, a.eye(), reach, most, kind != "call") <= reach:      # a call is word: it must come by the air
+			a.hear(at, kind, about if about != null else at, by)
 
 
 ## How keen an actor's ears are against an ordinary one's (its def's `hearing` over HEARING).
@@ -95,14 +95,15 @@ static func ear(a: Node) -> float:
 
 
 ## How far a noise at `from` seems by the time it reaches `to`, in metres, as far as `reach` (INF beyond it). `spread`
-## is how far to follow the air when there is no clear line (at least `reach`).
-func carried(from: Vector3, to: Vector3, reach: float, spread := 0.0) -> float:
+## is how far to follow the air when there is no clear line (at least `reach`). `walls`: it may also come through solid
+## walls and floors, muffled (a shot, a blast); a call's words do not.
+func carried(from: Vector3, to: Vector3, reach: float, spread := 0.0, walls := true) -> float:
 	var straight := from.distance_to(to)
 	if straight > reach:
 		return INF
 	if level.los(from, to):
 		return straight
-	var best := straight * WALL
+	var best := straight * WALL if walls else INF
 	var nav := level.nav_graph
 	var e := nav.point_at(to)
 	var dist := _spread(from, maxf(reach, spread))

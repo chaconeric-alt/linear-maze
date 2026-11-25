@@ -8,7 +8,7 @@ class_name Schema
 
 const WEAPON := ["name", "model", "kit", "hold", "scale", "ammo", "per_shot", "pickup_ammo", "damage", "pellets", "spread", "noise",
 	"rate", "auto", "range", "falloff", "projectile", "recoil", "kick", "sound", "color", "kind"]
-const ACTOR := ["relentless", "search", "name", "model", "kit", "scale", "robot", "hp", "armor", "takes", "mass", "gib", "speed", "accel", "turn", "radius",
+const ACTOR := ["relentless", "search", "call", "name", "model", "kit", "scale", "robot", "hp", "armor", "takes", "mass", "gib", "speed", "accel", "turn", "radius",
 	"height", "center", "eye", "fly", "mount", "still", "sight", "hearing", "wake_sight", "behavior", "keep", "attacks",
 	"flee_below", "flee_text", "barks", "bark_color", "drops", "explode", "sounds", "blood", "clips", "walk_rate",
 	"footfall", "dormant_clip", "startle_time", "startle_text", "lounge", "climb", "aim", "screen", "gait", "bob", "swim",

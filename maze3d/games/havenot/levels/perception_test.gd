@@ -5,7 +5,7 @@ extends SelfTestPart
 ## the gallery behind its railing; a shot through the railing; gunfire heard across the hall, from the doorway above it
 ## and through the Store's shut door; the route to a player standing by a crate that blocks its cell; a player on the
 ## gallery only the lift reaches (a monster that shoots finds a shot, one that does not waits under them, one hurt there
-## hides); a flyer under the gallery; where a monster goes when the player vanishes; how one startles.
+## hides); a flyer under the gallery; where a monster goes when the player vanishes; how one startles; a call.
 
 const NORTH := Vector2i(3, 4)        # a cell of the north gallery (storey 1)
 const SOUTH := Vector2i(3, 9)        # a cell of the south gallery, which only the lift reaches
@@ -29,6 +29,7 @@ func run() -> void:
 	await _flyer()
 	await _vanish()
 	await _startle()
+	await _calls()
 
 
 # ------------------------------------------------------------------ helpers
@@ -308,3 +309,34 @@ func _startle() -> void:
 	say(tw != null and tw.twitching(), "a Glorexx woken twitches its feelers")
 	await _kill(g)
 	Events.off("actor.noticed", listen)
+
+
+# ------------------------------------------------------------------ calls
+## A Custodian that sees the player calls. Another Custodian, asleep 16.6 m from it with its back to the player and
+## 26 m from them (too far to see them, and further than a neighbour's waking ever reached, 10 m), wakes to the call and
+## hunts, told where they are. A Glorexx asleep 12 m from it, and more than 10 m from both (beyond their waking), is
+## of another faction: it does not heed a robot's call.
+func _calls() -> void:
+	var told: Array = []
+	var listen := func(p: Dictionary) -> void:
+		told.append(p)
+	Events.on("actor.noticed", listen)
+	_put(Vector2i(3, 8), 0)
+	var far := _make("custodian", Vector2i(10, 7), {"still": true, "face": "e"})
+	var other := _make("glorexx", Vector2i(6, 5), {"still": true, "face": "e"})
+	await frames(5)
+	var caller := _make("custodian", Vector2i(6, 8), {"still": true, "face": "w"})
+	for k in 20:
+		await frames(3)
+		_put(Vector2i(3, 8), 0)
+	var heard: Array = told.filter(func(p: Dictionary) -> bool: return p.get("key", "") == level.key_of(far))
+	var how: String = heard[0].get("how", "") if not heard.is_empty() else "-"
+	var off := far.aware.place.distance_to(pl.global_position)
+	say(caller.awake and how == "call" and far.aware.state_name() == "hunting" and off < 1.5 and not other.awake,
+		"a Custodian that sees you calls: another asleep %.1f m from it and %.1f m from you wakes to the call (it says '%s') and hunts, told where you are (%.1f m off); a Glorexx asleep %.1f m from it, another faction, sleeps on" % [
+		caller.global_position.distance_to(far.global_position), pl.global_position.distance_to(far.global_position), how, off,
+		caller.global_position.distance_to(other.global_position)])
+	Events.off("actor.noticed", listen)
+	await _kill(caller)
+	await _kill(far)
+	await _kill(other)

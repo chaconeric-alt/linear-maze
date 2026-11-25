@@ -4,6 +4,18 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Calls between monsters** (step 6 of 6, the last; SPEC 3.3, 4.5, 5.13, 5.24, 9).
+  - **When it calls.** A monster calls when its contact becomes its own and fresh: woken by seeing the player or by being hurt by someone, or seeing them after being told where they were or after losing them. At most once in 6 s (`ActorAware._call`).
+  - **What a call is.** A noise of the kind `call`, as loud as the actor's `call` (a new actor key: 25 m; 0, it never calls), telling where the player is, with its alert sound. It carries only by the air (`LevelPerception.carried`, `walls` false), not through solid walls and floors.
+  - **Who heeds it.** Only the caller's own faction (`Factions.of`). Asleep, one wakes (`actor.noticed` says `call`) and hunts, told where the player is; awake and not hunting, it hunts (`ActorAware.told`). One told so calls in turn only when it sees them, so word goes through a pack.
+  - **Kept:** waking still stirs anything within 10 m, whatever its side (`ActorSenses.wake_others`). The first try dropped it, and the baseline (item60) showed why it matters: on the Collections Office, a Garnisher made by its dispenser no longer woke the Foreclosure Unit beside it, so the doors were never sealed. Garnishers got out and one was clamped on the player in the movement part ("player jumps" failed).
+  - **Three fixes the same baseline found.** On the Anomalous Structure's story run, "the Heavy Security Drone is on its station, dormant" failed:
+    - a call went up through two floors, by the through-walls rule (8 m straight), so calls now carry by the air only;
+    - a Custodian killed by the blow that woke it still called, so now it makes none;
+    - a Custodian pottering about walked on to the Security Complex's shock floor, woke hurt, believed it knew where the player was, and its waking stirred the drone. Now a hurt from no one (a trap, a fall, a cloud, burning: no `by`) wakes a monster in `pain`, alerted to look round where it stands, knowing nothing of the player; awake, such a hurt teaches it nothing. And a monster pottering about on foot keeps out of a live trap that would hurt it, as a wandering flyer already did.
+  - **The Listening Post:** a Custodian that sees you calls. Another asleep 16.6 m from it, 25.8 m from you with its back to you, wakes to the call and hunts, told where you are; a Glorexx 12 m from the caller, another faction, sleeps on.
+  - **Baseline item61:** 29 runs, 3976 checks, 0 failures. The fights shifted more than before, since calls bring monsters into earlier fights: 735 "dies" checks became 716 (83 "already dead when its turn came" INFO lines became 102). On gen22 no flyer outlives the fights now, so its two flyer checks ("a Bloodfly Cloud on a balcony ... comes down to it", "a Bloodfly Cloud gets past a live laser unburned") are the INFO lines "no flyer left alive to put on the balcony" and "no chaser flyer left to send past the laser". Crypt gained a vent check. Nothing fails.
+
 - **Somewhere to go when there is no route** (step 5 of 6; the review: "no walking route means no behaviour"; SPEC 3.3, 4.3, 4.11, 5.5, 5.24, 9).
   - **Moved:** which way a hunter wants to go (`ActorLocomotion._want`, with its strafing and fleeing state) is now `ActorWay` (`engine/actor/way.gd`), owned by the locomotion; `_fleeing` became the public `fleeing()`. Locomotion is 356 lines (it was 396).
   - **No route to the player** (a gallery only a lift reaches). Every 1.5 s, and at once when it is hurt, it looks over the places it can walk to:

@@ -1,5 +1,6 @@
 extends Node
-## ActorWary - a flyer or a wall-climber keeps out of a trap that would hurt it (a walker does not see one coming).
+## ActorWary - a flyer or a wall-climber keeps out of a trap that would hurt it (a walker hunting does not see one
+## coming; one pottering about at home does not walk into one: ActorLocomotion.wander_tick).
 ## Before it moves it looks a little way ahead, and asks the level's traps (Level.hazard) whether its body would be
 ## hurt there now, or before it could be through (a flyer works that out from its size and speed; a climber allows
 ## LEAD). A hunting flyer then rises over the trap, or sinks under it, when the room has the height, holding back

@@ -28,6 +28,8 @@ const SPREAD := 8.0              # metres round the last place that a search loo
 const CHASE := 4.0               # in the GRACE after losing sight, it follows them as far as CHASE + RUN m/s from where it
 const RUN := 8.0                 # last saw them: round a corner, not up a lift or through a wall
 const HURT := 6.0                # seconds it counts as hurt lately
+const CALL := 25.0               # metres a call carries, if the def says nothing ("call")
+const CALL_GAP := 6.0            # seconds between one actor's calls
 
 var a: Actor
 var state := UNAWARE
@@ -42,6 +44,8 @@ var _seen := Vector3.ZERO        # where they were at the last contact
 var _there := false              # it has got to where it was sent: the search's time runs from then
 var _gone := 0.0                 # seconds with nothing to go after
 var _hurt := 100.0               # seconds since it was last hurt
+var _called := 100.0             # seconds since it last called
+var _eyes := false               # its contact is its own: it has seen them or been hurt by them since it last lost them
 
 
 func setup(actor: Actor) -> void:
@@ -69,10 +73,11 @@ func hurt_lately() -> bool:
 	return _hurt < HURT
 
 
-## It wakes (ActorCore.alert): how it noticed ("saw", "hurt", "heard", "call", or "told": a spawn, an alarm, a
-## station, a neighbour) and the place that told of, if any. In a station it is let out first; a lounger is caught; a
-## thing on a wall comes off it; a thing powered down plays its startle clip and stands its `startle_time`. Every one
-## startles (ActorStartle), makes its alert sound and wakes the others near it.
+## It wakes (ActorCore.alert): how it noticed ("saw", "hurt" by someone, "pain" from a trap or the like, "heard",
+## "call", or "told": a spawn, an alarm, a station, a neighbour) and the place that told of, if any. In a station it is let out first; a lounger is caught; a thing on a
+## wall comes off it; a thing powered down plays its startle clip and stands its `startle_time`. Every one startles
+## (ActorStartle), makes its alert sound and wakes the others near it; woken by seeing them or being hurt, it also
+## calls the others of its side (`_call`).
 func wake(how: String, at: Variant) -> void:
 	if a.awake or a.dead or a.off_duty:
 		return
@@ -98,38 +103,74 @@ func wake(how: String, at: Variant) -> void:
 	LM.sound(cue, a.global_position)
 	Events.emit("actor.noticed", {"key": a.level.key_of(a), "how": how, "cue": cue})
 	a.senses.wake_others()
+	if _eyes:
+		_call(place, false)
 
 
 ## What it knows on waking.
 func noticed(how: String, at: Variant) -> void:
 	_wary = 0.0
-	if how == "heard" and not relentless:
+	if (how == "heard" or how == "pain") and not relentless:
 		_send(ALERTED, at if at is Vector3 else a.global_position)
 		return
 	_since = 0.0
 	state = HUNTING
+	_eyes = how == "saw" or how == "hurt"
 	var t := a.target()
 	place = at if at is Vector3 else (t.global_position if t != null and is_instance_valid(t) else a.global_position)
 	_seen = place
 
 
-## It sees them (ActorSenses.look): contact.
+## It sees them (ActorSenses.look): contact. Its own, fresh (it was told, or had lost them): it calls.
 func saw(at: Vector3) -> void:
+	var fresh := not _eyes or state != HUNTING
 	_since = 0.0
 	place = at
 	_seen = at
 	state = HUNTING
+	_eyes = true
+	if fresh:
+		_call(at)
 
 
 ## It was hurt by them: contact, as if it had seen them.
 func hurt() -> void:
 	_hurt = 0.0
 	if a.awake:
+		var fresh := not _eyes or state != HUNTING
 		_since = 0.0
 		state = HUNTING
+		_eyes = true
 		var t := a.target()
 		if t != null and is_instance_valid(t):
 			_seen = t.global_position
+			if fresh:
+				_call(_seen)
+
+
+## Word from one of its own (a call: ActorSenses.hear): awake and not hunting, it knows where they are now, and hunts.
+func told(about: Vector3) -> void:
+	if state == HUNTING:
+		return
+	_since = 0.0
+	place = about
+	_seen = about
+	state = HUNTING
+	_eyes = false
+
+
+## It calls the others of its faction (the awareness review's step 6, calls between monsters): a noise
+## as loud as its `call` (25 m; 0, it never calls), telling where the player is, and its alert sound (unless it has just
+## made it, waking). At most once in CALL_GAP seconds. One killed by the blow that woke it makes none: a kill in one
+## blow stays quiet.
+func _call(about: Vector3, cue := true) -> void:
+	var loud: float = a.d.get("call", CALL)
+	if loud <= 0.0 or _called < CALL_GAP or a.hp <= 0.0:
+		return
+	_called = 0.0
+	if cue:
+		LM.sound(a.d.get("sounds", {}).get("alert", ""), a.global_position)
+	a.level.perception.noise(a.eye(), loud, "call", a, about)
 
 
 ## Awake and not in contact, it heard something more: it goes to look there instead.
@@ -140,6 +181,7 @@ func heard(about: Vector3) -> void:
 
 func _send(to: int, at: Vector3) -> void:
 	state = to
+	_eyes = false
 	place = at
 	spot = at
 	_look = 0.0
@@ -152,6 +194,7 @@ func _send(to: int, at: Vector3) -> void:
 func tick(dt: float, target: Node3D) -> void:
 	_wary = maxf(0.0, _wary - dt)
 	_hurt += dt
+	_called += dt
 	_gone = 0.0
 	if not a.awake or a.off_duty:
 		state = UNAWARE
@@ -236,6 +279,7 @@ func _near(at: Vector3) -> Vector3:
 ## The search is over: back to its post (its beat, if it walks one), asleep, warier.
 func give_up() -> void:
 	state = UNAWARE
+	_eyes = false
 	_wary = WARY
 	_since = 100.0
 	if a.attacks:

@@ -347,9 +347,11 @@ func hurt(amount: float, info: Dictionary = {}) -> void:
 	Afflictions.on_hurt(self, info)
 	if foes:
 		foes.hurt_by(info.get("by"))
-	if not awake:
-		alert("hurt")
-	aware.hurt()
+	var someone: bool = info.get("by") is Node and is_instance_valid(info.get("by"))   # not a trap, a fall, a cloud:
+	if not awake:                                    # those tell it nothing of anyone (it wakes in pain, and looks round)
+		alert("hurt" if someone else "pain", null if someone else global_position)
+	if someone:
+		aware.hurt()
 	if off_duty and e.get("provoke", false) and info.get("from_player", info.get("type", "") != "trap"):
 		anger()                                      # this one was only being polite
 	if off_duty:

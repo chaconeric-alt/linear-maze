@@ -243,6 +243,8 @@ func wander_tick(dt: float) -> void:
 			_wander.y = 0
 	if fly and a.wary and a.wary.blocked(_wander):
 		_wander = Vector3.ZERO                       # a trap that way: stay put, and think again
+	elif not fly and _into_trap(_wander):
+		_wander = Vector3.ZERO                       # on foot too: at home it knows where its traps are
 	var sp: float = d.get("speed", 4.0) * 0.25
 	a.velocity.x = move_toward(a.velocity.x, _wander.x * sp, 10 * dt)
 	a.velocity.z = move_toward(a.velocity.z, _wander.z * sp, 10 * dt)
@@ -253,6 +255,14 @@ func wander_tick(dt: float) -> void:
 		a.play("walk", 0.5)
 	else:
 		a.play("idle")
+
+
+## Pottering about on foot, would a step that way take it into a trap that would hurt it (on now, or within half a
+## second)? Already in one, no: it walks on out.
+func _into_trap(dir: Vector3) -> bool:
+	if dir.length() < 0.01 or a.level.traps.is_empty() or a.level.hazard(a, a.global_position):
+		return false
+	return a.level.hazard(a, a.global_position + dir.normalized() * (float(d.get("radius", 0.5)) + 0.8), 0.5)
 
 
 ## "dance": {"reach": 9, "speed": 1.6, "radius": 1.6}
