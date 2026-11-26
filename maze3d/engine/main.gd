@@ -208,6 +208,7 @@ func _level_data(id: String, back: Dictionary) -> Dictionary:
 	var params: Dictionary = LM.game.get("generator_params", {}).duplicate(true)
 	if bits.size() > 1:
 		params.merge(LM.game.get("generator_themes", {}).get(bits[1], {}), true)
+		params["theme"] = bits[1]                    # (a generator with themes of its own reads which: InstallationGen)
 	_seed = int(back.get("seed", _args.get("seed", randi())))      # (randi is drawn either way, as it always was)
 	var data: Dictionary = g.generate(_seed, params)
 	if _args.has("dump"):                            # --dump=file.json: keep the level that was generated

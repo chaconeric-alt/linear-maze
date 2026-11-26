@@ -50,7 +50,7 @@ func title() -> void:
 		var lv: Dictionary = LM.levels.get(id, {})
 		box.add_child(style.button(("⌂  " if lv.get("home", false) else "▸  ") + lv.get("name", id), func(): hud.start_requested.emit(id), true))
 	for gid in LM.generators:
-		_generator_grid(g, gid)
+		_generator_grid(gid)
 	box.add_child(style.label("", 8, Color.WHITE))
 	box.add_child(style.label("WASD move · mouse look · click fire · Shift dash · Space jump\nE use · right mouse zoom · 1-9 / wheel weapons · F lamp · Tab map · Esc pause · F9 save · F10 load\nEasy mode: E also names what you look at · P then writes an image prompt for it (console and clipboard)", 15, Color(0.7, 0.75, 0.75)))
 
@@ -88,9 +88,7 @@ func _saved_place(w: Dictionary) -> String:
 		return ""
 	var name: String = LM.levels.get(id, {}).get("name", id)
 	if id.begins_with("gen:"):
-		var bits := id.split(":")
-		name = LM.game.get("generator_themes", {}).get(bits[2], {}).get("title", bits[2]) if bits.size() > 2 else "Mixed"
-		name = "a random installation: " + name
+		name = "a random installation: " + GeneratedPlaces.name_of(id, "Mixed")
 	return "%s, day %d" % [name, int(w.get("world", {}).get("day", 0))]
 
 
@@ -106,9 +104,12 @@ func _easy_button(ez: Dictionary) -> Button:
 	return eb
 
 
-## A generator's places: mixed, and every theme not kept off the title screen. Three across, so a dozen still fit.
-func _generator_grid(g: Dictionary, gid: String) -> void:
-	box.add_child(style.label("RANDOM INSTALLATIONS", 14, Color(0.7, 0.75, 0.75)))
+## A generator's places (GeneratedPlaces): mixed, and every theme not kept off the title screen; or what the generator
+## offers itself, under its own heading (the written installations: any, and each archetype). Three across, so a dozen
+## still fit.
+func _generator_grid(gid: String) -> void:
+	var offer := GeneratedPlaces.of(gid, "RANDOM INSTALLATIONS", "Mixed")
+	box.add_child(style.label(offer["title"], 14, Color(0.7, 0.75, 0.75)))
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 8)
@@ -119,12 +120,8 @@ func _generator_grid(g: Dictionary, gid: String) -> void:
 		bt.add_theme_font_size_override("font_size", 16)
 		bt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(bt)
-	add.call("▸ Mixed", "gen:" + gid)
-	var themes: Dictionary = g.get("generator_themes", {})
-	for th in themes:
-		if not themes[th].get("menu", true):          # kept off the title screen; still playable with --level=gen:<generator>:<theme>
-			continue
-		add.call("▸ %s" % themes[th].get("title", th), "gen:%s:%s" % [gid, th])
+	for p in offer["places"]:
+		add.call("▸ %s" % p[0], p[1])
 
 
 func pause() -> void:

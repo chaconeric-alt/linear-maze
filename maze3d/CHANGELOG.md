@@ -4,6 +4,15 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **A random written installation from the title screen** (Eric, 25 Nov: "a button to generate and run a random installation created using these new rules"; SPEC 3, 6, 6.4).
+  - **The title screen** has a new section, "RANDOM INSTALLATIONS WITH A PURPOSE": "Somewhere with a purpose" (any archetype, the seed's pick), then one button per archetype (Corporate Behavioural Laboratory, Regional Medical Centre, Industrial Reclamation Plant). Each press draws a new seed. The bunker's lift offers the same places.
+  - **`InstallationGen` is a generator** (`game.json` `generators`: `installation`). `generate(seed, params)` writes a level from the theme's archetype, or any, and lays it out. `menu()` says what it offers, its heading and first place in the game's `words` (`written_title`, `written_any`). Like any generated place, a save made in one comes back to it by its seed, and it is forgotten once its expedition ends.
+  - **`GeneratedPlaces`** (`engine/generated_places.gd`). What the title screen, the saved game's place name and the lift offer of each generator. A generator with a `menu()` says its own; the rooms generator offers "Mixed" and the game's `generator_themes`, as before. `Main` passes a place's theme to its generator as `params.theme`.
+  - **A new baseline run**, `gen_installation` (`gen:installation`, seed 5): every standard part on a written installation, 120 checks, 0 failures.
+  - **Baseline item66:** 32 runs, 4238 checks, 0 failures; no check differs from item65.
+    - Every run's title-menu line counts 32 buttons (was 28), and the bunker's lift 15 unsurveyed places (was 11).
+    - The menus part brings each button into view, a frame apiece, so the parts after it start four frames later. In Deepworks, Deep and gen5 the save part counts one thing fewer and the event digests differ (a monster noticed the player at another moment); every check still passes.
+
 - **The mission graph: a loop, a gate with two ways past, a shortcut back** (the generation review's build order, step 4 of 4: "generate the logical map first: branches, dependencies, shortcuts"; SPEC 6.3, 6.4, 9).
   - **Links** (a programme's `links`; `ProgrammePlan`, `ProgrammeLayout`). A link joins the far ends of two wings round the outside: both branch corridors run on past everything on their side between them, and a corridor along the next row joins them. So there are two ways between the stretches of spine they leave from. It is a room of the level (`"link": id`), may have a door in its middle, and a lock may lock that door (`{"link": id}`). Its two wings go on one side (one written `"any"` takes the other's side, drawing no number); a side has one link at most.
   - **A release** (`ProgrammeFill`). A flag lock on a spine room may have a `release`: a thing hung on the corridor's wall just outside its door on one side, whose use sets the lock's flag. The lock holds from the other side and lets through from that one.

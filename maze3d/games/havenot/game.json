@@ -98,7 +98,8 @@
   "stun": {"name": "Stunned", "stun": true, "color": [1.0, 0.9, 0.4], "text": "Stunned! You can't move!"}
  },
  "generators": [
-  "rooms"
+  "rooms",
+  "installation"
  ],
  "generator_params": {
   "kit": "agency",
@@ -390,7 +391,9 @@
   "restocked": "Fresh scuffs on the floor. Something has been at work here since you left.",
   "death_title": "YOU BECAME SALVAGE",
   "death_text": "Somebody will find your boots useful.",
-  "end_title": "The road goes on"
+  "end_title": "The road goes on",
+  "written_title": "RANDOM INSTALLATIONS WITH A PURPOSE",
+  "written_any": "Somewhere with a purpose"
  },
  "generator_themes": {
   "works": {

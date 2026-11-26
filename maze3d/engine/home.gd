@@ -360,12 +360,8 @@ func destinations() -> Dictionary:
 		elif id != level.data.get("id", "home") and LM.levels.has(id):
 			built.append([LM.levels[id].get("name", id), id])
 	var wild: Array = []
-	for gid in LM.generators:
-		wild.append([word("lift_unnamed"), "gen:" + gid])
-		var themes: Dictionary = LM.game.get("generator_themes", {})
-		for th in themes:
-			if themes[th].get("menu", true):
-				wild.append([themes[th].get("title", th), "gen:%s:%s" % [gid, th]])
+	for gid in LM.generators:                        # each generator's places, as the title screen offers them
+		wild += GeneratedPlaces.of(gid, "", word("lift_unnamed"))["places"]
 	return {"built": built, "wild": wild}
 
 

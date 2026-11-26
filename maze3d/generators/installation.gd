@@ -52,6 +52,32 @@ static func write(level: Dictionary, seed_value: int) -> Dictionary:
 	return out
 
 
+# ------------------------------------------------------------------ as a generator (game.json "generators")
+## A random installation (the title screen and the bunker's lift): written from one of the game's archetypes, the
+## theme's ("gen:installation:<archetype>") or any (the seed's pick), and laid out from the seed; {} if the game has no
+## archetypes, or no layout came of it. Its level has no test of its own, so the self-test plays the standard parts.
+func generate(seed_value: int, params: Dictionary) -> Dictionary:
+	var ids: Array = LM.defs.get("archetypes", {}).keys()
+	if ids.is_empty():
+		return {}
+	var theme := str(params.get("theme", ""))
+	var level := {"id": "written-%d" % seed_value, "archetype": [theme] if ids.has(theme) else ids, "style": "corridor",
+		"legend": {}, "things": [], "objectives": [], "triggers": []}
+	return ProgrammeGen.make(InstallationGen.write(level, seed_value), seed_value)
+
+
+## What the title screen and the bunker's lift offer of it (GeneratedPlaces): a heading, the place that leaves the
+## archetype to the seed, and one per archetype, by its name. The heading and that place's name are the game's words
+## (game.json "words": "written_title", "written_any").
+func menu() -> Dictionary:
+	var words: Dictionary = LM.game.get("words", {})
+	var themes: Array = []
+	for id in LM.defs.get("archetypes", {}):
+		themes.append([str(LM.defs["archetypes"][id].get("name", id)), id])
+	return {"title": str(words.get("written_title", "WRITTEN INSTALLATIONS")), "any": str(words.get("written_any", "Any")),
+		"themes": themes}
+
+
 ## The archetype's words with its contradiction's, and the few chosen once for the whole place (its name, its core's,
 ## what it calls its people) fixed, so that every line says the same.
 static func _words(arch: Dictionary, contra: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
