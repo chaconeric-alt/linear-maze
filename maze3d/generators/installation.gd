@@ -21,8 +21,9 @@ const PA_ROOMS := 3              # rooms whose entering brings an announcement, 
 
 
 ## The level written: a programme, its systems, triggers, objectives and words; "installation" says what was chosen.
-## The level as it was if its setting is not one of the game's.
-static func write(level: Dictionary, seed_value: int) -> Dictionary:
+## The level as it was if its setting is not one of the game's. `on_rooms`: to be laid on the rooms generator's
+## geometry (InstallationPlace), so written without the gate and the locked wing a programme's layout gives.
+static func write(level: Dictionary, seed_value: int, on_rooms := false) -> Dictionary:
 	var pick := Dice.derive(seed_value, "installation")
 	var ids: Variant = level.get("setting", level.get("archetype", ""))
 	var arch_id := str(Dice.pick(pick, ids) if ids is Array else ids)
@@ -37,6 +38,7 @@ static func write(level: Dictionary, seed_value: int) -> Dictionary:
 	var name := InstallationWords.line("name", words, said)
 	var systems := InstallationGen._systems(arch, Dice.derive(seed_value, "installation systems"))
 	var w := InstallationWriter.new(arch, contra, words, said, Dice.derive(seed_value, "installation rooms"))
+	w.on_rooms = on_rooms
 	var prog := w.programme(systems)
 	var out: Dictionary = level.duplicate(true)
 	out.erase("archetype")
@@ -57,8 +59,9 @@ static func write(level: Dictionary, seed_value: int) -> Dictionary:
 
 # ------------------------------------------------------------------ as a generator (game.json "generators")
 ## A random installation (the title screen and the bunker's lift): written from one of the game's settings, the
-## theme's ("gen:installation:<setting>") or any (the seed's pick), and laid out from the seed; {} if the game has no
-## settings, or no layout came of it. Its level has no test of its own, so the self-test plays the standard parts.
+## theme's ("gen:installation:<setting>") or any (the seed's pick), and laid on the rooms generator's geometry from
+## the seed (InstallationPlace), with the game's `params` for it; {} if the game has no settings, or no layout came of
+## it. Its level has no test of its own, so the self-test plays the standard parts.
 func generate(seed_value: int, params: Dictionary) -> Dictionary:
 	var ids: Array = InstallationSettings.ids()
 	if ids.is_empty():
@@ -66,7 +69,7 @@ func generate(seed_value: int, params: Dictionary) -> Dictionary:
 	var theme := str(params.get("theme", ""))
 	var level := {"id": "written-%d" % seed_value, "setting": [theme] if ids.has(theme) else ids, "style": "corridor",
 		"legend": {}, "things": [], "objectives": [], "triggers": []}
-	return ProgrammeGen.make(InstallationGen.write(level, seed_value), seed_value)
+	return InstallationPlace.make(InstallationGen.write(level, seed_value, true), seed_value, params)
 
 
 ## What the title screen and the bunker's lift offer of it (GeneratedPlaces): a heading, the place that leaves the

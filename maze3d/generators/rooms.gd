@@ -62,15 +62,8 @@ func generate(seed_value: int, p: Dictionary) -> Dictionary:
 ## One layout from one seed, or {} if this seed's layout will not do (too few rooms, or the vault cannot be locked).
 func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	var ctx := GenContext.new(seed_value, p, lock)
-	if not Layout.units(ctx):                # boxes for the rooms
+	if not geometry(ctx):
 		return {}
-	Layout.shapes(ctx)                       # cut corners, crosses, piers, suites
-	Layout.areas(ctx)                        # what gets a style, a height and furniture
-	Layout.corridors(ctx)                    # carve only; doors come afterwards
-	if not Layout.thresholds(ctx):           # doors, and where the red card can go
-		return {}
-	Galleries.cut_corners(ctx)
-	Galleries.galleries(ctx)                 # balconies and ramps, before the furniture
 	ctx.stage("essentials")
 	Contents.essentials(ctx)                 # the start, the card, the guns, the way out
 	Contents.arches(ctx)
@@ -89,7 +82,23 @@ func _try(seed_value: int, p: Dictionary, lock := true) -> Dictionary:
 	_ambush(ctx)
 	ctx.stage("danger")
 	Danger.zone(ctx)                         # a danger zone in a dead end, on numbers of its own: last of all
-	return _assemble(ctx)
+	return assemble(ctx)
+
+
+## The place's shape, before anything is put in it: the rooms, their shapes and heights, the corridors, the doors and
+## the balconies, all from the context's own generator in a fixed order. False if this seed's will not do (too few
+## rooms, or the vault cannot be locked). Written installations build on it too (InstallationPlace).
+static func geometry(ctx: GenContext) -> bool:
+	if not Layout.units(ctx):                # boxes for the rooms
+		return false
+	Layout.shapes(ctx)                       # cut corners, crosses, piers, suites
+	Layout.areas(ctx)                        # what gets a style, a height and furniture
+	Layout.corridors(ctx)                    # carve only; doors come afterwards
+	if not Layout.thresholds(ctx):           # doors, and where the red card can go
+		return false
+	Galleries.cut_corners(ctx)
+	Galleries.galleries(ctx)                 # balconies and ramps, before the furniture
+	return true
 
 
 ## Taking the card brings company to the big room.
@@ -113,8 +122,8 @@ func _ambush(ctx: GenContext) -> void:
 		{"type": "spawn", "tag": "ambush", "actor": ctx.weighted(p.get("ambush_actors", ctx.actors)), "count": ctx.rng.randi_range(2, 3), "delay": 1.5}]})
 
 
-## The level dictionary, in the shape of a level file.
-func _assemble(ctx: GenContext) -> Dictionary:
+## The level dictionary, in the shape of a level file (a written installation's words go over its own afterwards).
+static func assemble(ctx: GenContext) -> Dictionary:
 	var p := ctx.p
 	var seed_value := ctx.seed_value
 	var out := {"diags": ctx.diags, "decks": ctx.decks, "ramps": ctx.ramps, "windows": ctx.windows, "walls": ctx.walls, "seed": seed_value,

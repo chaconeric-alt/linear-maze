@@ -6,14 +6,15 @@ extends RefCounted
 class_name SchemaSettings
 
 const SETTING := ["name", "kit", "style", "systems", "core_lock", "spine", "clusters", "rooms", "occupants", "loot",
-	"contradictions", "words", "hub", "gate", "way_round", "containers"]    # defs "settings": what a place was
+	"contradictions", "words", "hub", "gate", "way_round", "containers", "doors", "dressing"]    # defs "settings": what a place was
 const SETTING_CLUSTERS := ["count", "always", "list"]
 const SETTING_CLUSTER := ["name", "corridor"]                     # a setting's own view of a cluster it has
 const SPINE_STEP := ["room"]
 const CLUSTER := ["name", "corridor", "rooms"]                    # defs "clusters": rooms that work together
 const CLUSTER_ROOM := ["room", "chance", "door_to", "next_to"]
 const ROOM_TYPE := ["name", "style", "purpose", "size", "way_in", "empty", "memos", "card", "loot", "trap", "core",
-	"generator", "security"]                                     # defs "room_types": what a room is for
+	"generator", "security", "fit"]                              # defs "room_types": what a room is for
+const ROOM_FIT := ["size", "storeys"]                            # the room it suits on the rooms generator's geometry
 const CORE_LOCK := ["when", "flag", "need", "color"]
 const OCCUPANTS := ["per_room", "empty", "actors"]
 const GATE := ["step", "by", "color", "flag", "need"]
@@ -24,7 +25,7 @@ const ARCHETYPE := ["name", "kit", "style", "systems", "core_lock", "spine", "wi
 const ARCH_WINGS := ["count", "always", "list"]
 const ARCH_WING := ["name", "corridor", "rooms"]
 const ARCH_STEP := ["role", "chance", "door_to", "next_to"]
-const KEYS := SETTING + SETTING_CLUSTERS + SETTING_CLUSTER + SPINE_STEP + CLUSTER + CLUSTER_ROOM + ROOM_TYPE + CORE_LOCK \
+const KEYS := SETTING + SETTING_CLUSTERS + SETTING_CLUSTER + SPINE_STEP + CLUSTER + CLUSTER_ROOM + ROOM_TYPE + ROOM_FIT + CORE_LOCK \
 	+ OCCUPANTS + GATE + WAY_ROUND + CONTRADICTION + ARCHETYPE + ARCH_WINGS + ARCH_WING + ARCH_STEP
 
 
@@ -40,6 +41,7 @@ static func check(defs: Dictionary) -> Array:
 		out += SchemaSettings._rooms_named(defs, c.get("rooms", []), "cluster '%s'" % id, pairs)
 	for id in defs.get("room_types", {}):
 		pairs.append([defs["room_types"][id], ROOM_TYPE, "room type '%s'" % id])
+		pairs.append([defs["room_types"][id].get("fit", {}), ROOM_FIT, "room type '%s', its fit" % id])
 	for id in defs.get("settings", {}):
 		out += SchemaSettings._setting(defs, id, pairs)
 	for id in defs.get("archetypes", {}):

@@ -1,6 +1,7 @@
 extends SelfTestPart
 ## Containers, stations and terminals: every one can be used (terminals pause the world and every option is
-## chosen); then every crate and barrel breaks.
+## chosen; one whose level systems are not as it needs refuses, opening nothing, as SPEC 5.25 says); then every crate
+## and barrel breaks.
 
 
 func run() -> void:
@@ -15,6 +16,13 @@ func run() -> void:
 				if str(opts[i].get("effects", "")).contains("\"end\""):
 					ending = true
 			if ending:
+				continue
+			if n.e.get("needs") is Dictionary and not level.systems.ok(n.e["needs"]):      # power off, and it needs power
+				n.use(pl)
+				say(not Game.hud.in_panel() and not get_tree().paused, "terminal refuses while its systems are not as it needs: %s (%s)" % [
+					n.e["use"].get("title", "?"), level.systems.refusal(n.e["needs"])])
+				Game.hud.close_panel()
+				await frames(3)
 				continue
 			n.use(pl)
 			say(Game.hud.in_panel() and get_tree().paused, "terminal opens and pauses the world: " + n.e["use"].get("title", "?"))

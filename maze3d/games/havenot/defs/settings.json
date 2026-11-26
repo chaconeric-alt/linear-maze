@@ -181,8 +181,27 @@
      "colleagues",
      "team members",
      "human assets"
+    ],
+    "quiet": [
+     "Breakout Space",
+     "Hot Desks",
+     "Copy Room",
+     "Waiting Area",
+     "Wellness Pod",
+     "Annex"
     ]
-   }
+   },
+   "doors": [
+    "door_split",
+    "door_rise",
+    "door_iris"
+   ],
+   "dressing": [
+    "crate",
+    "server_rack",
+    "ag_planter",
+    "ag_sofa"
+   ]
   },
   "medical": {
    "name": "Regional Medical Centre",
@@ -389,8 +408,27 @@
      "service users",
      "clients",
      "bed occupants"
+    ],
+    "quiet": [
+     "Side Room",
+     "Day Room",
+     "Linen Store",
+     "Waiting Area",
+     "Quiet Room",
+     "Annex"
     ]
-   }
+   },
+   "doors": [
+    "door_hs_swing",
+    "door_hs_swing",
+    "door_split"
+   ],
+   "dressing": [
+    "hs_gurney",
+    "hs_screen",
+    "hs_cabinet",
+    "iv_stand"
+   ]
   },
   "reclamation": {
    "name": "Industrial Reclamation Plant",
@@ -619,8 +657,27 @@
      "the workforce",
      "units",
      "materials handlers"
+    ],
+    "quiet": [
+     "Bay",
+     "Annex",
+     "Tool Crib",
+     "Yard Office",
+     "Bunded Store",
+     "Plant Space"
     ]
-   }
+   },
+   "doors": [
+    "door_wk_shutter",
+    "door_wk_shutter",
+    "door_rise"
+   ],
+   "dressing": [
+    "crate",
+    "barrel",
+    "wk_drums",
+    "debris"
+   ]
   }
  },
  "clusters": {
@@ -805,7 +862,14 @@
     ]
    ],
    "way_in": true,
-   "empty": true
+   "empty": true,
+   "fit": {
+    "size": "large",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "open_plan": {
    "name": [
@@ -825,7 +889,14 @@
      5
     ]
    ],
-   "memos": 1
+   "memos": 1,
+   "fit": {
+    "size": "large",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "test_chamber": {
    "name": [
@@ -845,7 +916,14 @@
      5
     ]
    ],
-   "trap": "laser"
+   "trap": "laser",
+   "fit": {
+    "size": "large",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "observation": {
    "name": [
@@ -864,7 +942,14 @@
      4
     ]
    ],
-   "memos": 1
+   "memos": 1,
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "core": {
    "name": [
@@ -882,7 +967,14 @@
      5
     ]
    ],
-   "core": true
+   "core": true,
+   "fit": {
+    "size": "large",
+    "storeys": [
+     1,
+     3
+    ]
+   }
   },
   "corner_office": {
    "name": [
@@ -907,7 +999,14 @@
    "loot": [
     "statuette",
     "chips"
-   ]
+   ],
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "boardroom": {
    "name": [
@@ -925,7 +1024,14 @@
      3,
      4
     ]
-   ]
+   ],
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "archive": {
    "name": [
@@ -945,7 +1051,14 @@
     ]
    ],
    "memos": 1,
-   "card": true
+   "card": true,
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "cafeteria": {
    "name": [
@@ -963,7 +1076,14 @@
      4,
      5
     ]
-   ]
+   ],
+   "fit": {
+    "size": "large",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "kitchen": {
    "name": [
@@ -980,7 +1100,14 @@
    ],
    "loot": [
     "cookies"
-   ]
+   ],
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "lockers": {
    "name": [
@@ -998,7 +1125,14 @@
      3
     ]
    ],
-   "card": true
+   "card": true,
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "lab": {
    "name": [
@@ -1021,7 +1155,14 @@
     "crystal",
     "circuit"
    ],
-   "card": true
+   "card": true,
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "isolation": {
    "name": [
@@ -1039,7 +1180,14 @@
      2,
      3
     ]
-   ]
+   ],
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "specimens": {
    "name": [
@@ -1057,7 +1205,14 @@
      3,
      4
     ]
-   ]
+   ],
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "generator": {
    "name": [
@@ -1077,7 +1232,14 @@
     ]
    ],
    "generator": true,
-   "empty": true
+   "empty": true,
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "security": {
    "name": [
@@ -1093,7 +1255,14 @@
     ],
     3
    ],
-   "security": true
+   "security": true,
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "admissions": {
    "name": [
@@ -1114,7 +1283,14 @@
     ]
    ],
    "way_in": true,
-   "empty": true
+   "empty": true,
+   "fit": {
+    "size": "large",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "main_ward": {
    "name": [
@@ -1134,7 +1310,14 @@
      5
     ]
    ],
-   "memos": 1
+   "memos": 1,
+   "fit": {
+    "size": "large",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "theatre": {
    "name": [
@@ -1153,7 +1336,14 @@
      5
     ]
    ],
-   "trap": "laser"
+   "trap": "laser",
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "pharmacy": {
    "name": [
@@ -1175,7 +1365,14 @@
    "loot": [
     "health",
     "health"
-   ]
+   ],
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "ward": {
    "name": [
@@ -1193,7 +1390,14 @@
      3,
      5
     ]
-   ]
+   ],
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "ward2": {
    "name": [
@@ -1211,7 +1415,14 @@
      3,
      4
     ]
-   ]
+   ],
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "showers": {
    "name": [
@@ -1228,7 +1439,14 @@
      2,
      3
     ]
-   ]
+   ],
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "neurology": {
    "name": [
@@ -1247,7 +1465,14 @@
      4
     ]
    ],
-   "memos": 1
+   "memos": 1,
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "morgue": {
    "name": [
@@ -1266,7 +1491,14 @@
      4
     ]
    ],
-   "card": true
+   "card": true,
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "office": {
    "name": [
@@ -1289,7 +1521,14 @@
    "card": true,
    "loot": [
     "chips"
-   ]
+   ],
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "records": {
    "name": [
@@ -1308,7 +1547,14 @@
      4
     ]
    ],
-   "memos": 1
+   "memos": 1,
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "meeting": {
    "name": [
@@ -1325,7 +1571,14 @@
      3,
      4
     ]
-   ]
+   ],
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   },
   "loading_gate": {
    "name": [
@@ -1346,7 +1599,14 @@
     ]
    ],
    "way_in": true,
-   "empty": true
+   "empty": true,
+   "fit": {
+    "size": "large",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "sorting": {
    "name": [
@@ -1365,7 +1625,14 @@
      5
     ]
    ],
-   "memos": 1
+   "memos": 1,
+   "fit": {
+    "size": "large",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "crusher_hall": {
    "name": [
@@ -1384,7 +1651,14 @@
      5
     ]
    ],
-   "trap": "laser"
+   "trap": "laser",
+   "fit": {
+    "size": "large",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "sump": {
    "name": [
@@ -1403,7 +1677,14 @@
      5
     ]
    ],
-   "trap": "vent"
+   "trap": "vent",
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     2,
+     3
+    ]
+   }
   },
   "stores": {
    "name": [
@@ -1426,7 +1707,14 @@
     "fuel_cell",
     "circuit"
    ],
-   "card": true
+   "card": true,
+   "fit": {
+    "size": "medium",
+    "storeys": [
+     1,
+     2
+    ]
+   }
   },
   "salvage": {
    "name": [
@@ -1448,7 +1736,14 @@
    "loot": [
     "fuel_cell_big",
     "circuit"
-   ]
+   ],
+   "fit": {
+    "size": "large",
+    "storeys": [
+     1,
+     3
+    ]
+   }
   },
   "decon": {
    "name": [
@@ -1465,7 +1760,14 @@
      3,
      4
     ]
-   ]
+   ],
+   "fit": {
+    "size": "small",
+    "storeys": [
+     1,
+     1
+    ]
+   }
   }
  },
  "contradictions": {

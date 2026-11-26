@@ -29,8 +29,14 @@ func run() -> void:
 		and (b.get("map") != a.get("map") or b.get("name") != a.get("name")),
 		"written from the world's seed (%d): %s (%s), built to %s and now %s; the same seed writes it the same, another another" % [
 		seed_value, level.data.get("name", "?"), _kind(info), info.get("mandate", "?"), info.get("now", "?")])
+	var tally := {"rooms": 0, "quiet": 0, "tall": 0, "three": 0, "decks": 0, "storeys": 0, "worlds": 0}
 	for id in InstallationSettings.ids():
 		_worlds(id)
+		_on_rooms(id, tally)
+	var share := float(tally["quiet"]) / maxf(1.0, tally["rooms"])
+	say(share >= 0.15 and share <= 0.45 and tally["three"] > 0 and tally["decks"] * 2 >= tally["worlds"] and tally["storeys"] * 2 >= tally["worlds"],
+		"  on the rooms generator's geometry, over %d worlds: %d rooms, %d of them quiet (%d%%), %d two storeys tall or more and %d three; balconies in %d worlds and another storey in %d" % [
+		tally["worlds"], tally["rooms"], tally["quiet"], roundi(share * 100), tally["tall"], tally["three"], tally["decks"], tally["storeys"]])
 	await _played(info)
 	for p in PARTS:
 		await runner.part(p).run()
@@ -66,6 +72,87 @@ func _worlds(arch_id: String) -> void:
 		"  its ways through: in every world a loop (%d at least), its gate held shut without both its ways, passed by its own way without the way round and by the way round without its own way (a card in %d, security shut down in %d); the way round, taken, makes the gate a short way back (%d steps saved at least)%s" % [
 		graph["loops"], graph["by"].get("card", 0), graph["by"].get("security", 0), graph["saved"],
 		"" if graph["bad"].is_empty() else "; not: " + "; ".join(graph["bad"].slice(0, 3))])
+
+
+## WORLDS seeds of one setting laid on the rooms generator's geometry, as the title screen's button lays them
+## (InstallationPlace, SPEC 6.4): each laid out and finishable; every cluster with the rooms it must have, and every
+## spine room; within a cluster, no two rooms that would fit better swapped; its core shut the way its power says (and
+## not reached without that key); its people its own; every word written out. Adds what it saw to `tally`.
+func _on_rooms(arch_id: String, tally: Dictionary) -> void:
+	var arch := InstallationSettings.resolve(arch_id)
+	var bad: Array = []
+	for i in WORLDS:
+		var s := 5000 + i * 41
+		var w := InstallationGen.write({"id": "written", "setting": arch_id, "style": "corridor", "legend": {}, "things": [],
+			"objectives": [], "triggers": []}, s, true)
+		var lv := InstallationPlace.make(w, s, LM.game.get("generator_params", {}))
+		var why := _wrong_on_rooms(arch, w, lv)
+		if why != "":
+			bad.append("seed %d: %s" % [s, why])
+			continue
+		tally["worlds"] += 1
+		tally["decks"] += 1 if not lv.get("decks", []).is_empty() else 0
+		tally["storeys"] += 1 if not lv.get("floors", []).is_empty() else 0
+		for r in lv["rooms"]:
+			tally["rooms"] += 1
+			tally["quiet"] += 0 if r.has("role") else 1
+			tally["tall"] += 1 if int(r.get("height", 1)) >= 2 else 0
+			tally["three"] += 1 if int(r.get("height", 1)) >= 3 else 0
+	say(bad.is_empty(), "%s on the rooms generator's geometry: %d worlds, each laid out and finishable, every cluster with the rooms it must have, no two of a cluster's rooms that would fit better swapped, its core shut the way its power says, its people its own%s" % [
+		arch_id, WORLDS, "" if bad.is_empty() else "; not: " + "; ".join(bad.slice(0, 3))])
+
+
+## What is wrong with one installation on the rooms generator's geometry, or "" (see _on_rooms).
+func _wrong_on_rooms(arch: Dictionary, w: Dictionary, lv: Dictionary) -> String:
+	if lv.is_empty():
+		return "not laid out"
+	var proof := ProgrammeCheck.solve(lv)
+	if not proof["ok"]:
+		return "cannot be finished (missed %s)" % ", ".join(proof["missed"])
+	var by_id := {}
+	for r in lv["rooms"]:
+		if r.has("id"):
+			by_id[r["id"]] = r
+	var prog: Dictionary = w["programme"]
+	for r in prog["rooms"]:
+		if not by_id.has(r["id"]):
+			return "no %s on the spine" % r["id"]
+	for wg in prog["wings"]:
+		for r in wg["rooms"]:
+			if not r.has("chance") and str(by_id.get(r["id"], {}).get("cluster", "")) != str(wg["id"]):
+				return "cluster %s without its %s" % [wg["id"], r["id"]]
+	var swap := _swap_better(arch, lv, by_id)
+	if swap != "":
+		return swap
+	var z: Dictionary = lv.get("legend", {}).get("Z", {})
+	var off: bool = str(w["systems"].get("power", {}).get("start", "")) == "off"
+	var keys: Array = [str(z.get("flag", ""))] if z.has("flag") else ["card:" + str(z.get("lock", "")), "key_" + str(z.get("lock", ""))]
+	var core: String = by_id[prog["rooms"][-1]["id"]]["name"]
+	if off != z.has("flag") or not ProgrammeCheck.solve(lv, {"withhold": keys})["missed"].has(core):
+		return "the core is shut wrong (power %s, %s)" % ["off" if off else "on", z]
+	var allowed: Array = arch.get("occupants", {}).get("actors", []).map(func(e: Array) -> String: return str(e[0]))
+	for t in lv.get("things", []):
+		if t.has("actor") and not allowed.has(str(t["actor"])):
+			return "a %s lives there" % t["actor"]
+	var hashes := _hashed(lv)
+	return "words not written out: %s" % hashes[0] if not hashes.is_empty() else ""
+
+
+## Two rooms of one cluster that would fit better each in the other's room, as "a and b", or "".
+func _swap_better(arch: Dictionary, lv: Dictionary, by_id: Dictionary) -> String:
+	var fits: Dictionary = lv.get("installation", {}).get("fits", {})
+	var roles: Dictionary = arch.get("roles", {})
+	for a in by_id:
+		for b in by_id:
+			var ca := str(by_id[a].get("cluster", ""))
+			if a >= b or ca == "" or ca != str(by_id[b].get("cluster", "")) or not fits.has(a) or not fits.has(b):
+				continue
+			var fa: Dictionary = roles.get(str(by_id[a]["role"]), {}).get("fit", {})
+			var fb: Dictionary = roles.get(str(by_id[b]["role"]), {}).get("fit", {})
+			var now := InstallationFit.score(fa, fits[a][0], fits[a][1]) + InstallationFit.score(fb, fits[b][0], fits[b][1])
+			if InstallationFit.score(fa, fits[b][0], fits[b][1]) + InstallationFit.score(fb, fits[a][0], fits[a][1]) > now:
+				return "%s and %s would fit better swapped" % [a, b]
+	return ""
 
 
 ## One world's ways through (the mission graph, SPEC 6.3 and 6.4), proved on its level: it has a loop; its gate holds

@@ -185,6 +185,7 @@ static func world(level: Dictionary, seal: Array = []) -> Dictionary:
 			if float(rp.get("to", 2)) >= 4.0:              # its top is a storey up: it joins the cell it rises toward there
 				var c := Vector2i(int(rp["at"][0]), int(rp["at"][1]))
 				links.append([[c, f], [c + DIR_OF.get(str(rp.get("dir", "n")), Vector2i.ZERO), f + 1], null, {}])
+	var shafts := {}
 	for t in level.get("things", []):
 		if t.has("lift") and t.has("at"):
 			var stops: Array = t["lift"]
@@ -192,6 +193,8 @@ static func world(level: Dictionary, seal: Array = []) -> Dictionary:
 			var lock: Variant = t["lock"].get("flag") if t.get("lock") is Dictionary else null
 			for i in range(1, stops.size()):
 				links.append([[c, int(stops[i - 1])], [c, int(stops[i])], lock, t.get("needs", {})])
+			for f in range(int(stops.min()) + 1, int(stops.max()) + 1):    # open above its lowest stop, as LevelData builds it
+				shafts[[c, f]] = true
 	var sealed := {}
 	for rc in seal:
 		for y in range(int(rc[1]), int(rc[1]) + int(rc[3])):
@@ -206,7 +209,7 @@ static func world(level: Dictionary, seal: Array = []) -> Dictionary:
 		systems[n] = true
 		starts.append("sys:%s=%s" % [n, st if st != "" or kinds.is_empty() else kinds[0]])
 	return {"maps": maps, "decks": decks, "links": links, "rooms": rooms, "legend": legend, "sealed": sealed,
-		"systems": systems, "starts": starts}
+		"systems": systems, "starts": starts, "shafts": shafts}
 
 
 static func _any_reached(reached: Dictionary, rc: Array, f: int) -> bool:
@@ -217,11 +220,12 @@ static func _any_reached(reached: Dictionary, rc: Array, f: int) -> bool:
 	return false
 
 
-## Can this place be stood on with these keys: a floor or open door of its storey's map, or a balcony; not sealed.
+## Can this place be stood on with these keys: a floor or open door of its storey's map, a balcony, or a lift's shaft
+## on a storey above its lowest stop (open there whatever the map says, as LevelData builds it); not sealed.
 static func walkable(w: Dictionary, p: Array, held: Array) -> bool:
 	if w["sealed"].has(p):
 		return false
-	if w["decks"].has(p):
+	if w["decks"].has(p) or w["shafts"].has(p):
 		return true
 	var rows: Array = w["maps"].get(p[1], [])
 	var c: Vector2i = p[0]
