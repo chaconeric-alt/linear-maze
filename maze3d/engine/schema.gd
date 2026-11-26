@@ -31,7 +31,7 @@ const DANGER := ["name", "kicker", "sign", "title", "notice", "open", "opened", 
 	"treasure", "prizes"]                                          # defs "danger": a danger zone's set (SPEC.md 4.13)
 const PIECE := ["piece", "seat", "around", "chairs", "foot", "turn", "count", "side_by_side", "per_cell"]   # a purpose's piece written out
 const PROG_SPINE := ["gap"]
-const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts", "door_above"]
+const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts", "door_above", "role"]
 const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms", "danger"]
 const PROG_LOCK := ["room", "wing", "color", "card", "door", "flag", "need"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
@@ -57,6 +57,16 @@ const THING_KINDS := {
 	"sign": ["sign", "size", "color", "y", "out", "width", "plain"],
 	"light": ["light", "y", "flicker", "shadows"],
 }
+const ARCHETYPE := ["name", "kit", "style", "systems", "core_lock", "spine", "wings", "roles", "occupants", "loot",
+	"contradictions", "words"]                                     # defs "archetypes": what writes an installation (SPEC.md 6.4)
+const ARCH_ROLE := ["name", "style", "purpose", "size", "way_in", "empty", "memos", "card", "loot", "trap", "core",
+	"generator", "security"]
+const ARCH_WINGS := ["count", "always", "list"]
+const ARCH_WING := ["name", "corridor", "rooms"]
+const ARCH_STEP := ["role", "chance", "door_to", "next_to"]       # a spine step, or a wing's room written out
+const ARCH_CORE_LOCK := ["when", "flag", "need", "color"]
+const ARCH_OCCUPANTS := ["per_room", "empty", "actors"]
+const CONTRADICTION := ["mandate", "now", "bias", "words"]       # defs "contradictions"
 const PIT := ["trap", "delay", "damage"]
 const COLLAPSE := ["trap", "warn", "damage"]
 
@@ -70,6 +80,7 @@ static func check_defs(defs: Dictionary) -> Array:
 			for k in defs[pair[0]][id]:
 				if k != "id" and not k in pair[1]:                # LM adds "id" itself
 					out.append("%s '%s': %s" % [pair[0].trim_suffix("s"), id, _unknown(k, pair[1])])
+	out += Schema._check_archetypes(defs)
 	for id in defs.get("installations", {}):
 		for e in defs["installations"][id].get("entrances", []):
 			for k in e:
@@ -86,6 +97,33 @@ static func check_defs(defs: Dictionary) -> Array:
 			for k in defs[kind][id].get("gives", {}):
 				if not k in GIVES:
 					out.append("%s '%s', what it gives: %s" % [kind.trim_suffix("s"), id, _unknown(k, GIVES)])
+	return out
+
+
+## The archetypes' parts and the contradictions: each has only the keys an archetype is written with.
+static func _check_archetypes(defs: Dictionary) -> Array:
+	var pairs: Array = []
+	for id in defs.get("contradictions", {}):
+		pairs.append([defs["contradictions"][id], CONTRADICTION, "contradiction '%s'" % id])
+	for id in defs.get("archetypes", {}):
+		var a: Dictionary = defs["archetypes"][id]
+		var at := "archetype '%s'" % id
+		pairs.append_array([[a, ARCHETYPE, at], [a.get("wings", {}), ARCH_WINGS, at + ", wings"],
+			[a.get("core_lock", {}), ARCH_CORE_LOCK, at + ", core_lock"], [a.get("occupants", {}), ARCH_OCCUPANTS, at + ", occupants"]])
+		for r in a.get("roles", {}):
+			pairs.append([a["roles"][r], ARCH_ROLE, "%s, role %s" % [at, r]])
+		var steps: Array = a.get("spine", []).duplicate()
+		for w in a.get("wings", {}).get("list", {}):
+			pairs.append([a["wings"]["list"][w], ARCH_WING, "%s, wing %s" % [at, w]])
+			steps += a["wings"]["list"][w].get("rooms", [])
+		for st in steps:
+			if st is Dictionary:
+				pairs.append([st, ARCH_STEP, at + ", a room"])
+	var out: Array = []
+	for pr in pairs:
+		for k in pr[0]:
+			if k != "id" and not k in pr[1]:              # LM adds "id" to each entry of a defs file
+				out.append("%s: %s" % [pr[2], _unknown(k, pr[1])])
 	return out
 
 
@@ -170,7 +208,8 @@ static func undocumented(spec_text: String) -> Array:
 		for w in re.search_all(m.get_string(1)):
 			said[w.get_string()] = true
 	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + COLLAPSE + STAT + SKILL + ORIGIN + MUTATION + GIVES \
-		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS + DANGER + LEVEL_SYSTEM + SYSTEM + SYSTEM_STATE
+		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS + DANGER + LEVEL_SYSTEM + SYSTEM + SYSTEM_STATE \
+		+ ARCHETYPE + ARCH_ROLE + ARCH_WINGS + ARCH_WING + ARCH_STEP + ARCH_CORE_LOCK + ARCH_OCCUPANTS + CONTRADICTION
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

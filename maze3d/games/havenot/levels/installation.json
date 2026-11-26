@@ -1,0 +1,2 @@
+{"id": "installation", "name": "An Installation (written from an archetype)", "archetype": ["behavioural_lab", "medical", "reclamation"],
+ "kit": "omni", "style": "corridor", "legend": {}, "things": [], "objectives": [], "triggers": []}

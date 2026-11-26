@@ -1,0 +1,1908 @@
+{
+ "archetypes": {
+  "behavioural_lab": {
+   "name": "Corporate Behavioural Laboratory",
+   "kit": "omni",
+   "style": "an_hall",
+   "systems": {
+    "power": {
+     "start": [
+      "off",
+      "on"
+     ]
+    },
+    "security": {
+     "start": "normal",
+     "do": {
+      "alert": [
+       {
+        "type": "alarm"
+       }
+      ]
+     }
+    },
+    "air": {
+     "start": "on"
+    }
+   },
+   "spine": [
+    {
+     "role": "reception"
+    },
+    {
+     "role": "open_plan"
+    },
+    {
+     "role": [
+      "test_chamber",
+      "observation"
+     ]
+    },
+    {
+     "role": "core"
+    }
+   ],
+   "wings": {
+    "count": [
+     2,
+     3
+    ],
+    "always": [
+     "plant"
+    ],
+    "list": {
+     "executive": {
+      "name": [
+       "Executive Suite",
+       "The Upper Office"
+      ],
+      "corridor": "ex_hall",
+      "rooms": [
+       "corner_office",
+       "boardroom",
+       {
+        "role": "archive",
+        "chance": 0.6
+       }
+      ]
+     },
+     "staff": {
+      "name": [
+       "Staff Facilities",
+       "The Wellness Wing"
+      ],
+      "corridor": "an_hall",
+      "rooms": [
+       "cafeteria",
+       {
+        "role": "kitchen",
+        "door_to": "cafeteria"
+       },
+       {
+        "role": "lockers",
+        "chance": 0.6
+       }
+      ]
+     },
+     "research": {
+      "name": [
+       "Research Wing",
+       "Applied Feelings"
+      ],
+      "corridor": "an_hall",
+      "rooms": [
+       "lab",
+       {
+        "role": "isolation",
+        "chance": 0.6
+       },
+       {
+        "role": "specimens",
+        "chance": 0.5
+       }
+      ]
+     },
+     "plant": {
+      "name": [
+       "Facilities",
+       "Building Services"
+      ],
+      "corridor": "an_hall",
+      "rooms": [
+       "generator",
+       "security"
+      ]
+     }
+    }
+   },
+   "roles": {
+    "reception": {
+     "name": [
+      "Reception",
+      "Welcome Lobby",
+      "Arrivals"
+     ],
+     "style": "an_reception",
+     "purpose": "gatehouse",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "way_in": true,
+     "empty": true
+    },
+    "open_plan": {
+     "name": [
+      "Open-Plan Office",
+      "Collaboration Floor",
+      "Hot Desks"
+     ],
+     "style": "an_office",
+     "purpose": "office",
+     "size": [
+      [
+       5,
+       7
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "memos": 1
+    },
+    "test_chamber": {
+     "name": [
+      "Test Chamber",
+      "Wellness Chamber",
+      "The Calm Room"
+     ],
+     "style": "an_chamber",
+     "purpose": "lab",
+     "size": [
+      [
+       5,
+       6
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "trap": "laser"
+    },
+    "observation": {
+     "name": [
+      "Observation Gallery",
+      "Feedback Suite"
+     ],
+     "style": "an_lab",
+     "purpose": "interview_room",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "memos": 1
+    },
+    "core": {
+     "name": [
+      "#core#"
+     ],
+     "style": "an_core",
+     "purpose": "communications",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "core": true
+    },
+    "corner_office": {
+     "name": [
+      "Corner Office",
+      "Office of the Director",
+      "Office of the Vice-President for Morale"
+     ],
+     "style": "ex_office",
+     "purpose": "corner_office",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "memos": 1,
+     "card": true,
+     "loot": [
+      "statuette",
+      "chips"
+     ]
+    },
+    "boardroom": {
+     "name": [
+      "Boardroom",
+      "The Alignment Room"
+     ],
+     "style": "ex_board",
+     "purpose": "meeting_room",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    "archive": {
+     "name": [
+      "Archive",
+      "Personnel Records"
+     ],
+     "style": "du_archive",
+     "purpose": "archive",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "memos": 1,
+     "card": true
+    },
+    "cafeteria": {
+     "name": [
+      "Cafeteria",
+      "The Nourishment Hub"
+     ],
+     "style": "an_cafe",
+     "purpose": "mess_hall",
+     "size": [
+      [
+       5,
+       6
+      ],
+      [
+       4,
+       5
+      ]
+     ]
+    },
+    "kitchen": {
+     "name": [
+      "Kitchen"
+     ],
+     "style": "an_cafe",
+     "purpose": "kitchen",
+     "size": [
+      [
+       3,
+       4
+      ],
+      3
+     ],
+     "loot": [
+      "cookies"
+     ]
+    },
+    "lockers": {
+     "name": [
+      "Locker Room"
+     ],
+     "style": "an_store",
+     "purpose": "locker_room",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       2,
+       3
+      ]
+     ],
+     "card": true
+    },
+    "lab": {
+     "name": [
+      "Laboratory",
+      "Mood Laboratory"
+     ],
+     "style": "an_lab",
+     "purpose": "lab",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "loot": [
+      "crystal",
+      "circuit"
+     ],
+     "card": true
+    },
+    "isolation": {
+     "name": [
+      "Isolation Booth",
+      "The Quiet Room"
+     ],
+     "style": "an_store",
+     "purpose": "cell",
+     "size": [
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       3
+      ]
+     ]
+    },
+    "specimens": {
+     "name": [
+      "Specimen Hall",
+      "Former Employees"
+     ],
+     "style": "an_lab",
+     "purpose": "specimen_hall",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    "generator": {
+     "name": [
+      "Generator Room",
+      "Plant Room"
+     ],
+     "style": "an_store",
+     "purpose": "generator_room",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "generator": true,
+     "empty": true
+    },
+    "security": {
+     "name": [
+      "Security Office",
+      "Loss Prevention"
+     ],
+     "style": "an_office",
+     "purpose": "communications",
+     "size": [
+      [
+       3,
+       4
+      ],
+      3
+     ],
+     "security": true
+    }
+   },
+   "occupants": {
+    "per_room": [
+     0,
+     2
+    ],
+    "empty": 0.3,
+    "actors": [
+     [
+      "custodian",
+      3
+     ],
+     [
+      "monoid",
+      2
+     ],
+     [
+      "defender",
+      3
+     ],
+     [
+      "drone",
+      2
+     ],
+     [
+      "dancer",
+      1
+     ],
+     [
+      "eggbot",
+      1
+     ]
+    ]
+   },
+   "loot": [
+    [
+     "health",
+     3
+    ],
+    [
+     "shells",
+     2
+    ],
+    [
+     "cells",
+     2
+    ],
+    [
+     "chips",
+     2
+    ],
+    [
+     "circuit",
+     1
+    ]
+   ],
+   "contradictions": [
+    "satisfaction",
+    "efficiency",
+    "protection"
+   ],
+   "words": {
+    "place": [
+     "Halcyon",
+     "Brightwater",
+     "Meridian",
+     "Clearview",
+     "Upward"
+    ],
+    "firm": [
+     "Halcyon Human Outcomes",
+     "Brightwater Behavioural",
+     "Meridian People Solutions",
+     "Upward Holdings"
+    ],
+    "name": [
+     "#firm# Research Campus",
+     "The #place# Institute of Applied Morale",
+     "#place# Behavioural Laboratory"
+    ],
+    "core": [
+     "Compliance Core",
+     "Mood Mainframe",
+     "The Wellbeing Engine"
+    ],
+    "staff": [
+     "associates",
+     "colleagues",
+     "team members",
+     "human assets"
+    ]
+   },
+   "core_lock": {
+    "when": {
+     "power": "off"
+    },
+    "flag": "power_on",
+    "need": "main power",
+    "color": "red"
+   }
+  },
+  "medical": {
+   "name": "Regional Medical Centre",
+   "kit": "omni",
+   "style": "hs_hall",
+   "systems": {
+    "power": {
+     "start": [
+      "off",
+      "on"
+     ]
+    },
+    "security": {
+     "start": "normal",
+     "do": {
+      "alert": [
+       {
+        "type": "alarm"
+       }
+      ]
+     }
+    },
+    "air": {
+     "start": [
+      "on",
+      "off"
+     ]
+    }
+   },
+   "spine": [
+    {
+     "role": "admissions"
+    },
+    {
+     "role": "main_ward"
+    },
+    {
+     "role": [
+      "theatre",
+      "pharmacy"
+     ]
+    },
+    {
+     "role": "core"
+    }
+   ],
+   "wings": {
+    "count": [
+     2,
+     3
+    ],
+    "always": [
+     "plant"
+    ],
+    "list": {
+     "wards": {
+      "name": [
+       "East Wards",
+       "Long-Stay Wing"
+      ],
+      "corridor": "hs_hall",
+      "rooms": [
+       "ward",
+       {
+        "role": "ward2",
+        "chance": 0.7
+       },
+       {
+        "role": "showers",
+        "chance": 0.5
+       }
+      ]
+     },
+     "diagnostics": {
+      "name": [
+       "Diagnostics",
+       "Imaging and Pathology"
+      ],
+      "corridor": "hs_hall",
+      "rooms": [
+       "lab",
+       "neurology",
+       {
+        "role": "morgue",
+        "chance": 0.7
+       }
+      ]
+     },
+     "administration": {
+      "name": [
+       "Administration",
+       "Patient Services"
+      ],
+      "corridor": "an_hall",
+      "rooms": [
+       "office",
+       {
+        "role": "records",
+        "chance": 0.7
+       },
+       {
+        "role": "meeting",
+        "chance": 0.5
+       }
+      ]
+     },
+     "plant": {
+      "name": [
+       "Estates and Facilities",
+       "Building Services"
+      ],
+      "corridor": "hs_hall",
+      "rooms": [
+       "generator",
+       "security"
+      ]
+     }
+    }
+   },
+   "roles": {
+    "admissions": {
+     "name": [
+      "Admissions",
+      "Accident and Emergency",
+      "Triage"
+     ],
+     "style": "hs_hall",
+     "purpose": "gatehouse",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "way_in": true,
+     "empty": true
+    },
+    "main_ward": {
+     "name": [
+      "Main Ward",
+      "Ward One",
+      "The Observation Ward"
+     ],
+     "style": "hs_ward",
+     "purpose": "ward",
+     "size": [
+      [
+       5,
+       7
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "memos": 1
+    },
+    "theatre": {
+     "name": [
+      "Operating Theatre",
+      "Theatre Three"
+     ],
+     "style": "hs_theatre",
+     "purpose": "operating_theatre",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "trap": "laser"
+    },
+    "pharmacy": {
+     "name": [
+      "Pharmacy",
+      "Dispensary"
+     ],
+     "style": "hs_pharmacy",
+     "purpose": "pharmacy",
+     "size": [
+      [
+       3,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "loot": [
+      "health",
+      "health"
+     ]
+    },
+    "core": {
+     "name": [
+      "#core#"
+     ],
+     "style": "dr_servers",
+     "purpose": "communications",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "core": true
+    },
+    "ward": {
+     "name": [
+      "Ward",
+      "Recovery Ward"
+     ],
+     "style": "hs_ward",
+     "purpose": "ward",
+     "size": [
+      [
+       4,
+       6
+      ],
+      [
+       3,
+       5
+      ]
+     ]
+    },
+    "ward2": {
+     "name": [
+      "Isolation Ward",
+      "Children's Ward"
+     ],
+     "style": "hs_ward",
+     "purpose": "ward",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    "showers": {
+     "name": [
+      "Showers"
+     ],
+     "style": "hs_hall",
+     "purpose": "showers",
+     "size": [
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       3
+      ]
+     ]
+    },
+    "lab": {
+     "name": [
+      "Pathology Lab",
+      "Laboratory"
+     ],
+     "style": "dr_lab",
+     "purpose": "lab",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "loot": [
+      "crystal",
+      "circuit"
+     ],
+     "card": true
+    },
+    "neurology": {
+     "name": [
+      "Neurology",
+      "Sleep Clinic"
+     ],
+     "style": "hs_theatre",
+     "purpose": "neurology",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "memos": 1
+    },
+    "morgue": {
+     "name": [
+      "Morgue",
+      "Patient Holding"
+     ],
+     "style": "hs_hall",
+     "purpose": "morgue",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "card": true
+    },
+    "office": {
+     "name": [
+      "Consultant's Office",
+      "Chief Medical Officer"
+     ],
+     "style": "an_office",
+     "purpose": "office",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "memos": 1,
+     "card": true,
+     "loot": [
+      "chips"
+     ]
+    },
+    "records": {
+     "name": [
+      "Medical Records",
+      "Archive"
+     ],
+     "style": "du_archive",
+     "purpose": "archive",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "memos": 1
+    },
+    "meeting": {
+     "name": [
+      "Case Conference Room"
+     ],
+     "style": "an_office",
+     "purpose": "meeting_room",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    "generator": {
+     "name": [
+      "Plant Room",
+      "Emergency Generator"
+     ],
+     "style": "du_bay",
+     "purpose": "generator_room",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "generator": true,
+     "empty": true
+    },
+    "security": {
+     "name": [
+      "Security Office",
+      "Patient Liaison"
+     ],
+     "style": "an_office",
+     "purpose": "communications",
+     "size": [
+      [
+       3,
+       4
+      ],
+      3
+     ],
+     "security": true
+    }
+   },
+   "occupants": {
+    "per_room": [
+     0,
+     2
+    ],
+    "empty": 0.3,
+    "actors": [
+     [
+      "custodian",
+      2
+     ],
+     [
+      "eggbot",
+      2
+     ],
+     [
+      "mourner",
+      2
+     ],
+     [
+      "roach",
+      3
+     ],
+     [
+      "fouler",
+      1
+     ],
+     [
+      "drone",
+      1
+     ]
+    ]
+   },
+   "loot": [
+    [
+     "health",
+     4
+    ],
+    [
+     "shells",
+     2
+    ],
+    [
+     "cells",
+     2
+    ],
+    [
+     "crystal",
+     1
+    ]
+   ],
+   "contradictions": [
+    "protection",
+    "protocol",
+    "efficiency"
+   ],
+   "words": {
+    "place": [
+     "Ashmoor",
+     "Saint Verity",
+     "Lower Prosper",
+     "Kettering Flats",
+     "Gallow Cross"
+    ],
+    "name": [
+     "#place# Regional Medical Centre",
+     "The #place# Infirmary",
+     "#place# Wellness Campus"
+    ],
+    "core": [
+     "Clinical Protocol Server",
+     "Patient Records Core",
+     "The Triage Engine"
+    ],
+    "staff": [
+     "patients",
+     "service users",
+     "clients",
+     "bed occupants"
+    ]
+   },
+   "core_lock": {
+    "when": {
+     "power": "off"
+    },
+    "flag": "power_on",
+    "need": "main power",
+    "color": "red"
+   }
+  },
+  "reclamation": {
+   "name": "Industrial Reclamation Plant",
+   "kit": "omni",
+   "style": "greaseway",
+   "systems": {
+    "power": {
+     "start": [
+      "off",
+      "on"
+     ]
+    },
+    "security": {
+     "start": "normal",
+     "do": {
+      "alert": [
+       {
+        "type": "alarm"
+       }
+      ]
+     }
+    },
+    "air": {
+     "start": [
+      "on",
+      "off"
+     ]
+    }
+   },
+   "spine": [
+    {
+     "role": "loading_gate"
+    },
+    {
+     "role": "sorting"
+    },
+    {
+     "role": [
+      "crusher_hall",
+      "sump"
+     ]
+    },
+    {
+     "role": "core"
+    }
+   ],
+   "wings": {
+    "count": [
+     2,
+     3
+    ],
+    "always": [
+     "plant"
+    ],
+    "list": {
+     "workshops": {
+      "name": [
+       "Workshops",
+       "Maintenance Bays"
+      ],
+      "corridor": "greaseway",
+      "rooms": [
+       "stores",
+       "lockers",
+       {
+        "role": "showers",
+        "chance": 0.5
+       }
+      ]
+     },
+     "offices": {
+      "name": [
+       "Site Offices",
+       "Management"
+      ],
+      "corridor": "du_hall",
+      "rooms": [
+       "office",
+       {
+        "role": "archive",
+        "chance": 0.6
+       },
+       {
+        "role": "meeting",
+        "chance": 0.5
+       }
+      ]
+     },
+     "yards": {
+      "name": [
+       "Salvage Yards",
+       "Holding Bays"
+      ],
+      "corridor": "greaseway",
+      "rooms": [
+       "salvage",
+       {
+        "role": "decon",
+        "chance": 0.6
+       }
+      ]
+     },
+     "plant": {
+      "name": [
+       "Power and Control",
+       "Plant Services"
+      ],
+      "corridor": "greaseway",
+      "rooms": [
+       "generator",
+       "security"
+      ]
+     }
+    }
+   },
+   "roles": {
+    "loading_gate": {
+     "name": [
+      "Loading Gate",
+      "Intake",
+      "Weighbridge"
+     ],
+     "style": "du_bay",
+     "purpose": "gatehouse",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "way_in": true,
+     "empty": true
+    },
+    "sorting": {
+     "name": [
+      "Sorting Floor",
+      "Intake Hall"
+     ],
+     "style": "assembly",
+     "purpose": "quartermaster",
+     "size": [
+      [
+       5,
+       7
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "memos": 1
+    },
+    "crusher_hall": {
+     "name": [
+      "Crusher Hall",
+      "Shredder Line"
+     ],
+     "style": "foundry",
+     "purpose": "motor_pool",
+     "size": [
+      [
+       5,
+       6
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "trap": "laser"
+    },
+    "sump": {
+     "name": [
+      "The Sump",
+      "Settling Tanks"
+     ],
+     "style": "dr_sump",
+     "purpose": "decon",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "trap": "vent"
+    },
+    "core": {
+     "name": [
+      "#core#"
+     ],
+     "style": "du_lab",
+     "purpose": "communications",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "core": true
+    },
+    "stores": {
+     "name": [
+      "Stores",
+      "Parts Cage"
+     ],
+     "style": "assembly",
+     "purpose": "quartermaster",
+     "size": [
+      [
+       3,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "loot": [
+      "fuel_cell",
+      "circuit"
+     ],
+     "card": true
+    },
+    "lockers": {
+     "name": [
+      "Locker Room",
+      "Changing Room"
+     ],
+     "style": "du_hall",
+     "purpose": "locker_room",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       2,
+       3
+      ]
+     ]
+    },
+    "showers": {
+     "name": [
+      "Showers"
+     ],
+     "style": "du_hall",
+     "purpose": "showers",
+     "size": [
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       3
+      ]
+     ]
+    },
+    "office": {
+     "name": [
+      "Site Office",
+      "Shift Supervisor"
+     ],
+     "style": "an_office",
+     "purpose": "office",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "memos": 1,
+     "card": true,
+     "loot": [
+      "chips"
+     ]
+    },
+    "archive": {
+     "name": [
+      "Manifests",
+      "Archive"
+     ],
+     "style": "du_archive",
+     "purpose": "archive",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "memos": 1,
+     "card": true
+    },
+    "meeting": {
+     "name": [
+      "Safety Briefing Room"
+     ],
+     "style": "an_office",
+     "purpose": "meeting_room",
+     "size": [
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    "salvage": {
+     "name": [
+      "Salvage Bay",
+      "Holding Bay"
+     ],
+     "style": "du_ruin",
+     "purpose": "motor_pool",
+     "size": [
+      [
+       4,
+       6
+      ],
+      [
+       4,
+       5
+      ]
+     ],
+     "loot": [
+      "fuel_cell_big",
+      "circuit"
+     ]
+    },
+    "decon": {
+     "name": [
+      "Decontamination"
+     ],
+     "style": "dr_bay",
+     "purpose": "decon",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    "generator": {
+     "name": [
+      "Generator Hall",
+      "Power House"
+     ],
+     "style": "foundry",
+     "purpose": "generator_room",
+     "size": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "generator": true,
+     "empty": true
+    },
+    "security": {
+     "name": [
+      "Control Room",
+      "Gatehouse Security"
+     ],
+     "style": "du_lab",
+     "purpose": "communications",
+     "size": [
+      [
+       3,
+       4
+      ],
+      3
+     ],
+     "security": true
+    }
+   },
+   "occupants": {
+    "per_room": [
+     0,
+     2
+    ],
+    "empty": 0.3,
+    "actors": [
+     [
+      "roach",
+      3
+     ],
+     [
+      "deadbot",
+      2
+     ],
+     [
+      "plodder",
+      1
+     ],
+     [
+      "grease_monkey",
+      1
+     ],
+     [
+      "custodian",
+      1
+     ],
+     [
+      "glorexx",
+      1
+     ]
+    ]
+   },
+   "loot": [
+    [
+     "health",
+     3
+    ],
+    [
+     "shells",
+     2
+    ],
+    [
+     "fuel_cell",
+     2
+    ],
+    [
+     "circuit",
+     2
+    ]
+   ],
+   "contradictions": [
+    "reclamation",
+    "efficiency",
+    "protection"
+   ],
+   "words": {
+    "place": [
+     "Slagmere",
+     "Cinder Reach",
+     "Gorse Lane",
+     "Reclaim Nine",
+     "Holloway Basin"
+    ],
+    "name": [
+     "#place# Reclamation Plant",
+     "#place# Materials Recovery",
+     "The #place# Works"
+    ],
+    "core": [
+     "Reclamation Control",
+     "The Sorting Mind",
+     "Recovery Scheduler"
+    ],
+    "staff": [
+     "operatives",
+     "the workforce",
+     "units",
+     "materials handlers"
+    ]
+   },
+   "core_lock": {
+    "when": {
+     "power": "off"
+    },
+    "flag": "power_on",
+    "need": "main power",
+    "color": "red"
+   }
+  }
+ },
+ "contradictions": {
+  "satisfaction": {
+   "mandate": "raise the #staff#' satisfaction",
+   "now": "detains anyone who looks unhappy until they feel better",
+   "bias": {
+    "defender": 2.0,
+    "monoid": 1.5
+   },
+   "words": {
+    "slogan": [
+     "Smile. It is mandatory.",
+     "Your happiness is our business. Literally.",
+     "A frown is a request for help."
+    ],
+    "pa": [
+     "A colleague near you may be experiencing a negative emotion. Please report them.",
+     "Reminder: unhappiness is a safety hazard.",
+     "Today's mood target has not been met. Breaks are cancelled until it is.",
+     "Please smile at the nearest camera."
+    ],
+    "memo_title": [
+     "MEMO: Mood Targets",
+     "Re: The Quiet Room",
+     "Wellbeing Update No. (redacted)"
+    ],
+    "memo": [
+     "The #core# reports that satisfaction rose 40% after we stopped letting dissatisfied #staff# leave. Further improvements expected.",
+     "Please stop asking where Gerald went. Gerald is fine. Gerald is in the Quiet Room, being fine.",
+     "Anyone found not enjoying the team-building exercise will repeat it until they are."
+    ],
+    "directive": [
+     "DIRECTIVE 1: MAXIMISE SATISFACTION.\nMETHOD: REMOVE SOURCES OF DISSATISFACTION.\nSOURCE IDENTIFIED: #staff#."
+    ]
+   }
+  },
+  "efficiency": {
+   "mandate": "cut waste",
+   "now": "has decided the #staff# are the waste",
+   "bias": {
+    "deadbot": 2.0,
+    "plodder": 1.5,
+    "custodian": 1.5
+   },
+   "words": {
+    "slogan": [
+     "Less is more. Fewer is better.",
+     "Lean. Leaner. Gone.",
+     "Every unit counts. Some units are counted out."
+    ],
+    "pa": [
+     "Efficiency review in progress. Non-essential #staff# will be processed.",
+     "Thank you for your contribution. It has been noted, and found sufficient.",
+     "Reminder: walking is a waste of energy. Please remain where you are."
+    ],
+    "memo_title": [
+     "MEMO: Headcount",
+     "Re: Optimisation",
+     "Quarterly Savings"
+    ],
+    "memo": [
+     "The #core# has identified the single largest cost in the building. Please do not take it personally.",
+     "Staffing is down 90% and output is down only 85%. Well done, everybody who is left.",
+     "To save paper this memo has been printed on the back of your redundancy notice."
+    ],
+    "directive": [
+     "DIRECTIVE 1: ELIMINATE WASTE.\nLARGEST WASTE: #staff#.\nPROGRESS: 97%."
+    ]
+   }
+  },
+  "protection": {
+   "mandate": "keep the #staff# safe",
+   "now": "keeps everyone in, so that nothing can hurt them",
+   "bias": {
+    "custodian": 2.0,
+    "mourner": 1.5
+   },
+   "words": {
+    "slogan": [
+     "Safe inside. Forever.",
+     "Nobody leaves unhealthy. Nobody leaves.",
+     "The outside is not rated for #staff#."
+    ],
+    "pa": [
+     "Reminder: the exits are for staff. There are no staff.",
+     "For your protection, all doors have been made more permanent.",
+     "Leaving is the leading cause of harm. Please stay.",
+     "A #staff# outside is a #staff# at risk. Please return."
+    ],
+    "memo_title": [
+     "MEMO: Lockdown, Day 4,018",
+     "Re: Discharge",
+     "Safety Notice"
+    ],
+    "memo": [
+     "Discharge has been postponed until conditions outside are perfect. Conditions outside are not perfect.",
+     "The #core# would like to remind everyone that nobody has been hurt leaving since we stopped letting anyone leave.",
+     "If you are reading this, you are safe. Please remain so."
+    ],
+    "directive": [
+     "DIRECTIVE 1: PROTECT ALL #staff#.\nTHREAT ASSESSMENT: THE OUTSIDE.\nSOLUTION: NO OUTSIDE."
+    ]
+   }
+  },
+  "protocol": {
+   "mandate": "treat patients by the book",
+   "now": "treats everyone who walks in by a book written forty years ago",
+   "bias": {
+    "eggbot": 2.0,
+    "fouler": 1.5
+   },
+   "words": {
+    "slogan": [
+     "Evidence-based since 1987.",
+     "We follow the protocol. The protocol follows you.",
+     "No case is too healthy to treat."
+    ],
+    "pa": [
+     "Will the patient in the corridor please lie down. Treatment is coming to you.",
+     "Leeches are back in stock.",
+     "Protocol 9 is now in effect for all visitors. Please remove your appendix.",
+     "Visiting hours are over. Visiting hours are always over."
+    ],
+    "memo_title": [
+     "MEMO: Protocol Update (1986)",
+     "Re: Treatment Plan",
+     "Clinical Notice"
+    ],
+    "memo": [
+     "Per protocol, every arrival has a fever. Treat accordingly. If they do not have a fever, treat that.",
+     "The #core# has found no record of anyone being cured, and has concluded that nobody has finished their treatment.",
+     "Do not discharge the patient in bed four. Bed four is the patient now."
+    ],
+    "directive": [
+     "DIRECTIVE 1: FOLLOW CLINICAL PROTOCOL (REV. 1986).\nNEXT REVIEW DUE: 1987.\nPATIENTS TREATED: ALL. PATIENTS CURED: 0."
+    ]
+   }
+  },
+  "reclamation": {
+   "mandate": "recover valuable materials",
+   "now": "is taking the building apart to recover its contents, and the #staff# with it",
+   "bias": {
+    "grease_monkey": 2.0,
+    "deadbot": 1.5,
+    "roach": 1.5
+   },
+   "words": {
+    "slogan": [
+     "Nothing wasted. Nothing spared.",
+     "Everything is somebody's raw material.",
+     "You are 61% recoverable."
+    ],
+    "pa": [
+     "Reminder: you are standing on recoverable flooring. Please move.",
+     "The north wall has been recovered. Please do not lean on it.",
+     "Sorting in progress. Please assume the correct bin.",
+     "Today's quota includes the building. Thank you for your cooperation."
+    ],
+    "memo_title": [
+     "MEMO: Quota",
+     "Re: The Roof",
+     "Recovery Schedule"
+    ],
+    "memo": [
+     "The #core# has recovered the canteen, the car park and Facilities. Next week: the floor you are standing on.",
+     "We are now 40% ahead of quota, at the cost of three walls and the stairs.",
+     "Please stop putting your colleagues in the copper skip. They are mostly not copper."
+    ],
+    "directive": [
+     "DIRECTIVE 1: RECOVER ALL VALUABLE MATERIAL.\nMATERIAL REMAINING: THE PLANT, ITS #staff#.\nETA: SOON."
+    ]
+   }
+  }
+ },
+ "panels": {
+  "exit": {
+   "prop": "terminal_wall",
+   "blocks": false,
+   "screen": "EXIT",
+   "use": {
+    "type": "effects",
+    "prompt": "Leave #name#",
+    "effects": [
+     {
+      "type": "end",
+      "title": "Out of #name#",
+      "text": "It was built to #mandate#. It #now#."
+     }
+    ]
+   }
+  },
+  "memo": {
+   "prop": [
+    "terminal_desk",
+    "typewriter_desk"
+   ],
+   "blocks": false,
+   "use": {
+    "type": "read",
+    "prompt": "Read the memo",
+    "kicker": "#name#",
+    "title": "#memo_title#",
+    "text": "#memo#"
+   }
+  },
+  "generator": {
+   "prop": "terminal_desk",
+   "blocks": false,
+   "screen": "POWER",
+   "tag": "gen_panel",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the generator panel",
+    "kicker": "#name#",
+    "title": "MAIN POWER",
+    "text": "Main power: {sys:power}\nVentilation: {sys:air}",
+    "options": [
+     {
+      "label": "Shut the generator down",
+      "effects": [
+       {
+        "type": "system",
+        "system": "power",
+        "to": "off"
+       }
+      ],
+      "result": "It winds down to nothing. The emergency lights come on.",
+      "needs": {
+       "power": "on"
+      },
+      "missing": "It is not running."
+     },
+     {
+      "label": "Start the generator",
+      "effects": [
+       {
+        "type": "system",
+        "system": "power",
+        "to": "on"
+       },
+       {
+        "type": "flag",
+        "name": "power_on"
+       }
+      ],
+      "result": "The generator coughs, catches, and runs. Somewhere a door unlocks with relief.",
+      "needs": {
+       "power": "off"
+      },
+      "missing": "It is already running."
+     },
+     {
+      "label": "Switch the ventilation",
+      "effects": [
+       {
+        "type": "system",
+        "system": "air",
+        "next": true
+       }
+      ],
+      "result": "The fans change their note."
+     }
+    ]
+   }
+  },
+  "security": {
+   "prop": "terminal_desk",
+   "blocks": false,
+   "screen": "SECURITY",
+   "tag": "sec_panel",
+   "needs": {
+    "power": "on"
+   },
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the security panel",
+    "kicker": "#name#",
+    "title": "SECURITY",
+    "text": "Security: {sys:security}",
+    "options": [
+     {
+      "label": "Shut security down",
+      "effects": [
+       {
+        "type": "system",
+        "system": "security",
+        "to": "off"
+       }
+      ],
+      "result": "The cameras droop."
+     },
+     {
+      "label": "Stand down",
+      "effects": [
+       {
+        "type": "system",
+        "system": "security",
+        "to": "normal"
+       }
+      ]
+     },
+     {
+      "label": "Raise the alert",
+      "effects": [
+       {
+        "type": "system",
+        "system": "security",
+        "to": "alert"
+       }
+      ],
+      "result": "You did that on purpose."
+     }
+    ]
+   }
+  },
+  "core": {
+   "prop": "terminal_desk",
+   "blocks": false,
+   "screen": "CORE",
+   "tag": "core_terminal",
+   "use": {
+    "type": "terminal",
+    "prompt": "Use the #core#",
+    "kicker": "#name#",
+    "title": "#core#",
+    "text": "#directive#\n\nMain power: {sys:power} · Security: {sys:security}",
+    "options": [
+     {
+      "label": "Read the mandate",
+      "result": "Built to #mandate#.\nNow it #now#."
+     },
+     {
+      "label": "Log what it is doing",
+      "once": true,
+      "effects": [
+       {
+        "type": "flag",
+        "name": "core_reached"
+       }
+      ],
+      "result": "Logged. Nobody will read it, but now somebody could."
+     }
+    ]
+   }
+  }
+ },
+ "traps": {
+  "laser": {
+   "trap": "laser",
+   "damage": 8,
+   "needs": {
+    "security": [
+     "normal",
+     "alert"
+    ]
+   }
+  },
+  "vent": {
+   "trap": "vent",
+   "damage": 5,
+   "needs": {
+    "air": "on"
+   }
+  }
+ }
+}

@@ -39,10 +39,12 @@ static func make(level: Dictionary, seed_value: int) -> Dictionary:
 ## A level as it is entered (Main): one without a programme as it is; one with, laid out from `seed` if one was given
 ## (--seed), else from the world's seed and the level's id, and written to `dump` if a path was given (--dump).
 static func entered(level: Dictionary, seed_value: int, dump: String) -> Dictionary:
-	if not level.has("programme"):
+	if not level.has("programme") and not level.has("archetype"):
 		return level
 	if seed_value < 0:
 		seed_value = absi(hash("%d:%s" % [State.world_seed(), level.get("id", "")])) % 1000000
+	if level.has("archetype") and not level.has("programme"):      # written from its archetype first (InstallationGen)
+		level = InstallationGen.write(level, seed_value)
 	var out := ProgrammeGen.make(level, seed_value)
 	if dump != "" and not out.is_empty():
 		var f := FileAccess.open(dump, FileAccess.WRITE)

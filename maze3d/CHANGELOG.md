@@ -4,6 +4,21 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **Installations written from an archetype** (the generation review's build order, step 3 of 4: "generate a purpose before generating a floor plan"; SPEC 6.4, 7, 9).
+  - **`InstallationGen`** (`generators/installation.gd`). A level file with `archetype` (an id, or a list: the seed picks) is written into a programme level as it is entered, from the seed it is then laid out from (`ProgrammeGen.entered`). Every choice comes from streams of that seed of their own.
+  - **The archetypes** (`defs/archetypes.json`): `behavioural_lab`, `medical` and `reclamation`. Each says its kit, its systems and how each starts, its spine from the way in to its core (a step can be one of two roles), its wings (those it must have, the power wing among them, and how many more), each role's names, style, size, purpose and what it holds (the way out, the generator's or security's panel, the core's terminal, memos, a card, loot, a trap), who lives there, and how the core is shut: on the generator's flag when power starts off, else by a red card.
+  - **The contradictions** (five): what the place was built for, what it does now, which monsters it favours, and its words.
+  - **The words** (`InstallationWords`): a small grammar, `#symbol#` in a line picking one of that symbol's lines. The place's name, its firm, its staff and its core are chosen once. They write the level's name and intro, the panels, the memos, the core's directive and the `PUBLIC ADDRESS` lines heard entering up to three rooms.
+  - **The writer** (`InstallationWriter`): the spine, the wings, the rooms and their things, the locks and the announcements.
+  - **The panels and traps** every installation shares (`panels`, `traps`): the way out, the memo, the generator (shut down, which needs power on; start, which needs power off; switch the air), security (which needs power) and the core's terminal; a laser that needs security and a vent that needs the air.
+  - **An Installation** (`installation`, the baseline's 31st run) and its test: the same seed writes it the same; for each archetype, over eight seeds, each world is laid out, finishable, its spine in order, its panels there, its core shut the way its power says, every word written out, its monsters its own; the choices come out more than one way, and some worlds have a trap of their kind; then played: the core's doors shut until the generator is started, its terminal logs what the place is doing, and the objective moves on to the way out. Then the standard parts.
+  - **`Schema`** checks the archetypes' and contradictions' keys; a programme room keeps the role it was written from (`role`).
+  - **Three things the first runs showed, fixed in the level, not the test.**
+    - The level's own test left out the `traps` part, which in the standard order makes the player unkillable before the fights. A hard draw of monsters killed the player in the third fight, so the rest failed: the later fights, the security terminal (the world had ended) and "a day goes by" (no day passes for the dead). The test now runs `traps` before `actors`, as the standard order does.
+    - Choosing every option of the generator's panel in turn, as the containers part does, ended with the generator shut down, and the security panel, which needs power, would not open. Its options now say what they need (start: power off; shut down: power on) and come in that order, so the last one standing is power on.
+    - The first objective ("find out what it is doing") had nothing to finish it, so it stayed up after the core was reached. It now ends on `core_reached`, and the test checks the objective moves on.
+  - **Baseline item64:** 31 runs, 4108 checks, 0 failures. Every run that was there before is the same line for line; An Installation adds 84.
+
 - **Level systems: power, security, air** (the generation review's build order, step 2 of 4: "shared systems, not isolated switches"; SPEC 4.5, 4.10, 4.12, 5.13, 5.25, 7, 9).
   - **`LevelSystems`** (`engine/level/systems.gd`, `Level.systems`). A level's `systems` name which it has, the state each starts in, the rooms it serves and what happens as it comes to a state (`do`). The game's `systems` say what each kind is: HaveNot has
     - `power`: off gives the emergency lights, low and red; or on;

@@ -30,3 +30,4 @@ collections     | --level=collections --selftest
 pen             | --level=pen --selftest
 perception      | --level=perception --selftest
 plant           | --level=plant --selftest
+installation    | --level=installation --selftest

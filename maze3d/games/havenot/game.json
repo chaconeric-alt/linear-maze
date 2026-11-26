@@ -44,7 +44,8 @@
   "defs/installations.json",
   "defs/character.json",
   "defs/purposes.json",
-  "defs/danger.json"
+  "defs/danger.json",
+  "defs/archetypes.json"
  ],
  "levels": [
   "levels/home.json",
@@ -65,7 +66,8 @@
   "levels/collections.json",
   "levels/pen.json",
   "levels/perception.json",
-  "levels/plant.json"
+  "levels/plant.json",
+  "levels/installation.json"
  ],
  "stand_ins": {
   "chair_plain": ["ht_chair_ops"],
