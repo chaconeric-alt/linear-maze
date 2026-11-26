@@ -885,6 +885,10 @@
    "model": "models/trap_laser.glb",
    "type": "prop"
   },
+  "trap_laser_post": {
+   "model": "models/trap_laser_post.glb",
+   "type": "prop"
+  },
   "trap_shock": {
    "model": "models/trap_shock.glb",
    "type": "prop"

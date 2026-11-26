@@ -617,6 +617,24 @@ def trap_laser():
     return dict(objects=[m.to_object()], meta=dict(type='prop'))
 
 
+def trap_laser_post():
+    """A post that holds a laser's emitters where there is no wall to hold them (out on a room's floor). Its face, where
+    the emitters go, is at y = 0, the same plane as a wall's face; the post stands behind it (+y)."""
+    m = Mesh('trap_laser_post')
+    m.box((0.5, 0.5, 0.06), at=(0, 0.13, 0.03), mat='hull_dark', bevel=0.02)            # foot
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            m.cyl(0.025, 0.03, at=(sx * 0.19, 0.13 + sy * 0.19, 0.07), mat='trim', seg=6)    # bolts
+    m.box((0.22, 0.24, 2.15), at=(0, 0.13, 1.135), mat='hull', bevel=0.03)              # the post
+    m.box((0.06, 0.02, 1.9), at=(0, 0.005, 1.1), mat='trim')                            # the strip the heads sit on
+    for z in (0.32, 2.0):
+        m.box((0.24, 0.26, 0.1), at=(0, 0.13, z), mat='hazard', bevel=0.01)              # warning bands
+    m.box((0.3, 0.3, 0.08), at=(0, 0.13, 2.25), mat='hull_dark', bevel=0.02)            # cap
+    m.cyl(0.05, 0.05, at=(0, 0.13, 2.31), mat='glow_red', seg=10)                       # it is live
+    m.tube([(0, 0.27, 0.9), (0, 0.33, 0.5), (0, 0.4, 0.07), (0, 0.55, 0.03)], 0.025, mat='cable', seg=6)
+    return dict(objects=[m.to_object()], meta=dict(type='prop'))
+
+
 def trap_shock():
     m = Mesh('trap_shock')
     m.box((3.2, 3.2, 0.05), at=(0, 0, 0.02), mat='hull_dark', bevel=0.02)
@@ -736,7 +754,7 @@ PROPS = {'window_obs': window_obs,
     'item_ammo_bullets': lambda: p_ammo('bullets'), 'item_ammo_shells': lambda: p_ammo('shells'), 'item_ammo_cells': lambda: p_ammo('cells'), 'item_keycard': p_keycard,
     'item_ammo_rockets': lambda: p_ammo('rockets'),
     'item_backpack': p_backpack, 'item_hauler': p_hauler, 'item_sling': p_sling,
-    'trap_laser': trap_laser, 'trap_shock': trap_shock, 'trap_vent': trap_vent,
+    'trap_laser': trap_laser, 'trap_laser_post': trap_laser_post, 'trap_shock': trap_shock, 'trap_vent': trap_vent,
     'weapon_handgun': w_handgun, 'weapon_scattergun': w_scattergun, 'weapon_plasma': w_plasma, 'weapon_launcher': w_launcher,
 }
 

@@ -546,6 +546,11 @@
      "The Back Way"
     ],
     "corridor": "an_hall"
+   },
+   "containers": {
+    "shelf": "lt_shelf_ex",
+    "box": "lt_box_ex",
+    "trophy": "lt_trophy_ex"
    }
   },
   "medical": {
@@ -1087,6 +1092,11 @@
      "The Back Corridor"
     ],
     "corridor": "hs_hall"
+   },
+   "containers": {
+    "shelf": "lt_shelf_hs",
+    "box": "lt_box_hs",
+    "trophy": "lt_trophy_hs"
    }
   },
   "reclamation": {
@@ -1604,6 +1614,11 @@
      "The Maintenance Run"
     ],
     "corridor": "greaseway"
+   },
+   "containers": {
+    "shelf": "lt_shelf_wk",
+    "box": "lt_box_wk",
+    "trophy": "lt_trophy_wk"
    }
   }
  },

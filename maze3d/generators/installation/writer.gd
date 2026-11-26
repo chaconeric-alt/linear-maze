@@ -1,7 +1,7 @@
 extends RefCounted
 ## InstallationWriter - the rooms of one installation, from its archetype (InstallationGen): the spine, the wings, each
-## room's things, the locks, and the announcements. Its numbers come from the stream it is given, its words from the
-## installation's (InstallationWords); its panels and traps are the game's (defs "panels", "traps"), their words put in.
+## room (what it holds: InstallationContents), the locks, and the announcements. Its numbers come from the stream it
+## is given, its words from the installation's (InstallationWords).
 ## With a gate (the archetype's "gate", "hub" and "way_round"; the generation review's mission graph, 25 Nov): the spine
 ## room at the gate's step is shut; one wing, the far wing, branches past it and the rest off the hub, the near side;
 ## a near wing and the far wing are joined round the outside (a link, the way round). The gate opens one way on the
@@ -23,6 +23,7 @@ var gate: Dictionary = {}        # what the gate came to: its room, "by", the ke
 var _spine: Array = []
 var _wings: Array = []
 var _far := ""                   # the wing past the gate
+var contents: InstallationContents   # what each room holds
 
 
 func _init(a: Dictionary, c: Dictionary, w: Dictionary, s: RandomNumberGenerator, r: RandomNumberGenerator) -> void:
@@ -31,6 +32,7 @@ func _init(a: Dictionary, c: Dictionary, w: Dictionary, s: RandomNumberGenerator
 	words = w
 	said = s
 	rng = r
+	contents = InstallationContents.new(a, c, w, s, r)
 	core_name = InstallationWords.line("core", words, said)
 
 
@@ -138,7 +140,7 @@ func _gate_lock() -> Dictionary:
 		rooms[at].erase("chance")
 		rooms[at]["things"].append({"item": "keycard", "color": color})
 	gate.merge({"room": room, "name": rooms[room]["name"], "flag": flag})
-	var release: Dictionary = _said(LM.defs.get("panels", {}).get("release", {}))
+	var release: Dictionary = contents.said_in(LM.defs.get("panels", {}).get("release", {}))
 	return {"room": room, "flag": [flag, key], "need": InstallationWords.expand(str(g.get("need", {}).get(gate["by"], "")), words, said),
 		"release": {"side": "e", "thing": release}}
 
@@ -204,57 +206,8 @@ func _room(role_id: String) -> String:
 		"style": str(Dice.pick(rng, style) if style is Array else style), "size": role.get("size", [3, 3]).duplicate(true),
 		"purpose": str(role.get("purpose", "")), "things": []}      # "role": what it was written as (the layout ignores it)
 	rooms[id] = r
-	r["things"] = _things(role)
+	r["things"] = contents.things(role)
 	return id
-
-
-## What a room of that role holds: the way out at the way in; its panels; memos; its own loot and now and then one of
-## the archetype's; a trap of its kind; and who lives there, unless it is left empty.
-func _things(role: Dictionary) -> Array:
-	var out: Array = []
-	var panels: Dictionary = LM.defs.get("panels", {})
-	for k in ["way_in", "generator", "security", "core"]:
-		if role.get(k, false):
-			out.append(_said(panels.get("exit" if k == "way_in" else k, {})))
-	for i in int(role.get("memos", 0)):
-		out.append(_said(panels.get("memo", {})))
-	for it in role.get("loot", []):
-		out.append({"item": it})
-	if not role.get("way_in", false) and rng.randf() < 0.5:
-		out.append({"item": InstallationWriter._weighted(arch.get("loot", []), {}, rng)})
-	if role.has("trap"):
-		var t: Dictionary = LM.defs.get("traps", {}).get(str(role["trap"]), {}).duplicate(true)
-		t.erase("id")                                # (the defs' own name for it)
-		out.append(t)
-	var occ: Dictionary = arch.get("occupants", {})
-	if role.get("way_in", false) or (role.get("empty", false) and not role.get("core", false)) or rng.randf() < float(occ.get("empty", 0.0)):
-		return out.filter(func(t: Dictionary) -> bool: return not t.is_empty())
-	var span: Array = occ.get("per_room", [0, 2])
-	var n := rng.randi_range(int(span[0]), int(span[1])) + (1 if role.get("core", false) else 0)
-	for i in n:
-		out.append({"actor": InstallationWriter._weighted(occ.get("actors", []), contra.get("bias", {}), rng)})
-	return out.filter(func(t: Dictionary) -> bool: return not t.is_empty())
-
-
-## A panel of the game's, with the installation's words put in every line of it (and the id the level files know
-## it by taken off).
-func _said(spec: Dictionary) -> Dictionary:
-	var out: Variant = _put_words(spec.duplicate(true))
-	(out as Dictionary).erase("id")
-	return out
-
-
-func _put_words(v: Variant) -> Variant:
-	if v is String:
-		return InstallationWords.expand(v, words, said)
-	if v is Array:
-		return (v as Array).map(func(x: Variant) -> Variant: return _put_words(x))
-	if v is Dictionary:
-		var d := {}
-		for k in v:
-			d[k] = _put_words(v[k])
-		return d
-	return v
 
 
 # ------------------------------------------------------------------ questions
@@ -284,16 +237,3 @@ func _wing_of(id: String) -> String:
 			if r["id"] == id:
 				return w["id"]
 	return ""
-
-
-## One of [[id, weight], ...], the weights times `bias` (an id's own, else 1).
-static func _weighted(list: Array, bias: Dictionary, r: RandomNumberGenerator) -> String:
-	var total := 0.0
-	for e in list:
-		total += float(e[1]) * float(bias.get(e[0], 1.0))
-	var x := r.randf() * total
-	for e in list:
-		x -= float(e[1]) * float(bias.get(e[0], 1.0))
-		if x <= 0.0:
-			return str(e[0])
-	return str(list[-1][0]) if not list.is_empty() else ""

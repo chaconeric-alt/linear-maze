@@ -60,7 +60,7 @@ const THING_KINDS := {
 	"light": ["light", "y", "flicker", "shadows"],
 }
 const ARCHETYPE := ["name", "kit", "style", "systems", "core_lock", "spine", "wings", "roles", "occupants", "loot",
-	"contradictions", "words", "hub", "gate", "way_round"]                                     # defs "archetypes": what writes an installation (SPEC.md 6.4)
+	"contradictions", "words", "hub", "gate", "way_round", "containers"]                                     # defs "archetypes": what writes an installation (SPEC.md 6.4)
 const ARCH_ROLE := ["name", "style", "purpose", "size", "way_in", "empty", "memos", "card", "loot", "trap", "core",
 	"generator", "security"]
 const ARCH_WINGS := ["count", "always", "list"]

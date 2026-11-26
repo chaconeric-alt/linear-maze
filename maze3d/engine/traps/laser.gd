@@ -2,8 +2,12 @@ extends TrapKind
 ## The laser: emitters on the walls either side at each of "heights" (0.5, 1.15, 1.8 m), and a beam across between
 ## each pair, on for cycle[0] seconds and off for cycle[1] (no "cycle": always on). A beam within a body's height burns
 ## it ("damage", 14, every half second). "trip": true makes it a tripwire: no damage; it runs its "effects" once and goes
-## out.
+## out. An end with no wall to hold its emitters (a laser out on a room's floor) has a post instead (the kit's
+## "trap_laser_post"), standing a little inside the cell, solid, with the emitters on its face.
 class_name TrapLaser
+
+const POST_IN := 0.3             # how far inside the cell's edge a post's face stands
+const POST_BOX := Vector3(0.32, 2.3, 0.32)
 
 var _beams: Array = []
 var along_x := true              # the beams run east and west (else north and south)
@@ -18,27 +22,51 @@ func build(kit_id: String) -> void:
 	trap.rotation.y = 0.0 if along_x else PI / 2
 	var mat := Fx.glow_mat(Color(1.0, 0.1, 0.05), 4.0).duplicate()
 	mat.billboard_mode = BaseMaterial3D.BILLBOARD_DISABLED
+	var ends := {}                                   # -1, 1 -> where that end's emitters sit, along the beam
+	for s in [-1, 1]:
+		ends[s] = s * lv.C / 2
+		var side := Vector2i(s, 0) if along_x else Vector2i(0, -s)       # (turned a quarter, the beam's +x is north)
+		if not trap.solid_at(p.x + side.x, p.y + side.y):
+			ends[s] = s * (lv.C / 2 - POST_IN)
+			_post(kit_id, float(s), ends[s])
 	for hgt in e.get("heights", [0.5, 1.15, 1.8]):
-		for s in [-1.0, 1.0]:
+		for s in [-1, 1]:
 			var em := LM.spawn_model(kit_id, "trap_laser")
 			trap.add_child(em)
-			em.position = Vector3(s * lv.C / 2, hgt, 0)
+			em.position = Vector3(ends[s], hgt, 0)
 			em.rotation.y = -s * PI / 2
 		var mi := MeshInstance3D.new()
 		var cm := CylinderMesh.new()
 		cm.top_radius = 0.018
 		cm.bottom_radius = 0.018
-		cm.height = lv.C - 0.4
+		cm.height = ends[1] - ends[-1] - 0.4
 		cm.radial_segments = 6
 		cm.material = mat
 		mi.mesh = cm
 		mi.rotation.z = PI / 2
-		mi.position.y = hgt
+		mi.position = Vector3((ends[1] + ends[-1]) / 2.0, hgt, 0)
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		trap.add_child(mi)
 		_beams.append(mi)
 	trap.light.light_color = Color(1.0, 0.1, 0.05)
 	trap.light.position.y = 1.2
+
+
+## A post at one end, its face (where the emitters go) at x, the post behind it; solid, so nothing walks through it.
+func _post(kit_id: String, s: float, x: float) -> void:
+	var post := LM.spawn_model(kit_id, "trap_laser_post")
+	trap.add_child(post)
+	post.position = Vector3(x, 0, 0)
+	post.rotation.y = -s * PI / 2
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	var cs := CollisionShape3D.new()
+	var bx := BoxShape3D.new()
+	bx.size = POST_BOX
+	cs.shape = bx
+	body.add_child(cs)
+	trap.add_child(body)
+	body.position = Vector3(x + s * POST_BOX.x / 2.0, POST_BOX.y / 2.0, 0)
 
 
 func off() -> void:

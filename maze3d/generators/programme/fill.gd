@@ -163,8 +163,9 @@ func _thing(room: String, t: Dictionary) -> void:
 			problems.append("no room left in '%s' for %s" % [room, JSON.stringify(t)])
 			return
 		e["at"] = [at.x, at.y]
-		if e.has("prop") and not e.has("face"):
-			_turn(room, at, e)
+		var model := str(e.get("prop", e.get("station", "")))        # a robot's station stands as a prop does
+		if model != "" and not e.has("face"):
+			_turn(room, at, e, model)
 		if str(e.get("patrol", "")) == "room":
 			e["patrol"] = _beat(room)
 		var s := int(storeys.get(room, storey))
@@ -179,15 +180,27 @@ func _thing(room: String, t: Dictionary) -> void:
 		things.append(e)
 
 
-## Where it goes: the cell it says, in the room's own cells, or a free one the seed picks.
+## Where it goes: the cell it says, in the room's own cells, or a free one the seed picks ("at": "wall": one against
+## a wall, where the room has one free; for what stands with its back to a wall, a container or a station).
 func _spot(room: String, at: Variant) -> Vector2i:
 	var r: Rect2i = lay.rects[room]
 	if at is Array and at.size() == 2:
 		return r.position + Vector2i(int(at[0]), int(at[1]))
 	var free := free_cells(room)
+	if str(at) == "wall":
+		var by_wall := free.filter(func(c: Vector2i) -> bool: return _against_wall(r, c))
+		free = by_wall if not by_wall.is_empty() else free
 	if free.is_empty():
 		return Vector2i(-1, -1)
 	return free[rng.randi() % free.size()]
+
+
+## Is the cell against one of the room's walls (not a doorway)?
+func _against_wall(r: Rect2i, c: Vector2i) -> bool:
+	for d in GenContext.DIRS:
+		if not r.has_point(c + d) and not lay.open_at(c + d):
+			return true
+	return false
 
 
 ## The room's way out to the world, for a prop hung on the wall (`e`, given its face, its offset along the wall if it
@@ -240,9 +253,10 @@ func _wall_run(r: Rect2i, c: Vector2i, d: int, n: int, by_doors: Dictionary) -> 
 	return run
 
 
-## A prop turned to the room it stands in (see the top of this file). One hung on a wall the level hangs itself.
-func _turn(room: String, at: Vector2i, e: Dictionary) -> void:
-	var meta: Dictionary = LM.model_meta(kit, str(e["prop"]))
+## A prop (`model`) turned to the room it stands in (see the top of this file). One hung on a wall the level hangs
+## itself.
+func _turn(room: String, at: Vector2i, e: Dictionary, model: String) -> void:
+	var meta: Dictionary = LM.model_meta(kit, model)
 	if meta.get("mount", "") == "wall":
 		return
 	var r: Rect2i = lay.rects[room]
@@ -251,9 +265,12 @@ func _turn(room: String, at: Vector2i, e: Dictionary) -> void:
 	for d in 4:
 		var n: Vector2i = at + dirs[d]
 		if not r.has_point(n) and not lay.open_at(n):         # a wall behind it, not a doorway
+			e["face"] = names[(d + 2) % 4]
+			if e.has("station"):                                 # a bay that fills its cell: its back is on the wall already
+				e["blocks"] = true
+				return
 			var depth := float(meta.get("solid", [1.0, 1.0, 1.0])[2])
 			var push := maxf(0.0, 2.0 - depth / 2.0 - 0.12)
-			e["face"] = names[(d + 2) % 4]
 			e["offset"] = [dirs[d].x * push, 0, dirs[d].y * push]
 			return
 	var v := Vector2(r.get_center()) - Vector2(at) - Vector2(0.5, 0.5)

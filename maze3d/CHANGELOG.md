@@ -2,6 +2,20 @@
 
 What changed and when, newest first. The reference for how things are now is `SPEC.md`; how to work on the code is `CLAUDE.md`.
 
+## 2026-11-26
+
+- **Written installations keep the rooms generator's rules** (Eric, 26 Nov: robots without stations, treasure floating in the air, laser beams floating in the middle of rooms; SPEC 4.5, 6.3, 6.4).
+  - **What a room holds moved out of the writer** into `InstallationContents` (`generators/installation/contents.gd`), with the rules the rooms generator always kept:
+    - **Loot in containers.** Four times in five a thing of the loot goes in a container against a wall: a shelf, a box or a trophy case, in the archetype's own look (its new `containers`: the hospital's for the medical centre, the executive floor's for the laboratory, the works' for the reclamation plant). The rest lies on the floor (`"rest"`). Key cards still hover, to be seen.
+    - **Robots and their stations.** A robot with a station kind waits in one against its room's wall (`stationed`, 65%), shut over it half the time (`hibernating`). One that is out walks a beat round its room, and its empty station stands against the wall there.
+    - **Against the walls.** Panels, containers and stations stand against a wall.
+  - **`ProgrammeFill`**: `"at": "wall"` puts a thing on a free cell against a wall; a station is turned as a prop is, its back on the wall, its cell blocked.
+  - **The laser post** (`trap_laser_post`, hightech, `tools/blender/props.py`): a post 2.3 m tall with a foot, warning bands and a live light on its cap. A laser whose end has no wall to hold its emitters stands a post there, a little inside the cell, solid, with the emitters on its face (`TrapLaser`). Lasers between walls are as they were.
+  - **Baseline item67:** 32 runs, 4225 checks, 0 failures.
+    - Every run but three is line for line the same as item66.
+    - Staff Only has one laser out on the floor: its two posts move the Heavy Security Drone 0.6 m further aside going past it, still unburned.
+    - An Installation and the button's world are other worlds now (their rooms draw more numbers), with 91 and 110 checks (were 94 and 120): fewer loose things to pick up, fewer doors in this draw.
+
 ## 2026-11-25
 
 - **A random written installation from the title screen** (Eric, 25 Nov: "a button to generate and run a random installation created using these new rules"; SPEC 3, 6, 6.4).
