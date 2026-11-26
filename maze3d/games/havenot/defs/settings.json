@@ -869,7 +869,24 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "ag_planter",
+     "ag_sofa"
+    ],
+    "uncommon": [
+     "an_sign",
+     "ag_kiosk"
+    ],
+    "rare": [
+     "an_tv"
+    ],
+    "anomalous": [
+     "bb_font"
+    ]
+   },
+   "density": "sparse"
   },
   "open_plan": {
    "name": [
@@ -896,7 +913,25 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "an_cubicle",
+     "an_copier",
+     "an_filing"
+    ],
+    "uncommon": [
+     "an_whiteboard",
+     "an_cooler"
+    ],
+    "rare": [
+     "an_poster_a"
+    ],
+    "anomalous": [
+     "punching_bag"
+    ]
+   },
+   "density": "cluttered"
   },
   "test_chamber": {
    "name": [
@@ -923,7 +958,23 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "an_test"
+    ],
+    "uncommon": [
+     "restraint_chair",
+     "an_tablet"
+    ],
+    "rare": [
+     "cryo_pod"
+    ],
+    "anomalous": [
+     "hm_cradle"
+    ]
+   },
+   "density": "normal"
   },
   "observation": {
    "name": [
@@ -949,7 +1000,23 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "an_holo",
+     "terminal_desk"
+    ],
+    "uncommon": [
+     "an_tablet"
+    ],
+    "rare": [
+     "projection_screen"
+    ],
+    "anomalous": [
+     "hm_gramophone"
+    ]
+   },
+   "density": "normal"
   },
   "core": {
    "name": [
@@ -974,7 +1041,22 @@
      1,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "server_rack"
+    ],
+    "uncommon": [
+     "holo_table"
+    ],
+    "rare": [
+     "reactor"
+    ],
+    "anomalous": [
+     "cr_candles"
+    ]
+   },
+   "density": "normal"
   },
   "corner_office": {
    "name": [
@@ -1006,7 +1088,23 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "ex_globe",
+     "ex_case"
+    ],
+    "uncommon": [
+     "ex_bar"
+    ],
+    "rare": [
+     "hm_painting"
+    ],
+    "anomalous": [
+     "hm_aquarium"
+    ]
+   },
+   "density": "normal"
   },
   "boardroom": {
    "name": [
@@ -1031,7 +1129,23 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "ex_case"
+    ],
+    "uncommon": [
+     "projection_screen",
+     "ex_globe"
+    ],
+    "rare": [
+     "ex_bar"
+    ],
+    "anomalous": [
+     "cr_statue"
+    ]
+   },
+   "density": "normal"
   },
   "archive": {
    "name": [
@@ -1058,7 +1172,22 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "an_filing"
+    ],
+    "uncommon": [
+     "du_reel"
+    ],
+    "rare": [
+     "an_safe"
+    ],
+    "anomalous": [
+     "hm_gramophone"
+    ]
+   },
+   "density": "cluttered"
   },
   "cafeteria": {
    "name": [
@@ -1083,7 +1212,23 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "mp_vendor"
+    ],
+    "uncommon": [
+     "mp_autochef",
+     "an_cooler"
+    ],
+    "rare": [
+     "mp_kiosk"
+    ],
+    "anomalous": [
+     "bb_pulpit"
+    ]
+   },
+   "density": "normal"
   },
   "kitchen": {
    "name": [
@@ -1107,7 +1252,23 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "stove",
+     "prep_table"
+    ],
+    "uncommon": [
+     "mp_autochef"
+    ],
+    "rare": [
+     "wk_vat"
+    ],
+    "anomalous": [
+     "hm_aquarium"
+    ]
+   },
+   "density": "cluttered"
   },
   "lockers": {
    "name": [
@@ -1132,7 +1293,22 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "footlocker"
+    ],
+    "uncommon": [
+     "an_poster_b"
+    ],
+    "rare": [
+     "punching_bag"
+    ],
+    "anomalous": [
+     "hm_cradle"
+    ]
+   },
+   "density": "crowded"
   },
   "lab": {
    "name": [
@@ -1162,7 +1338,24 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "an_test",
+     "an_holo"
+    ],
+    "uncommon": [
+     "cryo_pod",
+     "du_scope"
+    ],
+    "rare": [
+     "cryo_pod_broken"
+    ],
+    "anomalous": [
+     "mp_vendor"
+    ]
+   },
+   "density": "cluttered"
   },
   "isolation": {
    "name": [
@@ -1187,7 +1380,22 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "cell_cot"
+    ],
+    "uncommon": [
+     "restraint_chair"
+    ],
+    "rare": [
+     "dead_scavenger"
+    ],
+    "anomalous": [
+     "hm_plant"
+    ]
+   },
+   "density": "sparse"
   },
   "specimens": {
    "name": [
@@ -1212,7 +1420,23 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "cryo_pod"
+    ],
+    "uncommon": [
+     "dr_tank",
+     "cryo_pod_broken"
+    ],
+    "rare": [
+     "wk_vat"
+    ],
+    "anomalous": [
+     "bb_font"
+    ]
+   },
+   "density": "crowded"
   },
   "generator": {
    "name": [
@@ -1239,7 +1463,23 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "bk_generator"
+    ],
+    "uncommon": [
+     "wk_drums",
+     "barrel"
+    ],
+    "rare": [
+     "reactor"
+    ],
+    "anomalous": [
+     "hm_radio"
+    ]
+   },
+   "density": "cluttered"
   },
   "security": {
    "name": [
@@ -1262,7 +1502,23 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "bk_console",
+     "an_tv"
+    ],
+    "uncommon": [
+     "signals_desk"
+    ],
+    "rare": [
+     "firing_booth"
+    ],
+    "anomalous": [
+     "hm_aquarium"
+    ]
+   },
+   "density": "normal"
   },
   "admissions": {
    "name": [
@@ -1290,7 +1546,24 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "hs_screen",
+     "ag_planter"
+    ],
+    "uncommon": [
+     "hs_gurney",
+     "an_sign"
+    ],
+    "rare": [
+     "an_till"
+    ],
+    "anomalous": [
+     "ex_bar"
+    ]
+   },
+   "density": "sparse"
   },
   "main_ward": {
    "name": [
@@ -1317,7 +1590,24 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "iv_stand",
+     "hs_monitor"
+    ],
+    "uncommon": [
+     "hs_screen",
+     "hs_gurney"
+    ],
+    "rare": [
+     "surgical_lamp"
+    ],
+    "anomalous": [
+     "hm_gramophone"
+    ]
+   },
+   "density": "cluttered"
   },
   "theatre": {
    "name": [
@@ -1343,7 +1633,24 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "surgical_lamp",
+     "hs_monitor"
+    ],
+    "uncommon": [
+     "iv_stand",
+     "hs_cabinet"
+    ],
+    "rare": [
+     "morgue_drawers"
+    ],
+    "anomalous": [
+     "ex_bar"
+    ]
+   },
+   "density": "normal"
   },
   "pharmacy": {
    "name": [
@@ -1372,7 +1679,22 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "hs_cabinet"
+    ],
+    "uncommon": [
+     "an_till"
+    ],
+    "rare": [
+     "an_safe"
+    ],
+    "anomalous": [
+     "mp_vendor"
+    ]
+   },
+   "density": "crowded"
   },
   "ward": {
    "name": [
@@ -1397,7 +1719,23 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "iv_stand",
+     "hs_screen"
+    ],
+    "uncommon": [
+     "hs_monitor"
+    ],
+    "rare": [
+     "hs_gurney"
+    ],
+    "anomalous": [
+     "hm_aquarium"
+    ]
+   },
+   "density": "normal"
   },
   "ward2": {
    "name": [
@@ -1422,7 +1760,23 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "iv_stand",
+     "hs_screen"
+    ],
+    "uncommon": [
+     "hs_monitor"
+    ],
+    "rare": [
+     "hs_gurney"
+    ],
+    "anomalous": [
+     "hm_aquarium"
+    ]
+   },
+   "density": "normal"
   },
   "showers": {
    "name": [
@@ -1446,7 +1800,19 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "uncommon": [
+     "footlocker"
+    ],
+    "rare": [
+     "dead_scavenger"
+    ],
+    "anomalous": [
+     "hm_plant"
+    ]
+   },
+   "density": "sparse"
   },
   "neurology": {
    "name": [
@@ -1472,7 +1838,23 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "hs_monitor"
+    ],
+    "uncommon": [
+     "restraint_chair",
+     "du_scope"
+    ],
+    "rare": [
+     "an_holo"
+    ],
+    "anomalous": [
+     "hm_cradle"
+    ]
+   },
+   "density": "normal"
   },
   "morgue": {
    "name": [
@@ -1498,7 +1880,22 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "morgue_drawers"
+    ],
+    "uncommon": [
+     "hs_gurney"
+    ],
+    "rare": [
+     "dead_scavenger"
+    ],
+    "anomalous": [
+     "cr_candles"
+    ]
+   },
+   "density": "normal"
   },
   "office": {
    "name": [
@@ -1528,7 +1925,24 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "an_filing",
+     "typewriter_desk"
+    ],
+    "uncommon": [
+     "an_whiteboard",
+     "pin_board"
+    ],
+    "rare": [
+     "an_safe"
+    ],
+    "anomalous": [
+     "hm_aquarium"
+    ]
+   },
+   "density": "cluttered"
   },
   "records": {
    "name": [
@@ -1554,7 +1968,22 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "an_filing"
+    ],
+    "uncommon": [
+     "du_reel"
+    ],
+    "rare": [
+     "an_floorsafe"
+    ],
+    "anomalous": [
+     "hm_gramophone"
+    ]
+   },
+   "density": "crowded"
   },
   "meeting": {
    "name": [
@@ -1578,7 +2007,23 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "projection_screen"
+    ],
+    "uncommon": [
+     "an_whiteboard",
+     "an_cooler"
+    ],
+    "rare": [
+     "lectern"
+    ],
+    "anomalous": [
+     "bb_pulpit"
+    ]
+   },
+   "density": "normal"
   },
   "loading_gate": {
    "name": [
@@ -1606,7 +2051,24 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "crate",
+     "du_cart"
+    ],
+    "uncommon": [
+     "bk_crates",
+     "barrel"
+    ],
+    "rare": [
+     "wk_press"
+    ],
+    "anomalous": [
+     "ag_kiosk"
+    ]
+   },
+   "density": "sparse"
   },
   "sorting": {
    "name": [
@@ -1632,7 +2094,24 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "wk_bench",
+     "du_cart"
+    ],
+    "uncommon": [
+     "wk_drums",
+     "crate"
+    ],
+    "rare": [
+     "du_arm"
+    ],
+    "anomalous": [
+     "bb_altar"
+    ]
+   },
+   "density": "cluttered"
   },
   "crusher_hall": {
    "name": [
@@ -1658,7 +2137,23 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "wk_press"
+    ],
+    "uncommon": [
+     "wk_drums",
+     "du_arm"
+    ],
+    "rare": [
+     "wk_forge"
+    ],
+    "anomalous": [
+     "ag_sofa"
+    ]
+   },
+   "density": "normal"
   },
   "sump": {
    "name": [
@@ -1684,7 +2179,23 @@
      2,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "dr_pump"
+    ],
+    "uncommon": [
+     "dr_tank",
+     "barrel"
+    ],
+    "rare": [
+     "dr_arm"
+    ],
+    "anomalous": [
+     "hm_aquarium"
+    ]
+   },
+   "density": "normal"
   },
   "stores": {
    "name": [
@@ -1714,7 +2225,24 @@
      1,
      2
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "crate",
+     "bk_crates"
+    ],
+    "uncommon": [
+     "du_rack",
+     "wk_drums"
+    ],
+    "rare": [
+     "an_safe"
+    ],
+    "anomalous": [
+     "ex_globe"
+    ]
+   },
+   "density": "crowded"
   },
   "salvage": {
    "name": [
@@ -1743,7 +2271,24 @@
      1,
      3
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "debris",
+     "crate"
+    ],
+    "uncommon": [
+     "du_cart",
+     "barrel"
+    ],
+    "rare": [
+     "cryo_pod_broken"
+    ],
+    "anomalous": [
+     "hm_armchair"
+    ]
+   },
+   "density": "cluttered"
   },
   "decon": {
    "name": [
@@ -1767,7 +2312,22 @@
      1,
      1
     ]
-   }
+   },
+   "contents": {
+    "common": [
+     "dr_rack"
+    ],
+    "uncommon": [
+     "bk_shower"
+    ],
+    "rare": [
+     "dead_scavenger"
+    ],
+    "anomalous": [
+     "hm_plant"
+    ]
+   },
+   "density": "sparse"
   }
  },
  "contradictions": {

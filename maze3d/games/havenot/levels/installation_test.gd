@@ -29,7 +29,8 @@ func run() -> void:
 		and (b.get("map") != a.get("map") or b.get("name") != a.get("name")),
 		"written from the world's seed (%d): %s (%s), built to %s and now %s; the same seed writes it the same, another another" % [
 		seed_value, level.data.get("name", "?"), _kind(info), info.get("mandate", "?"), info.get("now", "?")])
-	var tally := {"rooms": 0, "quiet": 0, "tall": 0, "three": 0, "decks": 0, "storeys": 0, "worlds": 0}
+	var tally := {"rooms": 0, "quiet": 0, "tall": 0, "three": 0, "decks": 0, "storeys": 0, "worlds": 0, "written": 0,
+		"common": 0, "uncommon": 0, "rare": 0, "anomalous": 0, "density": {}}
 	for id in InstallationSettings.ids():
 		_worlds(id)
 		_on_rooms(id, tally)
@@ -37,6 +38,15 @@ func run() -> void:
 	say(share >= 0.15 and share <= 0.45 and tally["three"] > 0 and tally["decks"] * 2 >= tally["worlds"] and tally["storeys"] * 2 >= tally["worlds"],
 		"  on the rooms generator's geometry, over %d worlds: %d rooms, %d of them quiet (%d%%), %d two storeys tall or more and %d three; balconies in %d worlds and another storey in %d" % [
 		tally["worlds"], tally["rooms"], tally["quiet"], roundi(share * 100), tally["tall"], tally["three"], tally["decks"], tally["storeys"]])
+	var per := {}
+	for den in tally["density"]:
+		per[den] = float(tally["density"][den][0]) / maxf(1.0, tally["density"][den][1])
+	say(tally["common"] > tally["uncommon"] and tally["uncommon"] > tally["anomalous"] and tally["anomalous"] * 10 <= tally["written"]
+		and per.get("sparse", 0.0) < per.get("normal", 0.0) and per.get("normal", 0.0) < per.get("cluttered", 0.0)
+		and per.get("cluttered", 0.0) < per.get("crowded", 0.0),
+		"  what stands in the %d written rooms by their tiers: something common in %d, uncommon in %d, rare in %d, anomalous in %d; props to a cell of floor: %s" % [
+		tally["written"], tally["common"], tally["uncommon"], tally["rare"], tally["anomalous"],
+		", ".join(["sparse", "normal", "cluttered", "crowded"].map(func(d: String) -> String: return "%s %.2f" % [d, per.get(d, 0.0)]))])
 	await _played(info)
 	for p in PARTS:
 		await runner.part(p).run()
@@ -93,6 +103,7 @@ func _on_rooms(arch_id: String, tally: Dictionary) -> void:
 		tally["worlds"] += 1
 		tally["decks"] += 1 if not lv.get("decks", []).is_empty() else 0
 		tally["storeys"] += 1 if not lv.get("floors", []).is_empty() else 0
+		_contents_seen(lv, arch, tally)
 		for r in lv["rooms"]:
 			tally["rooms"] += 1
 			tally["quiet"] += 0 if r.has("role") else 1
@@ -100,6 +111,34 @@ func _on_rooms(arch_id: String, tally: Dictionary) -> void:
 			tally["three"] += 1 if int(r.get("height", 1)) >= 3 else 0
 	say(bad.is_empty(), "%s on the rooms generator's geometry: %d worlds, each laid out and finishable, every cluster with the rooms it must have, no two of a cluster's rooms that would fit better swapped, its core shut the way its power says, its people its own%s" % [
 		arch_id, WORLDS, "" if bad.is_empty() else "; not: " + "; ".join(bad.slice(0, 3))])
+
+
+## What stands in each written room of the level by its type's tiers ("contents"), and how many props to a cell of
+## floor each density leaves: added to `tally`.
+func _contents_seen(lv: Dictionary, arch: Dictionary, tally: Dictionary) -> void:
+	var at := {}
+	for t in lv.get("things", []):
+		if t.has("at") and t.has("prop") and not t.has("level"):
+			var c := Vector2i(int(t["at"][0]), int(t["at"][1]))
+			at[c] = at.get(c, []) + [str(t["prop"])]
+	for r in lv["rooms"]:
+		if not r.has("role"):
+			continue
+		var role: Dictionary = arch.get("roles", {}).get(str(r["role"]), {})
+		var rc: Array = r["rect"]
+		var props: Array = []
+		var cells := 0
+		for y in range(int(rc[1]), int(rc[1]) + int(rc[3])):
+			for x in range(int(rc[0]), int(rc[0]) + int(rc[2])):
+				cells += 1 if str(lv["map"][y])[x] != "#" else 0
+				props += at.get(Vector2i(x, y), [])
+		tally["written"] += 1
+		for tier in ["common", "uncommon", "rare", "anomalous"]:
+			if role.get("contents", {}).get(tier, []).any(func(m: String) -> bool: return props.has(m)):
+				tally[tier] += 1
+		var den := str(role.get("density", "normal"))
+		var was: Array = tally["density"].get(den, [0, 0])
+		tally["density"][den] = [was[0] + props.size(), was[1] + cells]
 
 
 ## What is wrong with one installation on the rooms generator's geometry, or "" (see _on_rooms).

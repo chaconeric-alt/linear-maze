@@ -11,9 +11,11 @@ extends RefCounted
 ##   - The rooms left over, about one in four, are quiet: ordinary, in the look of their block, with no function of
 ##     their own; each goes to a block, the seed's pick. Within its block a room type takes the room that fits it
 ##     best (InstallationFit), the quiet ones what is left.
-##   - Each room's things go in as written (InstallationPut), and it is furnished for its purpose (the rooms generator's
-##     furnishing); a quiet room is dressed in its corners. Then, as the rooms generator does: something on the
-##     balconies, windows, pools, the storeys above and below (their rooms quiet too).
+##   - Each room's things go in as written (InstallationPut); then what may stand there by its type's tiers (common,
+##     uncommon, rare and anomalous, each at its chance); then it is furnished for its purpose (the rooms generator's
+##     furnishing), as fully as its type's density says, with dressing in its corners if that says so; a quiet room is
+##     dressed in its corners. Then, as the rooms generator does: something on the balconies, windows, pools, the
+##     storeys above and below (their rooms quiet too).
 ##   - The level is proved finishable (ProgrammeCheck); a seed whose is not, or that fits too few rooms, gives way to
 ##     the next.
 ## The gate and the locked wing of a written programme are not laid here yet (the design's step 4: the mission graph on
@@ -29,6 +31,10 @@ const TRIES := 40
 const QUIET := 0.25              # of the rooms, about this many stand quiet
 const CELLS := 110.0             # map cells for each room wanted (the rooms generator's own: ten on 36 by 28)
 const CORE_DOOR := "door_vault"
+const TIERS := {"common": 0.6, "uncommon": 0.3, "rare": 0.1, "anomalous": 0.04}     # the chance of each thing of a tier
+const DENSITY := {"sparse": [0.4, 0, 2], "normal": [1.0, 0, 2], "cluttered": [1.0, 4, 1], "crowded": [1.0, 8, 1],
+	"crammed": [1.0, 0, 2]}      # how much of its purpose's furniture goes in, how much dressing besides, and where:
+	# in a corner (wall on two sides) or anywhere against a wall (one)
 
 
 ## The written level (InstallationGen.write, on_rooms) laid out from `seed_value` with the rooms generator's `params`
@@ -196,13 +202,30 @@ static func _fill(ctx: GenContext, written: Dictionary, arch: Dictionary, contra
 		var things: Array = room.get("things", []).duplicate(true)
 		if i == card_at:
 			things.append({"item": "keycard", "color": str(lock["color"])})
-		for t in things:
-			if not InstallationPut.put(ctx, a, t):
-				return false
-		var pur: Dictionary = LM.defs.get("purposes", {}).get(str(room.get("purpose", "")), {})
-		if not pur.is_empty():
-			ctx.stage("installation furnish %d %s" % [i, a["rect"].position])
-			Furnish.furnish(ctx, a["unit"], InstallationPut.floor_of(ctx, a), pur, ctx.kit_name, float(ctx.p.get("furnish", 1.0)))
+		if not InstallationPlace._furnished(ctx, i, a, room, things, arch.get("roles", {}).get(str(room.get("role", "")), {})):
+			return false
+	return true
+
+
+## A written room's things put in (false if it cannot hold them all), then what may stand there by its type's tiers
+## ("contents": each thing of "common", "uncommon", "rare" and "anomalous" there at its tier's chance, TIERS), then its
+## furniture for its purpose, as much as its "density" says, and dressing in its corners if it says so (DENSITY).
+static func _furnished(ctx: GenContext, i: int, a: Dictionary, room: Dictionary, things: Array, role: Dictionary) -> bool:
+	for t in things:
+		if not InstallationPut.put(ctx, a, t):
+			return false
+	var tiers: Dictionary = role.get("contents", {})
+	for tier in TIERS:
+		for e in tiers.get(tier, []):
+			if ctx.rng.randf() < float(TIERS[tier]):
+				InstallationPut.put(ctx, a, e if e is Dictionary else {"prop": str(e), "at": "wall"})
+	var den: Array = DENSITY.get(str(role.get("density", "normal")), DENSITY["normal"])
+	var pur: Dictionary = LM.defs.get("purposes", {}).get(str(room.get("purpose", "")), {}).duplicate(true)
+	ctx.stage("installation furnish %d %s" % [i, a["rect"].position])
+	if not pur.is_empty():
+		pur["crammed"] = pur.get("crammed", false) or str(role.get("density", "")) == "crammed"
+		Furnish.furnish(ctx, a["unit"], InstallationPut.floor_of(ctx, a), pur, ctx.kit_name, float(ctx.p.get("furnish", 1.0)) * float(den[0]))
+	InstallationPut.dress(ctx, a, ctx.p.get("props", []), int(den[1]), int(den[2]))
 	return true
 
 

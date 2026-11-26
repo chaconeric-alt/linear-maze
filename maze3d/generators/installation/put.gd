@@ -118,10 +118,11 @@ static func _beat(ctx: GenContext, a: Dictionary) -> Array:
 	return out
 
 
-## A quiet room's dressing: up to three of `props` in its corners and nooks (floor with wall on two sides or more),
-## where they block no way through.
-static func dress(ctx: GenContext, a: Dictionary, props: Array) -> void:
-	if props.is_empty():
+## A room's dressing: up to `most` of `props` in its corners and nooks (floor with wall on `walls` sides or more: two
+## for a corner, one for anywhere along a wall), where they block no way through. A quiet room has three at most, in
+## its corners; a written room as many as its density says, and where.
+static func dress(ctx: GenContext, a: Dictionary, props: Array, most := 3, walls := 2) -> void:
+	if props.is_empty() or most <= 0:
 		return
 	var near := InstallationPut._by_doors(ctx)
 	var n := 0
@@ -129,7 +130,7 @@ static func dress(ctx: GenContext, a: Dictionary, props: Array) -> void:
 		var solid := 0
 		for d in DIRS:
 			solid += 1 if ctx.g[c.y + d.y][c.x + d.x] == "#" else 0
-		if n >= 3 or solid < 2 or ctx.used.has(c) or near.has(c) or ctx.rng.randf() >= 0.55:
+		if n >= most or solid < walls or ctx.used.has(c) or near.has(c) or ctx.rng.randf() >= 0.55:
 			continue
 		n += 1
 		ctx.used[c] = true

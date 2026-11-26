@@ -13,8 +13,10 @@ const SPINE_STEP := ["room"]
 const CLUSTER := ["name", "corridor", "rooms"]                    # defs "clusters": rooms that work together
 const CLUSTER_ROOM := ["room", "chance", "door_to", "next_to"]
 const ROOM_TYPE := ["name", "style", "purpose", "size", "way_in", "empty", "memos", "card", "loot", "trap", "core",
-	"generator", "security", "fit"]                              # defs "room_types": what a room is for
+	"generator", "security", "fit", "contents", "density"]      # defs "room_types": what a room is for
 const ROOM_FIT := ["size", "storeys"]                            # the room it suits on the rooms generator's geometry
+const ROOM_CONTENTS := ["common", "uncommon", "rare", "anomalous"]   # what may stand in it, by how often
+const DENSITIES := ["sparse", "normal", "cluttered", "crowded", "crammed"]
 const CORE_LOCK := ["when", "flag", "need", "color"]
 const OCCUPANTS := ["per_room", "empty", "actors"]
 const GATE := ["step", "by", "color", "flag", "need"]
@@ -25,7 +27,7 @@ const ARCHETYPE := ["name", "kit", "style", "systems", "core_lock", "spine", "wi
 const ARCH_WINGS := ["count", "always", "list"]
 const ARCH_WING := ["name", "corridor", "rooms"]
 const ARCH_STEP := ["role", "chance", "door_to", "next_to"]
-const KEYS := SETTING + SETTING_CLUSTERS + SETTING_CLUSTER + SPINE_STEP + CLUSTER + CLUSTER_ROOM + ROOM_TYPE + ROOM_FIT + CORE_LOCK \
+const KEYS := SETTING + SETTING_CLUSTERS + SETTING_CLUSTER + SPINE_STEP + CLUSTER + CLUSTER_ROOM + ROOM_TYPE + ROOM_FIT + ROOM_CONTENTS + CORE_LOCK \
 	+ OCCUPANTS + GATE + WAY_ROUND + CONTRADICTION + ARCHETYPE + ARCH_WINGS + ARCH_WING + ARCH_STEP
 
 
@@ -42,6 +44,10 @@ static func check(defs: Dictionary) -> Array:
 	for id in defs.get("room_types", {}):
 		pairs.append([defs["room_types"][id], ROOM_TYPE, "room type '%s'" % id])
 		pairs.append([defs["room_types"][id].get("fit", {}), ROOM_FIT, "room type '%s', its fit" % id])
+		pairs.append([defs["room_types"][id].get("contents", {}), ROOM_CONTENTS, "room type '%s', its contents" % id])
+		var den := str(defs["room_types"][id].get("density", "normal"))
+		if not den in DENSITIES:
+			out.append("room type '%s': no density '%s' (%s)" % [id, den, ", ".join(DENSITIES)])
 	for id in defs.get("settings", {}):
 		out += SchemaSettings._setting(defs, id, pairs)
 	for id in defs.get("archetypes", {}):
