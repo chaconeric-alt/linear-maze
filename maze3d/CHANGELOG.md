@@ -4,6 +4,8 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-26
 
+- **No door upstairs into the vault** (SPEC 6.1). The rooms generator's doors a storey up, between two halls' balconies, never go into the vault: a tall vault (a written installation's core on a ring, say) could otherwise be entered from its neighbour's balcony past its locked door. None of the baseline's levels had one: every rooms-generator level of the baseline (gen at seeds 5, 7, 11 and 22, every theme at seed 5) comes out byte for byte the same, as do the button's world and An Installation's checks.
+
 - **Layout forms, and how faithfully they are kept** (the grandeur design's step 3; Eric, 26 Nov: "build the layout connections so that we can adjust how slavishly the room-connector follows the chosen layout"; SPEC 6.1, 6.2, 6.3, 6.4, 9).
   - **`RoomForms`** (`generators/rooms/forms.gd`): eight forms, each a rough graph of places and ways drawn before any room is placed, for a plan of groups (spine steps and clusters): `hub`, `stack`, `spine`, `tree`, `ring`, `concentric`, `twin` and `campus`. The way in is always the first place and the core the last, joined by one way only.
   - **`RoomJoins`** (`generators/rooms/joins.gd`) puts a room at each place and carves the form's ways. **`follow`** (0 to 1) says how faithfully: how near its place a room goes, whether a room is joined from where the form says or from any room before it, whether a corridor goes round every other room (pathfinding, `AStarGrid2D`) or straight through what is in the way, whether the form's ways round are kept, and how many random loops come in besides. At 1 the form is kept to slavishly; at 0 it is all but the scatter.

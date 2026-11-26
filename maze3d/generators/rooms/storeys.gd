@@ -63,6 +63,8 @@ static func _upper_doors(ctx: GenContext) -> int:
 			var b: Vector2i = c - f
 			if ctx.no_door_up.has(c) or not ctx.deck1.has(a) or g[b.y][b.x] != "." or h0[b.y][b.x] < 2 or ctx.room_of[a.y][a.x] == ctx.room_of[b.y][b.x] or ctx.taken.has(b):
 				continue
+			if ctx.lock and (ctx.room_of[a.y][a.x] == ctx.last or ctx.room_of[b.y][b.x] == ctx.last):
+				continue                                   # never a way into the vault but its own locked door
 			if h0[c.y + s2.y][c.x + s2.x] > 1 or h0[c.y - s2.y][c.x - s2.x] > 1 or up[c.y][c.x] != "#":
 				continue
 			up[c.y][c.x] = ctx.letters[ctx.rng.randi() % ctx.doors.size()]

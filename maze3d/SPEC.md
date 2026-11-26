@@ -866,7 +866,7 @@ func generate(seed: int, params: Dictionary) -> Dictionary   # a level dictionar
 | `cut_corners`, `galleries` | `galleries.gd` | Cut corners; balconies and ramps, before any furniture. |
 | `essentials`, `arches`, `rooms`, `balconies` | `contents.gd` | The start, the card, the guns, the way out and its boss; scanner arches inside doorways; per room monsters, treasure in containers, furniture for its purpose (`furnish.gd`), dressing in the corners, lockers; something worth the climb on the balconies. |
 | `windows`, `traps`, `pools` | `hazards.gd` | Observation windows; lasers and shock plates in corridors, vents in rooms; flooded patches. |
-| `storeys` | `storeys.gd` | Doors a storey up between halls, rooms upstairs (off a balcony, or by lift only), the basement with its lift and pits. |
+| `storeys` | `storeys.gd` | Doors a storey up between halls (never into the vault, whose own locked door is its only way in), rooms upstairs (off a balcony, or by lift only), the basement with its lift and pits. |
 | `stations` | `stations.gd` | Sphinx guns by the doors of valuable rooms; robots into stations. |
 | ambush, assembly | `rooms.gd` | Taking the card brings company; the level dictionary. |
 
