@@ -201,7 +201,13 @@
     "server_rack",
     "ag_planter",
     "ag_sofa"
-   ]
+   ],
+   "forms": {
+    "hub": 2,
+    "concentric": 1,
+    "campus": 1,
+    "twin": 1
+   }
   },
   "medical": {
    "name": "Regional Medical Centre",
@@ -428,7 +434,13 @@
     "hs_screen",
     "hs_cabinet",
     "iv_stand"
-   ]
+   ],
+   "forms": {
+    "spine": 2,
+    "hub": 1,
+    "ring": 1,
+    "stack": 1
+   }
   },
   "reclamation": {
    "name": "Industrial Reclamation Plant",
@@ -677,7 +689,14 @@
     "barrel",
     "wk_drums",
     "debris"
-   ]
+   ],
+   "forms": {
+    "campus": 2,
+    "spine": 1,
+    "tree": 1,
+    "twin": 1,
+    "stack": 1
+   }
   }
  },
  "clusters": {

@@ -3,8 +3,9 @@ extends RefCounted
 ## level from the start, through open doors, picking up every key card on the way; a locked door opens once its
 ## colour's card is held; go on until nothing new is reached. It walks every storey: "map" is storey 0, each of
 ## "floors" its own; a balcony ("decks", level n over its floor) is floor n storeys up; a ramp that rises to a storey
-## (from 2 to 4 m) joins the cell it rises toward on the storey above; a lift joins its stops. It works on any level
-## dictionary, so the self-test can ask it of a level it did not make.
+## (from 2 to 4 m) joins the cell it rises toward on the storey above; a lift joins its stops; a balcony joins what
+## is beside it on its storey only through a door or a lift's shaft (the room's wall stands between them). It works on
+## any level dictionary, so the self-test can ask it of a level it did not make.
 ## Flags are keys too. A thing reached that sets a flag (its "use" runs a "flag" effect, at once or as an option open
 ## to anyone: no hack, skill, load or price, and its "when", if any, already held) gives that flag, and one that drops a
 ## key card gives the card; a card gives its "key_<colour>" flag as well. A door with a "flag" in its legend entry, and
@@ -249,13 +250,32 @@ static func flood(w: Dictionary, start: Array, held: Array) -> Dictionary:
 		i += 1
 		var next: Array = by_place.get(p, []).duplicate()
 		for d in DIRS:
-			next.append([p[0] + d, p[1]])
+			var q := [p[0] + d, p[1]]
+			if ProgrammeCheck._open_between(w, p, q):
+				next.append(q)
 		for n in next:
 			if seen.has(n) or not ProgrammeCheck.walkable(w, n, held):
 				continue
 			seen[n] = int(seen[p]) + 1
 			todo.append(n)
 	return seen
+
+
+## Can one step from p to q, beside it on the same storey? Between a balcony and what is not one, only through a door
+## or into a lift's shaft: a balcony in a tall room and a room upstairs beside it have the room's wall between them,
+## as the level builds them.
+static func _open_between(w: Dictionary, p: Array, q: Array) -> bool:
+	var dp: bool = w["decks"].has(p)
+	if dp == w["decks"].has(q):
+		return true
+	var other: Array = q if dp else p
+	if w["shafts"].has(other):
+		return true
+	var rows: Array = w["maps"].get(other[1], [])
+	var c: Vector2i = other[0]
+	if c.y < 0 or c.y >= rows.size() or c.x < 0 or c.x >= str(rows[c.y]).length():
+		return false
+	return w["legend"].get(str(rows[c.y])[c.x], {}).has("door")
 
 
 ## The links between storeys open with these keys: place -> the places it joins (a lift held by its lock or its

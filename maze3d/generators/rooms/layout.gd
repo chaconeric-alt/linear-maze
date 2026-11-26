@@ -7,8 +7,11 @@ const CORNERS := GenContext.CORNERS
 
 
 ## Units: boxes scattered over the map, never closer than a wall (or two) apart. The second, and one about halfway,
-## are halls: the big rooms, for the showpieces. Fails if fewer than three fit.
+## are halls: the big rooms, for the showpieces. Fails if fewer than three fit. On a layout form, a room at each of
+## its places instead (RoomJoins).
 static func units(ctx: GenContext) -> bool:
+	if ctx.form != "":
+		return RoomJoins.units(ctx)
 	var rng := ctx.rng
 	var sh := ctx.sh
 	var rects := ctx.rects
@@ -63,7 +66,7 @@ static func shapes(ctx: GenContext) -> void:
 		var pick: Array = ["oct", "oct", "ell", "cross"]
 		if w >= 6 and h >= 6:
 			pick.append_array(["round", "round", "piers"])
-		if maxi(w, h) >= 7 and i != ctx.last:
+		if maxi(w, h) >= 7 and i != ctx.last and not ctx.whole.has(i):
 			pick.append_array(["suite", "suite"])
 		var s: String = pick[rng.randi() % pick.size()]
 		if s == "suite" and rng.randf() >= ctx.sh.get("suite", 1.0):
@@ -145,6 +148,8 @@ static func _style_areas(ctx: GenContext) -> void:
 			hgt = 3 if (r.size.x >= 6 and r.size.y >= 6 and rng.randf() < ctx.sh.get("tall", 0.65) * 0.6) else 2
 		elif r.get_area() >= 12 and rng.randf() < 0.2:
 			hgt = 2
+		if ctx.tall.has(a["unit"]):                       # a stack's atrium: three storeys whatever its size
+			hgt = 3
 		if suite_h.has(a["unit"]):                        # the two halves of a suite share a ceiling: nothing closes the gap above a lower one
 			hgt = suite_h[a["unit"]]
 		elif ctx.shape[a["unit"]] == "suite":
@@ -176,8 +181,12 @@ static func _carve(ctx: GenContext, a: Vector2i, b: Vector2i, dry: bool) -> bool
 	return true
 
 
-## Corridors: carve only; doors come afterwards. Each unit joins the one before it, and a few loops are added.
+## Corridors: carve only; doors come afterwards. Each unit joins the one before it, and a few loops are added. On a
+## layout form, as the form joins them (RoomJoins).
 static func corridors(ctx: GenContext) -> void:
+	if ctx.form != "":
+		RoomJoins.corridors(ctx)
+		return
 	var rects := ctx.rects
 	for i in range(1, rects.size()):
 		_carve(ctx, rects[i - 1].get_center(), rects[i].get_center(), false)

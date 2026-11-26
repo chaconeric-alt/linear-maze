@@ -102,6 +102,7 @@
   "installation"
  ],
  "generator_params": {
+  "follow": 0.85,
   "kit": "agency",
   "back_to_back": ["hm_bookcase", "an_filing", "du_reel", "server_rack", "dr_rack"],
   "danger": {"chance": 0.5, "sets": ["collections", "overgrowth"]},

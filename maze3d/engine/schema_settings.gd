@@ -6,7 +6,7 @@ extends RefCounted
 class_name SchemaSettings
 
 const SETTING := ["name", "kit", "style", "systems", "core_lock", "spine", "clusters", "rooms", "occupants", "loot",
-	"contradictions", "words", "hub", "gate", "way_round", "containers", "doors", "dressing"]    # defs "settings": what a place was
+	"contradictions", "words", "hub", "gate", "way_round", "containers", "doors", "dressing", "forms", "follow"]     # defs "settings": what a place was
 const SETTING_CLUSTERS := ["count", "always", "list"]
 const SETTING_CLUSTER := ["name", "corridor"]                     # a setting's own view of a cluster it has
 const SPINE_STEP := ["room"]

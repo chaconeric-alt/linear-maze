@@ -3,14 +3,15 @@ extends RefCounted
 ## step 2, purpose over chaos): its rooms of every size and shape, two and three storeys tall, balconies and ramps,
 ## windows, pools, rooms upstairs and a basement, with the place's purpose fitted on to them afterwards, as HaveNot
 ## Vol. 2 builds an installation (a random floor plan first, then what each room is for).
-##   - The geometry is the rooms generator's own (its `geometry`), on a map sized for the rooms written, about one in
-##     four more than they need: the way in is its first room, the core its last, behind the vault door, which the
-##     core's lock shuts (on the generator's flag, or a card's colour).
-##   - The rooms in between are taken in the order the corridors join them, in blocks: the clusters that branch after
-##     each spine room, then that spine room; so a cluster's rooms are joined to each other, one after another.
-##   - The rooms left over, about one in four, are quiet: ordinary, in the look of their block, with no function of
-##     their own; each goes to a block, the seed's pick. Within its block a room type takes the room that fits it
-##     best (InstallationFit), the quiet ones what is left.
+##   - The written rooms are put in blocks: the clusters that branch after each spine room, then that spine room. A
+##     quarter more rooms than they need stand quiet: ordinary, in the look of their block, with no function of their
+##     own; they go to the clusters, the seed's pick. The blocks, so sized, are the plan the geometry is laid out for.
+##   - The geometry is the rooms generator's own (its `geometry`), on one of the setting's layout forms (RoomForms, by
+##     weight; hub and spokes, spine, ring ...) kept to as faithfully as its "follow" says (RoomJoins), each block a
+##     group of the form's places (a spoke, a wing, a building, a stretch of a ring), or on the scatter, the blocks
+##     taken in the order the corridors join its rooms. The way in is its first room, the core its last, behind the
+##     vault door, which the core's lock shuts (on the generator's flag, or a card's colour).
+##   - Within its block a room type takes the room that fits it best (InstallationFit), the quiet ones what is left.
 ##   - Each room's things go in as written (InstallationPut); then what may stand there by its type's tiers (common,
 ##     uncommon, rare and anomalous, each at its chance); then it is furnished for its purpose (the rooms generator's
 ##     furnishing), as fully as its type's density says, with dressing in its corners if that says so; a quiet room is
@@ -30,6 +31,7 @@ const Furnish := preload("res://generators/rooms/furnish.gd")
 const TRIES := 40
 const QUIET := 0.25              # of the rooms, about this many stand quiet
 const CELLS := 110.0             # map cells for each room wanted (the rooms generator's own: ten on 36 by 28)
+const CELLS_FORM := 140.0        # on a layout form, which leaves more of the map between its places
 const CORE_DOOR := "door_vault"
 const TIERS := {"common": 0.6, "uncommon": 0.3, "rare": 0.1, "anomalous": 0.04}     # the chance of each thing of a tier
 const DENSITY := {"sparse": [0.4, 0, 2], "normal": [1.0, 0, 2], "cluttered": [1.0, 4, 1], "crowded": [1.0, 8, 1],
@@ -56,13 +58,11 @@ static func _try(written: Dictionary, arch: Dictionary, contra: Dictionary, s: i
 	var prog: Dictionary = written.get("programme", {})
 	var pick := Dice.derive(s, "installation place")
 	var blocks := InstallationPlace._blocks(prog, pick)
-	var n := 2
-	for b in blocks:
-		n += b["rooms"].size()
-	var ctx := GenContext.new(s, InstallationPlace.params(written, arch, contra, params, n), true)
+	var plan := InstallationPlace._plan(blocks, pick)
+	var ctx := GenContext.new(s, InstallationPlace.params(written, arch, contra, params, plan, s), true)
 	if not RoomsGen.geometry(ctx):
 		return {}
-	var where := InstallationPlace._assign(ctx, blocks, pick, arch.get("roles", {}))
+	var where := InstallationPlace._assign(ctx, blocks, plan, arch.get("roles", {}))
 	if where.is_empty():
 		return {}
 	if not InstallationPlace._fill(ctx, written, arch, contra, where):
@@ -74,17 +74,24 @@ static func _try(written: Dictionary, arch: Dictionary, contra: Dictionary, s: i
 	Hazards.pools(ctx)
 	ctx.stage("storeys")
 	Storeys.storeys(ctx)                     # doors and rooms upstairs, the basement, lifts and pits
-	var out := InstallationPlace._level(RoomsGen.assemble(ctx), written, where)
+	var out := InstallationPlace._level(RoomsGen.assemble(ctx), written, where, ctx)
 	return out if ProgrammeCheck.solve(out).get("ok", false) else {}
 
 
-## The rooms generator's params for an installation of `n` rooms: the game's, with the setting's look (its kit, its
-## corridors, its doors, its rooms' styles), its people (by the contradiction's bias) and its loot, and a map sized for
-## the rooms with a quarter more to stand quiet.
-static func params(written: Dictionary, arch: Dictionary, contra: Dictionary, base: Dictionary, n: int) -> Dictionary:
+## The rooms generator's params for an installation laid out for `plan` (its groups of rooms, _plan): the game's, with
+## the setting's look (its kit, its corridors, its doors, its rooms' styles), its people (by the contradiction's bias)
+## and its loot; its layout forms ("forms", by weight) and how faithfully they are kept ("follow"), where it gives them
+## (a "form" the params name already is kept: the test's); and a map sized for its rooms and the form.
+static func params(written: Dictionary, arch: Dictionary, contra: Dictionary, base: Dictionary, plan: Array, s: int) -> Dictionary:
 	var p: Dictionary = base.duplicate(true)
-	var want := ceili(n / (1.0 - QUIET))
-	var side := sqrt(want * CELLS / (36.0 * 28.0))
+	var want := 2
+	for gp in plan:
+		want += int(gp["size"])
+	for k in ["forms", "follow"]:
+		if arch.has(k):
+			p[k] = arch[k]
+	p["plan"] = plan
+	var side := sqrt(want * (CELLS if GenContext.pick_form(p, s) == "" else CELLS_FORM) / (36.0 * 28.0))
 	p.merge({"kit": written.get("kit", p.get("kit", "")), "corridor": written.get("style", "corridor"),
 		"place": written.get("name", "Installation"), "rooms": want, "size": [roundi(36 * side), roundi(28 * side)],
 		"doors": arch.get("doors", p.get("doors", ["door_split"])), "props": arch.get("dressing", []), "swimmers": []}, true)
@@ -131,34 +138,43 @@ static func _blocks(prog: Dictionary, pick: RandomNumberGenerator) -> Array:
 	return out
 
 
-## Which room of the geometry each written room gets: the way in the first, the core the last; the rest in blocks
-## (see the top of this file). An array the length of the context's areas: {"room": the written room, or {} for a
-## quiet one, "block": its block, "shape": what the fit saw of it}. [] if the geometry has too few rooms. `roles`: the
-## room types, for their fit.
-static func _assign(ctx: GenContext, blocks: Array, pick: RandomNumberGenerator, roles: Dictionary) -> Array:
-	var middle: Array = []
-	for i in ctx.areas.size():
-		if ctx.areas[i]["unit"] != 0 and ctx.areas[i]["unit"] != ctx.last:
-			middle.append(i)
-	var wanted := 0
-	for b in blocks:
-		wanted += b["rooms"].size()
-	if middle.size() < wanted or blocks.is_empty():
-		return []
-	var extra: Array = []
-	extra.resize(blocks.size())
-	extra.fill(0)
-	for k in middle.size() - wanted:          # the quiet rooms, each to a block
-		extra[pick.randi() % blocks.size()] += 1
+## Each block as a group of the plan the geometry is laid out for: as many rooms as it has, and the quiet ones (a
+## quarter more in all, QUIET) given to its clusters, the seed's pick (to its steps only if it has no cluster): each
+## {"size": n, "kind": "step" (a spine room) or "cluster"}.
+static func _plan(blocks: Array, pick: RandomNumberGenerator) -> Array:
+	var n := 2
+	var to: Array = []
+	for bi in blocks.size():
+		n += blocks[bi]["rooms"].size()
+		if blocks[bi]["cluster"] != "":
+			to.append(bi)
+	if to.is_empty():
+		to = range(blocks.size())
+	var out: Array = blocks.map(func(b: Dictionary) -> Dictionary:
+		return {"size": b["rooms"].size(), "kind": "cluster" if b["cluster"] != "" else "step"})
+	for k in ceili(n / (1.0 - QUIET)) - n:
+		out[to[pick.randi() % to.size()]]["size"] += 1
+	return out
+
+
+## Which room of the geometry each written room gets: the way in the first, the core the last; the rest by the plan's
+## groups (see the top of this file): on a form, the rooms at the places for each group; on the scatter, the units in
+## the order the corridors join them, as many to each group as its size. An array the length of the context's areas:
+## {"room": the written room, or {} for a quiet one, "block": its block, "shape": what the fit saw of it}. [] if a
+## group has fewer rooms than it must hold. `roles`: the room types, for their fit.
+static func _assign(ctx: GenContext, blocks: Array, plan: Array, roles: Dictionary) -> Array:
+	var group_of: Array = ctx.group_of if not ctx.group_of.is_empty() else InstallationPlace._slices(ctx, plan)
 	var out: Array = []
 	out.resize(ctx.areas.size())
 	for i in ctx.areas.size():
 		out[i] = {"room": {}, "block": {}, "shape": InstallationPlace.shape_of(ctx, ctx.areas[i])}
-	var next := 0
 	for bi in blocks.size():
 		var b: Dictionary = blocks[bi]
-		var span: Array = middle.slice(next, next + b["rooms"].size() + extra[bi])
-		next += span.size()
+		var span: Array = range(ctx.areas.size()).filter(func(i: int) -> bool:
+			var u: int = ctx.areas[i]["unit"]
+			return u != 0 and u != ctx.last and int(group_of[u]) == bi)
+		if span.size() < b["rooms"].size():
+			return []
 		var places: Array = span.map(func(i: int) -> Array: return out[i]["shape"])
 		var fits: Array = b["rooms"].map(func(r: Dictionary) -> Dictionary: return roles.get(str(r.get("role", "")), {}).get("fit", {}))
 		var got := InstallationFit.best(fits, places)
@@ -166,6 +182,21 @@ static func _assign(ctx: GenContext, blocks: Array, pick: RandomNumberGenerator,
 			out[span[k]]["block"] = b
 		for j in got.size():
 			out[span[got[j]]]["room"] = b["rooms"][j]
+	return out
+
+
+## On the scatter: each unit's group, the units between the way in and the core taken in order, as many to each group
+## as its size (-1 for the way in, the core and any over).
+static func _slices(ctx: GenContext, plan: Array) -> Array:
+	var out: Array = []
+	out.resize(ctx.rects.size())
+	out.fill(-1)
+	var u := 1
+	for gi in plan.size():
+		for k in int(plan[gi]["size"]):
+			if u < ctx.last:
+				out[u] = gi
+			u += 1
 	return out
 
 
@@ -270,9 +301,11 @@ static func _quiet(ctx: GenContext, a: Dictionary, block: Dictionary, quiet: Ins
 
 
 ## The level as the rooms generator assembled it, with the written level's own keys over it: its id, name, look,
-## words, systems, triggers, objectives and what was chosen; now also "geometry": "rooms", and "fits": each written
-## room's id -> what the fit saw of the room it got ([cells of floor, storeys]), for the test.
-static func _level(out: Dictionary, written: Dictionary, where: Array) -> Dictionary:
+## words, systems, triggers, objectives and what was chosen; now also "geometry": "rooms"; "fits": each written room's
+## id -> what the fit saw of the room it got ([cells of floor, storeys]); and the layout form ("form", "follow", and
+## "form_ways": the ways the form meant, before any was let go, as pairs of indices into the level's rooms): for the
+## test.
+static func _level(out: Dictionary, written: Dictionary, where: Array, ctx: GenContext) -> Dictionary:
 	for k in ["id", "name", "kit", "style", "intro", "systems", "objectives"]:
 		if written.has(k):
 			out[k] = written[k]
@@ -284,5 +317,13 @@ static func _level(out: Dictionary, written: Dictionary, where: Array) -> Dictio
 		if not w["room"].is_empty():
 			fits[w["room"]["id"]] = w["shape"]
 	out["installation"]["fits"] = fits
+	var room_of := {}                              # unit -> the level room of its first area
+	for a in ctx.areas:
+		if not room_of.has(a["unit"]):
+			room_of[a["unit"]] = a["room"]
+	var ways: Array = ctx.graph.get("edges", []) + ctx.graph.get("loops", []) if ctx.form != "" \
+		else range(1, ctx.rects.size()).map(func(i: int) -> Array: return [i - 1, i])
+	out["installation"].merge({"form": ctx.form if ctx.form != "" else "scatter", "follow": ctx.follow,
+		"form_ways": ways.map(func(e: Array) -> Array: return [room_of[e[0]], room_of[e[1]]])}, true)
 	out.erase("tags")
 	return out

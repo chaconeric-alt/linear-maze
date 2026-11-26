@@ -23,12 +23,18 @@ var actors: Array
 var treasure: Array
 var loot: Array                   # what wall lockers hold
 var kit_name: String
+var form := ""                    # the layout form (RoomForms), or "" for the scatter (params "form", or "forms" by weight)
+var follow := 1.0                 # how faithfully the rooms and corridors keep to it (params "follow"; RoomJoins)
+var graph: Dictionary = {}        # the form's places and ways (RoomForms.graph)
 # units
 var g: Array = []                 # the main floor: one row of one-letter strings per y
 var room_of: Array = []           # the unit each cell belongs to, -1 outside every unit
 var rects: Array = []             # one per unit: a box that corridors join
 var shape: Array = []             # per unit: rect, oct, round, ell, cross, piers, suite
 var last := 0                     # the last unit: the vault, behind the locked door
+var group_of: Array = []          # per unit, on a form: the plan's group its place is for (-1: the form's own)
+var whole: Dictionary = {}        # units never split into a suite (a form's halls)
+var tall: Dictionary = {}         # units three storeys tall whatever their size (a stack's atrium)
 # areas
 var areas: Array = []             # what gets a style, a height and furniture: {unit, rect, style, height, room}
 var walls: Array = []             # the thin walls that divide suites
@@ -102,6 +108,7 @@ func _init(seed_v: int, params: Dictionary, locked: bool) -> void:
 	loot = p.get("locker_loot", treasure)
 	kit_name = p.get("kit", "hightech")
 	doors = p.get("doors", ["door_split"])
+	_layout_form()
 	for y in H:
 		var row: Array = []
 		row.resize(W)
@@ -111,6 +118,40 @@ func _init(seed_v: int, params: Dictionary, locked: bool) -> void:
 		r2.resize(W)
 		r2.fill(-1)
 		room_of.append(r2)
+
+
+## The layout form, if the params give one (see the fields above): its graph drawn for the params' "plan" (a written
+## installation's), or for one of the seed's; its shapes over the params'. Each from a stream of the seed's own, so the
+## scatter, which draws none of them, comes out as it always did.
+func _layout_form() -> void:
+	form = GenContext.pick_form(p, seed_value)
+	if form == "":
+		return
+	follow = clampf(float(p.get("follow", 1.0)), 0.0, 1.0)
+	var plan: Array = p.get("plan", [])
+	if plan.is_empty():
+		plan = RoomForms.plan_for(int(p.get("rooms", 10)), Dice.derive(seed_value, "form plan"))
+	graph = RoomForms.graph(form, plan, Dice.derive(seed_value, "form graph"))
+	sh = sh.duplicate()
+	sh.merge(graph.get("shapes", {}), true)
+
+
+## The layout form for these params and seed: "form" if they name one, else one of "forms" ({form: weight}) by weight;
+## "" for the scatter (as also for "scatter", or a form the generator does not know).
+static func pick_form(params: Dictionary, seed_v: int) -> String:
+	var id := str(params.get("form", ""))
+	var forms: Variant = params.get("forms", {})
+	if id == "" and forms is Dictionary and not (forms as Dictionary).is_empty():
+		var total := 0.0
+		for k in forms:
+			total += float(forms[k])
+		var x := Dice.derive(seed_v, "form").randf() * total
+		for k in forms:
+			x -= float(forms[k])
+			if x <= 0.0:
+				id = str(k)
+				break
+	return id if RoomForms.FORMS.has(id) else ""
 
 
 func shuffle(a: Array) -> void:

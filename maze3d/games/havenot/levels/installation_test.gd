@@ -13,6 +13,8 @@ extends SelfTestPart
 
 const PARTS := ["movement", "reach", "traps", "actors", "containers", "pickups", "doors", "finish"]
 const WORLDS := 8
+const FORM_WORLDS := 4           # worlds for each layout form, kept to and let go
+const FAITHFUL := 0.8            # of the ways a form means, the share that must join just their two rooms when kept to
 
 
 func replaces_standard() -> bool:
@@ -47,6 +49,7 @@ func run() -> void:
 		"  what stands in the %d written rooms by their tiers: something common in %d, uncommon in %d, rare in %d, anomalous in %d; props to a cell of floor: %s" % [
 		tally["written"], tally["common"], tally["uncommon"], tally["rare"], tally["anomalous"],
 		", ".join(["sparse", "normal", "cluttered", "crowded"].map(func(d: String) -> String: return "%s %.2f" % [d, per.get(d, 0.0)]))])
+	_forms()
 	await _played(info)
 	for p in PARTS:
 		await runner.part(p).run()
@@ -111,6 +114,132 @@ func _on_rooms(arch_id: String, tally: Dictionary) -> void:
 			tally["three"] += 1 if int(r.get("height", 1)) >= 3 else 0
 	say(bad.is_empty(), "%s on the rooms generator's geometry: %d worlds, each laid out and finishable, every cluster with the rooms it must have, no two of a cluster's rooms that would fit better swapped, its core shut the way its power says, its people its own%s" % [
 		arch_id, WORLDS, "" if bad.is_empty() else "; not: " + "; ".join(bad.slice(0, 3))])
+
+
+## Each layout form (RoomForms, SPEC 6.2), forced, over FORM_WORLDS seeds, the settings in turn, kept to (follow 1)
+## and let go (follow 0): each laid out and finished; at 1, nearly every way the form means is a corridor joining those
+## two rooms and no other (FAITHFUL), more than at 0; and its shape: four ways out or more of the hub's (the stack's,
+## the campus's) hall, a loop on the main floor round the ring, the concentric rings and between the twins, one at
+## most in the tree, the spine's rooms joined one to the next from the way in to the core.
+func _forms() -> void:
+	var ids: Array = InstallationSettings.ids()
+	for form in RoomForms.FORMS:
+		var seen := {1.0: [], 0.0: []}
+		var bad: Array = []
+		var shape: Array = []
+		for follow in [1.0, 0.0]:
+			for k in FORM_WORLDS:
+				var s := 7000 + k * 53
+				var w := InstallationGen.write({"id": "written", "setting": ids[k % ids.size()], "style": "corridor", "legend": {},
+					"things": [], "objectives": [], "triggers": []}, s, true)
+				var params: Dictionary = LM.game.get("generator_params", {}).duplicate(true)
+				params.merge({"form": form, "follow": follow}, true)
+				var lv := InstallationPlace.make(w, s, params)
+				if lv.is_empty() or lv["installation"].get("form", "") != form:
+					bad.append("seed %d at %d: not laid out on it" % [s, follow])
+					continue
+				var joins := _joins(lv)
+				seen[follow].append(_faithful(lv, joins))
+				if follow == 1.0:
+					shape.append(_shape_of(form, lv, joins))
+		var kept := _mean(seen[1.0])
+		var loose := _mean(seen[0.0])
+		var shaped := shape.all(func(x: Array) -> bool: return x[0])
+		say(bad.is_empty() and kept >= FAITHFUL and kept > loose + 0.1 and shaped,
+			"form %s: %d worlds kept to and %d let go, each laid out and finished; kept to, %d%% of its ways join just the two rooms they are for (let go, %d%%); %s%s" % [
+			form, seen[1.0].size(), seen[0.0].size(), roundi(kept * 100), roundi(loose * 100),
+			", ".join(shape.map(func(x: Array) -> String: return x[1])), "" if bad.is_empty() else "; not: " + "; ".join(bad.slice(0, 2))])
+
+
+## What share of the ways the form meant ("form_ways") join their two rooms directly in the level.
+func _faithful(lv: Dictionary, joins: Dictionary) -> float:
+	var ways: Array = lv["installation"].get("form_ways", [])
+	var ok := 0
+	for e in ways:
+		ok += 1 if joins.get(int(e[0]), {}).has(int(e[1])) else 0
+	return float(ok) / maxf(1.0, ways.size())
+
+
+## Whether the level has its form's shape, and what it came to in words: [bool, text].
+func _shape_of(form: String, lv: Dictionary, joins: Dictionary) -> Array:
+	var hall := int(lv["installation"]["form_ways"][0][1])           # the first way: from the way in to the form's first place
+	var loops := ProgrammeGraph.loops({"map": lv["map"], "legend": lv.get("legend", {})})     # on the main floor alone
+	match form:
+		"hub", "stack", "campus":
+			return [joins.get(hall, {}).size() >= 4, "%d ways out of the hall" % joins.get(hall, {}).size()]
+		"ring", "concentric", "twin":
+			return [loops >= 1, "loops %d" % loops]
+		"tree":
+			return [loops <= 1, "loops %d" % loops]
+	var spine: Array = [int(lv["installation"]["form_ways"][0][0])]       # the way in, the spine's rooms in order, the core
+	for i in lv["rooms"].size():
+		if lv["rooms"][i].has("role") and str(lv["rooms"][i].get("cluster", "?")) == "" and i != spine[0] and i != _core_room(lv):
+			spine.append(i)
+	spine.append(_core_room(lv))
+	var joined := 0
+	for k in spine.size() - 1:
+		joined += 1 if joins.get(spine[k], {}).has(spine[k + 1]) else 0
+	return [joined == spine.size() - 1, "%d of %d steps of the spine joined" % [joined, spine.size() - 1]]
+
+
+## The level's rooms (storey 0) and which join which directly: by a corridor that enters no other room, or by an
+## opening between the two halves of a suite. Room index -> {room index: true}.
+func _joins(lv: Dictionary) -> Dictionary:
+	var rows: Array = lv["map"]
+	var room_at := {}
+	for i in lv["rooms"].size():
+		var rc: Array = lv["rooms"][i]["rect"]
+		for y in range(int(rc[1]), int(rc[1]) + int(rc[3])):
+			for x in range(int(rc[0]), int(rc[0]) + int(rc[2])):
+				if str(rows[y])[x] != "#":
+					room_at[Vector2i(x, y)] = i
+	var out := {}
+	for c in room_at:
+		var i: int = room_at[c]
+		if not out.has(i):
+			out[i] = {}
+		for d in GenContext.DIRS:
+			var n: Vector2i = c + d
+			if room_at.has(n) and room_at[n] != i:
+				out[i][room_at[n]] = true
+			elif not room_at.has(n) and str(rows[n.y])[n.x] != "#":
+				for j in _corridor_ends(rows, room_at, n):
+					if j != i:
+						out[i][j] = true
+	return out
+
+
+## The rooms a corridor reaches from the cell `from`, going through no room.
+func _corridor_ends(rows: Array, room_at: Dictionary, from: Vector2i) -> Array:
+	var seen := {from: true}
+	var todo: Array = [from]
+	var ends := {}
+	while not todo.is_empty():
+		var c: Vector2i = todo.pop_back()
+		for d in GenContext.DIRS:
+			var n: Vector2i = c + d
+			if seen.has(n) or n.y < 0 or n.y >= rows.size() or n.x < 0 or n.x >= str(rows[n.y]).length() or str(rows[n.y])[n.x] == "#":
+				continue
+			seen[n] = true
+			if room_at.has(n):
+				ends[room_at[n]] = true
+			else:
+				todo.append(n)
+	return ends.keys()
+
+
+func _core_room(lv: Dictionary) -> int:
+	for i in lv["rooms"].size():
+		if str(lv["rooms"][i].get("role", "")) == "core":
+			return i
+	return 0
+
+
+func _mean(xs: Array) -> float:
+	var t := 0.0
+	for x in xs:
+		t += float(x)
+	return t / maxf(1.0, xs.size())
 
 
 ## What stands in each written room of the level by its type's tiers ("contents"), and how many props to a cell of
