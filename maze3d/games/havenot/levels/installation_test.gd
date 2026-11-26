@@ -44,6 +44,7 @@ func _worlds(arch_id: String) -> void:
 	var wingsets := {}
 	var powers := {}
 	var trapped := 0
+	var graph := {"bad": [], "by": {}, "loops": 99, "saved": 9999}       # the mission graph's checks, over the worlds
 	for i in WORLDS:
 		var s := 3000 + i * 37
 		var w := InstallationGen.write({"id": "installation", "archetype": arch_id, "kit": "omni"}, s)
@@ -55,10 +56,56 @@ func _worlds(arch_id: String) -> void:
 		wingsets[",".join(w["programme"]["wings"].map(func(x: Dictionary) -> String: return x["id"]))] = true
 		powers[w["systems"].get("power", {}).get("start", "")] = true
 		trapped += 1 if lv.get("things", []).any(func(t: Dictionary) -> bool: return t.has("trap")) else 0
+		if not lv.is_empty():
+			_graph(lv, s, graph)
 	say(bad.is_empty(), "%s: %d worlds, each written, laid out and finishable, its spine in order, its power wing and panels, its core shut the way its power says, every word written out, its people its own%s" % [
 		arch_id, WORLDS, "" if bad.is_empty() else "; not: " + "; ".join(bad.slice(0, 3))])
 	say(contras.size() >= 2 and wingsets.size() >= 2 and powers.size() == 2 and trapped > 0, "  its choices come out more than one way: %d contradictions (%s), %d sets of wings, power starting %s, a trap of its kind in %d of the %d" % [
 		contras.size(), ", ".join(contras.keys()), wingsets.size(), " and ".join(powers.keys()), trapped, WORLDS])
+	say(graph["bad"].is_empty() and graph["by"].size() == 2,
+		"  its ways through: in every world a loop (%d at least), its gate held shut without both its ways, passed by its own way without the way round and by the way round without its own way (a card in %d, security shut down in %d); the way round, taken, makes the gate a short way back (%d steps saved at least)%s" % [
+		graph["loops"], graph["by"].get("card", 0), graph["by"].get("security", 0), graph["saved"],
+		"" if graph["bad"].is_empty() else "; not: " + "; ".join(graph["bad"].slice(0, 3))])
+
+
+## One world's ways through (the mission graph, SPEC 6.3 and 6.4), proved on its level: it has a loop; its gate holds
+## with both its ways withheld (its own: the card or security; and the way round, sealed), and opens by either alone;
+## from the gate's release the way back through the open gate is shorter than round.
+func _graph(lv: Dictionary, s: int, out: Dictionary) -> void:
+	var g: Dictionary = lv.get("installation", {}).get("gate", {})
+	var ring: Array = lv.get("rooms", []).filter(func(r: Dictionary) -> bool: return r.get("link", "") == g.get("link", "?"))
+	var rel: Array = lv.get("things", []).filter(func(t: Dictionary) -> bool: return t.get("tag", "") == "gate_release")
+	if g.is_empty() or ring.size() != 1 or rel.size() != 1:
+		out["bad"].append("seed %d: no gate, way round or release" % s)
+		return
+	var loops := ProgrammeGraph.loops(lv)
+	var seal: Array = [ring[0]["rect"]]
+	var neither := ProgrammeCheck.solve(lv, {"withhold": g["withhold"], "seal": seal})
+	var by_own := ProgrammeCheck.solve(lv, {"seal": seal})
+	var round := ProgrammeCheck.solve(lv, {"withhold": g["withhold"]})
+	var full := ProgrammeCheck.solve(lv)
+	var held: Array = full["flags"] + full["systems"]
+	for c in full["cards"]:
+		held += ["card:" + c, "key_" + c]
+	var shut: Array = held.filter(func(k: String) -> bool: return k != g["flag"] and not g["withhold"].has(k))
+	var from := [Vector2i(int(rel[0]["at"][0]), int(rel[0]["at"][1])), 0]
+	var back := ProgrammeGraph.steps(lv, from, ProgrammeCheck.start_of(lv), held)
+	var back_round := ProgrammeGraph.steps(lv, from, ProgrammeCheck.start_of(lv), shut)
+	var why := ""
+	if loops < 1:
+		why = "no loop"
+	elif neither["ok"] or not neither["missed"].has(g["name"]):
+		why = "the gate does not hold (missed: %s)" % ", ".join(neither["missed"])
+	elif not (by_own["missed"] == [ring[0]["name"]] and by_own["behind"].is_empty()) or not round["ok"]:      # (sealed, the way round itself is missed)
+		why = "not passed both ways (by %s: %s; round: %s)" % [g["by"], by_own["ok"], round["ok"]]
+	elif back < 0 or back_round < 0 or back >= back_round:
+		why = "no short way back (%d steps, %d round)" % [back, back_round]
+	if why != "":
+		out["bad"].append("seed %d: %s" % [s, why])
+		return
+	out["by"][g["by"]] = int(out["by"].get(g["by"], 0)) + 1
+	out["loops"] = mini(out["loops"], loops)
+	out["saved"] = mini(out["saved"], back_round - back)
 
 
 ## What is wrong with one written installation and its level, or "".
@@ -121,14 +168,15 @@ func _hashed(v: Variant) -> Array:
 func _shut_on(flag: String) -> int:
 	var n := 0
 	for d in level.get_children():
-		if d is Door and d.is_locked() and d.flag != null and str(d.flag) == flag:
+		if d is Door and d.is_locked() and d.flag != null and (str(d.flag) == flag or (d.flag is Array and d.flag.has(flag))):
 			n += 1
 	return n
 
 
-## Played: with power off, the core's door is shut and the generator's panel opens it; the core's terminal logs what
-## the place is doing.
+## Played: the gate's doors are shut until its release, on the far side, unlocks them; with power off, the core's door
+## is shut and the generator's panel opens it; the core's terminal logs what the place is doing.
 func _played(info: Dictionary) -> void:
+	await _released(info.get("gate", {}))
 	var core_t: Node3D = thing("core_terminal")
 	var gen: Node3D = thing("gen_panel")
 	if core_t == null or gen == null:
@@ -153,6 +201,20 @@ func _played(info: Dictionary) -> void:
 	else:
 		say(started and on and logged and Game.has_flag("core_reached") and moved_on,
 			"played: power on, the generator's panel answers, the core's terminal logs what the place is doing (its doors locked %s), and the objective moves on to the way out" % info.get("core_lock", "?"))
+
+
+## The gate shut, then its release used from the far side: its doors open, and stay so.
+func _released(g: Dictionary) -> void:
+	var rel: Node3D = thing("gate_release")
+	var shut := _shut_on(str(g.get("flag", "?")))
+	if rel != null:
+		pl.global_position = rel.global_position + rel.global_transform.basis.z * 1.6
+		pl.global_position.y = level.floor_y(pl.global_position + Vector3(0, 0.5, 0)) + 0.05
+		rel.use(pl)
+		await frames(10)
+	var open := _shut_on(str(g.get("flag", "?")))
+	say(rel != null and shut > 0 and open == 0 and Game.has_flag(str(g.get("flag", "?"))),
+		"played: the gate (%s) is shut (%d doors) until its release on the far side unlocks it; then it stands open (%d shut)" % [g.get("name", "?"), shut, open])
 
 
 ## What kind of place the archetype is, in words ("Industrial Reclamation Plant").

@@ -23,7 +23,7 @@ const SKILL := ["name", "text", "max", "gives"]
 const ORIGIN := ["name", "text", "stats", "mutations", "rerolls"]
 const MUTATION := ["name", "text", "stats", "gives"]
 const GIVES := ["hp", "move", "pack", "slots", "hack", "heal", "sense", "armor", "lamp"]     # what the engine reads (CharacterSheet)
-const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "bank_at", "below"]   # a level's written programme (SPEC.md 6.3)
+const PROGRAMME := ["spine", "rooms", "wings", "locks", "lock_door", "furnish", "bank", "bank_at", "below", "links"]   # a level's written programme (SPEC.md 6.3)
 const PROG_LIFTS := ["count", "travel", "start", "lock"]
 const PURPOSE := ["name", "wall", "floor", "centre", "corner", "outside", "fill", "rows", "floor_fill", "crammed"]   # defs "purposes" (furnishing a room for its use)
 const DANGER := ["name", "kicker", "sign", "title", "notice", "open", "opened", "leave", "need", "note", "enter", "clear",
@@ -33,7 +33,9 @@ const PIECE := ["piece", "seat", "around", "chairs", "foot", "turn", "count", "s
 const PROG_SPINE := ["gap"]
 const PROG_ROOM := ["id", "name", "style", "size", "things", "next_to", "door_to", "height", "purpose", "chance", "down", "lifts", "door_above", "role"]
 const PROG_WING := ["id", "name", "style", "corridor", "after", "side", "door", "rooms", "danger"]
-const PROG_LOCK := ["room", "wing", "color", "card", "door", "flag", "need"]
+const PROG_LOCK := ["room", "wing", "link", "color", "card", "door", "flag", "need", "release"]
+const PROG_LINK := ["id", "from", "to", "name", "corridor", "door"]
+const PROG_RELEASE := ["side", "thing"]
 # Every thing takes these; then the keys of its kind. A thing's kind is the first of these keys it has (as Spawner
 # decides what to make), except that a "trap": "pit" is a pit.
 const THING := ["at", "tag", "offset", "face", "level", "restock", "needs"]
@@ -58,7 +60,7 @@ const THING_KINDS := {
 	"light": ["light", "y", "flicker", "shadows"],
 }
 const ARCHETYPE := ["name", "kit", "style", "systems", "core_lock", "spine", "wings", "roles", "occupants", "loot",
-	"contradictions", "words"]                                     # defs "archetypes": what writes an installation (SPEC.md 6.4)
+	"contradictions", "words", "hub", "gate", "way_round"]                                     # defs "archetypes": what writes an installation (SPEC.md 6.4)
 const ARCH_ROLE := ["name", "style", "purpose", "size", "way_in", "empty", "memos", "card", "loot", "trap", "core",
 	"generator", "security"]
 const ARCH_WINGS := ["count", "always", "list"]
@@ -66,6 +68,8 @@ const ARCH_WING := ["name", "corridor", "rooms"]
 const ARCH_STEP := ["role", "chance", "door_to", "next_to"]       # a spine step, or a wing's room written out
 const ARCH_CORE_LOCK := ["when", "flag", "need", "color"]
 const ARCH_OCCUPANTS := ["per_room", "empty", "actors"]
+const ARCH_GATE := ["step", "by", "color", "flag", "need"]
+const ARCH_WAY_ROUND := ["name", "corridor"]
 const CONTRADICTION := ["mandate", "now", "bias", "words"]       # defs "contradictions"
 const PIT := ["trap", "delay", "damage"]
 const COLLAPSE := ["trap", "warn", "damage"]
@@ -109,7 +113,8 @@ static func _check_archetypes(defs: Dictionary) -> Array:
 		var a: Dictionary = defs["archetypes"][id]
 		var at := "archetype '%s'" % id
 		pairs.append_array([[a, ARCHETYPE, at], [a.get("wings", {}), ARCH_WINGS, at + ", wings"],
-			[a.get("core_lock", {}), ARCH_CORE_LOCK, at + ", core_lock"], [a.get("occupants", {}), ARCH_OCCUPANTS, at + ", occupants"]])
+			[a.get("core_lock", {}), ARCH_CORE_LOCK, at + ", core_lock"], [a.get("occupants", {}), ARCH_OCCUPANTS, at + ", occupants"],
+			[a.get("gate", {}), ARCH_GATE, at + ", gate"], [a.get("way_round", {}), ARCH_WAY_ROUND, at + ", way_round"]])
 		for r in a.get("roles", {}):
 			pairs.append([a["roles"][r], ARCH_ROLE, "%s, role %s" % [at, r]])
 		var steps: Array = a.get("spine", []).duplicate()
@@ -177,6 +182,11 @@ static func _check_programme(lv: Dictionary, entries: Array) -> Array:
 			entries.append(e)
 	for lk in p.get("locks", []):
 		pairs.append([lk, PROG_LOCK, " lock"])
+		if lk.get("release") is Dictionary:
+			pairs.append([lk["release"], PROG_RELEASE, " lock's release"])
+			entries.append(lk["release"].get("thing", {}))
+	for ln in p.get("links", []):
+		pairs.append([ln, PROG_LINK, " link '%s'" % ln.get("id", "?")])
 	for pr in pairs:
 		for k in pr[0]:
 			if not k in pr[1]:
@@ -209,7 +219,8 @@ static func undocumented(spec_text: String) -> Array:
 			said[w.get_string()] = true
 	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + COLLAPSE + STAT + SKILL + ORIGIN + MUTATION + GIVES \
 		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS + DANGER + LEVEL_SYSTEM + SYSTEM + SYSTEM_STATE \
-		+ ARCHETYPE + ARCH_ROLE + ARCH_WINGS + ARCH_WING + ARCH_STEP + ARCH_CORE_LOCK + ARCH_OCCUPANTS + CONTRADICTION
+		+ ARCHETYPE + ARCH_ROLE + ARCH_WINGS + ARCH_WING + ARCH_STEP + ARCH_CORE_LOCK + ARCH_OCCUPANTS + CONTRADICTION \
+		+ PROG_LINK + PROG_RELEASE + ARCH_GATE + ARCH_WAY_ROUND
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []

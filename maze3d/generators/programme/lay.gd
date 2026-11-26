@@ -9,6 +9,9 @@ extends RefCounted
 ## gap), not for whole wings. Wings on one side never overlap one another: each starts east of the one before.
 ## Walls are whole cells, as everywhere in the engine; a door only ever stands in a wall cell with floor on both sides
 ## and wall to both flanks. Nothing here draws a random number: the plan made every choice.
+## A link (the plan's "links") runs both its wings' branch corridors on past everything on their side between them, a
+## wall row beyond the farthest, and joins them there along one row: a ring round the outside, with a door in its
+## middle if it asks for one.
 class_name ProgrammeLayout
 
 var plan: ProgrammePlan
@@ -20,6 +23,8 @@ var rects: Dictionary = {}          # room id -> Rect2i of its floor
 var doors: Array = []               # {"at": Vector2i, "rooms": [ids], "wing": id or ""}: every doorway
 var junctions: Dictionary = {}      # wing id -> the cell where its branch meets the spine
 var corridors: Array = []           # Rect2i: the spine's and the wings' corridors
+var rings: Dictionary = {}          # link id -> Rect2i: the row joining its two wings (their corridors' ends left out)
+var _ring_rows: Dictionary = {}     # wing id -> how many rows from the spine's row its link's row is
 
 
 func _init(p: ProgrammePlan) -> void:
@@ -29,6 +34,10 @@ func _init(p: ProgrammePlan) -> void:
 	var clear := {}
 	for w in plan.wings:
 		clear[w["id"]] = _clearance(w, xs)
+	for ln in plan.links:
+		var r := _ring_row(ln, xs, clear)
+		_ring_rows[ln["from"]] = r
+		_ring_rows[ln["to"]] = r
 	y0 = maxi(_reach("n", clear), _reach_spine(true)) + 1
 	H = y0 + maxi(_reach("s", clear), _reach_spine(false)) + 2
 	for y in H:
@@ -39,6 +48,8 @@ func _init(p: ProgrammePlan) -> void:
 	_spine(xs)
 	for w in plan.wings:
 		_wing(w, int(xs["branch"][w["id"]]), int(clear[w["id"]]))
+	for ln in plan.links:
+		_ring(ln, xs)
 
 
 ## How far the wings on a side reach from the spine: past the spine rooms they reach over, then their longer side (a
@@ -47,8 +58,52 @@ func _reach(side: String, clear: Dictionary) -> int:
 	var n := 0
 	for w in plan.wings:
 		if w["side"] == side:
-			n = maxi(n, int(clear[w["id"]]) - 2 + maxi(plan.length(w["west"]), plan.length(w["east"])))
+			n = maxi(n, maxi(_far(w, clear), int(_ring_rows.get(w["id"], 0))))
 	return n
+
+
+## How many rows from the spine's row a wing's farthest floor is (its corridor's end, without a link).
+func _far(w: Dictionary, clear: Dictionary) -> int:
+	return int(clear[w["id"]]) - 2 + maxi(plan.length(w["west"]), plan.length(w["east"]))
+
+
+## The columns a wing's rooms and corridor take: [first, past the last).
+func _span(w: Dictionary, xs: Dictionary) -> Vector2i:
+	var xb := int(xs["branch"][w["id"]])
+	var wl := plan.width(w["west"])
+	var wr := plan.width(w["east"])
+	return Vector2i(xb - 1 - wl if wl > 0 else xb, xb + 2 + wr if wr > 0 else xb + 1)
+
+
+## A link's row, in rows from the spine's: a wall row past the farthest floor between its two branch corridors (the
+## wings on its side reaching into those columns, the spine rooms bulging that way), and then the row itself.
+func _ring_row(ln: Dictionary, xs: Dictionary, clear: Dictionary) -> int:
+	var xa := int(xs["branch"][ln["from"]])
+	var xb := int(xs["branch"][ln["to"]])
+	var lo := mini(xa, xb)
+	var hi := maxi(xa, xb) + 1
+	var n := 0
+	for w in plan.wings:
+		var sp := _span(w, xs)
+		if w["side"] == ln["side"] and sp.x < hi and sp.y > lo:
+			n = maxi(n, _far(w, clear))
+	for id in plan.spine:
+		var rx := int(xs["room"][id])
+		if rx - 1 < hi and rx + int(plan.rooms[id]["w"]) + 1 > lo:
+			n = maxi(n, _half(id, ln["side"] == "n"))
+	return n + 2
+
+
+## The link's row joining its wings' corridors (each already run on to it), and its door.
+func _ring(ln: Dictionary, xs: Dictionary) -> void:
+	var xa := int(xs["branch"][ln["from"]])
+	var xb := int(xs["branch"][ln["to"]])
+	var y := y0 + (-1 if ln["side"] == "n" else 1) * int(_ring_rows[ln["from"]])
+	var rc := Rect2i(mini(xa, xb) + 1, y, absi(xb - xa) - 1, 1)
+	_carve(rc)
+	rings[ln["id"]] = rc
+	if ln.get("door", false) and rc.size.x >= 1:
+		_door(Vector2i(rc.position.x + rc.size.x / 2, y), [], "", ln["id"])
 
 
 ## How far the spine rooms' floors reach above (or below) the spine's row (a wing's reach counts the same way: its
@@ -98,15 +153,11 @@ func _columns() -> Dictionary:
 ## How many rows from the spine's row to a wing's first room: two (a wall row between) beside the corridor, or past
 ## the spine rooms its rooms reach over (their walls included) and a wall row.
 func _clearance(w: Dictionary, xs: Dictionary) -> int:
-	var xb := int(xs["branch"][w["id"]])
-	var wl := plan.width(w["west"])
-	var wr := plan.width(w["east"])
-	var lo := xb - 1 - wl if wl > 0 else xb
-	var hi := xb + 2 + wr if wr > 0 else xb + 1        # [lo, hi): the columns its rooms take
+	var sp := _span(w, xs)                               # [x, y): the columns its rooms take
 	var n := 2
 	for id in plan.spine:
 		var rx := int(xs["room"][id])
-		if lo < rx + int(plan.rooms[id]["w"]) + 1 and hi > rx - 1:
+		if sp.x < rx + int(plan.rooms[id]["w"]) + 1 and sp.y > rx - 1:
 			n = maxi(n, _half(id, w["side"] == "n") + 2)
 	return n
 
@@ -132,7 +183,7 @@ func _spine(xs: Dictionary) -> void:
 ## A wing: its branch corridor off the spine, its rooms up (or down) each side past `clear` rows, their doors.
 func _wing(w: Dictionary, xb: int, clear: int) -> void:
 	var dy := -1 if w["side"] == "n" else 1
-	var reach := clear - 2 + maxi(plan.length(w["west"]), plan.length(w["east"]))
+	var reach := maxi(clear - 2 + maxi(plan.length(w["west"]), plan.length(w["east"])), int(_ring_rows.get(w["id"], 0)))
 	var y_far := y0 + dy * reach
 	var cor := Rect2i(xb, mini(y0 + dy, y_far), 1, absi(y_far - y0))
 	_carve(cor)
@@ -181,9 +232,9 @@ func _carve(r: Rect2i) -> void:
 			g[y][x] = "."
 
 
-func _door(at: Vector2i, rooms: Array, wing: String) -> void:
+func _door(at: Vector2i, rooms: Array, wing: String, link := "") -> void:
 	g[at.y][at.x] = "+"
-	doors.append({"at": at, "rooms": rooms, "wing": wing})
+	doors.append({"at": at, "rooms": rooms, "wing": wing, "link": link})
 
 
 ## The doors of a room.
@@ -221,6 +272,8 @@ func shift(d: Vector2i, w: int, h: int) -> void:
 		junctions[k] += d
 	for i in corridors.size():
 		corridors[i] = Rect2i(corridors[i].position + d, corridors[i].size)
+	for k in rings:
+		rings[k] = Rect2i(rings[k].position + d, rings[k].size)
 
 
 ## Is this cell floor (or a door) on this layout's map?

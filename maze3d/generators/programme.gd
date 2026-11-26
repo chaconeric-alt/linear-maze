@@ -144,8 +144,8 @@ static func _below(out: Dictionary, level: Dictionary, seed_value: int, lay: Pro
 			return e)
 
 
-## The level's rooms (what has a name, a style and a height): each room as written (less those in `leave`), and each
-## wing's corridor.
+## The level's rooms (what has a name, a style and a height): each room as written (less those in `leave`), each
+## wing's corridor and each link's row.
 static func rooms_of(lay: ProgrammeLayout, leave: Array) -> Array:
 	var out: Array = []
 	for id in lay.plan.spine + lay.rects.keys().filter(func(k: String) -> bool: return not lay.plan.spine.has(k)):
@@ -156,6 +156,14 @@ static func rooms_of(lay: ProgrammeLayout, leave: Array) -> Array:
 		var e := {"name": w["name"], "rect": [c.position.x, c.position.y, c.size.x, c.size.y], "wing": w["id"]}
 		if str(w.get("corridor", "")) != "":
 			e["style"] = w["corridor"]
+		out.append(e)
+	for ln in lay.plan.links:                             # a link's row round the outside (its ends are its wings')
+		var rc: Rect2i = lay.rings[ln["id"]]
+		if rc.size.x < 1:
+			continue
+		var e := {"name": ln["name"], "rect": [rc.position.x, rc.position.y, rc.size.x, rc.size.y], "link": ln["id"]}
+		if str(ln.get("corridor", "")) != "":
+			e["style"] = ln["corridor"]
 		out.append(e)
 	return out
 

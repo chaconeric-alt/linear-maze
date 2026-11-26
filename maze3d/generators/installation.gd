@@ -8,7 +8,7 @@ extends RefCounted
 ## room's name, style, size, purpose and things; who lives there (by weight, a room left empty now and then, the way in
 ## always); its systems and the state each starts in (power off: the core is shut until the generator is started; on:
 ## it is locked by a card in one of the rooms that keep cards); a generator panel, a security panel (it needs power)
-## and the core's terminal. From its contradiction (defs "contradictions", one of those the archetype lists): what it
+## and the core's terminal; and its gate, with a way round it (InstallationWriter). From its contradiction (defs "contradictions", one of those the archetype lists): what it
 ## was for and what it does now, which monsters it favours, and its words. The words (InstallationWords) give its name,
 ## the intro, the memos, the announcements heard on entering some rooms, and the core's directive. Every choice comes
 ## from streams of this seed of their own (Dice.derive).
@@ -48,7 +48,7 @@ static func write(level: Dictionary, seed_value: int) -> Dictionary:
 	out["objectives"] = [{"text": "Find out what %s is doing: reach the %s." % [name, w.core_name], "done": "core_reached"},
 		{"text": "Leave the way you came in."}]
 	out["installation"] = {"archetype": arch_id, "contradiction": contra_id, "core_lock": w.core_lock,
-		"mandate": words["mandate"][0], "now": words["now"][0]}
+		"mandate": words["mandate"][0], "now": words["now"][0], "gate": w.gate}
 	return out
 
 

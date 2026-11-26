@@ -4,6 +4,27 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-25
 
+- **The mission graph: a loop, a gate with two ways past, a shortcut back** (the generation review's build order, step 4 of 4: "generate the logical map first: branches, dependencies, shortcuts"; SPEC 6.3, 6.4, 9).
+  - **Links** (a programme's `links`; `ProgrammePlan`, `ProgrammeLayout`). A link joins the far ends of two wings round the outside: both branch corridors run on past everything on their side between them, and a corridor along the next row joins them. So there are two ways between the stretches of spine they leave from. It is a room of the level (`"link": id`), may have a door in its middle, and a lock may lock that door (`{"link": id}`). Its two wings go on one side (one written `"any"` takes the other's side, drawing no number); a side has one link at most.
+  - **A release** (`ProgrammeFill`). A flag lock on a spine room may have a `release`: a thing hung on the corridor's wall just outside its door on one side, whose use sets the lock's flag. The lock holds from the other side and lets through from that one.
+  - **The proof knows the level's systems** (`ProgrammeCheck`). Each system's state is a key (`sys:power=on`): held from the start, given by a `system` effect, and needed by any door, lift, thing or option with `needs`. Before, the proof took the security panel as usable with the power off. A state once had counts as had for good, the one way the proof is generous. `solve(level, opts)` can `withhold` keys and `seal` cells, to prove a level without one way or another.
+  - **The ways through** (`ProgrammeGraph`, `generators/programme/graph.gd`): `loops(level)`, counted on the regions between doors (the doors and links more than a tree of them needs), and `steps(level, from, to, held)`, the fewest steps with those keys.
+  - **The installations use them** (`InstallationWriter`; each archetype's `hub`, `gate` and `way_round`):
+    - The third spine room is a gate. It is shut on its own flag or on its own way, the seed's pick of a blue card (put in a near room) or security shut down (the security panel now also sets `security_off`).
+    - One wing, the far wing, branches past the gate; the rest branch off the hub (the second spine room), the near side.
+    - The way round links a near wing to the far wing.
+    - A release (`panels` `release`) hangs outside the gate's far door: "Unlock the Pharmacy from this side".
+    - So the gate is passed by its own way, or by going round and unlocking it from behind, and once unlocked it is the short way back.
+    - The gate's own way is always on the near side: with security, the far wing is not the security panel's; the generator wing's yellow card, when it has one, is on the near side too.
+    - A core whose wings keep no card has its red card in the hub; one draw had none, and its core was left unlocked.
+  - **The test proves it** for every world (24 over the three archetypes):
+    - it has a loop;
+    - the gate holds with both its ways withheld;
+    - it is passed by its own way with the way round sealed, and by the way round without its own way (a card in 3 of 8, security in 5);
+    - from the release, the way back through the gate is shorter than round (18 to 26 steps saved at least).
+    - Played: the gate is shut until its release unlocks it, then stands open.
+  - **Baseline item65:** 31 runs, 4118 checks, 0 failures. The 30 runs before An Installation are line for line the same (no programme they lay out has a link, and no level of theirs is held up by a system). An Installation is another world now (the writer draws its gate's way first), with 94 checks (was 84).
+
 - **Installations written from an archetype** (the generation review's build order, step 3 of 4: "generate a purpose before generating a floor plan"; SPEC 6.4, 7, 9).
   - **`InstallationGen`** (`generators/installation.gd`). A level file with `archetype` (an id, or a list: the seed picks) is written into a programme level as it is entered, from the seed it is then laid out from (`ProgrammeGen.entered`). Every choice comes from streams of that seed of their own.
   - **The archetypes** (`defs/archetypes.json`): `behavioural_lab`, `medical` and `reclamation`. Each says its kit, its systems and how each starts, its spine from the way in to its core (a step can be one of two roles), its wings (those it must have, the power wing among them, and how many more), each role's names, style, size, purpose and what it holds (the way out, the generator's or security's panel, the core's terminal, memos, a card, loot, a trap), who lives there, and how the core is shut: on the generator's flag when power starts off, else by a red card.

@@ -2,6 +2,12 @@ extends RefCounted
 ## InstallationWriter - the rooms of one installation, from its archetype (InstallationGen): the spine, the wings, each
 ## room's things, the locks, and the announcements. Its numbers come from the stream it is given, its words from the
 ## installation's (InstallationWords); its panels and traps are the game's (defs "panels", "traps"), their words put in.
+## With a gate (the archetype's "gate", "hub" and "way_round"; the generation review's mission graph, 25 Nov): the spine
+## room at the gate's step is shut; one wing, the far wing, branches past it and the rest off the hub, the near side;
+## a near wing and the far wing are joined round the outside (a link, the way round). The gate opens one way on the
+## near side (its "by": the seed's pick of a card in a near room, or security shut down), and from the far side by a
+## release beside its far door. So there are two ways past it, and the way round, once taken, makes the gate a short
+## way back.
 class_name InstallationWriter
 
 var arch: Dictionary
@@ -13,8 +19,10 @@ var core_name := ""
 var core_lock := ""              # how the core is shut: a flag, or a card's colour
 var rooms: Dictionary = {}       # id -> the room written
 var _ids: Dictionary = {}        # role -> how many rooms of it so far
+var gate: Dictionary = {}        # what the gate came to: its room, "by", the keys of its way, its flag, the link
 var _spine: Array = []
 var _wings: Array = []
+var _far := ""                   # the wing past the gate
 
 
 func _init(a: Dictionary, c: Dictionary, w: Dictionary, s: RandomNumberGenerator, r: RandomNumberGenerator) -> void:
@@ -31,9 +39,16 @@ func programme(systems: Dictionary) -> Dictionary:
 	for step in arch.get("spine", []):
 		var role: Variant = step.get("role", "")
 		_spine.append(_room(str(Dice.pick(rng, role) if role is Array else role)))
+	var g: Dictionary = arch.get("gate", {})
+	if not g.is_empty():
+		gate["by"] = str(Dice.pick(rng, g.get("by", ["card"])))
 	_wings = _choose_wings()
-	return {"spine": {"gap": [1, 2]}, "rooms": _spine.map(func(id: String) -> Dictionary: return rooms[id]),
+	var out := {"spine": {"gap": [1, 2]}, "rooms": _spine.map(func(id: String) -> Dictionary: return rooms[id]),
 		"wings": _wings, "locks": _locks(systems)}
+	if not gate.is_empty():
+		out["links"] = [_way_round()]
+		out["locks"].append(_gate_lock())
+	return out
 
 
 ## The wings it must have, and as many more of the rest as its count says, in an order of the seed's.
@@ -47,11 +62,14 @@ func _choose_wings() -> Array:
 	var n := clampi(rng.randi_range(int(count[0]), int(count[1])), must.size(), list.size())
 	var chosen: Array = must + rest.slice(0, n - must.size())
 	Dice.shuffle(rng, chosen)
+	if not gate.is_empty():                        # past the gate: any wing but the one whose panel is the gate's way
+		var past: Array = chosen.filter(func(k: String) -> bool: return gate["by"] != "security" or not _holds(list[k], "security"))
+		_far = str(Dice.pick(rng, past if not past.is_empty() else chosen))
 	var out: Array = []
 	for wid in chosen:
 		var wd: Dictionary = list[wid]
 		var wing := {"id": wid, "name": InstallationWords.expand(str(Dice.pick(rng, wd.get("name", [wid]))), words, said),
-			"after": _spine.slice(0, _spine.size() - 1), "side": "any", "corridor": str(wd.get("corridor", "")), "rooms": []}
+			"after": _after_of(wid), "side": "any", "corridor": str(wd.get("corridor", "")), "rooms": []}
 		for entry in wd.get("rooms", []):
 			var e: Dictionary = entry if entry is Dictionary else {"role": entry}
 			var id := _room(str(e["role"]))
@@ -66,9 +84,69 @@ func _choose_wings() -> Array:
 	return out
 
 
+## Where a wing branches: past the gate for the far wing, off the hub for the rest; with no gate, after any spine room
+## but the last (the seed's pick).
+func _after_of(wid: String) -> Variant:
+	if gate.is_empty():
+		return _spine.slice(0, _spine.size() - 1)
+	return _spine[int(arch["gate"].get("step", 1))] if wid == _far else _spine[int(arch.get("hub", 0))]
+
+
+## Does a wing as written have a room of a role with that flag (generator, security, card ...)?
+func _holds(wd: Dictionary, flag: String) -> bool:
+	return wd.get("rooms", []).any(func(e: Variant) -> bool:
+		return arch.get("roles", {}).get(str(e.get("role", "") if e is Dictionary else e), {}).get(flag, false))
+
+
+## The rooms on the near side that can keep a card, but not in that wing (the gate's way past must not wait on it).
+func _near_keep(not_in: String) -> Array:
+	return rooms.keys().filter(func(id: String) -> bool:
+		var w := _wing_of(id)
+		return _role(id).get("card", false) and w != "" and w != _far and w != not_in)
+
+
+## The way round: a near wing joined to the far wing round the outside, both on one side (the seed's pick).
+func _way_round() -> Dictionary:
+	var near: Array = _wings.filter(func(w: Dictionary) -> bool: return w["id"] != _far)
+	var from: Dictionary = Dice.pick(rng, near)
+	var side := "n" if rng.randf() < 0.5 else "s"
+	for w in _wings:
+		if w["id"] == from["id"] or w["id"] == _far:
+			w["side"] = side
+	var wr: Dictionary = arch.get("way_round", {})
+	gate["link"] = "way_round"
+	return {"id": "way_round", "from": from["id"], "to": _far, "corridor": str(wr.get("corridor", "")),
+		"name": InstallationWords.expand(str(Dice.pick(rng, wr.get("name", ["The Way Round"]))), words, said)}
+
+
+## The gate: its room's doors shut on its own flag, or on its way's (a card's, put in a near room, or security's), and
+## a release beside its far door that sets its flag.
+func _gate_lock() -> Dictionary:
+	var g: Dictionary = arch["gate"]
+	var room: String = _spine[int(g.get("step", 1))]
+	var flag := str(g.get("flag", "gate_open"))
+	words["gate"] = [rooms[room]["name"]]
+	words["gate_flag"] = [flag]
+	var key := "security_off"
+	gate["withhold"] = [key]
+	if gate["by"] == "card":
+		var color := str(g.get("color", "blue"))
+		key = "key_" + color
+		gate["withhold"] = [key, "card:" + color]
+		var keep := _near_keep(_wing_of(_first_with("generator")))
+		var at: String = Dice.pick(rng, keep) if not keep.is_empty() else _spine[int(arch.get("hub", 0))]
+		rooms[at].erase("chance")
+		rooms[at]["things"].append({"item": "keycard", "color": color})
+	gate.merge({"room": room, "name": rooms[room]["name"], "flag": flag})
+	var release: Dictionary = _said(LM.defs.get("panels", {}).get("release", {}))
+	return {"room": room, "flag": [flag, key], "need": InstallationWords.expand(str(g.get("need", {}).get(gate["by"], "")), words, said),
+		"release": {"side": "e", "thing": release}}
+
+
 ## The core shut until the generator is started (its lock's flag), if power starts as its `when` says; else locked by
-## a card of its colour in one of the rooms that keep cards. The generator's wing locked too, now and then, by a card
-## in another wing, when the core waits on power: one more thing to find before the way through.
+## a card of its colour in one of the rooms that keep cards (the hub, if none of its wings has one). The generator's
+## wing locked too, now and then, by a card in another wing (with a gate, a near one), when the core waits on power:
+## one more thing to find before the way through.
 func _locks(systems: Dictionary) -> Array:
 	var cl: Dictionary = arch.get("core_lock", {})
 	var core := _first_with("core")
@@ -81,12 +159,15 @@ func _locks(systems: Dictionary) -> Array:
 		core_lock = "flag " + str(cl.get("flag", ""))
 		out.append({"room": core, "flag": cl.get("flag", ""), "need": cl.get("need", "")})
 		var gen_wing := _wing_of(_first_with("generator"))
-		var others: Array = keep.filter(func(id: String) -> bool: return _wing_of(id) != gen_wing and _wing_of(id) != "")
+		var others: Array = keep.filter(func(id: String) -> bool: return _wing_of(id) != gen_wing and _wing_of(id) != "") \
+			if gate.is_empty() else _near_keep(gen_wing)       # (with a gate, on the near side: the gate's ways must not wait on it)
 		if gen_wing != "" and not others.is_empty() and rng.randf() < 0.5:
 			_sure(others)
 			out.append({"wing": gen_wing, "color": "yellow", "card": others})
-	elif not keep.is_empty():
+	elif not cl.is_empty():
 		core_lock = str(cl.get("color", "red"))
+		if keep.is_empty():                        # no room of its wings keeps cards: the hub does
+			keep = [_spine[int(arch.get("hub", 1)) if _spine.size() > 2 else 0]]
 		_sure(keep)
 		out.append({"room": core, "color": core_lock, "card": keep})
 	return out

@@ -524,6 +524,28 @@
     "flag": "power_on",
     "need": "main power",
     "color": "red"
+   },
+   "hub": 1,
+   "gate": {
+    "step": 2,
+    "by": [
+     "card",
+     "security"
+    ],
+    "color": "blue",
+    "flag": "gate_open",
+    "need": {
+     "card": "a blue clearance card, or a hand on the far side",
+     "security": "security shut down, or a hand on the far side"
+    }
+   },
+   "way_round": {
+    "name": [
+     "The Service Corridor",
+     "Staff Route B",
+     "The Back Way"
+    ],
+    "corridor": "an_hall"
    }
   },
   "medical": {
@@ -1043,6 +1065,28 @@
     "flag": "power_on",
     "need": "main power",
     "color": "red"
+   },
+   "hub": 1,
+   "gate": {
+    "step": 2,
+    "by": [
+     "card",
+     "security"
+    ],
+    "color": "blue",
+    "flag": "gate_open",
+    "need": {
+     "card": "quarantine clearance (the blue card), or a hand on the far side",
+     "security": "the quarantine lifted (security shut down), or a hand on the far side"
+    }
+   },
+   "way_round": {
+    "name": [
+     "The Porters' Corridor",
+     "The Service Run",
+     "The Back Corridor"
+    ],
+    "corridor": "hs_hall"
    }
   },
   "reclamation": {
@@ -1538,6 +1582,28 @@
     "flag": "power_on",
     "need": "main power",
     "color": "red"
+   },
+   "hub": 1,
+   "gate": {
+    "step": 2,
+    "by": [
+     "card",
+     "security"
+    ],
+    "color": "blue",
+    "flag": "gate_open",
+    "need": {
+     "card": "a blue line pass, or a hand on the far side",
+     "security": "the line's interlock off (security shut down), or a hand on the far side"
+    }
+   },
+   "way_round": {
+    "name": [
+     "The Crawlway",
+     "The Conveyor Return",
+     "The Maintenance Run"
+    ],
+    "corridor": "greaseway"
    }
   }
  },
@@ -1827,6 +1893,10 @@
         "type": "system",
         "system": "security",
         "to": "off"
+       },
+       {
+        "type": "flag",
+        "name": "security_off"
        }
       ],
       "result": "The cameras droop."
@@ -1881,6 +1951,27 @@
        }
       ],
       "result": "Logged. Nobody will read it, but now somebody could."
+     }
+    ]
+   }
+  },
+  "release": {
+   "prop": "terminal_wall",
+   "blocks": false,
+   "screen": "OPEN",
+   "tag": "gate_release",
+   "use": {
+    "type": "effects",
+    "prompt": "Unlock #gate# from this side",
+    "effects": [
+     {
+      "type": "flag",
+      "name": "#gate_flag#"
+     },
+     {
+      "type": "message",
+      "text": "#gate# unlocks with a thud. The short way back is open.",
+      "kind": "info"
      }
     ]
    }

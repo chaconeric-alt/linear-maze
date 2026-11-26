@@ -12,6 +12,9 @@ extends RefCounted
 ## the world's seed picks the rest"): which spine room a wing branches after, when "after" lists several; whether a
 ## wing room with a "chance" is there at all; and, later, in ProgrammeFill, which room holds a card and which monster or
 ## item a thing is, when they list several.
+## A link ("links": {"id", "from", "to"}: two wings) joins the far ends of two wings by a corridor round the outside of
+## everything between them, so there are two ways between them: a loop. Its wings go on the same side of the spine
+## (one written "any" takes the other's); a side has one link at most.
 class_name ProgrammePlan
 
 var rng := RandomNumberGenerator.new()          # the plan's own choices; later stages draw from streams of their own
@@ -21,6 +24,7 @@ var wings: Array = []            # {"id", "name", "style", "after", "side", "wes
 var rooms: Dictionary = {}       # id -> room dict (+ "w", "h", "wing")
 var gaps: Dictionary = {}        # spine room id -> the corridor after it, at least
 var left_out: Array = []         # wing rooms whose "chance" the seed did not give
+var links: Array = []            # {"id", "from", "to", "side", "name", "corridor", "door"}: a corridor joining two wings
 var problems: Array = []         # what is wrong with the programme as written (nothing is laid out then)
 
 
@@ -36,6 +40,8 @@ func _init(prog: Dictionary, seed_v: int) -> void:
 	for w in prog.get("wings", []):
 		_wing(w, n)
 		n += 1
+	for ln in prog.get("links", []):
+		_link(ln, prog)
 	for lk in prog.get("locks", []):                   # a locked wing has a door where it meets the spine
 		for w in wings:
 			if w["id"] == str(lk.get("wing", "")):
@@ -106,6 +112,40 @@ func _wing(w: Dictionary, n: int) -> void:
 		var to_west := west < east or (west == east and rng.randi() % 2 == 0)
 		wing["west" if to_west else "east"].append(rid)
 	wings.append(wing)
+
+
+## A link: its two wings on one side (the one written "any" takes the other's side, which draws no number); one per side.
+func _link(ln: Dictionary, prog: Dictionary) -> void:
+	var id := str(ln.get("id", "link%d" % links.size()))
+	var a := wing(str(ln.get("from", "")))
+	var b := wing(str(ln.get("to", "")))
+	if a.is_empty() or b.is_empty() or a == b:
+		problems.append("link '%s' must join two of the programme's wings" % id)
+		return
+	if a["side"] != b["side"]:
+		var written := {}
+		for w in prog.get("wings", []):
+			written[str(w.get("id", ""))] = str(w.get("side", "any"))
+		if written.get(b["id"], "any") == "any":
+			b["side"] = a["side"]
+		elif written.get(a["id"], "any") == "any":
+			a["side"] = b["side"]
+		else:
+			problems.append("link '%s' joins wings on two sides" % id)
+			return
+	if links.any(func(l: Dictionary) -> bool: return l["side"] == a["side"]):
+		problems.append("link '%s': a side has one link at most" % id)
+		return
+	links.append({"id": id, "from": a["id"], "to": b["id"], "side": a["side"], "name": str(ln.get("name", id)),
+		"corridor": str(ln.get("corridor", "")), "door": bool(ln.get("door", false))})
+
+
+## The wing of that id ({} if none).
+func wing(id: String) -> Dictionary:
+	for w in wings:
+		if w["id"] == id:
+			return w
+	return {}
 
 
 ## Put a room straight after its anchor, on the anchor's side.

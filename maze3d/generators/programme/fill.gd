@@ -16,6 +16,9 @@ extends RefCounted
 ## room: against a wall it faces away from it, pushed back as the furnishing pushes its wall pieces (so the level gives
 ## that wall its plain tile, and nothing stands with its back to lockers or a screen); out on the floor it faces the
 ## room's middle.
+## A lock on a spine room may have a "release": {"side": "e" or "w", "thing": {...}}: the thing (one whose use sets the
+## lock's flag) hung on the corridor's wall just outside that door, the first cell along with a wall to hang it on. So
+## the lock opens from that side: the way it holds from the other side and lets through from this one.
 class_name ProgrammeFill
 
 const Put := preload("res://generators/rooms/furnish_put.gd")
@@ -85,11 +88,15 @@ func _lock(lk: Dictionary, prog: Dictionary) -> void:
 		shut = lay.doors_of(str(lk["room"]))
 	elif lk.has("wing"):
 		shut = lay.doors.filter(func(d: Dictionary) -> bool: return d["wing"] == str(lk["wing"]) and d["rooms"].is_empty())
+	elif lk.has("link"):
+		shut = lay.doors.filter(func(d: Dictionary) -> bool: return d.get("link", "") == str(lk["link"]))
 	if shut.is_empty():
 		problems.append("lock %s closes no door" % JSON.stringify(lk))
 	for d in shut:
 		var at: Vector2i = d["at"]
 		lay.g[at.y][at.x] = letter
+	if lk.has("release"):
+		_release(lk, shut)
 	if lk.has("flag"):
 		return
 	var card_v: Variant = lk.get("card", "")
@@ -101,6 +108,33 @@ func _lock(lk: Dictionary, prog: Dictionary) -> void:
 		problems.append("the %s card's room '%s' is not in the programme" % [color, card])
 		return
 	_thing(card, {"item": "keycard", "color": color})
+
+
+## A lock's release (see the top of this file): on a spine room's corridor, beside the door on its side.
+func _release(lk: Dictionary, shut: Array) -> void:
+	var rel: Dictionary = lk["release"]
+	var step := Vector2i(1, 0) if str(rel.get("side", "e")) == "e" else Vector2i(-1, 0)
+	var room := str(lk.get("room", ""))
+	var door: Array = []
+	if lay.rects.has(room) and plan.spine.has(room):
+		var rc: Rect2i = lay.rects[room]
+		door = shut.filter(func(d: Dictionary) -> bool: return not rc.has_point(d["at"] + step))
+	if door.is_empty():
+		problems.append("a release needs a spine room's door on its side (%s)" % JSON.stringify(lk))
+		return
+	var c: Vector2i = door[0]["at"] + step
+	while lay.g[c.y][c.x] == ".":                       # along the corridor, up to the next door
+		var up := not lay.open_at(c + Vector2i(0, -1))
+		if up or not lay.open_at(c + Vector2i(0, 1)):
+			var e: Dictionary = rel.get("thing", {}).duplicate(true)
+			e["at"] = [c.x, c.y]
+			e["face"] = "s" if up else "n"                # its back to the wall it hangs on
+			e["blocks"] = false
+			things.append(e)
+			_used[c] = true
+			return
+		c += step
+	problems.append("no wall beside the corridor to hang a release on (%s)" % JSON.stringify(lk))
 
 
 ## The legend letter for a flag lock's door: the one already standing for the same door, else the first free.
