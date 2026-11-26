@@ -398,6 +398,7 @@
  },
  "generator_themes": {
   "works": {
+   "forms": {"spine": 2, "campus": 2, "stack": 1},
    "title": "The Works",
    "place": "Works",
    "kit": "works",
@@ -510,6 +511,7 @@
    }
   },
   "bunker": {
+   "forms": {"spine": 2, "tree": 1, "concentric": 1},
    "title": "The Bunker",
    "place": "Bunker",
    "kit": "bunker",
@@ -616,6 +618,7 @@
    }
   },
   "crypt": {
+   "forms": {"tree": 2, "concentric": 1, "ring": 1},
    "title": "The Crypt",
    "place": "Crypt",
    "kit": "crypt",
@@ -732,6 +735,7 @@
    }
   },
   "deep": {
+   "forms": {"tree": 2, "stack": 1, "spine": 1},
    "title": "All the way down",
    "place": "Deep Installation",
    "kit": "omni",
@@ -903,6 +907,7 @@
    }
   },
   "executive": {
+   "forms": {"hub": 2, "twin": 1, "stack": 1},
    "title": "The Executive Floor",
    "place": "Executive Floor",
    "kit": "executive",
@@ -1028,6 +1033,7 @@
    }
   },
   "megaplex": {
+   "forms": {"hub": 2, "ring": 1, "stack": 1},
    "title": "The Megaplex",
    "place": "Megaplex",
    "kit": "megaplex",
@@ -1163,6 +1169,7 @@
    }
   },
   "hospital": {
+   "forms": {"spine": 2, "hub": 1, "ring": 1},
    "title": "The Hospital",
    "place": "Hospital",
    "kit": "hospital",
@@ -1290,6 +1297,7 @@
    }
   },
   "basilica": {
+   "forms": {"hub": 2, "concentric": 1, "spine": 1},
    "title": "The Basilica",
    "place": "Basilica",
    "kit": "basilica",
@@ -1412,6 +1420,7 @@
    }
   },
   "drowned": {
+   "forms": {"ring": 1, "tree": 1, "twin": 1},
    "title": "The Drowned Array",
    "place": "Thalassa Array",
    "kit": "drowned",
@@ -1564,6 +1573,7 @@
    }
   },
   "dust": {
+   "forms": {"campus": 2, "tree": 1, "spine": 1},
    "title": "The Dust Station",
    "place": "Helion Station",
    "kit": "dust",

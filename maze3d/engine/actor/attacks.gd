@@ -329,7 +329,7 @@ func _grab_tick(dt: float, pl: Node3D) -> void:
 	a.velocity.z = 0
 	a.move.fall(dt)
 	a.move_and_slide()
-	if not is_instance_valid(pl) or pl.dead or pl.held_by != a:
+	if not is_instance_valid(pl) or pl.dead or pl.held_by != a or Game.calm:     # (calm: nothing notices them, so nothing holds them)
 		_let_go(false)
 		return
 	var hold: Vector3 = a.global_position + a.global_transform.basis.z * (d.get("radius", 0.8) + at.get("reach", 0.9)) + Vector3(0, at.get("lift", 0.7), 0)

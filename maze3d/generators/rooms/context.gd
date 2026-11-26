@@ -4,6 +4,8 @@ extends RefCounted
 ## It also holds the few cell questions and placing helpers that more than one stage asks.
 class_name GenContext
 
+const FORM_SPREAD := 1.128        # each side of the map on a layout form: 140 cells to a room where the scatter has 110
+
 const DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 const NAMES := ["n", "e", "s", "w"]
 const CORNERS := [["nw", 0, 0, -1, -1], ["ne", 1, 0, 1, -1], ["sw", 0, 1, -1, 1], ["se", 1, 1, 1, 1]]     # name, which end in x, in y, outward x, y
@@ -121,7 +123,7 @@ func _init(seed_v: int, params: Dictionary, locked: bool) -> void:
 
 
 ## The layout form, if the params give one (see the fields above): its graph drawn for the params' "plan" (a written
-## installation's), or for one of the seed's; its shapes over the params'. Each from a stream of the seed's own, so the
+## installation's), or for one of the seed's; its shapes over the params'; the map a little larger (FORM_SPREAD). Each from a stream of the seed's own, so the
 ## scatter, which draws none of them, comes out as it always did.
 func _layout_form() -> void:
 	form = GenContext.pick_form(p, seed_value)
@@ -132,6 +134,8 @@ func _layout_form() -> void:
 	if plan.is_empty():
 		plan = RoomForms.plan_for(int(p.get("rooms", 10)), Dice.derive(seed_value, "form plan"))
 	graph = RoomForms.graph(form, plan, Dice.derive(seed_value, "form graph"))
+	W = roundi(W * FORM_SPREAD)                   # a form leaves more of the map between its places than the scatter
+	H = roundi(H * FORM_SPREAD)
 	sh = sh.duplicate()
 	sh.merge(graph.get("shapes", {}), true)
 

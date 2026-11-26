@@ -39,6 +39,8 @@ static func take(level: Level) -> Dictionary:
 				at = LevelMemory.room_for(level, n, at)  # beside anyone standing there (it climbs back up)
 			at = LevelMemory.out_of_traps(level, n, at)
 			extra[k] = {"e": n.entry(), "at": [at.x, at.y, at.z], "yaw": n.rotation.y}
+		if sp.made.has(k) and not extra.has(k):
+			continue                                 # made while playing and not to be made again (a mine a monster laid): nothing to keep
 		if n.has_method("remember"):
 			var r: Dictionary = n.remember()
 			if n is Actor and not (n as Actor).off_duty and (n as Actor).dock == null:      # its own record, too

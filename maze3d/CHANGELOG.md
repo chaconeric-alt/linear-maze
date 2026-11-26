@@ -4,6 +4,15 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-26
 
+- **The themes on layout forms; Mixed on the scatter** (Eric, 26 Nov: "put Mixed but not the theme dungeons on the old scatter"; SPEC 5.14, 6.2, 9).
+  - **Each theme weights its own forms** (`generator_themes` `forms`): works spine 2, campus 2, stack 1; bunker spine 2, tree, concentric 1; crypt tree 2, concentric, ring 1; deep tree 2, stack, spine 1; executive hub 2, twin, stack 1; megaplex hub 2, ring, stack 1; hospital spine 2, hub, ring 1; basilica hub 2, concentric, spine 1; drowned ring, tree, twin 1; dust campus 2, tree, spine 1. Mixed names none and is the scatter, as it was. Over eight seeds each theme laid out at the first try or the second.
+  - **A form's map is larger**: each side 1.128 times the params' `size` (`GenContext.FORM_SPREAD`: 140 cells to a room where the scatter has 110). The written installations, which sized their own maps for forms, now leave it to this.
+  - **Found by the new worlds** (works at seed 5, a Collections danger zone beside two doors and an arch):
+    - **A grab let go when nothing notices the player.** A monster holding the player lets go once `Game.calm` is set (`--calm`, and the self-test's arches, actors and now doors). A Plodder had the player in hand through the arches part and carried them 77 m from the arch they were walking.
+    - **The doors part checks each door with nothing noticing the player**, as the arches part walks its arches: a Plodder grabbed the player in front of a door and the door was never tried. The check is the same: the door must open and be stood in.
+    - **The level's memory keeps nothing of a thing made while playing that cannot be made again.** A mine the Foreclosure Unit laid had gone off; the memory kept its "off", but such a thing is not made again on return, so the memory part found its record pointing at nothing. Only monsters and pickups are made again, and only they are remembered now.
+  - **Baseline item73:** 32 runs, 4348 checks, none failing. Only works changed: its three failures pass, and six fewer of its monsters die in play (with nothing noticing the player at the doors, fewer fights start there; a monster's death is checked only when it dies).
+
 - **No door upstairs into the vault** (SPEC 6.1). The rooms generator's doors a storey up, between two halls' balconies, never go into the vault: a tall vault (a written installation's core on a ring, say) could otherwise be entered from its neighbour's balcony past its locked door. None of the baseline's levels had one: every rooms-generator level of the baseline (gen at seeds 5, 7, 11 and 22, every theme at seed 5) comes out byte for byte the same, as do the button's world and An Installation's checks.
 
 - **Layout forms, and how faithfully they are kept** (the grandeur design's step 3; Eric, 26 Nov: "build the layout connections so that we can adjust how slavishly the room-connector follows the chosen layout"; SPEC 6.1, 6.2, 6.3, 6.4, 9).

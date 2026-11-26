@@ -31,7 +31,6 @@ const Furnish := preload("res://generators/rooms/furnish.gd")
 const TRIES := 40
 const QUIET := 0.25              # of the rooms, about this many stand quiet
 const CELLS := 110.0             # map cells for each room wanted (the rooms generator's own: ten on 36 by 28)
-const CELLS_FORM := 140.0        # on a layout form, which leaves more of the map between its places
 const CORE_DOOR := "door_vault"
 const TIERS := {"common": 0.6, "uncommon": 0.3, "rare": 0.1, "anomalous": 0.04}     # the chance of each thing of a tier
 const DENSITY := {"sparse": [0.4, 0, 2], "normal": [1.0, 0, 2], "cluttered": [1.0, 4, 1], "crowded": [1.0, 8, 1],
@@ -81,7 +80,7 @@ static func _try(written: Dictionary, arch: Dictionary, contra: Dictionary, s: i
 ## The rooms generator's params for an installation laid out for `plan` (its groups of rooms, _plan): the game's, with
 ## the setting's look (its kit, its corridors, its doors, its rooms' styles), its people (by the contradiction's bias)
 ## and its loot; its layout forms ("forms", by weight) and how faithfully they are kept ("follow"), where it gives them
-## (a "form" the params name already is kept: the test's); and a map sized for its rooms and the form.
+## (a "form" the params name already is kept: the test's); and a map sized for its rooms.
 static func params(written: Dictionary, arch: Dictionary, contra: Dictionary, base: Dictionary, plan: Array, s: int) -> Dictionary:
 	var p: Dictionary = base.duplicate(true)
 	var want := 2
@@ -91,7 +90,7 @@ static func params(written: Dictionary, arch: Dictionary, contra: Dictionary, ba
 		if arch.has(k):
 			p[k] = arch[k]
 	p["plan"] = plan
-	var side := sqrt(want * (CELLS if GenContext.pick_form(p, s) == "" else CELLS_FORM) / (36.0 * 28.0))
+	var side := sqrt(want * CELLS / (36.0 * 28.0))      # (on a layout form the rooms generator makes it larger)
 	p.merge({"kit": written.get("kit", p.get("kit", "")), "corridor": written.get("style", "corridor"),
 		"place": written.get("name", "Installation"), "rooms": want, "size": [roundi(36 * side), roundi(28 * side)],
 		"doors": arch.get("doors", p.get("doors", ["door_split"])), "props": arch.get("dressing", []), "swimmers": []}, true)

@@ -24,6 +24,8 @@ func run() -> void:
 				say(n.at == was, "lift at %s is held by its lock: it stays put with the player on it" % level.cell_of(n.global_position))
 				continue
 			say(n.at != was and absf(pl.global_position.y - n.global_position.y) < 0.6, "lift at %s carries the player (stop %d to %d, player y=%.1f, lift y=%.1f)" % [level.cell_of(n.global_position), was, n.at, pl.global_position.y, n.global_position.y])
+	var was_calm := Game.calm
+	Game.calm = true                                 # nothing turns on the player at a door: a grab mid-check is not the door
 	for dp in level.doors:
 		var d: Door = level.doors[dp]
 		var side := Vector2i.ZERO
@@ -37,3 +39,4 @@ func run() -> void:
 		pl.global_position = level.center(dp, 0.05)
 		await frames(10)
 		say(level.cell_of(pl.global_position) == dp, "  and can be stood in")
+	Game.calm = was_calm
