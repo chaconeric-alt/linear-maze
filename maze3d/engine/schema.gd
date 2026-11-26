@@ -59,18 +59,6 @@ const THING_KINDS := {
 	"sign": ["sign", "size", "color", "y", "out", "width", "plain"],
 	"light": ["light", "y", "flicker", "shadows"],
 }
-const ARCHETYPE := ["name", "kit", "style", "systems", "core_lock", "spine", "wings", "roles", "occupants", "loot",
-	"contradictions", "words", "hub", "gate", "way_round", "containers"]                                     # defs "archetypes": what writes an installation (SPEC.md 6.4)
-const ARCH_ROLE := ["name", "style", "purpose", "size", "way_in", "empty", "memos", "card", "loot", "trap", "core",
-	"generator", "security"]
-const ARCH_WINGS := ["count", "always", "list"]
-const ARCH_WING := ["name", "corridor", "rooms"]
-const ARCH_STEP := ["role", "chance", "door_to", "next_to"]       # a spine step, or a wing's room written out
-const ARCH_CORE_LOCK := ["when", "flag", "need", "color"]
-const ARCH_OCCUPANTS := ["per_room", "empty", "actors"]
-const ARCH_GATE := ["step", "by", "color", "flag", "need"]
-const ARCH_WAY_ROUND := ["name", "corridor"]
-const CONTRADICTION := ["mandate", "now", "bias", "words"]       # defs "contradictions"
 const PIT := ["trap", "delay", "damage"]
 const COLLAPSE := ["trap", "warn", "damage"]
 
@@ -83,52 +71,24 @@ static func check_defs(defs: Dictionary) -> Array:
 		for id in defs.get(pair[0], {}):
 			for k in defs[pair[0]][id]:
 				if k != "id" and not k in pair[1]:                # LM adds "id" itself
-					out.append("%s '%s': %s" % [pair[0].trim_suffix("s"), id, _unknown(k, pair[1])])
-	out += Schema._check_archetypes(defs)
+					out.append("%s '%s': %s" % [pair[0].trim_suffix("s"), id, unknown(k, pair[1])])
+	out += SchemaSettings.check(defs)                # what writes an installation (SPEC 6.4)
 	for id in defs.get("installations", {}):
 		for e in defs["installations"][id].get("entrances", []):
 			for k in e:
 				if not k in ENTRANCE:
-					out.append("installation '%s', an entrance: %s" % [id, _unknown(k, ENTRANCE)])
+					out.append("installation '%s', an entrance: %s" % [id, unknown(k, ENTRANCE)])
 	for id in defs.get("purposes", {}):
 		for list_key in ["wall", "floor", "centre"]:
 			for pc in defs["purposes"][id].get(list_key, []):
 				for k in (pc if pc is Dictionary else []):    # a piece written out as a dictionary
 					if not k in PIECE:
-						out.append("purpose '%s', a piece in %s: %s" % [id, list_key, _unknown(k, PIECE)])
+						out.append("purpose '%s', a piece in %s: %s" % [id, list_key, unknown(k, PIECE)])
 	for kind in ["stats", "skills", "mutations"]:
 		for id in defs.get(kind, {}):
 			for k in defs[kind][id].get("gives", {}):
 				if not k in GIVES:
-					out.append("%s '%s', what it gives: %s" % [kind.trim_suffix("s"), id, _unknown(k, GIVES)])
-	return out
-
-
-## The archetypes' parts and the contradictions: each has only the keys an archetype is written with.
-static func _check_archetypes(defs: Dictionary) -> Array:
-	var pairs: Array = []
-	for id in defs.get("contradictions", {}):
-		pairs.append([defs["contradictions"][id], CONTRADICTION, "contradiction '%s'" % id])
-	for id in defs.get("archetypes", {}):
-		var a: Dictionary = defs["archetypes"][id]
-		var at := "archetype '%s'" % id
-		pairs.append_array([[a, ARCHETYPE, at], [a.get("wings", {}), ARCH_WINGS, at + ", wings"],
-			[a.get("core_lock", {}), ARCH_CORE_LOCK, at + ", core_lock"], [a.get("occupants", {}), ARCH_OCCUPANTS, at + ", occupants"],
-			[a.get("gate", {}), ARCH_GATE, at + ", gate"], [a.get("way_round", {}), ARCH_WAY_ROUND, at + ", way_round"]])
-		for r in a.get("roles", {}):
-			pairs.append([a["roles"][r], ARCH_ROLE, "%s, role %s" % [at, r]])
-		var steps: Array = a.get("spine", []).duplicate()
-		for w in a.get("wings", {}).get("list", {}):
-			pairs.append([a["wings"]["list"][w], ARCH_WING, "%s, wing %s" % [at, w]])
-			steps += a["wings"]["list"][w].get("rooms", [])
-		for st in steps:
-			if st is Dictionary:
-				pairs.append([st, ARCH_STEP, at + ", a room"])
-	var out: Array = []
-	for pr in pairs:
-		for k in pr[0]:
-			if k != "id" and not k in pr[1]:              # LM adds "id" to each entry of a defs file
-				out.append("%s: %s" % [pr[2], _unknown(k, pr[1])])
+					out.append("%s '%s', what it gives: %s" % [kind.trim_suffix("s"), id, unknown(k, GIVES)])
 	return out
 
 
@@ -145,7 +105,7 @@ static func check_level(lv: Dictionary) -> Array:
 		if systems[n] is Dictionary:
 			for k in systems[n]:
 				if not k in LEVEL_SYSTEM:
-					out.append("level '%s', system %s: %s" % [lv.get("id", "?"), n, _unknown(k, LEVEL_SYSTEM)])
+					out.append("level '%s', system %s: %s" % [lv.get("id", "?"), n, unknown(k, LEVEL_SYSTEM)])
 	for e in entries:
 		if not e is Dictionary:
 			continue
@@ -155,7 +115,7 @@ static func check_level(lv: Dictionary) -> Array:
 			valid = valid + ITEM
 		for k in e:
 			if not k in valid:
-				out.append("level '%s', %s at %s: %s" % [lv.get("id", "?"), kind, e.get("at", e.get("tag", "?")), _unknown(k, valid)])
+				out.append("level '%s', %s at %s: %s" % [lv.get("id", "?"), kind, e.get("at", e.get("tag", "?")), unknown(k, valid)])
 	return out + out_p
 
 
@@ -190,7 +150,7 @@ static func _check_programme(lv: Dictionary, entries: Array) -> Array:
 	for pr in pairs:
 		for k in pr[0]:
 			if not k in pr[1]:
-				out.append("%s%s: %s" % [at, pr[2], _unknown(k, pr[1])])
+				out.append("%s%s: %s" % [at, pr[2], unknown(k, pr[1])])
 	return out
 
 
@@ -219,8 +179,7 @@ static func undocumented(spec_text: String) -> Array:
 			said[w.get_string()] = true
 	var all: Array = WEAPON + ACTOR + ITEM + INSTALLATION + ENTRANCE + THING + PIT + COLLAPSE + STAT + SKILL + ORIGIN + MUTATION + GIVES \
 		+ PROGRAMME + PROG_SPINE + PROG_ROOM + PROG_WING + PROG_LOCK + PURPOSE + PIECE + PROG_LIFTS + DANGER + LEVEL_SYSTEM + SYSTEM + SYSTEM_STATE \
-		+ ARCHETYPE + ARCH_ROLE + ARCH_WINGS + ARCH_WING + ARCH_STEP + ARCH_CORE_LOCK + ARCH_OCCUPANTS + CONTRADICTION \
-		+ PROG_LINK + PROG_RELEASE + ARCH_GATE + ARCH_WAY_ROUND
+		+ PROG_LINK + PROG_RELEASE + SchemaSettings.KEYS
 	for kind in THING_KINDS:
 		all += THING_KINDS[kind]
 	var out: Array = []
@@ -230,7 +189,7 @@ static func undocumented(spec_text: String) -> Array:
 	return out
 
 
-static func _unknown(k: String, valid: Array) -> String:
+static func unknown(k: String, valid: Array) -> String:
 	var best := ""
 	var bd := 3
 	for v in valid:

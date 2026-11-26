@@ -2,7 +2,7 @@ extends RefCounted
 ## InstallationContents - what a room of a written installation holds, from its role (InstallationWriter): the way out
 ## at the way in, its panels and memos, its loot, a trap of its kind, and who lives there. The rules the rooms generator
 ## keeps hold here too:
-## - Loot goes in a container four times in five (a shelf, a box or a trophy case against a wall: the archetype's
+## - Loot goes in a container four times in five (a shelf, a box or a trophy case against a wall: the setting's
 ##   "containers", else the game's generator_params "containers", by the item's "loot_kinds"); else it lies on the
 ##   floor ("rest"), not hovering.
 ## - A robot of a kind with a station (generator_params "stations") waits in one against its room's wall, as many as
@@ -31,7 +31,7 @@ func _init(a: Dictionary, c: Dictionary, w: Dictionary, s: RandomNumberGenerator
 
 
 ## What a room of that role holds: the way out at the way in; its panels; memos; its own loot and now and then one of
-## the archetype's; a trap of its kind; and who lives there, unless it is left empty.
+## the setting's; a trap of its kind; and who lives there, unless it is left empty.
 func things(role: Dictionary) -> Array:
 	var out: Array = []
 	var panels: Dictionary = LM.defs.get("panels", {})

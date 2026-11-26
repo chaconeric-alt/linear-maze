@@ -1,10 +1,10 @@
 extends SelfTestPart
-## An Installation's own test (it runs instead of the standard parts): levels written from an archetype (SPEC 6.4).
+## An Installation's own test (it runs instead of the standard parts): levels written from a setting (SPEC 6.4).
 ## The level as entered was written and laid out from the world's seed: written again from the same seed it is the
-## same, from another it is another. For each of the game's archetypes, over WORLDS seeds: each is written, laid out
-## and can be finished; its spine is its archetype's, in order; it has its power wing, with the generator's panel and
+## same, from another it is another. For each of the game's settings, over WORLDS seeds: each is written, laid out
+## and can be finished; its spine is its setting's, in order; it has its power wing, with the generator's panel and
 ## security's; with power off at the start its core waits on the generator, and with power on it is locked by a card;
-## every word is written out; whoever lives there is one of its archetype's; its contradiction is one its archetype
+## every word is written out; whoever lives there is one of its setting's; its contradiction is one its setting
 ## lists. Over those seeds the choices come out more than one way, and some of them have a trap of their kind.
 ## Then it is played: the core's door, the generator, the core's terminal and the objective moving on; then the
 ## standard parts that walk, stand in its traps, fight, take, open and finish. (The traps part comes before the
@@ -29,16 +29,16 @@ func run() -> void:
 		and (b.get("map") != a.get("map") or b.get("name") != a.get("name")),
 		"written from the world's seed (%d): %s (%s), built to %s and now %s; the same seed writes it the same, another another" % [
 		seed_value, level.data.get("name", "?"), _kind(info), info.get("mandate", "?"), info.get("now", "?")])
-	for id in LM.defs.get("archetypes", {}):
+	for id in InstallationSettings.ids():
 		_worlds(id)
 	await _played(info)
 	for p in PARTS:
 		await runner.part(p).run()
 
 
-## WORLDS seeds of one archetype, written and laid out.
+## WORLDS seeds of one setting, written and laid out.
 func _worlds(arch_id: String) -> void:
-	var arch: Dictionary = LM.defs["archetypes"][arch_id]
+	var arch := InstallationSettings.resolve(arch_id)
 	var bad: Array = []
 	var contras := {}
 	var wingsets := {}
@@ -47,7 +47,7 @@ func _worlds(arch_id: String) -> void:
 	var graph := {"bad": [], "by": {}, "loops": 99, "saved": 9999}       # the mission graph's checks, over the worlds
 	for i in WORLDS:
 		var s := 3000 + i * 37
-		var w := InstallationGen.write({"id": "installation", "archetype": arch_id, "kit": "omni"}, s)
+		var w := InstallationGen.write({"id": "installation", "setting": arch_id, "kit": "omni"}, s)
 		var lv := ProgrammeGen.make(w, s)
 		var why := _wrong(arch, w, lv)
 		if why != "":
@@ -217,6 +217,6 @@ func _released(g: Dictionary) -> void:
 		"played: the gate (%s) is shut (%d doors) until its release on the far side unlocks it; then it stands open (%d shut)" % [g.get("name", "?"), shut, open])
 
 
-## What kind of place the archetype is, in words ("Industrial Reclamation Plant").
+## What kind of place the setting is, in words ("Industrial Reclamation Plant").
 func _kind(info: Dictionary) -> String:
-	return str(LM.defs.get("archetypes", {}).get(info.get("archetype", ""), {}).get("name", "?"))
+	return InstallationSettings.name_of(str(info.get("archetype", "?")))

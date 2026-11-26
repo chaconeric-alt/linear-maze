@@ -1,5 +1,5 @@
 extends RefCounted
-## InstallationWords - the small grammar an installation's words are written in (defs "archetypes" and
+## InstallationWords - the small grammar an installation's words are written in (defs "settings" and
 ## "contradictions": "words"). Each symbol is a list of lines; "#symbol#" in a line is one of that symbol's lines,
 ## itself expanded, picked from the stream given. No modifiers, no state: a symbol the words do not have is left as it
 ## is ("#symbol#"), so a line that still shows a "#" after expanding is a line written wrong.

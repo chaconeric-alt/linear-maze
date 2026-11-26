@@ -45,7 +45,7 @@
   "defs/character.json",
   "defs/purposes.json",
   "defs/danger.json",
-  "defs/archetypes.json"
+  "defs/settings.json"
  ],
  "levels": [
   "levels/home.json",

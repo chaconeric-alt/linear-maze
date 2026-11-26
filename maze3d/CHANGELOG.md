@@ -4,6 +4,14 @@ What changed and when, newest first. The reference for how things are now is `SP
 
 ## 2026-11-26
 
+- **Settings, clusters and room types as data** (the grandeur design's build order, step 1: "today's archetypes move over; the written installations read the new shape and come out as before"; SPEC 6.4).
+  - **`defs/settings.json`** replaces `defs/archetypes.json`, in three parts. **Room types** (`room_types`): what a room is for, shared between settings (the archetypes' roles, merged: 35 of them). **Clusters** (`clusters`): rooms that work together off a corridor of their own (the archetypes' wings: 10). **Settings** (`settings`): what a place was, which clusters it can have (`clusters`: `count`, `always`, `list`, each with its own name and corridor where it differs) and its own take on any room type (`rooms`: the medical centre's generator room is its Plant Room, the reclamation plant's lockers keep no card). The spine's steps say `room` where they said `role`. The contradictions, panels and traps moved over as they were.
+  - **`InstallationSettings`** (`generators/installation/settings.gd`) puts a setting together with the clusters and room types it names, in the shape the writer reads; an `archetypes` file of the older shape is still read as it was.
+  - **A level says `setting`** (An Installation's level file); `archetype` is still read. `gen:installation:<setting>` names a setting.
+  - **`SchemaSettings`** (`engine/schema_settings.gd`) checks the keys of settings, clusters, room types, contradictions and archetypes (moved out of `Schema`), and now that every id one names is there: a setting's clusters (and that the ones it must have are in its list), rooms and contradictions, a cluster's room types, a spine step's.
+  - **Output unchanged:** `--dump` of `gen:installation` at seeds 1, 2, 3, 5, 7, 12, 21, 33, 40 and 58 and of An Installation at seeds 3, 9 and 17 is byte for byte the same as before.
+  - **Baseline item68:** 32 runs, 4225 checks, 0 failures; every run line for line the same as item67.
+
 - **Written installations keep the rooms generator's rules** (Eric, 26 Nov: robots without stations, treasure floating in the air, laser beams floating in the middle of rooms; SPEC 4.5, 6.3, 6.4).
   - **What a room holds moved out of the writer** into `InstallationContents` (`generators/installation/contents.gd`), with the rules the rooms generator always kept:
     - **Loot in containers.** Four times in five a thing of the loot goes in a container against a wall: a shelf, a box or a trophy case, in the archetype's own look (its new `containers`: the hospital's for the medical centre, the executive floor's for the laboratory, the works' for the reclamation plant). The rest lies on the floor (`"rest"`). Key cards still hover, to be seen.

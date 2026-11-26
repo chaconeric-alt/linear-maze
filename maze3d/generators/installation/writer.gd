@@ -1,8 +1,9 @@
 extends RefCounted
-## InstallationWriter - the rooms of one installation, from its archetype (InstallationGen): the spine, the wings, each
-## room (what it holds: InstallationContents), the locks, and the announcements. Its numbers come from the stream it
-## is given, its words from the installation's (InstallationWords).
-## With a gate (the archetype's "gate", "hub" and "way_round"; the generation review's mission graph, 25 Nov): the spine
+## InstallationWriter - the rooms of one installation, from its setting (InstallationGen; as InstallationSettings puts
+## it together, its clusters are "wings" and its room types "roles"): the spine, the wings, each room (what it holds:
+## InstallationContents), the locks, and the announcements. Its numbers come from the stream it is given, its words from
+## the installation's (InstallationWords).
+## With a gate (the setting's "gate", "hub" and "way_round"; the generation review's mission graph, 25 Nov): the spine
 ## room at the gate's step is shut; one wing, the far wing, branches past it and the rest off the hub, the near side;
 ## a near wing and the far wing are joined round the outside (a link, the way round). The gate opens one way on the
 ## near side (its "by": the seed's pick of a card in a near room, or security shut down), and from the far side by a
