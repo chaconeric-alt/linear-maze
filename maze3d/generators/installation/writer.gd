@@ -170,12 +170,38 @@ func _locks(systems: Dictionary) -> Array:
 			_sure(others)
 			out.append({"wing": gen_wing, "color": "yellow", "card": others})
 	elif not cl.is_empty():
+		var il: Dictionary = cl.get("interlock", {})
+		if on_rooms and not il.is_empty() and _wings.size() >= 2 and rng.randf() < float(il.get("chance", 0.0)):
+			core_lock = "keys"                     # (on the rooms geometry: two keys turned, each in a wing of its own)
+			out.append({"room": core, "flag": {"all": _interlock(il)}, "need": InstallationWords.expand(str(il.get("need", "")), words, said)})
+			return out
 		core_lock = str(cl.get("color", "red"))
 		if keep.is_empty():                        # no room of its wings keeps cards: the hub does
 			keep = [_spine[int(arch.get("hub", 1)) if _spine.size() > 2 else 0]]
 		_sure(keep)
 		out.append({"room": core, "color": core_lock, "card": keep})
 	return out
+
+
+## The core's interlock (its `core_lock` "interlock"): a keyholder panel (`panels` "keyholder") in a room of each of
+## two wings, the seed's pick (a room there for sure, not by chance), each setting a flag of its own, named by its
+## `keys`: the two flags, which the core's doors wait on together.
+func _interlock(il: Dictionary) -> Array:
+	var ids: Array = _wings.map(func(w: Dictionary) -> String: return w["id"])
+	Dice.shuffle(rng, ids)
+	var names: Array = il.get("keys", ["the first", "the second"])
+	var flags: Array = []
+	for k in 2:
+		var wing: Array = _wings.filter(func(w: Dictionary) -> bool: return w["id"] == ids[k])
+		var sure: Array = wing[0]["rooms"].filter(func(r: Dictionary) -> bool: return not r.has("chance"))
+		var room: Dictionary = Dice.pick(rng, sure if not sure.is_empty() else wing[0]["rooms"])
+		room.erase("chance")
+		var flag := "core_key_%d" % (k + 1)
+		words["key_name"] = [str(names[k % names.size()])]
+		words["key_flag"] = [flag]
+		room["things"].append(contents.panel("keyholder"))
+		flags.append(flag)
+	return flags
 
 
 ## A card's rooms: if every one is only there by chance, the first is there for sure (a card must have a room).

@@ -17,7 +17,8 @@ const ROOM_TYPE := ["name", "style", "purpose", "size", "way_in", "empty", "memo
 const ROOM_FIT := ["size", "storeys"]                            # the room it suits on the rooms generator's geometry
 const ROOM_CONTENTS := ["common", "uncommon", "rare", "anomalous"]   # what may stand in it, by how often
 const DENSITIES := ["sparse", "normal", "cluttered", "crowded", "crammed"]
-const CORE_LOCK := ["when", "flag", "need", "color"]
+const CORE_LOCK := ["when", "flag", "need", "color", "interlock"]
+const INTERLOCK := ["chance", "keys", "need"]                  # a core shut on two keys turned in two wings, at times
 const OCCUPANTS := ["per_room", "empty", "actors"]
 const GATE := ["step", "by", "color", "flag", "need"]
 const WAY_ROUND := ["name", "corridor"]
@@ -27,7 +28,7 @@ const ARCHETYPE := ["name", "kit", "style", "systems", "core_lock", "spine", "wi
 const ARCH_WINGS := ["count", "always", "list"]
 const ARCH_WING := ["name", "corridor", "rooms"]
 const ARCH_STEP := ["role", "chance", "door_to", "next_to"]
-const KEYS := SETTING + SETTING_CLUSTERS + SETTING_CLUSTER + SPINE_STEP + CLUSTER + CLUSTER_ROOM + ROOM_TYPE + ROOM_FIT + ROOM_CONTENTS + CORE_LOCK \
+const KEYS := SETTING + SETTING_CLUSTERS + SETTING_CLUSTER + SPINE_STEP + CLUSTER + CLUSTER_ROOM + ROOM_TYPE + ROOM_FIT + ROOM_CONTENTS + CORE_LOCK + INTERLOCK \
 	+ OCCUPANTS + GATE + WAY_ROUND + CONTRADICTION + ARCHETYPE + ARCH_WINGS + ARCH_WING + ARCH_STEP
 
 
@@ -67,7 +68,8 @@ static func _setting(defs: Dictionary, id: String, pairs: Array) -> Array:
 	var cl: Dictionary = s.get("clusters", {})
 	pairs.append_array([[s, SETTING, at], [cl, SETTING_CLUSTERS, at + ", clusters"],
 		[s.get("core_lock", {}), CORE_LOCK, at + ", core_lock"], [s.get("occupants", {}), OCCUPANTS, at + ", occupants"],
-		[s.get("gate", {}), GATE, at + ", gate"], [s.get("way_round", {}), WAY_ROUND, at + ", way_round"]])
+		[s.get("gate", {}), GATE, at + ", gate"], [s.get("way_round", {}), WAY_ROUND, at + ", way_round"],
+		[s.get("core_lock", {}).get("interlock", {}), INTERLOCK, at + ", core_lock, interlock"]])
 	for cid in cl.get("list", {}):
 		pairs.append([cl["list"][cid], SETTING_CLUSTER, "%s, cluster %s" % [at, cid]])
 		if not defs.get("clusters", {}).has(cid):

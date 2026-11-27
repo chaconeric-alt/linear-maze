@@ -50,6 +50,8 @@ var region: Array = []            # per unit: NEAR, GATE, FAR or WING; empty wit
 var gate := -1                    # the gate's unit: every door of it is the gate's
 var corr_region: Dictionary = {}  # corridor cell (outside every unit) -> the region of the corridor that carved it
 var turf: Array = []              # per cell (rows of units): the unit nearest it, so each side's corridors keep to its own
+var needed: Dictionary = {}       # units the level needs (a written installation's: Danger.zone leaves them alone); else
+                                  # the rooms generator's own (the start, the halls, the card's room, the vault)
 var round_cells: Array = []       # the way round's own cells, from the near end to the far
 # areas
 var areas: Array = []             # what gets a style, a height and furniture: {unit, rect, style, height, room}

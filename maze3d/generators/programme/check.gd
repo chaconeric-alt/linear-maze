@@ -9,7 +9,7 @@ extends RefCounted
 ## Flags are keys too. A thing reached that sets a flag (its "use" runs a "flag" effect, at once or as an option open
 ## to anyone: no hack, skill, load or price, and its "when", if any, already held) gives that flag, and one that drops a
 ## key card gives the card; a card gives its "key_<colour>" flag as well. A door with a "flag" in its legend entry, and
-## a lift with a "lock", open on any one of theirs.
+## a lift with a "lock", open on any one of theirs (a list), or on every one of an {"all": [...]}.
 ## The level's systems (SPEC.md 5.25) are keys as well: "sys:<system>=<state>", held from the start for each system's
 ## starting state, and given by what changes it (a "system" effect: its "to", or every state for "next"). A door, a
 ## lift, a thing or an option with "needs" opens or gives only once the states it needs are held. A state once had
@@ -142,12 +142,15 @@ static func ok_for(w: Dictionary, needs: Variant, held: Array) -> bool:
 	return true
 
 
-## Is what waits for these flags open: none, or any one of them held (as Game.has_flag reads a list).
+## Is what waits for these flags open: none, or any one of them held (as Game.has_flag reads a list), or every one
+## of an {"all": [...]} (each of which may be a list or another "all").
 static func _may(need: Variant, held: Array) -> bool:
 	if need == null:
 		return true
 	if need is Array:
-		return need.is_empty() or need.any(func(f: Variant) -> bool: return held.has(str(f)))
+		return need.is_empty() or need.any(func(f: Variant) -> bool: return ProgrammeCheck._may(f, held))
+	if need is Dictionary:
+		return need.get("all", []).all(func(f: Variant) -> bool: return ProgrammeCheck._may(f, held))
 	return held.has(str(need))
 
 

@@ -31,7 +31,15 @@
     },
     "flag": "power_on",
     "need": "main power",
-    "color": "red"
+    "color": "red",
+    "interlock": {
+     "chance": 0.5,
+     "keys": [
+      "the Director of Wellbeing's",
+      "the Compliance Officer's"
+     ],
+     "need": "two keys turned: the Director of Wellbeing's and the Compliance Officer's, each in a wing of its own"
+    }
    },
    "spine": [
     {
@@ -243,7 +251,15 @@
     },
     "flag": "power_on",
     "need": "main power",
-    "color": "red"
+    "color": "red",
+    "interlock": {
+     "chance": 0.5,
+     "keys": [
+      "the Medical Director's",
+      "the Chief Pharmacist's"
+     ],
+     "need": "two keys turned: the Medical Director's and the Chief Pharmacist's, each in a wing of its own"
+    }
    },
    "spine": [
     {
@@ -476,7 +492,15 @@
     },
     "flag": "power_on",
     "need": "main power",
-    "color": "red"
+    "color": "red",
+    "interlock": {
+     "chance": 0.5,
+     "keys": [
+      "the Plant Manager's",
+      "the Shift Supervisor's"
+     ],
+     "need": "two keys turned: the Plant Manager's and the Shift Supervisor's, each in a wing of its own"
+    }
    },
    "spine": [
     {
@@ -2713,6 +2737,27 @@
      {
       "type": "message",
       "text": "#gate# unlocks with a thud. The short way back is open.",
+      "kind": "info"
+     }
+    ]
+   }
+  },
+  "keyholder": {
+   "prop": "terminal_wall",
+   "blocks": false,
+   "screen": "KEY",
+   "tag": "keyholder",
+   "use": {
+    "type": "effects",
+    "prompt": "Turn #key_name# key",
+    "effects": [
+     {
+      "type": "flag",
+      "name": "#key_flag#"
+     },
+     {
+      "type": "message",
+      "text": "You turn #key_name# key. #core# opens to both keys, not one.",
       "kind": "info"
      }
     ]

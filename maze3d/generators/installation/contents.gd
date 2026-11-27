@@ -102,6 +102,11 @@ func _occupant(who: String) -> Array:
 	return [{"actor": who, "patrol": "room"}, {"station": station, "at": "wall"}]
 
 
+## A panel of the game's (`panels`, by id) with the installation's words in it, to stand against a wall.
+func panel(id: String) -> Dictionary:
+	return _against_wall(said_in(LM.defs.get("panels", {}).get(id, {})))
+
+
 func _against_wall(e: Dictionary) -> Dictionary:
 	if not e.has("at"):
 		e["at"] = "wall"

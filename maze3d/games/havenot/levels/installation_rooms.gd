@@ -3,7 +3,8 @@ extends RefCounted
 ## own test file, installation_test.gd, says them): is each world right, by its clusters, its fit, its core's lock, its
 ## people and its words; what stands in its rooms by their tiers; how faithfully a layout form is kept and whether it
 ## has its shape; and the mission graph: its gate held without both its ways (its own and the way round), passed by
-## either alone, with a short way back from its release, and its locked wing shut without its card.
+## either alone, with a short way back from its release, and its locked wing shut without its card; the core's two
+## keys in two clusters; a danger zone a detour off the way.
 
 
 ## What share of the ways the form meant ("form_ways") join their two rooms directly in the level.
@@ -162,14 +163,29 @@ static func wrong_on_rooms(arch: Dictionary, w: Dictionary, lv: Dictionary) -> S
 	var off: bool = str(w["systems"].get("power", {}).get("start", "")) == "off"
 	var keys: Array = [str(z.get("flag", ""))] if z.has("flag") else ["card:" + str(z.get("lock", "")), "key_" + str(z.get("lock", ""))]
 	var core: String = by_id[prog["rooms"][-1]["id"]]["name"]
-	if off != z.has("flag") or not ProgrammeCheck.solve(lv, {"withhold": keys})["missed"].has(core):
+	var keyed: bool = z.get("flag") is Dictionary          # (power on, and the interlock: two keys, interlock() below)
+	if keyed:
+		keys = [str(z["flag"].get("all", [""])[0])]
+	if off != (z.has("flag") and not keyed) or (keyed and off) or not ProgrammeCheck.solve(lv, {"withhold": keys})["missed"].has(core):
 		return "the core is shut wrong (power %s, %s)" % ["off" if off else "on", z]
 	var allowed: Array = arch.get("occupants", {}).get("actors", []).map(func(e: Array) -> String: return str(e[0]))
 	for t in lv.get("things", []):
-		if t.has("actor") and not allowed.has(str(t["actor"])):
+		if t.has("actor") and not allowed.has(str(t["actor"])) and not in_zone(lv, t):
 			return "a %s lives there" % t["actor"]
 	var hashes := hashed(lv)
 	return "words not written out: %s" % hashes[0] if not hashes.is_empty() else ""
+
+
+## Does thing t stand in the level's danger zone (whose monsters are its set's, not the setting's)?
+static func in_zone(lv: Dictionary, t: Dictionary) -> bool:
+	var at: Array = t.get("at", [])
+	if at.size() < 2 or int(t.get("level", 0)) != 0:
+		return false
+	for z in lv.get("zones", []):
+		for rc in z.get("rects", []):
+			if Rect2i(int(rc[0]), int(rc[1]), int(rc[2]), int(rc[3])).has_point(Vector2i(int(at[0]), int(at[1]))):
+				return true
+	return false
 
 
 ## Two rooms of one cluster that would fit better each in the other's room, as "a and b", or "".
@@ -259,4 +275,54 @@ static func wing(lv: Dictionary) -> String:
 	var inside: Array = lv["rooms"].filter(func(r: Dictionary) -> bool: return str(r.get("cluster", "")) == str(wg["wing"]))
 	if inside.is_empty() or not inside.all(func(r: Dictionary) -> bool: return missed.has(r["name"])):
 		return "the %s wing opens without its %s card" % [wg["wing"], c]
+	return ""
+
+
+## What is wrong with a world's interlock, or "" (none, or right): the core's doors wait on two keys, each turned at a
+## keyholder of its own in a room of a cluster of its own, and with either key withheld the core is not reached.
+static func interlock(lv: Dictionary) -> String:
+	var f: Variant = lv.get("legend", {}).get("Z", {}).get("flag")
+	if not f is Dictionary:
+		return ""
+	var flags: Array = f.get("all", [])
+	var at := {}                                    # the flag a keyholder sets -> the cluster of the room it is in
+	for t in lv.get("things", []):
+		if str(t.get("tag", "")) == "keyholder":
+			at[str(t["use"]["effects"][0]["name"])] = cluster_at(lv, Vector2i(int(t["at"][0]), int(t["at"][1])))
+	var core := ""
+	for r in lv["rooms"]:
+		core = str(r["name"]) if str(r.get("role", "")) == "core" else core
+	if flags.size() != 2 or at.size() != 2 or not flags.all(func(k: Variant) -> bool: return at.has(str(k))):
+		return "the core's two keys are not both there (%s; keyholders %s)" % [flags, at]
+	if at.values()[0] == at.values()[1] or at.values().has(""):
+		return "the core's two keys are not in two clusters (%s)" % at
+	for k in flags:
+		if not ProgrammeCheck.solve(lv, {"withhold": [str(k)]})["missed"].has(core):
+			return "the core opens without %s" % k
+	return ""
+
+
+## What is wrong with a world's danger zone, or "" (none, or right): a tempting detour, in a quiet room, the rest of
+## the level finished without it.
+static func detour(lv: Dictionary) -> String:
+	if lv.get("zones", []).is_empty():
+		return ""
+	var zr: Array = lv["zones"][0].get("rects", [])
+	var inside: Array = lv["rooms"].filter(func(r: Dictionary) -> bool:
+		return r.get("rect", []).size() == 4 and zr.any(func(z: Array) -> bool:
+			return Rect2i(int(z[0]), int(z[1]), int(z[2]), int(z[3])).intersects(Rect2i(int(r["rect"][0]), int(r["rect"][1]), int(r["rect"][2]), int(r["rect"][3])))))
+	if inside.is_empty() or inside.any(func(r: Dictionary) -> bool: return r.has("role")):
+		return "the danger zone is not in a quiet room (%s)" % inside.map(func(r: Dictionary) -> String: return str(r.get("name", "?")))
+	var missed: Array = ProgrammeCheck.solve(lv, {"withhold": ["zone_open"]})["missed"]
+	if missed.any(func(nm: String) -> bool: return not inside.any(func(r: Dictionary) -> bool: return r["name"] == nm)):
+		return "the level needs the danger zone (without it, missed %s)" % ", ".join(missed)
+	return ""
+
+
+## The cluster of the level's room at cell c ("" on the spine or in none).
+static func cluster_at(lv: Dictionary, c: Vector2i) -> String:
+	for r in lv["rooms"]:
+		var rc: Array = r.get("rect", [])
+		if rc.size() == 4 and Rect2i(int(rc[0]), int(rc[1]), int(rc[2]), int(rc[3])).has_point(c):
+			return str(r.get("cluster", ""))
 	return ""

@@ -50,8 +50,8 @@ func _released() -> void:
 	for dp in level.doors:
 		var d: Door = level.doors[dp]
 		if d.is_locked() and d.flag != null:
-			for f in (d.flag if d.flag is Array else [d.flag]):
-				waits[str(f)] = true
+			for f in _names(d.flag):
+				waits[f] = true
 	if waits.is_empty():
 		return
 	for n in get_tree().get_nodes_in_group("usable"):
@@ -62,3 +62,15 @@ func _released() -> void:
 				return ef is Dictionary and ef.get("type", "") == "flag" and waits.has(str(ef.get("name", "")))):
 			n.use(pl)
 			await frames(5)
+
+
+## Every flag's name in a door's flag: one, a list (any of them) or {"all": [...]}, however nested.
+func _names(f: Variant) -> Array:
+	if f is Array:
+		var out: Array = []
+		for x in f:
+			out += _names(x)
+		return out
+	if f is Dictionary:
+		return _names(f.get("all", []))
+	return [str(f)]

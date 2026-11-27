@@ -32,7 +32,7 @@ func run() -> void:
 		and (b.get("map") != a.get("map") or b.get("name") != a.get("name")),
 		"written from the world's seed (%d): %s (%s), built to %s and now %s; the same seed writes it the same, another another" % [
 		seed_value, level.data.get("name", "?"), _kind(info), info.get("mandate", "?"), info.get("now", "?")])
-	var tally := {"rooms": 0, "quiet": 0, "tall": 0, "three": 0, "decks": 0, "storeys": 0, "worlds": 0, "written": 0, "wings": 0,
+	var tally := {"rooms": 0, "quiet": 0, "tall": 0, "three": 0, "decks": 0, "storeys": 0, "worlds": 0, "written": 0, "wings": 0, "keyed": 0, "zones": 0,
 		"common": 0, "uncommon": 0, "rare": 0, "anomalous": 0, "density": {}}
 	for id in InstallationSettings.ids():
 		_worlds(id)
@@ -42,6 +42,8 @@ func run() -> void:
 		"  on the rooms generator's geometry, over %d worlds: %d rooms, %d of them quiet (%d%%), %d two storeys tall or more and %d three; balconies in %d worlds and another storey in %d" % [
 		tally["worlds"], tally["rooms"], tally["quiet"], roundi(share * 100), tally["tall"], tally["three"], tally["decks"], tally["storeys"]])
 	say(tally["wings"] > 0, "  the generator's wing locked by a yellow card in another wing in %d of those %d worlds" % [tally["wings"], tally["worlds"]])
+	say(tally["keyed"] > 0 and tally["zones"] > 0,
+		"  the core shut on two keys turned in two clusters in %d; a danger zone, a tempting detour in a quiet room off the way, in %d" % [tally["keyed"], tally["zones"]])
 	var per := {}
 	for den in tally["density"]:
 		per[den] = float(tally["density"][den][0]) / maxf(1.0, tally["density"][den][1])
@@ -92,8 +94,9 @@ func _worlds(arch_id: String) -> void:
 ## WORLDS seeds of one setting laid on the rooms generator's geometry, as the title screen's button lays them
 ## (InstallationPlace, SPEC 6.4): each laid out and finishable; every cluster with the rooms it must have, and every
 ## spine room; within a cluster, no two rooms that would fit better swapped; its core shut the way its power says (and
-## not reached without that key); its people its own; every word written out; and its gate and its locked wing, if
-## it has one, as they must be (Rooms.gate). Adds what it saw to `tally`.
+## not reached without that key); its people its own; every word written out; and its gate, its locked wing, the
+## core's two keys and its danger zone, if it has them, as they must be (Rooms.gate, interlock, detour). Adds what it
+## saw to `tally`.
 func _on_rooms(arch_id: String, tally: Dictionary) -> void:
 	var arch := InstallationSettings.resolve(arch_id)
 	var bad: Array = []
@@ -108,6 +111,11 @@ func _on_rooms(arch_id: String, tally: Dictionary) -> void:
 			bad.append("seed %d: %s" % [s, why])
 			continue
 		Rooms.gate(lv, s, graph)
+		for why2 in [Rooms.interlock(lv), Rooms.detour(lv)]:
+			if why2 != "":
+				graph["bad"].append("seed %d: %s" % [s, why2])
+		tally["keyed"] += 1 if lv["legend"].get("Z", {}).get("flag") is Dictionary else 0
+		tally["zones"] += 0 if lv.get("zones", []).is_empty() else 1
 		tally["worlds"] += 1
 		tally["decks"] += 1 if not lv.get("decks", []).is_empty() else 0
 		tally["storeys"] += 1 if not lv.get("floors", []).is_empty() else 0

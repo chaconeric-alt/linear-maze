@@ -21,7 +21,8 @@ extends RefCounted
 ##     the next.
 ##   - Its gate and its locked wing (the design's step 4, the mission graph on any geometry): the form decides where
 ##     they go and the rooms generator keeps their sides apart; their doors, the release and the proof that they hold
-##     are InstallationGate's.
+##     are InstallationGate's. Then, now and then, a danger zone in a quiet dead end off the way (the rooms generator's
+##     own, Danger.zone, told which rooms the level needs): a tempting detour.
 class_name InstallationPlace
 
 const RoomsGen := preload("res://generators/rooms.gd")
@@ -29,6 +30,7 @@ const Contents := preload("res://generators/rooms/contents.gd")
 const Hazards := preload("res://generators/rooms/hazards.gd")
 const Storeys := preload("res://generators/rooms/storeys.gd")
 const Furnish := preload("res://generators/rooms/furnish.gd")
+const Danger := preload("res://generators/rooms/danger.gd")
 const TRIES := 40
 const QUIET := 0.25              # of the rooms, about this many stand quiet
 const CELLS := 110.0             # map cells for each room wanted (the rooms generator's own: ten on 36 by 28)
@@ -76,6 +78,9 @@ static func _try(written: Dictionary, arch: Dictionary, contra: Dictionary, s: i
 	Hazards.pools(ctx)
 	ctx.stage("storeys")
 	Storeys.storeys(ctx)                     # doors and rooms upstairs, the basement, lifts and pits
+	ctx.stage("danger")
+	ctx.needed = InstallationPlace._needed(ctx, where)
+	Danger.zone(ctx)                         # a tempting detour: a danger zone in a quiet dead end, now and then
 	var out := InstallationPlace._level(RoomsGen.assemble(ctx), written, where, ctx, sides)
 	if not ProgrammeCheck.solve(out).get("ok", false):
 		return {}
@@ -280,6 +285,29 @@ static func _card_room(ctx: GenContext, where: Array, lock: Dictionary) -> int:
 		if lock.get("card", []).has(where[i]["room"].get("id", "")):
 			keep.append(i)
 	return keep[ctx.rng.randi() % keep.size()] if not keep.is_empty() else -1
+
+
+## The units the level needs, which a danger zone must leave alone: the way in and the core, every written room's,
+## the gate's, the way round's two ends, the locked wing's, and any with a key card or a tagged thing in it (a panel,
+## the release). So a zone is only ever a quiet room off the way: a tempting detour.
+static func _needed(ctx: GenContext, where: Array) -> Dictionary:
+	var out := {0: true, ctx.last: true}
+	for i in where.size():
+		if not where[i]["room"].is_empty():
+			out[ctx.areas[i]["unit"]] = true
+	for u in [ctx.gate] + ctx.graph.get("round", []):
+		if u >= 0:
+			out[u] = true
+	for u in ctx.region.size():
+		if ctx.region[u] == GenContext.WING:
+			out[u] = true
+	for t in ctx.things:
+		var at: Array = t.get("at", [])
+		if at.size() >= 2 and int(t.get("level", 0)) == 0 and (t.get("item", "") == "keycard" or str(t.get("tag", "")) != ""):
+			var u: int = ctx.room_of[int(at[1])][int(at[0])]
+			if u >= 0:
+				out[u] = true
+	return out
 
 
 ## The names of the level's rooms in the locked wing.

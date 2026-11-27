@@ -1,9 +1,10 @@
 extends RefCounted
 ## The rooms generator's danger zone (SPEC.md 4.13, 6.2; params "danger": {"chance": 0.5, "sets": ["collections",
 ## "overgrowth"]}): with that chance a level gets one, in a room that can be shut off as a dead end: one storey, at
-## most three ways in, each a threshold that can take a door, nothing in it the level needs (not the start, the card,
-## a gun handed out, or the way out), and every other part of the level still reachable without it; the further from
-## the start the likelier. Its ways in become doors sealed by a flag ("<zone>_open", legend "0"), broken at a notice
+## most three ways in, each a threshold that can take a door (not one locked already), nothing in it the level needs
+## (not the start, the card, a gun handed out, or the way out; a written installation says which rooms it needs:
+## GenContext.needed), and every other part of the level still reachable without it; the further from the start the
+## likelier. Its ways in become doors sealed by a flag ("<zone>_open", legend "0"), broken at a notice
 ## on the corridor wall beside the one nearest the start; a warning is lettered on the other side, a red light and a dead scavenger with a note
 ## lie outside. Inside go the set's monsters (three for every twenty cells of floor), its keeper, its strong traps, its
 ## loot (three times the rest), a prize and the maker (the alarm). The zone is lit low in the set's colour and outlined
@@ -15,6 +16,7 @@ const DIRS := GenContext.DIRS
 const NAMES := GenContext.NAMES
 const ZONE := "zone"
 const LETTER := "0"
+const LOCKED := ["Z", GenContext.GATE_DOOR, GenContext.WING_DOOR]
 
 
 static func zone(ctx: GenContext) -> void:
@@ -47,7 +49,7 @@ static func zone(ctx: GenContext) -> void:
 ## The rooms that may be a zone, the further from the start the likelier: {"unit", "cells", "ways": [[the cell of a
 ## way in, in the corridor, the direction from there into the room], ...]}, nearest the start first; or {}.
 static func _pick_room(ctx: GenContext, rng: RandomNumberGenerator) -> Dictionary:
-	var needed := [0, 1, maxi(2, ctx.last / 2), ctx.key_room, ctx.last]
+	var needed: Array = ctx.needed.keys() if not ctx.needed.is_empty() else [0, 1, maxi(2, ctx.last / 2), ctx.key_room, ctx.last]
 	var found: Array = []
 	for i in range(1, ctx.rects.size()):
 		if needed.has(i) or ctx.areas.any(func(a: Dictionary) -> bool: return a["unit"] == i and int(a.get("height", 1)) != 1):
@@ -86,8 +88,8 @@ static func _sealable(ctx: GenContext, i: int) -> Dictionary:
 		return {}
 	for way in ways:
 		var side: Vector2i = DIRS[(ways[way] + 1) % 4]
-		if g[way.y + side.y][way.x + side.x] != "#" or g[way.y - side.y][way.x - side.x] != "#" or GenContext.is_door(g, way) and g[way.y][way.x] == "Z":
-			return {}
+		if g[way.y + side.y][way.x + side.x] != "#" or g[way.y - side.y][way.x - side.x] != "#" or GenContext.is_door(g, way) and LOCKED.has(g[way.y][way.x]):
+			return {}                              # (never a door that is locked already: the vault's, a gate's, a wing's)
 	for t in ctx.things:                           # a lift beside it goes somewhere else: not a dead end
 		if t.has("lift") and cells.any(func(c: Vector2i) -> bool: return Vector2(c).distance_to(Vector2(int(t["at"][0]), int(t["at"][1]))) < 1.5):
 			return {}

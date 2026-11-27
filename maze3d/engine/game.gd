@@ -104,10 +104,16 @@ func has_flag(f: Variant) -> bool:
 	if f == null:
 		return true
 	if f is Array:
-		for x in f:
-			if State.has_flag(str(x)):
+		for x in f:                                  # any one of them
+			var nested: bool = x is Array or x is Dictionary
+			if (has_flag(x) if nested else State.has_flag(str(x))):
 				return true
 		return false
+	if f is Dictionary:                              # {"all": [...]}: every one of them (an interlock: two keys turned)
+		for x in f.get("all", []):
+			if not has_flag(x):
+				return false
+		return true
 	return State.has_flag(str(f))
 
 
