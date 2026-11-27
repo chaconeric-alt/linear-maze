@@ -8,6 +8,13 @@ const FORM_SPREAD := 1.128        # each side of the map on a layout form: 140 c
 
 const DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 const NAMES := ["n", "e", "s", "w"]
+const NEAR := 0                   # regions of a form with a gate (see region): the near side, the way in's
+const GATE := 1                   # the gate's room
+const FAR := 2                    # past the gate: the far wing and the core
+const WING := 3                   # a locked wing: entered only through its own locked doors
+const ROUND := 4                  # the way round's corridor, from a near room to a far one
+const GATE_DOOR := "1"            # the legend letters of the gate's doors and the locked wing's (a written installation says
+const WING_DOOR := "2"            # what each opens on: InstallationPlace)
 const CORNERS := [["nw", 0, 0, -1, -1], ["ne", 1, 0, 1, -1], ["sw", 0, 1, -1, 1], ["se", 1, 1, 1, 1]]     # name, which end in x, in y, outward x, y
 
 # given: the params and what is read straight from them
@@ -37,6 +44,13 @@ var last := 0                     # the last unit: the vault, behind the locked 
 var group_of: Array = []          # per unit, on a form: the plan's group its place is for (-1: the form's own)
 var whole: Dictionary = {}        # units never split into a suite (a form's halls)
 var tall: Dictionary = {}         # units three storeys tall whatever their size (a stack's atrium)
+# the mission graph on a form (RoomForms' "region"; the grandeur design's step 4): which side of the gate each unit is
+# on, so that nothing but the gate's doors and the way round joins one side to the other
+var region: Array = []            # per unit: NEAR, GATE, FAR or WING; empty with no gate and no locked wing
+var gate := -1                    # the gate's unit: every door of it is the gate's
+var corr_region: Dictionary = {}  # corridor cell (outside every unit) -> the region of the corridor that carved it
+var turf: Array = []              # per cell (rows of units): the unit nearest it, so each side's corridors keep to its own
+var round_cells: Array = []       # the way round's own cells, from the near end to the far
 # areas
 var areas: Array = []             # what gets a style, a height and furniture: {unit, rect, style, height, room}
 var walls: Array = []             # the thin walls that divide suites
@@ -134,6 +148,8 @@ func _layout_form() -> void:
 	if plan.is_empty():
 		plan = RoomForms.plan_for(int(p.get("rooms", 10)), Dice.derive(seed_value, "form plan"))
 	graph = RoomForms.graph(form, plan, Dice.derive(seed_value, "form graph"))
+	region = graph.get("region", [])
+	gate = int(graph.get("gate", -1))
 	W = roundi(W * FORM_SPREAD)                   # a form leaves more of the map between its places than the scatter
 	H = roundi(H * FORM_SPREAD)
 	sh = sh.duplicate()
@@ -196,6 +212,13 @@ static func is_door(grid: Array, q: Vector2i) -> bool:
 func inside(c: Vector2i) -> bool:
 	return c.x >= 1 and c.y >= 1 and c.x < W - 1 and c.y < H - 1
 
+
+## Must nothing join these two units but their own locked doors (a door upstairs, a pit over the basement): one is
+## the vault, or they are on two sides of the gate or of a locked wing's doors.
+func apart(u: int, v: int) -> bool:
+	if lock and (u == last or v == last):
+		return true
+	return not region.is_empty() and u >= 0 and v >= 0 and region[u] != region[v]
 
 ## That cell, or the nearest one of the same room that is not a ramp or a cut corner.
 func clear(c: Vector2i) -> Vector2i:

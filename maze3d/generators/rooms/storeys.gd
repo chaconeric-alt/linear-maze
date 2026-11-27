@@ -63,8 +63,8 @@ static func _upper_doors(ctx: GenContext) -> int:
 			var b: Vector2i = c - f
 			if ctx.no_door_up.has(c) or not ctx.deck1.has(a) or g[b.y][b.x] != "." or h0[b.y][b.x] < 2 or ctx.room_of[a.y][a.x] == ctx.room_of[b.y][b.x] or ctx.taken.has(b):
 				continue
-			if ctx.lock and (ctx.room_of[a.y][a.x] == ctx.last or ctx.room_of[b.y][b.x] == ctx.last):
-				continue                                   # never a way into the vault but its own locked door
+			if ctx.apart(ctx.room_of[a.y][a.x], ctx.room_of[b.y][b.x]):
+				continue                                   # never a way into the vault, or past the gate, but its own locked doors
 			if h0[c.y + s2.y][c.x + s2.x] > 1 or h0[c.y - s2.y][c.x - s2.x] > 1 or up[c.y][c.x] != "#":
 				continue
 			up[c.y][c.x] = ctx.letters[ctx.rng.randi() % ctx.doors.size()]
@@ -205,6 +205,8 @@ static func _basement(ctx: GenContext) -> void:
 			break
 	if shaft.x <= 0:
 		return
+	var front := ctx.nook_front(shaft)
+	var lift_room: int = ctx.room_of[front.y][front.x]       # the room the lift down stands in
 	var bg := ctx.blank("#")
 	var b_in := ctx.blank(-1)
 	var brects := _chambers(ctx, shaft, bg, b_in)
@@ -221,7 +223,7 @@ static func _basement(ctx: GenContext) -> void:
 	for i in brects.size():
 		ctx.grid_of[-1] = bg
 		b_rooms.append(_furnish_room(ctx, brects[i], -1, "%s %d" % [ctx.p.get("basement_name", "Undercroft"), i + 1]))
-	_pits(ctx, bg)
+	_pits(ctx, bg, lift_room)
 	ctx.storeys.append({"level": -1, "map": GenContext.rows(bg), "rooms": b_rooms})
 
 
@@ -302,14 +304,17 @@ static func _passages(ctx: GenContext, bg: Array, b_in: Array, brects: Array) ->
 					break
 
 
-## Pits: in a room, off the lines the corridors come in on, over an empty part of the basement, three cells apart.
-static func _pits(ctx: GenContext, bg: Array) -> void:
+## Pits: in a room, off the lines the corridors come in on, over an empty part of the basement, three cells apart;
+## only in rooms on the same side of the gate as the lift's (`lift_room`), so a fall and the ride up go nowhere new.
+static func _pits(ctx: GenContext, bg: Array, lift_room: int) -> void:
 	var g := ctx.g
 	var spots: Array = []
 	for y in range(2, ctx.H - 2):
 		for x in range(2, ctx.W - 2):
 			var c := Vector2i(x, y)
 			if bg[y][x] != "." or ctx.under.has(c) or not ctx.plain(c) or ctx.room_of[y][x] < 1 or (c - ctx.start).length() < 4.0:
+				continue
+			if not ctx.region.is_empty() and ctx.region[ctx.room_of[y][x]] != ctx.region[lift_room]:
 				continue
 			var r: Rect2i = ctx.rects[ctx.room_of[y][x]]
 			var by_door := false

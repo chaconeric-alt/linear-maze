@@ -19,8 +19,9 @@ extends RefCounted
 ##     storeys above and below (their rooms quiet too).
 ##   - The level is proved finishable (ProgrammeCheck); a seed whose is not, or that fits too few rooms, gives way to
 ##     the next.
-## The gate and the locked wing of a written programme are not laid here yet (the design's step 4: the mission graph on
-## any geometry), so the writer leaves them out (InstallationWriter.on_rooms).
+##   - Its gate and its locked wing (the design's step 4, the mission graph on any geometry): the form decides where
+##     they go and the rooms generator keeps their sides apart; their doors, the release and the proof that they hold
+##     are InstallationGate's.
 class_name InstallationPlace
 
 const RoomsGen := preload("res://generators/rooms.gd")
@@ -58,13 +59,15 @@ static func _try(written: Dictionary, arch: Dictionary, contra: Dictionary, s: i
 	var pick := Dice.derive(s, "installation place")
 	var blocks := InstallationPlace._blocks(prog, pick)
 	var plan := InstallationPlace._plan(blocks, pick)
+	InstallationGate.mark(plan, blocks, prog)
 	var ctx := GenContext.new(s, InstallationPlace.params(written, arch, contra, params, plan, s), true)
 	if not RoomsGen.geometry(ctx):
 		return {}
 	var where := InstallationPlace._assign(ctx, blocks, plan, arch.get("roles", {}))
 	if where.is_empty():
 		return {}
-	if not InstallationPlace._fill(ctx, written, arch, contra, where):
+	var sides := InstallationGate.lay(ctx, prog, written.get("installation", {}).get("gate", {}))
+	if not sides["ok"] or not InstallationPlace._fill(ctx, written, arch, contra, where, sides):
 		return {}
 	ctx.stage("balconies")
 	Contents.balconies(ctx)                  # something worth the climb
@@ -73,8 +76,10 @@ static func _try(written: Dictionary, arch: Dictionary, contra: Dictionary, s: i
 	Hazards.pools(ctx)
 	ctx.stage("storeys")
 	Storeys.storeys(ctx)                     # doors and rooms upstairs, the basement, lifts and pits
-	var out := InstallationPlace._level(RoomsGen.assemble(ctx), written, where, ctx)
-	return out if ProgrammeCheck.solve(out).get("ok", false) else {}
+	var out := InstallationPlace._level(RoomsGen.assemble(ctx), written, where, ctx, sides)
+	if not ProgrammeCheck.solve(out).get("ok", false):
+		return {}
+	return out if InstallationGate.holds(out, sides["wing"], InstallationPlace._wing_rooms(ctx)) else {}
 
 
 ## The rooms generator's params for an installation laid out for `plan` (its groups of rooms, _plan): the game's, with
@@ -205,9 +210,10 @@ static func shape_of(ctx: GenContext, a: Dictionary) -> Array:
 
 
 ## Each room of the geometry made what it was given: its name, style and purpose; its things; its furniture; a quiet
-## room its dressing. The start at the way in; the core's lock on the vault door, and its card, if it has one. False if
-## a room cannot hold what it must.
-static func _fill(ctx: GenContext, written: Dictionary, arch: Dictionary, contra: Dictionary, where: Array) -> bool:
+## room its dressing. The start at the way in; the core's lock on the vault door, and its card, if it has one; the
+## locked wing's card, if its doors are laid (`sides`, InstallationGate.lay), and no gate's card where there is no
+## gate. False if a room cannot hold what it must.
+static func _fill(ctx: GenContext, written: Dictionary, arch: Dictionary, contra: Dictionary, where: Array, sides: Dictionary) -> bool:
 	var prog: Dictionary = written.get("programme", {})
 	var spine: Array = prog.get("rooms", [])
 	var quiet := InstallationContents.new(arch, contra, arch.get("words", {}), Dice.derive(ctx.seed_value, "installation quiet words"), ctx.rng)
@@ -220,6 +226,8 @@ static func _fill(ctx: GenContext, written: Dictionary, arch: Dictionary, contra
 	ctx.legend["Z"] = {"door": CORE_DOOR, "flag": lock["flag"], "need": lock.get("need", "")} if lock.has("flag") \
 		else {"door": CORE_DOOR, "lock": str(lock.get("color", "red"))}
 	var card_at := InstallationPlace._card_room(ctx, where, lock)
+	var wing_at := InstallationPlace._card_room(ctx, where, sides["wing"]) if not sides["wing"].is_empty() else -1
+	var stray := InstallationGate.stray_card(ctx, written.get("installation", {}).get("gate", {}))
 	for i in ctx.areas.size():
 		var a: Dictionary = ctx.areas[i]
 		ctx.stage("installation room %d %s" % [i, a["rect"].position])     # each room its own numbers
@@ -229,9 +237,12 @@ static func _fill(ctx: GenContext, written: Dictionary, arch: Dictionary, contra
 			InstallationPlace._quiet(ctx, a, where[i]["block"], quiet, arch)
 			continue
 		InstallationPlace._named(ctx, a, room, where[i]["block"].get("cluster", ""))
-		var things: Array = room.get("things", []).duplicate(true)
+		var things: Array = room.get("things", []).duplicate(true).filter(func(t: Dictionary) -> bool:
+			return stray == "" or t.get("item", "") != "keycard" or str(t.get("color", "")) != stray)
 		if i == card_at:
 			things.append({"item": "keycard", "color": str(lock["color"])})
+		if i == wing_at:
+			things.append({"item": "keycard", "color": str(sides["wing"].get("color", "yellow"))})
 		if not InstallationPlace._furnished(ctx, i, a, room, things, arch.get("roles", {}).get(str(room.get("role", "")), {})):
 			return false
 	return true
@@ -271,6 +282,15 @@ static func _card_room(ctx: GenContext, where: Array, lock: Dictionary) -> int:
 	return keep[ctx.rng.randi() % keep.size()] if not keep.is_empty() else -1
 
 
+## The names of the level's rooms in the locked wing.
+static func _wing_rooms(ctx: GenContext) -> Array:
+	var out: Array = []
+	for a in ctx.areas:
+		if not ctx.region.is_empty() and ctx.region[a["unit"]] == GenContext.WING:
+			out.append(str(ctx.rooms[a["room"]].get("name", "")))
+	return out
+
+
 ## A written room's entry in the level's rooms: its name, style and purpose, what it was written as ("role") and the
 ## cluster it belongs to ("" on the spine); the area takes its style, so the walls are its.
 static func _named(ctx: GenContext, a: Dictionary, room: Dictionary, cluster: String) -> void:
@@ -303,14 +323,18 @@ static func _quiet(ctx: GenContext, a: Dictionary, block: Dictionary, quiet: Ins
 ## words, systems, triggers, objectives and what was chosen; now also "geometry": "rooms"; "fits": each written room's
 ## id -> what the fit saw of the room it got ([cells of floor, storeys]); and the layout form ("form", "follow", and
 ## "form_ways": the ways the form meant, before any was let go, as pairs of indices into the level's rooms): for the
-## test.
-static func _level(out: Dictionary, written: Dictionary, where: Array, ctx: GenContext) -> Dictionary:
+## test; "gate": what the level says of its gate (InstallationGate.lay), {} for none; "wing": the locked wing and its
+## card's colour ({"wing", "color"}), if its doors are laid (`sides`).
+static func _level(out: Dictionary, written: Dictionary, where: Array, ctx: GenContext, sides: Dictionary) -> Dictionary:
 	for k in ["id", "name", "kit", "style", "intro", "systems", "objectives"]:
 		if written.has(k):
 			out[k] = written[k]
 	out["triggers"] = written.get("triggers", []) + out.get("triggers", [])
 	out["installation"] = written.get("installation", {}).duplicate(true)
 	out["installation"]["geometry"] = "rooms"
+	out["installation"]["gate"] = sides["gate"]
+	if not sides["wing"].is_empty():
+		out["installation"]["wing"] = {"wing": sides["wing"]["wing"], "color": sides["wing"].get("color", "yellow")}
 	var fits := {}
 	for w in where:
 		if not w["room"].is_empty():

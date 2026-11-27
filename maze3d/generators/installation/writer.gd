@@ -25,7 +25,8 @@ var _spine: Array = []
 var _wings: Array = []
 var _far := ""                   # the wing past the gate
 var contents: InstallationContents   # what each room holds
-var on_rooms := false            # laid on the rooms generator's geometry (InstallationPlace): no gate, no locked wing yet
+var on_rooms := false            # laid on the rooms generator's geometry (InstallationPlace): its form decides where the
+                                 # gate goes, so the locked wing is never the far one (InstallationGate)
 
 
 func _init(a: Dictionary, c: Dictionary, w: Dictionary, s: RandomNumberGenerator, r: RandomNumberGenerator) -> void:
@@ -44,7 +45,7 @@ func programme(systems: Dictionary) -> Dictionary:
 		var role: Variant = step.get("role", "")
 		_spine.append(_room(str(Dice.pick(rng, role) if role is Array else role)))
 	var g: Dictionary = arch.get("gate", {})
-	if not g.is_empty() and not on_rooms:
+	if not g.is_empty():
 		gate["by"] = str(Dice.pick(rng, g.get("by", ["card"])))
 	_wings = _choose_wings()
 	var out := {"spine": {"gap": [1, 2]}, "rooms": _spine.map(func(id: String) -> Dictionary: return rooms[id]),
@@ -165,7 +166,7 @@ func _locks(systems: Dictionary) -> Array:
 		var gen_wing := _wing_of(_first_with("generator"))
 		var others: Array = keep.filter(func(id: String) -> bool: return _wing_of(id) != gen_wing and _wing_of(id) != "") \
 			if gate.is_empty() else _near_keep(gen_wing)       # (with a gate, on the near side: the gate's ways must not wait on it)
-		if gen_wing != "" and not on_rooms and not others.is_empty() and rng.randf() < 0.5:
+		if gen_wing != "" and not (on_rooms and gen_wing == _far) and not others.is_empty() and rng.randf() < 0.5:
 			_sure(others)
 			out.append({"wing": gen_wing, "color": "yellow", "card": others})
 	elif not cl.is_empty():

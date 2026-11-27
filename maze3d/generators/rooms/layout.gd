@@ -202,7 +202,8 @@ static func corridors(ctx: GenContext) -> void:
 
 
 ## Thresholds: doors, then where the red card can go. Fails if a corridor leaks into the last room or there is
-## nowhere to put the card.
+## nowhere to put the card, or, with a gate, if anything past it or in a locked wing can be walked to from the way in
+## without its doors or the way round.
 static func thresholds(ctx: GenContext) -> bool:
 	for i in ctx.doors.size():
 		ctx.legend[ctx.letters[i]] = {"door": ctx.doors[i]}
@@ -210,12 +211,20 @@ static func thresholds(ctx: GenContext) -> bool:
 	ctx.legend["Z"] = {"door": "door_vault", "lock": "red"}
 	ctx.legend["~"] = {"fluid": true}
 	_doors(ctx)
-	return _key_room(ctx)
+	return _key_room(ctx) and _sides_hold(ctx)
 
 
 ## A door only ever goes on a corridor cell with a room on one side, open floor on the other and solid wall to both
-## flanks, never two back to back. The ones into the last room are the vault door.
+## flanks, never two back to back. The ones into the last room are the vault door. With sides (a gate, a locked wing)
+## the locked doors go in first, so a door beside one never takes its place.
 static func _doors(ctx: GenContext) -> void:
+	if not ctx.region.is_empty():
+		_door_pass(ctx, true)
+	_door_pass(ctx, false)
+
+
+## One pass of _doors: only the locked doors (`locked_only`), or every door.
+static func _door_pass(ctx: GenContext, locked_only: bool) -> void:
 	var g := ctx.g
 	var room_of := ctx.room_of
 	var rng := ctx.rng
@@ -237,14 +246,59 @@ static func _doors(ctx: GenContext) -> void:
 					continue
 				var into := d if ra >= 0 else d + 2
 				var guards_last := ra == ctx.last or rb == ctx.last
+				var locked := _locked_door(ctx, q, ra, rb)
 				if guards_last and ctx.lock:
 					g[y][x] = "Z"
+				elif locked != "":
+					g[y][x] = locked
+				elif locked_only:
+					continue
 				elif rng.randf() < 0.85:
 					var ch: String = ctx.letters[rng.randi() % ctx.doors.size()]
 					g[y][x] = ch.to_lower() if rng.randf() < ctx.sh.get("jammed", 0.08) else ch
 				else:
 					continue
 				ctx.door_cells.append([q, into, guards_last])
+
+
+## The letter of a locked door between rooms ra and rb (or a room and corridor cell q): the gate's, into its room
+## from anywhere; a locked wing's, into one of its rooms from outside it; "" for none of them.
+static func _locked_door(ctx: GenContext, q: Vector2i, ra: int, rb: int) -> String:
+	if ctx.region.is_empty():
+		return ""
+	if ctx.gate >= 0 and (ra == ctx.gate or rb == ctx.gate):
+		return GenContext.GATE_DOOR
+	var sides: Array = [ra, rb].map(func(u: int) -> int: return ctx.region[u] if u >= 0 else int(ctx.corr_region.get(q, -1)))
+	if sides.has(GenContext.WING) and sides.any(func(r: int) -> bool: return r != GenContext.WING):
+		return GenContext.WING_DOOR
+	return ""
+
+
+## With sides (the context's region): from the way in, with the gate's doors, the locked wing's, the vault's and the
+## way round shut, only rooms of the near side are reached; and the way round has cells of its own, if the form has one.
+static func _sides_hold(ctx: GenContext) -> bool:
+	if ctx.region.is_empty():
+		return true
+	if ctx.graph.has("round") and ctx.round_cells.is_empty():
+		return false
+	var shut := {}
+	if not ctx.round_cells.is_empty():
+		shut[ctx.round_cells[ctx.round_cells.size() / 2]] = true
+	var seen := {ctx.start: true}
+	var todo: Array = [ctx.start]
+	while not todo.is_empty():
+		var c: Vector2i = todo.pop_back()
+		var u: int = ctx.room_of[c.y][c.x]
+		if u >= 0 and ctx.region[u] != GenContext.NEAR:
+			return false
+		for d in DIRS:
+			var n: Vector2i = c + d
+			var ch: String = ctx.g[n.y][n.x]
+			if seen.has(n) or shut.has(n) or ch == "#" or ch == "Z" or ch == GenContext.GATE_DOOR or ch == GenContext.WING_DOOR:
+				continue
+			seen[n] = true
+			todo.append(n)
+	return true
 
 
 ## The red card has to be findable without going through the vault door.
